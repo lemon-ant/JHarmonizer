@@ -1,4 +1,4 @@
-# Documentation Structure and Repository Layout
+# Documentation
 
 This section defines the expected structure of the documentation and repository layout for the project.
 It is a non-functional but **mandatory** requirement aimed at ensuring clarity, consistency, and ease of collaboration
