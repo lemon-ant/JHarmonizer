@@ -1,4 +1,3 @@
-
 #  Formatter Wrapper
 
 ## Purpose

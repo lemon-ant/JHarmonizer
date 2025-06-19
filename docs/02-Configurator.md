@@ -30,6 +30,9 @@ To construct a validated, immutable configuration model (`Configuration`) by:
 | `ProjectFileConfigParser` | Reads XML configuration from project sources.                                    |
 | `Configurator`            | Coordinates the full assembly process; returns validated `Configuration`.        |
 
+These additional configuration parsers can implement a unified interface `OverridingConfigurationProvider` to be 
+processed as a sequence in a unified stream/cycle algorithm. 
+
 ## Proposed Core Types
 
 All code snippets given only as illustrations of the idea
@@ -99,3 +102,35 @@ public interface Configurator {
 - Merging logic should handle null fields safely, always preserving previous values unless explicitly overridden.
 - Multiple `merge()` calls are expected in sequence.
 - Final `Configuration` must be fully initialized and validated (non-null + correct values).
+
+## Optional Configuration Sources Control
+
+For advanced usage, the configurator supports **optional control over which sources to include** when resolving the final configuration.
+
+By default, all sources are enabled:
+- IDE configuration (e.g. IntelliJ, Eclipse)
+- Project-level configuration files (XML/YAML)
+- External override inputs (e.g. plugin parameters)
+
+However, users can pass boolean flags (e.g. `disableIDEA`, `disableFileConfig`) to suppress specific sources.
+
+Additionally, for full flexibility, it is proposed that the configurator exposes a method accepting a **custom sequence of configuration parsers**, each implementing a common interface (e.g. `RawConfigProvider`).
+
+This allows advanced consumers (e.g. plugins, test suites) to **control exactly which parsers participate** in the configuration resolution process.
+
+```java
+public interface OverridingConfigurationProvider {
+    OverridingConfiguration load();
+}
+```
+
+Suggested method for customized merging:
+
+```java
+public Configuration resolve(List<OverridingConfigurationProvider> customProviders);
+```
+
+This approach makes it possible to:
+- Test specific parsers in isolation
+- Apply only trusted configuration layers (e.g. CI pipelines)
+- Extend or replace default parsing logic
