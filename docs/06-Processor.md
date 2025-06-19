@@ -8,6 +8,23 @@ then manages the full transformation pipeline:
 - Serializing the sorted AST back to source code
 - Formatting the final source code using `PalantirJavaFormat`.
 
+## Dual Flow Overview
+
+The Processor supports two distinct execution flows:
+
+### 1. Restructure Flow
+- Full processing pipeline: config → parse → sort → serialize → format
+- Produces a new source code
+- Optionally writes to file(s)
+- Can return stats (count, size, duration)
+
+### 2. Check Flow
+- Same pipeline as above, but only in memory
+- Compares input and output
+- Throws if restructuring would alter content
+- Used for CI/linting
+
+
 ## Public API Methods
 
 ### 1. Process a single Java source code string
@@ -54,3 +71,48 @@ ProcessingReport restructure(Path inputDirectory, OverridingConfiguration config
 - **Parser control flags**: selectively enable/disable configuration sources.
 - **Contextual outputs**: method output varies depending on target (string, file, directory).
 - **Metrics & logging hooks**: optionally integrated for performance tracking and diagnostics.
+
+## 🔍 Check Mode (Validation Without Rewrite)
+
+In addition to full restructuring, the Processor also provides a **`check` mode**.  
+This flow performs the same pipeline (configuration → parsing → sorting → serialization → formatting) but **only in memory** and does **not write any changes**.  
+It compares the original input with the result and throws an exception if restructuring would make changes.
+
+### Purpose:
+Used in CI or quality gates to validate whether code is already correctly structured.
+
+### Public Methods:
+
+All configuration parameters were omitted for simplicity.
+
+- `void check(Path directory)`
+  - Recursively checks all `.java` files in a directory.
+  - If any file differs from its restructured version, throws `CodeNotRestructuredException`.
+
+- `void check(Path file)`
+  - Checks a single file.
+
+- `void check(String javaSource)`
+  - Checks a raw Java source string.
+
+### Exception Behavior:
+
+If restructuring changes the code, a `CodeNotRestructuredException` is thrown.  
+The exception should contain:
+- Path or origin description
+- Unified diff for diagnostics
+
+
+## Additional Note: Compilation Validation Step
+
+In certain cases, if the selected AST parser fails to clearly identify invalid Java source files (e.g., files with 
+syntactical or structural corruption), it may be necessary to integrate a lightweight and embeddable Java compiler into
+the processing pipeline. 
+
+The idea is to pre-validate each file by attempting to compile it before parsing and restructuring. This compilation
+phase can serve as a safeguard to ensure that the file is valid Java code. If the compiler fails with a meaningful 
+error message, it can prevent the restructuring pipeline from executing on a broken file and help log or report the 
+cause of failure.
+
+This step may be performed in parallel or as a pre-processing phase before invoking the AST parser. The need for this 
+step will depend on the behavior of the selected parser and should be evaluated after initial POC validation.
