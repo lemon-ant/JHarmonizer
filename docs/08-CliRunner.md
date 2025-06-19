@@ -1,7 +1,6 @@
-
 # CLIRunner – Command-Line Interface Component (Draft)
 
-> ⚠️ **Draft Proposal**  
+> **Draft Proposal**  
 > This document outlines a preliminary sketch for adding command-line capabilities to the restructuring tool.  
 > It is not a finalized design and should be refined during implementation.
 

@@ -35,10 +35,10 @@ The corresponding AST structure would look like:
 
 ```
 Assignment
-├── Variable: x
-└── Expression: +
-    ├── Literal: 2
-    └── Literal: 3
++- Variable: x
+\- Expression: +
+    +- Literal: 2
+    \- Literal: 3
 ```
 
 ## Where It Fits in the Pipeline
@@ -146,7 +146,7 @@ The selected parser must:
 
 If needed, fallback parser integration may be considered for future iterations depending on POC results and resource availability.
 
-## 📎 Related Tools
+## Related Tools
 
 - [JavaParser](https://javaparser.org/)
 - [Eclipse JDT AST](https://www.eclipse.org/jdt/)

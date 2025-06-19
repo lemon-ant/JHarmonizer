@@ -8,21 +8,21 @@ within the team.
 
 ```bash
 my-project/
-├── core/                  # Core utility
-│   └── README-CORE.md     # Core documentation
-├── maven-plugin/          # Maven plugin
-│   └── README-MAVEN.md    # Plugin documentation
-├── gradle-plugin/         # Gradle plugin (optional)
-│   └── README-GRADLE.md
-├── examples/              # Example setups
-│   ├── jenkins/           # Jenkins example
-│   │   └── EXAMPLE.md     # Description and usage
-│   └── gitlab-ci.yml      # GitLab CI config
-├── docs/                  # Global documentation
-│   ├── CONFIG.md          # Configuration
-│   ├── TROUBLESHOOTING.md
-│   └── CHANGELOG.md
-└── README.md              # Main entry point
++-- core/                  # Core utility
+|   \-- README-CORE.md     # Core documentation
++-- maven-plugin/          # Maven plugin
+|   \-- README-MAVEN.md    # Plugin documentation
++-- gradle-plugin/         # Gradle plugin (optional)
+|   \-- README-GRADLE.md
++-- examples/              # Example setups
+|   +-- jenkins/           # Jenkins example
+|   |   \-- EXAMPLE.md     # Description and usage
+|   \-- gitlab-ci.yml      # GitLab CI config
++-- docs/                  # Global documentation
+|   +-- CONFIG.md          # Configuration
+|   +-- TROUBLESHOOTING.md
+|   \-- CHANGELOG.md
+\-- README.md              # Main entry point
 ```
 
 ## Required Markdown Documents
@@ -43,8 +43,6 @@ Contains:
   cd project
   mvn install
   ```
-- Maven Central badge:
-  [![Maven Central](https://img.shields.io/maven-central/v/com.your/plugin.svg)](https://search.maven.org)
 
 ---
 
@@ -82,7 +80,6 @@ Contains:
 
 Example: Jenkins
 
-```markdown
 ## Jenkins Integration
 
 ```groovy
@@ -97,7 +94,6 @@ pipeline {
     }
   }
 }
-```
 ```
 
 ---

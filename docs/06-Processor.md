@@ -72,7 +72,7 @@ ProcessingReport restructure(Path inputDirectory, OverridingConfiguration config
 - **Contextual outputs**: method output varies depending on target (string, file, directory).
 - **Metrics & logging hooks**: optionally integrated for performance tracking and diagnostics.
 
-## 🔍 Check Mode (Validation Without Rewrite)
+## Check Mode (Validation Without Rewrite)
 
 In addition to full restructuring, the Processor also provides a **`check` mode**.  
 This flow performs the same pipeline (configuration → parsing → sorting → serialization → formatting) but **only in memory** and does **not write any changes**.  
