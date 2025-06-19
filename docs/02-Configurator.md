@@ -1,8 +1,8 @@
-# JReStructorConfigurator
+# Configurator
 
 ## Purpose
 
-To construct a validated, immutable configuration model (`JReStructorConfig`) by:
+To construct a validated, immutable configuration model (`Config`) by:
 
 - loading internal defaults from resources,
 - overlaying with external config sources (IDE (IDEA, possibly Eclipse), configuration file, passed model from external wrapper),
@@ -11,7 +11,7 @@ To construct a validated, immutable configuration model (`JReStructorConfig`) by
 ## Configuration Assembly Flow
 
 1. Load default config from embedded resource file  
-   → `JReStructorConfig defaultConfig`
+   → `Config defaultConfig`
 
 2. Optionally overlay:
    - IDE config (optional) - it must be IDEA and possibly Eclipse
@@ -28,13 +28,13 @@ To construct a validated, immutable configuration model (`JReStructorConfig`) by
 | `DefaultConfigLoader`     | Loads embedded default config from `resources/`.                                 |
 | `IDEConfigParser`         | Parses IDE-specific configuration formats (e.g. `.editorconfig`, `.idea/*.xml`). |
 | `ProjectFileConfigParser` | Reads XML config from project sources.                                           |
-| `JReStructorConfigurator` | Coordinates the full assembly process; returns validated `JReStructorConfig`.    |
+| `Configurator` | Coordinates the full assembly process; returns validated `Config`.    |
 
 ## Proposed Core Types
 
 All code snippets given only as illustrations of the idea
 
-### 1. `OverridingJReStructorConfig`
+### 1. `OverridingConfig`
 
 A nullable, non-validated DTO representing raw config input.
 
@@ -47,7 +47,7 @@ Used as intermediary for loading from:
 
 ```java
 @Data
-public class OverridingJReStructorConfig {
+public class OverridingConfig {
     private List<String> memberOrder;
     private List<String> accessLevelOrder;
     private Integer maxLineLength;
@@ -55,14 +55,14 @@ public class OverridingJReStructorConfig {
 }
 ```
 
-## 2. `JReStructorConfig`
+## 2. `Config`
 
 Final, validated, immutable model for internal use.
 
 ```java
 @Value
 @Builder
-public class JReStructorConfig {
+public class Config {
     List<String> memberOrder;
     List<String> accessLevelOrder;
     int maxLineLength;
@@ -77,9 +77,9 @@ All code snippets given only as illustrations of the idea
 ### Resolve Signature
 
 ```java
-public interface JReStructorConfigurator {
-    JReStructorConfig resolve(
-        List<OverridingJReStructorConfig> externalConfigs,
+public interface Configurator {
+    Config resolve(
+        List<OverridingConfig> externalConfigs,
         List<Path> configFiles
     );
 }
@@ -88,14 +88,14 @@ public interface JReStructorConfigurator {
 ### Merge Signature
 
 ```java
-public interface JReStructorConfigurator {
-    RawJReStructorConfig merge(JReStructorConfig baseConfig, OverridingJReStructorConfig overridingConfig);
+public interface Configurator {
+    RawConfig merge(Config baseConfig, OverridingConfig overridingConfig);
 }
 ```
 
 ## Notes
 
-- `OverridingJReStructorConfig` can be reused across all stages as the universal nullable intermediate.
+- `OverridingConfig` can be reused across all stages as the universal nullable intermediate.
 - Merging logic should handle null fields safely, always preserving previous values unless explicitly overridden.
 - Multiple `merge()` calls are expected in sequence.
-- Final `JReStructorConfig` must be fully initialized and validated (non-null + correct values).
+- Final `Config` must be fully initialized and validated (non-null + correct values).
