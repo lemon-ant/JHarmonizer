@@ -116,3 +116,12 @@ cause of failure.
 
 This step may be performed in parallel or as a pre-processing phase before invoking the AST parser. The need for this 
 step will depend on the behavior of the selected parser and should be evaluated after initial POC validation.
+
+## Backup Handling Before File Overwrite
+
+To prevent accidental data loss when overwriting files during restructuring, especially in environments where no version control is used, implement an optional backup mechanism.
+
+- **Condition**: A backup file should be created **only if** the output differs from the original input (i.e. the file is modified).
+- **Backup naming convention**: Append a `.bak` or `.backup` extension to the original filename (e.g. `MyClass.java.bak`).
+- **Activation**: This feature should be configurable via `Configuration`, e.g. a flag like `createFileBackup = true`.
+- **Rationale**: Enables safe recovery if something goes wrong during restructuring, or if a user prefers to manually inspect changes.
