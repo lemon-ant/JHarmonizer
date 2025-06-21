@@ -1,6 +1,7 @@
-# Central Processing Component: `Processor`
+# Central Processor
 
 ## Purpose
+
 `Processor` is the main orchestrator of the system. It performs configuration aggregation first,
 then manages the full transformation pipeline:
 - Parsing Java source code into an abstract syntax tree (AST)

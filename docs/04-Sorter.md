@@ -1,4 +1,4 @@
-# Member Sorter Specification
+# Sorter
 
 ## Purpose
 

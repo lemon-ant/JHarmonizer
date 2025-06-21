@@ -1,4 +1,4 @@
-# CLIRunner – Command-Line Interface Component (Draft)
+# CLI Runner
 
 > **Draft Proposal**  
 > This document outlines a preliminary sketch for adding command-line capabilities to the restructuring tool.  
