@@ -1,42 +1,62 @@
-file:
+java-file:
+ main-type-first: true
  type-order:
   - public-class
   - class
   - interface
   - enum
   - record
- main-type-first: true
+
+selector-aliases:
+ object-methods: '~^(toString\\(\\)|equals\\(\\)|hashCode\\(\\)|clone\\(\\)|finalize\\(\\))$'
+ junit-init:
+  - '@BeforeEach'
+  - '@BeforeAll'
+ junit-cleanup:
+  - '@AfterEach'
+  - '@AfterAll'
+ test-class: "~.*Test$"
 
 type-sort:
  test:
-  match:
-   - '@Test'
-   - '@ExtendWith'
-   - name~'.*Test$'
-  behavior:
-   keepOverridesTogether: true
+  match: test-class
   sort:
    method:
-    '@BeforeEach': top
-    '@Test': asc
-    '@AfterEach': bottom
+    junit-init: orig
+    '@Test': alpha
+    junit-cleanup: orig
+    rest: orig
 
  utility:
   match:
-   - modifiers=final
-   - modifiers=static
-   - name~'.*Util$'
-  behavior:
-   keepAccessorPairsTogether: true
-  sort:
-   method:
-    default: asc
-
- default:
+   - [final, static]
+   - "~.*Utils?$"
   sort:
    field:
-    static: asc
-    default: asc
+    static: alpha
+    instance: alpha
+   method: alpha
+
+ dto:
+  match: [final, "~.*Dto$"]
+  behavior:
+   keepAccessorsTogether: true
+  sort:
+   field:
+    instance: alpha
+   method: alpha
+
+ default:
+  behavior:
+   keepAccessorsTogether: true
+  sort:
+   field:
+    static:
+     public: alpha
+     private: orig
+    instance:
+     public: alpha
+     private: orig
    method:
-    '@Override': bottom
-    default: asc
+    '@Override': orig
+    object-methods: orig
