@@ -1,65 +1,66 @@
 engine:
- name: freeform-sorter
+ name: freeform-orderer
  version: 5.0
 
 file-order:
  primary-type: first
  secondary-types: [class, interface, enum, record]
 
-sorting-rules:
+ordering-rules:
  # Правило для тестовых классов
- - when: class-name ~.*Test$
-   sort:
+ - match: class-name ~.*Test$
+   groups:
     - select: annotation:["@BeforeAll", "@BeforeEach"]
-      sort: preserve
+      order: preserve
       name: "JUnit Setup"
 
     - select: annotation:@Test
-      sort: alpha
+      order: alpha
       name: "Test Methods"
 
     - select: annotation:["@AfterAll", "@AfterEach"]
-      sort: preserve
+      order: preserve
       name: "JUnit Teardown"
    rest: preserve
 
  # Правило для DTO
- - when:
+ - match:
     - class-name ~.*(Dto|DTO)$
     - modifier:final
-   sort:
+   groups:
     - select: type:field
-      sort: alpha
+      order: alpha
 
     - select: type:method
-      then:
+      groups:
        - select: name:~^(get|is).+$
          group-with:
           - select: name:~^set.+$
-         sort: alpha
+         order: alpha
        - select: rest
-         sort: preserve
+         order: preserve
+      rest: alpha
 
  # Универсальное правило (как вы просили)
- - when: all-types
-   plan:
+ - match: all-types
+   groups:
     # Первый уровень: группировка по доступности
     - select: modifier:public
-      then:
+      groups:
        # Второй уровень: группировка по типу
        - select: type:field
-         sort: alpha
+         order: alpha
        - select: type:method
-         then:
+         groups:
           # Третий уровень: группировка по аннотациям
           - select: annotation:@Override
-            sort: preserve
+            order: preserve
           - select: rest
-            sort: alpha
+            order: alpha
 
     - select: modifier:private
-      then:
+      groups:
        - select: type:field
-         sort: preserve
+         order: preserve
        - select: type:method
-         sort: preserve
+         order: preserve
