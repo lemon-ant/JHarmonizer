@@ -1,0 +1,42 @@
+file:
+ type-order:
+  - public-class
+  - class
+  - interface
+  - enum
+  - record
+ main-type-first: true
+
+type-sort:
+ test:
+  match:
+   - '@Test'
+   - '@ExtendWith'
+   - name~'.*Test$'
+  behavior:
+   keepOverridesTogether: true
+  sort:
+   method:
+    '@BeforeEach': top
+    '@Test': asc
+    '@AfterEach': bottom
+
+ utility:
+  match:
+   - modifiers=final
+   - modifiers=static
+   - name~'.*Util$'
+  behavior:
+   keepAccessorPairsTogether: true
+  sort:
+   method:
+    default: asc
+
+ default:
+  sort:
+   field:
+    static: asc
+    default: asc
+   method:
+    '@Override': bottom
+    default: asc
