@@ -13,14 +13,14 @@ public class TypeOrderEntryDeserializer extends JsonDeserializer<TypeOrderEntry>
         ObjectCodec codec = p.getCodec();
         JsonNode node = codec.readTree(p);
 
-        List<TypeOrderEntry.TypeKind> result = new ArrayList<>();
+        List<TypeKind> result = new ArrayList<>();
 
         if (node.isTextual()) {
-            result.add(TypeOrderEntry.TypeKind.fromRaw(node.asText()));
+            result.add(TypeKind.fromRaw(node.asText()));
         } else if (node.isArray()) {
             for (JsonNode child : node) {
                 if (!child.isTextual()) throw new IOException("Expected string in array");
-                result.add(TypeOrderEntry.TypeKind.fromRaw(child.asText()));
+                result.add(TypeKind.fromRaw(child.asText()));
             }
         } else {
             throw new IOException("Unsupported type-order entry: " + node);

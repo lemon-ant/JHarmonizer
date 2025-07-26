@@ -1,8 +1,8 @@
 java-file:
   main-type-first: true
   type-order:
-    - public-class
-    - interface
     - [class, records]
+    - interface
     - enum
+    - annotation
   sort: alpha

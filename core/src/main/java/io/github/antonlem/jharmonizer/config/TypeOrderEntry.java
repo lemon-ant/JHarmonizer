@@ -1,7 +1,9 @@
 package io.github.antonlem.jharmonizer.config;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Collections;
 import java.util.List;
 import lombok.Value;
 
@@ -12,25 +14,11 @@ import lombok.Value;
 @Value
 @JsonDeserialize(using = TypeOrderEntryDeserializer.class)
 public class TypeOrderEntry {
-    @SuppressFBWarnings({"EI_EXPOSE_REP2", "EI_EXPOSE_REP"})
+
     List<TypeKind> kinds;
 
-    public enum TypeKind {
-        public_class, // mapped from "public-class"
-        class_,
-        interface_,
-        enum_,
-        record_;
-
-        public static TypeKind fromRaw(String raw) {
-            return switch (raw.replace("-", "_")) {
-                case "public_class" -> public_class;
-                case "class" -> class_;
-                case "interface" -> interface_;
-                case "enum" -> enum_;
-                case "record" -> record_;
-                default -> throw new IllegalArgumentException("Unsupported type: " + raw);
-            };
-        }
+    @JsonCreator
+    public TypeOrderEntry(@JsonProperty(value = "kinds", required = true) List<TypeKind> kinds) {
+        this.kinds = Collections.unmodifiableList(kinds);
     }
 }
