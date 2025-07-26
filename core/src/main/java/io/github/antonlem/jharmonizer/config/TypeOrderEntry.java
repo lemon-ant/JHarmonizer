@@ -1,6 +1,5 @@
 package io.github.antonlem.jharmonizer.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collections;
@@ -17,7 +16,6 @@ public class TypeOrderEntry {
 
     List<TypeKind> kinds;
 
-    @JsonCreator
     public TypeOrderEntry(@JsonProperty(value = "kinds", required = true) List<TypeKind> kinds) {
         this.kinds = Collections.unmodifiableList(kinds);
     }
