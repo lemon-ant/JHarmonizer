@@ -1,19 +1,21 @@
 package io.github.antonlem.jharmonizer.config;
 
+import java.util.Locale;
+
 public enum TypeKind {
-    class_,
-    interface_,
-    enum_,
-    annotation,
-    record_;
+    CLASS,
+    INTERFACE,
+    ENUM,
+    ANNOTATION,
+    RECORD;
 
     public static TypeKind fromRaw(String raw) {
-        return switch (raw.replace("-", "_")) {
-            case "class" -> class_;
-            case "interface" -> interface_;
-            case "enum" -> enum_;
-            case "annotation" -> annotation;
-            case "record" -> record_;
+        return switch (raw.toLowerCase(Locale.ENGLISH)) {
+            case "class" -> CLASS;
+            case "interface" -> INTERFACE;
+            case "enum" -> ENUM;
+            case "annotation" -> ANNOTATION;
+            case "record" -> RECORD;
             default -> throw new IllegalArgumentException("Unsupported type: " + raw);
         };
     }

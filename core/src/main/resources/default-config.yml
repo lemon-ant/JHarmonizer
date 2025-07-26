@@ -1,7 +1,7 @@
 java-file:
   main-type-first: true
   type-order:
-    - [class, records]
+    - [class, record]
     - interface
     - enum
     - annotation

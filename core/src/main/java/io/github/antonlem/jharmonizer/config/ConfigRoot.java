@@ -7,6 +7,12 @@ import lombok.Value;
 @Value
 public class ConfigRoot {
 
-    @JsonProperty("java-file")
+
     JavaFileEntry javaFile;
+
+
+    ConfigRoot(@JsonProperty("java-file") JavaFileEntry javaFile){
+
+        this.javaFile = javaFile;
+    }
 }

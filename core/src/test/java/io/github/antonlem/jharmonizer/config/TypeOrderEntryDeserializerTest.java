@@ -1,12 +1,13 @@
 package io.github.antonlem.jharmonizer.config;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.*;
 
 class TypeOrderEntryDeserializerTest {
 
@@ -14,24 +15,32 @@ class TypeOrderEntryDeserializerTest {
 
     @Test
     void deserialize_listOfTypeKindStrings_returnsEntryWithMultipleKinds() throws IOException {
-        String yaml = "- [class, interface, record]";
-        List<TypeOrderEntry> result = mapper.readValue(
-                yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class));
+        // given
+        String yaml = "- [class, INTERFACE, RECORD]";
 
-        assertEquals(1, result.size());
-        assertEquals(
-                List.of(TypeKind.class_, TypeKind.interface_, TypeKind.record_),
-                result.get(0).getKinds());
+        // when
+        List<TypeOrderEntry> result = mapper.readValue(
+            yaml,
+            mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class)
+        );
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getKinds())
+            .containsExactly(TypeKind.CLASS, TypeKind.INTERFACE, TypeKind.RECORD);
     }
 
     @Test
     void deserialize_unknownTypeKind_throwsException() {
-        String yaml = "- unicorn";
+        // given
+        String yaml = "- UNICORN";
 
-        Exception exception = assertThrows(Exception.class, () -> {
-            mapper.readValue(yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class));
-        });
-
-        assertTrue(exception.getMessage().toLowerCase().contains("unicorn"));
+        // when/then
+        assertThatThrownBy(() -> mapper.readValue(
+            yaml,
+            mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class)
+        ))
+            .isInstanceOf(Exception.class)
+            .hasMessageContaining("UNICORN");
     }
 }

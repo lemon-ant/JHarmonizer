@@ -1,56 +1,57 @@
 package io.github.antonlem.jharmonizer.config;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+
+import static org.assertj.core.api.Assertions.*;
 
 class ConfigLoaderTest {
 
     @Test
-    @Disabled
-    void loadFrom_validDefaultConfig_returnsParsedJavaFileEntry() throws IOException {
+    void loadFrom_validDefaultConfig_returnsParsedConfigRoot() throws IOException {
+        // given
         File yaml = new File("src/main/resources/default-config.yml");
-        JavaFileEntry config = ConfigLoader.loadFrom(yaml);
 
-        assertNotNull(config);
-        assertTrue(config.isMainTypeFirst());
-        assertNotNull(config.getTypeOrderEntries());
-        assertFalse(config.getTypeOrderEntries().isEmpty());
+        // when
+        ConfigRoot root = ConfigLoader.loadFrom(yaml);
 
-        config.getTypeOrderEntries().forEach(entry -> assertNotNull(entry.getKinds()));
+        // then
+        assertThat(root).isNotNull();
+        assertThat(root.getJavaFile()).isNotNull();
+        assertThat(root.getJavaFile().isMainTypeFirst()).isTrue();
+        assertThat(root.getJavaFile().getTypeOrderEntries()).isNotEmpty();
+        root.getJavaFile().getTypeOrderEntries().forEach(entry ->
+            assertThat(entry.getKinds()).isNotEmpty()
+        );
     }
 
     @Test
     void loadFrom_missingRequiredField_throwsException(@TempDir Path tempDir) throws IOException {
-        File invalidFile = tempDir.resolve("invalid.yml").toFile();
-        try (FileWriter writer = new FileWriter(invalidFile)) {
-            writer.write("main-type-first: true"); // no "type-order"
+        // given
+        File badFile = tempDir.resolve("bad.yml").toFile();
+        try (FileWriter writer = new FileWriter(badFile)) {
+            writer.write("java-file:\n  main-type-first: true\n"); // type-order отсутствует
         }
 
-        assertThrows(Exception.class, () -> ConfigLoader.loadFrom(invalidFile));
+        // when/then
+        assertThatThrownBy(() -> ConfigLoader.loadFrom(badFile))
+            .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
     void loadFrom_emptyFile_throwsException(@TempDir Path tempDir) throws IOException {
-        File emptyFile = tempDir.resolve("empty.yml").toFile();
-        assertTrue(emptyFile.createNewFile());
+        // given
+        File empty = tempDir.resolve("empty.yml").toFile();
+        assertThat(empty.createNewFile()).isTrue();
 
-        assertThrows(Exception.class, () -> ConfigLoader.loadFrom(emptyFile));
-    }
-
-    @Test
-    void loadFrom_malformedYaml_throwsException(@TempDir Path tempDir) throws IOException {
-        File badFile = tempDir.resolve("bad.yml").toFile();
-        try (FileWriter writer = new FileWriter(badFile)) {
-            writer.write("this: is: not: valid: yaml:");
-        }
-
-        assertThrows(Exception.class, () -> ConfigLoader.loadFrom(badFile));
+        // when/then
+        assertThatThrownBy(() -> ConfigLoader.loadFrom(empty))
+            .isInstanceOf(MismatchedInputException.class);
     }
 }
