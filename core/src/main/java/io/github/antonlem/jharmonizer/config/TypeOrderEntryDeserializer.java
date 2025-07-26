@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.*;
 import java.io.IOException;
 import java.util.*;
 
-public class TypeOrderEntryDeserializer extends JsonDeserializer<TypeOrderEntry> {
+class TypeOrderEntryDeserializer extends JsonDeserializer<TypeOrderEntry> {
 
     @Override
     public TypeOrderEntry deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {

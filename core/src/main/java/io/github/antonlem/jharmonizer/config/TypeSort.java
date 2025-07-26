@@ -8,7 +8,7 @@ public enum TypeSort {
     PRESERVE;
 
     @JsonCreator
-    public static TypeSort fromRaw(String raw) {
+    static TypeSort fromRaw(String raw) {
         return switch (raw.toLowerCase(Locale.ENGLISH)) {
             case "alpha" -> ALPHA;
             case "preserve" -> PRESERVE;

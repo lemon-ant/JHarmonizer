@@ -9,7 +9,7 @@ public enum TypeKind {
     ANNOTATION,
     RECORD;
 
-    public static TypeKind fromRaw(String raw) {
+    static TypeKind fromRaw(String raw) {
         return switch (raw.toLowerCase(Locale.ENGLISH)) {
             case "class" -> CLASS;
             case "interface" -> INTERFACE;
