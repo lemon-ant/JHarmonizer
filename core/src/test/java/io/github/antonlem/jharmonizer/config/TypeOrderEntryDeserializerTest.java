@@ -1,13 +1,12 @@
 package io.github.antonlem.jharmonizer.config;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class TypeOrderEntryDeserializerTest {
 
@@ -20,14 +19,11 @@ class TypeOrderEntryDeserializerTest {
 
         // when
         List<TypeOrderEntry> result = mapper.readValue(
-            yaml,
-            mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class)
-        );
+                yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class));
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getKinds())
-            .containsExactly(TypeKind.CLASS, TypeKind.INTERFACE, TypeKind.RECORD);
+        assertThat(result.getFirst().getKinds()).containsExactly(TypeKind.CLASS, TypeKind.INTERFACE, TypeKind.RECORD);
     }
 
     @Test
@@ -37,10 +33,8 @@ class TypeOrderEntryDeserializerTest {
 
         // when/then
         assertThatThrownBy(() -> mapper.readValue(
-            yaml,
-            mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class)
-        ))
-            .isInstanceOf(Exception.class)
-            .hasMessageContaining("UNICORN");
+                        yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class)))
+                .isInstanceOf(Exception.class)
+                .hasMessageContaining("UNICORN");
     }
 }

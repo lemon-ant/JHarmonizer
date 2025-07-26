@@ -1,15 +1,14 @@
 package io.github.antonlem.jharmonizer.config;
 
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.assertj.core.api.Assertions.*;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class ConfigLoaderTest {
 
@@ -26,9 +25,8 @@ class ConfigLoaderTest {
         assertThat(root.getJavaFile()).isNotNull();
         assertThat(root.getJavaFile().isMainTypeFirst()).isTrue();
         assertThat(root.getJavaFile().getTypeOrderEntries()).isNotEmpty();
-        root.getJavaFile().getTypeOrderEntries().forEach(entry ->
-            assertThat(entry.getKinds()).isNotEmpty()
-        );
+        root.getJavaFile().getTypeOrderEntries().forEach(entry -> assertThat(entry.getKinds())
+                .isNotEmpty());
     }
 
     @Test
@@ -40,8 +38,7 @@ class ConfigLoaderTest {
         }
 
         // when/then
-        assertThatThrownBy(() -> ConfigLoader.loadFrom(badFile))
-            .isInstanceOf(MismatchedInputException.class);
+        assertThatThrownBy(() -> ConfigLoader.loadFrom(badFile)).isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
@@ -51,7 +48,6 @@ class ConfigLoaderTest {
         assertThat(empty.createNewFile()).isTrue();
 
         // when/then
-        assertThatThrownBy(() -> ConfigLoader.loadFrom(empty))
-            .isInstanceOf(MismatchedInputException.class);
+        assertThatThrownBy(() -> ConfigLoader.loadFrom(empty)).isInstanceOf(MismatchedInputException.class);
     }
 }
