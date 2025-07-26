@@ -6,9 +6,9 @@ import lombok.Value;
 @Value
 public class ConfigRoot {
 
-    JavaFileEntry javaFile;
+    TopLevelTypesOrdering topLevelTypesOrdering;
 
-    ConfigRoot(@JsonProperty("java-file") JavaFileEntry javaFile) {
-        this.javaFile = javaFile;
+    ConfigRoot(@JsonProperty("top-level-types-ordering") TopLevelTypesOrdering topLevelTypesOrdering) {
+        this.topLevelTypesOrdering = topLevelTypesOrdering;
     }
 }

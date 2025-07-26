@@ -1,8 +1,8 @@
-java-file:
+top-level-types-ordering:
   main-type-first: true
-  type-order:
+  type-groups:
     - [class, record]
     - interface
     - enum
     - annotation
-  type-sort: alpha
+  intra-group-sorting: alpha

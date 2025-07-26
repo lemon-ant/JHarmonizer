@@ -19,17 +19,17 @@ class ConfigLoaderTest {
         File yaml = new File("src/main/resources/default-config.yml");
 
         // when
-        ConfigRoot root = ConfigLoader.loadFrom(yaml);
+        ConfigRoot configRoot = ConfigLoader.loadFrom(yaml);
 
         // then
-        assertThat(root).isNotNull();
-        JavaFileEntry javaFileEntry = root.getJavaFile();
-        assertThat(javaFileEntry).isNotNull();
-        assertThat(javaFileEntry.isMainTypeFirst()).isTrue();
-        assertThat(javaFileEntry.getTypeOrderEntries()).isNotEmpty();
-        javaFileEntry.getTypeOrderEntries().forEach(entry -> assertThat(entry.getKinds())
+        assertThat(configRoot).isNotNull();
+        TopLevelTypesOrdering topLevelTypesOrdering = configRoot.getTopLevelTypesOrdering();
+        assertThat(topLevelTypesOrdering).isNotNull();
+        assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
+        assertThat(topLevelTypesOrdering.getTypeGroups()).isNotEmpty();
+        topLevelTypesOrdering.getTypeGroups().forEach(entry -> assertThat(entry.getKinds())
                 .isNotEmpty());
-        assertThat(javaFileEntry.getTypeSort()).isEqualTo(ALPHA);
+        assertThat(topLevelTypesOrdering.getIntraGroupSorting()).isEqualTo(ALPHA);
     }
 
     @Test
@@ -37,7 +37,7 @@ class ConfigLoaderTest {
         // given
         File badFile = tempDir.resolve("bad.yml").toFile();
         try (FileWriter writer = new FileWriter(badFile)) {
-            writer.write("java-file:\n  main-type-first: true\n"); // type-order отсутствует
+            writer.write("top-level-types-ordering:\n  main-type-first: true\n"); // type-order отсутствует
         }
 
         // when/then
