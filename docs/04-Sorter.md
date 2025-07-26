@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the design and responsibilities of the member sorting component in the JReStructor tool.
+This document describes the design and responsibilities of the member sorting component in the JHarmonizer tool.
 The purpose of the sorter is to provide consistent, configurable ordering of all class members in a Java source file,
 to ensure readability, maintainability, and stability of diffs.
 
@@ -64,7 +64,7 @@ The sorter operates on:
 
 ## Testing Strategy for Fields Resorting
 
-Even before final parser selection, the sorting logic can be prototyped using in-memory mock models that simulate 
+Even before final parser selection, the sorting logic can be prototyped using in-memory mock models that simulate
 class members and their relationships. This allows testing of:
 
 - Sorting correctness

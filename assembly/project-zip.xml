@@ -1,0 +1,35 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/3.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/3.0.0 http://maven.apache.org/xsd/assembly-3.0.0.xsd">
+    <id>sources</id>
+    <formats>
+        <format>zip</format> <!-- Формат: ZIP -->
+    </formats>
+    <includeBaseDirectory>true</includeBaseDirectory> <!-- Включить корневую директорию проекта в ZIP -->
+    <fileSets>
+        <!-- Включаем исходный код (src/) -->
+        <fileSet>
+            <directory>${project.basedir}/src</directory>
+            <outputDirectory>/src</outputDirectory>
+            <includes>
+                <include>**/*</include> <!-- Всё внутри src/ -->
+            </includes>
+        </fileSet>
+        <!-- Включаем конфиги проекта (pom.xml, README и т.д.) -->
+        <fileSet>
+            <directory>${project.basedir}</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>pom.xml</include>
+                <include>README.md</include> <!-- Добавь другие файлы, если нужно, например *.properties -->
+            </includes>
+            <excludes>
+                <exclude>**/target/**</exclude> <!-- Исключаем target/ и скомпилированное -->
+                <exclude>.idea/**</exclude> <!-- Исключаем IDE-файлы -->
+                <exclude>.git/**</exclude> <!-- Исключаем Git -->
+                <exclude>**/*.class</exclude> <!-- Исключаем .class файлы, если они где-то завалялись -->
+                <exclude>**/build/**</exclude> <!-- Другие build-артефакты -->
+            </excludes>
+        </fileSet>
+    </fileSets>
+</assembly>

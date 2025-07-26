@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.antonlem.jharmonizer</groupId>
+        <artifactId>jharmonizer-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>jharmonizer-core</artifactId>
+    <name>JHarmonizer Core</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.palantir.javaformat</groupId>
+            <artifactId>palantir-java-format</artifactId>
+            <version>${palantir-java-format.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.19.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.19.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.java-diff-utils</groupId>
+            <artifactId>java-diff-utils</artifactId>
+            <version>4.15</version>
+        </dependency>
+        <dependency>
+            <groupId>fr.inria.gforge.spoon</groupId>
+            <artifactId>spoon-core</artifactId>
+            <version>11.2.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <argLine>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                        --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
+                        --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                        --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+                        --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argLine>
+                    </configuration>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
+                <!-- Актуальная версия на 2025 год; проверь на maven.apache.org если нужно обновить -->
+                <configuration>
+                    <descriptors>
+                        <descriptor>assembly/project-zip.xml</descriptor>
+                        <!-- Ссылка на дескриптор; создадим его ниже -->
+                    </descriptors>
+                    <outputDirectory>${project.basedir}</outputDirectory>
+                    <finalName>${project.artifactId}-${project.version}-sources</finalName>
+                    <!-- Имя ZIP: например, myproject-1.0-sources.zip -->
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <!-- Не добавлять суффикс к имени файла -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <!-- Привязка к фазе package: после компиляции и тестов, но перед установкой -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

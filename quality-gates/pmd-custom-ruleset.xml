@@ -1,0 +1,19 @@
+<ruleset name="JHarmonizer: Custom Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0">
+    <description>Everything except LawOfDemeter</description>
+
+    <rule ref="category/java/bestpractices.xml"/>
+    <!-- TODO It's too strict to use and should be reconsidered
+    <ruleset>category/java/codestyle.xml</ruleset>
+    -->
+    <rule ref="category/java/design.xml">
+        <exclude name="LawOfDemeter"/>
+    </rule>
+    <!-- TODO Activate it
+    ruleset>category/java/documentation.xml</ruleset>
+    -->
+    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/multithreading.xml"/>
+    <rule ref="category/java/performance.xml"/>
+    <rule ref="category/java/security.xml"/>
+</ruleset>

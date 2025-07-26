@@ -2,10 +2,10 @@ java-file:
  main-type-first: true
  type-order:
   - public-class
-  - class
   - interface
+  - [class, records]
   - enum
-  - record
+ sort: alpha
 
 selector-aliases:
  object-methods: '~^(toString\\(\\)|equals\\(\\)|hashCode\\(\\)|clone\\(\\)|finalize\\(\\))$'

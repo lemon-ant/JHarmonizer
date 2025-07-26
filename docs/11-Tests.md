@@ -2,7 +2,7 @@
 
 ## Overview
 
-Testing the core logic of JReStructor can be done in parallel with the development of other components. This includes
+Testing the core logic of JHarmonizer can be done in parallel with the development of other components. This includes
 both the sorter (restructuring logic) and the diff-reporter component.
 
 ## Test Coverage Goals

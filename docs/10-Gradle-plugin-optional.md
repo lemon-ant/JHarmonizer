@@ -8,8 +8,8 @@ of a **Gradle plugin** as an **optional contribution**, outside the primary scop
 
 ## Purpose
 
-The Gradle plugin would mirror the functionality provided by the Maven plugin. It would allow Java projects using 
-Gradle to integrate the JReStructor tool directly into their build pipeline, enabling:
+The Gradle plugin would mirror the functionality provided by the Maven plugin. It would allow Java projects using
+Gradle to integrate the JHarmonizer tool directly into their build pipeline, enabling:
 
 - Automatic restructuring (`restructure`) of Java source code during the build process.
 - Validation (`check`) of formatting consistency to prevent unformatted code from passing through CI/CD pipelines.

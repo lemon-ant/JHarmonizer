@@ -3,7 +3,7 @@
 ## Purpose
 
 The formatter wrapper integrates the [Palantir Java Formatter](https://github.com/palantir/palantir-java-format) into
-the `JReStructor` toolchain to ensure clean and consistent Java code output **after deserialization** of an AST structure.
+the `JHarmonizer` toolchain to ensure clean and consistent Java code output **after deserialization** of an AST structure.
 
 This step is **critical** because deserialized Java code may lose indentation, import order, and other formatting features. Formatter ensures:
 

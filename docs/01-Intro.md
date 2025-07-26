@@ -1,8 +1,8 @@
-# JReStructor: Java Class Restructuring Tool
+# JHarmonizer: Java Class Restructuring Tool
 
 ## Overview
 
-**JReStructor** is a modular tool for restructuring Java source code. Its main purpose is to automatically reorder and
+**JHarmonizer** is a modular tool for restructuring Java source code. Its main purpose is to automatically reorder and
 format members of Java classes (fields, constructors, methods, blocks, etc.) to ensure a consistent and readable
 structure based on configurable rules.
 
@@ -19,7 +19,7 @@ is important for code reviews, quality checks, or compliance with internal style
 
 ## Main Flow of the Tool
 
-The main flow of JReStructor can be summarized as:
+The main flow of JHarmonizer can be summarized as:
 
 1. **Configuration Resolution**: Load user-defined configuration (inline, file, or environment).
 2. **Parsing**: Convert Java source into AST using selected parser (e.g., JavaParser, Spoon).

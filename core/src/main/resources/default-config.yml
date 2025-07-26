@@ -1,0 +1,8 @@
+java-file:
+  main-type-first: true
+  type-order:
+    - public-class
+    - interface
+    - [class, records]
+    - enum
+  sort: alpha

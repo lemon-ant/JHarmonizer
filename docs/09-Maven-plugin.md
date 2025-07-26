@@ -1,9 +1,9 @@
-# Maven Plugin: `jrestructor-maven-plugin`
+# Maven Plugin: `jharmonizer-maven-plugin`
 
 ## Purpose
 
-This Maven plugin is designed to integrate the **JReStructor** utility into Java projects as a build phase tool. 
-It enables automated restructuring or structure validation of Java source files directly from Maven, with flexible 
+This Maven plugin is designed to integrate the **JHarmonizer** utility into Java projects as a build phase tool.
+It enables automated restructuring or structure validation of Java source files directly from Maven, with flexible
 configuration and execution modes.
 
 ## Features
@@ -17,8 +17,8 @@ configuration and execution modes.
 
 ## Plugin Goals
 
-- `jrestructor:check` — validates whether files are already properly structured.
-- `jrestructor:restructure` — restructures Java source files according to the defined sorting and formatting logic.
+- `jharmonizer:check` — validates whether files are already properly structured.
+- `jharmonizer:restructure` — restructures Java source files according to the defined sorting and formatting logic.
 
 ## Configuration Options
 
@@ -34,7 +34,7 @@ configuration and execution modes.
 
 ## Maven Phase
 
-By default, the plugin is configured to execute before `generate-sources`, ensuring that only manually written Java 
+By default, the plugin is configured to execute before `generate-sources`, ensuring that only manually written Java
 files are processed.
 
 ## Sample Usage
@@ -42,7 +42,7 @@ files are processed.
 ```xml
 <plugin>
   <groupId>com.example</groupId>
-  <artifactId>jrestructor-maven-plugin</artifactId>
+  <artifactId>jharmonizer-maven-plugin</artifactId>
   <version>0.1.0</version>
   <executions>
     <execution>
@@ -63,7 +63,7 @@ files are processed.
 
 ## Testing Strategy
 
-The plugin will use the **Maven Plugin Testing Framework** (e.g. `org.apache.maven.plugin.testing`) or alternatives 
+The plugin will use the **Maven Plugin Testing Framework** (e.g. `org.apache.maven.plugin.testing`) or alternatives
 such as **Invoker Plugin** for full integration testing.
 
 Tests will:

@@ -2,10 +2,10 @@
 
 ## Purpose
 
-In the context of the JReStructor project, we aim to evaluate and select a reliable and flexible Java parser 
-that transforms raw Java source code into an object-oriented model (AST - Abstract Syntax Tree). 
-This is a critical step for performing member reordering and clean reserialization back into Java source. 
-Post-sorting, raw code might lose its original formatting and readability. Thus, to preserve correctness and maintain 
+In the context of the JHarmonizer project, we aim to evaluate and select a reliable and flexible Java parser
+that transforms raw Java source code into an object-oriented model (AST - Abstract Syntax Tree).
+This is a critical step for performing member reordering and clean reserialization back into Java source.
+Post-sorting, raw code might lose its original formatting and readability. Thus, to preserve correctness and maintain
 format quality, we must rely on a robust parser + formatter pair.
 
 The AST parser must serve as the foundation for:
@@ -124,7 +124,7 @@ We must test:
 
 ## Additional Notes
 
-- We may wrap the parser of choice in a lightweight adapter component to abstract its API and expose a simplified JReStructor-specific interface.
+- We may wrap the parser of choice in a lightweight adapter component to abstract its API and expose a simplified JHarmonizer-specific interface.
 - This component will serve as the core input/output layer for sorting and transformation logic.
 
 ## Summary
