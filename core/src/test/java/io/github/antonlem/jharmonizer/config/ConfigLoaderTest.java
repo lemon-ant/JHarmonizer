@@ -1,5 +1,6 @@
 package io.github.antonlem.jharmonizer.config;
 
+import static io.github.antonlem.jharmonizer.config.TypeSort.ALPHA;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -22,11 +23,13 @@ class ConfigLoaderTest {
 
         // then
         assertThat(root).isNotNull();
-        assertThat(root.getJavaFile()).isNotNull();
-        assertThat(root.getJavaFile().isMainTypeFirst()).isTrue();
-        assertThat(root.getJavaFile().getTypeOrderEntries()).isNotEmpty();
-        root.getJavaFile().getTypeOrderEntries().forEach(entry -> assertThat(entry.getKinds())
+        JavaFileEntry javaFileEntry = root.getJavaFile();
+        assertThat(javaFileEntry).isNotNull();
+        assertThat(javaFileEntry.isMainTypeFirst()).isTrue();
+        assertThat(javaFileEntry.getTypeOrderEntries()).isNotEmpty();
+        javaFileEntry.getTypeOrderEntries().forEach(entry -> assertThat(entry.getKinds())
                 .isNotEmpty());
+        assertThat(javaFileEntry.getTypeSort()).isEqualTo(ALPHA);
     }
 
     @Test

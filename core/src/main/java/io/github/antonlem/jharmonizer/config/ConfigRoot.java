@@ -9,7 +9,6 @@ public class ConfigRoot {
     JavaFileEntry javaFile;
 
     ConfigRoot(@JsonProperty("java-file") JavaFileEntry javaFile) {
-
         this.javaFile = javaFile;
     }
 }

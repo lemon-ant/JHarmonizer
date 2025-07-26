@@ -5,4 +5,4 @@ java-file:
     - interface
     - enum
     - annotation
-  sort: alpha
+  type-sort: alpha

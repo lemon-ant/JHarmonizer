@@ -1,4 +1,4 @@
-image: maven-3.9.9-openjdk-1.21
+image: maven:3.9.9-eclipse-temurin-21
 
 cache:
   key: mvn-cache
