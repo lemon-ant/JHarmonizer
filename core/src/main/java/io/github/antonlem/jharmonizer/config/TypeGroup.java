@@ -12,11 +12,11 @@ import lombok.Value;
  */
 @Value
 @JsonDeserialize(using = TypeOrderEntryDeserializer.class)
-public class TypeOrderEntry {
+public class TypeGroup {
 
     List<TypeKind> kinds;
 
-    public TypeOrderEntry(@JsonProperty(value = "kinds", required = true) List<TypeKind> kinds) {
+    public TypeGroup(@JsonProperty(value = "kinds", required = true) List<TypeKind> kinds) {
         this.kinds = Collections.unmodifiableList(kinds);
     }
 }

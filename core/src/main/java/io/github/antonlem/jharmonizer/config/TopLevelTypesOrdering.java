@@ -9,13 +9,13 @@ import lombok.Value;
 public class TopLevelTypesOrdering {
 
     boolean mainTypeFirst;
-    List<TypeOrderEntry> typeGroups;
-    TypeSort intraGroupSorting;
+    List<TypeGroup> typeGroups;
+    IntraGroupSorting intraGroupSorting;
 
     TopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
-            @JsonProperty(value = "type-groups", required = true) List<TypeOrderEntry> typeGroups,
-            @JsonProperty(value = "intra-group-sorting", required = true) TypeSort intraGroupSorting) {
+            @JsonProperty(value = "type-groups", required = true) List<TypeGroup> typeGroups,
+            @JsonProperty(value = "intra-group-sorting", required = true) IntraGroupSorting intraGroupSorting) {
         this.mainTypeFirst = mainTypeFirst;
         this.typeGroups = Collections.unmodifiableList(typeGroups);
         this.intraGroupSorting = intraGroupSorting;

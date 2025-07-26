@@ -1,6 +1,6 @@
 package io.github.antonlem.jharmonizer.config;
 
-import static io.github.antonlem.jharmonizer.config.TypeSort.ALPHA;
+import static io.github.antonlem.jharmonizer.config.IntraGroupSorting.ALPHA;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -30,6 +30,8 @@ class ConfigLoaderTest {
         topLevelTypesOrdering.getTypeGroups().forEach(entry -> assertThat(entry.getKinds())
                 .isNotEmpty());
         assertThat(topLevelTypesOrdering.getIntraGroupSorting()).isEqualTo(ALPHA);
+        assertThat(configRoot.isFixImports()).isTrue();
+        assertThat(configRoot.getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
     }
 
     @Test

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class TypeOrderEntryDeserializerTest {
+class TypeGroupDeserializerTest {
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -18,8 +18,8 @@ class TypeOrderEntryDeserializerTest {
         String yaml = "- [class, INTERFACE, RECORD]";
 
         // when
-        List<TypeOrderEntry> result = mapper.readValue(
-                yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class));
+        List<TypeGroup> result =
+                mapper.readValue(yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeGroup.class));
 
         // then
         assertThat(result).hasSize(1);
@@ -33,7 +33,7 @@ class TypeOrderEntryDeserializerTest {
 
         // when/then
         assertThatThrownBy(() -> mapper.readValue(
-                        yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeOrderEntry.class)))
+                        yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeGroup.class)))
                 .isInstanceOf(Exception.class)
                 .hasMessageContaining("UNICORN");
     }

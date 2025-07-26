@@ -1,5 +1,6 @@
 package io.github.antonlem.jharmonizer.config;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Locale;
 
 public enum TypeKind {
@@ -9,14 +10,8 @@ public enum TypeKind {
     ANNOTATION,
     RECORD;
 
-    static TypeKind fromRaw(String raw) {
-        return switch (raw.toLowerCase(Locale.ENGLISH)) {
-            case "class" -> CLASS;
-            case "interface" -> INTERFACE;
-            case "enum" -> ENUM;
-            case "annotation" -> ANNOTATION;
-            case "record" -> RECORD;
-            default -> throw new IllegalArgumentException("Unsupported type: " + raw);
-        };
+    @JsonCreator
+    static TypeKind fromString(String value) {
+        return TypeKind.valueOf(value.toUpperCase(Locale.ENGLISH));
     }
 }

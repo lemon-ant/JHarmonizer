@@ -1,3 +1,6 @@
+fix-imports: true
+formatter-style: PALANTIR # NONE, GOOGLE, PALANTIR
+
 top-level-types-ordering:
   main-type-first: true
   type-groups:
