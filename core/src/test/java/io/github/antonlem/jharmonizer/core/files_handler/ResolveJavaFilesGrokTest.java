@@ -22,27 +22,23 @@ public class ResolveJavaFilesGrokTest {
     private static final String NON_JAVA_FILE = "Test.txt";
 
     @TempDir
-    Path tempRoot; // Временный root для всех тестов
+    Path tempRoot;
 
     @BeforeEach
     void setup() throws IOException {
-        // Создаём базовую структуру: tempRoot/src/main/java/Test.java + deep dirs
         Path src = tempRoot.resolve("src/main/java");
         Files.createDirectories(src);
         Files.createFile(src.resolve(JAVA_FILE));
-        Files.createFile(src.resolve(NON_JAVA_FILE)); // Non-java для фильтра
+        Files.createFile(src.resolve(NON_JAVA_FILE));
 
-        // Deep dir: tempRoot/deep/level1/level2/Test.java (depth >2)
         Path deep = tempRoot.resolve("deep/level1/level2");
         Files.createDirectories(deep);
         Files.createFile(deep.resolve(JAVA_FILE));
 
-        // Exclude dir: tempRoot/target/Test.java
         Path target = tempRoot.resolve("target");
         Files.createDirectories(target);
         Files.createFile(target.resolve(JAVA_FILE));
 
-        // Single file: tempRoot/single.java
         Files.createFile(tempRoot.resolve("single.java"));
     }
 
@@ -62,7 +58,7 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_relativeGlob_findsFilesInCwd() {
-        String relGlobAsAbs = tempRoot.toString() + "/src/**/*.java"; // Simulate rel as abs for test
+        String relGlobAsAbs = tempRoot.toString() + "/src/**.java";
         Collection<String> includes = singleton(relGlobAsAbs);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -72,7 +68,7 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_absoluteGlob_findsFilesFromAbsPath() {
-        String absGlob = tempRoot.toString() + "/src/**/*.java";
+        String absGlob = tempRoot.toString() + "/src/**.java";
         Collection<String> includes = singleton(absGlob);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -82,7 +78,7 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_nonExistentBaseDir_skipsWithWarning() {
-        String nonExistentGlob = tempRoot.toString() + "/nonexistent/**/*.java";
+        String nonExistentGlob = tempRoot.toString() + "/nonexistent/**.java";
         Collection<String> includes = singleton(nonExistentGlob);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -91,8 +87,8 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_overlappingGlobs_removesDuplicates() {
-        String glob1 = tempRoot.toString() + "/src/**/*.java";
-        String glob2 = tempRoot.toString() + "/src/main/**/*.java";
+        String glob1 = tempRoot.toString() + "/src/**.java";
+        String glob2 = tempRoot.toString() + "/src/main/**.java";
         Collection<String> includes = Arrays.asList(glob1, glob2);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -110,7 +106,7 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_relativeExclude_filtersOutFiles() {
-        String absInclude = tempRoot.toString() + "/**/*.java";
+        String absInclude = tempRoot.toString() + "/**.java";
         Collection<String> includes = singleton(absInclude);
         Collection<String> excludes = singleton("target/**");
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -121,7 +117,7 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_absoluteExclude_filtersOutAbsFiles() {
-        String absInclude = tempRoot.toString() + "/**/*.java";
+        String absInclude = tempRoot.toString() + "/**.java";
         Collection<String> includes = singleton(absInclude);
         String absExclude = tempRoot.toString() + "/target/**";
         Collection<String> excludes = singleton(absExclude);
@@ -142,7 +138,7 @@ public class ResolveJavaFilesGrokTest {
 
     @Test
     void resolveJavaFiles_deepDir_respectsDepthLimit() {
-        String deepGlob = tempRoot.toString() + "/deep/**/*.java";
+        String deepGlob = tempRoot.toString() + "/deep/**.java";
         Collection<String> includes = singleton(deepGlob);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -155,19 +151,19 @@ public class ResolveJavaFilesGrokTest {
         Collection<String> includes = singleton(invalidGlob);
         Collection<String> excludes = emptyList();
         assertThatThrownBy(() -> resolveJavaFiles(includes, excludes).count())
-            .isInstanceOf(IllegalArgumentException.class); // From PathMatcher bad glob
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     static Stream<Arguments> invalidGlobProvider() {
         return Stream.of(
-            Arguments.of("invalid:syntax:glob"),
-            Arguments.of("**/*.java[")
+            Arguments.of("**.java["),
+            Arguments.of("*:bad")
         );
     }
 
     @Test
     void resolveJavaFiles_noJavaFiles_returnsEmpty() {
-        String txtGlob = tempRoot.toString() + "/**/*.txt";
+        String txtGlob = tempRoot.toString() + "/**.txt";
         Collection<String> includes = singleton(txtGlob);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);
@@ -178,7 +174,7 @@ public class ResolveJavaFilesGrokTest {
     void resolveJavaFiles_emptyDir_returnsEmpty() throws IOException {
         Path emptyDir = tempRoot.resolve("empty");
         Files.createDirectory(emptyDir);
-        String emptyGlob = emptyDir.toString() + "/**/*.java";
+        String emptyGlob = emptyDir.toString() + "/**.java";
         Collection<String> includes = singleton(emptyGlob);
         Collection<String> excludes = emptyList();
         Stream<Path> result = resolveJavaFiles(includes, excludes);

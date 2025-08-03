@@ -52,6 +52,7 @@ public class SourceFilesHandler {
      */
 
 
+
         public static Stream<Path> resolveJavaFiles(Collection<String> includeGlobs, Collection<String> excludeGlobs) {
             FileSystem fs = FileSystems.getDefault();
             Path cwd = Path.of(".").toAbsolutePath().normalize();
@@ -59,11 +60,11 @@ public class SourceFilesHandler {
             // Подготовка exclude matchers (assume relative; for abs — treat as global)
             List<PathMatcher> globalExcludeMatchers = excludeGlobs.stream()
                 .filter(SourceFilesHandler::isAbsoluteGlob)
-                .map(glob -> fs.getPathMatcher("glob:" + glob))
+                .map(glob -> fs.getPathMatcher("glob:" + glob.replace('\\', '/'))) // Normalize slashes
                 .toList();
             List<PathMatcher> relativeExcludeMatchers = excludeGlobs.stream()
                 .filter(glob -> !isAbsoluteGlob(glob))
-                .map(glob -> fs.getPathMatcher("glob:" + glob))
+                .map(glob -> fs.getPathMatcher("glob:" + glob.replace('\\', '/'))) // Normalize
                 .toList();
 
             // Группировка include по baseDir
@@ -96,7 +97,7 @@ public class SourceFilesHandler {
                                        relativeExcludeMatchers.stream().noneMatch(m -> m.matches(relative)) &&
                                        globalExcludeMatchers.stream().noneMatch(m -> m.matches(path));
                             })
-                            .toList(); // Collect inside to avoid close
+                            .toList(); // Collect to avoid close
                         return paths.stream();
                     } catch (IOException e) {
                         System.err.println("Warning: Failed to walk baseDir '" + baseDir + "': " + e.getMessage());
@@ -108,7 +109,6 @@ public class SourceFilesHandler {
                 .distinct();
         }
 
-        // Helper methods as before
         private static boolean isAbsoluteGlob(String glob) {
             return glob.startsWith("/") || (glob.length() > 1 && Character.isLetter(glob.charAt(0)) && glob.charAt(1) == ':');
         }
@@ -141,11 +141,14 @@ public class SourceFilesHandler {
             if (isAbsoluteGlob(glob)) {
                 Path baseDir = extractBaseDirFromGlob(glob);
                 String baseStr = baseDir.toString().replace('\\', '/');
-                String relativeGlob = glob.substring(baseStr.length()).replaceFirst("^[/\\\\]+", "");
+                int offset = baseStr.length();
+                if (offset < glob.length() && (glob.charAt(offset) == '/' || glob.charAt(offset) == '\\')) offset++;
+                String relativeGlob = glob.substring(offset);
                 return fs.getPathMatcher("glob:" + relativeGlob);
             }
-            return fs.getPathMatcher("glob:" + glob);
-    }
+            return fs.getPathMatcher("glob:" + glob.replace('\\', '/'));
+        }
+
 
 
     public final void overwrite(@NonNull FileContent fileContent) throws IOException {
