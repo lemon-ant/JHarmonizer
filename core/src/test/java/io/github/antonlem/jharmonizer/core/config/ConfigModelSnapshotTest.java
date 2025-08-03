@@ -40,7 +40,7 @@ class ConfigModelSnapshotTest {
 
         String newSnapshot = mapper.writeValueAsString(config);
         Files.writeString(
-                Path.of("src/test/resources/test-cases/config/expected-config.json"),
+                Path.of("src/test/resources/test-cases/core/config/expected-config.json"),
                 newSnapshot,
                 StandardCharsets.UTF_8);
     }

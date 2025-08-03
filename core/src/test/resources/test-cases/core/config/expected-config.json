@@ -1,6 +1,13 @@
 {
+  "fixImports" : true,
+  "formatterStyle" : "PALANTIR",
+  "headerLine" : {
+    "character" : "-",
+    "leftPadding" : 3
+  },
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
     "typeGroups" : [ {
       "typeKinds" : [ "CLASS", "RECORD" ]
     }, {
@@ -9,14 +16,7 @@
       "typeKinds" : [ "ENUM" ]
     }, {
       "typeKinds" : [ "ANNOTATION" ]
-    } ],
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-  },
-  "fixImports" : true,
-  "formatterStyle" : "PALANTIR",
-  "headerLine" : {
-    "character" : "-",
-    "leftPadding" : 3
+    } ]
   },
   "typeMembersOrdering" : [ {
     "name" : "Test Classes",
