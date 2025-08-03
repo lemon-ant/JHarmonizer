@@ -1,16 +1,18 @@
 package io.github.antonlem.jharmonizer.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import java.util.Locale;
+import lombok.NonNull;
 
 public enum FormatterStyle {
     AOP,
     GOOGLE,
     NONE,
-    PALANTIR;
+    PALANTIR,
+    ;
 
+    @NonNull
     @JsonCreator
-    public static FormatterStyle fromString(String value) {
-        return FormatterStyle.valueOf(value.toUpperCase(Locale.ENGLISH));
+    static FormatterStyle fromString(@NonNull String value) {
+        return EnumDeserializerUtil.deserialize(FormatterStyle.class, value);
     }
 }
