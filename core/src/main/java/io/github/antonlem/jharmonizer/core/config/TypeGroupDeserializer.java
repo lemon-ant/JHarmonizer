@@ -1,10 +1,14 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 
 class TypeGroupDeserializer extends JsonDeserializer<TypeGroup> {
 
@@ -19,7 +23,9 @@ class TypeGroupDeserializer extends JsonDeserializer<TypeGroup> {
             result.add(EnumDeserializerUtil.deserialize(TypeKind.class, node.asText()));
         } else if (node.isArray()) {
             for (JsonNode child : node) {
-                if (!child.isTextual()) throw new IOException("Expected string in array");
+                if (!child.isTextual()) {
+                    throw new IOException("Expected string in array");
+                }
                 result.add(EnumDeserializerUtil.deserialize(TypeKind.class, child.asText()));
             }
         } else {

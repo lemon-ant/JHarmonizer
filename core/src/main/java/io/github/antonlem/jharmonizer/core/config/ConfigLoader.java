@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

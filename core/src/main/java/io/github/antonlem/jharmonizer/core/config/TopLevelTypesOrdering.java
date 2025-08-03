@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -15,10 +15,21 @@ public class TopLevelTypesOrdering {
     boolean mainTypeFirst;
 
     @NonNull
-    List<@NonNull TypeGroup> typeGroups;
+    List<SortKey> sortKeys;
 
     @NonNull
-    List<SortKey> sortKeys;
+    List<@NonNull TypeGroup> typeGroups;
+
+    private static void validateUniqueTypeKinds(List<TypeGroup> typeGroups) {
+        Set<TypeKind> allTypes = new HashSet<>();
+        for (TypeGroup group : typeGroups) {
+            for (TypeKind kind : group.getTypeKinds()) {
+                if (!allTypes.add(kind)) {
+                    throw new IllegalArgumentException("Duplicate TypeKind found: " + kind);
+                }
+            }
+        }
+    }
 
     TopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
@@ -31,17 +42,6 @@ public class TopLevelTypesOrdering {
         validateUniqueTypeKinds(typeGroups);
         this.typeGroups = Collections.unmodifiableList(typeGroups);
         this.sortKeys = Collections.unmodifiableList(sortKeys);
-    }
-
-    private static void validateUniqueTypeKinds(List<TypeGroup> typeGroups) {
-        Set<TypeKind> allTypes = new HashSet<>();
-        for (TypeGroup group : typeGroups) {
-            for (TypeKind kind : group.getTypeKinds()) {
-                if (!allTypes.add(kind)) {
-                    throw new IllegalArgumentException("Duplicate TypeKind found: " + kind);
-                }
-            }
-        }
     }
 
     @Override

@@ -1,6 +1,5 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -18,7 +17,7 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
 
     @Override
     public Set<Set<String>> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-            throws IOException, JacksonException {
+            throws IOException {
         JsonNode node = jsonParser.readValueAsTree();
         Set<Set<String>> result = new HashSet<>();
 

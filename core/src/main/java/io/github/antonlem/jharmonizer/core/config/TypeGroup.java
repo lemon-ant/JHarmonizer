@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -17,7 +17,7 @@ public class TypeGroup {
     @NonNull
     Set<@NonNull TypeKind> typeKinds;
 
-    public TypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull TypeKind> typeKinds) {
+    TypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull TypeKind> typeKinds) {
         this.typeKinds = Collections.unmodifiableSet(typeKinds);
     }
 

@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 public enum SortKey {
     ALPHA,
@@ -6,5 +6,4 @@ public enum SortKey {
     SIGNATURE,
     VISIBILITY_ASC,
     VISIBILITY_DESC,
-    ;
 }

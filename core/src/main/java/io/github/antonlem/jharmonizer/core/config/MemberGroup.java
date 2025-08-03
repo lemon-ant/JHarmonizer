@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import static java.util.Optional.ofNullable;
 
@@ -16,26 +16,26 @@ import lombok.Value;
 public class MemberGroup {
 
     @NonNull
-    String name;
-
-    @NonNull
-    Set<Set<String>> includes;
-
-    @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
     Set<Set<String>> excludes;
 
     @NonNull
-    List<SortKey> sortKeys;
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    List<@NonNull MemberGroup> groups;
 
     @NonNull
-    Separator separator;
+    Set<Set<String>> includes;
 
     boolean keepAccessorsTogether;
 
     @NonNull
-    @SuppressFBWarnings("EI_EXPOSE_REP")
-    List<@NonNull MemberGroup> groups;
+    String name;
+
+    @NonNull
+    Separator separator;
+
+    @NonNull
+    List<SortKey> sortKeys;
 
     MemberGroup(
             @NonNull @JsonProperty(value = "name", required = true) String name,

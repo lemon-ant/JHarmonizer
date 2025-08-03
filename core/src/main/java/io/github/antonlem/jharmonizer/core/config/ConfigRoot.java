@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
@@ -9,9 +9,6 @@ import lombok.Value;
 @Value
 public class ConfigRoot {
 
-    @NonNull
-    TopLevelTypesOrdering topLevelTypesOrdering;
-
     boolean fixImports;
 
     @NonNull
@@ -19,6 +16,9 @@ public class ConfigRoot {
 
     @NonNull
     HeaderLine headerLine;
+
+    @NonNull
+    TopLevelTypesOrdering topLevelTypesOrdering;
 
     @NonNull
     List<MemberGroup> typeMembersOrdering;

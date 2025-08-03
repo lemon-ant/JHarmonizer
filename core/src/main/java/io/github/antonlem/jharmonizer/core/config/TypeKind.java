@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 public enum TypeKind {
     CLASS,
@@ -6,5 +6,4 @@ public enum TypeKind {
     ENUM,
     ANNOTATION,
     RECORD,
-    ;
 }

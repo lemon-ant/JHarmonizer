@@ -1,4 +1,4 @@
-package io.github.antonlem.jharmonizer.config;
+package io.github.antonlem.jharmonizer.core.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,7 +26,7 @@ class ConfigModelSnapshotTest {
         String actualJson = mapper.writeValueAsString(config);
 
         // then
-        InputStream expectedJsonStream = getClass().getResourceAsStream("/test-cases/config/expected-config.json");
+        InputStream expectedJsonStream = getClass().getResourceAsStream("/test-cases/core/config/expected-config.json");
         String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
 
         assertThat(actualJson).isEqualToNormalizingNewlines(expectedJson);
