@@ -1,0 +1,350 @@
+{
+  "topLevelTypesOrdering" : {
+    "mainTypeFirst" : true,
+    "typeGroups" : [ {
+      "typeKinds" : [ "CLASS", "RECORD" ]
+    }, {
+      "typeKinds" : [ "INTERFACE" ]
+    }, {
+      "typeKinds" : [ "ENUM" ]
+    }, {
+      "typeKinds" : [ "ANNOTATION" ]
+    } ],
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+  },
+  "fixImports" : true,
+  "formatterStyle" : "PALANTIR",
+  "headerLine" : {
+    "character" : "-",
+    "leftPadding" : 3
+  },
+  "typeMembersOrdering" : [ {
+    "name" : "Test Classes",
+    "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@Test", "class" ] ],
+    "excludes" : [ ],
+    "separator" : "NONE",
+    "keepAccessorsTogether" : false,
+    "groups" : [ {
+      "name" : "JUnit Fields",
+      "includes" : [ [ "field" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ {
+        "name" : "JUnit Constants",
+        "includes" : [ [ "static" ], [ "final" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      }, {
+        "name" : "JUnit Static fields",
+        "includes" : [ [ "static" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      } ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+    }, {
+      "name" : "JUnit Methods",
+      "includes" : [ [ "method" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ {
+        "name" : "JUnit Setup Methods",
+        "includes" : [ [ "@BeforeAll" ], [ "@BeforeEach" ] ],
+        "excludes" : [ ],
+        "separator" : "HEADER",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "PRESERVE" ]
+      }, {
+        "name" : "JUnit Test Methods",
+        "includes" : [ [ "@Test" ] ],
+        "excludes" : [ ],
+        "separator" : "HEADER",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "ALPHA" ]
+      }, {
+        "name" : "JUnit Teardown Methods",
+        "includes" : [ [ "@AfterEach" ], [ "@AfterAll" ] ],
+        "excludes" : [ ],
+        "separator" : "HEADER",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "PRESERVE" ]
+      }, {
+        "name" : "Utility Methods",
+        "includes" : [ [ "static" ] ],
+        "excludes" : [ ],
+        "separator" : "HEADER",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "ALPHA", "SIGNATURE" ]
+      } ],
+      "sortKeys" : [ "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "JUnit Test Configuration",
+      "includes" : [ [ "@TestConfiguration", "class", "static" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "ALPHA" ]
+    } ],
+    "sortKeys" : [ "ALPHA", "SIGNATURE" ]
+  }, {
+    "name" : "DTO and Entities",
+    "includes" : [ [ "~.*(Dto|DTO)$" ], [ "@Entity" ], [ "@Embeddable" ], [ "@Document" ], [ "@Data" ], [ "~.*Entity$" ], [ "@Value" ], [ "@MappedSuperclass" ], [ "@ConfigurationProperties" ] ],
+    "excludes" : [ ],
+    "separator" : "NONE",
+    "keepAccessorsTogether" : false,
+    "groups" : [ {
+      "name" : "Fields",
+      "includes" : [ [ "field" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ {
+        "name" : "Constants",
+        "includes" : [ [ "static" ], [ "final" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ {
+          "name" : "Public Constants",
+          "includes" : [ [ "public" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Protected Constants",
+          "includes" : [ [ "protected" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Package-Private Constants",
+          "includes" : [ [ "package-private" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Private Constants",
+          "includes" : [ [ "private" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      }, {
+        "name" : "Static Fields",
+        "includes" : [ [ "static" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      }, {
+        "name" : "Final Instance Fields",
+        "includes" : [ [ "final" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      } ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+    }, {
+      "name" : "Static Initializer Blocks",
+      "includes" : [ [ "static" ], [ "initializer" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Static Methods",
+      "includes" : [ [ "static" ], [ "method" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Instant Initializer Blocks",
+      "includes" : [ [ "instant" ], [ "initializer" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Constructors",
+      "includes" : [ [ "constructor" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Accessor Methods",
+      "includes" : [ [ "method" ], [ "~^(get|set|is|has).+$" ], [ "instant" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : true,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Instant Methods",
+      "includes" : [ [ "method" ], [ "instant" ] ],
+      "excludes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Basic Object Methods",
+      "includes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    } ],
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+  }, {
+    "name" : "Default Rule",
+    "includes" : [ [ "*" ] ],
+    "excludes" : [ ],
+    "separator" : "NONE",
+    "keepAccessorsTogether" : false,
+    "groups" : [ {
+      "name" : "Fields",
+      "includes" : [ [ "field" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ {
+        "name" : "Constants",
+        "includes" : [ [ "static" ], [ "final" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ {
+          "name" : "Public Constants",
+          "includes" : [ [ "public" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Protected Constants",
+          "includes" : [ [ "protected" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Package-Private Constants",
+          "includes" : [ [ "package-private" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Private Constants",
+          "includes" : [ [ "private" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : false,
+          "groups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      }, {
+        "name" : "Static Fields",
+        "includes" : [ [ "static" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      }, {
+        "name" : "Final Instance Fields",
+        "includes" : [ [ "final" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : false,
+        "groups" : [ ],
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      } ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+    }, {
+      "name" : "Static Initializer Blocks",
+      "includes" : [ [ "static" ], [ "initializer" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Static Methods",
+      "includes" : [ [ "static" ], [ "method" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Instant Initializer Blocks",
+      "includes" : [ [ "instant" ], [ "initializer" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Constructors",
+      "includes" : [ [ "constructor" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Instant Methods",
+      "includes" : [ [ "method" ], [ "instant" ] ],
+      "excludes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    }, {
+      "name" : "Basic Object Methods",
+      "includes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    } ],
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+  } ]
+}

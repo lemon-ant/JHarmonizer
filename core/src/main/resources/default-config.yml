@@ -1,11 +1,246 @@
 fix-imports: true
-formatter-style: PALANTIR # NONE, GOOGLE, PALANTIR
+formatter-style: PALANTIR # NONE, AOP, GOOGLE, PALANTIR
+header-line:
+  character: '-'
+  left-padding: 3
 
 top-level-types-ordering:
   main-type-first: true
   type-groups:
-    - [class, record]
+    - [ class, record ]
     - interface
     - enum
     - annotation
-  intra-group-sorting: alpha
+  sort-keys: [ visibility-desc, alpha ]
+
+type-members-ordering:
+  - name: Test Classes
+    includes:
+      - [ class, '@Test' ]
+      - [ class, '@ExtendWith' ]
+      - [ class, ~.*Test$ ]
+    sort-keys: alpha, signature
+    groups:
+      - name: JUnit Fields
+        separator: new-line
+        sort-keys: [ visibility-desc, alpha ]
+        includes: field
+        groups:
+          - name: JUnit Constants
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: [ static, final ]
+          - name: JUnit Static fields
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: static
+
+      - name: JUnit Methods
+        separator: new-line
+        sort-keys: alpha, signature
+        includes: method
+        groups:
+          - name: JUnit Setup Methods
+            separator: header
+            sort-keys: preserve
+            includes:
+              - '@BeforeEach'
+              - '@BeforeAll'
+
+          - name: JUnit Test Methods
+            separator: header
+            sort-keys: alpha
+            includes: '@Test'
+
+          - name: JUnit Teardown Methods
+            separator: header
+            sort-keys: preserve
+            includes:
+              - '@AfterEach'
+              - '@AfterAll'
+
+          - name: Utility Methods
+            separator: header
+            includes: static
+            sort-keys: alpha, signature
+
+      - name: JUnit Test Configuration
+        separator: new-line
+        sort-keys: alpha
+        includes:
+          - [ static, class, '@TestConfiguration' ]
+
+
+  - name: DTO and Entities
+    includes:
+      - ~.*(Dto|DTO)$
+      - ~.*Entity$
+      - '@Value'
+      - '@Data'
+      - '@Entity'
+      - '@MappedSuperclass'
+      - '@Embeddable'
+      - '@ConfigurationProperties'
+      - '@Document'
+    sort-keys: [ visibility-desc, alpha, signature ]
+    groups:
+      - name: Fields
+        separator: new-line
+        sort-keys: [ visibility-desc, alpha ]
+        includes: field
+        groups:
+          - name: Constants
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: [ static, final ]
+            groups:
+              - name: Public Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: public
+              - name: Protected Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: protected
+              - name: Package-Private Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: package-private
+              - name: Private Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: private
+
+          - name: Static Fields
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: static
+
+          - name: Final Instance Fields
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: final
+
+      - name: Static Initializer Blocks
+        separator: none
+        sort-keys: preserve
+        includes: [ static, initializer ]
+
+      - name: Static Methods
+        separator: none
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: [ static, method ]
+
+      - name: Instant Initializer Blocks
+        separator: none
+        sort-keys: preserve
+        includes: [ instant, initializer ]
+
+      - name: Constructors
+        separator: none
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: constructor
+
+      - name: Accessor Methods
+        separator: none
+        keepAccessorsTogether: true
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: [ instant, method, ~^(get|set|is|has).+$ ]
+
+      - name: Instant Methods
+        separator: none
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: [ instant, method ]
+        excludes:
+          - [ instant, method, =toString ]
+          - [ instant, method, =equals ]
+          - [ instant, method, =hashCode ]
+          - [ instant, method, =clone ]
+
+      - name: Basic Object Methods
+        sort-keys: preserve
+        includes:
+          - [ instant, method, =toString ]
+          - [ instant, method, =equals ]
+          - [ instant, method, =hashCode ]
+          - [ instant, method, =clone ]
+
+  - name: Default Rule
+    includes: '*'
+    sort-keys: [ visibility-desc, alpha, signature ] # For subtypes
+    groups:
+      - name: Fields
+        separator: new-line
+        sort-keys: [ visibility-desc, alpha ]
+        includes: field
+        groups:
+          - name: Constants
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: [ static, final ]
+            groups:
+              - name: Public Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: public
+              - name: Protected Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: protected
+              - name: Package-Private Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: package-private
+              - name: Private Constants
+                separator: new-line
+                sort-keys: alpha
+                includes: private
+
+          - name: Static Fields
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: static
+
+          - name: Final Instance Fields
+            separator: new-line
+            sort-keys: [ visibility-desc, alpha ]
+            includes: final
+
+      - name: Static Initializer Blocks
+        separator: none
+        sort-keys: preserve
+        includes: [ static, initializer ]
+
+      - name: Static Methods
+        separator: none
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: [ static, method ]
+
+      - name: Instant Initializer Blocks
+        separator: none
+        sort-keys: preserve
+        includes: [ instant, initializer ]
+
+      - name: Constructors
+        separator: none
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: constructor
+
+      - name: Instant Methods
+        separator: none
+        sort-keys: [ visibility-desc, alpha, signature ]
+        includes: [ instant, method ]
+        excludes:
+          - [ instant, method, =toString ]
+          - [ instant, method, =equals ]
+          - [ instant, method, =hashCode ]
+          - [ instant, method, =clone ]
+
+      - name: Basic Object Methods
+        separator: none
+        sort-keys: preserve
+        includes:
+          - [ instant, method, =toString ]
+          - [ instant, method, =equals ]
+          - [ instant, method, =hashCode ]
+          - [ instant, method, =clone ]

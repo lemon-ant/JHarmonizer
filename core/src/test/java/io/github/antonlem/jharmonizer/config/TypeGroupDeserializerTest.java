@@ -23,7 +23,8 @@ class TypeGroupDeserializerTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getKinds()).containsExactly(TypeKind.CLASS, TypeKind.INTERFACE, TypeKind.RECORD);
+        assertThat(result.getFirst().getTypeKinds())
+                .containsExactly(TypeKind.CLASS, TypeKind.INTERFACE, TypeKind.RECORD);
     }
 
     @Test

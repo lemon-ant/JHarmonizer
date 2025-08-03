@@ -3,7 +3,8 @@ package io.github.antonlem.jharmonizer.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
+import lombok.NonNull;
 import lombok.Value;
 
 /**
@@ -11,12 +12,22 @@ import lombok.Value;
  * Supports both: "- enum" and "- [class, record]"
  */
 @Value
-@JsonDeserialize(using = TypeOrderEntryDeserializer.class)
+@JsonDeserialize(using = TypeGroupDeserializer.class)
 public class TypeGroup {
+    @NonNull
+    Set<@NonNull TypeKind> typeKinds;
 
-    List<TypeKind> kinds;
+    public TypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull TypeKind> typeKinds) {
+        this.typeKinds = Collections.unmodifiableSet(typeKinds);
+    }
 
-    public TypeGroup(@JsonProperty(value = "kinds", required = true) List<TypeKind> kinds) {
-        this.kinds = Collections.unmodifiableList(kinds);
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof TypeGroup other) && typeKinds.equals(other.typeKinds);
+    }
+
+    @Override
+    public int hashCode() {
+        return typeKinds.hashCode();
     }
 }
