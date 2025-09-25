@@ -34,6 +34,7 @@ public class SourceFilesHandler {
     public static Stream<Path> findJavaFiles(
             Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
+                .baseDir(baseDir)
                 .includeGlobs(includeGlobs)
                 .excludeGlobs(excludeGlobs)
                 .allowedExtensions(Set.of("java"))
