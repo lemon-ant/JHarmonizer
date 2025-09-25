@@ -8,18 +8,18 @@ header-line:
 top-level-types-ordering:
   main-type-first: true
   type-groups:
-    - [class]
-    - [interface, record]
+    - [ class ]
+    - [ interface, record ]
     - enum
     - annotation
     - record
-  sort-keys: [alpha]
+  sort-keys: [ alpha ]
 
 type-members-ordering:
   - name: BadGroup
     includes:
-      - [method]
-      - [method]  # дубликат
-    sort-keys: [alpha]
+      - [ method ]
+      - [ method ]  # дубликат
+    sort-keys: [ alpha ]
     separator: none
-    groups: []
+    groups: [ ]

@@ -8,16 +8,16 @@ header-line:
 top-level-types-ordering:
   main-type-first: true
   type-groups:
-    - [class]
-    - [interface]
-    - [enum]
-    - [annotation]
-  sort-keys: [alpha]
+    - [ class ]
+    - [ interface ]
+    - [ enum ]
+    - [ annotation ]
+  sort-keys: [ alpha ]
 
 type-members-ordering:
   - name: Basic
     includes:
-      - [method]
-    sort-keys: [alpha]
+      - [ method ]
+    sort-keys: [ alpha ]
     separator: none
-    groups: []
+    groups: [ ]
