@@ -1,0 +1,134 @@
+package io.github.lemon_ant.jharmonizer.core.parser.spoon;
+
+import static io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonSourcePrinterUtils.findIndentationStart;
+import static io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
+import static io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
+
+import java.lang.annotation.Annotation;
+import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+import spoon.compiler.Environment;
+import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtAnnotationType;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtEnum;
+import spoon.reflect.declaration.CtInterface;
+import spoon.reflect.declaration.CtRecord;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.TokenWriter;
+
+class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
+    private final String originalSourceCode;
+
+    SpoonCustomSourcePrinter(Environment env, String originalSourceCode) {
+        super(env);
+        this.originalSourceCode = originalSourceCode;
+    }
+
+    @Override
+    public <A extends Annotation> void visitCtAnnotationType(CtAnnotationType<A> annotationType) {
+        printTypeStructure(annotationType);
+    }
+
+    @Override
+    public <T> void visitCtClass(CtClass<T> ctClass) {
+        printTypeStructure(ctClass);
+    }
+
+    @Override
+    public <T extends Enum<?>> void visitCtEnum(CtEnum<T> ctEnum) {
+        printTypeStructure(ctEnum);
+    }
+
+    @Override
+    public <T> void visitCtInterface(CtInterface<T> intrface) {
+        printTypeStructure(intrface);
+    }
+
+    @Override
+    public void visitCtRecord(CtRecord recordType) {
+        printTypeStructure(recordType);
+    }
+
+    private TokenWriter printOriginalFragment(SourcePosition pos) {
+        return printOriginalFragment(pos.getSourceStart(), pos.getSourceEnd());
+    }
+
+    private TokenWriter printOriginalFragment(int start, int end) {
+        int startWithIndent = findIndentationStart(start, originalSourceCode);
+        if (startWithIndent < end && end <= originalSourceCode.length()) {
+            String originalCodeFragment =
+                    StringUtils.stripEnd(originalSourceCode.substring(startWithIndent, end + 1), null);
+            return getPrinterTokenWriter()
+                    .writeCodeSnippet(originalCodeFragment)
+                    .writeln();
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
+    private void printTypeStructure(CtType<?> type) {
+        SourcePosition typePosition = type.getPosition();
+
+        List<CtTypeMember> explicitTypeMembers = type.getTypeMembers().stream()
+                // Spoon creates implicit constructors which don't exist in the source code
+                .filter(typeMember -> !typeMember.isImplicit())
+                .toList();
+
+        if (explicitTypeMembers.isEmpty()) {
+            // If no nested elements, then print the original source fragment entirely
+            printOriginalFragment(typePosition).writeln();
+            return;
+        }
+
+        // Find the minimal nested element start position
+        int minMemberStart = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .min()
+                .orElseThrow(IllegalStateException::new);
+
+        // Print the type header until the start of the topmost element
+        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
+
+        // Print elements in the actual possibly resorted order
+        boolean first = true;
+        boolean previousElementNeedSeparatorAfter = false;
+        for (CtTypeMember member : explicitTypeMembers) {
+
+            // TODO Orphaned comments
+
+            boolean needsSeparatorBefore = needsSeparatorBefore(member, first);
+            if (needsSeparatorBefore || previousElementNeedSeparatorAfter) {
+                getPrinterTokenWriter().writeln();
+            }
+            previousElementNeedSeparatorAfter = needsSeparatorAfter(member);
+            first = false;
+
+            if (member instanceof CtType<?> typeMember) {
+                // Nested type declaration
+                printTypeStructure(typeMember);
+                continue;
+            }
+
+            // Copy class member code from the original code without changes
+            int nextElementStart = explicitTypeMembers.stream()
+                    .mapToInt(nextMember -> nextMember.getPosition().getSourceStart())
+                    .filter(start -> start > member.getPosition().getSourceEnd())
+                    .min()
+                    .orElse(member.getPosition().getSourceEnd() + 1);
+            printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
+        }
+
+        // Print the type footer from the end of the bottommost nested element until end of the type fragment
+        int maxMemberEnd = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                .max()
+                .orElseThrow(IllegalStateException::new);
+
+        // TODO Check trailing comments
+        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd()).writeln();
+        // TODO Check trailing idents
+    }
+}
