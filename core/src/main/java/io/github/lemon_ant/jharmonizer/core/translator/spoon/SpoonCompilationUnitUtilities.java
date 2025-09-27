@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.parser.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import com.google.common.collect.Streams;
 import java.util.List;
@@ -14,6 +14,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 @UtilityClass
 public class SpoonCompilationUnitUtilities {
     private static final int ONE_ROOT_TYPE = 1;
+    private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
     public static List<CtType<?>> getRootTypes(CtCompilationUnit compilationUnit) {
         return compilationUnit.getDeclaredTypes();
@@ -21,7 +22,7 @@ public class SpoonCompilationUnitUtilities {
 
     public static List<CtTypeMember> getAllTypeMembers(CtCompilationUnit compilationUnit) {
         return getAllTypes(compilationUnit).stream()
-                .flatMap(type -> type.getElements(new TypeFilter<>(CtTypeMember.class)).stream())
+                .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
                 .toList();
     }
 

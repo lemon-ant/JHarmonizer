@@ -1,16 +1,16 @@
-package io.github.lemon_ant.jharmonizer.core.parser;
+package io.github.lemon_ant.jharmonizer.core.translator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonASTModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonASTModel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class SourceAstConverterTest {
+class SourceAstTranslatorTest {
 
     @TempDir
     Path tempDir;
@@ -20,7 +20,7 @@ class SourceAstConverterTest {
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
 
         FileContent fileContent = new FileContent(file, Files.readString(file));
-        SourceAstConverter converter = new SourceAstConverter();
+        SourceAstTranslator converter = new SourceAstTranslator();
 
         ParsingResult result = converter.parseSourceFile(fileContent);
 
@@ -38,9 +38,9 @@ class SourceAstConverterTest {
         String source = "class Demo { void m() {} }";
         FileContent fileContent = new FileContent(Path.of("Demo.java"), source);
         SpoonASTModel model =
-                new SourceAstConverter().parseSourceFile(fileContent).getSpoonAstModel();
+                new SourceAstTranslator().parseSourceFile(fileContent).getSpoonAstModel();
 
-        SourceAstConverter converter = new SourceAstConverter();
+        SourceAstTranslator converter = new SourceAstTranslator();
 
         // when
         SerializationResult result = converter.serialize(model);

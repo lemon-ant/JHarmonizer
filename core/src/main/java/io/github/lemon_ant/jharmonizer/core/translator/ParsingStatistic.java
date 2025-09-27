@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.parser;
+package io.github.lemon_ant.jharmonizer.core.translator;
 
 import lombok.Value;
 

@@ -1,12 +1,12 @@
-package io.github.lemon_ant.jharmonizer.core.parser;
+package io.github.lemon_ant.jharmonizer.core.translator;
 
-import static io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonCompilationUnitUtilities.getAllTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonCompilationUnitUtilities.getAllTypes;
-import static io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonCompilationUnitUtilities.getRootTypes;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getAllTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getAllTypes;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonASTModel;
-import io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonASTModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
@@ -18,7 +18,7 @@ import spoon.reflect.declaration.CtTypeMember;
 
 @RequiredArgsConstructor
 @Slf4j
-public final class SourceAstConverter {
+public final class SourceAstTranslator {
 
     private static ParsingStatistic createParsingStatistic(
             String originalSourceCode, TimedResult<SpoonASTModel> parsingTimedResult) {

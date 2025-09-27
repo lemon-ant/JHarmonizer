@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.parser.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;

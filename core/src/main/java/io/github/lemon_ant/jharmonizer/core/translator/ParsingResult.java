@@ -1,6 +1,6 @@
-package io.github.lemon_ant.jharmonizer.core.parser;
+package io.github.lemon_ant.jharmonizer.core.translator;
 
-import io.github.lemon_ant.jharmonizer.core.parser.spoon.SpoonASTModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonASTModel;
 import java.util.Objects;
 import lombok.NonNull;
 import lombok.Value;

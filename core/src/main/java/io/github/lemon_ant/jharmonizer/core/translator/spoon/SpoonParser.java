@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.parser.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,8 +26,8 @@ public class SpoonParser {
     public static SpoonASTModel parseJavaSourceResource(Path originalSourceFile, String originalSourceCode) {
         VirtualFile virtualFile = new VirtualFile(originalSourceCode, originalSourceFile.toString());
 
-        Launcher originalLauncher = createPreconfiguredParserLauncher();
-        originalLauncher.addInputResource(virtualFile);
+        /* Launcher originalLauncher = createPreconfiguredParserLauncher();
+        originalLauncher.addInputResource(virtualFile);*/
 
         Launcher workingLauncher = createPreconfiguredParserLauncher();
         workingLauncher.addInputResource(virtualFile);
