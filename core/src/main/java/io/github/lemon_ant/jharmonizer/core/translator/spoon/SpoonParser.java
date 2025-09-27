@@ -17,13 +17,13 @@ public class SpoonParser {
 
     private static final int JAVA_VERSION = 21;
 
-    public static SpoonASTModel parseJavaSourceResource(Path javaSourcePath) throws IOException {
+    public static SpoonAstModel parseJavaSourceResource(Path javaSourcePath) throws IOException {
         Path normalizedSourcePath = javaSourcePath.normalize().toAbsolutePath();
         String originalSourceCode = Files.readString(normalizedSourcePath);
         return parseJavaSourceResource(normalizedSourcePath, originalSourceCode);
     }
 
-    public static SpoonASTModel parseJavaSourceResource(Path originalSourceFile, String originalSourceCode) {
+    public static SpoonAstModel parseJavaSourceResource(Path originalSourceFile, String originalSourceCode) {
         VirtualFile virtualFile = new VirtualFile(originalSourceCode, originalSourceFile.toString());
 
         /* Launcher originalLauncher = createPreconfiguredParserLauncher();
@@ -36,17 +36,17 @@ public class SpoonParser {
                 .setPrettyPrinterCreator(
                         () -> new SpoonCustomSourcePrinter(workingLauncher.getEnvironment(), originalSourceCode));
 
-        return buildSpoonASTModel(/*originalLauncher,*/ workingLauncher);
+        return buildSpoonAstModel(/*originalLauncher,*/ workingLauncher);
     }
 
-    private static SpoonASTModel buildSpoonASTModel(
+    private static SpoonAstModel buildSpoonAstModel(
             /* @NonNull Launcher originalLauncher, */ @NonNull Launcher workingLauncher) {
         // var originalCompilationUnit = extractCompilationUnit(originalLauncher);
         var workingCompilationUnit = extractCompilationUnit(workingLauncher);
         var mainType = SpoonCompilationUnitUtilities.findMainType(workingCompilationUnit);
         Supplier<String> serializedSourceCode =
                 () -> workingLauncher.createPrettyPrinter().printCompilationUnit(workingCompilationUnit);
-        return SpoonASTModel.builder()
+        return SpoonAstModel.builder()
                 // .originalCompilationUnit(originalCompilationUnit)
                 .workingCompilationUnit(workingCompilationUnit)
                 .mainType(mainType)

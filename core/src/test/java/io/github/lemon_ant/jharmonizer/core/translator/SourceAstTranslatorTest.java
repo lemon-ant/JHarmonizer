@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonASTModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,7 +37,7 @@ class SourceAstTranslatorTest {
         // given: simple source code
         String source = "class Demo { void m() {} }";
         FileContent fileContent = new FileContent(Path.of("Demo.java"), source);
-        SpoonASTModel model =
+        SpoonAstModel model =
                 new SourceAstTranslator().parseSourceFile(fileContent).getSpoonAstModel();
 
         SourceAstTranslator converter = new SourceAstTranslator();

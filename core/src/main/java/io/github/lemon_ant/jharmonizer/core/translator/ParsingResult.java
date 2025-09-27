@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonASTModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.Objects;
 import lombok.NonNull;
 import lombok.Value;
@@ -8,7 +8,7 @@ import lombok.Value;
 @Value
 public class ParsingResult {
     @NonNull
-    SpoonASTModel spoonAstModel;
+    SpoonAstModel spoonAstModel;
 
     @NonNull
     ParsingStatistic parsingStatistic;

@@ -5,7 +5,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompila
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonASTModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
@@ -21,8 +21,8 @@ import spoon.reflect.declaration.CtTypeMember;
 public final class SourceAstTranslator {
 
     private static ParsingStatistic createParsingStatistic(
-            String originalSourceCode, TimedResult<SpoonASTModel> parsingTimedResult) {
-        SpoonASTModel spoonASTModel = parsingTimedResult.getResult();
+            String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
+        SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         CtCompilationUnit originalCompilationUnit = spoonASTModel.getWorkingCompilationUnit();
 
         //  TODO It doesn't work  String originalSourceCode = originalCompilationUnit.getOriginalSourceCode();
@@ -41,15 +41,15 @@ public final class SourceAstTranslator {
     public ParsingResult parseSourceFile(FileContent sourceFileContent) {
         if (log.isInfoEnabled()) log.info("[Parser] Parsing {}!", sourceFileContent.getPath());
 
-        TimedResult<SpoonASTModel> parsingTimedResult = StopWatch.measure(
+        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
                 () -> SpoonParser.parseJavaSourceResource(sourceFileContent.getPath(), sourceFileContent.getContent()));
 
-        SpoonASTModel spoonASTModel = parsingTimedResult.getResult();
+        SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         var statistic = createParsingStatistic(sourceFileContent.getContent(), parsingTimedResult);
         return new ParsingResult(spoonASTModel, statistic);
     }
 
-    public SerializationResult serialize(SpoonASTModel sortedSpoonAstModel) {
+    public SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
         if (log.isInfoEnabled()) log.info("[Parser] Serializing!");
 
         TimedResult<String> serializationTimedResult = StopWatch.measure(

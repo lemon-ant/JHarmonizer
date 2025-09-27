@@ -18,7 +18,7 @@ import spoon.reflect.declaration.CtType;
 @Builder(access = PACKAGE)
 @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 @AllArgsConstructor(access = PRIVATE)
-public class SpoonASTModel {
+public class SpoonAstModel {
 
     @Nullable
     CtType<?> mainType;
