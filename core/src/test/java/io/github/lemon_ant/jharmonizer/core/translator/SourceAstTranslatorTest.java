@@ -2,11 +2,13 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,14 +17,20 @@ class SourceAstTranslatorTest {
     @TempDir
     Path tempDir;
 
+    SourceFilesHandler sourceFilesHandler;
+
+    @BeforeEach
+    void setUp() {
+        sourceFilesHandler = new SourceFilesHandler(false);
+    }
+
     @Test
     void parseSourceFile_validJavaSource_returnParsingResult() throws IOException {
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
 
-        FileContent fileContent = new FileContent(file, Files.readString(file));
-        SourceAstTranslator converter = new SourceAstTranslator();
+        FileContent fileContent = sourceFilesHandler.readFile(file);
 
-        ParsingResult result = converter.parseSourceFile(fileContent);
+        ParsingResult result = SourceAstTranslator.parseSourceFile(fileContent);
 
         assertThat(result).isNotNull();
         assertThat(result.getSpoonAstModel()).isNotNull();
@@ -37,13 +45,10 @@ class SourceAstTranslatorTest {
         // given: simple source code
         String source = "class Demo { void m() {} }";
         FileContent fileContent = new FileContent(Path.of("Demo.java"), source);
-        SpoonAstModel model =
-                new SourceAstTranslator().parseSourceFile(fileContent).getSpoonAstModel();
-
-        SourceAstTranslator converter = new SourceAstTranslator();
+        SpoonAstModel model = SourceAstTranslator.parseSourceFile(fileContent).getSpoonAstModel();
 
         // when
-        SerializationResult result = converter.serialize(model);
+        SerializationResult result = SourceAstTranslator.serialize(model);
 
         // then
         assertThat(result).isNotNull();

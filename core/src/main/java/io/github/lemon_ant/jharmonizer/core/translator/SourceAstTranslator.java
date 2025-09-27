@@ -10,14 +10,14 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-@RequiredArgsConstructor
 @Slf4j
+@UtilityClass
 public final class SourceAstTranslator {
 
     private static ParsingStatistic createParsingStatistic(
@@ -38,8 +38,8 @@ public final class SourceAstTranslator {
                 parsingTimedResult.getNanos());
     }
 
-    public ParsingResult parseSourceFile(FileContent sourceFileContent) {
-        if (log.isInfoEnabled()) log.info("[Parser] Parsing {}!", sourceFileContent.getPath());
+    public static ParsingResult parseSourceFile(FileContent sourceFileContent) {
+        if (log.isInfoEnabled()) log.info("Parsing {}", sourceFileContent.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
                 () -> SpoonParser.parseJavaSourceResource(sourceFileContent.getPath(), sourceFileContent.getContent()));
@@ -49,8 +49,8 @@ public final class SourceAstTranslator {
         return new ParsingResult(spoonASTModel, statistic);
     }
 
-    public SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
-        if (log.isInfoEnabled()) log.info("[Parser] Serializing!");
+    public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
+        if (log.isInfoEnabled()) log.info("Serializing");
 
         TimedResult<String> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());

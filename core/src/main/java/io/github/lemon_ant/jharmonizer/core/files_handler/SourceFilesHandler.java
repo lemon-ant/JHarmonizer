@@ -44,6 +44,9 @@ public class SourceFilesHandler {
 
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public final void backup(@NonNull Path sourceFile) throws IOException {
+        if (!isMakingBackup) {
+            return;
+        }
         if (!Files.exists(sourceFile) || !Files.isRegularFile(sourceFile)) {
             throw new IOException("Source file does not exist or is not a valid file: " + sourceFile);
         }

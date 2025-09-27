@@ -30,7 +30,7 @@ public class SerializationStatistic {
     @Override
     public String toString() {
         return "SerializationStatistic[" + "serializedCodeLength="
-                + serializedCodeLength + ", " + "processingTimeinNanos="
+                + serializedCodeLength + ", " + "processingTimeInNanos="
                 + processingTimeInNanos + ']';
     }
 }
