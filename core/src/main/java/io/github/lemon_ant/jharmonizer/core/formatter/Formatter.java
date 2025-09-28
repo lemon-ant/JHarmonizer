@@ -35,7 +35,7 @@ public final class Formatter {
     @NonNull
     @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
     public FormatingResult fixImports(String sourceCode) {
-        log.info("Fix imports");
+        log.debug("Fix imports");
         TimedResult<String> formatingResult = StopWatch.measure(() -> {
             try {
                 return formatter.fixImports(sourceCode);
@@ -59,7 +59,7 @@ public final class Formatter {
     @NonNull
     @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
     public FormatingResult formatSource(String sourceCode) {
-        log.info("Formating source");
+        log.debug("Formating source");
         TimedResult<String> formatingResult = StopWatch.measure(() -> {
             try {
                 return formatter.formatSource(sourceCode);
@@ -83,7 +83,7 @@ public final class Formatter {
     @NonNull
     @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
     public FormatingResult formatSourceAndFixImports(String sourceCode) {
-        log.info("Formating source and fix imports");
+        log.debug("Formating source and fix imports");
         TimedResult<String> formatingResult = StopWatch.measure(() -> {
             try {
                 return formatter.formatSourceAndFixImports(sourceCode);

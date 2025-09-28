@@ -38,8 +38,9 @@ public final class SourceAstTranslator {
                 parsingTimedResult.getNanos());
     }
 
+    @SuppressWarnings("PMD.GuardLogStatement")
     public static ParsingResult parseSourceFile(FileContent sourceFileContent) {
-        if (log.isInfoEnabled()) log.info("Parsing {}", sourceFileContent.getPath());
+        log.debug("Parsing {}", sourceFileContent.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
                 () -> SpoonParser.parseJavaSourceResource(sourceFileContent.getPath(), sourceFileContent.getContent()));
@@ -50,7 +51,7 @@ public final class SourceAstTranslator {
     }
 
     public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
-        if (log.isInfoEnabled()) log.info("Serializing");
+        log.debug("Serializing");
 
         TimedResult<String> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());

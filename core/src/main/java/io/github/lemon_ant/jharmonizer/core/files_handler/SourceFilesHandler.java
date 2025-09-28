@@ -54,18 +54,18 @@ public class SourceFilesHandler {
         Path backupPath = sourceFile.resolveSibling(sourceFile.getFileName().toString() + ".bak");
         Files.move(sourceFile, backupPath);
 
-        log.info("File renamed (backup) to {}", backupPath);
+        log.debug("File renamed (backup) to {}", backupPath);
     }
 
     public final void overwrite(@NonNull FileContent fileContent) throws IOException {
         Files.writeString(fileContent.getPath(), fileContent.getContent(), StandardCharsets.UTF_8);
 
-        log.info("File content overwritten at {}", fileContent);
+        log.debug("File content overwritten at {}", fileContent);
     }
 
     @NonNull
     public final FileContent readFile(@NonNull Path file) throws IOException {
-        log.info("Reading file contents from {}", file);
+        log.debug("Reading file contents from {}", file);
 
         return new FileContent(file, Files.readString(file, StandardCharsets.UTF_8));
     }
