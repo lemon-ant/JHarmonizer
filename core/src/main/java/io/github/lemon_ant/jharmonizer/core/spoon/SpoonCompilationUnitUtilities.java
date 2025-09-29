@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.translator.spoon;
+package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import com.google.common.collect.Streams;
 import java.util.List;

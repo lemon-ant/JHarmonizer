@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.translator.spoon;
+package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtField;

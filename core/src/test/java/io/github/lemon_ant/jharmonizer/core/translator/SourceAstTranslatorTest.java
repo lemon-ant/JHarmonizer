@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

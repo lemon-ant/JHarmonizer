@@ -5,8 +5,8 @@ import static org.assertj.core.data.Percentage.withPercentage;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonParser;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Objects;

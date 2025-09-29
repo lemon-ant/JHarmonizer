@@ -1,12 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getAllTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getAllTypes;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonCompilationUnitUtilities.getRootTypes;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities.getAllTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities.getAllTypes;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
