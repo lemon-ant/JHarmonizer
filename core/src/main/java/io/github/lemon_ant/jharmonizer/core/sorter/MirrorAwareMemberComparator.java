@@ -1,18 +1,34 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Domain model for a class member. Replace with your real implementation.
  */
 interface Member {
-    /** Stable unique identifier within the compilation unit (e.g., FQN+offset). */
+    /**
+     * Stable unique identifier within the compilation unit (e.g., FQN+offset).
+     */
     String id();
 
-    /** Simple name for deterministic tie-breaking. */
+    /**
+     * Simple name for deterministic tie-breaking.
+     */
     String simpleName();
 
-    /** Original position (e.g., start offset or ordinal) in the source file. */
+    /**
+     * Original position (e.g., start offset or ordinal) in the source file.
+     */
     int originalPosition();
 }
 
@@ -23,7 +39,9 @@ interface Member {
 interface GroupingRules {
     int groupIndex(Member member);
 
-    /** True for members whose placement can be pulled earlier by dependencies (e.g., constants). */
+    /**
+     * True for members whose placement can be pulled earlier by dependencies (e.g., constants).
+     */
     boolean isDependencySensitive(Member member);
 }
 
@@ -50,10 +68,14 @@ interface IntraGroupOrder {
  * Options for ordering inside the same effective group (fallback after IntraGroupOrder).
  */
 final class OptionsWithinSameGroup {
-    /** Keep-by-originalPosition when true. */
+    /**
+     * Keep-by-originalPosition when true.
+     */
     final boolean preserveOriginalOrder;
 
-    /** Additionally sort by name if true (after original position if enabled). */
+    /**
+     * Additionally sort by name if true (after original position if enabled).
+     */
     final boolean alsoSortByName;
 
     OptionsWithinSameGroup(boolean preserveOriginalOrder, boolean alsoSortByName) {
@@ -80,28 +102,28 @@ final class OptionsWithinSameGroup {
 
 /**
  * Full analysis result used by the comparator.
- *
+ * <p>
  * representativeForCompare:
- *   - If dependencies exist: the chosen "root" representative (topmost dependency) of the chain.
- *   - If no dependencies: the member itself (self).
- *
+ * - If dependencies exist: the chosen "root" representative (topmost dependency) of the chain.
+ * - If no dependencies: the member itself (self).
+ * <p>
  * effectiveGroupIndex:
- *   - Minimum among baseline group and ALL transitive dependencies' effective groups.
+ * - Minimum among baseline group and ALL transitive dependencies' effective groups.
  */
 record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
 
 /**
  * Comparator that implements:
- *  1) Reflexivity: compare(x, x) == 0
- *  2) Mirror/symmetric dependency rule:
- *     - If RIGHT depends (transitively) on LEFT -> RIGHT is "greater" (goes lower) => return -1
- *     - If LEFT  depends (transitively) on RIGHT -> LEFT  is "greater"             => return  1
- *     (We run reachability on representatives: root/self.)
- *  3) Compare by effective group (lower index first).
- *  4) Inside the same group, apply **group-specific rules** (IntraGroupOrder),
- *     then fallback to OptionsWithinSameGroup (originalPosition, then name, then id),
- *     finally actuals if still equal.
- *
+ * 1) Reflexivity: compare(x, x) == 0
+ * 2) Mirror/symmetric dependency rule:
+ * - If RIGHT depends (transitively) on LEFT -> RIGHT is "greater" (goes lower) => return -1
+ * - If LEFT  depends (transitively) on RIGHT -> LEFT  is "greater"             => return  1
+ * (We run reachability on representatives: root/self.)
+ * 3) Compare by effective group (lower index first).
+ * 4) Inside the same group, apply **group-specific rules** (IntraGroupOrder),
+ * then fallback to OptionsWithinSameGroup (originalPosition, then name, then id),
+ * finally actuals if still equal.
+ * <p>
  * Cycles are considered invalid model/code and cause IllegalStateException with a readable path.
  */
 @SuppressWarnings("PMD")
@@ -125,6 +147,10 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         this.intraGroupOrder = intraGroupOrder; // may be null
         this.sameGroupOptions =
                 (sameGroupOptions != null) ? sameGroupOptions : OptionsWithinSameGroup.keepOriginalThenByName();
+    }
+
+    private static <T> Set<T> safeSet(Set<T> maybeNull) {
+        return (maybeNull == null) ? Collections.emptySet() : maybeNull;
     }
 
     @Override
@@ -166,35 +192,6 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         return left.id().compareTo(right.id());
     }
 
-    /**
-     * Compare members within the same group:
-     *  - firstly by group-specific comparator (if provided),
-     *  - then fallback to sameGroupOptions (originalPosition, name),
-     *  - return 0 if still equal.
-     */
-    private int compareWithinGroup(int groupIndex, Member a, Member b) {
-        // Group-specific rules have priority
-        Comparator<Member> groupCmp = (intraGroupOrder != null) ? intraGroupOrder.comparatorForGroup(groupIndex) : null;
-
-        if (groupCmp != null) {
-            int res = groupCmp.compare(a, b);
-            if (res != 0) return res;
-        }
-
-        // Fallback rules: original position then name (as configured)
-        if (sameGroupOptions.preserveOriginalOrder) {
-            int positionComparison = Integer.compare(a.originalPosition(), b.originalPosition());
-            if (positionComparison != 0) return positionComparison;
-        }
-
-        if (sameGroupOptions.alsoSortByName) {
-            int nameComparison = a.simpleName().compareTo(b.simpleName());
-            if (nameComparison != 0) return nameComparison;
-        }
-
-        return 0;
-    }
-
     // ======================================================================
     // TODO(Anton, 2025-09-27): RETHINK DEP-CHAIN RESOLUTION STRATEGY
     // ----------------------------------------------------------------------
@@ -215,7 +212,38 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     //   [B] Consider pre-pass topo order (Kahn) or SCC compression (Tarjan) if graphs grow larger.
     // ======================================================================
 
-    /** Analyze a member (with cycle detection) and memoize. */
+    /**
+     * Compare members within the same group:
+     * - firstly by group-specific comparator (if provided),
+     * - then fallback to sameGroupOptions (originalPosition, name),
+     * - return 0 if still equal.
+     */
+    private int compareWithinGroup(int groupIndex, Member a, Member b) {
+        // Group-specific rules have priority
+        Comparator<Member> groupCmp = (intraGroupOrder != null) ? intraGroupOrder.comparatorForGroup(groupIndex) : null;
+
+        if (groupCmp != null) {
+            int res = groupCmp.compare(a, b);
+            if (res != 0) return res;
+        }
+
+        // Fallback rules: original position then name (as configured)
+        if (sameGroupOptions.preserveOriginalOrder) {
+            int positionComparison = Integer.compare(a.originalPosition(), b.originalPosition());
+            if (positionComparison != 0) return positionComparison;
+        }
+
+        if (sameGroupOptions.alsoSortByName) {
+            int nameComparison = a.simpleName().compareTo(b.simpleName());
+            return nameComparison;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Analyze a member (with cycle detection) and memoize.
+     */
     private Analysis analyze(Member member) {
         Analysis cached = analysisCache.get(member.id());
         if (cached != null) return cached;
@@ -231,12 +259,12 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
 
     /**
      * Recursive analysis that:
-     *  - Detects cycles and throws IllegalStateException with a readable path.
-     *  - Computes effectiveGroupIndex as MIN(baseline, all transitive deps' effective groups).
-     *  - Picks representativeForCompare:
-     *      * If min == baseline -> representative = SELF.
-     *      * Else -> among deps that attain the minimum group, pick the **first by the same rules**
-     *        (using compareUsingFixedAnalyses for that group).
+     * - Detects cycles and throws IllegalStateException with a readable path.
+     * - Computes effectiveGroupIndex as MIN(baseline, all transitive deps' effective groups).
+     * - Picks representativeForCompare:
+     * * If min == baseline -> representative = SELF.
+     * * Else -> among deps that attain the minimum group, pick the **first by the same rules**
+     * (using compareUsingFixedAnalyses for that group).
      */
     private Analysis analyzeRecursive(Member member, Deque<Member> recursionStack, Set<String> inStackIds) {
         // ---- Detect cycles and fail hard ----
@@ -313,11 +341,11 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     /**
      * Compare two members as if the main comparator compared them *knowing* they are in the same group.
      * Uses already-computed Analysis from analysisCache; never calls analyze() (no re-entrancy).
-     *
+     * <p>
      * Order:
-     *   1) Mirror dependency rule on representatives (root/self), using the cache.
-     *   2) Intra-group rules (IntraGroupOrder).
-     *   3) Fallback: originalPosition, then name, then id.
+     * 1) Mirror dependency rule on representatives (root/self), using the cache.
+     * 2) Intra-group rules (IntraGroupOrder).
+     * 3) Fallback: originalPosition, then name, then id.
      */
     private int compareUsingFixedAnalyses(int groupIndex, Member a, Member b) {
         Analysis aA = analysisCache.get(a.id());
@@ -355,7 +383,9 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         return a.id().compareTo(b.id());
     }
 
-    /** Human-readable cycle message like: A[idA] -> B[idB] -> C[idC] -> A[idA] */
+    /**
+     * Human-readable cycle message like: A[idA] -> B[idB] -> C[idC] -> A[idA]
+     */
     private String buildCycleMessage(Member current, Deque<Member> stack) {
         List<Member> path = new ArrayList<>(stack);
         Collections.reverse(path); // bottom -> top
@@ -389,9 +419,5 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
             }
         }
         return false;
-    }
-
-    private static <T> Set<T> safeSet(Set<T> maybeNull) {
-        return (maybeNull == null) ? Collections.emptySet() : maybeNull;
     }
 }

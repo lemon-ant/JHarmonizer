@@ -1,8 +1,27 @@
 package io.github.lemon_ant.jharmonizer.core.config.effective;
 
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.*;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess.*;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.*;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.ABSTRACT;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.DEFAULT;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.FINAL;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.NATIVE;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.NON_SEALED;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.SEALED;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.STATIC;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.STRICTFP;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.SYNCHRONIZED;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.TRANSIENT;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.VOLATILE;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess.PRIVATE;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess.PUBLIC;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.CONSTRUCTOR;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.ENUM_CONSTANT;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.FIELD;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_INSTANCE;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_STATIC;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.METHOD;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.RECORD_COMPONENT;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_CLASS;
+import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_INTERFACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

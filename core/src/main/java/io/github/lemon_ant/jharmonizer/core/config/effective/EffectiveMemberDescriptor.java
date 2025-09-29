@@ -1,11 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.config.effective;
 
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.NON_SEALED;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -25,52 +25,49 @@ import lombok.Value;
 @Builder
 public class EffectiveMemberDescriptor {
 
-    /** Simple name (null for initializer blocks). */
+    private static final Set<MemberKind> KINDS_WITHOUT_MODIFIERS = EnumSet.of(
+            MemberKind.CONSTRUCTOR,
+            MemberKind.INIT_BLOCK_STATIC,
+            MemberKind.INIT_BLOCK_INSTANCE,
+            MemberKind.ENUM_CONSTANT,
+            MemberKind.RECORD_COMPONENT);
+    /**
+     * Simple name (null for initializer blocks).
+     */
     @Nullable
     String name;
-
-    /** Unified kind: fields, methods, ctors, init blocks, enum consts, record components, and nested types. */
+    /**
+     * Unified kind: fields, methods, ctors, init blocks, enum consts, record components, and nested types.
+     */
     @NonNull
     MemberKind memberKind;
-
-    /** Access level (PACKAGE means no explicit modifier). */
+    /**
+     * Access level (PACKAGE means no explicit modifier).
+     */
     @NonNull
     MemberAccess memberAccess;
-
-    /** Unified set of declaration modifiers (STATIC, FINAL, ABSTRACT, DEFAULT, SEALED, NON_SEALED, etc.). */
+    /**
+     * Unified set of declaration modifiers (STATIC, FINAL, ABSTRACT, DEFAULT, SEALED, NON_SEALED, etc.).
+     */
     @NonNull
     @Singular
     Set<@NonNull DeclarationModifier> declarationModifiers;
-
-    /** Fully-qualified annotation names. */
+    /**
+     * Fully-qualified annotation names.
+     */
     @NonNull
     @Singular
     Set<@NonNull String> annotationQualifiedNames;
 
-    /** True if this element is a (nested) type declaration. */
-    public boolean isType() {
-        return memberKind.isType();
-    }
-
-    /** True if this element is an initializer block. */
-    public boolean isInitializer() {
-        return memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE;
-    }
-
-    /** Optional-returning getter for name. */
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
-    }
-
     private EffectiveMemberDescriptor(
             @Nullable String name,
-            @NonNull EffectiveMemberDescriptor.MemberKind memberKind,
-            @NonNull EffectiveMemberDescriptor.MemberAccess memberAccess,
+            @NonNull MemberKind memberKind,
+            @NonNull MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
             @NonNull Set<@NonNull String> annotationQualifiedNames) {
 
         String trimmedName = trimToNull(name);
-        // Validate element name rules:
+        // Name invariants
         if (memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE) {
             // Initializers must NOT have a name
             if (trimmedName != null) {
@@ -91,107 +88,112 @@ public class EffectiveMemberDescriptor {
         this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
     }
 
-    @SuppressWarnings("PMD.CyclomaticComplexity")
     private static void validateModifiersForMemberKind(
             @NonNull MemberKind memberKind,
             @NonNull MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
-        // Kinds that must not declare any modifiers:
-        switch (memberKind) {
-            case CONSTRUCTOR:
-            case INIT_BLOCK_STATIC:
-            case INIT_BLOCK_INSTANCE:
-            case ENUM_CONSTANT:
-            case RECORD_COMPONENT:
-                if (!declarationModifiers.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            memberKind + " must not declare modifiers: " + declarationModifiers);
-                }
-                return;
-            default:
-                // fall through
+        ensureNoModifiersIfRequired(memberKind, declarationModifiers);
+
+        if (memberKind == MemberKind.FIELD) {
+            validateFieldModifiers(memberKind, declarationModifiers);
+            return;
         }
 
-        // Fields: forbid method/type-only modifiers.
-        if (memberKind == MemberKind.FIELD) {
+        if (memberKind == MemberKind.METHOD) {
+            validateMethodModifiers(memberKind, memberAccess, declarationModifiers);
+            return;
+        }
+
+        if (memberKind.isType()) {
+            validateTypeModifiers(memberKind, declarationModifiers);
+        }
+    }
+
+    private static void ensureNoModifiersIfRequired(
+            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+
+        if (KINDS_WITHOUT_MODIFIERS.contains(memberKind) && !declarationModifiers.isEmpty()) {
+            throw new IllegalArgumentException(memberKind + " must not declare modifiers: " + declarationModifiers);
+        }
+    }
+
+    private static void validateFieldModifiers(
+            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+        forbidAny(
+                memberKind,
+                declarationModifiers,
+                DeclarationModifier.ABSTRACT,
+                DeclarationModifier.SYNCHRONIZED,
+                DeclarationModifier.NATIVE,
+                DeclarationModifier.DEFAULT,
+                DeclarationModifier.SEALED,
+                DeclarationModifier.NON_SEALED,
+                DeclarationModifier.STRICTFP // not applicable to fields
+                );
+    }
+
+    private static void validateMethodModifiers(
+            @NonNull MemberKind memberKind,
+            @NonNull MemberAccess memberAccess,
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+        // Forbid field/type-only modifiers
+        forbidAny(
+                memberKind,
+                declarationModifiers,
+                DeclarationModifier.TRANSIENT,
+                DeclarationModifier.VOLATILE,
+                DeclarationModifier.SEALED,
+                DeclarationModifier.NON_SEALED);
+
+        // Conflicts with ABSTRACT.
+        if (declarationModifiers.contains(DeclarationModifier.ABSTRACT)) {
+            forbidAny(
+                    memberKind,
+                    declarationModifiers,
+                    DeclarationModifier.FINAL,
+                    DeclarationModifier.STATIC,
+                    DeclarationModifier.NATIVE,
+                    DeclarationModifier.SYNCHRONIZED);
+            // Abstract method cannot be private.
+            if (memberAccess == MemberAccess.PRIVATE) {
+                throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
+            }
+        }
+
+        // Default (interface) method cannot be abstract/static/final/synchronized/native.
+        if (declarationModifiers.contains(DeclarationModifier.DEFAULT)) {
             forbidAny(
                     memberKind,
                     declarationModifiers,
                     DeclarationModifier.ABSTRACT,
+                    DeclarationModifier.STATIC,
+                    DeclarationModifier.FINAL,
                     DeclarationModifier.SYNCHRONIZED,
-                    DeclarationModifier.NATIVE,
-                    DeclarationModifier.DEFAULT,
-                    DeclarationModifier.SEALED,
-                    NON_SEALED,
-                    DeclarationModifier.STRICTFP // not applicable to fields
-                    );
-            return;
-        }
-
-        // Methods (non-constructors).
-        if (memberKind == MemberKind.METHOD) {
-            // Forbid field/type-only modifiers.
-            forbidAny(
-                    memberKind,
-                    declarationModifiers,
-                    DeclarationModifier.TRANSIENT,
-                    DeclarationModifier.VOLATILE,
-                    DeclarationModifier.SEALED,
-                    NON_SEALED);
-
-            // Conflicts with ABSTRACT.
-            if (declarationModifiers.contains(DeclarationModifier.ABSTRACT)) {
-                forbidAny(
-                        memberKind,
-                        declarationModifiers,
-                        DeclarationModifier.FINAL,
-                        DeclarationModifier.STATIC,
-                        DeclarationModifier.NATIVE,
-                        DeclarationModifier.SYNCHRONIZED);
-                // Abstract method cannot be private.
-                if (memberAccess == MemberAccess.PRIVATE) {
-                    throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
-                }
-            }
-
-            // Default (interface) method cannot be abstract/static/final/synchronized/native.
-            if (declarationModifiers.contains(DeclarationModifier.DEFAULT)) {
-                forbidAny(
-                        memberKind,
-                        declarationModifiers,
-                        DeclarationModifier.ABSTRACT,
-                        DeclarationModifier.STATIC,
-                        DeclarationModifier.FINAL,
-                        DeclarationModifier.SYNCHRONIZED,
-                        DeclarationModifier.NATIVE);
-            }
-            return;
-        }
-
-        // Nested types: forbid method/field-only modifiers and check conflicts.
-        if (memberKind.isType()) {
-            forbidAny(
-                    memberKind,
-                    declarationModifiers,
-                    DeclarationModifier.TRANSIENT,
-                    DeclarationModifier.VOLATILE,
-                    DeclarationModifier.SYNCHRONIZED,
-                    DeclarationModifier.NATIVE,
-                    DeclarationModifier.DEFAULT);
-
-            // Conflicts for types: ABSTRACT + FINAL.
-            requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.ABSTRACT, DeclarationModifier.FINAL);
-
-            // Mutually exclusive: SEALED vs NON_SEALED.
-            requireNotBoth(
-                    memberKind, declarationModifiers, DeclarationModifier.SEALED, DeclarationModifier.NON_SEALED);
+                    DeclarationModifier.NATIVE);
         }
     }
 
+    private static void validateTypeModifiers(
+            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+        // Forbid method/field-only modifiers
+        forbidAny(
+                memberKind,
+                declarationModifiers,
+                DeclarationModifier.TRANSIENT,
+                DeclarationModifier.VOLATILE,
+                DeclarationModifier.SYNCHRONIZED,
+                DeclarationModifier.NATIVE,
+                DeclarationModifier.DEFAULT);
+
+        // Conflicts for types
+        requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.ABSTRACT, DeclarationModifier.FINAL);
+        requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.SEALED, DeclarationModifier.NON_SEALED);
+    }
+
     private static void forbidAny(
-            MemberKind memberKind, Set<DeclarationModifier> mods, DeclarationModifier... forbiddenModifiers) {
-        Arrays.stream(forbiddenModifiers).filter(mods::contains).findAny().ifPresent(m -> {
+            MemberKind memberKind, Set<DeclarationModifier> modifiers, DeclarationModifier... forbiddenModifiers) {
+        Arrays.stream(forbiddenModifiers).filter(modifiers::contains).findAny().ifPresent(m -> {
             throw new IllegalArgumentException("Illegal modifier for " + memberKind + ": " + m);
         });
     }
@@ -206,6 +208,27 @@ public class EffectiveMemberDescriptor {
             throw new IllegalArgumentException("Illegal modifier combination for " + memberKind + ": "
                     + declarationModifier1 + " + " + declarationModifier2);
         }
+    }
+
+    /**
+     * True if this element is a (nested) type declaration.
+     */
+    public boolean isType() {
+        return memberKind.isType();
+    }
+
+    /**
+     * True if this element is an initializer block.
+     */
+    public boolean isInitializer() {
+        return memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE;
+    }
+
+    /**
+     * Optional-returning getter for name.
+     */
+    public Optional<String> getName() {
+        return Optional.ofNullable(name);
     }
 
     // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
@@ -234,7 +257,9 @@ public class EffectiveMemberDescriptor {
         return result;
     }
 
-    /** Unifies members and nested types; each constant knows whether it represents a type. */
+    /**
+     * Unifies members and nested types; each constant knows whether it represents a type.
+     */
     @Getter
     @RequiredArgsConstructor
     public enum MemberKind {
@@ -263,7 +288,9 @@ public class EffectiveMemberDescriptor {
         PRIVATE,
     }
 
-    /** Unified declaration modifiers used in rules; extend as needed. */
+    /**
+     * Unified declaration modifiers used in rules; extend as needed.
+     */
     public enum DeclarationModifier {
         STATIC,
         FINAL,
