@@ -16,8 +16,9 @@ top-level-types-ordering:
 type-members-ordering:
   - name: Test Classes
     includes:
-      - [ class, '@Test' ]
+      - [ class, '@~.*Test$' ]
       - [ class, '@ExtendWith' ]
+      - [ class, '@RunWith' ]
       - [ class, ~.*Test$ ]
     sort-keys: alpha, signature
     groups:
@@ -84,6 +85,11 @@ type-members-ordering:
       - '@Document'
     sort-keys: [ visibility-desc, alpha, signature ]
     groups:
+      - name: Serializable UID
+        separator: new-line
+        sort-keys: preserve
+        includes: [ field, static, final, =serialVersionUID ]
+
       - name: Fields
         separator: new-line
         sort-keys: [ visibility-desc, alpha ]
@@ -131,10 +137,10 @@ type-members-ordering:
         sort-keys: [ visibility-desc, alpha, signature ]
         includes: [ static, method ]
 
-      - name: Instant Initializer Blocks
+      - name: Instance Initializer Blocks
         separator: none
         sort-keys: preserve
-        includes: [ instant, initializer ]
+        includes: [ instance, initializer ]
 
       - name: Constructors
         separator: none
@@ -145,30 +151,41 @@ type-members-ordering:
         separator: none
         keepAccessorsTogether: true
         sort-keys: [ visibility-desc, alpha, signature ]
-        includes: [ instant, method, ~^(get|set|is|has).+$ ]
+        includes: [ instance, method, ~^(get|set|is|has).+$ ]
 
-      - name: Instant Methods
+      - name: Instance Methods
         separator: none
         sort-keys: [ visibility-desc, alpha, signature ]
-        includes: [ instant, method ]
+        includes: [ instance, method ]
         excludes:
-          - [ instant, method, =toString ]
-          - [ instant, method, =equals ]
-          - [ instant, method, =hashCode ]
-          - [ instant, method, =clone ]
+          - [ instance, method, =toString ]
+          - [ instance, method, =equals ]
+          - [ instance, method, =hashCode ]
+          - [ instance, method, =clone ]
 
       - name: Basic Object Methods
         sort-keys: preserve
         includes:
-          - [ instant, method, =toString ]
-          - [ instant, method, =equals ]
-          - [ instant, method, =hashCode ]
-          - [ instant, method, =clone ]
+          - [ instance, method, =toString ]
+          - [ instance, method, =equals ]
+          - [ instance, method, =hashCode ]
+          - [ instance, method, =clone ]
 
   - name: Default Rule
-    includes: '*'
+    includes: ~.*
     sort-keys: [ visibility-desc, alpha, signature ] # For subtypes
     groups:
+      - name: Serializable UID
+        separator: new-line
+        sort-keys: preserve
+        includes: [ field, static, final, =serialVersionUID ]
+
+      - name: Logger
+        separator: new-line
+        sort-keys: preserve
+        includes:
+          - [ field, static, final, '~(?i)(log|.*logger)$' ]
+
       - name: Fields
         separator: new-line
         sort-keys: [ visibility-desc, alpha ]
@@ -216,31 +233,51 @@ type-members-ordering:
         sort-keys: [ visibility-desc, alpha, signature ]
         includes: [ static, method ]
 
-      - name: Instant Initializer Blocks
+      - name: Instance Initializer Blocks
         separator: none
         sort-keys: preserve
-        includes: [ instant, initializer ]
+        includes: [ instance, initializer ]
 
       - name: Constructors
         separator: none
         sort-keys: [ visibility-desc, alpha, signature ]
         includes: constructor
 
-      - name: Instant Methods
+      - name: Instance Methods
         separator: none
         sort-keys: [ visibility-desc, alpha, signature ]
-        includes: [ instant, method ]
+        includes: [ instance, method ]
         excludes:
-          - [ instant, method, =toString ]
-          - [ instant, method, =equals ]
-          - [ instant, method, =hashCode ]
-          - [ instant, method, =clone ]
+          - [ instance, method, =toString ]
+          - [ instance, method, =equals ]
+          - [ instance, method, =hashCode ]
+          - [ instance, method, =clone ]
 
       - name: Basic Object Methods
         separator: none
         sort-keys: preserve
         includes:
-          - [ instant, method, =toString ]
-          - [ instant, method, =equals ]
-          - [ instant, method, =hashCode ]
-          - [ instant, method, =clone ]
+          - [ instance, method, =toString ]
+          - [ instance, method, =equals ]
+          - [ instance, method, =hashCode ]
+          - [ instance, method, =clone ]
+
+      - name: Classes & Records
+        separator: new-line
+        sort-keys: [ alpha ]
+        includes: [ class, record ]
+
+      - name: Interfaces
+        separator: new-line
+        sort-keys: [ alpha ]
+        includes: [ interface ]
+
+      - name: Enums
+        separator: new-line
+        sort-keys: [ alpha ]
+        includes: [ enum ]
+
+      - name: Annotations
+        separator: new-line
+        sort-keys: [ alpha ]
+        includes: [ annotation ]

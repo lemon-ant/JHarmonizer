@@ -20,7 +20,7 @@
   },
   "typeMembersOrdering" : [ {
     "name" : "Test Classes",
-    "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@Test", "class" ] ],
+    "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
     "excludes" : [ ],
     "separator" : "NONE",
     "keepAccessorsTogether" : false,
@@ -105,6 +105,14 @@
     "separator" : "NONE",
     "keepAccessorsTogether" : false,
     "groups" : [ {
+      "name" : "Serializable UID",
+      "includes" : [ [ "=serialVersionUID" ], [ "static" ], [ "field" ], [ "final" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
       "name" : "Fields",
       "includes" : [ [ "field" ] ],
       "excludes" : [ ],
@@ -185,8 +193,8 @@
       "groups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
-      "name" : "Instant Initializer Blocks",
-      "includes" : [ [ "instant" ], [ "initializer" ] ],
+      "name" : "Instance Initializer Blocks",
+      "includes" : [ [ "instance" ], [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
@@ -202,23 +210,23 @@
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Accessor Methods",
-      "includes" : [ [ "method" ], [ "~^(get|set|is|has).+$" ], [ "instant" ] ],
+      "includes" : [ [ "instance" ], [ "method" ], [ "~^(get|set|is|has).+$" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
       "groups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
-      "name" : "Instant Methods",
-      "includes" : [ [ "method" ], [ "instant" ] ],
-      "excludes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "name" : "Instance Methods",
+      "includes" : [ [ "instance" ], [ "method" ] ],
+      "excludes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "groups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Basic Object Methods",
-      "includes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "includes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
@@ -228,11 +236,27 @@
     "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
   }, {
     "name" : "Default Rule",
-    "includes" : [ [ "*" ] ],
+    "includes" : [ [ "~.*" ] ],
     "excludes" : [ ],
     "separator" : "NONE",
     "keepAccessorsTogether" : false,
     "groups" : [ {
+      "name" : "Serializable UID",
+      "includes" : [ [ "=serialVersionUID" ], [ "static" ], [ "field" ], [ "final" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Logger",
+      "includes" : [ [ "field", "final", "static", "~(?i)(log|.*logger)$" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
       "name" : "Fields",
       "includes" : [ [ "field" ] ],
       "excludes" : [ ],
@@ -313,8 +337,8 @@
       "groups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
-      "name" : "Instant Initializer Blocks",
-      "includes" : [ [ "instant" ], [ "initializer" ] ],
+      "name" : "Instance Initializer Blocks",
+      "includes" : [ [ "instance" ], [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
@@ -329,21 +353,53 @@
       "groups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
-      "name" : "Instant Methods",
-      "includes" : [ [ "method" ], [ "instant" ] ],
-      "excludes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "name" : "Instance Methods",
+      "includes" : [ [ "instance" ], [ "method" ] ],
+      "excludes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "groups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Basic Object Methods",
-      "includes" : [ [ "=toString", "instant", "method" ], [ "=clone", "instant", "method" ], [ "=equals", "instant", "method" ], [ "=hashCode", "instant", "method" ] ],
+      "includes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "groups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Classes & Records",
+      "includes" : [ [ "record" ], [ "class" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "ALPHA" ]
+    }, {
+      "name" : "Interfaces",
+      "includes" : [ [ "interface" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "ALPHA" ]
+    }, {
+      "name" : "Enums",
+      "includes" : [ [ "enum" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "ALPHA" ]
+    }, {
+      "name" : "Annotations",
+      "includes" : [ [ "annotation" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : false,
+      "groups" : [ ],
+      "sortKeys" : [ "ALPHA" ]
     } ],
     "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
   } ]

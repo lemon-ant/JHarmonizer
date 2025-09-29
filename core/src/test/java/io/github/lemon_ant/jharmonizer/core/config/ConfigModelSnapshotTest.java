@@ -14,34 +14,61 @@ import org.junit.jupiter.api.Test;
 
 class ConfigModelSnapshotTest {
 
-    private static final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Test
     void configModel_serializationMatchesSnapshot() throws Exception {
         // given
-        ConfigRoot config = ConfigLoader.loadFrom(
-                new File(getClass().getResource("/default-config.yml").toURI()));
+        File defaultConfigFile =
+                new File(getClass().getResource("/default-config.yml").toURI());
+        ConfigRoot configRoot = ConfigLoader.loadFrom(defaultConfigFile);
 
         // when
-        String actualJson = mapper.writeValueAsString(config);
+        String actualJson = MAPPER.writeValueAsString(configRoot);
 
         // then
-        InputStream expectedJsonStream = getClass().getResourceAsStream("/test-cases/core/config/expected-config.json");
-        String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
+        try (InputStream expectedJsonStream =
+                getClass().getResourceAsStream("/test-cases/core/config/expected-config.json")) {
 
-        assertThat(actualJson).isEqualToNormalizingNewlines(expectedJson);
+            // Defensive: make missing snapshot an explicit test failure with instructions.
+            assertThat(expectedJsonStream)
+                    .as("Missing snapshot file: /test-cases/core/config/expected-config.json")
+                    .isNotNull();
+
+            String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
+
+            assertThat(actualJson)
+                    .as(
+                            """
+                    Config snapshot mismatch.
+
+                    If you intentionally changed the default configuration (default-config.yml) or the config model,
+                    you must refresh the JSON snapshot:
+
+                      1) Run ConfigModelSnapshotTest.regenerateSnapshot() — it will rewrite:
+                         src/test/resources/test-cases/core/config/expected-config.json
+                      2) Re-run this test.
+
+                    IMPORTANT BEFORE COMMIT:
+                      • Verify that the diff in expected-config.json EXACTLY reflects your YAML/model changes.
+                      • Make sure nothing accidental was lost or reordered.
+                      • Commit both the YAML change and the updated snapshot together.
+                    """)
+                    .isEqualToNormalizingNewlines(expectedJson);
+        }
     }
 
     @Test
-    @Disabled("It's not a test but utility. Use it to regenerate expected-config.json")
+    @Disabled("Utility only. Temporarily enable and run to regenerate expected-config.json")
     void regenerateSnapshot() throws Exception {
-        ConfigRoot config = ConfigLoader.loadFrom(
-                new File(getClass().getResource("/default-config.yml").toURI()));
+        // Load current default config
+        File defaultConfigFile =
+                new File(getClass().getResource("/default-config.yml").toURI());
+        ConfigRoot configRoot = ConfigLoader.loadFrom(defaultConfigFile);
 
-        String newSnapshot = mapper.writeValueAsString(config);
-        Files.writeString(
-                Path.of("src/test/resources/test-cases/core/config/expected-config.json"),
-                newSnapshot,
-                StandardCharsets.UTF_8);
+        // Serialize and overwrite snapshot
+        String newSnapshot = MAPPER.writeValueAsString(configRoot);
+        Path snapshotPath = Path.of("src/test/resources/test-cases/core/config/expected-config.json");
+        Files.writeString(snapshotPath, newSnapshot, StandardCharsets.UTF_8);
     }
 }
