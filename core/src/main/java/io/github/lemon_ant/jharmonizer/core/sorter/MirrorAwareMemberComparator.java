@@ -284,7 +284,7 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
                 }
             }
 
-            // If our own baseline is the global minimum → representative is SELF (keep native group).
+            // If our own baseline is the global minimum → representative is SELF (keep jharmonizer group).
             if (earliestGroup == baseline) {
                 return new Analysis(baseline, member, true);
             }

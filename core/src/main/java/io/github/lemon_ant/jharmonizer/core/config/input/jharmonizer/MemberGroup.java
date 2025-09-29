@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config;
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
 import static java.util.Optional.ofNullable;
 

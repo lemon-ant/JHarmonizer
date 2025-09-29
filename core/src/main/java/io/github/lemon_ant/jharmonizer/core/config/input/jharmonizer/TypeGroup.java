@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config;
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

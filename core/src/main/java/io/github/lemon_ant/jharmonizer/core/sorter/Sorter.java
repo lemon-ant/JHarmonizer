@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import io.github.lemon_ant.jharmonizer.core.config.ConfigRoot;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.ConfigRoot;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
