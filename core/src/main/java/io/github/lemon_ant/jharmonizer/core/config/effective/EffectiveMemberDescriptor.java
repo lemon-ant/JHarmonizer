@@ -4,9 +4,9 @@ import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -26,6 +26,7 @@ import lombok.Value;
 @Builder
 public class EffectiveMemberDescriptor {
 
+    public static final int ONE = 1;
     /**
      * Simple name. Must be null for INIT_BLOCK and CONSTRUCTOR; must be non-blank for all other categories.
      */
@@ -116,80 +117,54 @@ public class EffectiveMemberDescriptor {
             @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
-        TargetCategory category = memberKind.getTargetCategory();
+        final TargetCategory targetCategory = memberKind.getTargetCategory();
 
-        // 1) Applicability of each modifier to this category
-        declarationModifiers.stream()
-                .filter(modifier -> !modifier.isApplicableTo(category))
-                .findAny()
-                .ifPresent(modifier -> {
-                    throw new IllegalArgumentException("Illegal modifier for " + memberKind + ": " + modifier);
-                });
-        // 2) Conflicts not expressible via applicability
-        if (category == TargetCategory.METHOD) {
-            validateMethodConflicts(memberKind, memberAccess, declarationModifiers);
-            return;
-        }
-        if (category == TargetCategory.TYPE) {
-            validateTypeConflicts(memberKind, declarationModifiers);
-        }
-        // For CONSTRUCTOR / INIT_BLOCK / ENUM_CONSTANT / RECORD_COMPONENT there are no applicable modifiers by design
-        // (no DeclarationModifier targets include these categories). Step (1) already rejects any presence.
+        validateModifierApplicability(memberKind, targetCategory, declarationModifiers);
+        validateModifierPairwiseConflicts(memberKind, declarationModifiers);
+        enforceAbstractNotPrivate(targetCategory, memberAccess, declarationModifiers);
     }
 
-    private static void validateMethodConflicts(
+    private static void validateModifierApplicability(
             @NonNull MemberKind memberKind,
+            @NonNull TargetCategory targetCategory,
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+
+        declarationModifiers.stream()
+                .filter(declarationModifier -> !declarationModifier.isApplicableTo(targetCategory))
+                .findAny()
+                .ifPresent(illegalModifier -> {
+                    throw new IllegalArgumentException("Illegal modifier for " + memberKind + ": " + illegalModifier);
+                });
+    }
+
+    private static void validateModifierPairwiseConflicts(
+            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+
+        if (declarationModifiers.size() > ONE) {
+            final DeclarationModifier[] declarationModifierArray =
+                    declarationModifiers.toArray(new DeclarationModifier[0]);
+            for (int leftIndex = 0; leftIndex < declarationModifierArray.length - ONE; leftIndex++) {
+                final DeclarationModifier leftModifier = declarationModifierArray[leftIndex];
+                for (int rightIndex = leftIndex + ONE; rightIndex < declarationModifierArray.length; rightIndex++) {
+                    final DeclarationModifier rightModifier = declarationModifierArray[rightIndex];
+                    if (leftModifier.conflictsWithOn(rightModifier)) {
+                        throw new IllegalArgumentException("Illegal modifier combination for " + memberKind + ": "
+                                + leftModifier + " + " + rightModifier);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void enforceAbstractNotPrivate(
+            @NonNull TargetCategory targetCategory,
             @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
-        // ABSTRACT conflicts for methods
-        if (declarationModifiers.contains(DeclarationModifier.ABSTRACT)) {
-            forbidAny(
-                    memberKind,
-                    declarationModifiers,
-                    DeclarationModifier.FINAL,
-                    DeclarationModifier.STATIC,
-                    DeclarationModifier.NATIVE,
-                    DeclarationModifier.SYNCHRONIZED);
-            if (memberAccess == MemberAccess.PRIVATE) {
-                throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
-            }
-        }
-
-        // DEFAULT conflicts for methods
-        if (declarationModifiers.contains(DeclarationModifier.DEFAULT)) {
-            forbidAny(
-                    memberKind,
-                    declarationModifiers,
-                    DeclarationModifier.ABSTRACT,
-                    DeclarationModifier.STATIC,
-                    DeclarationModifier.FINAL,
-                    DeclarationModifier.SYNCHRONIZED,
-                    DeclarationModifier.NATIVE);
-        }
-    }
-
-    private static void validateTypeConflicts(
-            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
-        requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.ABSTRACT, DeclarationModifier.FINAL);
-        requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.SEALED, DeclarationModifier.NON_SEALED);
-    }
-
-    private static void forbidAny(
-            MemberKind memberKind, Set<DeclarationModifier> modifiers, DeclarationModifier... forbiddenModifiers) {
-        Arrays.stream(forbiddenModifiers).filter(modifiers::contains).findAny().ifPresent(m -> {
-            throw new IllegalArgumentException("Illegal modifier for " + memberKind + ": " + m);
-        });
-    }
-
-    private static void requireNotBoth(
-            MemberKind memberKind,
-            Set<DeclarationModifier> modifiers,
-            DeclarationModifier first,
-            DeclarationModifier second) {
-        if (modifiers.contains(first) && modifiers.contains(second)) {
-            throw new IllegalArgumentException(
-                    "Illegal modifier combination for " + memberKind + ": " + first + " + " + second);
+        if (targetCategory == TargetCategory.METHOD
+                && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
+                && memberAccess == MemberAccess.PRIVATE) {
+            throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
         }
     }
 
@@ -323,9 +298,8 @@ public class EffectiveMemberDescriptor {
 
     /**
      * Unified declaration modifiers used in rules; applicability is defined via TargetCategory sets.
-     * Note: No modifier declares applicability to CONSTRUCTOR / INIT_BLOCK / ENUM_CONSTANT / RECORD_COMPONENT.
+     * Pairwise conflicts are declared globally (category-agnostic) and checked in {@link #validateModifiers}.
      */
-    @Getter
     public enum DeclarationModifier {
         STATIC(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
         FINAL(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
@@ -340,7 +314,12 @@ public class EffectiveMemberDescriptor {
         NON_SEALED(EnumSet.of(TargetCategory.TYPE)),
         ;
 
+        @Getter
         private final Set<TargetCategory> applicableTargets;
+
+        // Global symmetric conflicts (no TargetCategory scoping)
+        @SuppressWarnings("PMD.UseEnumCollections")
+        private final Set<DeclarationModifier> conflicts = new HashSet<>();
 
         private DeclarationModifier(Set<TargetCategory> applicableTargets) {
             this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
@@ -348,6 +327,40 @@ public class EffectiveMemberDescriptor {
 
         public boolean isApplicableTo(TargetCategory targetCategory) {
             return applicableTargets.contains(targetCategory);
+        }
+
+        /**
+         * Global conflict check. Category is ignored intentionally:
+         * applicability per category is validated separately before conflicts are checked.
+         */
+        public boolean conflictsWithOn(@NonNull DeclarationModifier other) {
+            return this.conflicts.contains(other);
+        }
+
+        // -- static conflict registry helpers (symmetric, category-agnostic) --
+
+        private static void conflict(DeclarationModifier a, DeclarationModifier b) {
+            a.conflicts.add(b);
+            b.conflicts.add(a);
+        }
+
+        static {
+            // METHOD-level pairs (but safe globally because of applicability filtering):
+            conflict(ABSTRACT, FINAL);
+            conflict(ABSTRACT, STATIC);
+            conflict(ABSTRACT, NATIVE);
+            conflict(ABSTRACT, SYNCHRONIZED);
+
+            conflict(DEFAULT, ABSTRACT);
+            conflict(DEFAULT, STATIC);
+            conflict(DEFAULT, FINAL);
+            conflict(DEFAULT, SYNCHRONIZED);
+            conflict(DEFAULT, NATIVE);
+
+            // TYPE-level pair (SEALED vs NON_SEALED) — applies only on types via applicability:
+            conflict(SEALED, NON_SEALED);
+
+            // No FIELD-only conflicts in the current minimal model.
         }
     }
 }
