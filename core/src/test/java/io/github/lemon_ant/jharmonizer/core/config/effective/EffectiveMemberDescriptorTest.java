@@ -29,6 +29,7 @@ import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDesc
 import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.EffectiveMemberDescriptorBuilder;
 import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.TargetCategory;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,7 @@ class EffectiveMemberDescriptorTest {
         assertThatThrownBy(() -> createBaseDescriptorBuilder(INIT_BLOCK_STATIC, PUBLIC, "<clinit>")
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Initializer elements must have null name");
+                .hasMessageContainingAll("Initializer", "constructor", "null", "name");
     }
 
     @Test
@@ -80,17 +81,17 @@ class EffectiveMemberDescriptorTest {
     @Test
     @DisplayName("Constructor must not declare modifiers")
     void build_constructorWithAnyModifiers_throwsIllegalArgumentException() {
-        assertThatThrownBy(() -> createBaseDescriptorBuilder(CONSTRUCTOR, PUBLIC, "X")
+        assertThatThrownBy(() -> createBaseDescriptorBuilder(CONSTRUCTOR, PUBLIC, null)
                         .declarationModifier(FINAL)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("CONSTRUCTOR must not declare modifiers");
+                .hasMessageContainingAll(CONSTRUCTOR.name(), "Illegal", "modifier", FINAL.name());
     }
 
     @Test
     @DisplayName("Enum constant must not declare modifiers")
     void build_enumConstantWithAnyModifiers_throwsIllegalArgumentException() {
-        assertThatThrownBy(() -> createBaseDescriptorBuilder(ENUM_CONSTANT, PUBLIC, "FOO")
+        assertThatThrownBy(() -> createBaseDescriptorBuilder(ENUM_CONSTANT, PUBLIC, "VALID_ENUM_CONSTANT")
                         .declarationModifier(STATIC)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -402,17 +403,184 @@ class EffectiveMemberDescriptorTest {
                 EffectiveMemberDescriptor.MemberKind.TYPE_RECORD,
                 EffectiveMemberDescriptor.MemberKind.TYPE_ANNOTATION);
 
-        for (EffectiveMemberDescriptor.MemberKind kind : memberKindsWithAccess) {
-            // Constructors require a non-blank name; types/fields/methods too (per our invariants)
-            String name = "Name";
+        for (EffectiveMemberDescriptor.MemberKind memberKind : memberKindsWithAccess) {
+            // Constructors require the null name; types/fields/methods in opposite require a non-blank
+            String name = memberKind.getTargetCategory() != TargetCategory.CONSTRUCTOR ? "ValidElementName" : null;
             assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
-                            .memberKind(kind)
+                            .memberKind(memberKind)
                             .name(name)
                             // no memberAccess
                             .build())
-                    .as("kind %s must require a provided access level", kind)
+                    .as("memberKind %s must require a provided access level", memberKind)
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Access level must be provided for " + kind);
+                    .hasMessageContaining("Access level must be provided for " + memberKind);
         }
     }
+
+    // ---------- name invariants (extra) ----------
+
+    @Test
+    void build_constructorWithName_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+            .memberKind(CONSTRUCTOR)
+            .memberAccess(PUBLIC)
+            .name("Ctor") // недопустимо
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContainingAll("Initializer/constructor", "null", "name");
+    }
+
+    @Test
+    void build_enumConstantWithBlankName_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+            .memberKind(ENUM_CONSTANT)
+            .memberAccess(null) // access не применяется
+            .name("   ")
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Non-initializer elements must have a non-blank name");
+    }
+
+    @Test
+    void build_recordComponentWithBlankName_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+            .memberKind(RECORD_COMPONENT)
+            .memberAccess(null)
+            .name("")
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Non-initializer elements must have a non-blank name");
+    }
+
+    @Test
+    void build_constructorWithNullNameAndAccess_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(CONSTRUCTOR)
+            .memberAccess(PUBLIC)
+            .name(null)
+            .build();
+        assertThat(d.getName()).isEmpty();
+        assertThat(d.getMemberAccess()).contains(PUBLIC);
+    }
+
+
+    // ---------- no-applicability categories: modifier rejection (with correct access/null) ----------
+
+    @Test
+    void build_enumConstantWithModifier_andNullAccess_throwsIllegalModifier() {
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+            .memberKind(ENUM_CONSTANT)
+            .name("E")
+            .memberAccess(null) // корректно: access не применим
+            .declarationModifier(STATIC) // любой
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContainingAll("Illegal modifier for ENUM_CONSTANT", "STATIC");
+    }
+
+    @Test
+    void build_recordComponentWithModifier_andNullAccess_throwsIllegalModifier() {
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+            .memberKind(RECORD_COMPONENT)
+            .name("x")
+            .memberAccess(null)
+            .declarationModifier(FINAL)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContainingAll("Illegal modifier for RECORD_COMPONENT", "FINAL");
+    }
+
+    @Test
+    void build_initBlockWithModifier_andNullAccess_throwsIllegalModifier() {
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+            .memberKind(INIT_BLOCK_STATIC)
+            .name(null) // init-блоку имя запрещено
+            .memberAccess(null)
+            .declarationModifier(STATIC)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContainingAll("Illegal modifier for INIT_BLOCK_STATIC", "STATIC");
+    }
+
+    // ---------- positives for allowed modifiers ----------
+
+    @Test
+    void build_methodWithStrictfp_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(METHOD)
+            .name("m")
+            .memberAccess(PUBLIC)
+            .declarationModifier(STRICTFP)
+            .build();
+        assertThat(d.getDeclarationModifiers()).containsExactly(STRICTFP);
+    }
+
+    @Test
+    void build_typeWithStrictfp_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(TYPE_CLASS)
+            .name("T")
+            .memberAccess(PUBLIC)
+            .declarationModifier(STRICTFP)
+            .build();
+        assertThat(d.getDeclarationModifiers()).containsExactly(STRICTFP);
+    }
+
+    @Test
+    void build_typeWithSealedOnly_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(TYPE_CLASS)
+            .name("T")
+            .memberAccess(PUBLIC)
+            .declarationModifier(SEALED)
+            .build();
+        assertThat(d.getDeclarationModifiers()).containsExactly(SEALED);
+    }
+
+    @Test
+    void build_fieldWithTransient_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(FIELD)
+            .name("value")
+            .memberAccess(PUBLIC)
+            .declarationModifier(TRANSIENT)
+            .build();
+        assertThat(d.getDeclarationModifiers()).containsExactly(TRANSIENT);
+    }
+
+    @Test
+    void build_fieldWithVolatile_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(FIELD)
+            .name("flag")
+            .memberAccess(PUBLIC)
+            .declarationModifier(VOLATILE)
+            .build();
+        assertThat(d.getDeclarationModifiers()).containsExactly(VOLATILE);
+    }
+
+    @Test
+    void build_methodWithDefaultOnly_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(METHOD)
+            .name("m")
+            .memberAccess(PUBLIC)
+            .declarationModifier(DEFAULT)
+            .build();
+        assertThat(d.getDeclarationModifiers()).containsExactly(DEFAULT);
+    }
+
+    // ---------- constructor: valid base (no modifiers, access required) ----------
+
+    @Test
+    void build_constructorWithAccessAndNoModifiers_returnsDescriptor() {
+        EffectiveMemberDescriptor d = EffectiveMemberDescriptor.builder()
+            .memberKind(CONSTRUCTOR)
+            .name(null)
+            .memberAccess(PUBLIC)
+            .build();
+        assertThat(d.getMemberAccess()).contains(PUBLIC);
+        assertThat(d.getDeclarationModifiers()).isEmpty();
+    }
+
 }

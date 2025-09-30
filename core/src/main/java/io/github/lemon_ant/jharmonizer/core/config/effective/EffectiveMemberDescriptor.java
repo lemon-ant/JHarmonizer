@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,37 +19,28 @@ import lombok.Value;
 
 /**
  * Java AST parser-agnostic descriptor for selection and sorting rules.
- * Unifies members and nested types via MemberKind; access level and declaration modifiers
+ * Unifies members and nested types via MemberKind and TargetCategory; access level and declaration modifiers
  * are captured explicitly to drive selectors and ordering logic.
  */
 @Value
 @Builder
-@SuppressWarnings("PMD.TooManyMethods")
 public class EffectiveMemberDescriptor {
 
-    // Kinds that must not declare any modifiers at all.
-    private static final Set<MemberKind> KINDS_WITHOUT_MODIFIERS = EnumSet.of(
-            MemberKind.CONSTRUCTOR,
-            MemberKind.INIT_BLOCK_STATIC,
-            MemberKind.INIT_BLOCK_INSTANCE,
-            MemberKind.ENUM_CONSTANT,
-            MemberKind.RECORD_COMPONENT);
-
     /**
-     * Simple name (null for initializer blocks).
+     * Simple name. Must be null for INIT_BLOCK and CONSTRUCTOR; must be non-blank for all other categories.
      */
     @Nullable
     String name;
 
     /**
-     * Unified kind: fields, methods, ctors, init blocks, enum consts, record components, and nested types.
+     * Unified kind: fields, methods, constructors, init blocks, enum constants, record components, and nested types.
      */
     @NonNull
     MemberKind memberKind;
 
     /**
      * Access level (PACKAGE means no explicit modifier).
-     * For kinds where access is not applicable (see {@link MemberKind#isAccessLevelApplicable()} ()}), this must be null.
+     * For kinds whose category does not support access (see TargetCategory#isAccessLevelApplicable()), this must be null.
      */
     @Nullable
     MemberAccess memberAccess;
@@ -79,7 +71,7 @@ public class EffectiveMemberDescriptor {
         // --- access invariants
         validateAccessForMemberKind(memberKind, memberAccess);
 
-        // --- modifier legality checks (conservative per JLS)
+        // --- modifier legality checks (via TargetCategory + conflicts)
         validateModifiers(memberKind, memberAccess, declarationModifiers);
 
         this.memberKind = memberKind;
@@ -89,33 +81,30 @@ public class EffectiveMemberDescriptor {
     }
 
     private static @Nullable String validateAndNormalizeName(@Nullable String rawName, @NonNull MemberKind memberKind) {
-        // Normalize once
         String trimmedName = trimToNull(rawName);
 
-        // For initializers the name MUST be null; for all others it MUST be non-null.
-        boolean mustBeNull = memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE;
+        // Only INIT_BLOCK and CONSTRUCTOR must have null name; all other categories must provide a non-blank name.
+        TargetCategory category = memberKind.getTargetCategory();
+        boolean mustBeNull = (category == TargetCategory.INIT_BLOCK) || (category == TargetCategory.CONSTRUCTOR);
         boolean isProvided = trimmedName != null;
 
         if (mustBeNull == isProvided) {
-            // Both true => initializer has a name (illegal)
-            // Both false => non-initializer without a name (illegal)
             throw new IllegalArgumentException(
                     mustBeNull
-                            ? "Initializer elements must have null name"
+                            ? "Initializer/constructor elements must have null name"
                             : "Non-initializer elements must have a non-blank name");
         }
-
-        // Valid: return null for initializers, normalized name for others.
-        return mustBeNull ? null : trimmedName;
+        return trimmedName;
     }
 
     private static void validateAccessForMemberKind(
             @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
-        boolean allows = memberKind.isAccessLevelApplicable();
+
+        boolean applicable = memberKind.getTargetCategory().isAccessLevelApplicable();
         boolean provided = (memberAccess != null);
 
-        if (allows != provided) {
-            String message = allows
+        if (applicable != provided) {
+            String message = applicable
                     ? "Access level must be provided for " + memberKind
                     : "Access level must be null for " + memberKind;
             throw new IllegalArgumentException(message);
@@ -127,61 +116,33 @@ public class EffectiveMemberDescriptor {
             @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
-        ensureNoModifiersIfRequired(memberKind, declarationModifiers);
+        TargetCategory category = memberKind.getTargetCategory();
 
-        if (memberKind == MemberKind.FIELD) {
-            validateFieldModifiers(memberKind, declarationModifiers);
+        // 1) Applicability of each modifier to this category
+        declarationModifiers.stream()
+                .filter(modifier -> !modifier.isApplicableTo(category))
+                .findAny()
+                .ifPresent(modifier -> {
+                    throw new IllegalArgumentException("Illegal modifier for " + memberKind + ": " + modifier);
+                });
+        // 2) Conflicts not expressible via applicability
+        if (category == TargetCategory.METHOD) {
+            validateMethodConflicts(memberKind, memberAccess, declarationModifiers);
             return;
         }
-
-        if (memberKind == MemberKind.METHOD) {
-            // memberAccess is guaranteed non-null for METHOD by validateAccessForMemberKind
-            validateMethodModifiers(memberKind, memberAccess, declarationModifiers);
-            return;
+        if (category == TargetCategory.TYPE) {
+            validateTypeConflicts(memberKind, declarationModifiers);
         }
-
-        if (memberKind.isType()) {
-            validateTypeModifiers(memberKind, declarationModifiers);
-        }
+        // For CONSTRUCTOR / INIT_BLOCK / ENUM_CONSTANT / RECORD_COMPONENT there are no applicable modifiers by design
+        // (no DeclarationModifier targets include these categories). Step (1) already rejects any presence.
     }
 
-    private static void ensureNoModifiersIfRequired(
-            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
-
-        if (KINDS_WITHOUT_MODIFIERS.contains(memberKind) && !declarationModifiers.isEmpty()) {
-            throw new IllegalArgumentException(memberKind + " must not declare modifiers: " + declarationModifiers);
-        }
-    }
-
-    private static void validateFieldModifiers(
-            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
-        forbidAny(
-                memberKind,
-                declarationModifiers,
-                DeclarationModifier.ABSTRACT,
-                DeclarationModifier.SYNCHRONIZED,
-                DeclarationModifier.NATIVE,
-                DeclarationModifier.DEFAULT,
-                DeclarationModifier.SEALED,
-                DeclarationModifier.NON_SEALED,
-                DeclarationModifier.STRICTFP // not applicable to fields
-                );
-    }
-
-    private static void validateMethodModifiers(
+    private static void validateMethodConflicts(
             @NonNull MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
-        // Forbid field/type-only modifiers
-        forbidAny(
-                memberKind,
-                declarationModifiers,
-                DeclarationModifier.TRANSIENT,
-                DeclarationModifier.VOLATILE,
-                DeclarationModifier.SEALED,
-                DeclarationModifier.NON_SEALED);
 
-        // Conflicts with ABSTRACT
+        // ABSTRACT conflicts for methods
         if (declarationModifiers.contains(DeclarationModifier.ABSTRACT)) {
             forbidAny(
                     memberKind,
@@ -195,7 +156,7 @@ public class EffectiveMemberDescriptor {
             }
         }
 
-        // Default (interface) method conflicts
+        // DEFAULT conflicts for methods
         if (declarationModifiers.contains(DeclarationModifier.DEFAULT)) {
             forbidAny(
                     memberKind,
@@ -208,19 +169,8 @@ public class EffectiveMemberDescriptor {
         }
     }
 
-    private static void validateTypeModifiers(
+    private static void validateTypeConflicts(
             @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
-        // Forbid method/field-only modifiers
-        forbidAny(
-                memberKind,
-                declarationModifiers,
-                DeclarationModifier.TRANSIENT,
-                DeclarationModifier.VOLATILE,
-                DeclarationModifier.SYNCHRONIZED,
-                DeclarationModifier.NATIVE,
-                DeclarationModifier.DEFAULT);
-
-        // Conflicts for types
         requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.ABSTRACT, DeclarationModifier.FINAL);
         requireNotBoth(memberKind, declarationModifiers, DeclarationModifier.SEALED, DeclarationModifier.NON_SEALED);
     }
@@ -251,10 +201,10 @@ public class EffectiveMemberDescriptor {
     }
 
     /**
-     * True if this element is an initializer block.
+     * True if this element is an initializer block (static or instance).
      */
     public boolean isInitializer() {
-        return memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE;
+        return memberKind.isInitializer();
     }
 
     /**
@@ -298,29 +248,70 @@ public class EffectiveMemberDescriptor {
     }
 
     /**
-     * Unifies members and nested types; each constant knows whether it represents a type and whether access applies.
+     * Coarse-grained target category that drives applicability of access and declaration modifiers.
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum TargetCategory {
+        FIELD(true),
+        METHOD(true),
+        CONSTRUCTOR(true),
+        INIT_BLOCK(false), // static / instance initializer blocks
+        ENUM_CONSTANT(false), // enum constant entries
+        RECORD_COMPONENT(false), // record component entries
+        TYPE(true), // all TYPE_* kinds
+        ;
+
+        /**
+         * Whether explicit access level applies (must be provided).
+         */
+        private final boolean accessLevelApplicable;
+
+        /** True if this category represents a (nested) type. */
+        public boolean isType() {
+            return this == TYPE;
+        }
+
+        public boolean isInitializer() {
+            return this == TargetCategory.INIT_BLOCK;
+        }
+    }
+
+    /**
+     * Unifies members and nested types; each constant binds to a TargetCategory.
      */
     @Getter
     @RequiredArgsConstructor
     public enum MemberKind {
-        FIELD(false, true),
-        METHOD(false, true),
-        CONSTRUCTOR(false, true),
-        INIT_BLOCK_STATIC(false, false),
-        INIT_BLOCK_INSTANCE(false, false),
-        ENUM_CONSTANT(false, false),
-        RECORD_COMPONENT(false, false),
+        FIELD(TargetCategory.FIELD),
+        METHOD(TargetCategory.METHOD),
+        CONSTRUCTOR(TargetCategory.CONSTRUCTOR),
 
-        TYPE_CLASS(true, true),
-        TYPE_INTERFACE(true, true),
-        TYPE_ENUM(true, true),
-        TYPE_RECORD(true, true),
-        TYPE_ANNOTATION(true, true),
+        // Initializer blocks:
+        INIT_BLOCK_STATIC(TargetCategory.INIT_BLOCK),
+        INIT_BLOCK_INSTANCE(TargetCategory.INIT_BLOCK),
+
+        // Non-block entries that must have names (distinct from init blocks):
+        ENUM_CONSTANT(TargetCategory.ENUM_CONSTANT),
+        RECORD_COMPONENT(TargetCategory.RECORD_COMPONENT),
+
+        // Types:
+        TYPE_CLASS(TargetCategory.TYPE),
+        TYPE_INTERFACE(TargetCategory.TYPE),
+        TYPE_ENUM(TargetCategory.TYPE),
+        TYPE_RECORD(TargetCategory.TYPE),
+        TYPE_ANNOTATION(TargetCategory.TYPE),
         ;
 
-        private final boolean type;
-        // Whether an explicit access modifier is applicable/required for this kind.
-        private final boolean accessLevelApplicable;
+        private final TargetCategory targetCategory;
+
+        public boolean isType() {
+            return this.getTargetCategory().isType();
+        }
+
+        public boolean isInitializer() {
+            return this.getTargetCategory().isInitializer();
+        }
     }
 
     public enum MemberAccess {
@@ -331,19 +322,32 @@ public class EffectiveMemberDescriptor {
     }
 
     /**
-     * Unified declaration modifiers used in rules; extend as needed.
+     * Unified declaration modifiers used in rules; applicability is defined via TargetCategory sets.
+     * Note: No modifier declares applicability to CONSTRUCTOR / INIT_BLOCK / ENUM_CONSTANT / RECORD_COMPONENT.
      */
+    @Getter
     public enum DeclarationModifier {
-        STATIC,
-        FINAL,
-        ABSTRACT,
-        DEFAULT, // interface method only
-        SYNCHRONIZED,
-        TRANSIENT, // fields only
-        VOLATILE, // fields only
-        NATIVE, // methods only
-        STRICTFP, // types and methods
-        SEALED, // types (Java 17)
-        NON_SEALED, // types (Java 17)
+        STATIC(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
+        FINAL(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
+        ABSTRACT(EnumSet.of(TargetCategory.METHOD, TargetCategory.TYPE)),
+        DEFAULT(EnumSet.of(TargetCategory.METHOD)), // interface default methods
+        SYNCHRONIZED(EnumSet.of(TargetCategory.METHOD)),
+        TRANSIENT(EnumSet.of(TargetCategory.FIELD)),
+        VOLATILE(EnumSet.of(TargetCategory.FIELD)),
+        NATIVE(EnumSet.of(TargetCategory.METHOD)),
+        STRICTFP(EnumSet.of(TargetCategory.METHOD, TargetCategory.TYPE)),
+        SEALED(EnumSet.of(TargetCategory.TYPE)),
+        NON_SEALED(EnumSet.of(TargetCategory.TYPE)),
+        ;
+
+        private final Set<TargetCategory> applicableTargets;
+
+        private DeclarationModifier(Set<TargetCategory> applicableTargets) {
+            this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
+        }
+
+        public boolean isApplicableTo(TargetCategory targetCategory) {
+            return applicableTargets.contains(targetCategory);
+        }
     }
 }
