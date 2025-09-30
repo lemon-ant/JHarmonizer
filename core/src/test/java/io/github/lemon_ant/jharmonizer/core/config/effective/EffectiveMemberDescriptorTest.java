@@ -35,8 +35,6 @@ import org.junit.jupiter.api.Test;
 
 class EffectiveMemberDescriptorTest {
 
-    // ---------- builder helpers (no abbreviations) ----------
-
     private EffectiveMemberDescriptorBuilder createBaseDescriptorBuilder(
             MemberKind kind, MemberAccess access, String name) {
         return EffectiveMemberDescriptor.builder()
@@ -96,7 +94,7 @@ class EffectiveMemberDescriptorTest {
                         .declarationModifier(STATIC)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("ENUM_CONSTANT must not declare modifiers");
+                .hasMessageContainingAll("ENUM_CONSTANT", "Access", "null");
     }
 
     @Test
@@ -106,7 +104,7 @@ class EffectiveMemberDescriptorTest {
                         .declarationModifier(FINAL)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("RECORD_COMPONENT must not declare modifiers");
+                .hasMessageContainingAll("RECORD_COMPONENT", "Access", "null");
     }
 
     @Test
@@ -116,7 +114,7 @@ class EffectiveMemberDescriptorTest {
                         .declarationModifier(STATIC)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("INIT_BLOCK_INSTANCE must not declare modifiers");
+                .hasMessageContainingAll("INIT_BLOCK_INSTANCE", "Access", "null");
     }
 
     // ---------- field rules ----------
@@ -263,7 +261,7 @@ class EffectiveMemberDescriptorTest {
     void isTypeAndIsInitializer_givenTypeMethodAndInitKinds_returnExpectedFlags() {
         assertThat(createTypeDescriptorBuilder(TYPE_INTERFACE, "Api").build().isType())
                 .isTrue();
-        assertThat(createBaseDescriptorBuilder(INIT_BLOCK_STATIC, PUBLIC, null)
+        assertThat(createBaseDescriptorBuilder(INIT_BLOCK_STATIC, null, null)
                         .build()
                         .isInitializer())
                 .isTrue();
@@ -295,5 +293,126 @@ class EffectiveMemberDescriptorTest {
 
         assertThat(fieldConstantOne).isEqualTo(fieldConstantTwo).hasSameHashCodeAs(fieldConstantTwo);
         assertThat(fieldConstantOne).isNotEqualTo(fieldDifferentName);
+    }
+
+    @Test
+    @DisplayName("build_kindWithApplicableAccessAndOmittedAccess_throwsIllegalArgumentException")
+    void build_kindWithApplicableAccess_andNullAccess_throwsIllegalArgumentException() {
+        // FIELD requires an explicit access level → null access must fail
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+                        .memberKind(EffectiveMemberDescriptor.MemberKind.FIELD)
+                        .name("ValidName")
+                        // .memberAccess(...) intentionally omitted
+                        .build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Access level must be provided for FIELD");
+    }
+
+    @Test
+    @DisplayName("build_kindWithoutApplicableAccess_andProvidedAccess_throwsIllegalArgumentException")
+    void build_kindWithoutApplicableAccessAndProvidedAccess_throwsIllegalArgumentException() {
+        // INIT_BLOCK_STATIC does not allow access level → any provided access must fail
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+                        .memberKind(EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_STATIC)
+                        .name(null) // initializer must have null name
+                        .memberAccess(EffectiveMemberDescriptor.MemberAccess.PUBLIC)
+                        .build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Access level must be null for INIT_BLOCK_STATIC");
+    }
+
+    @Test
+    @DisplayName("build_kindWithoutApplicableAccess_andNullAccess_returnsDescriptor")
+    void build_kindWithoutApplicableAccessAndNullAccess_returnsDescriptor() {
+        // INIT_BLOCK_INSTANCE with null access is valid
+        EffectiveMemberDescriptor descriptor = EffectiveMemberDescriptor.builder()
+                .memberKind(EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_INSTANCE)
+                .name(null)
+                // no memberAccess on purpose
+                .build();
+
+        assertThat(descriptor.getMemberAccess()).isEmpty();
+        assertThat(descriptor.isInitializer()).isTrue();
+    }
+
+    @Test
+    @DisplayName("build_kindWithApplicableAccessAndProvidedAccess_returnsDescriptor")
+    void build_kindWithApplicableAccess_andProvidedAccess_returnsDescriptor() {
+        EffectiveMemberDescriptor descriptor = EffectiveMemberDescriptor.builder()
+                .memberKind(EffectiveMemberDescriptor.MemberKind.FIELD)
+                .name("ValidName")
+                .memberAccess(EffectiveMemberDescriptor.MemberAccess.PUBLIC)
+                .build();
+
+        assertThat(descriptor.getMemberAccess()).contains(EffectiveMemberDescriptor.MemberAccess.PUBLIC);
+        assertThat(descriptor.isType()).isFalse();
+    }
+
+    @Test
+    @DisplayName("build_methodWithNullAccess_throwsIllegalArgumentException")
+    void build_methodWithNullAccess_throwsIllegalArgumentException() {
+        // METHOD requires access (any of PUBLIC/PROTECTED/PACKAGE/PRIVATE), so null must fail
+        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+                        .memberKind(EffectiveMemberDescriptor.MemberKind.METHOD)
+                        .name("ValidName")
+                        // access omitted
+                        .build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Access level must be provided for METHOD");
+    }
+
+    @Test
+    @DisplayName("build_allKindsWithoutApplicableAccessAndProvidedAccess_throwsIllegalArgumentException")
+    void build_allKindsWithoutApplicableAccess_andProvidedAccess_throwsIllegalArgumentException() {
+        java.util.Set<EffectiveMemberDescriptor.MemberKind> kindsWithoutAccess = java.util.EnumSet.of(
+                EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_STATIC,
+                EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_INSTANCE,
+                EffectiveMemberDescriptor.MemberKind.ENUM_CONSTANT,
+                EffectiveMemberDescriptor.MemberKind.RECORD_COMPONENT);
+
+        for (EffectiveMemberDescriptor.MemberKind memberKind : kindsWithoutAccess) {
+            // Prepare a name according to invariants
+            String name = (memberKind == EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_STATIC
+                            || memberKind == EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_INSTANCE)
+                    ? null
+                    : "ValidName";
+
+            // effectively final for lambda
+            assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+                            .memberKind(memberKind)
+                            .name(name)
+                            .memberAccess(EffectiveMemberDescriptor.MemberAccess.PUBLIC)
+                            .build())
+                    .as("kind %s must reject any provided access level", memberKind)
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Access level must be null for " + memberKind);
+        }
+    }
+
+    @Test
+    @DisplayName("build_allKindsWithApplicableAccessAndNullAccess_throwsIllegalArgumentException")
+    void build_allKindsWithApplicableAccess_andNullAccess_throwsIllegalArgumentException() {
+        java.util.Set<EffectiveMemberDescriptor.MemberKind> memberKindsWithAccess = java.util.EnumSet.of(
+                EffectiveMemberDescriptor.MemberKind.FIELD,
+                EffectiveMemberDescriptor.MemberKind.METHOD,
+                EffectiveMemberDescriptor.MemberKind.CONSTRUCTOR,
+                EffectiveMemberDescriptor.MemberKind.TYPE_CLASS,
+                EffectiveMemberDescriptor.MemberKind.TYPE_INTERFACE,
+                EffectiveMemberDescriptor.MemberKind.TYPE_ENUM,
+                EffectiveMemberDescriptor.MemberKind.TYPE_RECORD,
+                EffectiveMemberDescriptor.MemberKind.TYPE_ANNOTATION);
+
+        for (EffectiveMemberDescriptor.MemberKind kind : memberKindsWithAccess) {
+            // Constructors require a non-blank name; types/fields/methods too (per our invariants)
+            String name = "Name";
+            assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+                            .memberKind(kind)
+                            .name(name)
+                            // no memberAccess
+                            .build())
+                    .as("kind %s must require a provided access level", kind)
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Access level must be provided for " + kind);
+        }
     }
 }

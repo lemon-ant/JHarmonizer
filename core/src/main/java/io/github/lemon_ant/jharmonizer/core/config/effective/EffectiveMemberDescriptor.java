@@ -23,35 +23,43 @@ import lombok.Value;
  */
 @Value
 @Builder
+@SuppressWarnings("PMD.TooManyMethods")
 public class EffectiveMemberDescriptor {
 
+    // Kinds that must not declare any modifiers at all.
     private static final Set<MemberKind> KINDS_WITHOUT_MODIFIERS = EnumSet.of(
             MemberKind.CONSTRUCTOR,
             MemberKind.INIT_BLOCK_STATIC,
             MemberKind.INIT_BLOCK_INSTANCE,
             MemberKind.ENUM_CONSTANT,
             MemberKind.RECORD_COMPONENT);
+
     /**
      * Simple name (null for initializer blocks).
      */
     @Nullable
     String name;
+
     /**
      * Unified kind: fields, methods, ctors, init blocks, enum consts, record components, and nested types.
      */
     @NonNull
     MemberKind memberKind;
+
     /**
      * Access level (PACKAGE means no explicit modifier).
+     * For kinds where access is not applicable (see {@link MemberKind#isAccessLevelApplicable()} ()}), this must be null.
      */
-    @NonNull
+    @Nullable
     MemberAccess memberAccess;
+
     /**
      * Unified set of declaration modifiers (STATIC, FINAL, ABSTRACT, DEFAULT, SEALED, NON_SEALED, etc.).
      */
     @NonNull
     @Singular
     Set<@NonNull DeclarationModifier> declarationModifiers;
+
     /**
      * Fully-qualified annotation names.
      */
@@ -62,35 +70,61 @@ public class EffectiveMemberDescriptor {
     private EffectiveMemberDescriptor(
             @Nullable String name,
             @NonNull MemberKind memberKind,
-            @NonNull MemberAccess memberAccess,
+            @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
             @NonNull Set<@NonNull String> annotationQualifiedNames) {
 
-        String trimmedName = trimToNull(name);
-        // Name invariants
-        if (memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE) {
-            // Initializers must NOT have a name
-            if (trimmedName != null) {
-                throw new IllegalArgumentException("Initializer elements must have null name");
-            }
-        } else if (trimmedName == null) {
-            // All non-initializers must have a non-blank name
-            throw new IllegalArgumentException("Non-initializer elements must have a non-blank name");
-        }
-        this.name = trimmedName;
+        this.name = validateAndNormalizeName(name, memberKind);
 
-        // Modifier legality checks (conservative per JLS).
-        validateModifiersForMemberKind(memberKind, memberAccess, declarationModifiers);
+        // --- access invariants
+        validateAccessForMemberKind(memberKind, memberAccess);
+
+        // --- modifier legality checks (conservative per JLS)
+        validateModifiers(memberKind, memberAccess, declarationModifiers);
 
         this.memberKind = memberKind;
-        this.memberAccess = memberAccess;
+        this.memberAccess = memberAccess; // validated above for presence/absence
         this.declarationModifiers = unmodifiableSet(declarationModifiers);
         this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
     }
 
-    private static void validateModifiersForMemberKind(
+    private static @Nullable String validateAndNormalizeName(@Nullable String rawName, @NonNull MemberKind memberKind) {
+        // Normalize once
+        String trimmedName = trimToNull(rawName);
+
+        // For initializers the name MUST be null; for all others it MUST be non-null.
+        boolean mustBeNull = memberKind == MemberKind.INIT_BLOCK_STATIC || memberKind == MemberKind.INIT_BLOCK_INSTANCE;
+        boolean isProvided = trimmedName != null;
+
+        if (mustBeNull == isProvided) {
+            // Both true => initializer has a name (illegal)
+            // Both false => non-initializer without a name (illegal)
+            throw new IllegalArgumentException(
+                    mustBeNull
+                            ? "Initializer elements must have null name"
+                            : "Non-initializer elements must have a non-blank name");
+        }
+
+        // Valid: return null for initializers, normalized name for others.
+        return mustBeNull ? null : trimmedName;
+    }
+
+    private static void validateAccessForMemberKind(
+            @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
+        boolean allows = memberKind.isAccessLevelApplicable();
+        boolean provided = (memberAccess != null);
+
+        if (allows != provided) {
+            String message = allows
+                    ? "Access level must be provided for " + memberKind
+                    : "Access level must be null for " + memberKind;
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static void validateModifiers(
             @NonNull MemberKind memberKind,
-            @NonNull MemberAccess memberAccess,
+            @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
         ensureNoModifiersIfRequired(memberKind, declarationModifiers);
@@ -101,6 +135,7 @@ public class EffectiveMemberDescriptor {
         }
 
         if (memberKind == MemberKind.METHOD) {
+            // memberAccess is guaranteed non-null for METHOD by validateAccessForMemberKind
             validateMethodModifiers(memberKind, memberAccess, declarationModifiers);
             return;
         }
@@ -135,7 +170,7 @@ public class EffectiveMemberDescriptor {
 
     private static void validateMethodModifiers(
             @NonNull MemberKind memberKind,
-            @NonNull MemberAccess memberAccess,
+            @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
         // Forbid field/type-only modifiers
         forbidAny(
@@ -146,7 +181,7 @@ public class EffectiveMemberDescriptor {
                 DeclarationModifier.SEALED,
                 DeclarationModifier.NON_SEALED);
 
-        // Conflicts with ABSTRACT.
+        // Conflicts with ABSTRACT
         if (declarationModifiers.contains(DeclarationModifier.ABSTRACT)) {
             forbidAny(
                     memberKind,
@@ -155,13 +190,12 @@ public class EffectiveMemberDescriptor {
                     DeclarationModifier.STATIC,
                     DeclarationModifier.NATIVE,
                     DeclarationModifier.SYNCHRONIZED);
-            // Abstract method cannot be private.
             if (memberAccess == MemberAccess.PRIVATE) {
                 throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
             }
         }
 
-        // Default (interface) method cannot be abstract/static/final/synchronized/native.
+        // Default (interface) method conflicts
         if (declarationModifiers.contains(DeclarationModifier.DEFAULT)) {
             forbidAny(
                     memberKind,
@@ -200,13 +234,12 @@ public class EffectiveMemberDescriptor {
 
     private static void requireNotBoth(
             MemberKind memberKind,
-            Set<DeclarationModifier> declarationModifiers,
-            DeclarationModifier declarationModifier1,
-            DeclarationModifier declarationModifier2) {
-        if (declarationModifiers.contains(declarationModifier1)
-                && declarationModifiers.contains(declarationModifier2)) {
-            throw new IllegalArgumentException("Illegal modifier combination for " + memberKind + ": "
-                    + declarationModifier1 + " + " + declarationModifier2);
+            Set<DeclarationModifier> modifiers,
+            DeclarationModifier first,
+            DeclarationModifier second) {
+        if (modifiers.contains(first) && modifiers.contains(second)) {
+            throw new IllegalArgumentException(
+                    "Illegal modifier combination for " + memberKind + ": " + first + " + " + second);
         }
     }
 
@@ -231,17 +264,24 @@ public class EffectiveMemberDescriptor {
         return Optional.ofNullable(name);
     }
 
+    /**
+     * Optional-returning getter for access level.
+     */
+    public Optional<MemberAccess> getMemberAccess() {
+        return Optional.ofNullable(memberAccess);
+    }
+
     // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object other) {
+        if (this == other) {
             return true;
         }
-        if (!(o instanceof EffectiveMemberDescriptor that)) {
+        if (!(other instanceof EffectiveMemberDescriptor that)) {
             return false;
         }
         return this.memberKind == that.memberKind
-                && this.memberAccess == that.memberAccess
+                && Objects.equals(this.memberAccess, that.memberAccess)
                 && this.declarationModifiers.equals(that.declarationModifiers)
                 && this.annotationQualifiedNames.equals(that.annotationQualifiedNames)
                 && Objects.equals(this.name, that.name);
@@ -250,7 +290,7 @@ public class EffectiveMemberDescriptor {
     @Override
     public int hashCode() {
         int result = memberKind.hashCode();
-        result = 31 * result + memberAccess.hashCode();
+        result = 31 * result + Objects.hashCode(memberAccess);
         result = 31 * result + declarationModifiers.hashCode();
         result = 31 * result + annotationQualifiedNames.hashCode();
         result = 31 * result + Objects.hashCode(name);
@@ -258,27 +298,29 @@ public class EffectiveMemberDescriptor {
     }
 
     /**
-     * Unifies members and nested types; each constant knows whether it represents a type.
+     * Unifies members and nested types; each constant knows whether it represents a type and whether access applies.
      */
     @Getter
     @RequiredArgsConstructor
     public enum MemberKind {
-        FIELD(false),
-        METHOD(false),
-        CONSTRUCTOR(false),
-        INIT_BLOCK_STATIC(false),
-        INIT_BLOCK_INSTANCE(false),
-        ENUM_CONSTANT(false),
-        RECORD_COMPONENT(false),
+        FIELD(false, true),
+        METHOD(false, true),
+        CONSTRUCTOR(false, true),
+        INIT_BLOCK_STATIC(false, false),
+        INIT_BLOCK_INSTANCE(false, false),
+        ENUM_CONSTANT(false, false),
+        RECORD_COMPONENT(false, false),
 
-        TYPE_CLASS(true),
-        TYPE_INTERFACE(true),
-        TYPE_ENUM(true),
-        TYPE_RECORD(true),
-        TYPE_ANNOTATION(true),
+        TYPE_CLASS(true, true),
+        TYPE_INTERFACE(true, true),
+        TYPE_ENUM(true, true),
+        TYPE_RECORD(true, true),
+        TYPE_ANNOTATION(true, true),
         ;
 
         private final boolean type;
+        // Whether an explicit access modifier is applicable/required for this kind.
+        private final boolean accessLevelApplicable;
     }
 
     public enum MemberAccess {
