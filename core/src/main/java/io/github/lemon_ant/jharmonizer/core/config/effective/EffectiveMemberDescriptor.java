@@ -23,10 +23,9 @@ import lombok.Value;
  * are captured explicitly to drive selectors and ordering logic.
  */
 @Value
-@Builder
 public class EffectiveMemberDescriptor {
 
-    public static final int ONE = 1;
+    private static final int ONE = 1;
     /**
      * Simple name. Must be null for INIT_BLOCK and CONSTRUCTOR; must be non-blank for all other categories.
      */
@@ -50,22 +49,23 @@ public class EffectiveMemberDescriptor {
      * Unified set of declaration modifiers (STATIC, FINAL, ABSTRACT, DEFAULT, SEALED, NON_SEALED, etc.).
      */
     @NonNull
-    @Singular
     Set<@NonNull DeclarationModifier> declarationModifiers;
 
     /**
      * Fully-qualified annotation names.
      */
     @NonNull
-    @Singular
     Set<@NonNull String> annotationQualifiedNames;
 
+    int featureMask;
+
+    @Builder
     private EffectiveMemberDescriptor(
             @Nullable String name,
             @NonNull MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull Set<@NonNull String> annotationQualifiedNames) {
+            @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull @Singular Set<@NonNull String> annotationQualifiedNames) {
 
         this.name = validateAndNormalizeName(name, memberKind);
 
@@ -79,6 +79,10 @@ public class EffectiveMemberDescriptor {
         this.memberAccess = memberAccess; // validated above for presence/absence
         this.declarationModifiers = unmodifiableSet(declarationModifiers);
         this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
+
+        // Предвычисляем featureMask один раз (kind + access + modifiers)
+        this.featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                this.memberKind, this.memberAccess, this.declarationModifiers);
     }
 
     private static @Nullable String validateAndNormalizeName(@Nullable String rawName, @NonNull MemberKind memberKind) {
@@ -205,20 +209,17 @@ public class EffectiveMemberDescriptor {
         if (!(other instanceof EffectiveMemberDescriptor that)) {
             return false;
         }
-        return this.memberKind == that.memberKind
-                && Objects.equals(this.memberAccess, that.memberAccess)
-                && this.declarationModifiers.equals(that.declarationModifiers)
-                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames)
-                && Objects.equals(this.name, that.name);
+        // featureMask покрывает: memberKind + memberAccess + declarationModifiers
+        return this.featureMask == that.featureMask
+                && Objects.equals(this.name, that.name)
+                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
     }
 
     @Override
     public int hashCode() {
-        int result = memberKind.hashCode();
-        result = 31 * result + Objects.hashCode(memberAccess);
-        result = 31 * result + declarationModifiers.hashCode();
-        result = 31 * result + annotationQualifiedNames.hashCode();
+        int result = featureMask;
         result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + annotationQualifiedNames.hashCode();
         return result;
     }
 
@@ -242,7 +243,9 @@ public class EffectiveMemberDescriptor {
          */
         private final boolean accessLevelApplicable;
 
-        /** True if this category represents a (nested) type. */
+        /**
+         * True if this category represents a (nested) type.
+         */
         public boolean isType() {
             return this == TYPE;
         }
@@ -314,36 +317,6 @@ public class EffectiveMemberDescriptor {
         NON_SEALED(EnumSet.of(TargetCategory.TYPE)),
         ;
 
-        @Getter
-        private final Set<TargetCategory> applicableTargets;
-
-        // Global symmetric conflicts (no TargetCategory scoping)
-        @SuppressWarnings("PMD.UseEnumCollections")
-        private final Set<DeclarationModifier> conflicts = new HashSet<>();
-
-        private DeclarationModifier(Set<TargetCategory> applicableTargets) {
-            this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
-        }
-
-        public boolean isApplicableTo(TargetCategory targetCategory) {
-            return applicableTargets.contains(targetCategory);
-        }
-
-        /**
-         * Global conflict check. Category is ignored intentionally:
-         * applicability per category is validated separately before conflicts are checked.
-         */
-        public boolean conflictsWithOn(@NonNull DeclarationModifier other) {
-            return this.conflicts.contains(other);
-        }
-
-        // -- static conflict registry helpers (symmetric, category-agnostic) --
-
-        private static void conflict(DeclarationModifier a, DeclarationModifier b) {
-            a.conflicts.add(b);
-            b.conflicts.add(a);
-        }
-
         static {
             // METHOD-level pairs (but safe globally because of applicability filtering):
             conflict(ABSTRACT, FINAL);
@@ -361,6 +334,35 @@ public class EffectiveMemberDescriptor {
             conflict(SEALED, NON_SEALED);
 
             // No FIELD-only conflicts in the current minimal model.
+        }
+
+        @Getter
+        private final Set<TargetCategory> applicableTargets;
+        // Global symmetric conflicts (no TargetCategory scoping)
+        @SuppressWarnings("PMD.UseEnumCollections")
+        private final Set<DeclarationModifier> conflicts = new HashSet<>();
+
+        DeclarationModifier(Set<TargetCategory> applicableTargets) {
+            this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
+        }
+
+        private static void conflict(DeclarationModifier a, DeclarationModifier b) {
+            a.conflicts.add(b);
+            b.conflicts.add(a);
+        }
+
+        // -- static conflict registry helpers (symmetric, category-agnostic) --
+
+        public boolean isApplicableTo(TargetCategory targetCategory) {
+            return applicableTargets.contains(targetCategory);
+        }
+
+        /**
+         * Global conflict check. Category is ignored intentionally:
+         * applicability per category is validated separately before conflicts are checked.
+         */
+        public boolean conflictsWithOn(@NonNull DeclarationModifier other) {
+            return this.conflicts.contains(other);
         }
     }
 }
