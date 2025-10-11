@@ -1,9 +1,9 @@
-package io.github.lemon_ant.jharmonizer.core.config.effective;
+package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -65,18 +65,15 @@ public class MemberDeclarationFlagsUtil {
      *   <li>MODIFIERS subset bits (zero or more bits set).</li>
      * </ul>
      *
-     * @param memberKind
-     *        the member kind to encode; must not be {@code null}. Exactly one KIND bit is set.
-     * @param memberAccess
-     *        the member access to encode; may be {@code null} when access is not applicable
-     *        (e.g., for initializer blocks). If {@code null}, no ACCESS bit is set.
-     * @param declarationModifiers
-     *        the set of declaration modifiers to encode; must not be {@code null}. May be empty.
-     *        Each modifier contributes one bit in the MODIFIERS segment.
+     * @param memberKind           the member kind to encode; must not be {@code null}. Exactly one KIND bit is set.
+     * @param memberAccess         the member access to encode; may be {@code null} when access is not applicable
+     *                             (e.g., for initializer blocks). If {@code null}, no ACCESS bit is set.
+     * @param declarationModifiers the set of declaration modifiers to encode; must not be {@code null}. May be empty.
+     *                             Each modifier contributes one bit in the MODIFIERS segment.
      * @return a 32-bit integer mask representing the provided member declaration flags
      * @implNote Bit positions are derived from enum {@code ordinal()} values and contiguous
-     *           segment offsets; changing enum order will change bit layout. Tests should guard
-     *           the expected layout and non-overlapping segments.
+     * segment offsets; changing enum order will change bit layout. Tests should guard
+     * the expected layout and non-overlapping segments.
      */
     public static int encodeMemberDeclarationFlags(
             @NonNull MemberKind memberKind,
@@ -94,11 +91,9 @@ public class MemberDeclarationFlagsUtil {
      * <p>This check is segment-agnostic: any bits present in
      * {@code requiredDeclarationFlags} must also be set in {@code memberDeclarationFlags}.</p>
      *
-     * @param memberDeclarationFlags
-     *        the full mask computed for a member (KIND, ACCESS and MODIFIERS segments)
-     * @param requiredDeclarationFlags
-     *        the mask that encodes required flags (may include bits from any segment);
-     *        use zero to indicate “no requirement”
+     * @param memberDeclarationFlags   the full mask computed for a member (KIND, ACCESS and MODIFIERS segments)
+     * @param requiredDeclarationFlags the mask that encodes required flags (may include bits from any segment);
+     *                                 use zero to indicate “no requirement”
      * @return {@code true} if all required bits are present; {@code false} otherwise
      */
     public static boolean containsAllRequiredDeclarationFlags(

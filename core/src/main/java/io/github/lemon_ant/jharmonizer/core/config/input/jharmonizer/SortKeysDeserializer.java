@@ -38,7 +38,7 @@ class SortKeysDeserializer extends JsonDeserializer<List<SortKey>> {
         }
 
         if (result.isEmpty()) {
-            throw new IOException("SortKey list cannot be empty");
+            throw new IOException("UnifiedSortKey list cannot be empty");
         }
 
         return Collections.unmodifiableList(result);

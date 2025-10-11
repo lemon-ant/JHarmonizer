@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.ConfigRoot;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
@@ -14,7 +14,7 @@ import spoon.reflect.declaration.CtTypeMember;
 public final class Sorter {
     private final CtTypeMemberComparator comparator;
 
-    public Sorter(final ConfigRoot config) {
+    public Sorter(final JHarmonizerConfig config) {
         comparator = new CtTypeMemberComparator(config.getTypeMembersOrdering());
     }
 

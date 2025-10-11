@@ -7,7 +7,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 @Value
-public class ConfigRoot {
+public class JHarmonizerConfig {
 
     boolean fixImports;
 
@@ -23,7 +23,7 @@ public class ConfigRoot {
     @NonNull
     List<MemberGroup> typeMembersOrdering;
 
-    ConfigRoot(
+    JHarmonizerConfig(
             @NonNull @JsonProperty("top-level-types-ordering") TopLevelTypesOrdering topLevelTypesOrdering,
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle,
@@ -39,7 +39,7 @@ public class ConfigRoot {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ConfigRoot that)) {
+        if (!(o instanceof JHarmonizerConfig that)) {
             return false;
         }
         return fixImports == that.fixImports

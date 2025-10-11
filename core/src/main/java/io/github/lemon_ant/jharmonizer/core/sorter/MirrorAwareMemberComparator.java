@@ -65,7 +65,7 @@ interface IntraGroupOrder {
 }
 
 /**
- * Options for ordering inside the same effective group (fallback after IntraGroupOrder).
+ * Options for ordering inside the same compiled group (fallback after IntraGroupOrder).
  */
 final class OptionsWithinSameGroup {
     /**
@@ -108,7 +108,7 @@ final class OptionsWithinSameGroup {
  * - If no dependencies: the member itself (self).
  * <p>
  * effectiveGroupIndex:
- * - Minimum among baseline group and ALL transitive dependencies' effective groups.
+ * - Minimum among baseline group and ALL transitive dependencies' compiled groups.
  */
 record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
 
@@ -119,7 +119,7 @@ record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolea
  * - If RIGHT depends (transitively) on LEFT -> RIGHT is "greater" (goes lower) => return -1
  * - If LEFT  depends (transitively) on RIGHT -> LEFT  is "greater"             => return  1
  * (We run reachability on representatives: root/self.)
- * 3) Compare by effective group (lower index first).
+ * 3) Compare by compiled group (lower index first).
  * 4) Inside the same group, apply **group-specific rules** (IntraGroupOrder),
  * then fallback to OptionsWithinSameGroup (originalPosition, then name, then id),
  * finally actuals if still equal.
@@ -260,7 +260,7 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     /**
      * Recursive analysis that:
      * - Detects cycles and throws IllegalStateException with a readable path.
-     * - Computes effectiveGroupIndex as MIN(baseline, all transitive deps' effective groups).
+     * - Computes effectiveGroupIndex as MIN(baseline, all transitive deps' compiled groups).
      * - Picks representativeForCompare:
      * * If min == baseline -> representative = SELF.
      * * Else -> among deps that attain the minimum group, pick the **first by the same rules**

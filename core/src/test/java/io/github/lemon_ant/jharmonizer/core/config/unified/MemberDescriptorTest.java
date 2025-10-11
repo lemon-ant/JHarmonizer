@@ -1,47 +1,43 @@
-package io.github.lemon_ant.jharmonizer.core.config.effective;
+package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.ABSTRACT;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.DEFAULT;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.FINAL;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.NATIVE;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.NON_SEALED;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.SEALED;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.STATIC;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.STRICTFP;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.SYNCHRONIZED;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.TRANSIENT;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier.VOLATILE;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess.PRIVATE;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess.PUBLIC;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.CONSTRUCTOR;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.ENUM_CONSTANT;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.FIELD;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_INSTANCE;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.INIT_BLOCK_STATIC;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.METHOD;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.RECORD_COMPONENT;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_ANNOTATION;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_CLASS;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_ENUM;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_INTERFACE;
-import static io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind.TYPE_RECORD;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.ABSTRACT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.DEFAULT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.FINAL;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.NATIVE;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.NON_SEALED;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.SEALED;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.STATIC;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.STRICTFP;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.SYNCHRONIZED;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.TRANSIENT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier.VOLATILE;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess.PRIVATE;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess.PUBLIC;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.CONSTRUCTOR;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.ENUM_CONSTANT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.FIELD;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.INSTANCE_INIT_BLOCK;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.METHOD;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.RECORD_COMPONENT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.STATIC_INIT_BLOCK;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ANNOTATION;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_CLASS;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ENUM;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_INTERFACE;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.MemberKind;
-import io.github.lemon_ant.jharmonizer.core.config.effective.EffectiveMemberDescriptor.TargetCategory;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class EffectiveMemberDescriptorTest {
+class MemberDescriptorTest {
 
     private static Stream<Arguments> kindsRequiringNullName() {
-        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(INIT_BLOCK_STATIC), Arguments.of(INIT_BLOCK_INSTANCE));
+        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(STATIC_INIT_BLOCK), Arguments.of(INSTANCE_INIT_BLOCK));
     }
 
     private static Stream<Arguments> kindsRequiringNonBlankName() {
@@ -63,13 +59,13 @@ class EffectiveMemberDescriptorTest {
     }
 
     private static Stream<MemberKind> accessNotApplicableKinds() {
-        return Stream.of(INIT_BLOCK_STATIC, INIT_BLOCK_INSTANCE, ENUM_CONSTANT, RECORD_COMPONENT);
+        return Stream.of(STATIC_INIT_BLOCK, INSTANCE_INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
     }
 
     private static Stream<Arguments> noModifierCases() {
         return Stream.of(
-                Arguments.of(INIT_BLOCK_STATIC, null, STATIC),
-                Arguments.of(INIT_BLOCK_INSTANCE, null, FINAL),
+                Arguments.of(STATIC_INIT_BLOCK, null, STATIC),
+                Arguments.of(INSTANCE_INIT_BLOCK, null, FINAL),
                 Arguments.of(ENUM_CONSTANT, null, STATIC),
                 Arguments.of(RECORD_COMPONENT, null, FINAL));
     }
@@ -82,19 +78,19 @@ class EffectiveMemberDescriptorTest {
         return Stream.of(ABSTRACT, STATIC, FINAL, SYNCHRONIZED, NATIVE);
     }
 
-    private EffectiveMemberDescriptor.EffectiveMemberDescriptorBuilder base(MemberKind k, MemberAccess a, String n) {
-        return EffectiveMemberDescriptor.builder().memberKind(k).memberAccess(a).name(n);
+    private MemberDescriptor.MemberDescriptorBuilder base(MemberKind k, MemberAccess a, String n) {
+        return MemberDescriptor.builder().memberKind(k).memberAccess(a).name(n);
     }
 
-    private EffectiveMemberDescriptor.EffectiveMemberDescriptorBuilder fld(String n) {
+    private MemberDescriptor.MemberDescriptorBuilder fld(String n) {
         return base(FIELD, PUBLIC, n);
     }
 
-    private EffectiveMemberDescriptor.EffectiveMemberDescriptorBuilder mtd(String n) {
+    private MemberDescriptor.MemberDescriptorBuilder mtd(String n) {
         return base(METHOD, PUBLIC, n);
     }
 
-    private EffectiveMemberDescriptor.EffectiveMemberDescriptorBuilder typ(MemberKind k, String n) {
+    private MemberDescriptor.MemberDescriptorBuilder typ(MemberKind k, String n) {
         assertThat(k.isType()).isTrue();
         return base(k, PUBLIC, n);
     }
@@ -121,10 +117,8 @@ class EffectiveMemberDescriptorTest {
     @MethodSource("accessApplicableKinds")
     void builder_accessRequiredAndNull_throwsIAE(MemberKind kind) {
         String name = kind.getTargetCategory() == TargetCategory.CONSTRUCTOR ? null : "Valid";
-        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
-                        .memberKind(kind)
-                        .name(name)
-                        .build())
+        assertThatThrownBy(() ->
+                        MemberDescriptor.builder().memberKind(kind).name(name).build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Access level must be provided for " + kind);
     }
@@ -133,7 +127,7 @@ class EffectiveMemberDescriptorTest {
     @MethodSource("accessNotApplicableKinds")
     void builder_accessForbiddenAndProvided_throwsIAE(MemberKind kind) {
         String name = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
-        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+        assertThatThrownBy(() -> MemberDescriptor.builder()
                         .memberKind(kind)
                         .name(name)
                         .memberAccess(PUBLIC)
@@ -147,7 +141,7 @@ class EffectiveMemberDescriptorTest {
     void builder_modifierInapplicableAndProvided_throwsIAE(
             MemberKind kind, MemberAccess access, DeclarationModifier mod) {
         String name = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
-        assertThatThrownBy(() -> EffectiveMemberDescriptor.builder()
+        assertThatThrownBy(() -> MemberDescriptor.builder()
                         .memberKind(kind)
                         .name(name)
                         .memberAccess(access)
@@ -273,7 +267,7 @@ class EffectiveMemberDescriptorTest {
     @Test
     void flags_typeAndInitializer_asExpected() {
         assertThat(typ(TYPE_INTERFACE, "Api").build().isType()).isTrue();
-        assertThat(base(INIT_BLOCK_STATIC, null, null).build().isInitializer()).isTrue();
+        assertThat(base(STATIC_INIT_BLOCK, null, null).build().isInitializer()).isTrue();
         assertThat(mtd("x").build().isType()).isFalse();
         assertThat(mtd("x").build().isInitializer()).isFalse();
     }

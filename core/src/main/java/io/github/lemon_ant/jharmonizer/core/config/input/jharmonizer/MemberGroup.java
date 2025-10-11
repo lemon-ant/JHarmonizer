@@ -27,7 +27,7 @@ public class MemberGroup implements Serializable {
 
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
-    List<@NonNull MemberGroup> groups;
+    List<@NonNull MemberGroup> memberSubGroups;
 
     @NonNull
     Set<Set<String>> includes;
@@ -57,14 +57,16 @@ public class MemberGroup implements Serializable {
                     List<SortKey> sortKeys,
             @Nullable @JsonProperty(value = "separator") Separator separator,
             @Nullable @JsonProperty(value = "keepAccessorsTogether") Boolean keepAccessorsTogether,
-            @Nullable @JsonProperty(value = "groups") List<@NonNull MemberGroup> groups) {
+            // TODO Rename to subgroups
+            @Nullable @JsonProperty(value = "groups") List<@NonNull MemberGroup> memberSubGroups) {
         this.name = name;
         this.includes = Collections.unmodifiableSet(includes);
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
         this.sortKeys = Collections.unmodifiableList(sortKeys);
         this.separator = ofNullable(separator).orElse(Separator.NONE);
         this.keepAccessorsTogether = ofNullable(keepAccessorsTogether).orElse(false);
-        this.groups = ofNullable(groups).map(Collections::unmodifiableList).orElse(List.of());
+        this.memberSubGroups =
+                ofNullable(memberSubGroups).map(Collections::unmodifiableList).orElse(List.of());
     }
 
     @Override
@@ -79,7 +81,7 @@ public class MemberGroup implements Serializable {
                 && excludes.equals(that.excludes)
                 && sortKeys.equals(that.sortKeys)
                 && separator == that.separator
-                && groups.equals(that.groups);
+                && memberSubGroups.equals(that.memberSubGroups);
     }
 
     @Override
@@ -90,7 +92,7 @@ public class MemberGroup implements Serializable {
         result = 31 * result + sortKeys.hashCode();
         result = 31 * result + separator.hashCode();
         result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
-        result = 31 * result + groups.hashCode();
+        result = 31 * result + memberSubGroups.hashCode();
         return result;
     }
 }

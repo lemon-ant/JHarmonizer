@@ -15,7 +15,7 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class ConfigLoaderTest {
+class JHarmonizerConfigLoaderTest {
 
     @Test
     void loadFrom_emptyFile_throwsException(@TempDir Path tempDir) throws IOException {
@@ -24,7 +24,7 @@ class ConfigLoaderTest {
         assertThat(empty.createNewFile()).isTrue();
 
         // when/then
-        assertThatThrownBy(() -> ConfigLoader.loadFrom(empty)).isInstanceOf(MismatchedInputException.class);
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(empty)).isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
@@ -34,7 +34,7 @@ class ConfigLoaderTest {
                 getClass().getResourceAsStream("/test-cases/core/config/invalid-config-duplicate-types.yml"));
 
         // when / then
-        assertThatThrownBy(() -> ConfigLoader.loadFrom(config))
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(config))
                 .isInstanceOf(ValueInstantiationException.class)
                 .hasMessageContaining("Duplicate", "found"); // уточнение, если проверка сообщает контекст
     }
@@ -48,7 +48,8 @@ class ConfigLoaderTest {
         }
 
         // when/then
-        assertThatThrownBy(() -> ConfigLoader.loadFrom(badFile)).isInstanceOf(MismatchedInputException.class);
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(badFile))
+                .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
@@ -57,7 +58,7 @@ class ConfigLoaderTest {
         InputStream stream = getClass().getResourceAsStream("/test-cases/core/config/simplest-working-config.yml");
 
         // when / then
-        assertThatCode(() -> ConfigLoader.loadFrom(stream)).doesNotThrowAnyException();
+        assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(stream)).doesNotThrowAnyException();
     }
 
     @Test
@@ -66,18 +67,18 @@ class ConfigLoaderTest {
         InputStream stream = getClass().getResourceAsStream("/default-config.yml");
 
         // when
-        ConfigRoot configRoot = ConfigLoader.loadFrom(stream);
+        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadFrom(stream);
 
         // then
-        assertThat(configRoot).isNotNull();
-        TopLevelTypesOrdering topLevelTypesOrdering = configRoot.getTopLevelTypesOrdering();
+        assertThat(JHarmonizerConfig).isNotNull();
+        TopLevelTypesOrdering topLevelTypesOrdering = JHarmonizerConfig.getTopLevelTypesOrdering();
         assertThat(topLevelTypesOrdering).isNotNull();
         assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
         assertThat(topLevelTypesOrdering.getTypeGroups()).isNotEmpty();
         topLevelTypesOrdering.getTypeGroups().forEach(entry -> assertThat(entry.getTypeKinds())
                 .isNotEmpty());
         assertThat(topLevelTypesOrdering.getSortKeys()).containsExactly(SortKey.VISIBILITY_DESC, SortKey.ALPHA);
-        assertThat(configRoot.isFixImports()).isTrue();
-        assertThat(configRoot.getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+        assertThat(JHarmonizerConfig.isFixImports()).isTrue();
+        assertThat(JHarmonizerConfig.getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
     }
 }

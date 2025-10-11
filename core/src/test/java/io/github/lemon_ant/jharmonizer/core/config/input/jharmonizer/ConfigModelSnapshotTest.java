@@ -21,10 +21,10 @@ class ConfigModelSnapshotTest {
         // given
         File defaultConfigFile =
                 new File(getClass().getResource("/default-config.yml").toURI());
-        ConfigRoot configRoot = ConfigLoader.loadFrom(defaultConfigFile);
+        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadFrom(defaultConfigFile);
 
         // when
-        String actualJson = MAPPER.writeValueAsString(configRoot);
+        String actualJson = MAPPER.writeValueAsString(JHarmonizerConfig);
 
         // then
         try (InputStream expectedJsonStream =
@@ -64,10 +64,10 @@ class ConfigModelSnapshotTest {
         // Load current default config
         File defaultConfigFile =
                 new File(getClass().getResource("/default-config.yml").toURI());
-        ConfigRoot configRoot = ConfigLoader.loadFrom(defaultConfigFile);
+        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadFrom(defaultConfigFile);
 
         // Serialize and overwrite snapshot
-        String newSnapshot = MAPPER.writeValueAsString(configRoot);
+        String newSnapshot = MAPPER.writeValueAsString(JHarmonizerConfig);
         Path snapshotPath = Path.of("src/test/resources/test-cases/core/config/expected-config.json");
         Files.writeString(snapshotPath, newSnapshot, StandardCharsets.UTF_8);
     }

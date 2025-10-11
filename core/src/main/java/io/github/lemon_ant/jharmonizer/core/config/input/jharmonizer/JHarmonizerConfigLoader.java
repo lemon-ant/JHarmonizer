@@ -11,18 +11,18 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class ConfigLoader {
+public class JHarmonizerConfigLoader {
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
     @NonNull
-    public static ConfigRoot loadFrom(@NonNull InputStream configInput) throws IOException {
-        return YAML_MAPPER.readValue(configInput, ConfigRoot.class);
+    public static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
+        return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
     }
 
     @NonNull
-    public static ConfigRoot loadFrom(@NonNull File yamlFile) throws IOException {
+    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) throws IOException {
         try (InputStream is = Files.newInputStream(yamlFile.toPath())) {
             return loadFrom(is);
         }

@@ -1,19 +1,15 @@
-package io.github.lemon_ant.jharmonizer.core.config.effective;
+package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberDeclarationFlagsUtil;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.Value;
 
@@ -23,7 +19,7 @@ import lombok.Value;
  * are captured explicitly to drive selectors and ordering logic.
  */
 @Value
-public class EffectiveMemberDescriptor {
+public class MemberDescriptor {
 
     private static final int ONE = 1;
     /**
@@ -60,7 +56,7 @@ public class EffectiveMemberDescriptor {
     int featureMask;
 
     @Builder
-    private EffectiveMemberDescriptor(
+    private MemberDescriptor(
             @Nullable String name,
             @NonNull MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
@@ -206,7 +202,7 @@ public class EffectiveMemberDescriptor {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof EffectiveMemberDescriptor that)) {
+        if (!(other instanceof MemberDescriptor that)) {
             return false;
         }
         // featureMask покрывает: memberKind + memberAccess + declarationModifiers
@@ -221,148 +217,5 @@ public class EffectiveMemberDescriptor {
         result = 31 * result + Objects.hashCode(name);
         result = 31 * result + annotationQualifiedNames.hashCode();
         return result;
-    }
-
-    /**
-     * Coarse-grained target category that drives applicability of access and declaration modifiers.
-     */
-    @Getter
-    @RequiredArgsConstructor
-    public enum TargetCategory {
-        FIELD(true),
-        METHOD(true),
-        CONSTRUCTOR(true),
-        INIT_BLOCK(false), // static / instance initializer blocks
-        ENUM_CONSTANT(false), // enum constant entries
-        RECORD_COMPONENT(false), // record component entries
-        TYPE(true), // all TYPE_* kinds
-        ;
-
-        /**
-         * Whether explicit access level applies (must be provided).
-         */
-        private final boolean accessLevelApplicable;
-
-        /**
-         * True if this category represents a (nested) type.
-         */
-        public boolean isType() {
-            return this == TYPE;
-        }
-
-        public boolean isInitializer() {
-            return this == TargetCategory.INIT_BLOCK;
-        }
-    }
-
-    /**
-     * Unifies members and nested types; each constant binds to a TargetCategory.
-     */
-    @Getter
-    @RequiredArgsConstructor
-    public enum MemberKind {
-        FIELD(TargetCategory.FIELD),
-        METHOD(TargetCategory.METHOD),
-        CONSTRUCTOR(TargetCategory.CONSTRUCTOR),
-
-        // Initializer blocks:
-        INIT_BLOCK_STATIC(TargetCategory.INIT_BLOCK),
-        INIT_BLOCK_INSTANCE(TargetCategory.INIT_BLOCK),
-
-        // Non-block entries that must have names (distinct from init blocks):
-        ENUM_CONSTANT(TargetCategory.ENUM_CONSTANT),
-        RECORD_COMPONENT(TargetCategory.RECORD_COMPONENT),
-
-        // Types:
-        TYPE_CLASS(TargetCategory.TYPE),
-        TYPE_INTERFACE(TargetCategory.TYPE),
-        TYPE_ENUM(TargetCategory.TYPE),
-        TYPE_RECORD(TargetCategory.TYPE),
-        TYPE_ANNOTATION(TargetCategory.TYPE),
-        ;
-
-        private final TargetCategory targetCategory;
-
-        public boolean isType() {
-            return this.getTargetCategory().isType();
-        }
-
-        public boolean isInitializer() {
-            return this.getTargetCategory().isInitializer();
-        }
-    }
-
-    public enum MemberAccess {
-        PUBLIC,
-        PROTECTED,
-        PACKAGE,
-        PRIVATE,
-    }
-
-    /**
-     * Unified declaration modifiers used in rules; applicability is defined via TargetCategory sets.
-     * Pairwise conflicts are declared globally (category-agnostic) and checked in {@link #validateModifiers}.
-     */
-    public enum DeclarationModifier {
-        STATIC(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
-        FINAL(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
-        ABSTRACT(EnumSet.of(TargetCategory.METHOD, TargetCategory.TYPE)),
-        DEFAULT(EnumSet.of(TargetCategory.METHOD)), // interface default methods
-        SYNCHRONIZED(EnumSet.of(TargetCategory.METHOD)),
-        TRANSIENT(EnumSet.of(TargetCategory.FIELD)),
-        VOLATILE(EnumSet.of(TargetCategory.FIELD)),
-        NATIVE(EnumSet.of(TargetCategory.METHOD)),
-        STRICTFP(EnumSet.of(TargetCategory.METHOD, TargetCategory.TYPE)),
-        SEALED(EnumSet.of(TargetCategory.TYPE)),
-        NON_SEALED(EnumSet.of(TargetCategory.TYPE)),
-        ;
-
-        static {
-            // METHOD-level pairs (but safe globally because of applicability filtering):
-            conflict(ABSTRACT, FINAL);
-            conflict(ABSTRACT, STATIC);
-            conflict(ABSTRACT, NATIVE);
-            conflict(ABSTRACT, SYNCHRONIZED);
-
-            conflict(DEFAULT, ABSTRACT);
-            conflict(DEFAULT, STATIC);
-            conflict(DEFAULT, FINAL);
-            conflict(DEFAULT, SYNCHRONIZED);
-            conflict(DEFAULT, NATIVE);
-
-            // TYPE-level pair (SEALED vs NON_SEALED) — applies only on types via applicability:
-            conflict(SEALED, NON_SEALED);
-
-            // No FIELD-only conflicts in the current minimal model.
-        }
-
-        @Getter
-        private final Set<TargetCategory> applicableTargets;
-        // Global symmetric conflicts (no TargetCategory scoping)
-        @SuppressWarnings("PMD.UseEnumCollections")
-        private final Set<DeclarationModifier> conflicts = new HashSet<>();
-
-        DeclarationModifier(Set<TargetCategory> applicableTargets) {
-            this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
-        }
-
-        private static void conflict(DeclarationModifier a, DeclarationModifier b) {
-            a.conflicts.add(b);
-            b.conflicts.add(a);
-        }
-
-        // -- static conflict registry helpers (symmetric, category-agnostic) --
-
-        public boolean isApplicableTo(TargetCategory targetCategory) {
-            return applicableTargets.contains(targetCategory);
-        }
-
-        /**
-         * Global conflict check. Category is ignored intentionally:
-         * applicability per category is validated separately before conflicts are checked.
-         */
-        public boolean conflictsWithOn(@NonNull DeclarationModifier other) {
-            return this.conflicts.contains(other);
-        }
     }
 }
