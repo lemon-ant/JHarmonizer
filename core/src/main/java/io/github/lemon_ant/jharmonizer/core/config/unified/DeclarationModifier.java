@@ -9,7 +9,7 @@ import lombok.NonNull;
 
 /**
  * Unified declaration modifiers used in rules; applicability is defined via TargetCategory sets.
- * Pairwise conflicts are declared globally (category-agnostic) and checked in {@link #validateModifiers}.
+ * Pairwise conflicts are declared globally (category-agnostic) and checked.
  */
 public enum DeclarationModifier {
     STATIC(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
@@ -58,8 +58,6 @@ public enum DeclarationModifier {
         a.conflicts.add(b);
         b.conflicts.add(a);
     }
-
-    // -- static conflict registry helpers (symmetric, category-agnostic) --
 
     boolean isApplicableTo(TargetCategory targetCategory) {
         return applicableTargets.contains(targetCategory);
