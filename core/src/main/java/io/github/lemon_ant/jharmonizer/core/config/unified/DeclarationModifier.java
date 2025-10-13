@@ -67,7 +67,7 @@ public enum DeclarationModifier {
      * Global conflict check. Category is ignored intentionally:
      * applicability per category is validated separately before conflicts are checked.
      */
-    boolean conflictsWithOn(@NonNull DeclarationModifier other) {
+    boolean hasConflictWith(@NonNull DeclarationModifier other) {
         return this.conflicts.contains(other);
     }
 }

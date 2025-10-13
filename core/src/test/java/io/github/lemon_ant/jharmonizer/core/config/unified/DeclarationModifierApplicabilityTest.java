@@ -13,11 +13,6 @@ class DeclarationModifierApplicabilityTest {
 
     @Test
     void modifiers_shouldAllowSealedOnlyForTypes() {
-        UnifiedRuleLine rule = UnifiedRuleLine.builder()
-                .kinds(Set.of(MemberKind.METHOD))
-                .declarationModifiers(Set.of(DeclarationModifier.SEALED))
-                .build();
-
         boolean applicableToTypes = DeclarationModifier.SEALED.getApplicableTargets().contains(TargetCategory.TYPE);
         boolean applicableToMethods = DeclarationModifier.SEALED.getApplicableTargets().contains(TargetCategory.METHOD);
 
@@ -27,8 +22,8 @@ class DeclarationModifierApplicabilityTest {
 
     @Test
     void modifiers_conflicts_nonSealed_vs_sealed() {
-        boolean conflict = DeclarationModifier.SEALED.getConflicts().contains(DeclarationModifier.NON_SEALED)
-                && DeclarationModifier.NON_SEALED.getConflicts().contains(DeclarationModifier.SEALED);
+        boolean conflict = DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED)
+                && DeclarationModifier.NON_SEALED.hasConflictWith(DeclarationModifier.SEALED);
         assertThat(conflict).isTrue();
     }
 }

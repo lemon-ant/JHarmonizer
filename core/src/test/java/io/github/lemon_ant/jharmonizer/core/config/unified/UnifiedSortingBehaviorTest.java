@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 class UnifiedSortingBehaviorTest {
 
     @Test
-    void sortingBehavior_shouldHoldKeysAndAccessorFlag() {
+    void buildSortingBehavior_validProperties_containsExpectedSortKeysAndAccessorsFlag() {
         UnifiedSortingBehavior behavior = UnifiedSortingBehavior.builder()
-                .unifiedSortKeys(List.of(UnifiedSortKey.BY_VISIBILITY, UnifiedSortKey.BY_NAME))
+                .unifiedSortKeys(List.of(UnifiedSortKey.VISIBILITY_ASC, UnifiedSortKey.ALPHA))
                 .keepAccessorsTogether(true)
                 .build();
 
-        assertThat(behavior.getUnifiedSortKeys()).containsExactly(UnifiedSortKey.BY_VISIBILITY, UnifiedSortKey.BY_NAME);
+        assertThat(behavior.getUnifiedSortKeys()).containsExactly(UnifiedSortKey.VISIBILITY_ASC, UnifiedSortKey.ALPHA);
         assertThat(behavior.isKeepAccessorsTogether()).isTrue();
     }
 }

@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -43,6 +44,7 @@ public class MemberGroup implements Serializable {
     @NonNull
     List<SortKey> sortKeys;
 
+    @Builder
     MemberGroup(
             @NonNull @JsonProperty(value = "name", required = true) String name,
             @NonNull

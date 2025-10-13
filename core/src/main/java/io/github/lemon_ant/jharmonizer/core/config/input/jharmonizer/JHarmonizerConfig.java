@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.List;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -23,6 +24,7 @@ public class JHarmonizerConfig {
     @NonNull
     List<MemberGroup> typeMembersOrdering;
 
+    @Builder
     JHarmonizerConfig(
             @NonNull @JsonProperty("top-level-types-ordering") TopLevelTypesOrdering topLevelTypesOrdering,
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,

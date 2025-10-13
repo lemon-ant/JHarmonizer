@@ -147,7 +147,7 @@ public class MemberDescriptor {
                 final DeclarationModifier leftModifier = declarationModifierArray[leftIndex];
                 for (int rightIndex = leftIndex + ONE; rightIndex < declarationModifierArray.length; rightIndex++) {
                     final DeclarationModifier rightModifier = declarationModifierArray[rightIndex];
-                    if (leftModifier.conflictsWithOn(rightModifier)) {
+                    if (leftModifier.hasConflictWith(rightModifier)) {
                         throw new IllegalArgumentException("Illegal modifier combination for " + memberKind + ": "
                                 + leftModifier + " + " + rightModifier);
                     }
