@@ -22,7 +22,7 @@ public class JHarmonizerConfig {
     TopLevelTypesOrdering topLevelTypesOrdering;
 
     @NonNull
-    List<MemberGroup> typeMembersOrdering;
+    List<MemberGroup> memberGroups;
 
     @Builder
     JHarmonizerConfig(
@@ -31,12 +31,12 @@ public class JHarmonizerConfig {
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle,
             @NonNull @JsonProperty(value = "header-line", required = true) HeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
-                    List<@NonNull MemberGroup> typeMembersOrdering) {
+                    List<@NonNull MemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;
         this.headerLine = headerLine;
-        this.typeMembersOrdering = Collections.unmodifiableList(typeMembersOrdering);
+        this.memberGroups = Collections.unmodifiableList(memberGroups);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class JHarmonizerConfig {
                 && topLevelTypesOrdering.equals(that.topLevelTypesOrdering)
                 && formatterStyle == that.formatterStyle
                 && headerLine.equals(that.headerLine)
-                && typeMembersOrdering.equals(that.typeMembersOrdering);
+                && memberGroups.equals(that.memberGroups);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class JHarmonizerConfig {
         result = 31 * result + Boolean.hashCode(fixImports);
         result = 31 * result + formatterStyle.hashCode();
         result = 31 * result + headerLine.hashCode();
-        result = 31 * result + typeMembersOrdering.hashCode();
+        result = 31 * result + memberGroups.hashCode();
         return result;
     }
 }

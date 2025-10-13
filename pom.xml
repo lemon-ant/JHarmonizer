@@ -25,8 +25,8 @@
         <palantir-java-format.version>2.72.0</palantir-java-format.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
-        <spotbugs.version>4.9.3</spotbugs.version>
+        <spotbugs-maven-plugin.version>4.9.6.0</spotbugs-maven-plugin.version>
+        <spotbugs.version>4.9.6</spotbugs.version>
         <spotless-maven-plugin.version>2.44.5</spotless-maven-plugin.version>
     </properties>
 

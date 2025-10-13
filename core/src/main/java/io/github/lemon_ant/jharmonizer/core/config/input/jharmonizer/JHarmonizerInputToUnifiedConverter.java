@@ -95,7 +95,7 @@ public final class JHarmonizerInputToUnifiedConverter {
 
     public static UnifiedConfig convert2Unified(@NonNull JHarmonizerConfig jHarmonizerConfig) {
         UnifiedConfig.UnifiedConfigBuilder unifiedConfigBuilder = UnifiedConfig.builder();
-        jHarmonizerConfig.getTypeMembersOrdering().stream()
+        jHarmonizerConfig.getMemberGroups().stream()
                 .map(JHarmonizerInputToUnifiedConverter::convertMemberGroup)
                 .forEach(unifiedConfigBuilder::rootMemberGroup);
         return unifiedConfigBuilder.build();

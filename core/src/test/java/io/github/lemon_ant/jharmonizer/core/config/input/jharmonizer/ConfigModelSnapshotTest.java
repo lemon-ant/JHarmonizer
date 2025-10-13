@@ -59,7 +59,7 @@ class ConfigModelSnapshotTest {
     }
 
     @Test
-    @Disabled("Utility only. Temporarily enable and run to regenerate expected-config.json")
+    @Disabled("Utility only. Run to regenerate expected-config.json")
     void regenerateSnapshot() throws Exception {
         // Load current default config
         File defaultConfigFile =

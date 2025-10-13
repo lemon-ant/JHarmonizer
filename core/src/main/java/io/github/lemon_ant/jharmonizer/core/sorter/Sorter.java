@@ -15,7 +15,7 @@ public final class Sorter {
     private final CtTypeMemberComparator comparator;
 
     public Sorter(final JHarmonizerConfig config) {
-        comparator = new CtTypeMemberComparator(config.getTypeMembersOrdering());
+        comparator = new CtTypeMemberComparator(config.getMemberGroups());
     }
 
     /**

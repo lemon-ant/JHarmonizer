@@ -20,7 +20,7 @@ public class TopLevelTypesOrdering {
     @NonNull
     List<@NonNull TypeGroup> typeGroups;
 
-    TopLevelTypesOrdering(
+    public TopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
             @NonNull @JsonProperty(value = "type-groups", required = true) List<@NonNull TypeGroup> typeGroups,
             @NonNull

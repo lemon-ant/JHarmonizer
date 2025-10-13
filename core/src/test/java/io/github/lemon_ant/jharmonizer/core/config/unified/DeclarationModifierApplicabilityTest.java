@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -12,18 +11,20 @@ import org.junit.jupiter.api.Test;
 class DeclarationModifierApplicabilityTest {
 
     @Test
-    void modifiers_shouldAllowSealedOnlyForTypes() {
-        boolean applicableToTypes = DeclarationModifier.SEALED.getApplicableTargets().contains(TargetCategory.TYPE);
-        boolean applicableToMethods = DeclarationModifier.SEALED.getApplicableTargets().contains(TargetCategory.METHOD);
-
-        assertThat(applicableToTypes).isTrue();
-        assertThat(applicableToMethods).isFalse();
+    void getApplicableTargets_forSealed_containsOnlyTypes() {
+        assertThat(DeclarationModifier.SEALED.getApplicableTargets()).containsExactly(TargetCategory.TYPE);
     }
 
     @Test
-    void modifiers_conflicts_nonSealed_vs_sealed() {
-        boolean conflict = DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED)
-                && DeclarationModifier.NON_SEALED.hasConflictWith(DeclarationModifier.SEALED);
-        assertThat(conflict).isTrue();
+    void hasConflictWith_forSealedAgainstNonSealed_returnTrue() {
+        assertThat(DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED))
+                .isTrue();
+    }
+
+    @Test
+    void hasConflictWith_forNonSealedAgainstSealed_returnTrue() {
+        boolean conflict = DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED);
+        assertThat(DeclarationModifier.NON_SEALED.hasConflictWith(DeclarationModifier.SEALED))
+                .isTrue();
     }
 }

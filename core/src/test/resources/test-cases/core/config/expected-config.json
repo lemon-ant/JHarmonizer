@@ -18,7 +18,7 @@
       "typeKinds" : [ "ANNOTATION" ]
     } ]
   },
-  "typeMembersOrdering" : [ {
+  "memberGroups" : [ {
     "name" : "Test Classes",
     "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
     "excludes" : [ ],
