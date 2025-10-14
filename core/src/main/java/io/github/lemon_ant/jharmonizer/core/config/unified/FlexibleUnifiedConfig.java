@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 import static java.util.Optional.ofNullable;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@SuppressWarnings("PMD.DataClass")
 public class FlexibleUnifiedConfig {
 
     /** Optional override for top-level types ordering. */
@@ -37,8 +39,21 @@ public class FlexibleUnifiedConfig {
 
     /** Optional override for root member groups (full replacement). */
     @Nullable
-    @Singular
     List<UnifiedMemberGroup> rootMemberGroups;
+
+    public FlexibleUnifiedConfig(
+            @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
+            @Nullable Boolean fixImports,
+            @Nullable UnifiedFormatterStyle formatterStyle,
+            @Nullable UnifiedHeaderLine headerLine,
+            @Nullable @Singular List<UnifiedMemberGroup> rootMemberGroups) {
+        this.topLevelTypesOrdering = topLevelTypesOrdering;
+        this.fixImports = fixImports;
+        this.formatterStyle = formatterStyle;
+        this.headerLine = headerLine;
+        this.rootMemberGroups =
+                ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(List.of());
+    }
 
     @NonNull
     public Optional<UnifiedTopLevelTypesOrdering> getTopLevelTypesOrdering() {

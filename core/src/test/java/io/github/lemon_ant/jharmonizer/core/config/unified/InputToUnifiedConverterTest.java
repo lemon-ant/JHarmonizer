@@ -6,16 +6,14 @@ import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.Crea
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.FormatterStyle;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.HeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerInputToUnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.MemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.SortKey;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TypeKind;
 import java.util.List;
 import java.util.Set;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TypeGroup;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TypeKind;
 import org.junit.jupiter.api.Test;
 
 /**

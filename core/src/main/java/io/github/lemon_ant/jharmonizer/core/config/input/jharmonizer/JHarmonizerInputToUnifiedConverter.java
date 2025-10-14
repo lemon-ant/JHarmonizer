@@ -42,7 +42,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Slf4j
 @UtilityClass
-@SuppressWarnings("PMD.CouplingBetweenObjects")
+@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.TooManyMethods", "PMD.ExcessiveImports"})
 public final class JHarmonizerInputToUnifiedConverter {
 
     private static final Map<String, MemberKind> KIND_BY_TOKEN = Map.ofEntries(
