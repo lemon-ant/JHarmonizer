@@ -44,7 +44,7 @@ class JHarmonizerConfigLoaderTest {
         // given
         File badFile = tempDir.resolve("bad.yml").toFile();
         try (FileWriter writer = new FileWriter(badFile)) {
-            writer.write("top-level-types-ordering:\n  main-type-first: true\n"); // type-order отсутствует
+            writer.write("top-level-types-ordering:\n main-type-first: true\n"); // type-order отсутствует
         }
 
         // when/then

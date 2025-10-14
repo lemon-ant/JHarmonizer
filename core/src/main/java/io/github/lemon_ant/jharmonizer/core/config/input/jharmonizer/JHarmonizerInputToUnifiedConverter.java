@@ -12,11 +12,15 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.NameMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeGroup;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -93,12 +97,53 @@ public final class JHarmonizerInputToUnifiedConverter {
         return ofNullable(MOD_BY_TOKEN.get(token));
     }
 
+    private static UnifiedTopLevelTypesOrdering mapTopLevelTypesOrdering(TopLevelTypesOrdering topLevelTypesOrdering) {
+        List<UnifiedTypeGroup> typeGroups = topLevelTypesOrdering.getTypeGroups().stream()
+                .map(typeGroup -> new UnifiedTypeGroup(typeGroup.getTypeKinds().stream()
+                        .map(TypeKind::getUnifiedTypeKind)
+                        .collect(toUnmodifiableSet())))
+                .toList();
+
+        List<UnifiedSortKey> sortKeys = topLevelTypesOrdering.getSortKeys().stream()
+                .map(SortKey::getUnifiedSortKey)
+                .toList();
+
+        return UnifiedTopLevelTypesOrdering.builder()
+                .mainTypeFirst(topLevelTypesOrdering.isMainTypeFirst())
+                .typeGroups(typeGroups)
+                .sortKeys(sortKeys)
+                .build();
+    }
+
     public static UnifiedConfig convert2Unified(@NonNull JHarmonizerConfig jHarmonizerConfig) {
-        UnifiedConfig.UnifiedConfigBuilder unifiedConfigBuilder = UnifiedConfig.builder();
-        jHarmonizerConfig.getMemberGroups().stream()
+        // 1) Top-level types ordering
+        UnifiedTopLevelTypesOrdering topLevelTypesOrdering =
+                mapTopLevelTypesOrdering(jHarmonizerConfig.getTopLevelTypesOrdering());
+
+        // 2) fixImports
+        boolean fixImports = jHarmonizerConfig.isFixImports();
+
+        // 3) formatterStyle
+        UnifiedFormatterStyle formatterStyle =
+                jHarmonizerConfig.getFormatterStyle().getUnifiedFormatterStyle();
+
+        // 4) headerLine
+        UnifiedHeaderLine headerLine = new UnifiedHeaderLine(
+                jHarmonizerConfig.getHeaderLine().getCharacter(),
+                jHarmonizerConfig.getHeaderLine().getLeftPadding());
+
+        // 5) root member groups
+        List<UnifiedMemberGroup> unifiedMemberGroups = jHarmonizerConfig.getMemberGroups().stream()
                 .map(JHarmonizerInputToUnifiedConverter::convertMemberGroup)
-                .forEach(unifiedConfigBuilder::rootMemberGroup);
-        return unifiedConfigBuilder.build();
+                .toList();
+
+        return UnifiedConfig.builder()
+                .topLevelTypesOrdering(topLevelTypesOrdering)
+                .fixImports(fixImports)
+                .formatterStyle(formatterStyle)
+                .headerLine(headerLine)
+                .rootMemberGroups(unifiedMemberGroups)
+                .build();
     }
 
     private static UnifiedMemberGroup convertMemberGroup(@NonNull MemberGroup memberGroup) {

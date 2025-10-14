@@ -25,7 +25,7 @@ public final class SourceAstTranslator {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         CtCompilationUnit originalCompilationUnit = spoonASTModel.getWorkingCompilationUnit();
 
-        //  TODO It doesn't work  String originalSourceCode = originalCompilationUnit.getOriginalSourceCode();
+        // TODO It doesn't work String originalSourceCode = originalCompilationUnit.getOriginalSourceCode();
         List<CtType<?>> rootTypes = getRootTypes(originalCompilationUnit);
         List<CtType<?>> allDeclaredTypes = getAllTypes(originalCompilationUnit);
         List<CtTypeMember> allTypesMembers = getAllTypeMembers(originalCompilationUnit);

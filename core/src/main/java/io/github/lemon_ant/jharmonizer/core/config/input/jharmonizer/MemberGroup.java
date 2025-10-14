@@ -14,6 +14,7 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 @Value
 public class MemberGroup implements Serializable {
@@ -59,14 +60,21 @@ public class MemberGroup implements Serializable {
                     List<SortKey> sortKeys,
             @Nullable @JsonProperty(value = "separator") Separator separator,
             @Nullable @JsonProperty(value = "keepAccessorsTogether") Boolean keepAccessorsTogether,
-            // TODO Rename to subgroups
             @Nullable @JsonProperty(value = "groups") List<@NonNull MemberGroup> memberSubGroups) {
         this.name = name;
+
+        Validate.notEmpty(includes, "includes cannot be empty");
         this.includes = Collections.unmodifiableSet(includes);
+
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
+
+        Validate.notEmpty(includes, "sort-keys cannot be empty");
         this.sortKeys = Collections.unmodifiableList(sortKeys);
+
         this.separator = ofNullable(separator).orElse(Separator.NONE);
+
         this.keepAccessorsTogether = ofNullable(keepAccessorsTogether).orElse(false);
+
         this.memberSubGroups =
                 ofNullable(memberSubGroups).map(Collections::unmodifiableList).orElse(List.of());
     }

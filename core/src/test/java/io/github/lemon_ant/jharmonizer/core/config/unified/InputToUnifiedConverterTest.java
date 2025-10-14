@@ -1,5 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.CreationHelper.createHeaderLine;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.CreationHelper.createTopLevelTypesOrdering;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.CreationHelper.createTypeGroup;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.FormatterStyle;
@@ -11,6 +14,8 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.SortKey;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TopLevelTypesOrdering;
 import java.util.List;
 import java.util.Set;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TypeGroup;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TypeKind;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -30,17 +35,17 @@ class InputToUnifiedConverterTest {
                 .keepAccessorsTogether(false)
                 .build();
 
-        TopLevelTypesOrdering topLevel = new TopLevelTypesOrdering(
+        TopLevelTypesOrdering topLevel = createTopLevelTypesOrdering(
                 false,
-                List.of(), // type-groups (can be empty for this smoke test)
-                List.of() // sort-keys (can be empty for this smoke test)
+                List.of(createTypeGroup(Set.of(TypeKind.CLASS))), // type-groups (can be empty for this smoke test)
+                List.of(SortKey.ALPHA) // sort-keys (can be empty for this smoke test)
                 );
 
         JHarmonizerConfig jHarmonizerConfig = JHarmonizerConfig.builder()
                 .memberGroups(List.of(root))
                 .topLevelTypesOrdering(topLevel)
                 .formatterStyle(FormatterStyle.PALANTIR)
-                .headerLine(new HeaderLine('-', 5))
+                .headerLine(createHeaderLine('-', 5))
                 .build();
 
         UnifiedConfig unified = JHarmonizerInputToUnifiedConverter.convert2Unified(jHarmonizerConfig);

@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.Validate;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
@@ -72,9 +73,7 @@ public class SpoonParser {
     private static CtCompilationUnit extractCompilationUnit(Launcher launcher) {
         Collection<CtType<?>> allTypes = launcher.buildModel().getAllTypes();
         // TODO Flesh out the corner cases with package-info.java and module-info.java
-        if (allTypes.isEmpty()) {
-            throw new IllegalStateException(/*TODO*/ );
-        }
+        Validate.notEmpty(allTypes, "AllTypes cannot be empty");
         CtType<?> firstType = allTypes.iterator().next();
         return firstType.getPosition().getCompilationUnit();
     }

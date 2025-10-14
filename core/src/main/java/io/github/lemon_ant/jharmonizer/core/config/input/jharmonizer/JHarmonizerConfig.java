@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 @Value
 public class JHarmonizerConfig {
@@ -36,6 +37,7 @@ public class JHarmonizerConfig {
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;
         this.headerLine = headerLine;
+        Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
         this.memberGroups = Collections.unmodifiableList(memberGroups);
     }
 

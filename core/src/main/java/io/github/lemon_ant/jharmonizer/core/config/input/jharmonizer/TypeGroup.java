@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 /**
  * A single line in type-order: either a string or list of strings.
@@ -18,6 +19,7 @@ public class TypeGroup {
     Set<@NonNull TypeKind> typeKinds;
 
     TypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull TypeKind> typeKinds) {
+        Validate.notEmpty(typeKinds, "kinds cannot be empty");
         this.typeKinds = Collections.unmodifiableSet(typeKinds);
     }
 

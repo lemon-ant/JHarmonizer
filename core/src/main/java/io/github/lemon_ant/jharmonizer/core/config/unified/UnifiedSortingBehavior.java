@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Sorting behavior hints for a group. These are high-level knobs that the compiler will translate
@@ -31,6 +32,7 @@ public class UnifiedSortingBehavior {
     @Builder
     public UnifiedSortingBehavior(
             @NonNull @Singular List<UnifiedSortKey> unifiedSortKeys, boolean keepAccessorsTogether) {
+        Validate.notEmpty(unifiedSortKeys, "Sort keys collection cannot be empty");
         this.unifiedSortKeys = Collections.unmodifiableList(unifiedSortKeys);
         this.keepAccessorsTogether = keepAccessorsTogether;
     }

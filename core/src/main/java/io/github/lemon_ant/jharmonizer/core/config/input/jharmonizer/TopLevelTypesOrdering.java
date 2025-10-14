@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 @Value
 public class TopLevelTypesOrdering {
@@ -20,7 +21,7 @@ public class TopLevelTypesOrdering {
     @NonNull
     List<@NonNull TypeGroup> typeGroups;
 
-    public TopLevelTypesOrdering(
+     TopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
             @NonNull @JsonProperty(value = "type-groups", required = true) List<@NonNull TypeGroup> typeGroups,
             @NonNull
@@ -28,8 +29,12 @@ public class TopLevelTypesOrdering {
                     @JsonProperty(value = "sort-keys", required = true)
                     List<SortKey> sortKeys) {
         this.mainTypeFirst = mainTypeFirst;
+
+        Validate.notEmpty(typeGroups, "type-groups cannot be empty");
         validateUniqueTypeKinds(typeGroups);
         this.typeGroups = Collections.unmodifiableList(typeGroups);
+
+        Validate.notEmpty(sortKeys, "sort-keys cannot be empty");
         this.sortKeys = Collections.unmodifiableList(sortKeys);
     }
 
