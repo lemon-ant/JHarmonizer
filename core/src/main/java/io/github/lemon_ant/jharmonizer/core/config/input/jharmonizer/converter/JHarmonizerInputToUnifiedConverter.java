@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import static io.github.lemon_ant.jharmonizer.core.config.unified.NameMatchKind.EXACT;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.NameMatchKind.REGEX;
@@ -6,6 +6,11 @@ import static java.util.Map.entry;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.MemberGroup;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TypeKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;

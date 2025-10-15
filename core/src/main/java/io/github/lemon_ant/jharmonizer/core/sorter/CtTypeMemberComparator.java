@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.MemberGroup;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.MemberGroup;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;

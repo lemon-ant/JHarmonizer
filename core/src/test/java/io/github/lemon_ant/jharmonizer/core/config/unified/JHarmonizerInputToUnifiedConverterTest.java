@@ -1,17 +1,17 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.CreationHelper.createHeaderLine;
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.CreationHelper.createTopLevelTypesOrdering;
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.CreationHelper.createTypeGroup;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createHeaderLine;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createTopLevelTypesOrdering;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createTypeGroup;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.FormatterStyle;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerInputToUnifiedConverter;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.MemberGroup;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.SortKey;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TopLevelTypesOrdering;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.TypeKind;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizerInputToUnifiedConverter;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.MemberGroup;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TypeKind;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
  * - initializes all @NonNull fields of MemberGroup to avoid NPE
  * - asserts include-lines size via getSelectorBlock().getIncludes()
  */
-class InputToUnifiedConverterTest {
+class JHarmonizerInputToUnifiedConverterTest {
 
     @Test
     void convert2Unified_validMinimalJHarmonizerModel_returnExpectedUnifiedModel() {

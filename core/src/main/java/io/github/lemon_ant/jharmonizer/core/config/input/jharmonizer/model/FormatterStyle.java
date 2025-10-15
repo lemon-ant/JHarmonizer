@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;

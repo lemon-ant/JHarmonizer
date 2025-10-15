@@ -12,6 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Objects;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TopLevelTypesOrdering;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
