@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -7,9 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.util.List;
-
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TypeGroup;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TypeKind;
 import org.junit.jupiter.api.Test;
 
 class TypeGroupDeserializerTest {

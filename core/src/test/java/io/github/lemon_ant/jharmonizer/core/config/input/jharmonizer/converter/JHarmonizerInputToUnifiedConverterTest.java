@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.unified;
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createHeaderLine;
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createTopLevelTypesOrdering;
@@ -7,11 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizerInputToUnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.MemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.SortKey;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TypeKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
