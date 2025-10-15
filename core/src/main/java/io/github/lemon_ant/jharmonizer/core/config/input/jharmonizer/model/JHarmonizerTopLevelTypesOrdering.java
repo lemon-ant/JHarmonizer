@@ -23,7 +23,8 @@ public class JHarmonizerTopLevelTypesOrdering {
 
     JHarmonizerTopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
-            @NonNull @JsonProperty(value = "type-groups", required = true) List<@NonNull JHarmonizerTypeGroup> typeGroups,
+            @NonNull @JsonProperty(value = "type-groups", required = true)
+                    List<@NonNull JHarmonizerTypeGroup> typeGroups,
             @NonNull
                     @JsonDeserialize(using = SortKeysDeserializer.class)
                     @JsonProperty(value = "sort-keys", required = true)

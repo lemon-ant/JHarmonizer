@@ -3,11 +3,11 @@
 // =====================================================================================
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import java.util.Collections;
-import java.util.Set;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
+import java.util.Collections;
+import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;

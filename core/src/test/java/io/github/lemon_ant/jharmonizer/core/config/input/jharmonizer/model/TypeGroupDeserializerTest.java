@@ -19,8 +19,8 @@ class TypeGroupDeserializerTest {
         String yaml = "- [class, INTERFACE, RECORD]";
 
         // when
-        List<JHarmonizerTypeGroup> result =
-                mapper.readValue(yaml, mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTypeGroup.class));
+        List<JHarmonizerTypeGroup> result = mapper.readValue(
+                yaml, mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTypeGroup.class));
 
         // then
         assertThat(result).hasSize(1);

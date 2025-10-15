@@ -35,7 +35,8 @@ class JHarmonizerInputToUnifiedConverterTest {
 
         JHarmonizerTopLevelTypesOrdering topLevel = createTopLevelTypesOrdering(
                 false,
-                List.of(createTypeGroup(Set.of(JHarmonizerTypeKind.CLASS))), // type-groups (can be empty for this smoke test)
+                List.of(createTypeGroup(
+                        Set.of(JHarmonizerTypeKind.CLASS))), // type-groups (can be empty for this smoke test)
                 List.of(JHarmonizerSortKey.ALPHA) // sort-keys (can be empty for this smoke test)
                 );
 

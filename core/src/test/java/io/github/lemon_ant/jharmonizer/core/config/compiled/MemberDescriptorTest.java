@@ -139,7 +139,7 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "{0} + {2} → IAE")
     @MethodSource("noModifierCases")
     void builder_modifierInapplicableAndProvided_throwsIAE(
-        MemberKind kind, MemberAccess access, DeclarationModifier mod) {
+            MemberKind kind, MemberAccess access, DeclarationModifier mod) {
         String name = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
         assertThatThrownBy(() -> MemberDescriptor.builder()
                         .memberKind(kind)

@@ -16,7 +16,9 @@ public class CreationHelper {
     }
 
     public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
-        boolean mainTypeFirst, @NonNull List<@NonNull JHarmonizerTypeGroup> typeGroups, @NonNull List<JHarmonizerSortKey> sortKeys) {
+            boolean mainTypeFirst,
+            @NonNull List<@NonNull JHarmonizerTypeGroup> typeGroups,
+            @NonNull List<JHarmonizerSortKey> sortKeys) {
         return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, sortKeys);
     }
 }

@@ -4,10 +4,10 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMat
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind.REGEX;
 import static java.util.Optional.ofNullable;
 
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine.UnifiedRuleLineBuilder;

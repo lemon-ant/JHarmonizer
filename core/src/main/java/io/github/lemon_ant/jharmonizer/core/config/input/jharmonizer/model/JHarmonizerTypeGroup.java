@@ -18,7 +18,8 @@ public class JHarmonizerTypeGroup {
     @NonNull
     Set<@NonNull JHarmonizerTypeKind> typeKinds;
 
-    JHarmonizerTypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull JHarmonizerTypeKind> typeKinds) {
+    JHarmonizerTypeGroup(
+            @NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull JHarmonizerTypeKind> typeKinds) {
         Validate.notEmpty(typeKinds, "kinds cannot be empty");
         this.typeKinds = Collections.unmodifiableSet(typeKinds);
     }

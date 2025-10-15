@@ -98,7 +98,7 @@ public class MemberDescriptor {
     }
 
     private static void validateAccessForMemberKind(
-        @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
+            @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
 
         boolean applicable = memberKind.getTargetCategory().isAccessLevelApplicable();
         boolean provided = (memberAccess != null);
@@ -137,7 +137,7 @@ public class MemberDescriptor {
     }
 
     private static void validateModifierPairwiseConflicts(
-        @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
         if (declarationModifiers.size() > ONE) {
             final DeclarationModifier[] declarationModifierArray =
