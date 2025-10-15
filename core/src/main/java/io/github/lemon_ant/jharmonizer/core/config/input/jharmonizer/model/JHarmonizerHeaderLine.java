@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
 
 @Value
-public class HeaderLine {
+public class JHarmonizerHeaderLine {
 
     char character;
     int leftPadding;
 
-    HeaderLine(
+    JHarmonizerHeaderLine(
             @JsonProperty(value = "character", required = true) char character,
             @JsonProperty(value = "left-padding", required = true) int leftPadding) {
         this.character = character;

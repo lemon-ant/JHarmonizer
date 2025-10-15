@@ -17,22 +17,22 @@ public class JHarmonizerConfig {
     FormatterStyle formatterStyle;
 
     @NonNull
-    HeaderLine headerLine;
+    JHarmonizerHeaderLine headerLine;
 
     @NonNull
-    TopLevelTypesOrdering topLevelTypesOrdering;
+    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
     @NonNull
-    List<MemberGroup> memberGroups;
+    List<JHarmonizerMemberGroup> memberGroups;
 
     @Builder
     JHarmonizerConfig(
-            @NonNull @JsonProperty("top-level-types-ordering") TopLevelTypesOrdering topLevelTypesOrdering,
+            @NonNull @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle,
-            @NonNull @JsonProperty(value = "header-line", required = true) HeaderLine headerLine,
+            @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
-                    List<@NonNull MemberGroup> memberGroups) {
+                    List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;

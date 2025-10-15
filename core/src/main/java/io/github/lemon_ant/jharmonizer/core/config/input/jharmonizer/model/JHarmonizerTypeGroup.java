@@ -14,18 +14,18 @@ import org.apache.commons.lang3.Validate;
  */
 @Value
 @JsonDeserialize(using = TypeGroupDeserializer.class)
-public class TypeGroup {
+public class JHarmonizerTypeGroup {
     @NonNull
-    Set<@NonNull TypeKind> typeKinds;
+    Set<@NonNull JHarmonizerTypeKind> typeKinds;
 
-    TypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull TypeKind> typeKinds) {
+    JHarmonizerTypeGroup(@NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull JHarmonizerTypeKind> typeKinds) {
         Validate.notEmpty(typeKinds, "kinds cannot be empty");
         this.typeKinds = Collections.unmodifiableSet(typeKinds);
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof TypeGroup other) && typeKinds.equals(other.typeKinds);
+        return (o instanceof JHarmonizerTypeGroup other) && typeKinds.equals(other.typeKinds);
     }
 
     @Override

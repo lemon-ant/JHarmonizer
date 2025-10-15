@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum SortKey {
+public enum JHarmonizerSortKey {
     ALPHA(UnifiedSortKey.ALPHA),
     PRESERVE(UnifiedSortKey.PRESERVE),
     SIGNATURE(UnifiedSortKey.SIGNATURE),

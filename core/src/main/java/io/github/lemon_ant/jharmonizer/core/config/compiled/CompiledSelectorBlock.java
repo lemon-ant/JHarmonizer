@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;

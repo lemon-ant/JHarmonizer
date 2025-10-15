@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

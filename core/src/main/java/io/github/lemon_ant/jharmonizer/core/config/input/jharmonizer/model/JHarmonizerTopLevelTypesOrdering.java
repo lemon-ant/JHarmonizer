@@ -11,23 +11,23 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 @Value
-public class TopLevelTypesOrdering {
+public class JHarmonizerTopLevelTypesOrdering {
 
     boolean mainTypeFirst;
 
     @NonNull
-    List<SortKey> sortKeys;
+    List<JHarmonizerSortKey> sortKeys;
 
     @NonNull
-    List<@NonNull TypeGroup> typeGroups;
+    List<@NonNull JHarmonizerTypeGroup> typeGroups;
 
-    TopLevelTypesOrdering(
+    JHarmonizerTopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
-            @NonNull @JsonProperty(value = "type-groups", required = true) List<@NonNull TypeGroup> typeGroups,
+            @NonNull @JsonProperty(value = "type-groups", required = true) List<@NonNull JHarmonizerTypeGroup> typeGroups,
             @NonNull
                     @JsonDeserialize(using = SortKeysDeserializer.class)
                     @JsonProperty(value = "sort-keys", required = true)
-                    List<SortKey> sortKeys) {
+                    List<JHarmonizerSortKey> sortKeys) {
         this.mainTypeFirst = mainTypeFirst;
 
         Validate.notEmpty(typeGroups, "type-groups cannot be empty");
@@ -38,12 +38,12 @@ public class TopLevelTypesOrdering {
         this.sortKeys = Collections.unmodifiableList(sortKeys);
     }
 
-    private static void validateUniqueTypeKinds(List<TypeGroup> typeGroups) {
-        Set<TypeKind> allTypes = new HashSet<>();
-        for (TypeGroup group : typeGroups) {
-            for (TypeKind kind : group.getTypeKinds()) {
+    private static void validateUniqueTypeKinds(List<JHarmonizerTypeGroup> typeGroups) {
+        Set<JHarmonizerTypeKind> allTypes = new HashSet<>();
+        for (JHarmonizerTypeGroup group : typeGroups) {
+            for (JHarmonizerTypeKind kind : group.getTypeKinds()) {
                 if (!allTypes.add(kind)) {
-                    throw new IllegalArgumentException("Duplicate TypeKind found: " + kind);
+                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + kind);
                 }
             }
         }
@@ -51,7 +51,7 @@ public class TopLevelTypesOrdering {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof TopLevelTypesOrdering that)) {
+        if (!(o instanceof JHarmonizerTopLevelTypesOrdering that)) {
             return false;
         }
 

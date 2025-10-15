@@ -7,7 +7,7 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Exact mirror of vendor TypeGroup: just a set of kind tokens.
+ * Exact mirror of vendor JHarmonizerTypeGroup: just a set of kind tokens.
  */
 @Value
 public class UnifiedTypeGroup {

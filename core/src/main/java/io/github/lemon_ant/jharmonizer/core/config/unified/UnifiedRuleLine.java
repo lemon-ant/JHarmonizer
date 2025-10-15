@@ -5,6 +5,9 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import java.util.Collections;
 import java.util.Set;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -41,21 +44,21 @@ public class UnifiedRuleLine {
      * Optional name constraint (exact or regex). Null ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull NameMatcher> names;
+    Set<@NonNull UnifiedNameMatcher> names;
 
     /**
      * Any-of annotations: OR over the list; each matcher can be exact or regex. Empty ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull AnnotationMatcher> annotations;
+    Set<@NonNull UnifiedAnnotationMatcher> annotations;
 
     @Builder
     public UnifiedRuleLine(
             @NonNull @Singular Set<@NonNull MemberKind> kinds,
             @NonNull @Singular Set<@NonNull MemberAccess> accessLevels,
             @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull @Singular Set<@NonNull NameMatcher> names,
-            @NonNull @Singular Set<@NonNull AnnotationMatcher> annotations) {
+            @NonNull @Singular Set<@NonNull UnifiedNameMatcher> names,
+            @NonNull @Singular Set<@NonNull UnifiedAnnotationMatcher> annotations) {
         this.kinds = Collections.unmodifiableSet(kinds);
         this.accessLevels = Collections.unmodifiableSet(accessLevels);
         this.declarationModifiers = Collections.unmodifiableSet(declarationModifiers);

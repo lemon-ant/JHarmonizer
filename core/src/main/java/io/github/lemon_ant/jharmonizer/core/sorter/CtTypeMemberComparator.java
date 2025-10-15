@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.MemberGroup;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;
@@ -15,7 +15,7 @@ final class CtTypeMemberComparator implements Comparator<CtTypeMember>, Serializ
     @Serial
     private static final long serialVersionUID = -6080067198735534451L;
 
-    private final List<MemberGroup> configArrangementRules;
+    private final List<JHarmonizerMemberGroup> configArrangementRules;
 
     @Override
     public int compare(CtTypeMember member1, CtTypeMember member2) {

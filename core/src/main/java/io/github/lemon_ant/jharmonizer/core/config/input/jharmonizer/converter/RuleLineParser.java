@@ -1,14 +1,14 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import static io.github.lemon_ant.jharmonizer.core.config.unified.NameMatchKind.EXACT;
-import static io.github.lemon_ant.jharmonizer.core.config.unified.NameMatchKind.REGEX;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind.EXACT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind.REGEX;
 import static java.util.Optional.ofNullable;
 
-import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationMatcher;
-import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
-import io.github.lemon_ant.jharmonizer.core.config.unified.NameMatcher;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatcher;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine.UnifiedRuleLineBuilder;
 import java.util.Map;
@@ -47,12 +47,12 @@ class RuleLineParser {
     private static boolean handleNameToken(String token, UnifiedRuleLineBuilder ruleLineBuilder) {
         if (token.startsWith("=")) {
             String value = token.substring(1).trim();
-            if (!value.isEmpty()) ruleLineBuilder.name(new NameMatcher(EXACT, value));
+            if (!value.isEmpty()) ruleLineBuilder.name(new UnifiedNameMatcher(EXACT, value));
             return true;
         }
         if (token.startsWith("~")) {
             String pattern = token.substring(1).trim();
-            if (!pattern.isEmpty()) ruleLineBuilder.name(new NameMatcher(REGEX, pattern));
+            if (!pattern.isEmpty()) ruleLineBuilder.name(new UnifiedNameMatcher(REGEX, pattern));
             return true;
         }
         return false;
@@ -63,7 +63,7 @@ class RuleLineParser {
         boolean isRegex = token.startsWith("@~");
         String body = token.substring(isRegex ? 2 : 1).trim();
         if (!body.isEmpty()) {
-            ruleLineBuilder.annotation(new AnnotationMatcher(isRegex ? REGEX : EXACT, body));
+            ruleLineBuilder.annotation(new UnifiedAnnotationMatcher(isRegex ? REGEX : EXACT, body));
         }
         return true;
     }

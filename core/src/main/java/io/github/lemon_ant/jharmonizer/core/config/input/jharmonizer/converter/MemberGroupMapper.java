@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.MemberGroup;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.UnifiedMemberGroupBuilder;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
@@ -10,18 +10,18 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavio
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
-/** Maps vendor MemberGroup to unified counterpart. */
+/** Maps vendor JHarmonizerMemberGroup to unified counterpart. */
 @UtilityClass
 final class MemberGroupMapper {
 
-    static UnifiedMemberGroup map(MemberGroup srcMemberGroup) {
+    static UnifiedMemberGroup map(JHarmonizerMemberGroup srcMemberGroup) {
         UnifiedSelectorBlock.UnifiedSelectorBlockBuilder selectorBlockBuilder = UnifiedSelectorBlock.builder();
         srcMemberGroup.getIncludes().stream().map(RuleLineParser::parse).forEach(selectorBlockBuilder::include);
         srcMemberGroup.getExcludes().stream().map(RuleLineParser::parse).forEach(selectorBlockBuilder::exclude);
         UnifiedSelectorBlock selectorBlock = selectorBlockBuilder.build();
 
         List<UnifiedSortKey> sortKeys = srcMemberGroup.getSortKeys().stream()
-                .map(SortKey::getUnifiedSortKey)
+                .map(JHarmonizerSortKey::getUnifiedSortKey)
                 .toList();
 
         UnifiedSortingBehavior sortingBehavior = UnifiedSortingBehavior.builder()

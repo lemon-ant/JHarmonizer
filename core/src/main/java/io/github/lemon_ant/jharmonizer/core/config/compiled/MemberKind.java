@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.unified;
+package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

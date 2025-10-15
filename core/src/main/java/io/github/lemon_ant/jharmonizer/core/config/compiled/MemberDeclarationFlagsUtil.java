@@ -1,9 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;

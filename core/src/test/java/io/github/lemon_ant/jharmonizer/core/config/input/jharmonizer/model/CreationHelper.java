@@ -7,16 +7,16 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CreationHelper {
-    public static HeaderLine createHeaderLine(char character, int leftPadding) {
-        return new HeaderLine(character, leftPadding);
+    public static JHarmonizerHeaderLine createHeaderLine(char character, int leftPadding) {
+        return new JHarmonizerHeaderLine(character, leftPadding);
     }
 
-    public static TypeGroup createTypeGroup(@NonNull Set<@NonNull TypeKind> typeKinds) {
-        return new TypeGroup(typeKinds);
+    public static JHarmonizerTypeGroup createTypeGroup(@NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
+        return new JHarmonizerTypeGroup(typeKinds);
     }
 
-    public static TopLevelTypesOrdering createTopLevelTypesOrdering(
-            boolean mainTypeFirst, @NonNull List<@NonNull TypeGroup> typeGroups, @NonNull List<SortKey> sortKeys) {
-        return new TopLevelTypesOrdering(mainTypeFirst, typeGroups, sortKeys);
+    public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
+        boolean mainTypeFirst, @NonNull List<@NonNull JHarmonizerTypeGroup> typeGroups, @NonNull List<JHarmonizerSortKey> sortKeys) {
+        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, sortKeys);
     }
 }

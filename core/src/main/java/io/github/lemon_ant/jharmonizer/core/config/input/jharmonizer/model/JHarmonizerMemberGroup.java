@@ -17,10 +17,10 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 @Value
-public class MemberGroup implements Serializable {
+public class JHarmonizerMemberGroup implements Serializable {
 
     @Serial
-    // TODO We need it while we pass MemberGroup to the Comparator as a constructor parameter
+    // TODO We need it while we pass JHarmonizerMemberGroup to the Comparator as a constructor parameter
     private static final long serialVersionUID = 3113522117531985752L;
 
     @NonNull
@@ -29,7 +29,7 @@ public class MemberGroup implements Serializable {
 
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
-    List<@NonNull MemberGroup> memberSubGroups;
+    List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
 
     @NonNull
     Set<Set<String>> includes;
@@ -40,13 +40,13 @@ public class MemberGroup implements Serializable {
     String name;
 
     @NonNull
-    Separator separator;
+    JHarmonizerSeparator separator;
 
     @NonNull
-    List<SortKey> sortKeys;
+    List<JHarmonizerSortKey> sortKeys;
 
     @Builder
-    MemberGroup(
+    JHarmonizerMemberGroup(
             @NonNull @JsonProperty(value = "name", required = true) String name,
             @NonNull
                     @JsonDeserialize(using = SelectorsDeserializer.class)
@@ -57,10 +57,10 @@ public class MemberGroup implements Serializable {
             @NonNull
                     @JsonDeserialize(using = SortKeysDeserializer.class)
                     @JsonProperty(value = "sort-keys", required = true)
-                    List<SortKey> sortKeys,
-            @Nullable @JsonProperty(value = "separator") Separator separator,
+                    List<JHarmonizerSortKey> sortKeys,
+            @Nullable @JsonProperty(value = "separator") JHarmonizerSeparator separator,
             @Nullable @JsonProperty(value = "keepAccessorsTogether") Boolean keepAccessorsTogether,
-            @Nullable @JsonProperty(value = "groups") List<@NonNull MemberGroup> memberSubGroups) {
+            @Nullable @JsonProperty(value = "groups") List<@NonNull JHarmonizerMemberGroup> memberSubGroups) {
         this.name = name;
 
         Validate.notEmpty(includes, "includes cannot be empty");
@@ -71,7 +71,7 @@ public class MemberGroup implements Serializable {
         Validate.notEmpty(includes, "sort-keys cannot be empty");
         this.sortKeys = Collections.unmodifiableList(sortKeys);
 
-        this.separator = ofNullable(separator).orElse(Separator.NONE);
+        this.separator = ofNullable(separator).orElse(JHarmonizerSeparator.NONE);
 
         this.keepAccessorsTogether = ofNullable(keepAccessorsTogether).orElse(false);
 
@@ -81,7 +81,7 @@ public class MemberGroup implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof MemberGroup that)) {
+        if (!(o instanceof JHarmonizerMemberGroup that)) {
             return false;
         }
 

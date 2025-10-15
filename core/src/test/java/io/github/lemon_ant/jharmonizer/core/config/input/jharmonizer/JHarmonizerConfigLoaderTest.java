@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.SortKey;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.TopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -75,13 +75,13 @@ class JHarmonizerConfigLoaderTest {
 
         // then
         assertThat(JHarmonizerConfig).isNotNull();
-        TopLevelTypesOrdering topLevelTypesOrdering = JHarmonizerConfig.getTopLevelTypesOrdering();
+        JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = JHarmonizerConfig.getTopLevelTypesOrdering();
         assertThat(topLevelTypesOrdering).isNotNull();
         assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
         assertThat(topLevelTypesOrdering.getTypeGroups()).isNotEmpty();
         topLevelTypesOrdering.getTypeGroups().forEach(entry -> assertThat(entry.getTypeKinds())
                 .isNotEmpty());
-        assertThat(topLevelTypesOrdering.getSortKeys()).containsExactly(SortKey.VISIBILITY_DESC, SortKey.ALPHA);
+        assertThat(topLevelTypesOrdering.getSortKeys()).containsExactly(JHarmonizerSortKey.VISIBILITY_DESC, JHarmonizerSortKey.ALPHA);
         assertThat(JHarmonizerConfig.isFixImports()).isTrue();
         assertThat(JHarmonizerConfig.getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
     }

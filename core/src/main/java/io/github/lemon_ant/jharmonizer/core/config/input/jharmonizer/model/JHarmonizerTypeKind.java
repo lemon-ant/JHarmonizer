@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum TypeKind {
+public enum JHarmonizerTypeKind {
     CLASS(UnifiedTypeKind.CLASS),
     INTERFACE(UnifiedTypeKind.INTERFACE),
     ENUM(UnifiedTypeKind.ENUM),

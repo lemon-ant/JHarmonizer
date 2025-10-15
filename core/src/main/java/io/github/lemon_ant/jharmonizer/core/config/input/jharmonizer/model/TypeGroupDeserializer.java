@@ -10,28 +10,28 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
-class TypeGroupDeserializer extends JsonDeserializer<TypeGroup> {
+class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTypeGroup> {
 
     @Override
-    public TypeGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public JHarmonizerTypeGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         ObjectCodec codec = p.getCodec();
         JsonNode node = codec.readTree(p);
 
-        Set<TypeKind> result = new TreeSet<>();
+        Set<JHarmonizerTypeKind> result = new TreeSet<>();
 
         if (node.isTextual()) {
-            result.add(EnumDeserializerUtil.deserialize(TypeKind.class, node.asText()));
+            result.add(EnumDeserializerUtil.deserialize(JHarmonizerTypeKind.class, node.asText()));
         } else if (node.isArray()) {
             for (JsonNode child : node) {
                 if (!child.isTextual()) {
                     throw new IOException("Expected string in array");
                 }
-                result.add(EnumDeserializerUtil.deserialize(TypeKind.class, child.asText()));
+                result.add(EnumDeserializerUtil.deserialize(JHarmonizerTypeKind.class, child.asText()));
             }
         } else {
             throw new IOException("Unsupported type-order entry: " + node);
         }
 
-        return new TypeGroup(Collections.unmodifiableSet(result));
+        return new JHarmonizerTypeGroup(Collections.unmodifiableSet(result));
     }
 }

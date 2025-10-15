@@ -8,7 +8,7 @@ import lombok.Singular;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
-/** Exact mirror of vendor TopLevelTypesOrdering. */
+/** Exact mirror of vendor JHarmonizerTopLevelTypesOrdering. */
 @Value
 public class UnifiedTopLevelTypesOrdering {
 

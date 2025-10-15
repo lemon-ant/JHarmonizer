@@ -1,10 +1,9 @@
-package io.github.lemon_ant.jharmonizer.core.config.unified;
+package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberDeclarationFlagsUtil;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -99,7 +98,7 @@ public class MemberDescriptor {
     }
 
     private static void validateAccessForMemberKind(
-            @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
+        @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
 
         boolean applicable = memberKind.getTargetCategory().isAccessLevelApplicable();
         boolean provided = (memberAccess != null);
@@ -138,7 +137,7 @@ public class MemberDescriptor {
     }
 
     private static void validateModifierPairwiseConflicts(
-            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+        @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
         if (declarationModifiers.size() > ONE) {
             final DeclarationModifier[] declarationModifierArray =

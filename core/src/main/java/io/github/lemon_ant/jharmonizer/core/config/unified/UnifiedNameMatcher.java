@@ -1,5 +1,5 @@
 // =====================================================================================
-// FILE: AnnotationMatcher.java
+// FILE: UnifiedNameMatcher.java
 // =====================================================================================
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
@@ -7,30 +7,31 @@ import lombok.NonNull;
 import lombok.Value;
 
 /**
- * Annotation constraint. Matches by simple name or fully-qualified name, using EXACT or REGEX.
- * All-of semantics are intentionally omitted for v1 (kept for future extension).
+ * Name constraint: either EXACT or REGEX. The value stores the original string.
+ * Regex compilation is deferred to the compilation phase.
  */
 @Value
-public class AnnotationMatcher {
-
+public class UnifiedNameMatcher {
     @NonNull
-    NameMatchKind nameMatchKind; // EXACT or REGEX
-
+    UnifiedNameMatchKind kind;
+    /**
+     * Raw exact string or raw regex pattern (as provided in config).
+     */
     @NonNull
-    String value; // exact value or regex pattern
+    String value;
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AnnotationMatcher that)) {
+        if (!(o instanceof UnifiedNameMatcher that)) {
             return false;
         }
 
-        return nameMatchKind == that.nameMatchKind && value.equals(that.value);
+        return kind == that.kind && value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        int result = nameMatchKind.hashCode();
+        int result = kind.hashCode();
         result = 31 * result + value.hashCode();
         return result;
     }

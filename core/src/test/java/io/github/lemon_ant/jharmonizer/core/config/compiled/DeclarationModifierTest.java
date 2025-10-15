@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.unified;
+package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
  * Validates DeclarationModifier applicability/conflict rules by TargetCategory.
  * This is a structural smoke test that assumes the model exposes such contracts.
  */
-class DeclarationModifierApplicabilityTest {
+class DeclarationModifierTest {
 
     @Test
     void getApplicableTargets_forSealed_containsOnlyTypes() {

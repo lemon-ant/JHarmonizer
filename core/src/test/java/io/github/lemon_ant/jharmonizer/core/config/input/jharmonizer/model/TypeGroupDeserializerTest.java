@@ -19,13 +19,13 @@ class TypeGroupDeserializerTest {
         String yaml = "- [class, INTERFACE, RECORD]";
 
         // when
-        List<TypeGroup> result =
-                mapper.readValue(yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeGroup.class));
+        List<JHarmonizerTypeGroup> result =
+                mapper.readValue(yaml, mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTypeGroup.class));
 
         // then
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTypeKinds())
-                .containsExactly(TypeKind.CLASS, TypeKind.INTERFACE, TypeKind.RECORD);
+                .containsExactly(JHarmonizerTypeKind.CLASS, JHarmonizerTypeKind.INTERFACE, JHarmonizerTypeKind.RECORD);
     }
 
     @Test
@@ -35,7 +35,7 @@ class TypeGroupDeserializerTest {
 
         // when/then
         assertThatThrownBy(() -> mapper.readValue(
-                        yaml, mapper.getTypeFactory().constructCollectionType(List.class, TypeGroup.class)))
+                        yaml, mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTypeGroup.class)))
                 .isInstanceOf(Exception.class)
                 .hasMessageContaining("UNICORN");
     }
