@@ -7,10 +7,10 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
 import java.util.Map;
 
-/** Centralized token dictionaries (immutable). */
+/**
+ * Centralized token dictionaries (immutable).
+ */
 final class TokenMaps {
-
-    private TokenMaps() {}
 
     static final Map<String, MemberKind> KIND_BY_TOKEN = Map.ofEntries(
             entry("field", MemberKind.FIELD),
@@ -25,14 +25,12 @@ final class TokenMaps {
             entry("enum", MemberKind.TYPE_ENUM),
             entry("record", MemberKind.TYPE_RECORD),
             entry("annotation", MemberKind.TYPE_ANNOTATION));
-
     static final Map<String, MemberAccess> ACCESS_BY_TOKEN = Map.ofEntries(
             entry("public", MemberAccess.PUBLIC),
             entry("protected", MemberAccess.PROTECTED),
             entry("package", MemberAccess.PACKAGE),
             entry("package-private", MemberAccess.PACKAGE),
             entry("private", MemberAccess.PRIVATE));
-
     static final Map<String, DeclarationModifier> MOD_BY_TOKEN = Map.ofEntries(
             entry("static", DeclarationModifier.STATIC),
             entry("final", DeclarationModifier.FINAL),
@@ -46,4 +44,6 @@ final class TokenMaps {
             entry("sealed", DeclarationModifier.SEALED),
             entry("non-sealed", DeclarationModifier.NON_SEALED),
             entry("nonsealed", DeclarationModifier.NON_SEALED));
+
+    private TokenMaps() {}
 }

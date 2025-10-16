@@ -10,7 +10,9 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavio
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
-/** Maps vendor JHarmonizerMemberGroup to unified counterpart. */
+/**
+ * Maps vendor JHarmonizerMemberGroup to unified counterpart.
+ */
 @UtilityClass
 final class MemberGroupMapper {
 

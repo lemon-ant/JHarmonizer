@@ -86,8 +86,8 @@ public class MemberDeclarationFlagsUtil {
      * Combines flags for kinds, access levels, and modifiers using bitwise OR.
      * Empty sets contribute 0 (i.e., no requirement for that category).
      *
-     * @param memberKinds non-null set of kinds to encode (may be empty)
-     * @param memberAccesses non-null set of access levels to encode (may be empty)
+     * @param memberKinds          non-null set of kinds to encode (may be empty)
+     * @param memberAccesses       non-null set of access levels to encode (may be empty)
      * @param declarationModifiers non-null set of modifiers to encode (may be empty)
      * @return bit mask equal to OR of all encoded kind, access, and modifier flags
      */

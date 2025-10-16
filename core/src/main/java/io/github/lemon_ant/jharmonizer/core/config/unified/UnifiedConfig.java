@@ -22,22 +22,32 @@ import org.apache.commons.lang3.Validate;
 @Value
 public class UnifiedConfig {
 
-    /** Top-level types ordering (mainTypeFirst, typeGroups, sortKeys). */
+    /**
+     * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
+     */
     @NonNull
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
-    /** Whether to fix/reorder imports. */
+    /**
+     * Whether to fix/reorder imports.
+     */
     boolean fixImports;
 
-    /** Formatter style (AOP, GOOGLE, NONE, PALANTIR). */
+    /**
+     * Formatter style (AOP, GOOGLE, NONE, PALANTIR).
+     */
     @NonNull
     UnifiedFormatterStyle formatterStyle;
 
-    /** Header line descriptor (character + leftPadding). */
+    /**
+     * Header line descriptor (character + leftPadding).
+     */
     @NonNull
     UnifiedHeaderLine headerLine;
 
-    /** Root member groups. */
+    /**
+     * Root member groups.
+     */
     @NonNull
     List<UnifiedMemberGroup> rootMemberGroups;
 

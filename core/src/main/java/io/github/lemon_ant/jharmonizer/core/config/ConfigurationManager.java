@@ -14,7 +14,7 @@ import lombok.experimental.UtilityClass;
  * 1) Loading the built-in default configuration from resources.
  * 2) Converting the vendor (JHarmonizer) model to the strict Unified model.
  * 3) Compiling the Unified model into the Effective (runtime) model.
- *
+ * <p>
  * This class is intentionally minimal and pure. Future versions can add overlay sources
  * (IDEA/Eclipse exports, project YAML, CLI overrides) and a proper merge pipeline.
  */

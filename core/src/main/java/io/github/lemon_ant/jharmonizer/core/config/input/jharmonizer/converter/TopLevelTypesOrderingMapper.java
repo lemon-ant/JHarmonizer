@@ -12,7 +12,9 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
-/** Maps vendor JHarmonizerTopLevelTypesOrdering to unified. */
+/**
+ * Maps vendor JHarmonizerTopLevelTypesOrdering to unified.
+ */
 @UtilityClass
 class TopLevelTypesOrderingMapper {
 

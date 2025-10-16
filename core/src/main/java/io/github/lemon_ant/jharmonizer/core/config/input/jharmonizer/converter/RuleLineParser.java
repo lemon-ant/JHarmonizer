@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 import lombok.experimental.UtilityClass;
 
-/** Parses a single rule-line (set of tokens) into UnifiedRuleLine. */
+/**
+ * Parses a single rule-line (set of tokens) into UnifiedRuleLine.
+ */
 @UtilityClass
 class RuleLineParser {
 

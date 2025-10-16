@@ -14,11 +14,11 @@ import lombok.experimental.UtilityClass;
 /**
  * Translates strict Unified configuration into the Effective runtime model.
  * The Effective model is branch-free at runtime: each rule-line is compiled into a single predicate.
- *
+ * <p>
  * This compiler performs the following steps:
- *  - Compiles selector blocks (includes/excludes) into {@link CompiledSelectorBlock}
- *  - Maps sorting behavior knobs to {@link CompiledGroupSortingBehavior}
- *  - Builds a DFS-ordered tree of {@link CompiledGroup} nodes and assigns post-order indexes
+ * - Compiles selector blocks (includes/excludes) into {@link CompiledSelectorBlock}
+ * - Maps sorting behavior knobs to {@link CompiledGroupSortingBehavior}
+ * - Builds a DFS-ordered tree of {@link CompiledGroup} nodes and assigns post-order indexes
  */
 @UtilityClass
 @SuppressWarnings("PMD")

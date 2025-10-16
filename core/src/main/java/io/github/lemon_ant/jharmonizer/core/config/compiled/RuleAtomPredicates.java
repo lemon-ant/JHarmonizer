@@ -61,7 +61,9 @@ class RuleAtomPredicates {
                         || pattern.matcher(extractSimpleName(fqcn)).matches());
     }
 
-    /** Extracts simple name from fully qualified name, tolerant to non-qualified names. */
+    /**
+     * Extracts simple name from fully qualified name, tolerant to non-qualified names.
+     */
     private static String extractSimpleName(@NonNull String qualifiedName) {
         int lastDot = qualifiedName.lastIndexOf('.');
         return (lastDot < 0) ? qualifiedName : qualifiedName.substring(lastDot + 1);

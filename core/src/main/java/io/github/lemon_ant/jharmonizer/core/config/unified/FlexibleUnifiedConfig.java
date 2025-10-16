@@ -21,23 +21,33 @@ import lombok.Value;
 @SuppressWarnings("PMD.DataClass")
 public class FlexibleUnifiedConfig {
 
-    /** Optional override for top-level types ordering. */
+    /**
+     * Optional override for top-level types ordering.
+     */
     @Nullable
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
-    /** Optional override for fixImports flag. */
+    /**
+     * Optional override for fixImports flag.
+     */
     @Nullable
     Boolean fixImports;
 
-    /** Optional override for formatter style. */
+    /**
+     * Optional override for formatter style.
+     */
     @Nullable
     UnifiedFormatterStyle formatterStyle;
 
-    /** Optional override for header line. */
+    /**
+     * Optional override for header line.
+     */
     @Nullable
     UnifiedHeaderLine headerLine;
 
-    /** Optional override for root member groups (full replacement). */
+    /**
+     * Optional override for root member groups (full replacement).
+     */
     @Nullable
     List<UnifiedMemberGroup> rootMemberGroups;
 
