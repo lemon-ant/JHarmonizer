@@ -82,6 +82,34 @@ public class MemberDeclarationFlagsUtil {
     }
 
     /**
+     * Encodes multiple declaration attributes into a single bit mask.
+     * Combines flags for kinds, access levels, and modifiers using bitwise OR.
+     * Empty sets contribute 0 (i.e., no requirement for that category).
+     *
+     * @param memberKinds non-null set of kinds to encode (may be empty)
+     * @param memberAccesses non-null set of access levels to encode (may be empty)
+     * @param declarationModifiers non-null set of modifiers to encode (may be empty)
+     * @return bit mask equal to OR of all encoded kind, access, and modifier flags
+     */
+    public static int encodeMemberDeclarationFlags(
+            @NonNull Set<MemberKind> memberKinds,
+            @NonNull Set<MemberAccess> memberAccesses,
+            @NonNull Set<DeclarationModifier> declarationModifiers) {
+
+        int kindFlags = memberKinds.stream()
+                .mapToInt(MemberDeclarationFlagsUtil::encodeMemberKindToFlag)
+                .reduce(0, (a, b) -> a | b);
+
+        int accessFlags = memberAccesses.stream()
+                .mapToInt(MemberDeclarationFlagsUtil::encodeMemberAccessToFlag)
+                .reduce(0, (a, b) -> a | b);
+
+        int modifierFlags = encodeDeclarationModifiersToFlags(declarationModifiers);
+
+        return kindFlags | accessFlags | modifierFlags;
+    }
+
+    /**
      * Returns {@code true} if the given member declaration flags mask contains
      * all bits set in the required declaration flags mask.
      *

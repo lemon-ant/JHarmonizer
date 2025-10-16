@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +12,8 @@ import lombok.Value;
  * Fallback to the parent when none of the children matched.
  */
 @Value
-public class EffectiveGroup {
-    @NonNull
+public class CompiledGroup {
+    @Nullable
     String name;
 
     int orderIndex; // assigned post-order
@@ -21,30 +22,30 @@ public class EffectiveGroup {
     CompiledSelectorBlock selectorBlock;
 
     @NonNull
-    GroupSortingBehavior sortingBehavior;
+    CompiledGroupSortingBehavior groupSortingBehavior;
 
     @NonNull
-    List<EffectiveGroup> nestedEffectiveGroups; // immutable, ordered
+    List<CompiledGroup> compiledSubGroups; // immutable, ordered
 
-    public EffectiveGroup(
-            @NonNull String name,
+    public CompiledGroup(
+            @Nullable String name,
             int orderIndex,
             @NonNull CompiledSelectorBlock selectorBlock,
-            @NonNull GroupSortingBehavior sortingBehavior,
-            @NonNull List<EffectiveGroup> nestedEffectiveGroups) {
+            @NonNull CompiledGroupSortingBehavior groupSortingBehavior,
+            @NonNull List<CompiledGroup> compiledSubGroups) {
         this.name = name;
         this.orderIndex = orderIndex;
         this.selectorBlock = selectorBlock;
-        this.sortingBehavior = sortingBehavior;
-        this.nestedEffectiveGroups = Collections.unmodifiableList(nestedEffectiveGroups);
+        this.groupSortingBehavior = groupSortingBehavior;
+        this.compiledSubGroups = Collections.unmodifiableList(compiledSubGroups);
     }
 
-    public Optional<EffectiveGroup> classify(@NonNull MemberDescriptor descriptor) {
+    public Optional<CompiledGroup> classify(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();
         }
-        for (EffectiveGroup child : nestedEffectiveGroups) {
-            Optional<EffectiveGroup> hit = child.classify(descriptor);
+        for (CompiledGroup child : compiledSubGroups) {
+            Optional<CompiledGroup> hit = child.classify(descriptor);
             if (hit.isPresent()) {
                 return hit;
             }
@@ -54,13 +55,13 @@ public class EffectiveGroup {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof EffectiveGroup that)) return false;
+        if (!(o instanceof CompiledGroup that)) return false;
 
         return orderIndex == that.orderIndex
                 && name.equals(that.name)
                 && selectorBlock.equals(that.selectorBlock)
-                && sortingBehavior.equals(that.sortingBehavior)
-                && nestedEffectiveGroups.equals(that.nestedEffectiveGroups);
+                && groupSortingBehavior.equals(that.groupSortingBehavior)
+                && compiledSubGroups.equals(that.compiledSubGroups);
     }
 
     @Override
@@ -68,8 +69,8 @@ public class EffectiveGroup {
         int result = name.hashCode();
         result = 31 * result + orderIndex;
         result = 31 * result + selectorBlock.hashCode();
-        result = 31 * result + sortingBehavior.hashCode();
-        result = 31 * result + nestedEffectiveGroups.hashCode();
+        result = 31 * result + groupSortingBehavior.hashCode();
+        result = 31 * result + compiledSubGroups.hashCode();
         return result;
     }
 }

@@ -39,7 +39,8 @@ class RuleAtomPredicates {
      * Name: "~regex" compiled once.
      */
     @NonNull
-    static Predicate<MemberDescriptor> createNameRegex(@NonNull Pattern pattern) {
+    static Predicate<MemberDescriptor> createNameRegex(@NonNull String expectedPattern) {
+        Pattern pattern = Pattern.compile(expectedPattern);
         return effectiveMemberDescriptor -> effectiveMemberDescriptor
                 .getName()
                 .map(actualName -> pattern.matcher(actualName).matches())

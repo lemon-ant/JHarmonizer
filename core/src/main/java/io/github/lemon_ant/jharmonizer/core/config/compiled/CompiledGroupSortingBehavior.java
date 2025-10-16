@@ -9,15 +9,16 @@ import lombok.Value;
  */
 @Value
 @SuppressFBWarnings
-public class GroupSortingBehavior {
+// TODO This is a draft only
+public class CompiledGroupSortingBehavior {
     @NonNull
     SortKeys sortKeys;
 
     boolean keepAccessorsTogether;
     String separatorDirective; // nullable allowed
 
-    public static GroupSortingBehavior defaults() {
-        return new GroupSortingBehavior(SortKeys.PRESERVE, false, null);
+    public static CompiledGroupSortingBehavior defaults() {
+        return new CompiledGroupSortingBehavior(SortKeys.PRESERVE, false, null);
     }
 
     public enum SortKeys {

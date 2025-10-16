@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -13,16 +14,16 @@ import lombok.Value;
 public class CompiledSelectorBlock {
 
     @NonNull
-    List<RuleLineMatcher> includeRuleLineMatchers; // immutable, ordered
+    List<Predicate<MemberDescriptor>> includePredicate; // immutable, ordered
 
     @NonNull
-    List<RuleLineMatcher> excludeRuleLineMatchers; // immutable, ordered
+    List<Predicate<MemberDescriptor>> excludePredicate; // immutable, ordered
 
     public CompiledSelectorBlock(
-            @NonNull List<RuleLineMatcher> includeRuleLineMatchers,
-            @NonNull List<RuleLineMatcher> excludeRuleLineMatchers) {
-        this.includeRuleLineMatchers = Collections.unmodifiableList(includeRuleLineMatchers);
-        this.excludeRuleLineMatchers = Collections.unmodifiableList(excludeRuleLineMatchers);
+            @NonNull List<Predicate<MemberDescriptor>> includePredicate,
+            @NonNull List<Predicate<MemberDescriptor>> excludePredicate) {
+        this.includePredicate = Collections.unmodifiableList(includePredicate);
+        this.excludePredicate = Collections.unmodifiableList(excludePredicate);
     }
 
     public boolean match(@NonNull MemberDescriptor descriptor) {
@@ -30,14 +31,12 @@ public class CompiledSelectorBlock {
     }
 
     private boolean matchIncludes(MemberDescriptor descriptor) {
-        return includeRuleLineMatchers.stream()
-                .anyMatch(includeRuleLineMatcher -> includeRuleLineMatcher.test(descriptor));
+        return includePredicate.stream().anyMatch(includePredicate -> includePredicate.test(descriptor));
     }
 
     private boolean matchExcludes(MemberDescriptor descriptor) {
 
-        return excludeRuleLineMatchers.stream()
-                .anyMatch(excludeRuleLineMatcher -> excludeRuleLineMatcher.test(descriptor));
+        return excludePredicate.stream().anyMatch(excludePredicate -> excludePredicate.test(descriptor));
     }
 
     @Override
@@ -46,14 +45,13 @@ public class CompiledSelectorBlock {
             return false;
         }
 
-        return includeRuleLineMatchers.equals(that.includeRuleLineMatchers)
-                && excludeRuleLineMatchers.equals(that.excludeRuleLineMatchers);
+        return includePredicate.equals(that.includePredicate) && excludePredicate.equals(that.excludePredicate);
     }
 
     @Override
     public int hashCode() {
-        int result = includeRuleLineMatchers.hashCode();
-        result = 31 * result + excludeRuleLineMatchers.hashCode();
+        int result = includePredicate.hashCode();
+        result = 31 * result + excludePredicate.hashCode();
         return result;
     }
 }

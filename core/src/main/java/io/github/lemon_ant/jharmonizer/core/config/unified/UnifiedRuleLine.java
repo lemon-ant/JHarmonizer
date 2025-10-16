@@ -26,13 +26,13 @@ public class UnifiedRuleLine {
      * Allowed kinds of the member (OR inside the set). Empty set ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull MemberKind> kinds;
+    Set<@NonNull MemberKind> memberKinds;
 
     /**
      * Allowed access levels (OR). Empty set ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull MemberAccess> accessLevels;
+    Set<@NonNull MemberAccess> memberAccesses;
 
     /**
      * Required declaration modifiers (ALL-OF). Empty set ⇒ no constraint.
@@ -44,26 +44,26 @@ public class UnifiedRuleLine {
      * Optional name constraint (exact or regex). Null ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull UnifiedNameMatcher> names;
+    Set<@NonNull UnifiedNameMatcher> nameMatchers;
 
     /**
      * Any-of annotations: OR over the list; each matcher can be exact or regex. Empty ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull UnifiedAnnotationMatcher> annotations;
+    Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers;
 
     @Builder
     public UnifiedRuleLine(
-            @NonNull @Singular Set<@NonNull MemberKind> kinds,
-            @NonNull @Singular Set<@NonNull MemberAccess> accessLevels,
+            @NonNull @Singular Set<@NonNull MemberKind> memberKinds,
+            @NonNull @Singular Set<@NonNull MemberAccess> memberAccesses,
             @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull @Singular Set<@NonNull UnifiedNameMatcher> names,
-            @NonNull @Singular Set<@NonNull UnifiedAnnotationMatcher> annotations) {
-        this.kinds = Collections.unmodifiableSet(kinds);
-        this.accessLevels = Collections.unmodifiableSet(accessLevels);
+            @NonNull @Singular Set<@NonNull UnifiedNameMatcher> nameMatchers,
+            @NonNull @Singular Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers) {
+        this.memberKinds = Collections.unmodifiableSet(memberKinds);
+        this.memberAccesses = Collections.unmodifiableSet(memberAccesses);
         this.declarationModifiers = Collections.unmodifiableSet(declarationModifiers);
-        this.names = Collections.unmodifiableSet(names);
-        this.annotations = Collections.unmodifiableSet(annotations);
+        this.nameMatchers = Collections.unmodifiableSet(nameMatchers);
+        this.annotationMatchers = Collections.unmodifiableSet(annotationMatchers);
     }
 
     @Override
@@ -72,20 +72,20 @@ public class UnifiedRuleLine {
             return false;
         }
 
-        return kinds.equals(that.kinds)
-                && accessLevels.equals(that.accessLevels)
+        return memberKinds.equals(that.memberKinds)
+                && memberAccesses.equals(that.memberAccesses)
                 && declarationModifiers.equals(that.declarationModifiers)
-                && names.equals(that.names)
-                && annotations.equals(that.annotations);
+                && nameMatchers.equals(that.nameMatchers)
+                && annotationMatchers.equals(that.annotationMatchers);
     }
 
     @Override
     public int hashCode() {
-        int result = kinds.hashCode();
-        result = 31 * result + accessLevels.hashCode();
+        int result = memberKinds.hashCode();
+        result = 31 * result + memberAccesses.hashCode();
         result = 31 * result + declarationModifiers.hashCode();
-        result = 31 * result + names.hashCode();
-        result = 31 * result + annotations.hashCode();
+        result = 31 * result + nameMatchers.hashCode();
+        result = 31 * result + annotationMatchers.hashCode();
         return result;
     }
 }
