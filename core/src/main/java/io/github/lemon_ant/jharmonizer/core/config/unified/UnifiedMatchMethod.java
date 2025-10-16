@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-public enum UnifiedNameMatchKind {
+public enum UnifiedMatchMethod {
     EXACT,
     REGEX
 }

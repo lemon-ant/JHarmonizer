@@ -12,16 +12,16 @@ import lombok.Value;
 // TODO This is a draft only
 public class CompiledGroupSortingBehavior {
     @NonNull
-    SortKeys sortKeys;
+    CompiledGroupSortingBehavior.SortKey sortKey;
 
     boolean keepAccessorsTogether;
     String separatorDirective; // nullable allowed
 
     public static CompiledGroupSortingBehavior defaults() {
-        return new CompiledGroupSortingBehavior(SortKeys.PRESERVE, false, null);
+        return new CompiledGroupSortingBehavior(SortKey.PRESERVE, false, null);
     }
 
-    public enum SortKeys {
+    public enum SortKey {
         PRESERVE,
         ALPHA,
         SOURCE_ORDER

@@ -48,14 +48,22 @@ class RuleAtomPredicates {
     }
 
     @NonNull
-    static Predicate<MemberDescriptor> createAnnotationExact(@NonNull String expectedFqn) {
-        return effectiveMemberDescriptor ->
-                effectiveMemberDescriptor.getAnnotationQualifiedNames().stream().anyMatch(expectedFqn::equals);
+    static Predicate<MemberDescriptor> createAnnotationExactFqnOrSimple(@NonNull String expectedName) {
+        return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
+                .anyMatch(fqcn ->
+                        fqcn.equals(expectedName) || extractSimpleName(fqcn).equals(expectedName));
     }
 
     @NonNull
-    static Predicate<MemberDescriptor> createAnnotationRegex(@NonNull Pattern pattern) {
-        return effectiveMemberDescriptor -> effectiveMemberDescriptor.getAnnotationQualifiedNames().stream()
-                .anyMatch(annotation -> pattern.matcher(annotation).matches());
+    static Predicate<MemberDescriptor> createAnnotationRegexFqnOrSimple(@NonNull Pattern pattern) {
+        return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
+                .anyMatch(fqcn -> pattern.matcher(fqcn).matches()
+                        || pattern.matcher(extractSimpleName(fqcn)).matches());
+    }
+
+    /** Extracts simple name from fully qualified name, tolerant to non-qualified names. */
+    private static String extractSimpleName(@NonNull String qualifiedName) {
+        int lastDot = qualifiedName.lastIndexOf('.');
+        return (lastDot < 0) ? qualifiedName : qualifiedName.substring(lastDot + 1);
     }
 }

@@ -1,22 +1,13 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind.*;
-
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatcher;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledGroupSortingBehavior.SortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatcher;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -70,138 +61,40 @@ public class UnifiedToEffectiveCompiler {
     }
 
     @NonNull
-    private static CompiledSelectorBlock compileSelectorBlock(@NonNull UnifiedSelectorBlock selectorBlock) {
-        List<Predicate<MemberDescriptor>> includeMatchers = new ArrayList<>();
-        for (UnifiedRuleLine includeLine : selectorBlock.getIncludes()) {
-            includeMatchers.add(compileRuleLineToMatcher(includeLine));
-        }
-
-        List<Predicate<MemberDescriptor>> excludeMatchers = new ArrayList<>();
-        for (UnifiedRuleLine excludeLine : selectorBlock.getExcludes()) {
-            excludeMatchers.add(compileRuleLineToMatcher(excludeLine));
-        }
-
-        return new CompiledSelectorBlock(includeMatchers, excludeMatchers);
-    }
-
-    /**
-     * Compiles one rule line into one or more matchers.
-     * If a rule-line contains multiple kinds, we compile a matcher per kind (OR semantics across the list).
-     */
-    private static Predicate<MemberDescriptor> compileRuleLineToMatcher(UnifiedRuleLine unifiedRuleLine) {
-
-        Optional<Predicate<MemberDescriptor>> namePredicateOpt = compileNamePredicate(unifiedRuleLine.getNameMatchers());
-
-        // Annotation predicate is optional
-        Optional<Predicate<MemberDescriptor>> annotationPredicateOpt =
-                compileAnnotationPredicate(unifiedRuleLine.getAnnotationMatchers());
-
-        // Compute mask
-        int mask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                unifiedRuleLine.getMemberKinds(),
-                unifiedRuleLine.getMemberAccesses(),
-                unifiedRuleLine.getDeclarationModifiers());
-
-        return RuleLineAssembler.assembleLineRule(
-                mask, namePredicateOpt.orElse(null), annotationPredicateOpt.orElse(null));
-    }
-
-    @NonNull
-    private static Optional<Predicate<MemberDescriptor>> compileNamePredicate(
-            @NonNull Set<UnifiedNameMatcher> nameMatchers) {
-        if (nameMatchers.isEmpty()) return Optional.empty();
-
-        List<Predicate<MemberDescriptor>> compiledPredicates = nameMatchers.stream()
-                .map(UnifiedToEffectiveCompiler::predicateForNameMatcher)
+    private static CompiledSelectorBlock compileSelectorBlock(UnifiedSelectorBlock selectorBlock) {
+        var includes = selectorBlock.getIncludes().stream()
+                .map(RuleLineCompiler::compileRuleLine)
                 .toList();
-
-        Predicate<MemberDescriptor> disjunction = descriptor -> {
-            for (Predicate<MemberDescriptor> predicate : compiledPredicates) {
-                if (predicate.test(descriptor)) return true;
-            }
-            return false;
-        };
-        return Optional.of(disjunction);
-    }
-
-    private static Predicate<MemberDescriptor> predicateForNameMatcher(@NonNull UnifiedNameMatcher matcher) {
-        if (matcher.getKind() == EXACT) {
-            return RuleAtomPredicates.createNameExact(matcher.getValue());
-        }
-        if (matcher.getKind() == REGEX) {
-            return RuleAtomPredicates.createNameRegex(matcher.getValue());
-        }
-        throw new IllegalStateException(
-                "Unexpected " + UnifiedNameMatchKind.class.getSimpleName() + " value: " + matcher.getKind());
-    }
-
-    @NonNull
-    private static Optional<Predicate<MemberDescriptor>> compileAnnotationPredicate(
-            @NonNull Set<UnifiedAnnotationMatcher> annotationMatchers) {
-        if (annotationMatchers.isEmpty()) return Optional.empty();
-
-        List<Predicate<MemberDescriptor>> compiledPredicates = annotationMatchers.stream()
-                .map(UnifiedToEffectiveCompiler::predicateForAnnotationMatcher)
+        var excludes = selectorBlock.getExcludes().stream()
+                .map(RuleLineCompiler::compileRuleLine)
                 .toList();
-
-        Predicate<MemberDescriptor> disjunction = descriptor -> {
-            for (Predicate<MemberDescriptor> predicate : compiledPredicates) {
-                if (predicate.test(descriptor)) return true;
-            }
-            return false;
-        };
-        return Optional.of(disjunction);
+        return new CompiledSelectorBlock(includes, excludes);
     }
 
-    private static Predicate<MemberDescriptor> predicateForAnnotationMatcher(
-            @NonNull UnifiedAnnotationMatcher matcher) {
-        boolean isExact = matcher.getNameMatchKind() == EXACT;
-        final String value = matcher.getValue();
-        final Pattern regex = isExact ? null : Pattern.compile(value);
-
-        return descriptor -> {
-            for (String qualifiedAnnotationName : descriptor.getAnnotationQualifiedNames()) {
-                String simpleName = extractSimpleName(qualifiedAnnotationName);
-                if (isExact) {
-                    if (qualifiedAnnotationName.equals(value) || simpleName.equals(value)) return true;
-                } else {
-                    if (regex.matcher(qualifiedAnnotationName).matches()
-                            || regex.matcher(simpleName).matches()) return true;
-                }
-            }
-            return false;
-        };
-    }
-
-    private static String extractSimpleName(@NonNull String qualifiedName) {
-        int idx = qualifiedName.lastIndexOf('.');
-        return (idx < 0) ? qualifiedName : qualifiedName.substring(idx + 1);
-    }
-
+    // TODO Complete model and mapper
     @NonNull
-    private static CompiledGroupSortingBehavior mapSortingBehavior(
-            @NonNull UnifiedSortingBehavior unifiedSortingBehavior) {
-        CompiledGroupSortingBehavior.SortKeys sortKeys = mapSortKeys(unifiedSortingBehavior.getUnifiedSortKeys());
+    private static CompiledGroupSortingBehavior mapSortingBehavior(UnifiedSortingBehavior unifiedSortingBehavior) {
+        SortKey sortKey = mapSortKeys(unifiedSortingBehavior.getUnifiedSortKeys());
         boolean keepAccessorsTogether = unifiedSortingBehavior.isKeepAccessorsTogether();
         // Separator handling can be added to Effective model later; keep a placeholder string for now (null ==
         // unspecified).
-        return new CompiledGroupSortingBehavior(sortKeys, keepAccessorsTogether, null);
+        return new CompiledGroupSortingBehavior(sortKey, keepAccessorsTogether, null);
     }
 
-    private static CompiledGroupSortingBehavior.SortKeys mapSortKeys(@NonNull List<UnifiedSortKey> unifiedSortKeys) {
+    // TODO Complete model and mapper
+    @NonNull
+    private static SortKey mapSortKeys(List<UnifiedSortKey> unifiedSortKeys) {
         // We currently support a single effective sort key knob; pick the first meaningful item.
         for (UnifiedSortKey key : unifiedSortKeys) {
-            switch (key) {
-                case ALPHA:
-                    return CompiledGroupSortingBehavior.SortKeys.ALPHA;
-                case PRESERVE:
-                    return CompiledGroupSortingBehavior.SortKeys.PRESERVE;
-                default:
+            return switch (key) {
+                case ALPHA -> SortKey.ALPHA;
+                case PRESERVE -> SortKey.PRESERVE;
+                default ->
                     // VISIBILITY_ASC / VISIBILITY_DESC / SIGNATURE fall back to a stable source order for now.
-                    return CompiledGroupSortingBehavior.SortKeys.SOURCE_ORDER;
-            }
+                    SortKey.SOURCE_ORDER;
+            };
         }
         // Safety: default to PRESERVE if the list is somehow empty (should be validated earlier)
-        return CompiledGroupSortingBehavior.SortKeys.PRESERVE;
+        return SortKey.PRESERVE;
     }
 }

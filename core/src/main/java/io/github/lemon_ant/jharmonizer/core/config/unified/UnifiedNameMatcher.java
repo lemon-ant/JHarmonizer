@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 public class UnifiedNameMatcher {
     @NonNull
-    UnifiedNameMatchKind kind;
+    UnifiedMatchMethod matchMethod;
     /**
      * Raw exact string or raw regex pattern (as provided in config).
      */
@@ -26,12 +26,12 @@ public class UnifiedNameMatcher {
             return false;
         }
 
-        return kind == that.kind && value.equals(that.value);
+        return matchMethod == that.matchMethod && value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        int result = kind.hashCode();
+        int result = matchMethod.hashCode();
         result = 31 * result + value.hashCode();
         return result;
     }

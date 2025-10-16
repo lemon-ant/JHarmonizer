@@ -14,7 +14,7 @@ import lombok.Value;
 public class UnifiedAnnotationMatcher {
 
     @NonNull
-    UnifiedNameMatchKind nameMatchKind; // EXACT or REGEX
+    UnifiedMatchMethod matchMethod; // EXACT or REGEX
 
     @NonNull
     String value; // exact value or regex pattern
@@ -25,12 +25,12 @@ public class UnifiedAnnotationMatcher {
             return false;
         }
 
-        return nameMatchKind == that.nameMatchKind && value.equals(that.value);
+        return matchMethod == that.matchMethod && value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        int result = nameMatchKind.hashCode();
+        int result = matchMethod.hashCode();
         result = 31 * result + value.hashCode();
         return result;
     }

@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind.EXACT;
-import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatchKind.REGEX;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.EXACT;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.REGEX;
 import static java.util.Optional.ofNullable;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
@@ -30,10 +30,18 @@ class RuleLineParser {
 
         UnifiedRuleLineBuilder ruleLineBuilder = UnifiedRuleLine.builder();
         for (String token : tokens) {
-            if (handleNameToken(token, ruleLineBuilder)) continue;
-            if (handleAnnotationToken(token, ruleLineBuilder)) continue;
-            if (apply(ofNullable(KIND_BY_TOKEN.get(token)), ruleLineBuilder::kind)) continue;
-            if (apply(ofNullable(ACCESS_BY_TOKEN.get(token)), ruleLineBuilder::accessLevel)) continue;
+            if (handleNameToken(token, ruleLineBuilder)) {
+                continue;
+            }
+            if (handleAnnotationToken(token, ruleLineBuilder)) {
+                continue;
+            }
+            if (apply(ofNullable(KIND_BY_TOKEN.get(token)), ruleLineBuilder::memberKind)) {
+                continue;
+            }
+            if (apply(ofNullable(ACCESS_BY_TOKEN.get(token)), ruleLineBuilder::memberAccess)) {
+                continue;
+            }
             apply(ofNullable(MOD_BY_TOKEN.get(token)), ruleLineBuilder::declarationModifier);
         }
         return ruleLineBuilder.build();
@@ -47,12 +55,16 @@ class RuleLineParser {
     private static boolean handleNameToken(String token, UnifiedRuleLineBuilder ruleLineBuilder) {
         if (token.startsWith("=")) {
             String value = token.substring(1).trim();
-            if (!value.isEmpty()) ruleLineBuilder.name(new UnifiedNameMatcher(EXACT, value));
+            if (!value.isEmpty()) {
+                ruleLineBuilder.nameMatcher(new UnifiedNameMatcher(EXACT, value));
+            }
             return true;
         }
         if (token.startsWith("~")) {
             String pattern = token.substring(1).trim();
-            if (!pattern.isEmpty()) ruleLineBuilder.name(new UnifiedNameMatcher(REGEX, pattern));
+            if (!pattern.isEmpty()) {
+                ruleLineBuilder.nameMatcher(new UnifiedNameMatcher(REGEX, pattern));
+            }
             return true;
         }
         return false;
@@ -63,7 +75,7 @@ class RuleLineParser {
         boolean isRegex = token.startsWith("@~");
         String body = token.substring(isRegex ? 2 : 1).trim();
         if (!body.isEmpty()) {
-            ruleLineBuilder.annotation(new UnifiedAnnotationMatcher(isRegex ? REGEX : EXACT, body));
+            ruleLineBuilder.annotationMatcher(new UnifiedAnnotationMatcher(isRegex ? REGEX : EXACT, body));
         }
         return true;
     }
