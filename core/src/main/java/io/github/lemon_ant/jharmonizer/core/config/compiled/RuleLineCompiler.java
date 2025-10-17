@@ -24,7 +24,7 @@ class RuleLineCompiler {
 
     static Predicate<MemberDescriptor> compileRuleLine(UnifiedRuleLine unifiedRuleLine) {
 
-        Predicate<MemberDescriptor> namePredicateOpt = compileNamePredicate(unifiedRuleLine.getNameMatchers());
+        Predicate<MemberDescriptor> namePredicateOpt = compileNamePredicate(unifiedRuleLine.getNameMatcher());
 
         Predicate<MemberDescriptor> annotationPredicateOpt =
                 compileAnnotationPredicate(unifiedRuleLine.getAnnotationMatchers());
@@ -38,21 +38,11 @@ class RuleLineCompiler {
     }
 
     @Nullable
-    private static Predicate<MemberDescriptor> compileNamePredicate(@NonNull Set<UnifiedNameMatcher> nameMatchers) {
-        if (nameMatchers.isEmpty()) {
+    private static Predicate<MemberDescriptor> compileNamePredicate(@Nullable UnifiedNameMatcher nameMatcher) {
+        if (null == nameMatcher) {
             return null;
         }
-
-        List<Predicate<MemberDescriptor>> compiledPredicates = nameMatchers.stream()
-                .map(RuleLineCompiler::predicateForNameMatcher)
-                .toList();
-
-        return descriptor -> {
-            for (Predicate<MemberDescriptor> predicate : compiledPredicates) {
-                if (predicate.test(descriptor)) return true;
-            }
-            return false;
-        };
+        return predicateForNameMatcher(nameMatcher);
     }
 
     @Nullable

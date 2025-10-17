@@ -1,12 +1,11 @@
-// =====================================================================================
-// FILE: UnifiedRuleLine.java
-// =====================================================================================
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
@@ -43,8 +42,8 @@ public class UnifiedRuleLine {
     /**
      * Optional name constraint (exact or regex). Null ⇒ no constraint.
      */
-    @NonNull
-    Set<@NonNull UnifiedNameMatcher> nameMatchers;
+    @Nullable
+    UnifiedNameMatcher nameMatcher;
 
     /**
      * Any-of annotations: OR over the list; each matcher can be exact or regex. Empty ⇒ no constraint.
@@ -57,12 +56,12 @@ public class UnifiedRuleLine {
             @NonNull @Singular Set<@NonNull MemberKind> memberKinds,
             @NonNull @Singular Set<@NonNull MemberAccess> memberAccesses,
             @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull @Singular Set<@NonNull UnifiedNameMatcher> nameMatchers,
+            @Nullable UnifiedNameMatcher nameMatcher,
             @NonNull @Singular Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers) {
         this.memberKinds = Collections.unmodifiableSet(memberKinds);
         this.memberAccesses = Collections.unmodifiableSet(memberAccesses);
         this.declarationModifiers = Collections.unmodifiableSet(declarationModifiers);
-        this.nameMatchers = Collections.unmodifiableSet(nameMatchers);
+        this.nameMatcher = nameMatcher;
         this.annotationMatchers = Collections.unmodifiableSet(annotationMatchers);
     }
 
@@ -75,7 +74,7 @@ public class UnifiedRuleLine {
         return memberKinds.equals(that.memberKinds)
                 && memberAccesses.equals(that.memberAccesses)
                 && declarationModifiers.equals(that.declarationModifiers)
-                && nameMatchers.equals(that.nameMatchers)
+                && Objects.equals(nameMatcher, that.nameMatcher)
                 && annotationMatchers.equals(that.annotationMatchers);
     }
 
@@ -84,8 +83,33 @@ public class UnifiedRuleLine {
         int result = memberKinds.hashCode();
         result = 31 * result + memberAccesses.hashCode();
         result = 31 * result + declarationModifiers.hashCode();
-        result = 31 * result + nameMatchers.hashCode();
+        result = 31 * result + Objects.hash(nameMatcher);
         result = 31 * result + annotationMatchers.hashCode();
         return result;
+    }
+
+    /**
+     * Lombok will generate the builder class named UnifiedRuleLineBuilder by default.
+     * We extend it with a custom setter for nameMatcher that throws on second assignment.
+     */
+    public static class UnifiedRuleLineBuilder {
+        private boolean nameMatcherAlreadyAssigned;
+
+        /**
+         * Assigns the name matcher exactly once. Any subsequent call results in an exception.
+         *
+         * @param nameMatcher the matcher to set (nullable means "no constraint")
+         * @return the builder
+         * @throws IllegalStateException if nameMatcher has already been assigned
+         */
+        public UnifiedRuleLineBuilder nameMatcher(@Nullable UnifiedNameMatcher nameMatcher) {
+            if (this.nameMatcherAlreadyAssigned) {
+                throw new IllegalStateException("nameMatcher has already been assigned for " + this);
+            }
+            // delegate to Lombok-generated field (same name)
+            this.nameMatcher = nameMatcher;
+            this.nameMatcherAlreadyAssigned = true;
+            return this;
+        }
     }
 }
