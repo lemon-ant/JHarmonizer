@@ -7,6 +7,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -52,6 +53,8 @@ public class MemberDescriptor {
     @NonNull
     Set<@NonNull String> annotationQualifiedNames;
 
+    // TODO ParametersDescriptor to sort based on it
+
     int featureMask;
 
     @Builder
@@ -72,7 +75,7 @@ public class MemberDescriptor {
 
         this.memberKind = memberKind;
         this.memberAccess = memberAccess; // validated above for presence/absence
-        this.declarationModifiers = unmodifiableSet(declarationModifiers);
+        this.declarationModifiers = unmodifiableSet(new TreeSet<>(declarationModifiers));
         this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
 
         // Предвычисляем featureMask один раз (kind + access + modifiers)

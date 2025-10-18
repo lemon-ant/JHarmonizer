@@ -31,7 +31,7 @@ public class UnifiedConfig {
     boolean fixImports;
 
     /**
-     * Formatter style (AOP, GOOGLE, NONE, PALANTIR).
+     * Formatter style.
      */
     @NonNull
     UnifiedFormatterStyle formatterStyle;

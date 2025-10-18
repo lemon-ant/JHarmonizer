@@ -20,13 +20,13 @@ public class UnifiedTopLevelTypesOrdering {
     List<UnifiedTypeGroup> typeGroups;
 
     @NonNull
-    List<UnifiedSortKey> sortKeys;
+    List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys;
 
     @Builder
     public UnifiedTopLevelTypesOrdering(
             boolean mainTypeFirst,
             @NonNull @Singular List<UnifiedTypeGroup> typeGroups,
-            @NonNull @Singular List<UnifiedSortKey> sortKeys) {
+            @NonNull @Singular List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys) {
         this.mainTypeFirst = mainTypeFirst;
 
         Validate.notEmpty(typeGroups, "typeGroups cannot be empty");

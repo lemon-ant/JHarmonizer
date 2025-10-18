@@ -1,9 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -16,7 +19,7 @@ public class CompiledGroup {
     @Nullable
     String name;
 
-    int orderIndex; // assigned post-order
+    int orderIndex;
 
     @NonNull
     CompiledSelectorBlock selectorBlock;
@@ -27,17 +30,23 @@ public class CompiledGroup {
     @NonNull
     List<CompiledGroup> compiledSubGroups; // immutable, ordered
 
-    public CompiledGroup(
+    @NonNull
+    UnifiedSeparator separator;
+
+    @Builder
+    CompiledGroup(
             @Nullable String name,
             int orderIndex,
             @NonNull CompiledSelectorBlock selectorBlock,
             @NonNull CompiledGroupSortingBehavior groupSortingBehavior,
-            @NonNull List<CompiledGroup> compiledSubGroups) {
+            @NonNull List<CompiledGroup> compiledSubGroups,
+            @NonNull UnifiedSeparator separator) {
         this.name = name;
         this.orderIndex = orderIndex;
         this.selectorBlock = selectorBlock;
         this.groupSortingBehavior = groupSortingBehavior;
         this.compiledSubGroups = Collections.unmodifiableList(compiledSubGroups);
+        this.separator = separator;
     }
 
     public Optional<CompiledGroup> classify(@NonNull MemberDescriptor descriptor) {
@@ -58,7 +67,7 @@ public class CompiledGroup {
         if (!(o instanceof CompiledGroup that)) return false;
 
         return orderIndex == that.orderIndex
-                && name.equals(that.name)
+                && Objects.equals(name, that.name)
                 && selectorBlock.equals(that.selectorBlock)
                 && groupSortingBehavior.equals(that.groupSortingBehavior)
                 && compiledSubGroups.equals(that.compiledSubGroups);
@@ -66,7 +75,7 @@ public class CompiledGroup {
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
+        int result = Objects.hashCode(name);
         result = 31 * result + orderIndex;
         result = 31 * result + selectorBlock.hashCode();
         result = 31 * result + groupSortingBehavior.hashCode();

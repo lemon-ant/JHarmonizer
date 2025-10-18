@@ -1,5 +1,5 @@
 fix-imports: true
-formatter-style: PALANTIR # NONE, AOP, GOOGLE, PALANTIR
+formatter-style: PALANTIR # NONE, AOSP, GOOGLE, PALANTIR
 header-line:
   character: '-'
   left-padding: 3

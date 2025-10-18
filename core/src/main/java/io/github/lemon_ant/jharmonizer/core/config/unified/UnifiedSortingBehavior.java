@@ -49,4 +49,12 @@ public class UnifiedSortingBehavior {
         result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
         return result;
     }
+
+    public enum UnifiedSortKey {
+        ALPHA,
+        PRESERVE,
+        SIGNATURE,
+        VISIBILITY_ASC,
+        VISIBILITY_DESC,
+    }
 }

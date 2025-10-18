@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -60,7 +61,7 @@ public class UnifiedRuleLine {
             @NonNull @Singular Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers) {
         this.memberKinds = Collections.unmodifiableSet(memberKinds);
         this.memberAccesses = Collections.unmodifiableSet(memberAccesses);
-        this.declarationModifiers = Collections.unmodifiableSet(declarationModifiers);
+        this.declarationModifiers = Collections.unmodifiableSet(new TreeSet<>(declarationModifiers));
         this.nameMatcher = nameMatcher;
         this.annotationMatchers = Collections.unmodifiableSet(annotationMatchers);
     }

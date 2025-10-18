@@ -5,8 +5,8 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarm
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.UnifiedMemberGroupBuilder;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 

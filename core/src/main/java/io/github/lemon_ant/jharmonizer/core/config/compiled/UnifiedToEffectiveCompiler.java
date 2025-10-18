@@ -4,9 +4,8 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledGroupSorting
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
-import java.util.ArrayList;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -49,15 +48,20 @@ public class UnifiedToEffectiveCompiler {
         CompiledSelectorBlock compiledSelectorBlock = compileSelectorBlock(unifiedGroup.getSelectorBlock());
         CompiledGroupSortingBehavior sortingBehavior = mapSortingBehavior(unifiedGroup.getSortingBehavior());
 
-        // Recursively compile children first (DFS order preserved)
-        List<UnifiedMemberGroup> childGroups = unifiedGroup.getMemberSubGroups();
-        List<CompiledGroup> compiledChildren = new ArrayList<>(childGroups.size());
-        for (UnifiedMemberGroup child : childGroups) {
-            compiledChildren.add(compileGroupRecursively(child));
-        }
+        // Recursively compile subgroups first
+        List<CompiledGroup> compiledSubGroups = unifiedGroup.getMemberSubGroups().stream()
+                .map(UnifiedToEffectiveCompiler::compileGroupRecursively)
+                .toList();
 
         // orderIndex will be assigned by CompiledConfig.assignPostOrderIndexes(...)
-        return new CompiledGroup(groupName, /*orderIndex*/ 0, compiledSelectorBlock, sortingBehavior, compiledChildren);
+        return CompiledGroup.builder()
+                .name(groupName)
+                .orderIndex(/* TODO orderIndex*/ 0)
+                .selectorBlock(compiledSelectorBlock)
+                .separator(unifiedGroup.getSeparator())
+                .compiledSubGroups(compiledSubGroups)
+                .groupSortingBehavior(sortingBehavior)
+                .build();
     }
 
     @NonNull
@@ -78,12 +82,12 @@ public class UnifiedToEffectiveCompiler {
         boolean keepAccessorsTogether = unifiedSortingBehavior.isKeepAccessorsTogether();
         // Separator handling can be added to Effective model later; keep a placeholder string for now (null ==
         // unspecified).
-        return new CompiledGroupSortingBehavior(sortKey, keepAccessorsTogether, null);
+        return new CompiledGroupSortingBehavior(sortKey, keepAccessorsTogether);
     }
 
     // TODO Complete model and mapper
     @NonNull
-    private static SortKey mapSortKeys(List<UnifiedSortKey> unifiedSortKeys) {
+    private static SortKey mapSortKeys(List<UnifiedSortingBehavior.UnifiedSortKey> unifiedSortKeys) {
         // We currently support a single effective sort key knob; pick the first meaningful item.
         for (UnifiedSortKey key : unifiedSortKeys) {
             return switch (key) {

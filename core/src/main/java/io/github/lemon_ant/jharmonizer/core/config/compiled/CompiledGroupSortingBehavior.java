@@ -9,21 +9,25 @@ import lombok.Value;
  */
 @Value
 @SuppressFBWarnings
-// TODO This is a draft only
+// TODO This is a draft only.
 public class CompiledGroupSortingBehavior {
+
+    // TODO We do not need it at the end
     @NonNull
     CompiledGroupSortingBehavior.SortKey sortKey;
 
+    // TODO We do not need it at the end
     boolean keepAccessorsTogether;
-    String separatorDirective; // nullable allowed
 
-    public static CompiledGroupSortingBehavior defaults() {
-        return new CompiledGroupSortingBehavior(SortKey.PRESERVE, false, null);
-    }
+    // TODO private static final Comparator<MemberDescriptor> sortingComparator = ;
 
+    // TODO We do not need it at the end
     public enum SortKey {
         PRESERVE,
         ALPHA,
-        SOURCE_ORDER
+        SOURCE_ORDER,
+        VISIBILITY_ASC,
+        VISIBILITY_DESC,
+        SIGNATURE,
     }
 }

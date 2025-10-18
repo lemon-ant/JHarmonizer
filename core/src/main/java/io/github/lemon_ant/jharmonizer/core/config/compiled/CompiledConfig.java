@@ -1,8 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import static java.util.Collections.unmodifiableList;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
@@ -20,7 +21,7 @@ public class CompiledConfig {
     List<CompiledGroup> typeRoots;
 
     public CompiledConfig(@NonNull List<CompiledGroup> typeRoots) {
-        this.typeRoots = Collections.unmodifiableList(typeRoots);
+        this.typeRoots = unmodifiableList(typeRoots);
     }
 
     // TODO Delete it
@@ -28,7 +29,7 @@ public class CompiledConfig {
         List<CompiledGroup> reindexed = new ArrayList<>(roots.size());
         int[] counter = new int[] {0};
         for (CompiledGroup root : roots) reindexed.add(assignRec(root, counter));
-        return new CompiledConfig(Collections.unmodifiableList(reindexed));
+        return new CompiledConfig(unmodifiableList(reindexed));
     }
 
     // TODO Delete it
@@ -42,7 +43,8 @@ public class CompiledConfig {
                 idx,
                 node.getSelectorBlock(),
                 node.getGroupSortingBehavior(),
-                java.util.Collections.unmodifiableList(newChildren));
+                unmodifiableList(newChildren),
+                node.getSeparator());
     }
 
     @NonNull
