@@ -1,6 +1,3 @@
-// =====================================================================================
-// FILE: UnifiedAnnotationMatcher.java
-// =====================================================================================
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import lombok.NonNull;

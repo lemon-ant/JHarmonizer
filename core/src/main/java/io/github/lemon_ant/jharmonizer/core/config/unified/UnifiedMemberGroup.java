@@ -1,6 +1,3 @@
-// =====================================================================================
-// FILE: UnifiedMemberGroup.java
-// =====================================================================================
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
