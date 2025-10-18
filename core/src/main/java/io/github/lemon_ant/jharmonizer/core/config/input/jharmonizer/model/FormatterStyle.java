@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum FormatterStyle {
-    AOP(UnifiedFormatterStyle.AOP),
+    AOP(UnifiedFormatterStyle.AOSP),
     GOOGLE(UnifiedFormatterStyle.GOOGLE),
     NONE(UnifiedFormatterStyle.NONE),
     PALANTIR(UnifiedFormatterStyle.PALANTIR),

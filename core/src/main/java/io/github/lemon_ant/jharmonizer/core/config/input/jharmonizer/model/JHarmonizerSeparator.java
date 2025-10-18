@@ -1,12 +1,19 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@Getter
+@RequiredArgsConstructor
 public enum JHarmonizerSeparator {
-    NEW_LINE,
-    HEADER,
-    NONE;
+    NEW_LINE (UnifiedSeparator.NEW_LINE),
+    HEADER (UnifiedSeparator.HEADER),
+    NONE (UnifiedSeparator.NONE);
+
+    private final UnifiedSeparator unifiedSeparator;
 
     @NonNull
     @JsonCreator

@@ -18,11 +18,11 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Smoke test aligned with the current API:
- * - uses static JHarmonizerInputToUnifiedConverter.convert2Unified(cfg)
+ * - uses static JHarmonizer2UnifiedConverter.convert2Unified(cfg)
  * - initializes all @NonNull fields of JHarmonizerMemberGroup to avoid NPE
  * - asserts include-lines size via getSelectorBlock().getIncludes()
  */
-class JHarmonizerInputToUnifiedConverterTest {
+class JHarmonizer2UnifiedConverterTest {
 
     @Test
     void convert2Unified_validMinimalJHarmonizerModel_returnExpectedUnifiedModel() {
@@ -47,7 +47,7 @@ class JHarmonizerInputToUnifiedConverterTest {
                 .headerLine(createHeaderLine('-', 5))
                 .build();
 
-        UnifiedConfig unified = JHarmonizerInputToUnifiedConverter.convert2Unified(jHarmonizerConfig);
+        UnifiedConfig unified = JHarmonizer2UnifiedConverter.convert2Unified(jHarmonizerConfig);
 
         assertThat(unified.getRootMemberGroups()).hasSize(1);
         assertThat(unified.getRootMemberGroups().getFirst().getSelectorBlock().getIncludes())

@@ -35,7 +35,7 @@ class JHarmonizerConfigLoaderTest {
     void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() {
         // given
         InputStream config = Objects.requireNonNull(
-                getClass().getResourceAsStream("/test-cases/core/config/invalid-config-duplicate-types.yml"));
+                getClass().getResourceAsStream("/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml"));
 
         // when / then
         assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(config))
@@ -59,7 +59,7 @@ class JHarmonizerConfigLoaderTest {
     @Test
     void loadFrom_simpleWorkingConfigFile_doesNotThrow() {
         // given
-        InputStream stream = getClass().getResourceAsStream("/test-cases/core/config/simplest-working-config.yml");
+        InputStream stream = getClass().getResourceAsStream("/test-cases/core/config/input/jharmonizer/simplest-working-config.yml");
 
         // when / then
         assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(stream)).doesNotThrowAnyException();

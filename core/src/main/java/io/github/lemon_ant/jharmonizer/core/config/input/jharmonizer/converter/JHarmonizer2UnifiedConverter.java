@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @UtilityClass
-public final class JHarmonizerInputToUnifiedConverter {
+public final class JHarmonizer2UnifiedConverter {
 
     public static UnifiedConfig convert2Unified(@NonNull JHarmonizerConfig vendor) {
         // 1) Top-level types ordering

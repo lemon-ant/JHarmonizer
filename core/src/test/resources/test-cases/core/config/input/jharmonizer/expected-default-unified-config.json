@@ -1,0 +1,1288 @@
+{
+  "topLevelTypesOrdering" : {
+    "mainTypeFirst" : true,
+    "typeGroups" : [ {
+      "typeKinds" : [ "CLASS", "RECORD" ]
+    }, {
+      "typeKinds" : [ "INTERFACE" ]
+    }, {
+      "typeKinds" : [ "ENUM" ]
+    }, {
+      "typeKinds" : [ "ANNOTATION" ]
+    } ],
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+  },
+  "fixImports" : true,
+  "formatterStyle" : "PALANTIR",
+  "headerLine" : {
+    "character" : "-",
+    "leftPadding" : 3
+  },
+  "rootMemberGroups" : [ {
+    "groupName" : "Test Classes",
+    "selectorBlock" : {
+      "includes" : [ {
+        "memberKinds" : [ "TYPE_CLASS" ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : {
+          "matchMethod" : "REGEX",
+          "value" : ".*test$"
+        },
+        "annotationMatchers" : [ ]
+      }, {
+        "memberKinds" : [ "TYPE_CLASS" ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "extendwith"
+        } ]
+      }, {
+        "memberKinds" : [ "TYPE_CLASS" ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "runwith"
+        } ]
+      }, {
+        "memberKinds" : [ "TYPE_CLASS" ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "REGEX",
+          "value" : ".*test$"
+        } ]
+      } ],
+      "excludes" : [ ]
+    },
+    "sortingBehavior" : {
+      "unifiedSortKeys" : [ "ALPHA", "SIGNATURE" ],
+      "keepAccessorsTogether" : false
+    },
+    "memberSubGroups" : [ {
+      "groupName" : "JUnit Fields",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "FIELD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ {
+        "groupName" : "JUnit Constants",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          }, {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "FINAL" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "NEW_LINE"
+      }, {
+        "groupName" : "JUnit Static fields",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "NEW_LINE"
+      } ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "JUnit Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ {
+        "groupName" : "JUnit Setup Methods",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "beforeall"
+            } ]
+          }, {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "beforeeach"
+            } ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "PRESERVE" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "HEADER"
+      }, {
+        "groupName" : "JUnit Test Methods",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "test"
+            } ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "HEADER"
+      }, {
+        "groupName" : "JUnit Teardown Methods",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "aftereach"
+            } ]
+          }, {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "afterall"
+            } ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "PRESERVE" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "HEADER"
+      }, {
+        "groupName" : "Utility Methods",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "ALPHA", "SIGNATURE" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "HEADER"
+      } ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "JUnit Test Configuration",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "TYPE_CLASS" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ {
+            "matchMethod" : "EXACT",
+            "value" : "testconfiguration"
+          } ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    } ],
+    "separator" : "NONE"
+  }, {
+    "groupName" : "DTO and Entities",
+    "selectorBlock" : {
+      "includes" : [ {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : {
+          "matchMethod" : "REGEX",
+          "value" : ".*(dto|dto)$"
+        },
+        "annotationMatchers" : [ ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "entity"
+        } ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "embeddable"
+        } ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "document"
+        } ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "data"
+        } ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : {
+          "matchMethod" : "REGEX",
+          "value" : ".*entity$"
+        },
+        "annotationMatchers" : [ ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "value"
+        } ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "mappedsuperclass"
+        } ]
+      }, {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : null,
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "configurationproperties"
+        } ]
+      } ],
+      "excludes" : [ ]
+    },
+    "sortingBehavior" : {
+      "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+      "keepAccessorsTogether" : false
+    },
+    "memberSubGroups" : [ {
+      "groupName" : "Serializable UID",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "serialversionuid"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "FIELD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "FINAL" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Fields",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "FIELD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ {
+        "groupName" : "Constants",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          }, {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "FINAL" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ {
+          "groupName" : "Public Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PUBLIC" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        }, {
+          "groupName" : "Protected Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PROTECTED" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        }, {
+          "groupName" : "Package-Private Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PACKAGE" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        }, {
+          "groupName" : "Private Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PRIVATE" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        } ],
+        "separator" : "NEW_LINE"
+      }, {
+        "groupName" : "Static Fields",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "NEW_LINE"
+      }, {
+        "groupName" : "Final Instance Fields",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "FINAL" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "NEW_LINE"
+      } ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Static Initializer Blocks",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "INSTANCE_INIT_BLOCK" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Static Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Instance Initializer Blocks",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "INSTANCE_INIT_BLOCK" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Constructors",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "CONSTRUCTOR" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Accessor Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "REGEX",
+            "value" : "^(get|set|is|has).+$"
+          },
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : true
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Instance Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "tostring"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "clone"
+          },
+          "annotationMatchers" : [ ]
+        } ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Basic Object Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "tostring"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "clone"
+          },
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    } ],
+    "separator" : "NONE"
+  }, {
+    "groupName" : "Default Rule",
+    "selectorBlock" : {
+      "includes" : [ {
+        "memberKinds" : [ ],
+        "memberAccesses" : [ ],
+        "declarationModifiers" : [ ],
+        "nameMatcher" : {
+          "matchMethod" : "REGEX",
+          "value" : ".*"
+        },
+        "annotationMatchers" : [ ]
+      } ],
+      "excludes" : [ ]
+    },
+    "sortingBehavior" : {
+      "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+      "keepAccessorsTogether" : false
+    },
+    "memberSubGroups" : [ {
+      "groupName" : "Serializable UID",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "serialversionuid"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "FIELD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "FINAL" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Logger",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "FIELD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC", "FINAL" ],
+          "nameMatcher" : {
+            "matchMethod" : "REGEX",
+            "value" : "(?i)(log|.*logger)$"
+          },
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Fields",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "FIELD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ {
+        "groupName" : "Constants",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          }, {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "FINAL" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ {
+          "groupName" : "Public Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PUBLIC" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        }, {
+          "groupName" : "Protected Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PROTECTED" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        }, {
+          "groupName" : "Package-Private Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PACKAGE" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        }, {
+          "groupName" : "Private Constants",
+          "selectorBlock" : {
+            "includes" : [ {
+              "memberKinds" : [ ],
+              "memberAccesses" : [ "PRIVATE" ],
+              "declarationModifiers" : [ ],
+              "nameMatcher" : null,
+              "annotationMatchers" : [ ]
+            } ],
+            "excludes" : [ ]
+          },
+          "sortingBehavior" : {
+            "unifiedSortKeys" : [ "ALPHA" ],
+            "keepAccessorsTogether" : false
+          },
+          "memberSubGroups" : [ ],
+          "separator" : "NEW_LINE"
+        } ],
+        "separator" : "NEW_LINE"
+      }, {
+        "groupName" : "Static Fields",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "STATIC" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "NEW_LINE"
+      }, {
+        "groupName" : "Final Instance Fields",
+        "selectorBlock" : {
+          "includes" : [ {
+            "memberKinds" : [ ],
+            "memberAccesses" : [ ],
+            "declarationModifiers" : [ "FINAL" ],
+            "nameMatcher" : null,
+            "annotationMatchers" : [ ]
+          } ],
+          "excludes" : [ ]
+        },
+        "sortingBehavior" : {
+          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+          "keepAccessorsTogether" : false
+        },
+        "memberSubGroups" : [ ],
+        "separator" : "NEW_LINE"
+      } ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Static Initializer Blocks",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "INSTANCE_INIT_BLOCK" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Static Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ "STATIC" ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Instance Initializer Blocks",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "INSTANCE_INIT_BLOCK" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Constructors",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "CONSTRUCTOR" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Instance Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "tostring"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "clone"
+          },
+          "annotationMatchers" : [ ]
+        } ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Basic Object Methods",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "tostring"
+          },
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "METHOD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "clone"
+          },
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "PRESERVE" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NONE"
+    }, {
+      "groupName" : "Classes & Records",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "TYPE_RECORD" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        }, {
+          "memberKinds" : [ "TYPE_CLASS" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Interfaces",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "TYPE_INTERFACE" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Enums",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "TYPE_ENUM" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    }, {
+      "groupName" : "Annotations",
+      "selectorBlock" : {
+        "includes" : [ {
+          "memberKinds" : [ "TYPE_ANNOTATION" ],
+          "memberAccesses" : [ ],
+          "declarationModifiers" : [ ],
+          "nameMatcher" : null,
+          "annotationMatchers" : [ ]
+        } ],
+        "excludes" : [ ]
+      },
+      "sortingBehavior" : {
+        "unifiedSortKeys" : [ "ALPHA" ],
+        "keepAccessorsTogether" : false
+      },
+      "memberSubGroups" : [ ],
+      "separator" : "NEW_LINE"
+    } ],
+    "separator" : "NONE"
+  } ]
+}
