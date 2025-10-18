@@ -15,8 +15,9 @@ import org.junit.jupiter.api.Test;
 class ConfigModelSnapshotTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    private static final String CLASS_PATH_TO_SNAPSHOT = "/test-cases/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
-    private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources"+CLASS_PATH_TO_SNAPSHOT;
+    private static final String CLASS_PATH_TO_SNAPSHOT =
+            "/test-cases/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
+    private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
 
     @Test
     void configModel_serializationMatchesSnapshot() throws Exception {
@@ -27,12 +28,11 @@ class ConfigModelSnapshotTest {
         String actualJson = MAPPER.writeValueAsString(JHarmonizerConfig);
 
         // then
-        try (InputStream expectedJsonStream =
-                getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
+        try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
 
             // Defensive: make missing snapshot an explicit test failure with instructions.
             assertThat(expectedJsonStream)
-                    .as("Missing snapshot file: "+ CLASS_PATH_TO_SNAPSHOT)
+                    .as("Missing snapshot file: " + CLASS_PATH_TO_SNAPSHOT)
                     .isNotNull();
 
             String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
@@ -53,7 +53,8 @@ class ConfigModelSnapshotTest {
                           • Verify that the diff in expected-default-jharmonizer-config.json EXACTLY reflects your YAML/model changes.
                           • Make sure nothing accidental was lost or reordered.
                           • Commit both the YAML change and the updated snapshot together.
-                        """,FILE_PATH_TO_SNAPSHOT)
+                        """,
+                            FILE_PATH_TO_SNAPSHOT)
                     .isEqualToNormalizingNewlines(expectedJson);
         }
     }
@@ -70,7 +71,7 @@ class ConfigModelSnapshotTest {
         Files.writeString(snapshotPath, newSnapshot, StandardCharsets.UTF_8);
         // quick sanity: snapshot should be readable right away
         assertThat(Files.readString(snapshotPath, StandardCharsets.UTF_8))
-            .as("Snapshot file should be readable immediately after write")
-            .isEqualTo(newSnapshot);
+                .as("Snapshot file should be readable immediately after write")
+                .isEqualTo(newSnapshot);
     }
 }

@@ -24,8 +24,9 @@ import org.junit.jupiter.api.Test;
 class JHarmonizer2UnifiedConverterSnapshotTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    private static final String CLASS_PATH_TO_SNAPSHOT = "/test-cases/core/config/input/jharmonizer/expected-default-unified-config.json";
-    private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources"+CLASS_PATH_TO_SNAPSHOT;
+    private static final String CLASS_PATH_TO_SNAPSHOT =
+            "/test-cases/core/config/input/jharmonizer/expected-default-unified-config.json";
+    private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
 
     @Test
     @DisplayName("configUnified_serializationMatchesSnapshot")
@@ -33,25 +34,25 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
         // given
         JHarmonizerConfig vendorConfig = JHarmonizerConfigLoader.loadDefault();
         assertThat(vendorConfig)
-            .as("Default vendor config must be loadable via JHarmonizerConfigLoader.loadDefault()")
-            .isNotNull();
+                .as("Default vendor config must be loadable via JHarmonizerConfigLoader.loadDefault()")
+                .isNotNull();
 
         // when
         UnifiedConfig unifiedConfig = JHarmonizer2UnifiedConverter.convert2Unified(vendorConfig);
         String actualJson = MAPPER.writeValueAsString(unifiedConfig);
 
         // then
-        try (InputStream expectedJsonStream =
-                 getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
+        try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
 
             assertThat(expectedJsonStream)
-                .as("Missing snapshot file: %s", CLASS_PATH_TO_SNAPSHOT)
-                .isNotNull();
+                    .as("Missing snapshot file: %s", CLASS_PATH_TO_SNAPSHOT)
+                    .isNotNull();
 
             String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
 
             assertThat(actualJson)
-                .as("""
+                    .as(
+                            """
                         UnifiedConfig snapshot mismatch.
 
                         If you intentionally changed the default vendor YAML, the converter, or the unified model,
@@ -64,8 +65,9 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
                           • Review the diff in expected-unified.json to ensure it exactly reflects your intended changes.
                           • Commit the YAML/model changes together with the updated snapshot.
                           • Actual JSON dumped to: %s
-                        """, FILE_PATH_TO_SNAPSHOT)
-                .isEqualToNormalizingNewlines(expectedJson);
+                        """,
+                            FILE_PATH_TO_SNAPSHOT)
+                    .isEqualToNormalizingNewlines(expectedJson);
         }
     }
 
@@ -75,9 +77,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     void regenerateSnapshot_whenRun_overwritesSnapshotFile() throws Exception {
         // given
         JHarmonizerConfig vendorConfig = JHarmonizerConfigLoader.loadDefault();
-        assertThat(vendorConfig)
-            .as("Default vendor config must be loadable")
-            .isNotNull();
+        assertThat(vendorConfig).as("Default vendor config must be loadable").isNotNull();
 
         // when
         UnifiedConfig unifiedConfig = JHarmonizer2UnifiedConverter.convert2Unified(vendorConfig);
@@ -89,7 +89,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
 
         // quick sanity: snapshot should be readable right away
         assertThat(Files.readString(pathToSnapshot, StandardCharsets.UTF_8))
-            .as("Snapshot file should be readable immediately after write")
-            .isEqualTo(expectedJson);
+                .as("Snapshot file should be readable immediately after write")
+                .isEqualTo(expectedJson);
     }
 }

@@ -9,9 +9,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum JHarmonizerSeparator {
-    NEW_LINE (UnifiedSeparator.NEW_LINE),
-    HEADER (UnifiedSeparator.HEADER),
-    NONE (UnifiedSeparator.NONE);
+    NEW_LINE(UnifiedSeparator.NEW_LINE),
+    HEADER(UnifiedSeparator.HEADER),
+    NONE(UnifiedSeparator.NONE);
 
     private final UnifiedSeparator unifiedSeparator;
 

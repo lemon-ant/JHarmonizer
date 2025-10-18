@@ -35,7 +35,7 @@ final class MemberGroupMapper {
                 .groupName(srcMemberGroup.getName())
                 .selectorBlock(selectorBlock)
                 .sortingBehavior(sortingBehavior)
-            .separator(srcMemberGroup.getSeparator().getUnifiedSeparator());
+                .separator(srcMemberGroup.getSeparator().getUnifiedSeparator());
 
         srcMemberGroup.getMemberSubGroups().stream()
                 .map(MemberGroupMapper::map)
