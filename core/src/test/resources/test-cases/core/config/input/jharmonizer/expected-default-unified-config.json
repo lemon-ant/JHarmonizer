@@ -12,8 +12,10 @@
     } ],
     "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
   },
-  "fixImports" : true,
-  "formatterStyle" : "PALANTIR",
+  "formatting" : {
+    "fixImports" : true,
+    "formatterStyle" : "PALANTIR"
+  },
   "headerLine" : {
     "character" : "-",
     "leftPadding" : 3

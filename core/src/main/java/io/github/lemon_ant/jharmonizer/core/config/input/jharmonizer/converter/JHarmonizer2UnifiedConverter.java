@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
@@ -39,8 +40,8 @@ public final class JHarmonizer2UnifiedConverter {
 
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
-                .fixImports(fixImports)
-                .formatterStyle(style)
+                // TODO Refactor this
+                .formatting(new UnifiedFormatting(fixImports, style))
                 .headerLine(header)
                 .rootMemberGroups(root)
                 .build();

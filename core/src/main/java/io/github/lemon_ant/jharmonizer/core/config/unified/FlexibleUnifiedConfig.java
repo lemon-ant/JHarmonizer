@@ -6,7 +6,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import lombok.Builder;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
@@ -17,8 +18,8 @@ import lombok.Value;
  * This class does NOT define defaults and does NOT invent values.
  */
 @Value
-@Builder
 @SuppressWarnings("PMD.DataClass")
+@Getter(AccessLevel.NONE)
 public class FlexibleUnifiedConfig {
 
     /**
@@ -28,16 +29,10 @@ public class FlexibleUnifiedConfig {
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
     /**
-     * Optional override for fixImports flag.
+     * Cohesive formatting definition (preferred API).
      */
     @Nullable
-    Boolean fixImports;
-
-    /**
-     * Optional override for formatter style.
-     */
-    @Nullable
-    UnifiedFormatterStyle formatterStyle;
+    UnifiedFormatting formatting;
 
     /**
      * Optional override for header line.
@@ -53,13 +48,11 @@ public class FlexibleUnifiedConfig {
 
     public FlexibleUnifiedConfig(
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
-            @Nullable Boolean fixImports,
-            @Nullable UnifiedFormatterStyle formatterStyle,
+            @Nullable UnifiedFormatting formatting,
             @Nullable UnifiedHeaderLine headerLine,
             @Nullable @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
-        this.fixImports = fixImports;
-        this.formatterStyle = formatterStyle;
+        this.formatting = formatting;
         this.headerLine = headerLine;
         this.rootMemberGroups =
                 ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(List.of());
@@ -71,13 +64,8 @@ public class FlexibleUnifiedConfig {
     }
 
     @NonNull
-    public Optional<Boolean> getFixImports() {
-        return ofNullable(fixImports);
-    }
-
-    @NonNull
-    public Optional<UnifiedFormatterStyle> getFormatterStyle() {
-        return ofNullable(formatterStyle);
+    public Optional<UnifiedFormatting> getFormatting() {
+        return ofNullable(formatting);
     }
 
     @NonNull

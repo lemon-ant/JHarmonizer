@@ -11,9 +11,11 @@ import org.apache.commons.lang3.Validate;
 @Value
 public class JHarmonizerConfig {
 
+    // TODO Exclude to a dedicated class
     boolean fixImports;
 
     @NonNull
+    // TODO Exclude to a dedicated class
     FormatterStyle formatterStyle;
 
     @NonNull

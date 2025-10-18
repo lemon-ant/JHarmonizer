@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.UnifiedToEffectiveCompiler;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledCompiler;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoader;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizer2UnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
@@ -31,6 +31,6 @@ public class ConfigurationManager {
     public static CompiledConfig loadDefaultEffectiveConfig() {
         JHarmonizerConfig jHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
         UnifiedConfig unifiedConfig = JHarmonizer2UnifiedConverter.convert2Unified(jHarmonizerConfig);
-        return UnifiedToEffectiveCompiler.compile(unifiedConfig);
+        return Unified2CompiledCompiler.compile(unifiedConfig);
     }
 }

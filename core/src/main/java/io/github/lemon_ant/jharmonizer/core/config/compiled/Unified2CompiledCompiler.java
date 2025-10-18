@@ -6,9 +6,11 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Translates strict Unified configuration into the Effective runtime model.
@@ -21,7 +23,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 @SuppressWarnings("PMD")
-public class UnifiedToEffectiveCompiler {
+public class Unified2CompiledCompiler {
 
     /**
      * Compiles a full Unified configuration into an Effective configuration.
@@ -31,37 +33,69 @@ public class UnifiedToEffectiveCompiler {
         // TODO Today we only compile the member groups; top-level type ordering may feed into future phases.
         List<CompiledGroup> typeRoots = compileTopLevelGroups(unifiedConfig.getRootMemberGroups());
 
-        return new CompiledConfig(typeRoots);
+        return new CompiledConfig(
+                typeRoots,
+                unifiedConfig.getTopLevelTypesOrdering(),
+                unifiedConfig.getFormatting(),
+                unifiedConfig.getHeaderLine());
     }
 
+    /**
+     * Entry point: builds all root groups and assigns post-order indices in one pass.
+     * Indices are assigned AFTER children (post-order). Start index can be 0.
+     */
     @NonNull
-    private static List<CompiledGroup> compileTopLevelGroups(@NonNull List<UnifiedMemberGroup> unifiedGroups) {
-        return unifiedGroups.stream()
-                .map(UnifiedToEffectiveCompiler::compileGroupRecursively)
-                .toList();
+    private static List<CompiledGroup> compileTopLevelGroups(@NonNull List<UnifiedMemberGroup> unifiedRoots) {
+        int currentIndex = 0;
+        List<CompiledGroup> compiledRoots = new ArrayList<>(unifiedRoots.size());
+        for (UnifiedMemberGroup unifiedRoot : unifiedRoots) {
+            Pair<CompiledGroup, Integer> rootResult = compileGroupRecursively(unifiedRoot, currentIndex);
+            compiledRoots.add(rootResult.getLeft());
+            currentIndex = rootResult.getRight();
+        }
+        return compiledRoots;
     }
 
+    /**
+     * Recursive builder:
+     * 1) Recursively builds all children, threading the index through.
+     * 2) On unwind, assigns post-order index to the current group.
+     * 3) Returns (compiledGroup, nextFreeIndex).
+     */
     @NonNull
-    private static CompiledGroup compileGroupRecursively(@NonNull UnifiedMemberGroup unifiedGroup) {
-        String groupName = unifiedGroup.getGroupName();
+    private static Pair<CompiledGroup, Integer> compileGroupRecursively(
+            @NonNull UnifiedMemberGroup unifiedGroup, int startIndex) {
+        int runningIndex = startIndex;
 
+        // 1) Build children first (DFS), threading the index forward
+        List<CompiledGroup> compiledChildren =
+                new ArrayList<>(unifiedGroup.getMemberSubGroups().size());
+        for (UnifiedMemberGroup unifiedChild : unifiedGroup.getMemberSubGroups()) {
+            Pair<CompiledGroup, Integer> childResult = compileGroupRecursively(unifiedChild, runningIndex);
+            compiledChildren.add(childResult.getLeft());
+            runningIndex = childResult.getRight(); // advance by everything created inside the child
+        }
+
+        // 2) Compile selector/sorting for the current node (whatever your project uses)
         CompiledSelectorBlock compiledSelectorBlock = compileSelectorBlock(unifiedGroup.getSelectorBlock());
-        CompiledGroupSortingBehavior sortingBehavior = mapSortingBehavior(unifiedGroup.getSortingBehavior());
+        CompiledGroupSortingBehavior compiledSortingBehavior =
+                compileSortingBehavior(unifiedGroup.getSortingBehavior());
 
-        // Recursively compile subgroups first
-        List<CompiledGroup> compiledSubGroups = unifiedGroup.getMemberSubGroups().stream()
-                .map(UnifiedToEffectiveCompiler::compileGroupRecursively)
-                .toList();
+        // 3) Assign post-order index to THIS node and advance index
+        int assignedPostOrderIndex = runningIndex;
+        int nextFreeIndex = runningIndex + 1;
 
-        // orderIndex will be assigned by CompiledConfig.assignPostOrderIndexes(...)
-        return CompiledGroup.builder()
-                .name(groupName)
-                .orderIndex(/* TODO orderIndex*/ 0)
+        // 4) Build the current compiled group (assuming builder has postOrderIndex or similar)
+        CompiledGroup compiledCurrentGroup = CompiledGroup.builder()
+                .name(unifiedGroup.getGroupName())
                 .selectorBlock(compiledSelectorBlock)
-                .separator(unifiedGroup.getSeparator())
-                .compiledSubGroups(compiledSubGroups)
-                .groupSortingBehavior(sortingBehavior)
+                .groupSortingBehavior(compiledSortingBehavior)
+                .compiledSubGroups(compiledChildren)
+                .orderIndex(assignedPostOrderIndex) // <-- your field; rename if different
                 .build();
+
+        // 5) Return pair: (group, next index after this node)
+        return Pair.of(compiledCurrentGroup, nextFreeIndex);
     }
 
     @NonNull
@@ -77,7 +111,7 @@ public class UnifiedToEffectiveCompiler {
 
     // TODO Complete model and mapper
     @NonNull
-    private static CompiledGroupSortingBehavior mapSortingBehavior(UnifiedSortingBehavior unifiedSortingBehavior) {
+    private static CompiledGroupSortingBehavior compileSortingBehavior(UnifiedSortingBehavior unifiedSortingBehavior) {
         SortKey sortKey = mapSortKeys(unifiedSortingBehavior.getUnifiedSortKeys());
         boolean keepAccessorsTogether = unifiedSortingBehavior.isKeepAccessorsTogether();
         // Separator handling can be added to Effective model later; keep a placeholder string for now (null ==

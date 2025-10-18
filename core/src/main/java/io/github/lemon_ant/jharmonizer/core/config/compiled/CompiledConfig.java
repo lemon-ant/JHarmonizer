@@ -3,7 +3,9 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 import static java.util.Collections.unmodifiableList;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.ArrayList;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
@@ -14,42 +16,43 @@ import lombok.Value;
  * Top-level roots are checked top-to-bottom; the first matching root captures the member and DFS continues.
  */
 @Value
-@SuppressWarnings("PMD")
 @SuppressFBWarnings
 public class CompiledConfig {
     @NonNull
-    List<CompiledGroup> typeRoots;
+    List<CompiledGroup> rootMemberGroups;
 
-    public CompiledConfig(@NonNull List<CompiledGroup> typeRoots) {
-        this.typeRoots = unmodifiableList(typeRoots);
-    }
+    /**
+     * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
+     */
+    @NonNull
+    UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
-    // TODO Delete it
-    public static CompiledConfig assignPostOrderIndexes(@NonNull List<CompiledGroup> roots) {
-        List<CompiledGroup> reindexed = new ArrayList<>(roots.size());
-        int[] counter = new int[] {0};
-        for (CompiledGroup root : roots) reindexed.add(assignRec(root, counter));
-        return new CompiledConfig(unmodifiableList(reindexed));
-    }
+    /**
+     * Cohesive formatting definition (preferred API).
+     */
+    @NonNull
+    UnifiedFormatting formatting;
 
-    // TODO Delete it
-    private static CompiledGroup assignRec(CompiledGroup node, int[] counter) {
-        List<CompiledGroup> newChildren =
-                new ArrayList<>(node.getCompiledSubGroups().size());
-        for (CompiledGroup c : node.getCompiledSubGroups()) newChildren.add(assignRec(c, counter));
-        int idx = counter[0]++;
-        return new CompiledGroup(
-                node.getName(),
-                idx,
-                node.getSelectorBlock(),
-                node.getGroupSortingBehavior(),
-                unmodifiableList(newChildren),
-                node.getSeparator());
+    /**
+     * Header line descriptor (character + leftPadding).
+     */
+    @NonNull
+    UnifiedHeaderLine headerLine;
+
+    public CompiledConfig(
+            @NonNull List<CompiledGroup> rootMemberGroups,
+            @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
+            @NonNull UnifiedFormatting formatting,
+            @NonNull UnifiedHeaderLine headerLine) {
+        this.rootMemberGroups = unmodifiableList(rootMemberGroups);
+        this.topLevelTypesOrdering = topLevelTypesOrdering;
+        this.formatting = formatting;
+        this.headerLine = headerLine;
     }
 
     @NonNull
     public Optional<CompiledGroup> matchGroup(@NonNull MemberDescriptor descriptor) {
-        for (CompiledGroup typeRoot : typeRoots) {
+        for (CompiledGroup typeRoot : rootMemberGroups) {
             Optional<CompiledGroup> hit = typeRoot.classify(descriptor);
             if (hit.isPresent()) return hit;
         }

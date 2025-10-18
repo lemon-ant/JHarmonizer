@@ -26,15 +26,10 @@ public class UnifiedConfig {
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
     /**
-     * Whether to fix/reorder imports.
-     */
-    boolean fixImports;
-
-    /**
-     * Formatter style.
+     * Cohesive formatting definition (preferred API).
      */
     @NonNull
-    UnifiedFormatterStyle formatterStyle;
+    UnifiedFormatting formatting;
 
     /**
      * Header line descriptor (character + leftPadding).
@@ -48,16 +43,15 @@ public class UnifiedConfig {
     @NonNull
     List<UnifiedMemberGroup> rootMemberGroups;
 
+    // TODO Remove builder
     @Builder
     public UnifiedConfig(
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
-            boolean fixImports,
-            @NonNull UnifiedFormatterStyle formatterStyle,
+            @NonNull UnifiedFormatting formatting,
             @NonNull UnifiedHeaderLine headerLine,
             @NonNull @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
-        this.fixImports = fixImports;
-        this.formatterStyle = formatterStyle;
+        this.formatting = formatting;
         this.headerLine = headerLine;
         Validate.notEmpty(rootMemberGroups, "Root member groups cannot be empty");
         this.rootMemberGroups = Collections.unmodifiableList(rootMemberGroups);

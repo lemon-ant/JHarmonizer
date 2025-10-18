@@ -18,9 +18,7 @@ public final class UnifiedConfigMerger {
         UnifiedTopLevelTypesOrdering top =
                 overlay.getTopLevelTypesOrdering().orElse(baseline.getTopLevelTypesOrdering());
 
-        boolean fixImports = overlay.getFixImports().orElse(baseline.isFixImports());
-
-        UnifiedFormatterStyle style = overlay.getFormatterStyle().orElse(baseline.getFormatterStyle());
+        UnifiedFormatting formatting = overlay.getFormatting().orElse(baseline.getFormatting());
 
         UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
 
@@ -28,8 +26,7 @@ public final class UnifiedConfigMerger {
 
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
-                .fixImports(fixImports)
-                .formatterStyle(style)
+                .formatting(formatting)
                 .headerLine(header)
                 .rootMemberGroups(root)
                 .build();
