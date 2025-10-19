@@ -8,7 +8,7 @@
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
     "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
-    "typeGroups" : [ {
+    "topLevelTypeSelectors" : [ {
       "typeKinds" : [ "CLASS", "RECORD" ]
     }, {
       "typeKinds" : [ "INTERFACE" ]

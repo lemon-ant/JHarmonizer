@@ -15,25 +15,27 @@ import lombok.Value;
  * Final acceptance (in this node) is: any(includeLines) AND NOT any(excludeLines).
  */
 @Value
+// TODO Remove builder
 @Builder
-public class UnifiedSelectorBlock {
+public class UnifiedMemberGroupSelectorBlock {
 
     @NonNull
     @Singular
-    Set<UnifiedRuleLine> includes;
+    Set<UnifiedMemberGroupRuleLine> includes;
 
     @NonNull
     @Singular
-    Set<UnifiedRuleLine> excludes;
+    Set<UnifiedMemberGroupRuleLine> excludes;
 
-    public UnifiedSelectorBlock(@NonNull Set<UnifiedRuleLine> includes, @NonNull Set<UnifiedRuleLine> excludes) {
+    public UnifiedMemberGroupSelectorBlock(
+            @NonNull Set<UnifiedMemberGroupRuleLine> includes, @NonNull Set<UnifiedMemberGroupRuleLine> excludes) {
         this.includes = Collections.unmodifiableSet(includes);
         this.excludes = Collections.unmodifiableSet(excludes);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UnifiedSelectorBlock that)) {
+        if (!(o instanceof UnifiedMemberGroupSelectorBlock that)) {
             return false;
         }
 

@@ -2,6 +2,10 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import java.util.EnumSet;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;

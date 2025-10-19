@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.compiled;
+package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import java.util.Collections;
 import java.util.EnumSet;

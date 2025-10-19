@@ -4,7 +4,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarm
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.UnifiedMemberGroupBuilder;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSelectorBlock;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
 import java.util.List;
@@ -17,10 +17,15 @@ import lombok.experimental.UtilityClass;
 final class MemberGroupMapper {
 
     static UnifiedMemberGroup map(JHarmonizerMemberGroup srcMemberGroup) {
-        UnifiedSelectorBlock.UnifiedSelectorBlockBuilder selectorBlockBuilder = UnifiedSelectorBlock.builder();
-        srcMemberGroup.getIncludes().stream().map(RuleLineParser::parse).forEach(selectorBlockBuilder::include);
-        srcMemberGroup.getExcludes().stream().map(RuleLineParser::parse).forEach(selectorBlockBuilder::exclude);
-        UnifiedSelectorBlock selectorBlock = selectorBlockBuilder.build();
+        UnifiedMemberGroupSelectorBlock.UnifiedMemberGroupSelectorBlockBuilder selectorBlockBuilder =
+                UnifiedMemberGroupSelectorBlock.builder();
+        srcMemberGroup.getIncludes().stream()
+                .map(MemberGroupRuleLineParser::parse)
+                .forEach(selectorBlockBuilder::include);
+        srcMemberGroup.getExcludes().stream()
+                .map(MemberGroupRuleLineParser::parse)
+                .forEach(selectorBlockBuilder::exclude);
+        UnifiedMemberGroupSelectorBlock selectorBlock = selectorBlockBuilder.build();
 
         List<UnifiedSortKey> sortKeys = srcMemberGroup.getSortKeys().stream()
                 .map(JHarmonizerSortKey::getUnifiedSortKey)

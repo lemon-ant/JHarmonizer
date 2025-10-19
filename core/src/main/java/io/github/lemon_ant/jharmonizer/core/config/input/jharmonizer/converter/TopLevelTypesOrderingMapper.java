@@ -6,8 +6,8 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarm
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeGroup;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -19,11 +19,12 @@ import lombok.experimental.UtilityClass;
 class TopLevelTypesOrderingMapper {
 
     static UnifiedTopLevelTypesOrdering map(@NonNull JHarmonizerTopLevelTypesOrdering srcTopLevelTypesOrdering) {
-        List<UnifiedTypeGroup> typeGroups = srcTopLevelTypesOrdering.getTypeGroups().stream()
-                .map(typeGroup -> new UnifiedTypeGroup(typeGroup.getTypeKinds().stream()
-                        .map(JHarmonizerTypeKind::getUnifiedTypeKind)
-                        .collect(toUnmodifiableSet())))
-                .toList();
+        List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors =
+                srcTopLevelTypesOrdering.getTopLevelTypeSelectors().stream()
+                        .map(typeGroup -> new UnifiedTopLevelTypeSelector(typeGroup.getTypeKinds().stream()
+                                .map(JHarmonizerTypeKind::getUnifiedTypeKind)
+                                .collect(toUnmodifiableSet())))
+                        .toList();
 
         List<UnifiedSortKey> sortKeys = srcTopLevelTypesOrdering.getSortKeys().stream()
                 .map(JHarmonizerSortKey::getUnifiedSortKey)
@@ -31,7 +32,7 @@ class TopLevelTypesOrderingMapper {
 
         return UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(srcTopLevelTypesOrdering.isMainTypeFirst())
-                .typeGroups(typeGroups)
+                .topLevelTypeSelectors(topLevelTypeSelectors)
                 .sortKeys(sortKeys)
                 .build();
     }

@@ -12,6 +12,7 @@ import lombok.Value;
  * A group node in the classification tree. Children are ordered. Includes/Excludes carry OR semantics across rule lines.
  */
 @Value
+// TODO Remove builder
 @Builder
 public class UnifiedMemberGroup {
 
@@ -25,7 +26,7 @@ public class UnifiedMemberGroup {
      * Selectors for acceptance logic inside this node.
      */
     @NonNull
-    UnifiedSelectorBlock selectorBlock;
+    UnifiedMemberGroupSelectorBlock selectorBlock;
 
     /**
      * Sorting behavior hints to be applied within this group.

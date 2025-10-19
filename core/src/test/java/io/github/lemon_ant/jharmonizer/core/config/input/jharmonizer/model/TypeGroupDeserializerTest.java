@@ -19,8 +19,9 @@ class TypeGroupDeserializerTest {
         String yaml = "- [class, INTERFACE, RECORD]";
 
         // when
-        List<JHarmonizerTypeGroup> result = mapper.readValue(
-                yaml, mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTypeGroup.class));
+        List<JHarmonizerTopLevelTypeSelector> result = mapper.readValue(
+                yaml,
+                mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTopLevelTypeSelector.class));
 
         // then
         assertThat(result).hasSize(1);
@@ -35,7 +36,9 @@ class TypeGroupDeserializerTest {
 
         // when/then
         assertThatThrownBy(() -> mapper.readValue(
-                        yaml, mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTypeGroup.class)))
+                        yaml,
+                        mapper.getTypeFactory()
+                                .constructCollectionType(List.class, JHarmonizerTopLevelTypeSelector.class)))
                 .isInstanceOf(Exception.class)
                 .hasMessageContaining("UNICORN");
     }

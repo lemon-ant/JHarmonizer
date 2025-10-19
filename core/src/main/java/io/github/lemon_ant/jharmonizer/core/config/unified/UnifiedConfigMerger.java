@@ -2,14 +2,14 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import java.util.List;
 import java.util.Objects;
+import lombok.experimental.UtilityClass;
 
 /**
  * Performs a field-wise overlay of FlexibleUnifiedConfig onto a STRICT baseline UnifiedConfig.
  * No defaults are provided here; caller must supply the baseline with all fields fully set.
  */
-public final class UnifiedConfigMerger {
-
-    private UnifiedConfigMerger() {}
+@UtilityClass
+public class UnifiedConfigMerger {
 
     public static UnifiedConfig merge(UnifiedConfig baseline, FlexibleUnifiedConfig overlay) {
         Objects.requireNonNull(baseline, "baseline");

@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -11,7 +12,7 @@ import lombok.Value;
  * Empty includes => true; empty excludes => false.
  */
 @Value
-public class CompiledSelectorBlock {
+public class CompiledMemberGroupSelectorBlock {
 
     @NonNull
     List<Predicate<MemberDescriptor>> includePredicate; // immutable, ordered
@@ -19,7 +20,7 @@ public class CompiledSelectorBlock {
     @NonNull
     List<Predicate<MemberDescriptor>> excludePredicate; // immutable, ordered
 
-    public CompiledSelectorBlock(
+    CompiledMemberGroupSelectorBlock(
             @NonNull List<Predicate<MemberDescriptor>> includePredicate,
             @NonNull List<Predicate<MemberDescriptor>> excludePredicate) {
         this.includePredicate = Collections.unmodifiableList(includePredicate);
@@ -41,7 +42,7 @@ public class CompiledSelectorBlock {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof CompiledSelectorBlock that)) {
+        if (!(o instanceof CompiledMemberGroupSelectorBlock that)) {
             return false;
         }
 

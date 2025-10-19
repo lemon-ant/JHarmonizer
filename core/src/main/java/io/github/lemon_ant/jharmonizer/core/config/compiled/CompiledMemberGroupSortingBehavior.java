@@ -1,7 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 /**
@@ -10,11 +12,12 @@ import lombok.Value;
 @Value
 @SuppressFBWarnings
 // TODO This is a draft only.
-public class CompiledGroupSortingBehavior {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class CompiledMemberGroupSortingBehavior {
 
     // TODO We do not need it at the end
     @NonNull
-    CompiledGroupSortingBehavior.SortKey sortKey;
+    CompiledMemberGroupSortingBehavior.SortKey sortKey;
 
     // TODO We do not need it at the end
     boolean keepAccessorsTogether;

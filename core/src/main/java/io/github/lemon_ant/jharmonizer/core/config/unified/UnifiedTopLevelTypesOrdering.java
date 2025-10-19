@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.Singular;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
@@ -17,20 +16,21 @@ public class UnifiedTopLevelTypesOrdering {
     boolean mainTypeFirst;
 
     @NonNull
-    List<UnifiedTypeGroup> typeGroups;
+    List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors;
 
     @NonNull
     List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys;
 
+    // TODO Remove builder
     @Builder
     public UnifiedTopLevelTypesOrdering(
             boolean mainTypeFirst,
-            @NonNull @Singular List<UnifiedTypeGroup> typeGroups,
-            @NonNull @Singular List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys) {
+            @NonNull List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors,
+            @NonNull List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys) {
         this.mainTypeFirst = mainTypeFirst;
 
-        Validate.notEmpty(typeGroups, "typeGroups cannot be empty");
-        this.typeGroups = Collections.unmodifiableList(typeGroups);
+        Validate.notEmpty(topLevelTypeSelectors, "typeGroups cannot be empty");
+        this.topLevelTypeSelectors = Collections.unmodifiableList(topLevelTypeSelectors);
 
         Validate.notEmpty(sortKeys, "sortKeys cannot be empty");
         this.sortKeys = Collections.unmodifiableList(sortKeys);

@@ -19,29 +19,29 @@ public class JHarmonizerTopLevelTypesOrdering {
     List<JHarmonizerSortKey> sortKeys;
 
     @NonNull
-    List<@NonNull JHarmonizerTypeGroup> typeGroups;
+    List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors;
 
     JHarmonizerTopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
             @NonNull @JsonProperty(value = "type-groups", required = true)
-                    List<@NonNull JHarmonizerTypeGroup> typeGroups,
+                    List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors,
             @NonNull
                     @JsonDeserialize(using = SortKeysDeserializer.class)
                     @JsonProperty(value = "sort-keys", required = true)
                     List<JHarmonizerSortKey> sortKeys) {
         this.mainTypeFirst = mainTypeFirst;
 
-        Validate.notEmpty(typeGroups, "type-groups cannot be empty");
-        validateUniqueTypeKinds(typeGroups);
-        this.typeGroups = Collections.unmodifiableList(typeGroups);
+        Validate.notEmpty(topLevelTypeSelectors, "type-groups cannot be empty");
+        validateUniqueTypeKinds(topLevelTypeSelectors);
+        this.topLevelTypeSelectors = Collections.unmodifiableList(topLevelTypeSelectors);
 
         Validate.notEmpty(sortKeys, "sort-keys cannot be empty");
         this.sortKeys = Collections.unmodifiableList(sortKeys);
     }
 
-    private static void validateUniqueTypeKinds(List<JHarmonizerTypeGroup> typeGroups) {
+    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
         Set<JHarmonizerTypeKind> allTypes = new HashSet<>();
-        for (JHarmonizerTypeGroup group : typeGroups) {
+        for (JHarmonizerTopLevelTypeSelector group : typeGroups) {
             for (JHarmonizerTypeKind kind : group.getTypeKinds()) {
                 if (!allTypes.add(kind)) {
                     throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + kind);
@@ -57,14 +57,14 @@ public class JHarmonizerTopLevelTypesOrdering {
         }
 
         return mainTypeFirst == that.mainTypeFirst
-                && typeGroups.equals(that.typeGroups)
+                && topLevelTypeSelectors.equals(that.topLevelTypeSelectors)
                 && sortKeys.equals(that.sortKeys);
     }
 
     @Override
     public int hashCode() {
         int result = Boolean.hashCode(mainTypeFirst);
-        result = 31 * result + typeGroups.hashCode();
+        result = 31 * result + topLevelTypeSelectors.hashCode();
         result = 31 * result + sortKeys.hashCode();
         return result;
     }

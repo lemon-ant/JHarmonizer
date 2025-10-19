@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.Collections;
 import java.util.List;
@@ -15,31 +16,31 @@ import lombok.Value;
  * Fallback to the parent when none of the children matched.
  */
 @Value
-public class CompiledGroup {
+public class CompiledMemberGroup {
     @Nullable
     String name;
 
     int orderIndex;
 
     @NonNull
-    CompiledSelectorBlock selectorBlock;
+    CompiledMemberGroupSelectorBlock selectorBlock;
 
     @NonNull
-    CompiledGroupSortingBehavior groupSortingBehavior;
+    CompiledMemberGroupSortingBehavior groupSortingBehavior;
 
     @NonNull
-    List<CompiledGroup> compiledSubGroups; // immutable, ordered
+    List<CompiledMemberGroup> compiledSubGroups; // immutable, ordered
 
     @NonNull
     UnifiedSeparator separator;
 
     @Builder
-    CompiledGroup(
+    CompiledMemberGroup(
             @Nullable String name,
             int orderIndex,
-            @NonNull CompiledSelectorBlock selectorBlock,
-            @NonNull CompiledGroupSortingBehavior groupSortingBehavior,
-            @NonNull List<CompiledGroup> compiledSubGroups,
+            @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
+            @NonNull CompiledMemberGroupSortingBehavior groupSortingBehavior,
+            @NonNull List<CompiledMemberGroup> compiledSubGroups,
             @NonNull UnifiedSeparator separator) {
         this.name = name;
         this.orderIndex = orderIndex;
@@ -49,12 +50,12 @@ public class CompiledGroup {
         this.separator = separator;
     }
 
-    public Optional<CompiledGroup> classify(@NonNull MemberDescriptor descriptor) {
+    public Optional<CompiledMemberGroup> classify(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();
         }
-        for (CompiledGroup child : compiledSubGroups) {
-            Optional<CompiledGroup> hit = child.classify(descriptor);
+        for (CompiledMemberGroup child : compiledSubGroups) {
+            Optional<CompiledMemberGroup> hit = child.classify(descriptor);
             if (hit.isPresent()) {
                 return hit;
             }
@@ -64,7 +65,7 @@ public class CompiledGroup {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof CompiledGroup that)) return false;
+        if (!(o instanceof CompiledMemberGroup that)) return false;
 
         return orderIndex == that.orderIndex
                 && Objects.equals(name, that.name)

@@ -1,7 +1,7 @@
 {
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
-    "typeGroups" : [ {
+    "topLevelTypeSelectors" : [ {
       "typeKinds" : [ "CLASS", "RECORD" ]
     }, {
       "typeKinds" : [ "INTERFACE" ]

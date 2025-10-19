@@ -46,7 +46,7 @@ public class JHarmonizerMemberGroup implements Serializable {
     List<JHarmonizerSortKey> sortKeys;
 
     @Builder
-    JHarmonizerMemberGroup(
+    private JHarmonizerMemberGroup(
             @NonNull @JsonProperty(value = "name", required = true) String name,
             @NonNull
                     @JsonDeserialize(using = SelectorsDeserializer.class)

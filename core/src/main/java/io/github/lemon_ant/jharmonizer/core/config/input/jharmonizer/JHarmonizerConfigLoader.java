@@ -27,16 +27,16 @@ public class JHarmonizerConfigLoader {
 
     @NonNull
     public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) throws IOException {
-        try (InputStream is = Files.newInputStream(yamlFile.toPath())) {
-            return loadFrom(is);
+        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
+            return loadFrom(configYaml);
         }
     }
 
     @NonNull
     public static JHarmonizerConfig loadDefault() {
-        try (InputStream stream =
+        try (InputStream configYaml =
                 requireNonNull(JHarmonizerConfigLoader.class.getResourceAsStream(DEFAULT_CONFIG_RESOURCE_PATH))) {
-            return loadFrom(stream);
+            return loadFrom(configYaml);
         } catch (IOException e) {
             throw new IllegalStateException(
                     "Failed to read embedded default configuration: " + DEFAULT_CONFIG_RESOURCE_PATH, e);

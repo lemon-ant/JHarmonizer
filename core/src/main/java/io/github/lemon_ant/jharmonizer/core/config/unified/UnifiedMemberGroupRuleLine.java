@@ -1,9 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -20,7 +17,7 @@ import lombok.Value;
  * maskPredicate AND [namePredicate?] AND [annotationsPredicate?]
  */
 @Value
-public class UnifiedRuleLine {
+public class UnifiedMemberGroupRuleLine {
 
     /**
      * Allowed kinds of the member (OR inside the set). Empty set ⇒ no constraint.
@@ -52,8 +49,9 @@ public class UnifiedRuleLine {
     @NonNull
     Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers;
 
+    // TODO Remove builder
     @Builder
-    public UnifiedRuleLine(
+    public UnifiedMemberGroupRuleLine(
             @NonNull @Singular Set<@NonNull MemberKind> memberKinds,
             @NonNull @Singular Set<@NonNull MemberAccess> memberAccesses,
             @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
@@ -68,7 +66,7 @@ public class UnifiedRuleLine {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UnifiedRuleLine that)) {
+        if (!(o instanceof UnifiedMemberGroupRuleLine that)) {
             return false;
         }
 
@@ -93,7 +91,7 @@ public class UnifiedRuleLine {
      * Lombok will generate the builder class named UnifiedRuleLineBuilder by default.
      * We extend it with a custom setter for nameMatcher that throws on second assignment.
      */
-    public static class UnifiedRuleLineBuilder {
+    public static class UnifiedMemberGroupRuleLineBuilder {
         private boolean nameMatcherAlreadyAssigned;
 
         /**
@@ -103,7 +101,7 @@ public class UnifiedRuleLine {
          * @return the builder
          * @throws IllegalStateException if nameMatcher has already been assigned
          */
-        public UnifiedRuleLineBuilder nameMatcher(@Nullable UnifiedNameMatcher nameMatcher) {
+        public UnifiedMemberGroupRuleLineBuilder nameMatcher(@Nullable UnifiedNameMatcher nameMatcher) {
             if (this.nameMatcherAlreadyAssigned) {
                 throw new IllegalStateException("nameMatcher has already been assigned for " + this);
             }

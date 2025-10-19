@@ -10,10 +10,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
-class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTypeGroup> {
+class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTopLevelTypeSelector> {
 
     @Override
-    public JHarmonizerTypeGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public JHarmonizerTopLevelTypeSelector deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         ObjectCodec codec = p.getCodec();
         JsonNode node = codec.readTree(p);
 
@@ -32,6 +32,6 @@ class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTypeGroup> {
             throw new IOException("Unsupported type-order entry: " + node);
         }
 
-        return new JHarmonizerTypeGroup(Collections.unmodifiableSet(result));
+        return new JHarmonizerTopLevelTypeSelector(Collections.unmodifiableSet(result));
     }
 }

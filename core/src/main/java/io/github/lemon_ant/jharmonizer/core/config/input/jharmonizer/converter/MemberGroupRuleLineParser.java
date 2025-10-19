@@ -4,13 +4,13 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMe
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.REGEX;
 import static java.util.Optional.ofNullable;
 
-import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatcher;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupRuleLine;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatcher;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine.UnifiedRuleLineBuilder;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,19 +18,19 @@ import java.util.function.Consumer;
 import lombok.experimental.UtilityClass;
 
 /**
- * Parses a single rule-line (set of tokens) into UnifiedRuleLine.
+ * Parses a single rule-line (set of tokens) into UnifiedMemberGroupRuleLine.
  */
 @UtilityClass
-class RuleLineParser {
+class MemberGroupRuleLineParser {
 
     private static final Map<String, MemberKind> KIND_BY_TOKEN = TokenMaps.KIND_BY_TOKEN;
     private static final Map<String, MemberAccess> ACCESS_BY_TOKEN = TokenMaps.ACCESS_BY_TOKEN;
     private static final Map<String, DeclarationModifier> MOD_BY_TOKEN = TokenMaps.MOD_BY_TOKEN;
 
-    static UnifiedRuleLine parse(Set<String> rawTokens) {
+    static UnifiedMemberGroupRuleLine parse(Set<String> rawTokens) {
         Set<String> tokens = TokenNormalizer.normalizeTokens(rawTokens);
 
-        UnifiedRuleLineBuilder ruleLineBuilder = UnifiedRuleLine.builder();
+        UnifiedMemberGroupRuleLineBuilder ruleLineBuilder = UnifiedMemberGroupRuleLine.builder();
         for (String token : tokens) {
             if (handleNameToken(token, ruleLineBuilder)) {
                 continue;
@@ -54,7 +54,7 @@ class RuleLineParser {
         return opt.isPresent();
     }
 
-    private static boolean handleNameToken(String token, UnifiedRuleLineBuilder ruleLineBuilder) {
+    private static boolean handleNameToken(String token, UnifiedMemberGroupRuleLineBuilder ruleLineBuilder) {
         if (token.startsWith("=")) {
             String value = token.substring(1).trim();
             if (!value.isEmpty()) {
@@ -72,7 +72,7 @@ class RuleLineParser {
         return false;
     }
 
-    private static boolean handleAnnotationToken(String token, UnifiedRuleLineBuilder ruleLineBuilder) {
+    private static boolean handleAnnotationToken(String token, UnifiedMemberGroupRuleLineBuilder ruleLineBuilder) {
         if (!token.startsWith("@")) return false;
         boolean isRegex = token.startsWith("@~");
         String body = token.substring(isRegex ? 2 : 1).trim();

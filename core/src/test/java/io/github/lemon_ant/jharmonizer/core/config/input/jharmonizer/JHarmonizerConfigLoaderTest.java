@@ -79,8 +79,8 @@ class JHarmonizerConfigLoaderTest {
         JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = JHarmonizerConfig.getTopLevelTypesOrdering();
         assertThat(topLevelTypesOrdering).isNotNull();
         assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
-        assertThat(topLevelTypesOrdering.getTypeGroups()).isNotEmpty();
-        topLevelTypesOrdering.getTypeGroups().forEach(entry -> assertThat(entry.getTypeKinds())
+        assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).isNotEmpty();
+        topLevelTypesOrdering.getTopLevelTypeSelectors().forEach(entry -> assertThat(entry.getTypeKinds())
                 .isNotEmpty());
         assertThat(topLevelTypesOrdering.getSortKeys())
                 .containsExactly(JHarmonizerSortKey.VISIBILITY_DESC, JHarmonizerSortKey.ALPHA);

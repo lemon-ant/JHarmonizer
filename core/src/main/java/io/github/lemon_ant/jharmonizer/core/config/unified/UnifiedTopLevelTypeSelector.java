@@ -8,14 +8,15 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Exact mirror of vendor JHarmonizerTypeGroup: just a set of kind tokens.
+ * Exact mirror of vendor JHarmonizerTopLevelTypeSelector: just a set of kind tokens.
  */
 @Value
-public class UnifiedTypeGroup {
+// TODO Remove this type
+public class UnifiedTopLevelTypeSelector {
     @NonNull
     Set<@NonNull UnifiedTypeKind> typeKinds;
 
-    public UnifiedTypeGroup(@NonNull Set<@NonNull UnifiedTypeKind> typeKinds) {
+    public UnifiedTopLevelTypeSelector(@NonNull Set<@NonNull UnifiedTypeKind> typeKinds) {
         Validate.notEmpty(typeKinds, "Type kinds cannot be empty");
         this.typeKinds = Collections.unmodifiableSet(new TreeSet<>(typeKinds));
     }

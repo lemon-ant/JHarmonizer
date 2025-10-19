@@ -3,9 +3,9 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 import static java.util.Collections.unmodifiableList;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
@@ -19,13 +19,14 @@ import lombok.Value;
 @SuppressFBWarnings
 public class CompiledConfig {
     @NonNull
-    List<CompiledGroup> rootMemberGroups;
+    List<CompiledMemberGroup> rootMemberGroups;
 
     /**
-     * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
+     * Compiled top-level order as a sequence of predicates.
+     * Compiler is responsible for populating it (including optional head predicates).
      */
     @NonNull
-    UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
+    CompiledTopLevelTypesOrdering topLevelTypesOrdering;
 
     /**
      * Cohesive formatting definition (preferred API).
@@ -39,9 +40,9 @@ public class CompiledConfig {
     @NonNull
     UnifiedHeaderLine headerLine;
 
-    public CompiledConfig(
-            @NonNull List<CompiledGroup> rootMemberGroups,
-            @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
+    CompiledConfig(
+            @NonNull List<CompiledMemberGroup> rootMemberGroups,
+            @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             @NonNull UnifiedHeaderLine headerLine) {
         this.rootMemberGroups = unmodifiableList(rootMemberGroups);
@@ -51,9 +52,9 @@ public class CompiledConfig {
     }
 
     @NonNull
-    public Optional<CompiledGroup> matchGroup(@NonNull MemberDescriptor descriptor) {
-        for (CompiledGroup typeRoot : rootMemberGroups) {
-            Optional<CompiledGroup> hit = typeRoot.classify(descriptor);
+    public Optional<CompiledMemberGroup> matchGroup(@NonNull MemberDescriptor descriptor) {
+        for (CompiledMemberGroup typeRoot : rootMemberGroups) {
+            Optional<CompiledMemberGroup> hit = typeRoot.classify(descriptor);
             if (hit.isPresent()) return hit;
         }
         return Optional.empty();

@@ -2,9 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import static java.util.Map.entry;
 
-import io.github.lemon_ant.jharmonizer.core.config.compiled.DeclarationModifier;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberAccess;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import java.util.Map;
 
 /**

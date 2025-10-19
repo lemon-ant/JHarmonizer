@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.compiled;
+package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Set;

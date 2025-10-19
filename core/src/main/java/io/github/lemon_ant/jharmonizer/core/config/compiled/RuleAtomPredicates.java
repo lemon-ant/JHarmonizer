@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import lombok.NonNull;

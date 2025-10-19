@@ -4,10 +4,15 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMe
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.REGEX;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatcher;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatcher;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedRuleLine;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -20,19 +25,20 @@ import lombok.experimental.UtilityClass;
  * Runtime executes a single function with zero mode switching.
  */
 @UtilityClass
-class RuleLineCompiler {
+class MemberGroupRuleLineCompiler {
 
-    static Predicate<MemberDescriptor> compileRuleLine(UnifiedRuleLine unifiedRuleLine) {
+    static Predicate<MemberDescriptor> compileRuleLine(UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine) {
 
-        Predicate<MemberDescriptor> namePredicateOpt = compileNamePredicate(unifiedRuleLine.getNameMatcher());
+        Predicate<MemberDescriptor> namePredicateOpt =
+                compileNamePredicate(unifiedMemberGroupRuleLine.getNameMatcher());
 
         Predicate<MemberDescriptor> annotationPredicateOpt =
-                compileAnnotationPredicate(unifiedRuleLine.getAnnotationMatchers());
+                compileAnnotationPredicate(unifiedMemberGroupRuleLine.getAnnotationMatchers());
 
         Predicate<MemberDescriptor> memberDescriptorPredicate = compileMaskPredicate(
-                unifiedRuleLine.getMemberKinds(),
-                unifiedRuleLine.getMemberAccesses(),
-                unifiedRuleLine.getDeclarationModifiers());
+                unifiedMemberGroupRuleLine.getMemberKinds(),
+                unifiedMemberGroupRuleLine.getMemberAccesses(),
+                unifiedMemberGroupRuleLine.getDeclarationModifiers());
 
         return assembleRuleLine(memberDescriptorPredicate, namePredicateOpt, annotationPredicateOpt);
     }
@@ -42,7 +48,7 @@ class RuleLineCompiler {
         if (null == nameMatcher) {
             return null;
         }
-        return predicateForNameMatcher(nameMatcher);
+        return createPredicateForNameMatcher(nameMatcher);
     }
 
     @Nullable
@@ -53,14 +59,14 @@ class RuleLineCompiler {
         }
 
         List<Predicate<MemberDescriptor>> compiledPredicates = annotationMatchers.stream()
-                .map(RuleLineCompiler::predicateForAnnotationMatcher)
+                .map(MemberGroupRuleLineCompiler::createPredicateForAnnotationMatcher)
                 .toList();
 
         return descriptor -> compiledPredicates.stream().allMatch(predicate -> predicate.test(descriptor));
     }
 
     @NonNull
-    private static Predicate<MemberDescriptor> predicateForAnnotationMatcher(UnifiedAnnotationMatcher matcher) {
+    private static Predicate<MemberDescriptor> createPredicateForAnnotationMatcher(UnifiedAnnotationMatcher matcher) {
 
         final String value = matcher.getValue();
 
@@ -76,7 +82,7 @@ class RuleLineCompiler {
     }
 
     @NonNull
-    private static Predicate<MemberDescriptor> predicateForNameMatcher(UnifiedNameMatcher matcher) {
+    private static Predicate<MemberDescriptor> createPredicateForNameMatcher(UnifiedNameMatcher matcher) {
         if (matcher.getMatchMethod() == EXACT) {
             return RuleAtomPredicates.createNameExact(matcher.getValue());
         }

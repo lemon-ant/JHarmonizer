@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.compiled;
+package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

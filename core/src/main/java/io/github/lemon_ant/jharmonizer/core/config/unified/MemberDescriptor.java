@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.config.compiled;
+package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -57,6 +57,7 @@ public class MemberDescriptor {
 
     int featureMask;
 
+    // TODO Remove builder
     @Builder
     private MemberDescriptor(
             @Nullable String name,
