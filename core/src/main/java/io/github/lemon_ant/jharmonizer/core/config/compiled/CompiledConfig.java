@@ -18,27 +18,25 @@ import lombok.Value;
 @Value
 @SuppressFBWarnings
 public class CompiledConfig {
+    /**
+     * Cohesive formatting definition (preferred API).
+     */
+    @NonNull
+    UnifiedFormatting formatting;
+    /**
+     * Header line descriptor (character + leftPadding).
+     */
+    @NonNull
+    UnifiedHeaderLine headerLine;
+
     @NonNull
     List<CompiledMemberGroup> rootMemberGroups;
-
     /**
      * Compiled top-level order as a sequence of predicates.
      * Compiler is responsible for populating it (including optional head predicates).
      */
     @NonNull
     CompiledTopLevelTypesOrdering topLevelTypesOrdering;
-
-    /**
-     * Cohesive formatting definition (preferred API).
-     */
-    @NonNull
-    UnifiedFormatting formatting;
-
-    /**
-     * Header line descriptor (character + leftPadding).
-     */
-    @NonNull
-    UnifiedHeaderLine headerLine;
 
     CompiledConfig(
             @NonNull List<CompiledMemberGroup> rootMemberGroups,

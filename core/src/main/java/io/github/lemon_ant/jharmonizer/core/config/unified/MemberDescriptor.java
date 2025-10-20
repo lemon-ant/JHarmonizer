@@ -23,39 +23,35 @@ public class MemberDescriptor {
 
     private static final int ONE = 1;
     /**
-     * Simple name. Must be null for INIT_BLOCK and CONSTRUCTOR; must be non-blank for all other categories.
-     */
-    @Nullable
-    String name;
-
-    /**
-     * Unified kind: fields, methods, constructors, init blocks, enum constants, record components, and nested types.
+     * Fully-qualified annotation names.
      */
     @NonNull
-    MemberKind memberKind;
-
-    /**
-     * Access level (PACKAGE means no explicit modifier).
-     * For kinds whose category does not support access (see TargetCategory#isAccessLevelApplicable()), this must be null.
-     */
-    @Nullable
-    MemberAccess memberAccess;
-
+    Set<@NonNull String> annotationQualifiedNames;
     /**
      * Unified set of declaration modifiers (STATIC, FINAL, ABSTRACT, DEFAULT, SEALED, NON_SEALED, etc.).
      */
     @NonNull
     Set<@NonNull DeclarationModifier> declarationModifiers;
 
+    int featureMask;
     /**
-     * Fully-qualified annotation names.
+     * Access level (PACKAGE means no explicit modifier).
+     * For kinds whose category does not support access (see TargetCategory#isAccessLevelApplicable()), this must be null.
+     */
+    @Nullable
+    MemberAccess memberAccess;
+    /**
+     * Unified kind: fields, methods, constructors, init blocks, enum constants, record components, and nested types.
      */
     @NonNull
-    Set<@NonNull String> annotationQualifiedNames;
+    MemberKind memberKind;
 
     // TODO ParametersDescriptor to sort based on it
-
-    int featureMask;
+    /**
+     * Simple name. Must be null for INIT_BLOCK and CONSTRUCTOR; must be non-blank for all other categories.
+     */
+    @Nullable
+    String name;
 
     // TODO Remove builder
     @Builder
@@ -84,21 +80,67 @@ public class MemberDescriptor {
                 this.memberKind, this.memberAccess, this.declarationModifiers);
     }
 
-    private static @Nullable String validateAndNormalizeName(@Nullable String rawName, @NonNull MemberKind memberKind) {
-        String trimmedName = trimToNull(rawName);
-
-        // Only INIT_BLOCK and CONSTRUCTOR must have null name; all other categories must provide a non-blank name.
-        TargetCategory category = memberKind.getTargetCategory();
-        boolean mustBeNull = (category == TargetCategory.INIT_BLOCK) || (category == TargetCategory.CONSTRUCTOR);
-        boolean isProvided = trimmedName != null;
-
-        if (mustBeNull == isProvided) {
-            throw new IllegalArgumentException(
-                    mustBeNull
-                            ? "Initializer/constructor elements must have null name"
-                            : "Non-initializer elements must have a non-blank name");
+    // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
         }
-        return trimmedName;
+        if (!(other instanceof MemberDescriptor that)) {
+            return false;
+        }
+        // featureMask покрывает: memberKind + memberAccess + declarationModifiers
+        return this.featureMask == that.featureMask
+                && Objects.equals(this.name, that.name)
+                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
+    }
+
+    /**
+     * Optional-returning getter for access level.
+     */
+    public Optional<MemberAccess> getMemberAccess() {
+        return Optional.ofNullable(memberAccess);
+    }
+
+    /**
+     * Optional-returning getter for name.
+     */
+    public Optional<String> getName() {
+        return Optional.ofNullable(name);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = featureMask;
+        result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + annotationQualifiedNames.hashCode();
+        return result;
+    }
+
+    /**
+     * True if this element is an initializer block (static or instance).
+     */
+    public boolean isInitializer() {
+        return memberKind.isInitializer();
+    }
+
+    /**
+     * True if this element is a (nested) type declaration.
+     */
+    public boolean isType() {
+        return memberKind.isType();
+    }
+
+    private static void enforceAbstractNotPrivate(
+            @NonNull TargetCategory targetCategory,
+            @Nullable MemberAccess memberAccess,
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+
+        if (targetCategory == TargetCategory.METHOD
+                && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
+                && memberAccess == MemberAccess.PRIVATE) {
+            throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
+        }
     }
 
     private static void validateAccessForMemberKind(
@@ -115,16 +157,21 @@ public class MemberDescriptor {
         }
     }
 
-    private static void validateModifiers(
-            @NonNull MemberKind memberKind,
-            @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+    private static @Nullable String validateAndNormalizeName(@Nullable String rawName, @NonNull MemberKind memberKind) {
+        String trimmedName = trimToNull(rawName);
 
-        final TargetCategory targetCategory = memberKind.getTargetCategory();
+        // Only INIT_BLOCK and CONSTRUCTOR must have null name; all other categories must provide a non-blank name.
+        TargetCategory category = memberKind.getTargetCategory();
+        boolean mustBeNull = (category == TargetCategory.INIT_BLOCK) || (category == TargetCategory.CONSTRUCTOR);
+        boolean isProvided = trimmedName != null;
 
-        validateModifierApplicability(memberKind, targetCategory, declarationModifiers);
-        validateModifierPairwiseConflicts(memberKind, declarationModifiers);
-        enforceAbstractNotPrivate(targetCategory, memberAccess, declarationModifiers);
+        if (mustBeNull == isProvided) {
+            throw new IllegalArgumentException(
+                    mustBeNull
+                            ? "Initializer/constructor elements must have null name"
+                            : "Non-initializer elements must have a non-blank name");
+        }
+        return trimmedName;
     }
 
     private static void validateModifierApplicability(
@@ -159,66 +206,15 @@ public class MemberDescriptor {
         }
     }
 
-    private static void enforceAbstractNotPrivate(
-            @NonNull TargetCategory targetCategory,
+    private static void validateModifiers(
+            @NonNull MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
 
-        if (targetCategory == TargetCategory.METHOD
-                && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
-                && memberAccess == MemberAccess.PRIVATE) {
-            throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
-        }
-    }
+        final TargetCategory targetCategory = memberKind.getTargetCategory();
 
-    /**
-     * True if this element is a (nested) type declaration.
-     */
-    public boolean isType() {
-        return memberKind.isType();
-    }
-
-    /**
-     * True if this element is an initializer block (static or instance).
-     */
-    public boolean isInitializer() {
-        return memberKind.isInitializer();
-    }
-
-    /**
-     * Optional-returning getter for name.
-     */
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
-    }
-
-    /**
-     * Optional-returning getter for access level.
-     */
-    public Optional<MemberAccess> getMemberAccess() {
-        return Optional.ofNullable(memberAccess);
-    }
-
-    // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof MemberDescriptor that)) {
-            return false;
-        }
-        // featureMask покрывает: memberKind + memberAccess + declarationModifiers
-        return this.featureMask == that.featureMask
-                && Objects.equals(this.name, that.name)
-                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = featureMask;
-        result = 31 * result + Objects.hashCode(name);
-        result = 31 * result + annotationQualifiedNames.hashCode();
-        return result;
+        validateModifierApplicability(memberKind, targetCategory, declarationModifiers);
+        validateModifierPairwiseConflicts(memberKind, declarationModifiers);
+        enforceAbstractNotPrivate(targetCategory, memberAccess, declarationModifiers);
     }
 }

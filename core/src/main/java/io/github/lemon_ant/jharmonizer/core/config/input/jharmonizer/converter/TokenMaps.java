@@ -12,6 +12,12 @@ import java.util.Map;
  */
 final class TokenMaps {
 
+    static final Map<String, MemberAccess> ACCESS_BY_TOKEN = Map.ofEntries(
+            entry("public", MemberAccess.PUBLIC),
+            entry("protected", MemberAccess.PROTECTED),
+            entry("package", MemberAccess.PACKAGE),
+            entry("package-private", MemberAccess.PACKAGE),
+            entry("private", MemberAccess.PRIVATE));
     static final Map<String, MemberKind> KIND_BY_TOKEN = Map.ofEntries(
             entry("field", MemberKind.FIELD),
             entry("method", MemberKind.METHOD),
@@ -25,12 +31,6 @@ final class TokenMaps {
             entry("enum", MemberKind.TYPE_ENUM),
             entry("record", MemberKind.TYPE_RECORD),
             entry("annotation", MemberKind.TYPE_ANNOTATION));
-    static final Map<String, MemberAccess> ACCESS_BY_TOKEN = Map.ofEntries(
-            entry("public", MemberAccess.PUBLIC),
-            entry("protected", MemberAccess.PROTECTED),
-            entry("package", MemberAccess.PACKAGE),
-            entry("package-private", MemberAccess.PACKAGE),
-            entry("private", MemberAccess.PRIVATE));
     static final Map<String, DeclarationModifier> MOD_BY_TOKEN = Map.ofEntries(
             entry("static", DeclarationModifier.STATIC),
             entry("final", DeclarationModifier.FINAL),

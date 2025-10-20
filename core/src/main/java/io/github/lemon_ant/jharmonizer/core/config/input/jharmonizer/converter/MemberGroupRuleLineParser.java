@@ -23,8 +23,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class MemberGroupRuleLineParser {
 
-    private static final Map<String, MemberKind> KIND_BY_TOKEN = TokenMaps.KIND_BY_TOKEN;
     private static final Map<String, MemberAccess> ACCESS_BY_TOKEN = TokenMaps.ACCESS_BY_TOKEN;
+    private static final Map<String, MemberKind> KIND_BY_TOKEN = TokenMaps.KIND_BY_TOKEN;
     private static final Map<String, DeclarationModifier> MOD_BY_TOKEN = TokenMaps.MOD_BY_TOKEN;
 
     static UnifiedMemberGroupRuleLine parse(Set<String> rawTokens) {
@@ -54,6 +54,16 @@ class MemberGroupRuleLineParser {
         return opt.isPresent();
     }
 
+    private static boolean handleAnnotationToken(String token, UnifiedMemberGroupRuleLineBuilder ruleLineBuilder) {
+        if (!token.startsWith("@")) return false;
+        boolean isRegex = token.startsWith("@~");
+        String body = token.substring(isRegex ? 2 : 1).trim();
+        if (!body.isEmpty()) {
+            ruleLineBuilder.annotationMatcher(new UnifiedAnnotationMatcher(isRegex ? REGEX : EXACT, body));
+        }
+        return true;
+    }
+
     private static boolean handleNameToken(String token, UnifiedMemberGroupRuleLineBuilder ruleLineBuilder) {
         if (token.startsWith("=")) {
             String value = token.substring(1).trim();
@@ -70,15 +80,5 @@ class MemberGroupRuleLineParser {
             return true;
         }
         return false;
-    }
-
-    private static boolean handleAnnotationToken(String token, UnifiedMemberGroupRuleLineBuilder ruleLineBuilder) {
-        if (!token.startsWith("@")) return false;
-        boolean isRegex = token.startsWith("@~");
-        String body = token.substring(isRegex ? 2 : 1).trim();
-        if (!body.isEmpty()) {
-            ruleLineBuilder.annotationMatcher(new UnifiedAnnotationMatcher(isRegex ? REGEX : EXACT, body));
-        }
-        return true;
     }
 }

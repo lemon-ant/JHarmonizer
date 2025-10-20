@@ -13,23 +13,12 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Domain model for a class member. Replace with your real implementation.
+ * Provides direct dependency edges: A -> {B, C, ...}
+ * I.e., A (the key) depends on each member in the returned set.
  */
-interface Member {
-    /**
-     * Stable unique identifier within the compilation unit (e.g., FQN+offset).
-     */
-    String id();
-
-    /**
-     * Simple name for deterministic tie-breaking.
-     */
-    String simpleName();
-
-    /**
-     * Original position (e.g., start offset or ordinal) in the source file.
-     */
-    int originalPosition();
+@SuppressWarnings("PMD")
+interface DependencyGraph {
+    Set<Member> directDependencies(Member member);
 }
 
 /**
@@ -46,15 +35,6 @@ interface GroupingRules {
 }
 
 /**
- * Provides direct dependency edges: A -> {B, C, ...}
- * I.e., A (the key) depends on each member in the returned set.
- */
-@SuppressWarnings("PMD")
-interface DependencyGraph {
-    Set<Member> directDependencies(Member member);
-}
-
-/**
  * Intra-group ordering rules.
  * Return a Comparator that defines "who goes first" inside a given group.
  * If a group has no special rules, return null and the comparator will fallback to sameGroupOptions.
@@ -65,52 +45,24 @@ interface IntraGroupOrder {
 }
 
 /**
- * Options for ordering inside the same compiled group (fallback after IntraGroupOrder).
+ * Domain model for a class member. Replace with your real implementation.
  */
-final class OptionsWithinSameGroup {
+interface Member {
     /**
-     * Keep-by-originalPosition when true.
+     * Stable unique identifier within the compilation unit (e.g., FQN+offset).
      */
-    final boolean preserveOriginalOrder;
+    String id();
 
     /**
-     * Additionally sort by name if true (after original position if enabled).
+     * Original position (e.g., start offset or ordinal) in the source file.
      */
-    final boolean alsoSortByName;
+    int originalPosition();
 
-    OptionsWithinSameGroup(boolean preserveOriginalOrder, boolean alsoSortByName) {
-        this.preserveOriginalOrder = preserveOriginalOrder;
-        this.alsoSortByName = alsoSortByName;
-    }
-
-    static OptionsWithinSameGroup keepOriginalThenByName() {
-        return new OptionsWithinSameGroup(true, true);
-    }
-
-    static OptionsWithinSameGroup keepOriginalOnly() {
-        return new OptionsWithinSameGroup(true, false);
-    }
-
-    static OptionsWithinSameGroup byNameOnly() {
-        return new OptionsWithinSameGroup(false, true);
-    }
-
-    static OptionsWithinSameGroup none() {
-        return new OptionsWithinSameGroup(false, false);
-    }
+    /**
+     * Simple name for deterministic tie-breaking.
+     */
+    String simpleName();
 }
-
-/**
- * Full analysis result used by the comparator.
- * <p>
- * representativeForCompare:
- * - If dependencies exist: the chosen "root" representative (topmost dependency) of the chain.
- * - If no dependencies: the member itself (self).
- * <p>
- * effectiveGroupIndex:
- * - Minimum among baseline group and ALL transitive dependencies' compiled groups.
- */
-record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
 
 /**
  * Comparator that implements:
@@ -129,13 +81,12 @@ record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolea
 @SuppressWarnings("PMD")
 public final class MirrorAwareMemberComparator implements Comparator<Member> {
 
-    private final GroupingRules groupingRules;
-    private final DependencyGraph dependencyGraph;
-    private final IntraGroupOrder intraGroupOrder; // per-group rules
-    private final OptionsWithinSameGroup sameGroupOptions;
-
     // Memoization cache: per-member analysis
     private final Map<String, Analysis> analysisCache = new HashMap<>();
+    private final DependencyGraph dependencyGraph;
+    private final GroupingRules groupingRules;
+    private final IntraGroupOrder intraGroupOrder; // per-group rules
+    private final OptionsWithinSameGroup sameGroupOptions;
 
     public MirrorAwareMemberComparator(
             GroupingRules groupingRules,
@@ -147,10 +98,6 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         this.intraGroupOrder = intraGroupOrder; // may be null
         this.sameGroupOptions =
                 (sameGroupOptions != null) ? sameGroupOptions : OptionsWithinSameGroup.keepOriginalThenByName();
-    }
-
-    private static <T> Set<T> safeSet(Set<T> maybeNull) {
-        return (maybeNull == null) ? Collections.emptySet() : maybeNull;
     }
 
     @Override
@@ -192,6 +139,10 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         return left.id().compareTo(right.id());
     }
 
+    private static <T> Set<T> safeSet(Set<T> maybeNull) {
+        return (maybeNull == null) ? Collections.emptySet() : maybeNull;
+    }
+
     // ======================================================================
     // TODO(Anton, 2025-09-27): RETHINK DEP-CHAIN RESOLUTION STRATEGY
     // ----------------------------------------------------------------------
@@ -211,35 +162,6 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     //   [A] Anchor semantics vs group rules; verify against real-world cases.
     //   [B] Consider pre-pass topo order (Kahn) or SCC compression (Tarjan) if graphs grow larger.
     // ======================================================================
-
-    /**
-     * Compare members within the same group:
-     * - firstly by group-specific comparator (if provided),
-     * - then fallback to sameGroupOptions (originalPosition, name),
-     * - return 0 if still equal.
-     */
-    private int compareWithinGroup(int groupIndex, Member a, Member b) {
-        // Group-specific rules have priority
-        Comparator<Member> groupCmp = (intraGroupOrder != null) ? intraGroupOrder.comparatorForGroup(groupIndex) : null;
-
-        if (groupCmp != null) {
-            int res = groupCmp.compare(a, b);
-            if (res != 0) return res;
-        }
-
-        // Fallback rules: original position then name (as configured)
-        if (sameGroupOptions.preserveOriginalOrder) {
-            int positionComparison = Integer.compare(a.originalPosition(), b.originalPosition());
-            if (positionComparison != 0) return positionComparison;
-        }
-
-        if (sameGroupOptions.alsoSortByName) {
-            int nameComparison = a.simpleName().compareTo(b.simpleName());
-            return nameComparison;
-        }
-
-        return 0;
-    }
 
     /**
      * Analyze a member (with cycle detection) and memoize.
@@ -328,14 +250,19 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     }
 
     /**
-     * Pick anchor among candidates that share the same earliest group,
-     * using the *same* ordering as the main comparator, but reading Analysis from cache.
+     * Human-readable cycle message like: A[idA] -> B[idB] -> C[idC] -> A[idA]
      */
-    private Member pickAnchorUsingFixedAnalyses(int groupIndex, Member a, Member b) {
-        if (a == null) return b;
-        if (b == null) return a;
-        int cmp = compareUsingFixedAnalyses(groupIndex, a, b);
-        return (cmp <= 0) ? a : b; // stable
+    private String buildCycleMessage(Member current, Deque<Member> stack) {
+        List<Member> path = new ArrayList<>(stack);
+        Collections.reverse(path); // bottom -> top
+        StringBuilder message = new StringBuilder("Detected dependency cycle among members: ");
+        for (int i = 0; i < path.size(); i++) {
+            Member m = path.get(i);
+            message.append(m.simpleName()).append("[").append(m.id()).append("]");
+            message.append(" -> ");
+        }
+        message.append(current.simpleName()).append("[").append(current.id()).append("]");
+        return message.toString();
     }
 
     /**
@@ -375,28 +302,41 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         return fallbackByOriginalThenNameThenId(a, b);
     }
 
+    /**
+     * Compare members within the same group:
+     * - firstly by group-specific comparator (if provided),
+     * - then fallback to sameGroupOptions (originalPosition, name),
+     * - return 0 if still equal.
+     */
+    private int compareWithinGroup(int groupIndex, Member a, Member b) {
+        // Group-specific rules have priority
+        Comparator<Member> groupCmp = (intraGroupOrder != null) ? intraGroupOrder.comparatorForGroup(groupIndex) : null;
+
+        if (groupCmp != null) {
+            int res = groupCmp.compare(a, b);
+            if (res != 0) return res;
+        }
+
+        // Fallback rules: original position then name (as configured)
+        if (sameGroupOptions.preserveOriginalOrder) {
+            int positionComparison = Integer.compare(a.originalPosition(), b.originalPosition());
+            if (positionComparison != 0) return positionComparison;
+        }
+
+        if (sameGroupOptions.alsoSortByName) {
+            int nameComparison = a.simpleName().compareTo(b.simpleName());
+            return nameComparison;
+        }
+
+        return 0;
+    }
+
     private int fallbackByOriginalThenNameThenId(Member a, Member b) {
         int pos = Integer.compare(a.originalPosition(), b.originalPosition());
         if (pos != 0) return pos;
         int name = a.simpleName().compareTo(b.simpleName());
         if (name != 0) return name;
         return a.id().compareTo(b.id());
-    }
-
-    /**
-     * Human-readable cycle message like: A[idA] -> B[idB] -> C[idC] -> A[idA]
-     */
-    private String buildCycleMessage(Member current, Deque<Member> stack) {
-        List<Member> path = new ArrayList<>(stack);
-        Collections.reverse(path); // bottom -> top
-        StringBuilder message = new StringBuilder("Detected dependency cycle among members: ");
-        for (int i = 0; i < path.size(); i++) {
-            Member m = path.get(i);
-            message.append(m.simpleName()).append("[").append(m.id()).append("]");
-            message.append(" -> ");
-        }
-        message.append(current.simpleName()).append("[").append(current.id()).append("]");
-        return message.toString();
     }
 
     // ----------------------------------------------------------------------
@@ -419,5 +359,63 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
             }
         }
         return false;
+    }
+
+    /**
+     * Pick anchor among candidates that share the same earliest group,
+     * using the *same* ordering as the main comparator, but reading Analysis from cache.
+     */
+    private Member pickAnchorUsingFixedAnalyses(int groupIndex, Member a, Member b) {
+        if (a == null) return b;
+        if (b == null) return a;
+        int cmp = compareUsingFixedAnalyses(groupIndex, a, b);
+        return (cmp <= 0) ? a : b; // stable
+    }
+}
+
+/**
+ * Full analysis result used by the comparator.
+ * <p>
+ * representativeForCompare:
+ * - If dependencies exist: the chosen "root" representative (topmost dependency) of the chain.
+ * - If no dependencies: the member itself (self).
+ * <p>
+ * effectiveGroupIndex:
+ * - Minimum among baseline group and ALL transitive dependencies' compiled groups.
+ */
+record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
+
+/**
+ * Options for ordering inside the same compiled group (fallback after IntraGroupOrder).
+ */
+final class OptionsWithinSameGroup {
+    /**
+     * Additionally sort by name if true (after original position if enabled).
+     */
+    final boolean alsoSortByName;
+    /**
+     * Keep-by-originalPosition when true.
+     */
+    final boolean preserveOriginalOrder;
+
+    OptionsWithinSameGroup(boolean preserveOriginalOrder, boolean alsoSortByName) {
+        this.preserveOriginalOrder = preserveOriginalOrder;
+        this.alsoSortByName = alsoSortByName;
+    }
+
+    static OptionsWithinSameGroup byNameOnly() {
+        return new OptionsWithinSameGroup(false, true);
+    }
+
+    static OptionsWithinSameGroup keepOriginalOnly() {
+        return new OptionsWithinSameGroup(true, false);
+    }
+
+    static OptionsWithinSameGroup keepOriginalThenByName() {
+        return new OptionsWithinSameGroup(true, true);
+    }
+
+    static OptionsWithinSameGroup none() {
+        return new OptionsWithinSameGroup(false, false);
     }
 }

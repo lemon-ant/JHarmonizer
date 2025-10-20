@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 
 class ConfigModelSnapshotTest {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/test-cases/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
+    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Test
     void configModel_serializationMatchesSnapshot() throws Exception {

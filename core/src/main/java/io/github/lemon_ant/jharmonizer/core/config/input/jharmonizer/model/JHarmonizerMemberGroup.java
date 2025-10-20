@@ -28,13 +28,13 @@ public class JHarmonizerMemberGroup implements Serializable {
     Set<Set<String>> excludes;
 
     @NonNull
-    @SuppressFBWarnings("EI_EXPOSE_REP")
-    List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
-
-    @NonNull
     Set<Set<String>> includes;
 
     boolean keepAccessorsTogether;
+
+    @NonNull
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
 
     @NonNull
     String name;

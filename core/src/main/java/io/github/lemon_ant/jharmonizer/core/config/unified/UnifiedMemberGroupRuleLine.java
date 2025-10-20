@@ -20,34 +20,30 @@ import lombok.Value;
 public class UnifiedMemberGroupRuleLine {
 
     /**
-     * Allowed kinds of the member (OR inside the set). Empty set ⇒ no constraint.
+     * Any-of annotations: OR over the list; each matcher can be exact or regex. Empty ⇒ no constraint.
      */
     @NonNull
-    Set<@NonNull MemberKind> memberKinds;
-
-    /**
-     * Allowed access levels (OR). Empty set ⇒ no constraint.
-     */
-    @NonNull
-    Set<@NonNull MemberAccess> memberAccesses;
-
+    Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers;
     /**
      * Required declaration modifiers (ALL-OF). Empty set ⇒ no constraint.
      */
     @NonNull
     Set<@NonNull DeclarationModifier> declarationModifiers;
-
+    /**
+     * Allowed access levels (OR). Empty set ⇒ no constraint.
+     */
+    @NonNull
+    Set<@NonNull MemberAccess> memberAccesses;
+    /**
+     * Allowed kinds of the member (OR inside the set). Empty set ⇒ no constraint.
+     */
+    @NonNull
+    Set<@NonNull MemberKind> memberKinds;
     /**
      * Optional name constraint (exact or regex). Null ⇒ no constraint.
      */
     @Nullable
     UnifiedNameMatcher nameMatcher;
-
-    /**
-     * Any-of annotations: OR over the list; each matcher can be exact or regex. Empty ⇒ no constraint.
-     */
-    @NonNull
-    Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers;
 
     // TODO Remove builder
     @Builder

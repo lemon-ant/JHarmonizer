@@ -23,28 +23,25 @@ import lombok.Value;
 public class FlexibleUnifiedConfig {
 
     /**
-     * Optional override for top-level types ordering.
-     */
-    @Nullable
-    UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
-
-    /**
      * Cohesive formatting definition (preferred API).
      */
     @Nullable
     UnifiedFormatting formatting;
-
     /**
      * Optional override for header line.
      */
     @Nullable
     UnifiedHeaderLine headerLine;
-
     /**
      * Optional override for root member groups (full replacement).
      */
     @Nullable
     List<UnifiedMemberGroup> rootMemberGroups;
+    /**
+     * Optional override for top-level types ordering.
+     */
+    @Nullable
+    UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
     public FlexibleUnifiedConfig(
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
@@ -56,11 +53,6 @@ public class FlexibleUnifiedConfig {
         this.headerLine = headerLine;
         this.rootMemberGroups =
                 ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(List.of());
-    }
-
-    @NonNull
-    public Optional<UnifiedTopLevelTypesOrdering> getTopLevelTypesOrdering() {
-        return ofNullable(topLevelTypesOrdering);
     }
 
     @NonNull
@@ -76,5 +68,10 @@ public class FlexibleUnifiedConfig {
     @NonNull
     public Optional<List<UnifiedMemberGroup>> getRootMemberGroups() {
         return ofNullable(rootMemberGroups);
+    }
+
+    @NonNull
+    public Optional<UnifiedTopLevelTypesOrdering> getTopLevelTypesOrdering() {
+        return ofNullable(topLevelTypesOrdering);
     }
 }

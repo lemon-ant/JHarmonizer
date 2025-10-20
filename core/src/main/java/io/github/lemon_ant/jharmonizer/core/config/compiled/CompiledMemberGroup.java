@@ -17,6 +17,12 @@ import lombok.Value;
  */
 @Value
 public class CompiledMemberGroup {
+    @NonNull
+    List<CompiledMemberGroup> compiledSubGroups; // immutable, ordered
+
+    @NonNull
+    CompiledMemberGroupSortingBehavior groupSortingBehavior;
+
     @Nullable
     String name;
 
@@ -24,12 +30,6 @@ public class CompiledMemberGroup {
 
     @NonNull
     CompiledMemberGroupSelectorBlock selectorBlock;
-
-    @NonNull
-    CompiledMemberGroupSortingBehavior groupSortingBehavior;
-
-    @NonNull
-    List<CompiledMemberGroup> compiledSubGroups; // immutable, ordered
 
     @NonNull
     UnifiedSeparator separator;

@@ -16,10 +16,10 @@ public class UnifiedTopLevelTypesOrdering {
     boolean mainTypeFirst;
 
     @NonNull
-    List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors;
+    List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys;
 
     @NonNull
-    List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys;
+    List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors;
 
     // TODO Remove builder
     @Builder

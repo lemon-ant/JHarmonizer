@@ -16,11 +16,10 @@ import lombok.Value;
 public class CompiledMemberGroupSortingBehavior {
 
     // TODO We do not need it at the end
+    boolean keepAccessorsTogether;
+    // TODO We do not need it at the end
     @NonNull
     CompiledMemberGroupSortingBehavior.SortKey sortKey;
-
-    // TODO We do not need it at the end
-    boolean keepAccessorsTogether;
 
     // TODO private static final Comparator<MemberDescriptor> sortingComparator = ;
 

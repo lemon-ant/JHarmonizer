@@ -21,11 +21,6 @@ class ParseAllJava21FeaturesTest {
 
     private SourceFilesHandler sourceFilesHandler;
 
-    @BeforeEach
-    void setUp() {
-        sourceFilesHandler = new SourceFilesHandler(false);
-    }
-
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() throws Exception {
         // When
@@ -66,5 +61,10 @@ class ParseAllJava21FeaturesTest {
         assertThat(serializationStatistic.getSerializedCodeLength())
                 .isCloseTo(ORIGINAL_SOURCE_CODE_LENGTH, withPercentage(10));
         assertThat(serializationStatistic.getProcessingTimeInNanos()).isGreaterThan(1000000);
+    }
+
+    @BeforeEach
+    void setUp() {
+        sourceFilesHandler = new SourceFilesHandler(false);
     }
 }

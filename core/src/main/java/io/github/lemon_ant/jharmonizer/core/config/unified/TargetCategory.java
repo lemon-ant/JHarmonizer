@@ -23,14 +23,14 @@ enum TargetCategory {
      */
     private final boolean accessLevelApplicable;
 
+    public boolean isInitializer() {
+        return this == TargetCategory.INIT_BLOCK;
+    }
+
     /**
      * True if this category represents a (nested) type.
      */
     public boolean isType() {
         return this == TYPE;
-    }
-
-    public boolean isInitializer() {
-        return this == TargetCategory.INIT_BLOCK;
     }
 }

@@ -39,17 +39,6 @@ public class JHarmonizerTopLevelTypesOrdering {
         this.sortKeys = Collections.unmodifiableList(sortKeys);
     }
 
-    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
-        Set<JHarmonizerTypeKind> allTypes = new HashSet<>();
-        for (JHarmonizerTopLevelTypeSelector group : typeGroups) {
-            for (JHarmonizerTypeKind kind : group.getTypeKinds()) {
-                if (!allTypes.add(kind)) {
-                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + kind);
-                }
-            }
-        }
-    }
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof JHarmonizerTopLevelTypesOrdering that)) {
@@ -67,5 +56,16 @@ public class JHarmonizerTopLevelTypesOrdering {
         result = 31 * result + topLevelTypeSelectors.hashCode();
         result = 31 * result + sortKeys.hashCode();
         return result;
+    }
+
+    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
+        Set<JHarmonizerTypeKind> allTypes = new HashSet<>();
+        for (JHarmonizerTopLevelTypeSelector group : typeGroups) {
+            for (JHarmonizerTypeKind kind : group.getTypeKinds()) {
+                if (!allTypes.add(kind)) {
+                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + kind);
+                }
+            }
+        }
     }
 }

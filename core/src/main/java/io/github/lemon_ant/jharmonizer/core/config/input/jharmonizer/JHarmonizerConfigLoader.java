@@ -15,22 +15,10 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class JHarmonizerConfigLoader {
+    private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-    private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";
-
-    @NonNull
-    public static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
-        return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
-    }
-
-    @NonNull
-    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) throws IOException {
-        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
-            return loadFrom(configYaml);
-        }
-    }
 
     @NonNull
     public static JHarmonizerConfig loadDefault() {
@@ -41,5 +29,17 @@ public class JHarmonizerConfigLoader {
             throw new IllegalStateException(
                     "Failed to read embedded default configuration: " + DEFAULT_CONFIG_RESOURCE_PATH, e);
         }
+    }
+
+    @NonNull
+    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) throws IOException {
+        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
+            return loadFrom(configYaml);
+        }
+    }
+
+    @NonNull
+    public static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
+        return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
     }
 }

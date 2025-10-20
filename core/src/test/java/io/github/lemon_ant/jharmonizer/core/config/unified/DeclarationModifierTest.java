@@ -16,15 +16,15 @@ class DeclarationModifierTest {
     }
 
     @Test
-    void hasConflictWith_forSealedAgainstNonSealed_returnTrue() {
-        assertThat(DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED))
+    void hasConflictWith_forNonSealedAgainstSealed_returnTrue() {
+        boolean conflict = DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED);
+        assertThat(DeclarationModifier.NON_SEALED.hasConflictWith(DeclarationModifier.SEALED))
                 .isTrue();
     }
 
     @Test
-    void hasConflictWith_forNonSealedAgainstSealed_returnTrue() {
-        boolean conflict = DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED);
-        assertThat(DeclarationModifier.NON_SEALED.hasConflictWith(DeclarationModifier.SEALED))
+    void hasConflictWith_forSealedAgainstNonSealed_returnTrue() {
+        assertThat(DeclarationModifier.SEALED.hasConflictWith(DeclarationModifier.NON_SEALED))
                 .isTrue();
     }
 }

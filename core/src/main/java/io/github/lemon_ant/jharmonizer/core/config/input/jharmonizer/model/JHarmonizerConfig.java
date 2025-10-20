@@ -22,10 +22,10 @@ public class JHarmonizerConfig {
     JHarmonizerHeaderLine headerLine;
 
     @NonNull
-    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
+    List<JHarmonizerMemberGroup> memberGroups;
 
     @NonNull
-    List<JHarmonizerMemberGroup> memberGroups;
+    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
     @Builder
     JHarmonizerConfig(

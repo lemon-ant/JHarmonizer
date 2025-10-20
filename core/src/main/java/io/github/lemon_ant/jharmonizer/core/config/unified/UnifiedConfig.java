@@ -20,28 +20,25 @@ import org.apache.commons.lang3.Validate;
 public class UnifiedConfig {
 
     /**
-     * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
-     */
-    @NonNull
-    UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
-
-    /**
      * Cohesive formatting definition (preferred API).
      */
     @NonNull
     UnifiedFormatting formatting;
-
     /**
      * Header line descriptor (character + leftPadding).
      */
     @NonNull
     UnifiedHeaderLine headerLine;
-
     /**
      * Root member groups.
      */
     @NonNull
     List<UnifiedMemberGroup> rootMemberGroups;
+    /**
+     * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
+     */
+    @NonNull
+    UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
     // TODO Remove builder
     @Builder

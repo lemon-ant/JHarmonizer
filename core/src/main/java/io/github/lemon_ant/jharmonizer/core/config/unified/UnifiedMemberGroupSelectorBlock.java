@@ -21,16 +21,17 @@ public class UnifiedMemberGroupSelectorBlock {
 
     @NonNull
     @Singular
-    Set<UnifiedMemberGroupRuleLine> includes;
+    Set<UnifiedMemberGroupRuleLine> excludes;
 
     @NonNull
     @Singular
-    Set<UnifiedMemberGroupRuleLine> excludes;
+    Set<UnifiedMemberGroupRuleLine> includes;
 
     public UnifiedMemberGroupSelectorBlock(
-            @NonNull Set<UnifiedMemberGroupRuleLine> includes, @NonNull Set<UnifiedMemberGroupRuleLine> excludes) {
-        this.includes = Collections.unmodifiableSet(includes);
+            @NonNull Set<UnifiedMemberGroupRuleLine> excludes, @NonNull Set<UnifiedMemberGroupRuleLine> includes) {
+
         this.excludes = Collections.unmodifiableSet(excludes);
+        this.includes = Collections.unmodifiableSet(includes);
     }
 
     @Override

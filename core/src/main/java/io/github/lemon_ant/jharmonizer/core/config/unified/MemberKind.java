@@ -31,11 +31,11 @@ public enum MemberKind {
 
     private final TargetCategory targetCategory;
 
-    public boolean isType() {
-        return this.getTargetCategory().isType();
-    }
-
     public boolean isInitializer() {
         return this.getTargetCategory().isInitializer();
+    }
+
+    public boolean isType() {
+        return this.getTargetCategory().isType();
     }
 }

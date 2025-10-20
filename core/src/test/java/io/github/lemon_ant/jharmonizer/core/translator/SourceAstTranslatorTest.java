@@ -14,15 +14,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SourceAstTranslatorTest {
 
-    @TempDir
-    Path tempDir;
-
     SourceFilesHandler sourceFilesHandler;
 
-    @BeforeEach
-    void setUp() {
-        sourceFilesHandler = new SourceFilesHandler(false);
-    }
+    @TempDir
+    Path tempDir;
 
     @Test
     void parseSourceFile_validJavaSource_returnParsingResult() throws IOException {
@@ -44,7 +39,7 @@ class SourceAstTranslatorTest {
     void serialize_validSpoonAstModel_returnSerializedCode() {
         // given: simple source code
         String source = "class Demo { void m() {} }";
-        FileContent fileContent = new FileContent(Path.of("Demo.java"), source);
+        FileContent fileContent = new FileContent(source, Path.of("Demo.java"));
         SpoonAstModel model = SourceAstTranslator.parseSourceFile(fileContent).getSpoonAstModel();
 
         // when
@@ -56,5 +51,10 @@ class SourceAstTranslatorTest {
         assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
         assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
                 .isGreaterThan(0);
+    }
+
+    @BeforeEach
+    void setUp() {
+        sourceFilesHandler = new SourceFilesHandler(false);
     }
 }

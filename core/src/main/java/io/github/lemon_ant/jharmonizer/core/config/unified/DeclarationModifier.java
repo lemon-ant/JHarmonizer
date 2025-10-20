@@ -54,20 +54,20 @@ public enum DeclarationModifier {
         this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
     }
 
-    private static void conflict(DeclarationModifier a, DeclarationModifier b) {
-        a.conflicts.add(b);
-        b.conflicts.add(a);
-    }
-
-    boolean isApplicableTo(TargetCategory targetCategory) {
-        return applicableTargets.contains(targetCategory);
-    }
-
     /**
      * Global conflict check. Category is ignored intentionally:
      * applicability per category is validated separately before conflicts are checked.
      */
     boolean hasConflictWith(@NonNull DeclarationModifier other) {
         return this.conflicts.contains(other);
+    }
+
+    boolean isApplicableTo(TargetCategory targetCategory) {
+        return applicableTargets.contains(targetCategory);
+    }
+
+    private static void conflict(DeclarationModifier a, DeclarationModifier b) {
+        a.conflicts.add(b);
+        b.conflicts.add(a);
     }
 }

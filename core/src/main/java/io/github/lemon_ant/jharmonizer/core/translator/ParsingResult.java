@@ -8,10 +8,10 @@ import lombok.Value;
 @Value
 public class ParsingResult {
     @NonNull
-    SpoonAstModel spoonAstModel;
+    ParsingStatistic parsingStatistic;
 
     @NonNull
-    ParsingStatistic parsingStatistic;
+    SpoonAstModel spoonAstModel;
 
     @Override
     public boolean equals(Object obj) {

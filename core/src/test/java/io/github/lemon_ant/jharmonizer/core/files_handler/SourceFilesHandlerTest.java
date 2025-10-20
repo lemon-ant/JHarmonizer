@@ -18,19 +18,6 @@ class SourceFilesHandlerTest {
     Path tempDir;
 
     @Test
-    void findJavaFiles_validRequest_returnMatchingFiles() throws IOException {
-        Path javaFile = Files.writeString(tempDir.resolve("MyClass.java"), "class MyClass {}");
-        Path txtFile = Files.writeString(tempDir.resolve("notes.txt"), "not java");
-
-        List<Path> result = SourceFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
-                .collect(Collectors.toList());
-
-        assertThat(result)
-                .contains(javaFile.normalize().toAbsolutePath())
-                .doesNotContain(txtFile.normalize().toAbsolutePath());
-    }
-
-    @Test
     void backup_existingFile_renamedWithBakExtension() throws IOException {
         Path sourceFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
 
@@ -53,9 +40,37 @@ class SourceFilesHandlerTest {
     }
 
     @Test
+    void fileContent_twoInstancesWithSameValues_equalsAndHashCodeMatch() {
+        Path path1 = tempDir.resolve("A.java");
+        Path path2 = tempDir.resolve("B.java");
+
+        SourceFilesHandler.FileContent fc1a = new SourceFilesHandler.FileContent("x", path1);
+        SourceFilesHandler.FileContent fc1b = new SourceFilesHandler.FileContent("x", path1);
+        SourceFilesHandler.FileContent fc2 = new SourceFilesHandler.FileContent("y", path2);
+
+        assertThat(fc1a).isEqualTo(fc1b);
+        assertThat(fc1a.hashCode()).isEqualTo(fc1b.hashCode());
+
+        assertThat(fc1a).isNotEqualTo(fc2);
+    }
+
+    @Test
+    void findJavaFiles_validRequest_returnMatchingFiles() throws IOException {
+        Path javaFile = Files.writeString(tempDir.resolve("MyClass.java"), "class MyClass {}");
+        Path txtFile = Files.writeString(tempDir.resolve("notes.txt"), "not java");
+
+        List<Path> result = SourceFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
+                .collect(Collectors.toList());
+
+        assertThat(result)
+                .contains(javaFile.normalize().toAbsolutePath())
+                .doesNotContain(txtFile.normalize().toAbsolutePath());
+    }
+
+    @Test
     void overwrite_existingFile_replaceFileContent() throws IOException {
         Path sourceFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SourceFilesHandler.FileContent fileContent = new SourceFilesHandler.FileContent(sourceFile, "new content");
+        SourceFilesHandler.FileContent fileContent = new SourceFilesHandler.FileContent("new content", sourceFile);
 
         SourceFilesHandler handler = new SourceFilesHandler(true);
         handler.overwrite(fileContent);
@@ -73,20 +88,5 @@ class SourceFilesHandlerTest {
 
         assertThat(content.getPath()).isEqualTo(file);
         assertThat(content.getContent()).isEqualTo("class R {}");
-    }
-
-    @Test
-    void fileContent_twoInstancesWithSameValues_equalsAndHashCodeMatch() {
-        Path path1 = tempDir.resolve("A.java");
-        Path path2 = tempDir.resolve("B.java");
-
-        SourceFilesHandler.FileContent fc1a = new SourceFilesHandler.FileContent(path1, "x");
-        SourceFilesHandler.FileContent fc1b = new SourceFilesHandler.FileContent(path1, "x");
-        SourceFilesHandler.FileContent fc2 = new SourceFilesHandler.FileContent(path2, "y");
-
-        assertThat(fc1a).isEqualTo(fc1b);
-        assertThat(fc1a.hashCode()).isEqualTo(fc1b.hashCode());
-
-        assertThat(fc1a).isNotEqualTo(fc2);
     }
 }

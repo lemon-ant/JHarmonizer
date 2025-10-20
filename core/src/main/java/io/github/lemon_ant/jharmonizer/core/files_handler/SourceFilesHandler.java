@@ -67,16 +67,16 @@ public class SourceFilesHandler {
     public final FileContent readFile(@NonNull Path file) throws IOException {
         log.debug("Reading file contents from {}", file);
 
-        return new FileContent(file, Files.readString(file, StandardCharsets.UTF_8));
+        return new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
     }
 
     @Value
     public static class FileContent {
         @NonNull
-        Path path;
+        String content;
 
         @NonNull
-        String content;
+        Path path;
 
         @Override
         public boolean equals(Object o) {

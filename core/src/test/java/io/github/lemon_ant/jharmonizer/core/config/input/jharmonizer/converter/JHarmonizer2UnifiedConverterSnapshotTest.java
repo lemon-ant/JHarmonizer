@@ -17,16 +17,16 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Snapshot test: default vendor YAML -> UnifiedConfig JSON equals expected snapshot (raw JSON compare).
- *
+ * <p>
  * If the test fails after intentional changes, run the disabled generator below to refresh:
- *   JHarmonizer2UnifiedConverterSnapshotTest#regenerateSnapshot_whenRun_overwritesSnapshotFile
+ * JHarmonizer2UnifiedConverterSnapshotTest#regenerateSnapshot_whenRun_overwritesSnapshotFile
  */
 class JHarmonizer2UnifiedConverterSnapshotTest {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/test-cases/core/config/input/jharmonizer/expected-default-unified-config.json";
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
+    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Test
     @DisplayName("configUnified_serializationMatchesSnapshot")

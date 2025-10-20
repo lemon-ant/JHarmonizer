@@ -21,31 +21,27 @@ public class UnifiedMemberGroup {
      */
     @Nullable
     String groupName;
-
-    /**
-     * Selectors for acceptance logic inside this node.
-     */
-    @NonNull
-    UnifiedMemberGroupSelectorBlock selectorBlock;
-
-    /**
-     * Sorting behavior hints to be applied within this group.
-     */
-    @NonNull
-    UnifiedSortingBehavior sortingBehavior;
-
     /**
      * Ordered list of child groups.
      */
     @NonNull
     @Singular
     List<UnifiedMemberGroup> memberSubGroups;
-
+    /**
+     * Selectors for acceptance logic inside this node.
+     */
+    @NonNull
+    UnifiedMemberGroupSelectorBlock selectorBlock;
     /**
      * Separator directive propagated from vendor config and used at the rendering stage.
      */
     @NonNull
     UnifiedSeparator separator;
+    /**
+     * Sorting behavior hints to be applied within this group.
+     */
+    @NonNull
+    UnifiedSortingBehavior sortingBehavior;
 
     @Override
     public boolean equals(Object other) {

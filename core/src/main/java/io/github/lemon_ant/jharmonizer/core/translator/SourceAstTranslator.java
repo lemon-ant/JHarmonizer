@@ -20,6 +20,30 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 public final class SourceAstTranslator {
 
+    @SuppressWarnings("PMD.GuardLogStatement")
+    public static ParsingResult parseSourceFile(FileContent sourceFileContent) {
+        log.debug("Parsing {}", sourceFileContent.getPath());
+
+        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
+                () -> SpoonParser.parseJavaSourceResource(sourceFileContent.getPath(), sourceFileContent.getContent()));
+
+        SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
+        ParsingStatistic statistic = createParsingStatistic(sourceFileContent.getContent(), parsingTimedResult);
+        return new ParsingResult(statistic, spoonASTModel);
+    }
+
+    public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
+        log.debug("Serializing");
+
+        TimedResult<String> serializationTimedResult = StopWatch.measure(
+                () -> sortedSpoonAstModel.getSerializedSourceCode().get());
+        String serializedSourceCode = serializationTimedResult.getResult();
+
+        return new SerializationResult(
+                new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
+                serializedSourceCode);
+    }
+
     private static ParsingStatistic createParsingStatistic(
             String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
@@ -32,33 +56,9 @@ public final class SourceAstTranslator {
 
         return new ParsingStatistic(
                 originalSourceCode.length(),
+                allTypesMembers.size(),
                 rootTypes.size(),
                 allDeclaredTypes.size(),
-                allTypesMembers.size(),
                 parsingTimedResult.getNanos());
-    }
-
-    @SuppressWarnings("PMD.GuardLogStatement")
-    public static ParsingResult parseSourceFile(FileContent sourceFileContent) {
-        log.debug("Parsing {}", sourceFileContent.getPath());
-
-        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
-                () -> SpoonParser.parseJavaSourceResource(sourceFileContent.getPath(), sourceFileContent.getContent()));
-
-        SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
-        var statistic = createParsingStatistic(sourceFileContent.getContent(), parsingTimedResult);
-        return new ParsingResult(spoonASTModel, statistic);
-    }
-
-    public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
-        log.debug("Serializing");
-
-        TimedResult<String> serializationTimedResult = StopWatch.measure(
-                () -> sortedSpoonAstModel.getSerializedSourceCode().get());
-        String serializedSourceCode = serializationTimedResult.getResult();
-
-        return new SerializationResult(
-                serializedSourceCode,
-                new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()));
     }
 }

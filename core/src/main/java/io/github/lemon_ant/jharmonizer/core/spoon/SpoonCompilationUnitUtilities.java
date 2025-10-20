@@ -16,10 +16,6 @@ public class SpoonCompilationUnitUtilities {
     private static final int ONE_ROOT_TYPE = 1;
     private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
-    public static List<CtType<?>> getRootTypes(CtCompilationUnit compilationUnit) {
-        return compilationUnit.getDeclaredTypes();
-    }
-
     public static List<CtTypeMember> getAllTypeMembers(CtCompilationUnit compilationUnit) {
         return getAllTypes(compilationUnit).stream()
                 .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
@@ -32,9 +28,8 @@ public class SpoonCompilationUnitUtilities {
                 .toList();
     }
 
-    private static Stream<CtType<?>> findTypesTree(CtType<?> type) {
-        return Streams.concat(
-                Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonCompilationUnitUtilities::findTypesTree));
+    public static List<CtType<?>> getRootTypes(CtCompilationUnit compilationUnit) {
+        return compilationUnit.getDeclaredTypes();
     }
 
     static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
@@ -59,5 +54,10 @@ public class SpoonCompilationUnitUtilities {
 
         // If name matching was found, then return this matched class, otherwise null
         return fileNameMatchType;
+    }
+
+    private static Stream<CtType<?>> findTypesTree(CtType<?> type) {
+        return Streams.concat(
+                Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonCompilationUnitUtilities::findTypesTree));
     }
 }

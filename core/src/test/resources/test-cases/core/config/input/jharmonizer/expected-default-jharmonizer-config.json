@@ -5,19 +5,6 @@
     "character" : "-",
     "leftPadding" : 3
   },
-  "topLevelTypesOrdering" : {
-    "mainTypeFirst" : true,
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
-    "topLevelTypeSelectors" : [ {
-      "typeKinds" : [ "CLASS", "RECORD" ]
-    }, {
-      "typeKinds" : [ "INTERFACE" ]
-    }, {
-      "typeKinds" : [ "ENUM" ]
-    }, {
-      "typeKinds" : [ "ANNOTATION" ]
-    } ]
-  },
   "memberGroups" : [ {
     "name" : "Test Classes",
     "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
@@ -402,5 +389,18 @@
       "sortKeys" : [ "ALPHA" ]
     } ],
     "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-  } ]
+  } ],
+  "topLevelTypesOrdering" : {
+    "mainTypeFirst" : true,
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+    "topLevelTypeSelectors" : [ {
+      "typeKinds" : [ "CLASS", "RECORD" ]
+    }, {
+      "typeKinds" : [ "INTERFACE" ]
+    }, {
+      "typeKinds" : [ "ENUM" ]
+    }, {
+      "typeKinds" : [ "ANNOTATION" ]
+    } ]
+  }
 }

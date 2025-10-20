@@ -43,12 +43,21 @@ class MemberGroupRuleLineCompiler {
         return assembleRuleLine(memberDescriptorPredicate, namePredicateOpt, annotationPredicateOpt);
     }
 
-    @Nullable
-    private static Predicate<MemberDescriptor> compileNamePredicate(@Nullable UnifiedNameMatcher nameMatcher) {
-        if (null == nameMatcher) {
-            return null;
+    @NonNull
+    @SafeVarargs
+    private static Predicate<MemberDescriptor> assembleRuleLine(Predicate<MemberDescriptor>... predicates) {
+        // AND of all non-null predicates; require at least one
+        Predicate<MemberDescriptor> combined = null;
+        for (Predicate<MemberDescriptor> predicate : predicates) {
+            if (predicate == null) {
+                continue;
+            }
+            combined = (combined == null) ? predicate : combined.and(predicate);
         }
-        return createPredicateForNameMatcher(nameMatcher);
+        if (combined == null) {
+            throw new IllegalStateException("Rule line doesn't contain any rules");
+        }
+        return combined;
     }
 
     @Nullable
@@ -63,6 +72,26 @@ class MemberGroupRuleLineCompiler {
                 .toList();
 
         return descriptor -> compiledPredicates.stream().allMatch(predicate -> predicate.test(descriptor));
+    }
+
+    @Nullable
+    private static Predicate<MemberDescriptor> compileMaskPredicate(
+            Set<MemberKind> memberKinds,
+            Set<MemberAccess> memberAccesses,
+            Set<DeclarationModifier> declarationModifiers) {
+        int requiredDeclarationFlagsMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                memberKinds, memberAccesses, declarationModifiers);
+        return requiredDeclarationFlagsMask == 0
+                ? null
+                : RuleAtomPredicates.createMaskContainsAll(requiredDeclarationFlagsMask);
+    }
+
+    @Nullable
+    private static Predicate<MemberDescriptor> compileNamePredicate(@Nullable UnifiedNameMatcher nameMatcher) {
+        if (null == nameMatcher) {
+            return null;
+        }
+        return createPredicateForNameMatcher(nameMatcher);
     }
 
     @NonNull
@@ -91,34 +120,5 @@ class MemberGroupRuleLineCompiler {
         }
         throw new IllegalStateException(
                 "Unexpected " + UnifiedMatchMethod.class.getSimpleName() + " value: " + matcher.getMatchMethod());
-    }
-
-    @Nullable
-    private static Predicate<MemberDescriptor> compileMaskPredicate(
-            Set<MemberKind> memberKinds,
-            Set<MemberAccess> memberAccesses,
-            Set<DeclarationModifier> declarationModifiers) {
-        int requiredDeclarationFlagsMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                memberKinds, memberAccesses, declarationModifiers);
-        return requiredDeclarationFlagsMask == 0
-                ? null
-                : RuleAtomPredicates.createMaskContainsAll(requiredDeclarationFlagsMask);
-    }
-
-    @NonNull
-    @SafeVarargs
-    private static Predicate<MemberDescriptor> assembleRuleLine(Predicate<MemberDescriptor>... predicates) {
-        // AND of all non-null predicates; require at least one
-        Predicate<MemberDescriptor> combined = null;
-        for (Predicate<MemberDescriptor> predicate : predicates) {
-            if (predicate == null) {
-                continue;
-            }
-            combined = (combined == null) ? predicate : combined.and(predicate);
-        }
-        if (combined == null) {
-            throw new IllegalStateException("Rule line doesn't contain any rules");
-        }
-        return combined;
     }
 }

@@ -7,10 +7,10 @@ import lombok.Value;
 @Value
 public class SerializationResult {
     @NonNull
-    String serializedSourceCode;
+    SerializationStatistic serializationStatistic;
 
     @NonNull
-    SerializationStatistic serializationStatistic;
+    String serializedSourceCode;
 
     @Override
     public boolean equals(Object obj) {

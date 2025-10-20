@@ -11,17 +11,16 @@ import org.junit.jupiter.api.Test;
 class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
-    void nameMatcher_secondAssignment_throwsIllegalStateException() {
+    void build_withoutNameMatcher_isAllowed() {
         // given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
 
         // when
-        builder.nameMatcher(null); // first assignment is allowed (null means "no constraint")
+        UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = builder.build();
 
         // then
-        assertThatThrownBy(() -> builder.nameMatcher(null))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already been assigned");
+        assertThat(unifiedMemberGroupRuleLine).isNotNull();
+        assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isNull(); // absent -> null by contract
     }
 
     @Test
@@ -39,15 +38,16 @@ class UnifiedMemberGroupRuleLineBuilderTest {
     }
 
     @Test
-    void build_withoutNameMatcher_isAllowed() {
+    void nameMatcher_secondAssignment_throwsIllegalStateException() {
         // given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
 
         // when
-        UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = builder.build();
+        builder.nameMatcher(null); // first assignment is allowed (null means "no constraint")
 
         // then
-        assertThat(unifiedMemberGroupRuleLine).isNotNull();
-        assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isNull(); // absent -> null by contract
+        assertThatThrownBy(() -> builder.nameMatcher(null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already been assigned");
     }
 }

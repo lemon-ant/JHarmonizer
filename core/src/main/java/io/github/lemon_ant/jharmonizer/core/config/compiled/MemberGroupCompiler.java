@@ -93,7 +93,7 @@ class MemberGroupCompiler {
         boolean keepAccessorsTogether = unifiedSortingBehavior.isKeepAccessorsTogether();
         // Separator handling can be added to Effective model later; keep a placeholder string for now (null ==
         // unspecified).
-        return new CompiledMemberGroupSortingBehavior(sortKey, keepAccessorsTogether);
+        return new CompiledMemberGroupSortingBehavior(keepAccessorsTogether, sortKey);
     }
 
     // TODO Complete model and mapper

@@ -5,8 +5,8 @@ import lombok.Value;
 
 @Value
 public class SerializationStatistic {
-    long serializedCodeLength;
     long processingTimeInNanos;
+    long serializedCodeLength;
 
     public SerializationStatistic(long serializedCodeLength, long processingTimeInNanos) {
         this.serializedCodeLength = serializedCodeLength;

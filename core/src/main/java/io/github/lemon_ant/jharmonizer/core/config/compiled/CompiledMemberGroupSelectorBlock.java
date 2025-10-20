@@ -15,29 +15,16 @@ import lombok.Value;
 public class CompiledMemberGroupSelectorBlock {
 
     @NonNull
-    List<Predicate<MemberDescriptor>> includePredicate; // immutable, ordered
+    List<Predicate<MemberDescriptor>> excludePredicate; // immutable, ordered
 
     @NonNull
-    List<Predicate<MemberDescriptor>> excludePredicate; // immutable, ordered
+    List<Predicate<MemberDescriptor>> includePredicate; // immutable, ordered
 
     CompiledMemberGroupSelectorBlock(
             @NonNull List<Predicate<MemberDescriptor>> includePredicate,
             @NonNull List<Predicate<MemberDescriptor>> excludePredicate) {
         this.includePredicate = Collections.unmodifiableList(includePredicate);
         this.excludePredicate = Collections.unmodifiableList(excludePredicate);
-    }
-
-    public boolean match(@NonNull MemberDescriptor descriptor) {
-        return matchIncludes(descriptor) && !matchExcludes(descriptor);
-    }
-
-    private boolean matchIncludes(MemberDescriptor descriptor) {
-        return includePredicate.stream().anyMatch(includePredicate -> includePredicate.test(descriptor));
-    }
-
-    private boolean matchExcludes(MemberDescriptor descriptor) {
-
-        return excludePredicate.stream().anyMatch(excludePredicate -> excludePredicate.test(descriptor));
     }
 
     @Override
@@ -54,5 +41,18 @@ public class CompiledMemberGroupSelectorBlock {
         int result = includePredicate.hashCode();
         result = 31 * result + excludePredicate.hashCode();
         return result;
+    }
+
+    public boolean match(@NonNull MemberDescriptor descriptor) {
+        return matchIncludes(descriptor) && !matchExcludes(descriptor);
+    }
+
+    private boolean matchExcludes(MemberDescriptor descriptor) {
+
+        return excludePredicate.stream().anyMatch(excludePredicate -> excludePredicate.test(descriptor));
+    }
+
+    private boolean matchIncludes(MemberDescriptor descriptor) {
+        return includePredicate.stream().anyMatch(includePredicate -> includePredicate.test(descriptor));
     }
 }

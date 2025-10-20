@@ -16,15 +16,14 @@ import org.apache.commons.lang3.Validate;
 public class UnifiedSortingBehavior {
 
     /**
+     * Keep getter/setter pairs together where applicable.
+     */
+    boolean keepAccessorsTogether;
+    /**
      * Optional explicit access ordering for this group (overrides global default if present).
      */
     @NonNull
     List<UnifiedSortKey> unifiedSortKeys;
-
-    /**
-     * Keep getter/setter pairs together where applicable.
-     */
-    boolean keepAccessorsTogether;
 
     @Builder
     public UnifiedSortingBehavior(

@@ -14,6 +14,20 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class RuleAtomPredicates {
 
+    @NonNull
+    static Predicate<MemberDescriptor> createAnnotationExactFqnOrSimple(@NonNull String expectedName) {
+        return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
+                .anyMatch(fqcn ->
+                        fqcn.equals(expectedName) || extractSimpleName(fqcn).equals(expectedName));
+    }
+
+    @NonNull
+    static Predicate<MemberDescriptor> createAnnotationRegexFqnOrSimple(@NonNull Pattern pattern) {
+        return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
+                .anyMatch(fqcn -> pattern.matcher(fqcn).matches()
+                        || pattern.matcher(extractSimpleName(fqcn)).matches());
+    }
+
     /**
      * Mask check via existing MemberDeclarationFlagsUtil (single int mask).
      */
@@ -47,20 +61,6 @@ class RuleAtomPredicates {
                 .getName()
                 .map(actualName -> pattern.matcher(actualName).matches())
                 .orElse(false);
-    }
-
-    @NonNull
-    static Predicate<MemberDescriptor> createAnnotationExactFqnOrSimple(@NonNull String expectedName) {
-        return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
-                .anyMatch(fqcn ->
-                        fqcn.equals(expectedName) || extractSimpleName(fqcn).equals(expectedName));
-    }
-
-    @NonNull
-    static Predicate<MemberDescriptor> createAnnotationRegexFqnOrSimple(@NonNull Pattern pattern) {
-        return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
-                .anyMatch(fqcn -> pattern.matcher(fqcn).matches()
-                        || pattern.matcher(extractSimpleName(fqcn)).matches());
     }
 
     /**

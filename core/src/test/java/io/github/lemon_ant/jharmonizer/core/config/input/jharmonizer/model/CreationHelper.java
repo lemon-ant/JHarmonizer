@@ -11,15 +11,15 @@ public class CreationHelper {
         return new JHarmonizerHeaderLine(character, leftPadding);
     }
 
-    public static JHarmonizerTopLevelTypeSelector createTypeGroup(
-            @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
-        return new JHarmonizerTopLevelTypeSelector(typeKinds);
-    }
-
     public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
             boolean mainTypeFirst,
             @NonNull List<@NonNull JHarmonizerTopLevelTypeSelector> typeGroups,
-            @NonNull List<JHarmonizerSortKey> sortKeys) {
+            @NonNull List<@NonNull JHarmonizerSortKey> sortKeys) {
         return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, sortKeys);
+    }
+
+    public static JHarmonizerTopLevelTypeSelector createTypeGroup(
+            @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
+        return new JHarmonizerTopLevelTypeSelector(typeKinds);
     }
 }
