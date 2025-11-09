@@ -91,7 +91,7 @@ class MemberGroupCompiler {
             UnifiedSortingBehavior unifiedSortingBehavior) {
         SortKey sortKey = mapSortKeys(unifiedSortingBehavior.getUnifiedSortKeys());
         boolean keepAccessorsTogether = unifiedSortingBehavior.isKeepAccessorsTogether();
-        // Separator handling can be added to Effective model later; keep a placeholder string for now (null ==
+        // Separator handling can be added to Compiled model later; keep a placeholder string for now (null ==
         // unspecified).
         return new CompiledMemberGroupSortingBehavior(keepAccessorsTogether, sortKey);
     }
@@ -100,7 +100,7 @@ class MemberGroupCompiler {
     @NonNull
     @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
     private static SortKey mapSortKeys(List<UnifiedSortingBehavior.UnifiedSortKey> unifiedSortKeys) {
-        // We currently support a single effective sort key knob; pick the first meaningful item.
+        // We currently support a single Compiled sort key knob; pick the first meaningful item.
         for (UnifiedSortKey key : unifiedSortKeys) {
             return switch (key) {
                 case ALPHA -> SortKey.ALPHA;

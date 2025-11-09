@@ -13,7 +13,7 @@ import lombok.Value;
 /**
  * One rule line is a conjunction (AND) of atomic constraints.
  * <p>
- * During compilation, this becomes a single predicate function over EffectiveMemberDescriptor:
+ * During compilation, this becomes a single predicate function over CompiledMemberDescriptor:
  * maskPredicate AND [namePredicate?] AND [annotationsPredicate?]
  */
 @Value

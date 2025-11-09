@@ -118,9 +118,9 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         //    LEFT depends on RIGHT -> LEFT "greater" => RIGHT comes first => return  1
         if (isReachable(leftRep, rightRep)) return 1;
 
-        // 2) Effective group comparison (lower goes first)
-        int leftGroup = leftAnalysis.effectiveGroupIndex();
-        int rightGroup = rightAnalysis.effectiveGroupIndex();
+        // 2) Compiled group comparison (lower goes first)
+        int leftGroup = leftAnalysis.CompiledGroupIndex();
+        int rightGroup = rightAnalysis.CompiledGroupIndex();
         int groupComparison = Integer.compare(leftGroup, rightGroup);
         if (groupComparison != 0) return groupComparison;
 
@@ -149,7 +149,7 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     // Current approach:
     //   - For dependency-sensitive members we:
     //       1) compute each direct dep's Analysis (which already picked its own root and group),
-    //       2) compute effectiveGroupIndex(member) = min(baseline, all dep.effectiveGroupIndex),
+    //       2) compute CompiledGroupIndex(member) = min(baseline, all dep.CompiledGroupIndex),
     //       3) choose the anchor among deps that attain that earliest group by
     //          the *same rules as comparator within that group* (see compareUsingFixedAnalyses),
     //       4) set representativeForCompare = chosen anchor (or self if minimum == baseline).
@@ -182,7 +182,7 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
     /**
      * Recursive analysis that:
      * - Detects cycles and throws IllegalStateException with a readable path.
-     * - Computes effectiveGroupIndex as MIN(baseline, all transitive deps' compiled groups).
+     * - Computes CompiledGroupIndex as MIN(baseline, all transitive deps' compiled groups).
      * - Picks representativeForCompare:
      * * If min == baseline -> representative = SELF.
      * * Else -> among deps that attain the minimum group, pick the **first by the same rules**
@@ -220,7 +220,7 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
                     analysisCache.put(dep.id(), depAnalysis);
                 }
 
-                int depGroup = depAnalysis.effectiveGroupIndex();
+                int depGroup = depAnalysis.CompiledGroupIndex();
                 Member depRoot = depAnalysis.representativeForCompare();
 
                 if (depGroup < earliestGroup) {
@@ -380,10 +380,10 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
  * - If dependencies exist: the chosen "root" representative (topmost dependency) of the chain.
  * - If no dependencies: the member itself (self).
  * <p>
- * effectiveGroupIndex:
+ * CompiledGroupIndex:
  * - Minimum among baseline group and ALL transitive dependencies' compiled groups.
  */
-record Analysis(int effectiveGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
+record Analysis(int CompiledGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
 
 /**
  * Options for ordering inside the same compiled group (fallback after IntraGroupOrder).

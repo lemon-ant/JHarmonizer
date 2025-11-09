@@ -9,7 +9,7 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Unified, strongly-typed configuration model prepared for compilation into the effective model.
+ * Unified, strongly-typed configuration model prepared for compilation into the Compiled model.
  * <p>
  * This model is a normalized, vendor-independent representation assembled from any vendor-specific
  * inputs (IDE exports, YAML/XML, proprietary configs). It mirrors the MemberDescriptor capabilities

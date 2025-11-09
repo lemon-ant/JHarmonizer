@@ -6,8 +6,8 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Translates strict Unified configuration into the Effective runtime model.
- * The Effective model is branch-free at runtime: each rule-line is compiled into a single predicate.
+ * Translates strict Unified configuration into the Compiled runtime model.
+ * The Compiled model is branch-free at runtime: each rule-line is compiled into a single predicate.
  * <p>
  * This compiler performs the following steps:
  * - Compiles selector blocks (includes/excludes) into {@link CompiledMemberGroupSelectorBlock}
@@ -15,10 +15,10 @@ import lombok.experimental.UtilityClass;
  * - Builds a DFS-ordered tree of {@link CompiledMemberGroup} nodes and assigns post-order indexes
  */
 @UtilityClass
-public class Unified2CompiledCompiler {
+public class Unified2CompiledModelCompiler {
 
     /**
-     * Compiles a full Unified configuration into an Effective configuration.
+     * Compiles a full Unified configuration into an Compiled configuration.
      */
     @NonNull
     public static CompiledConfig compile(@NonNull UnifiedConfig unifiedConfig) {

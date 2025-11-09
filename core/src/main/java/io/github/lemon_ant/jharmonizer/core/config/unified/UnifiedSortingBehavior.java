@@ -10,7 +10,7 @@ import org.apache.commons.lang3.Validate;
 
 /**
  * Sorting behavior hints for a group. These are high-level knobs that the compiler will translate
- * into concrete comparators and flags inside the effective model.
+ * into concrete comparators and flags inside the Compiled model.
  */
 @Value
 public class UnifiedSortingBehavior {
