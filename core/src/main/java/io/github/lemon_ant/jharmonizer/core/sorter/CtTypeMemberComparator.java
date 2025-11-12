@@ -1,8 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
-import java.io.Serial;
-import java.io.Serializable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import java.util.Comparator;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,11 +10,11 @@ import spoon.reflect.declaration.CtTypeMember;
 
 @EqualsAndHashCode
 @AllArgsConstructor
-final class CtTypeMemberComparator implements Comparator<CtTypeMember>, Serializable {
-    @Serial
-    private static final long serialVersionUID = -6080067198735534451L;
+@SuppressFBWarnings("SE_COMPARATOR_SHOULD_BE_SERIALIZABLE")
+// TODO Complete it
+final class CtTypeMemberComparator implements Comparator<CtTypeMember> {
 
-    private final List<JHarmonizerMemberGroup> configArrangementRules;
+    private final List<CompiledMemberGroup> configArrangementRules;
 
     @Override
     public int compare(CtTypeMember member1, CtTypeMember member2) {

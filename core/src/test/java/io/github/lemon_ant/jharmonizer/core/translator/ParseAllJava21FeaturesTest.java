@@ -8,9 +8,11 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.Fil
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonParser;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import org.junit.jupiter.api.BeforeEach;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
@@ -24,7 +26,9 @@ class ParseAllJava21FeaturesTest {
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() throws Exception {
         // When
-        FileContent fileContent = sourceFilesHandler.readFile(Path.of(VALID_SAMPLE_SOURCE_CODE.toURI()));
+        @NonNull Path file = Path.of(VALID_SAMPLE_SOURCE_CODE.toURI());
+
+        FileContent fileContent = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(fileContent);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
@@ -33,7 +37,7 @@ class ParseAllJava21FeaturesTest {
         assertThat(parsingResult.getSpoonAstModel()).isNotNull();
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         assertThat(spoonAstModel.getMainType()).isNotNull();
-        assertThat(spoonAstModel.getWorkingCompilationUnit()).isNotNull();
+        assertThat(spoonAstModel.getCompilationUnit()).isNotNull();
 
         assertThat(parsingStatistic).isNotNull();
         assertThat(parsingStatistic.getOriginalSourceCodeLength())
@@ -61,10 +65,5 @@ class ParseAllJava21FeaturesTest {
         assertThat(serializationStatistic.getSerializedCodeLength())
                 .isCloseTo(ORIGINAL_SOURCE_CODE_LENGTH, withPercentage(10));
         assertThat(serializationStatistic.getProcessingTimeInNanos()).isGreaterThan(1000000);
-    }
-
-    @BeforeEach
-    void setUp() {
-        sourceFilesHandler = new SourceFilesHandler(false);
     }
 }

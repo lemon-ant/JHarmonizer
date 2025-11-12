@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities.getAllTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities.getAllTypes;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities.getRootTypes;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities.getAllTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities.getAllTypes;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
@@ -47,12 +47,12 @@ public final class SourceAstTranslator {
     private static ParsingStatistic createParsingStatistic(
             String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
-        CtCompilationUnit originalCompilationUnit = spoonASTModel.getWorkingCompilationUnit();
+        CtCompilationUnit compilationUnit = spoonASTModel.getCompilationUnit();
 
-        // TODO It doesn't work String originalSourceCode = originalCompilationUnit.getOriginalSourceCode();
-        List<CtType<?>> rootTypes = getRootTypes(originalCompilationUnit);
-        List<CtType<?>> allDeclaredTypes = getAllTypes(originalCompilationUnit);
-        List<CtTypeMember> allTypesMembers = getAllTypeMembers(originalCompilationUnit);
+        // TODO It doesn't work String originalSourceCode = compilationUnit.getOriginalSourceCode();
+        List<CtType<?>> rootTypes = getRootTypes(compilationUnit);
+        List<CtType<?>> allDeclaredTypes = getAllTypes(compilationUnit);
+        List<CtTypeMember> allTypesMembers = getAllTypeMembers(compilationUnit);
 
         return new ParsingStatistic(
                 originalSourceCode.length(),

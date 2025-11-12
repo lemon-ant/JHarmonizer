@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
@@ -26,9 +27,11 @@ class JHarmonizerConfigLoaderTest {
         // given
         File empty = tempDir.resolve("empty.yml").toFile();
         assertThat(empty.createNewFile()).isTrue();
+        InputStream configYaml = Files.newInputStream(empty.toPath());
 
         // when/then
-        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(empty)).isInstanceOf(MismatchedInputException.class);
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
+                .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
@@ -50,9 +53,10 @@ class JHarmonizerConfigLoaderTest {
         try (FileWriter writer = new FileWriter(badFile)) {
             writer.write("top-level-types-ordering:\n main-type-first: true\n"); // type-order отсутствует
         }
+        InputStream configYaml = Files.newInputStream(badFile.toPath());
 
         // when/then
-        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(badFile))
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
                 .isInstanceOf(MismatchedInputException.class);
     }
 
@@ -68,11 +72,8 @@ class JHarmonizerConfigLoaderTest {
 
     @Test
     void loadFrom_validDefaultConfig_returnsParsedConfigRoot() throws IOException {
-        // given
-        InputStream stream = getClass().getResourceAsStream("/default-config.yml");
-
         // when
-        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadFrom(stream);
+        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
 
         // then
         assertThat(JHarmonizerConfig).isNotNull();

@@ -27,29 +27,23 @@ public class SpoonParser {
     public static SpoonAstModel parseJavaSourceResource(Path originalSourceFile, String originalSourceCode) {
         VirtualFile virtualFile = new VirtualFile(originalSourceCode, originalSourceFile.toString());
 
-        /* Launcher originalLauncher = createPreconfiguredParserLauncher();
-        originalLauncher.addInputResource(virtualFile);*/
-
-        Launcher workingLauncher = createPreconfiguredParserLauncher();
-        workingLauncher.addInputResource(virtualFile);
-        workingLauncher
-                .getEnvironment()
+        Launcher launcher = createPreconfiguredParserLauncher();
+        launcher.addInputResource(virtualFile);
+        launcher.getEnvironment()
                 .setPrettyPrinterCreator(
-                        () -> new SpoonCustomSourcePrinter(workingLauncher.getEnvironment(), originalSourceCode));
+                        () -> new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode));
 
-        return buildSpoonAstModel(/*originalLauncher,*/ workingLauncher);
+        return buildSpoonAstModel(launcher);
     }
 
-    private static SpoonAstModel buildSpoonAstModel(
-            /* @NonNull Launcher originalLauncher, */ @NonNull Launcher workingLauncher) {
-        // var originalCompilationUnit = extractCompilationUnit(originalLauncher);
-        var workingCompilationUnit = extractCompilationUnit(workingLauncher);
-        var mainType = SpoonCompilationUnitUtilities.findMainType(workingCompilationUnit);
+    private static SpoonAstModel buildSpoonAstModel(@NonNull Launcher launcher) {
+        var compilationUnit = extractCompilationUnit(launcher);
+        var mainType = SpoonUtilities.findMainType(compilationUnit);
         Supplier<String> serializedSourceCode =
-                () -> workingLauncher.createPrettyPrinter().printCompilationUnit(workingCompilationUnit);
+                () -> launcher.createPrettyPrinter().printCompilationUnit(compilationUnit);
         return SpoonAstModel.builder()
-                // .originalCompilationUnit(originalCompilationUnit)
-                .workingCompilationUnit(workingCompilationUnit)
+                .originalElements2OrderIndices(ElementsFlatOrderIndexer.indexElementsByOrder(compilationUnit))
+                .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .serializedSourceCode(serializedSourceCode)
                 .build();

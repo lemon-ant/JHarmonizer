@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.spoon.SpoonCompilationUnitUtilities;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +14,8 @@ import spoon.reflect.declaration.CtTypeMember;
 public final class Sorter {
     private final CtTypeMemberComparator comparator;
 
-    public Sorter(final JHarmonizerConfig config) {
-        comparator = new CtTypeMemberComparator(config.getMemberGroups());
+    public Sorter(final CompiledConfig config) {
+        comparator = new CtTypeMemberComparator(config.getRootMemberGroups());
     }
 
     /**
@@ -25,10 +25,8 @@ public final class Sorter {
      * @return a SortingResult containing the sorted SpoonASTModel and statistics
      */
     public SortingResult sort(SpoonAstModel spoonAstModel) {
-        log.debug("Sorting");
-
-        StopWatch.TimedResult<SpoonAstModel> formatingResult = StopWatch.measure(() -> {
-            SpoonCompilationUnitUtilities.getAllTypes(spoonAstModel.getWorkingCompilationUnit()).stream()
+        StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
+            SpoonUtilities.getAllTypes(spoonAstModel.getCompilationUnit()).stream()
                     .filter(el -> el instanceof CtClass<?>)
                     .forEach((clazz) -> {
                         List<CtTypeMember> typesMembersForSorting = new ArrayList<>(clazz.getTypeMembers());
@@ -38,6 +36,6 @@ public final class Sorter {
             return spoonAstModel;
         });
 
-        return new SortingResult(formatingResult.getResult(), new SortingStatistic(formatingResult.getNanos()));
+        return new SortingResult(sortingResult.getResult(), new SortingStatistic(sortingResult.getNanos()));
     }
 }

@@ -3,7 +3,10 @@ package io.github.lemon_ant.jharmonizer.core.files_handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -21,8 +24,7 @@ class SourceFilesHandlerTest {
     void backup_existingFile_renamedWithBakExtension() throws IOException {
         Path sourceFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
 
-        SourceFilesHandler handler = new SourceFilesHandler(true);
-        handler.backup(sourceFile);
+        SourceFilesHandler.renameToBackup(sourceFile);
 
         Path expectedBackup = tempDir.resolve("Example.java.bak");
         assertThat(expectedBackup).exists();
@@ -33,9 +35,8 @@ class SourceFilesHandlerTest {
     void backup_nonExistingFile_throwIOException() {
         Path missingFile = tempDir.resolve("DoesNotExist.java");
 
-        SourceFilesHandler handler = new SourceFilesHandler(true);
-        assertThatThrownBy(() -> handler.backup(missingFile))
-                .isInstanceOf(IOException.class)
+        assertThatThrownBy(() -> SourceFilesHandler.renameToBackup(missingFile))
+                .isInstanceOf(UncheckedIOException.class)
                 .hasMessageContaining("does not exist");
     }
 
@@ -68,12 +69,11 @@ class SourceFilesHandlerTest {
     }
 
     @Test
-    void overwrite_existingFile_replaceFileContent() throws IOException {
+    void overwrite_Unchecked_existingFile_replaceFileContent() throws IOException {
         Path sourceFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
         SourceFilesHandler.FileContent fileContent = new SourceFilesHandler.FileContent("new content", sourceFile);
 
-        SourceFilesHandler handler = new SourceFilesHandler(true);
-        handler.overwrite(fileContent);
+        SourceFilesHandler.overwrite(fileContent.getPath(), fileContent.getContent());
 
         String newText = Files.readString(sourceFile);
         assertThat(newText).isEqualTo("new content");
@@ -83,8 +83,7 @@ class SourceFilesHandlerTest {
     void readFile_existingFile_returnFileContent() throws IOException {
         Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
 
-        SourceFilesHandler handler = new SourceFilesHandler(false);
-        SourceFilesHandler.FileContent content = handler.readFile(file);
+        SourceFilesHandler.FileContent content = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
 
         assertThat(content.getPath()).isEqualTo(file);
         assertThat(content.getContent()).isEqualTo("class R {}");

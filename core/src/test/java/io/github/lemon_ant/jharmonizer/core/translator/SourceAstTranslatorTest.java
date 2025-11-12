@@ -6,9 +6,9 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -23,7 +23,7 @@ class SourceAstTranslatorTest {
     void parseSourceFile_validJavaSource_returnParsingResult() throws IOException {
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
 
-        FileContent fileContent = sourceFilesHandler.readFile(file);
+        FileContent fileContent = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
 
         ParsingResult result = SourceAstTranslator.parseSourceFile(fileContent);
 
@@ -51,10 +51,5 @@ class SourceAstTranslatorTest {
         assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
         assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
                 .isGreaterThan(0);
-    }
-
-    @BeforeEach
-    void setUp() {
-        sourceFilesHandler = new SourceFilesHandler(false);
     }
 }

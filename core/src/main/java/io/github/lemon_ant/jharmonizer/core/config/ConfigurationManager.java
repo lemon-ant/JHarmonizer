@@ -1,11 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.config;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledModelCompiler;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoader;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizer2UnifiedConverter;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -28,9 +29,19 @@ public class ConfigurationManager {
      * @throws IllegalStateException if the resource cannot be found or parsed.
      */
     @NonNull
-    public static CompiledConfig loadDefaultCompiledConfig() {
-        JHarmonizerConfig jHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
-        UnifiedConfig unifiedConfig = JHarmonizer2UnifiedConverter.convert2Unified(jHarmonizerConfig);
-        return Unified2CompiledModelCompiler.compile(unifiedConfig);
+    public static CompiledConfig loadDefaultConfig() {
+        UnifiedConfig dafaultUnifiedConfig = JHarmonizerConfigurationManager.getUnifiedDefaultConfig();
+        return Unified2CompiledModelCompiler.compile(dafaultUnifiedConfig);
+    }
+
+    @NonNull
+    public static CompiledConfig overrideDefaultConfig(@Nullable FlexibleUnifiedConfig externalConfig) {
+        if (null == externalConfig) {
+            return loadDefaultConfig();
+        }
+
+        UnifiedConfig defaultUnifiedConfig = JHarmonizerConfigurationManager.getUnifiedDefaultConfig();
+        UnifiedConfig mergedUnifiedConfig = UnifiedConfigMerger.merge(defaultUnifiedConfig, externalConfig);
+        return Unified2CompiledModelCompiler.compile(mergedUnifiedConfig);
     }
 }

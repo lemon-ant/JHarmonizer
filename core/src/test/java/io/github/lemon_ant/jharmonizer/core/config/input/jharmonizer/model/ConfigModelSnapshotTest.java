@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoaderHelper.DEFAULT_JHARMONIZER_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoader;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,7 +22,7 @@ class ConfigModelSnapshotTest {
     @Test
     void configModel_serializationMatchesSnapshot() throws Exception {
         // given
-        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
+        JHarmonizerConfig JHarmonizerConfig = DEFAULT_JHARMONIZER_CONFIG;
 
         // when
         String actualJson = MAPPER.writeValueAsString(JHarmonizerConfig);
@@ -63,7 +63,7 @@ class ConfigModelSnapshotTest {
     @Disabled("Utility only. Run to regenerate expected-default-jharmonizer-config.json")
     void regenerateSnapshot() throws Exception {
         // Load current default config
-        JHarmonizerConfig jHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
+        JHarmonizerConfig jHarmonizerConfig = DEFAULT_JHARMONIZER_CONFIG;
 
         // Serialize and overwrite snapshot
         String newSnapshot = MAPPER.writeValueAsString(jHarmonizerConfig);

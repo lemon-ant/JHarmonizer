@@ -4,21 +4,21 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.globpathfinder.GlobPathFinder;
 import io.github.lemon_ant.globpathfinder.PathQuery;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@AllArgsConstructor
+@UtilityClass
 public class SourceFilesHandler {
-    private final boolean isMakingBackup;
 
     /**
      * Recursively resolves all `.java` files matching the given include and exclude glob patterns.
@@ -31,6 +31,7 @@ public class SourceFilesHandler {
      * @param excludeGlobs glob patterns to exclude (relative to bases)
      * @return stream of unique absolute Java file paths (normalized)
      */
+    // TODO Hide it and expose a new method readJavaFiles that combines findJavaFiles + readFile
     public static Stream<Path> findJavaFiles(
             Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
@@ -43,31 +44,42 @@ public class SourceFilesHandler {
     }
 
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
-    public final void backup(@NonNull Path sourceFile) throws IOException {
-        if (!isMakingBackup) {
-            return;
-        }
+    // TODO Hide in the Overwrite method
+    public static void renameToBackup(@NonNull Path sourceFile) {
         if (!Files.exists(sourceFile) || !Files.isRegularFile(sourceFile)) {
-            throw new IOException("Source file does not exist or is not a valid file: " + sourceFile);
+            throw new UncheckedIOException(
+                    new IOException("Source file does not exist or is not a valid file: " + sourceFile));
         }
 
         Path backupPath = sourceFile.resolveSibling(sourceFile.getFileName().toString() + ".bak");
-        Files.move(sourceFile, backupPath);
-
-        log.debug("File renamed (backup) to {}", backupPath);
+        try {
+            Files.move(sourceFile, backupPath);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        log.trace("File has been renamed to backup in {}", backupPath);
     }
 
-    public final void overwrite(@NonNull FileContent fileContent) throws IOException {
-        Files.writeString(fileContent.getPath(), fileContent.getContent(), StandardCharsets.UTF_8);
-
-        log.debug("File content overwritten at {}", fileContent);
+    public static void overwrite(@NonNull Path path, @NonNull String fileContent) {
+        try {
+            Files.writeString(path, fileContent, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        log.trace("File content has been overwritten at {}", fileContent);
     }
 
     @NonNull
-    public final FileContent readFile(@NonNull Path file) throws IOException {
-        log.debug("Reading file contents from {}", file);
-
-        return new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
+    // TODO Hide in readJavaFiles method
+    public static FileContent readFile(@NonNull Path file) {
+        FileContent fileContent;
+        try {
+            fileContent = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        log.trace("File content has been read from {}", file);
+        return fileContent;
     }
 
     @Value

@@ -1,18 +1,19 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
-import com.google.common.collect.Streams;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.compress.utils.FileNameUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
-public class SpoonCompilationUnitUtilities {
+// TODO Reconsider methods and remove superfluous
+public class SpoonUtilities {
     private static final int ONE_ROOT_TYPE = 1;
     private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
@@ -23,8 +24,8 @@ public class SpoonCompilationUnitUtilities {
     }
 
     public static List<CtType<?>> getAllTypes(CtCompilationUnit compilationUnit) {
-        return getRootTypes(compilationUnit).stream()
-                .flatMap(SpoonCompilationUnitUtilities::findTypesTree)
+        return streamRootTypes(compilationUnit)
+                .flatMap(SpoonUtilities::streamTypesTree)
                 .toList();
     }
 
@@ -56,8 +57,31 @@ public class SpoonCompilationUnitUtilities {
         return fileNameMatchType;
     }
 
-    private static Stream<CtType<?>> findTypesTree(CtType<?> type) {
-        return Streams.concat(
-                Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonCompilationUnitUtilities::findTypesTree));
+    private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
+        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonUtilities::streamTypesTree));
+    }
+
+    /** Current order for a whole compilation unit: declared types as-is. */
+    public static Stream<CtElement> streamDeclaredHierarchy(CtCompilationUnit compilationUnit) {
+        return streamRootTypes(compilationUnit).flatMap(SpoonUtilities::streamTypeAndNestedElements);
+    }
+
+    private static Stream<CtType<?>> streamRootTypes(CtCompilationUnit compilationUnit) {
+        return getRootTypes(compilationUnit).stream();
+    }
+
+    /** Current order for a type: the type, then its members as they are in lists; recurse for nested types. */
+    private static Stream<CtElement> streamTypeAndNestedElements(CtType<?> ownerType) {
+        Stream<CtElement> self = Stream.of(ownerType);
+        Stream<CtElement> membersAndNested = ownerType.getTypeMembers().stream()
+                // .filter(ElementsFlatIndexer::isSourceDeclarativeMember)
+                .flatMap(member -> {
+                    if (member instanceof CtType<?> nestedType) {
+                        // include the nested type declaration, then descend into its own members
+                        return streamTypeAndNestedElements(nestedType);
+                    }
+                    return Stream.of(member);
+                });
+        return Stream.concat(self, membersAndNested);
     }
 }

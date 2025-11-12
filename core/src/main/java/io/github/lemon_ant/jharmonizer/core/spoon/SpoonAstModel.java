@@ -5,12 +5,14 @@ import static lombok.AccessLevel.PRIVATE;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 
@@ -23,13 +25,8 @@ public class SpoonAstModel {
     @Nullable
     CtType<?> mainType;
 
-    /**
-     * Do not change this model under any circumstances!!!
-     * TODO: For what do we need it???
-     */
-    /*@NonNull
-    @SuppressFBWarnings("EI_EXPOSE_REP")
-    CtCompilationUnit originalCompilationUnit;*/
+    @NonNull
+    Map<SourcePosition, Integer> originalElements2OrderIndices;
 
     @NonNull
     Supplier<String> serializedSourceCode;
@@ -39,7 +36,7 @@ public class SpoonAstModel {
      */
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
-    CtCompilationUnit workingCompilationUnit;
+    CtCompilationUnit compilationUnit;
 
     public Optional<CtType<?>> getMainType() {
         return Optional.ofNullable(mainType);

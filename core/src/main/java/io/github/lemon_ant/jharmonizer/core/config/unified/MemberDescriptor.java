@@ -20,13 +20,14 @@ import lombok.Value;
  */
 @Value
 public class MemberDescriptor {
-
     private static final int ONE = 1;
+
     /**
      * Fully-qualified annotation names.
      */
     @NonNull
     Set<@NonNull String> annotationQualifiedNames;
+
     /**
      * Unified set of declaration modifiers (STATIC, FINAL, ABSTRACT, DEFAULT, SEALED, NON_SEALED, etc.).
      */
@@ -34,12 +35,14 @@ public class MemberDescriptor {
     Set<@NonNull DeclarationModifier> declarationModifiers;
 
     int featureMask;
+
     /**
      * Access level (PACKAGE means no explicit modifier).
      * For kinds whose category does not support access (see TargetCategory#isAccessLevelApplicable()), this must be null.
      */
     @Nullable
     MemberAccess memberAccess;
+
     /**
      * Unified kind: fields, methods, constructors, init blocks, enum constants, record components, and nested types.
      */

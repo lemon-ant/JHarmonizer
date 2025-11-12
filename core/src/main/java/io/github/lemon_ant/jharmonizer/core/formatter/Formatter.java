@@ -1,53 +1,66 @@
 package io.github.lemon_ant.jharmonizer.core.formatter;
 
+import static java.util.Map.entry;
+
 import com.palantir.javaformat.java.FormatterException;
 import com.palantir.javaformat.java.JavaFormatterOptions;
+import com.palantir.javaformat.java.JavaFormatterOptions.Builder;
 import com.palantir.javaformat.java.JavaFormatterOptions.Style;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.function.FailableFunction;
 
 @Slf4j
-@RequiredArgsConstructor
 public final class Formatter {
 
-    private final boolean fixImport;
+    private static final Map<UnifiedFormatterStyle, Style> UNIFIED_2_PALANTIR_FORMATTING_STYLE = Map.ofEntries(
+            /* UnifiedFormatterStyle.NONE is not mapped to return null */
+            entry(UnifiedFormatterStyle.PALANTIR, Style.PALANTIR),
+            entry(UnifiedFormatterStyle.AOSP, Style.AOSP),
+            entry(UnifiedFormatterStyle.GOOGLE, Style.GOOGLE));
 
-    @NonNull
-    @SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName") // TODO An idiotic rule that must be removed
-    private final com.palantir.javaformat.java.Formatter formatter;
+    private final Function<String, String> formattingMethod;
 
-    public Formatter(@NonNull Style style, boolean fixImports) {
-        JavaFormatterOptions options =
-                JavaFormatterOptions.builder().style(style).build();
-        this.formatter = com.palantir.javaformat.java.Formatter.createFormatter(options);
-        this.fixImport = fixImports;
+    public Formatter(@NonNull UnifiedFormatterStyle style, boolean fixImports) {
+        Style formatterStyle = UNIFIED_2_PALANTIR_FORMATTING_STYLE.get(style);
+        Builder formatterBuilder = JavaFormatterOptions.builder();
+        if (null != formatterStyle) {
+            formatterBuilder.style(formatterStyle);
+        }
+        JavaFormatterOptions options = formatterBuilder.build();
+        com.palantir.javaformat.java.Formatter formatter =
+                com.palantir.javaformat.java.Formatter.createFormatter(options);
+        formattingMethod = prepareSrcFormattingMethod(fixImports, formatterStyle, formatter);
     }
 
-    /**
-     * Fixes imports in the given source code.
-     *
-     * @param sourceCode the source code to fix imports for
-     * @return a FormatingResult containing the formatted source code and statistics
-     */
-    @NonNull
-    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
-    public FormatingResult fixImports(String sourceCode) {
-        log.debug("Fix imports");
-        TimedResult<String> formatingResult = StopWatch.measure(() -> {
+    /** Single try/catch wrapper for any Palantir operation that takes only the source code. */
+    private static Function<String, String> wrapFailableFunction(
+            FailableFunction<String, String, FormatterException> palantirMethod) {
+        return src -> {
             try {
-                return formatter.fixImports(sourceCode);
+                return palantirMethod.apply(src);
             } catch (FormatterException e) {
-                // TODO Come up with an exception model
-                throw new RuntimeException(e);
+                throw new IllegalArgumentException("Palantir formatting failure for the source code: " + src, e);
             }
-        });
+        };
+    }
 
-        String formattedSource = formatingResult.getResult();
-        return new FormatingResult(
-                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
+    private Function<String, String> prepareSrcFormattingMethod(
+            boolean fixImports, Style formatterStyle, com.palantir.javaformat.java.Formatter formatter) {
+        Optional<FailableFunction<String, String, FormatterException>> palantirMethod;
+        if (formatterStyle != null) {
+            palantirMethod = Optional.of(fixImports ? formatter::formatSourceAndFixImports : formatter::formatSource);
+        } else {
+            palantirMethod = fixImports ? Optional.of(formatter::fixImports) : Optional.empty(); // no-palantirMethod
+        }
+
+        return palantirMethod.map(Formatter::wrapFailableFunction).orElse(Function.identity());
     }
 
     /**
@@ -57,41 +70,8 @@ public final class Formatter {
      * @return a FormatingResult containing the formatted source code and statistics
      */
     @NonNull
-    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
     public FormatingResult formatSource(String sourceCode) {
-        log.debug("Formating source");
-        TimedResult<String> formatingResult = StopWatch.measure(() -> {
-            try {
-                return formatter.formatSource(sourceCode);
-            } catch (FormatterException e) {
-                // TODO Come up with an exception model
-                throw new RuntimeException(e);
-            }
-        });
-
-        String formattedSource = formatingResult.getResult();
-        return new FormatingResult(
-                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
-    }
-
-    /**
-     * Formats the given source code and fixes imports.
-     *
-     * @param sourceCode the source code to format and fix imports for
-     * @return a FormatingResult containing the formatted source code and statistics
-     */
-    @NonNull
-    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
-    public FormatingResult formatSourceAndFixImports(String sourceCode) {
-        log.debug("Formating source and fix imports");
-        TimedResult<String> formatingResult = StopWatch.measure(() -> {
-            try {
-                return formatter.formatSourceAndFixImports(sourceCode);
-            } catch (FormatterException e) {
-                // TODO Come up with an exception model
-                throw new RuntimeException(e);
-            }
-        });
+        TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
 
         String formattedSource = formatingResult.getResult();
         return new FormatingResult(

@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoaderHelper.DEFAULT_JHARMONIZER_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoader;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     @DisplayName("configUnified_serializationMatchesSnapshot")
     void configUnified_serializationMatchesSnapshot() throws Exception {
         // given
-        JHarmonizerConfig vendorConfig = JHarmonizerConfigLoader.loadDefault();
+        JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig)
                 .as("Default vendor config must be loadable via JHarmonizerConfigLoader.loadDefault()")
                 .isNotNull();
@@ -76,7 +76,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     @DisplayName("regenerateSnapshot_whenRun_overwritesSnapshotFile")
     void regenerateSnapshot_whenRun_overwritesSnapshotFile() throws Exception {
         // given
-        JHarmonizerConfig vendorConfig = JHarmonizerConfigLoader.loadDefault();
+        JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig).as("Default vendor config must be loadable").isNotNull();
 
         // when
