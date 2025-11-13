@@ -7,31 +7,36 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import java.nio.file.Path;
 import java.util.Collection;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
 @Value
+@Builder(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FlowProcessingResult {
+    @Nullable
+    String diff;
+
+    @NonNull
+    FormatingStatistic formatingStatistic;
+
+    @NonNull
+    ParsingStatistic parsingStatistic;
+
     @NonNull
     Path path;
 
     @Nullable
     Collection<Pair<CtElement, Integer>> relocations;
 
-    @Nullable
-    String diff;
-
-    @NonNull
-    ParsingStatistic parsingStatistic;
-
-    @NonNull
-    SortingStatistic sortingStatistic;
-
     @NonNull
     SerializationStatistic serializationStatistic;
 
     @NonNull
-    FormatingStatistic formatingStatistic;
+    SortingStatistic sortingStatistic;
 }

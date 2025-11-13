@@ -18,18 +18,6 @@ import lombok.Value;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class CompiledTopLevelTypesOrdering {
 
-    /**
-     * Ordered predicates applied to top-level candidates (MemberDescriptor).
-     * The first matching predicate determines the candidate's bucket.
-     * <p>
-     * Semantics:
-     * - includes-only;
-     * - within a single "rule line" the semantics is OR over type kinds;
-     * - name/annotations are NOT used here (types-only focus).
-     */
-    @NonNull
-    List<Predicate<MemberDescriptor>> topLevelTypesSelectors;
-
     // TODO It should be implemented it this way:
     // 1) There should be some comparator factory provider, that can create/return factories of 2 types, dependent on
     //    this flag:
@@ -42,4 +30,16 @@ public class CompiledTopLevelTypesOrdering {
     @NonNull
     // TODO It should be compiled
     List<UnifiedSortingBehavior.UnifiedSortKey> sortKeys;
+
+    /**
+     * Ordered predicates applied to top-level candidates (MemberDescriptor).
+     * The first matching predicate determines the candidate's bucket.
+     * <p>
+     * Semantics:
+     * - includes-only;
+     * - within a single "rule line" the semantics is OR over type kinds;
+     * - name/annotations are NOT used here (types-only focus).
+     */
+    @NonNull
+    List<Predicate<MemberDescriptor>> topLevelTypesSelectors;
 }

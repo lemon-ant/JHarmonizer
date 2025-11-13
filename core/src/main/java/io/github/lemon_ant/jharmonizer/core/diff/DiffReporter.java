@@ -20,6 +20,12 @@ public class DiffReporter {
         return format(diff);
     }
 
+    private static void appendDiffLine(StringBuilder sb, String prefix, String line) {
+        if (line != null) {
+            sb.append(prefix).append(visualizeWhitespace(line)).append(System.lineSeparator());
+        }
+    }
+
     private static String format(Patch<String> diffs) {
         StringBuilder sb = new StringBuilder();
 
@@ -39,6 +45,10 @@ public class DiffReporter {
         return sb.toString();
     }
 
+    private static String getLineSafe(List<String> list, int index) {
+        return (index >= 0 && index < list.size()) ? list.get(index) : null;
+    }
+
     private static void processDelta(
             int startLine, int i, List<String> original, List<String> revised, StringBuilder sb) {
         int lineNumber = startLine + i;
@@ -49,10 +59,6 @@ public class DiffReporter {
         sb.append(System.lineSeparator());
     }
 
-    private static String getLineSafe(List<String> list, int index) {
-        return (index >= 0 && index < list.size()) ? list.get(index) : null;
-    }
-
     private static String visualizeWhitespace(String line) {
         if (StringUtils.isBlank(line)) {
             return "[blank line]";
@@ -61,11 +67,5 @@ public class DiffReporter {
         return line.replace(" ", "·") // spaces
                         .replace("\t", "→→→→") // tabs
                 + "¶"; // End of the line marker
-    }
-
-    private static void appendDiffLine(StringBuilder sb, String prefix, String line) {
-        if (line != null) {
-            sb.append(prefix).append(visualizeWhitespace(line)).append(System.lineSeparator());
-        }
     }
 }

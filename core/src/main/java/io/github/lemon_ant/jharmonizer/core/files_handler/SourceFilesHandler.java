@@ -43,23 +43,6 @@ public class SourceFilesHandler {
         return GlobPathFinder.findPaths(pathQuery);
     }
 
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
-    // TODO Hide in the Overwrite method
-    public static void renameToBackup(@NonNull Path sourceFile) {
-        if (!Files.exists(sourceFile) || !Files.isRegularFile(sourceFile)) {
-            throw new UncheckedIOException(
-                    new IOException("Source file does not exist or is not a valid file: " + sourceFile));
-        }
-
-        Path backupPath = sourceFile.resolveSibling(sourceFile.getFileName().toString() + ".bak");
-        try {
-            Files.move(sourceFile, backupPath);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        log.trace("File has been renamed to backup in {}", backupPath);
-    }
-
     public static void overwrite(@NonNull Path path, @NonNull String fileContent) {
         try {
             Files.writeString(path, fileContent, StandardCharsets.UTF_8);
@@ -80,6 +63,23 @@ public class SourceFilesHandler {
         }
         log.trace("File content has been read from {}", file);
         return fileContent;
+    }
+
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
+    // TODO Hide in the Overwrite method
+    public static void renameToBackup(@NonNull Path sourceFile) {
+        if (!Files.exists(sourceFile) || !Files.isRegularFile(sourceFile)) {
+            throw new UncheckedIOException(
+                    new IOException("Source file does not exist or is not a valid file: " + sourceFile));
+        }
+
+        Path backupPath = sourceFile.resolveSibling(sourceFile.getFileName().toString() + ".bak");
+        try {
+            Files.move(sourceFile, backupPath);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        log.trace("File has been renamed to backup in {}", backupPath);
     }
 
     @Value

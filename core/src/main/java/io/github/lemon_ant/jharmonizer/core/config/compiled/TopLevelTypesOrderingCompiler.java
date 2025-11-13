@@ -45,8 +45,8 @@ class TopLevelTypesOrderingCompiler {
                     memberDescriptor.getFeatureMask(), requiredMemberDeclarationFlags));
         }
         return new CompiledTopLevelTypesOrdering(
-                compiledTopLevelTypesSelectors,
                 unifiedTopLevelTypesOrdering.isMainTypeFirst(),
-                unifiedTopLevelTypesOrdering.getSortKeys());
+                unifiedTopLevelTypesOrdering.getSortKeys(),
+                compiledTopLevelTypesSelectors);
     }
 }

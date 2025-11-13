@@ -37,13 +37,14 @@ public class RestructureFlow implements IFlow {
             SourceFilesHandler.overwrite(srcFileContent.getPath(), formatingResult.getFormatedSourceCode());
         }
 
-        return new FlowProcessingResult(
-                srcFileContent.getPath(),
-                null,
-                null,
-                parsingResult.getParsingStatistic(),
-                sortingResult.getSortingStatistic(),
-                serializationResult.getSerializationStatistic(),
-                formatingResult.getFormatingStatistic());
+        return FlowProcessingResult.builder()
+                .path(srcFileContent.getPath())
+                .relocations(null)
+                .diff(null)
+                .parsingStatistic(parsingResult.getParsingStatistic())
+                .sortingStatistic(sortingResult.getSortingStatistic())
+                .serializationStatistic(serializationResult.getSerializationStatistic())
+                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .build();
     }
 }

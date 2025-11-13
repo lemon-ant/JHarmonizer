@@ -47,13 +47,14 @@ public class CheckAllFlow implements IFlow {
             srcDiff = "";
         }
 
-        return new FlowProcessingResult(
-                srcFileContent.getPath(),
-                elementRelocations,
-                srcDiff,
-                parsingResult.getParsingStatistic(),
-                sortingResult.getSortingStatistic(),
-                serializationResult.getSerializationStatistic(),
-                formatingResult.getFormatingStatistic());
+        return FlowProcessingResult.builder()
+                .path(srcFileContent.getPath())
+                .relocations(elementRelocations)
+                .diff(srcDiff)
+                .parsingStatistic(parsingResult.getParsingStatistic())
+                .sortingStatistic(sortingResult.getSortingStatistic())
+                .serializationStatistic(serializationResult.getSerializationStatistic())
+                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .build();
     }
 }

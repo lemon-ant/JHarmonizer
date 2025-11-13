@@ -34,10 +34,10 @@ public class CheckFailFastFlow implements IFlow {
         // Sort (Fail Fast)
         SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
         SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
-        List<Pair<CtElement, Integer>> relocations = findRelocations(
+        List<Pair<CtElement, Integer>> elementRelocations = findRelocations(
                 sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-        if (!relocations.isEmpty()) {
-            throw new NotOrderedException(srcFileContent.getPath(), relocations);
+        if (!elementRelocations.isEmpty()) {
+            throw new NotOrderedException(srcFileContent.getPath(), elementRelocations);
         }
 
         // Serialize
@@ -46,17 +46,18 @@ public class CheckFailFastFlow implements IFlow {
         // Format (Fail Fast)
         FormatingResult formatingResult = formatter.formatSource(serializationResult.getSerializedSourceCode());
         if (!srcFileContent.getContent().equals(formatingResult.getFormatedSourceCode())) {
-            String diff = computeDiff(srcFileContent.getContent(), formatingResult.getFormatedSourceCode());
-            throw new NotFormattedException(srcFileContent.getPath(), diff);
+            String srcDiff = computeDiff(srcFileContent.getContent(), formatingResult.getFormatedSourceCode());
+            throw new NotFormattedException(srcFileContent.getPath(), srcDiff);
         }
 
-        return new FlowProcessingResult(
-                srcFileContent.getPath(),
-                relocations,
-                "",
-                parsingResult.getParsingStatistic(),
-                sortingResult.getSortingStatistic(),
-                serializationResult.getSerializationStatistic(),
-                formatingResult.getFormatingStatistic());
+        return FlowProcessingResult.builder()
+                .path(srcFileContent.getPath())
+                .relocations(elementRelocations)
+                .diff("")
+                .parsingStatistic(parsingResult.getParsingStatistic())
+                .sortingStatistic(sortingResult.getSortingStatistic())
+                .serializationStatistic(serializationResult.getSerializationStatistic())
+                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .build();
     }
 }

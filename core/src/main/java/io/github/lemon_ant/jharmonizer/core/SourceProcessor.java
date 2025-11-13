@@ -28,9 +28,9 @@ public final class SourceProcessor {
 
     private final CompiledConfig config;
     private final Formatter formatter;
+    private final Sorter sorter;
     // TODO This is bull shit
     private ProcessingResultCollector processingResultCollector;
-    private final Sorter sorter;
 
     public SourceProcessor() {
         this((FlexibleUnifiedConfig) null);

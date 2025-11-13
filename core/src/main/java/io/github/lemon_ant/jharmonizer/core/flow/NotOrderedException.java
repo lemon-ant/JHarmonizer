@@ -9,11 +9,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
-@Slf4j
 @Getter
 @SuppressFBWarnings("EI_EXPOSE_REP")
 public class NotOrderedException extends RuntimeException {
@@ -31,9 +29,5 @@ public class NotOrderedException extends RuntimeException {
     @Override
     public String getMessage() {
         return printRelocations(offendingFile, relocations);
-    }
-
-    public void printMessage() {
-        if (log.isInfoEnabled()) log.info("[NotOrderedException] {}", getMessage());
     }
 }

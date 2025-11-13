@@ -17,10 +17,18 @@ import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 
 @Value
+// TODO Remove builder
 @Builder(access = PACKAGE)
 @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 @AllArgsConstructor(access = PRIVATE)
 public class SpoonAstModel {
+
+    /**
+     * This is a working model copy for actual resorting changes
+     */
+    @NonNull
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    CtCompilationUnit compilationUnit;
 
     @Nullable
     CtType<?> mainType;
@@ -30,13 +38,6 @@ public class SpoonAstModel {
 
     @NonNull
     Supplier<String> serializedSourceCode;
-
-    /**
-     * This is a working model copy for actual resorting changes
-     */
-    @NonNull
-    @SuppressFBWarnings("EI_EXPOSE_REP")
-    CtCompilationUnit compilationUnit;
 
     public Optional<CtType<?>> getMainType() {
         return Optional.ofNullable(mainType);

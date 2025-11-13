@@ -33,6 +33,13 @@ public class SpoonUtilities {
         return compilationUnit.getDeclaredTypes();
     }
 
+    /**
+     * Current order for a whole compilation unit: declared types as-is.
+     */
+    public static Stream<CtElement> streamDeclaredHierarchy(CtCompilationUnit compilationUnit) {
+        return streamRootTypes(compilationUnit).flatMap(SpoonUtilities::streamTypeAndNestedElements);
+    }
+
     static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {
@@ -57,20 +64,13 @@ public class SpoonUtilities {
         return fileNameMatchType;
     }
 
-    private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
-        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonUtilities::streamTypesTree));
-    }
-
-    /** Current order for a whole compilation unit: declared types as-is. */
-    public static Stream<CtElement> streamDeclaredHierarchy(CtCompilationUnit compilationUnit) {
-        return streamRootTypes(compilationUnit).flatMap(SpoonUtilities::streamTypeAndNestedElements);
-    }
-
     private static Stream<CtType<?>> streamRootTypes(CtCompilationUnit compilationUnit) {
         return getRootTypes(compilationUnit).stream();
     }
 
-    /** Current order for a type: the type, then its members as they are in lists; recurse for nested types. */
+    /**
+     * Current order for a type: the type, then its members as they are in lists; recurse for nested types.
+     */
     private static Stream<CtElement> streamTypeAndNestedElements(CtType<?> ownerType) {
         Stream<CtElement> self = Stream.of(ownerType);
         Stream<CtElement> membersAndNested = ownerType.getTypeMembers().stream()
@@ -83,5 +83,9 @@ public class SpoonUtilities {
                     return Stream.of(member);
                 });
         return Stream.concat(self, membersAndNested);
+    }
+
+    private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
+        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonUtilities::streamTypesTree));
     }
 }

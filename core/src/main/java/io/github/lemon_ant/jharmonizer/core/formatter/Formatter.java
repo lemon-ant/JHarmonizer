@@ -39,7 +39,24 @@ public final class Formatter {
         formattingMethod = prepareSrcFormattingMethod(fixImports, formatterStyle, formatter);
     }
 
-    /** Single try/catch wrapper for any Palantir operation that takes only the source code. */
+    /**
+     * Formats the given source code.
+     *
+     * @param sourceCode the source code to format
+     * @return a FormatingResult containing the formatted source code and statistics
+     */
+    @NonNull
+    public FormatingResult formatSource(String sourceCode) {
+        TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
+
+        String formattedSource = formatingResult.getResult();
+        return new FormatingResult(
+                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
+    }
+
+    /**
+     * Single try/catch wrapper for any Palantir operation that takes only the source code.
+     */
     private static Function<String, String> wrapFailableFunction(
             FailableFunction<String, String, FormatterException> palantirMethod) {
         return src -> {
@@ -61,20 +78,5 @@ public final class Formatter {
         }
 
         return palantirMethod.map(Formatter::wrapFailableFunction).orElse(Function.identity());
-    }
-
-    /**
-     * Formats the given source code.
-     *
-     * @param sourceCode the source code to format
-     * @return a FormatingResult containing the formatted source code and statistics
-     */
-    @NonNull
-    public FormatingResult formatSource(String sourceCode) {
-        TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
-
-        String formattedSource = formatingResult.getResult();
-        return new FormatingResult(
-                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
     }
 }
