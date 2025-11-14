@@ -85,7 +85,7 @@ class JHarmonizerConfigLoaderTest {
                 .isNotEmpty());
         assertThat(topLevelTypesOrdering.getSortKeys())
                 .containsExactly(JHarmonizerSortKey.VISIBILITY_DESC, JHarmonizerSortKey.ALPHA);
-        assertThat(JHarmonizerConfig.isFixImports()).isTrue();
-        assertThat(JHarmonizerConfig.getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+        assertThat(JHarmonizerConfig.getFormatting().isFixImports()).isTrue();
+        assertThat(JHarmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
     }
 }

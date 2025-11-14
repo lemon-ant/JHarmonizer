@@ -1,6 +1,8 @@
 {
-  "fixImports" : true,
-  "formatterStyle" : "PALANTIR",
+  "formatting" : {
+    "fixImports" : true,
+    "formatterStyle" : "PALANTIR"
+  },
   "backupsEnabled" : true,
   "headerLine" : {
     "character" : "-",

@@ -25,10 +25,10 @@ public final class JHarmonizer2UnifiedConverter {
         UnifiedTopLevelTypesOrdering top = TopLevelTypesOrderingMapper.map(vendor.getTopLevelTypesOrdering());
 
         // 2) fixImports
-        boolean fixImports = vendor.isFixImports();
+        boolean fixImports = vendor.getFormatting().isFixImports();
 
         // 3) formatterStyle
-        UnifiedFormatterStyle style = vendor.getFormatterStyle().getUnifiedFormatterStyle();
+        UnifiedFormatterStyle style = vendor.getFormatting().getFormatterStyle().getUnifiedFormatterStyle();
 
         boolean backupsEnabled = vendor.isBackupsEnabled();
 
@@ -42,7 +42,6 @@ public final class JHarmonizer2UnifiedConverter {
 
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
-                // TODO Refactor this
                 .formatting(new UnifiedFormatting(fixImports, style))
             .backupsEnabled(backupsEnabled)
                 .headerLine(header)

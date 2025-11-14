@@ -22,4 +22,8 @@ public class CreationHelper {
             @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
         return new JHarmonizerTopLevelTypeSelector(typeKinds);
     }
+
+    public static JHarmonizerFormatting createFormatting(boolean fixImports, @NonNull FormatterStyle formatterStyle){
+        return new JHarmonizerFormatting(fixImports, formatterStyle);
+    }
 }

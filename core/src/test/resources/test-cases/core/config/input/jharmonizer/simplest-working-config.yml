@@ -1,5 +1,6 @@
-fix-imports: true
-formatter-style: PALANTIR
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR
 
 backups-enabled: true
 
