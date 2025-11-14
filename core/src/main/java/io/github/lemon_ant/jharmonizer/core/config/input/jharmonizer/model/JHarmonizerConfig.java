@@ -18,6 +18,8 @@ public class JHarmonizerConfig {
     // TODO Exclude to a dedicated class
     FormatterStyle formatterStyle;
 
+    boolean backupsEnabled;
+
     @NonNull
     JHarmonizerHeaderLine headerLine;
 
@@ -29,15 +31,18 @@ public class JHarmonizerConfig {
 
     @Builder
     JHarmonizerConfig(
-            @NonNull @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
+            @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
+                    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle,
+            @JsonProperty(value = "backups-enabled", required = true) boolean backupsEnabled,
             @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
                     List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;
+        this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
         Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
         this.memberGroups = Collections.unmodifiableList(memberGroups);
@@ -48,20 +53,23 @@ public class JHarmonizerConfig {
         if (!(o instanceof JHarmonizerConfig that)) {
             return false;
         }
+
         return fixImports == that.fixImports
-                && topLevelTypesOrdering.equals(that.topLevelTypesOrdering)
+                && backupsEnabled == that.backupsEnabled
                 && formatterStyle == that.formatterStyle
                 && headerLine.equals(that.headerLine)
-                && memberGroups.equals(that.memberGroups);
+                && memberGroups.equals(that.memberGroups)
+                && topLevelTypesOrdering.equals(that.topLevelTypesOrdering);
     }
 
     @Override
     public int hashCode() {
-        int result = topLevelTypesOrdering.hashCode();
-        result = 31 * result + Boolean.hashCode(fixImports);
+        int result = Boolean.hashCode(fixImports);
         result = 31 * result + formatterStyle.hashCode();
+        result = 31 * result + Boolean.hashCode(backupsEnabled);
         result = 31 * result + headerLine.hashCode();
         result = 31 * result + memberGroups.hashCode();
+        result = 31 * result + topLevelTypesOrdering.hashCode();
         return result;
     }
 }

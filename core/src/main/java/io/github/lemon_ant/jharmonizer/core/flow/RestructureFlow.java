@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RestructureFlow implements IFlow {
 
     private final Formatter formatter;
-    private final boolean isMakingBackups;
+    private final boolean backupsEnabled;
     private final Sorter sorter;
 
     @NonNull
@@ -31,7 +31,7 @@ public class RestructureFlow implements IFlow {
 
         boolean hasChanged = !srcFileContent.getContent().equals(formatingResult.getFormatedSourceCode());
         if (hasChanged) {
-            if (isMakingBackups) {
+            if (backupsEnabled) {
                 SourceFilesHandler.renameToBackup(srcFileContent.getPath());
             }
             SourceFilesHandler.overwrite(srcFileContent.getPath(), formatingResult.getFormatedSourceCode());

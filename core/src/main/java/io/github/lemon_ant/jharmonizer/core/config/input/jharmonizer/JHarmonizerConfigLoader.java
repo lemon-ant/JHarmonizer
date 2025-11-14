@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -33,5 +35,12 @@ class JHarmonizerConfigLoader {
     @NonNull
     static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
         return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
+    }
+
+    @NonNull
+    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) throws IOException {
+        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
+            return loadFrom(configYaml);
+        }
     }
 }

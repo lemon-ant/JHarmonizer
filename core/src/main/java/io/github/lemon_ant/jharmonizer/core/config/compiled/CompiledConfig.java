@@ -23,6 +23,9 @@ public class CompiledConfig {
      */
     @NonNull
     UnifiedFormatting formatting;
+
+    boolean backupsEnabled;
+
     /**
      * Header line descriptor (character + leftPadding).
      */
@@ -42,10 +45,12 @@ public class CompiledConfig {
             @NonNull List<CompiledMemberGroup> rootMemberGroups,
             @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
+            boolean backupsEnabled,
             @NonNull UnifiedHeaderLine headerLine) {
         this.rootMemberGroups = unmodifiableList(rootMemberGroups);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
+        this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
     }
 

@@ -49,7 +49,6 @@ public final class SourceProcessor {
                 new Formatter(
                         compiledConfig.getFormatting().getFormatterStyle(),
                         compiledConfig.getFormatting().isFixImports()),
-                //  new ProcessingResultCollector(),
                 new Sorter(compiledConfig));
     }
 
@@ -66,7 +65,7 @@ public final class SourceProcessor {
                 // TODO Move it into the flow factory
                 switch (flowType) {
                     case RESTRUCTURE ->
-                        new RestructureFlow(formatter, /* TODO Should be taken from the config*/ true, sorter);
+                        new RestructureFlow(formatter, config.isBackupsEnabled(), sorter);
                     case CHECK_ALL -> new CheckAllFlow(formatter, sorter);
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };

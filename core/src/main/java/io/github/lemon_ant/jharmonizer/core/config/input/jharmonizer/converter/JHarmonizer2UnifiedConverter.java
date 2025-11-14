@@ -30,6 +30,8 @@ public final class JHarmonizer2UnifiedConverter {
         // 3) formatterStyle
         UnifiedFormatterStyle style = vendor.getFormatterStyle().getUnifiedFormatterStyle();
 
+        boolean backupsEnabled = vendor.isBackupsEnabled();
+
         // 4) headerLine
         UnifiedHeaderLine header = new UnifiedHeaderLine(
                 vendor.getHeaderLine().getCharacter(), vendor.getHeaderLine().getLeftPadding());
@@ -42,6 +44,7 @@ public final class JHarmonizer2UnifiedConverter {
                 .topLevelTypesOrdering(top)
                 // TODO Refactor this
                 .formatting(new UnifiedFormatting(fixImports, style))
+            .backupsEnabled(backupsEnabled)
                 .headerLine(header)
                 .rootMemberGroups(root)
                 .build();

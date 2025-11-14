@@ -27,16 +27,21 @@ public class FlexibleUnifiedConfig {
      */
     @Nullable
     UnifiedFormatting formatting;
+
+    @Nullable Boolean backupsEnabled;
+
     /**
      * Optional override for header line.
      */
     @Nullable
     UnifiedHeaderLine headerLine;
+
     /**
      * Optional override for root member groups (full replacement).
      */
     @Nullable
     List<UnifiedMemberGroup> rootMemberGroups;
+
     /**
      * Optional override for top-level types ordering.
      */
@@ -46,10 +51,12 @@ public class FlexibleUnifiedConfig {
     public FlexibleUnifiedConfig(
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable UnifiedFormatting formatting,
+            @Nullable Boolean backupsEnabled,
             @Nullable UnifiedHeaderLine headerLine,
             @Nullable @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
+        this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
         this.rootMemberGroups =
                 ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(List.of());

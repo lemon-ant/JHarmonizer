@@ -24,16 +24,21 @@ public class UnifiedConfig {
      */
     @NonNull
     UnifiedFormatting formatting;
+
+    boolean backupsEnabled;
+
     /**
      * Header line descriptor (character + leftPadding).
      */
     @NonNull
     UnifiedHeaderLine headerLine;
+
     /**
      * Root member groups.
      */
     @NonNull
     List<UnifiedMemberGroup> rootMemberGroups;
+
     /**
      * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
      */
@@ -45,10 +50,12 @@ public class UnifiedConfig {
     public UnifiedConfig(
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
+            @NonNull Boolean backupsEnabled,
             @NonNull UnifiedHeaderLine headerLine,
             @NonNull @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
+        this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
         Validate.notEmpty(rootMemberGroups, "Root member groups cannot be empty");
         this.rootMemberGroups = Collections.unmodifiableList(rootMemberGroups);
