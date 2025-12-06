@@ -23,7 +23,7 @@ public class CreationHelper {
         return new JHarmonizerTopLevelTypeSelector(typeKinds);
     }
 
-    public static JHarmonizerFormatting createFormatting(boolean fixImports, @NonNull FormatterStyle formatterStyle){
+    public static JHarmonizerFormatting createFormatting(boolean fixImports, @NonNull FormatterStyle formatterStyle) {
         return new JHarmonizerFormatting(fixImports, formatterStyle);
     }
 }

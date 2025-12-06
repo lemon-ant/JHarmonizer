@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
@@ -52,12 +53,13 @@ public class CheckFailFastFlow implements IFlow {
 
         return FlowProcessingResult.builder()
                 .path(srcFileContent.getPath())
-                .relocations(elementRelocations)
+                .relocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(sortingResult.getSortingStatistic())
                 .serializationStatistic(serializationResult.getSerializationStatistic())
                 .formatingStatistic(formatingResult.getFormatingStatistic())
+                .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
                 .build();
     }
 }

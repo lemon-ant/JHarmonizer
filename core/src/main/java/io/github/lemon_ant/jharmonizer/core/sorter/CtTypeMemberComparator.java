@@ -18,9 +18,12 @@ final class CtTypeMemberComparator implements Comparator<CtTypeMember> {
 
     @Override
     public int compare(CtTypeMember member1, CtTypeMember member2) {
-
-        // TODO Sort alphabetically
-        return Integer.compare(
-                member1.getPosition().getSourceStart(), member2.getPosition().getSourceStart());
+        if (member1.getPosition().isValidPosition() && member2.getPosition().isValidPosition()) {
+            // TODO Sort alphabetically
+            return Integer.compare(
+                    member1.getPosition().getSourceStart(),
+                    member2.getPosition().getSourceStart());
+        }
+        return 0;
     }
 }

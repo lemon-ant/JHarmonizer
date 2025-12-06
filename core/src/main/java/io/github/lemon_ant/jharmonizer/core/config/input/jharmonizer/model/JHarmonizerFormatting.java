@@ -3,9 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NonNull;
 import lombok.Value;
-import org.apache.commons.lang3.Validate;
-import java.util.Collections;
-import java.util.List;
 
 @Value
 public class JHarmonizerFormatting {
@@ -18,12 +15,9 @@ public class JHarmonizerFormatting {
     FormatterStyle formatterStyle;
 
     public JHarmonizerFormatting(
-
-        @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
-        @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle
-    ) {
+            @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
+            @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle) {
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;
     }
-
 }

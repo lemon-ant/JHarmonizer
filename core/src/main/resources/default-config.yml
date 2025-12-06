@@ -144,7 +144,7 @@ type-members-ordering:
       - name: Instance Initializer Blocks
         separator: none
         sort-keys: preserve
-        includes: [ instance, initializer ]
+        includes: [ initializer ]
 
       - name: Constructors
         separator: none
@@ -155,25 +155,25 @@ type-members-ordering:
         separator: none
         keepAccessorsTogether: true
         sort-keys: [ visibility-desc, alpha, signature ]
-        includes: [ instance, method, ~^(get|set|is|has).+$ ]
+        includes: [ method, ~^(get|set|is|has).+$ ]
 
       - name: Instance Methods
         separator: none
         sort-keys: [ visibility-desc, alpha, signature ]
-        includes: [ instance, method ]
+        includes: [ method ]
         excludes:
-          - [ instance, method, =toString ]
-          - [ instance, method, =equals ]
-          - [ instance, method, =hashCode ]
-          - [ instance, method, =clone ]
+          - [ method, =toString ]
+          - [ method, =equals ]
+          - [ method, =hashCode ]
+          - [ method, =clone ]
 
       - name: Basic Object Methods
         sort-keys: preserve
         includes:
-          - [ instance, method, =toString ]
-          - [ instance, method, =equals ]
-          - [ instance, method, =hashCode ]
-          - [ instance, method, =clone ]
+          - [ method, =toString ]
+          - [ method, =equals ]
+          - [ method, =hashCode ]
+          - [ method, =clone ]
 
   - name: Default Rule
     includes: ~.*
@@ -240,7 +240,7 @@ type-members-ordering:
       - name: Instance Initializer Blocks
         separator: none
         sort-keys: preserve
-        includes: [ instance, initializer ]
+        includes: [ initializer ]
 
       - name: Constructors
         separator: none
@@ -250,21 +250,21 @@ type-members-ordering:
       - name: Instance Methods
         separator: none
         sort-keys: [ visibility-desc, alpha, signature ]
-        includes: [ instance, method ]
+        includes: [ method ]
         excludes:
-          - [ instance, method, =toString ]
-          - [ instance, method, =equals ]
-          - [ instance, method, =hashCode ]
-          - [ instance, method, =clone ]
+          - [ method, =toString ]
+          - [ method, =equals ]
+          - [ method, =hashCode ]
+          - [ method, =clone ]
 
       - name: Basic Object Methods
         separator: none
         sort-keys: preserve
         includes:
-          - [ instance, method, =toString ]
-          - [ instance, method, =equals ]
-          - [ instance, method, =hashCode ]
-          - [ instance, method, =clone ]
+          - [ method, =toString ]
+          - [ method, =equals ]
+          - [ method, =hashCode ]
+          - [ method, =clone ]
 
       - name: Classes & Records
         separator: new-line

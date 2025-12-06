@@ -44,7 +44,10 @@ class MemberGroupRuleLineParser {
             if (apply(ofNullable(ACCESS_BY_TOKEN.get(token)), ruleLineBuilder::memberAccess)) {
                 continue;
             }
-            apply(ofNullable(MOD_BY_TOKEN.get(token)), ruleLineBuilder::declarationModifier);
+            if (apply(ofNullable(MOD_BY_TOKEN.get(token)), ruleLineBuilder::declarationModifier)) {
+                continue;
+            }
+            throw new IllegalArgumentException("Unrecognized token: " + token);
         }
         return ruleLineBuilder.build();
     }

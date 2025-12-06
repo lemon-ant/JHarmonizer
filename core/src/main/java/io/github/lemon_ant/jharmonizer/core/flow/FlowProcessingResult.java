@@ -23,6 +23,9 @@ public class FlowProcessingResult {
     String diff;
 
     @NonNull
+    FlowProcessingStatus flowProcessingStatus;
+
+    @NonNull
     FormatingStatistic formatingStatistic;
 
     @NonNull

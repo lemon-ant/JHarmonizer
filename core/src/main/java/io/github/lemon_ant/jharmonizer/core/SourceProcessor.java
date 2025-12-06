@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core;
 
+import io.github.lemon_ant.jharmonizer.core.SourceProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -18,19 +19,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /*
- * Main class for processing source files in JReStructor.
+ * Main class for processing source files in JHarmonizer.
  * It orchestrates the flow of processing by utilizing the Components instance.
  * The processSources method is the entry point for processing the sources.
  */
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@SuppressWarnings("PMD.GuardLogStatement")
 public final class SourceProcessor {
 
     private final CompiledConfig config;
     private final Formatter formatter;
     private final Sorter sorter;
-    // TODO This is bull shit
-    private ProcessingResultCollector processingResultCollector;
 
     public SourceProcessor() {
         this((FlexibleUnifiedConfig) null);
@@ -59,29 +59,28 @@ public final class SourceProcessor {
      *
      * @param paths List of paths to source files to be processed.
      */
-    public ProcessingResultCollector processSources(
+    public void processSources(
             Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs, FlowType flowType) {
         IFlow flow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
-                    case RESTRUCTURE ->
-                        new RestructureFlow(formatter, config.isBackupsEnabled(), sorter);
+                    case RESTRUCTURE -> new RestructureFlow(formatter, config.isBackupsEnabled(), sorter);
                     case CHECK_ALL -> new CheckAllFlow(formatter, sorter);
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };
 
-        processingResultCollector = SourceFilesHandler.findJavaFiles(baseDir, includeGlobs, excludeGlobs)
+        AggregatedProcessingStatistic aggregatedProcessingStatistic = SourceFilesHandler.findJavaFiles(
+                        baseDir, includeGlobs, excludeGlobs)
                 // TODO Possibly include into the one method inside SourceFilesHandler
                 .map(SourceFilesHandler::readFile)
                 .map(flow::processSource)
-                .reduce(
-                        // TODO Some shit to understand and redesign
-                        processingResultCollector,
-                        ProcessingResultCollector::collectResult,
-                        (currentResult, newResult) -> newResult);
+                .peek(flowProcessingResult -> log.info(
+                        "Processing result: {}: {}",
+                        flowProcessingResult.getPath(),
+                        flowProcessingResult.getFlowProcessingStatus()))
+                .map(FileProcessingStatistic::convert)
+                .collect(SourceProcessingStats.statsCollector());
 
-        processingResultCollector.printAggregatedStatistics();
-
-        return processingResultCollector;
+        log.info(aggregatedProcessingStatistic.toString());
     }
 }

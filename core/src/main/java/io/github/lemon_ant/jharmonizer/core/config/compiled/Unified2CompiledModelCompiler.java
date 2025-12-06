@@ -29,6 +29,10 @@ public class Unified2CompiledModelCompiler {
                 TopLevelTypesOrderingCompiler.compileTopLevelTypesOrdering(unifiedConfig.getTopLevelTypesOrdering());
 
         return new CompiledConfig(
-                memberGroups, topLevelTypesOrdering, unifiedConfig.getFormatting(), unifiedConfig.isBackupsEnabled(), unifiedConfig.getHeaderLine());
+                memberGroups,
+                topLevelTypesOrdering,
+                unifiedConfig.getFormatting(),
+                unifiedConfig.isBackupsEnabled(),
+                unifiedConfig.getHeaderLine());
     }
 }

@@ -58,6 +58,29 @@ public class UnifiedMemberGroupRuleLine {
         this.declarationModifiers = Collections.unmodifiableSet(new TreeSet<>(declarationModifiers));
         this.nameMatcher = nameMatcher;
         this.annotationMatchers = Collections.unmodifiableSet(annotationMatchers);
+        validateAtLeastOneSelectorIsConfigured();
+    }
+
+    private void validateAtLeastOneSelectorIsConfigured() {
+        if (!isHasAnySelectorConfigured()) {
+            throw new IllegalArgumentException(
+                    this.getClass().getSimpleName() + " must have at least one selector configured: "
+                            + "memberKinds, memberAccesses, declarationModifiers, nameMatcher or annotationMatchers");
+        }
+    }
+
+    private boolean isHasAnySelectorConfigured() {
+        boolean hasMemberKindsConfigured = !memberKinds.isEmpty();
+        boolean hasMemberAccessesConfigured = !memberAccesses.isEmpty();
+        boolean hasDeclarationModifiersConfigured = !declarationModifiers.isEmpty();
+        boolean hasNameMatcherConfigured = nameMatcher != null;
+        boolean hasAnnotationMatchersConfigured = !annotationMatchers.isEmpty();
+
+        return hasMemberKindsConfigured
+                || hasMemberAccessesConfigured
+                || hasDeclarationModifiersConfigured
+                || hasNameMatcherConfigured
+                || hasAnnotationMatchersConfigured;
     }
 
     @Override

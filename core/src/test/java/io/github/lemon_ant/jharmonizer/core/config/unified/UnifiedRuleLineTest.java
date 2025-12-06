@@ -11,30 +11,31 @@ import org.junit.jupiter.api.Test;
 class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
-    void build_withoutNameMatcher_isAllowed() {
+    void build_withoutSelectors_isNotAllowed() {
         // given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
 
-        // when
-        UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = builder.build();
-
-        // then
-        assertThat(unifiedMemberGroupRuleLine).isNotNull();
-        assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isNull(); // absent -> null by contract
+        // when / then
+        assertThatThrownBy(builder::build)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("at least one selector");
     }
 
     @Test
     void nameMatcher_assignedOnce_buildsSuccessfully() {
         // given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
+        UnifiedNameMatcher expectedUnifiedNameMatcher = new UnifiedNameMatcher(UnifiedMatchMethod.EXACT, "methodName");
 
         // when
-        builder.nameMatcher(null); // single assignment is fine
+        builder.nameMatcher(expectedUnifiedNameMatcher); // single assignment is fine
         UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = builder.build();
 
         // then
         assertThat(unifiedMemberGroupRuleLine).isNotNull();
-        assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isNull(); // explicit null preserved
+        assertThat(unifiedMemberGroupRuleLine.getNameMatcher())
+                .isNotNull()
+                .isSameAs(expectedUnifiedNameMatcher); // explicit null preserved
     }
 
     @Test

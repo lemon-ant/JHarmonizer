@@ -28,7 +28,8 @@ public class FlexibleUnifiedConfig {
     @Nullable
     UnifiedFormatting formatting;
 
-    @Nullable Boolean backupsEnabled;
+    @Nullable
+    Boolean backupsEnabled;
 
     /**
      * Optional override for header line.

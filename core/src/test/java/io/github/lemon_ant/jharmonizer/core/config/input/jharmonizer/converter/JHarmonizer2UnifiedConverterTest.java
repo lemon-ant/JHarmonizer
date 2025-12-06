@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
@@ -42,9 +41,12 @@ class JHarmonizer2UnifiedConverterTest {
                 List.of(JHarmonizerSortKey.ALPHA) // sort-keys (can be empty for this smoke test)
                 );
 
-        JHarmonizerConfig jHarmonizerConfig = new  JHarmonizerConfig(
-            topLevel,createFormatting(true,FormatterStyle.PALANTIR),true,
-                createHeaderLine('-', 5),List.of(root));
+        JHarmonizerConfig jHarmonizerConfig = new JHarmonizerConfig(
+                topLevel,
+                createFormatting(true, FormatterStyle.PALANTIR),
+                true,
+                createHeaderLine('-', 5),
+                List.of(root));
 
         UnifiedConfig unified = JHarmonizer2UnifiedConverter.convert2Unified(jHarmonizerConfig);
 

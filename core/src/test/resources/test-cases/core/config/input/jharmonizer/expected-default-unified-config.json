@@ -502,12 +502,6 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
           "memberKinds" : [ "INSTANCE_INIT_BLOCK" ],
           "nameMatcher" : null
         } ]
@@ -544,12 +538,6 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
           "memberKinds" : [ "METHOD" ],
           "nameMatcher" : null
         }, {
@@ -579,24 +567,6 @@
           "memberKinds" : [ "METHOD" ],
           "nameMatcher" : {
             "matchMethod" : "EXACT",
-            "value" : "equals"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
-            "value" : "hashcode"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
             "value" : "tostring"
           }
         }, {
@@ -608,14 +578,26 @@
             "matchMethod" : "EXACT",
             "value" : "clone"
           }
-        } ],
-        "includes" : [ {
+        }, {
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ ],
-          "nameMatcher" : null
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          }
         }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
+          }
+        } ],
+        "includes" : [ {
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
@@ -640,24 +622,6 @@
           "memberKinds" : [ "METHOD" ],
           "nameMatcher" : {
             "matchMethod" : "EXACT",
-            "value" : "equals"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
-            "value" : "hashcode"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
             "value" : "tostring"
           }
         }, {
@@ -668,6 +632,24 @@
           "nameMatcher" : {
             "matchMethod" : "EXACT",
             "value" : "clone"
+          }
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          }
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
           }
         } ]
       },
@@ -1036,12 +1018,6 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
           "memberKinds" : [ "INSTANCE_INIT_BLOCK" ],
           "nameMatcher" : null
         } ]
@@ -1080,24 +1056,6 @@
           "memberKinds" : [ "METHOD" ],
           "nameMatcher" : {
             "matchMethod" : "EXACT",
-            "value" : "equals"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
-            "value" : "hashcode"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
             "value" : "tostring"
           }
         }, {
@@ -1109,14 +1067,26 @@
             "matchMethod" : "EXACT",
             "value" : "clone"
           }
-        } ],
-        "includes" : [ {
+        }, {
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ ],
-          "nameMatcher" : null
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          }
         }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
+          }
+        } ],
+        "includes" : [ {
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
@@ -1141,24 +1111,6 @@
           "memberKinds" : [ "METHOD" ],
           "nameMatcher" : {
             "matchMethod" : "EXACT",
-            "value" : "equals"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
-            "value" : "hashcode"
-          }
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD" ],
-          "nameMatcher" : {
-            "matchMethod" : "EXACT",
             "value" : "tostring"
           }
         }, {
@@ -1169,6 +1121,24 @@
           "nameMatcher" : {
             "matchMethod" : "EXACT",
             "value" : "clone"
+          }
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "equals"
+          }
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : {
+            "matchMethod" : "EXACT",
+            "value" : "hashcode"
           }
         } ]
       },

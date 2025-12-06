@@ -184,7 +184,7 @@
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Instance Initializer Blocks",
-      "includes" : [ [ "instance" ], [ "initializer" ] ],
+      "includes" : [ [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
@@ -200,7 +200,7 @@
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Accessor Methods",
-      "includes" : [ [ "instance" ], [ "method" ], [ "~^(get|set|is|has).+$" ] ],
+      "includes" : [ [ "method" ], [ "~^(get|set|is|has).+$" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
@@ -208,15 +208,15 @@
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Instance Methods",
-      "includes" : [ [ "instance" ], [ "method" ] ],
-      "excludes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
+      "includes" : [ [ "method" ] ],
+      "excludes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Basic Object Methods",
-      "includes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
+      "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
@@ -328,7 +328,7 @@
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Instance Initializer Blocks",
-      "includes" : [ [ "instance" ], [ "initializer" ] ],
+      "includes" : [ [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
@@ -344,15 +344,15 @@
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Instance Methods",
-      "includes" : [ [ "instance" ], [ "method" ] ],
-      "excludes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
+      "includes" : [ [ "method" ] ],
+      "excludes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "name" : "Basic Object Methods",
-      "includes" : [ [ "=equals", "instance", "method" ], [ "=hashCode", "instance", "method" ], [ "=toString", "instance", "method" ], [ "=clone", "instance", "method" ] ],
+      "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : false,

@@ -67,6 +67,7 @@ class MemberGroupCompiler {
                 .groupSortingBehavior(compiledSortingBehavior)
                 .compiledSubGroups(compiledChildren)
                 .orderIndex(assignedPostOrderIndex)
+                .separator(unifiedGroup.getSeparator())
                 .build();
 
         // 5) Return pair: (group, next index after this node)

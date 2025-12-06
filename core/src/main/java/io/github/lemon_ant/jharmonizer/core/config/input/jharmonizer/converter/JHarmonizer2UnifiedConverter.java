@@ -43,7 +43,7 @@ public final class JHarmonizer2UnifiedConverter {
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
                 .formatting(new UnifiedFormatting(fixImports, style))
-            .backupsEnabled(backupsEnabled)
+                .backupsEnabled(backupsEnabled)
                 .headerLine(header)
                 .rootMemberGroups(root)
                 .build();

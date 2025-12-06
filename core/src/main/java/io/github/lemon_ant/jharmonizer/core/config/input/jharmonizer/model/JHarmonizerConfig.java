@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.List;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
@@ -27,13 +26,13 @@ public class JHarmonizerConfig {
 
     // TODO Make it package
     public JHarmonizerConfig(
-        @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
-        JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
-        @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
-        @JsonProperty(value = "backups-enabled", required = true) boolean backupsEnabled,
-        @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
-        @NonNull @JsonProperty(value = "type-members-ordering", required = true)
-        List<@NonNull JHarmonizerMemberGroup> memberGroups) {
+            @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
+                    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
+            @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
+            @JsonProperty(value = "backups-enabled", required = true) boolean backupsEnabled,
+            @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
+            @NonNull @JsonProperty(value = "type-members-ordering", required = true)
+                    List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
@@ -44,9 +43,15 @@ public class JHarmonizerConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof JHarmonizerConfig that)){ return false;}
+        if (!(o instanceof JHarmonizerConfig that)) {
+            return false;
+        }
 
-        return backupsEnabled == that.backupsEnabled && formatting.equals(that.formatting) && headerLine.equals(that.headerLine) && memberGroups.equals(that.memberGroups) && topLevelTypesOrdering.equals(that.topLevelTypesOrdering);
+        return backupsEnabled == that.backupsEnabled
+                && formatting.equals(that.formatting)
+                && headerLine.equals(that.headerLine)
+                && memberGroups.equals(that.memberGroups)
+                && topLevelTypesOrdering.equals(that.topLevelTypesOrdering);
     }
 
     @Override

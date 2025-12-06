@@ -79,6 +79,23 @@ public class RelocationDetector {
                 .toList();
     }
 
+    public static boolean isRelocated(
+            Map<SourcePosition, Integer> originalOrderIndices, CtCompilationUnit reorderedCompilationUnit) {
+
+        AtomicInteger runningIndex = new AtomicInteger(0);
+
+        return streamDeclaredHierarchy(reorderedCompilationUnit)
+                .filter(element -> element.getPosition().isValidPosition())
+                // compute offset on the fly using the running encounter index
+                .mapToInt(element -> {
+                    int current = runningIndex.getAndIncrement();
+                    return Optional.ofNullable(originalOrderIndices.get(element.getPosition()))
+                            .map(orig -> current - orig)
+                            .orElse(0);
+                })
+                .anyMatch(offs -> offs > 0);
+    }
+
     /**
      * Formats the relocations into a human-readable string.
      *
