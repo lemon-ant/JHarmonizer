@@ -21,7 +21,6 @@ import org.junit.jupiter.api.io.TempDir;
  * They work against a real temporary file system and exercise
  * the full flow: config → parser → sorter → formatter.
  */
-// @Disabled
 class SourceProcessorTest {
 
     private static final Collection<String> ALL_JAVA_GLOBS = Set.of();
@@ -52,7 +51,6 @@ class SourceProcessorTest {
     }
 
     @Test
-    @Disabled("TODO Fix it, it should work")
     void processSources_multipleJavaFiles_onlyIncludedFilesAreProcessed() throws Exception {
         // given
         String unformattedSourceCode = "package demo; public class Included {private int x;}";

@@ -58,15 +58,19 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     private TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSourceCode);
-        if (startWithIndent < end && end <= originalSourceCode.length()) {
+        if (startWithIndent <= end && end <= originalSourceCode.length()) {
             String originalCodeFragment =
                     StringUtils.stripEnd(originalSourceCode.substring(startWithIndent, end + 1), null);
             return getPrinterTokenWriter()
                     .writeCodeSnippet(originalCodeFragment)
                     .writeln();
-        } else {
-            throw new IllegalStateException();
         }
+        throw new IllegalStateException(
+            "Invalid source fragment range: start=" + start
+                + ", end=" + end
+                + ", indentationStart=" + startWithIndent
+                + ", sourceLength=" + originalSourceCode.length()
+                + ". Expected indentationStart <= end < sourceLength.");
     }
 
     private void printTypeStructure(CtType<?> type) {
