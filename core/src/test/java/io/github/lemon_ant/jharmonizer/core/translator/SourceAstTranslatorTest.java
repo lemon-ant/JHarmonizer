@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,9 +23,9 @@ class SourceAstTranslatorTest {
     void parseSourceFile_validJavaSource_returnParsingResult() throws IOException {
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
 
-        FileContent fileContent = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
-        ParsingResult result = SourceAstTranslator.parseSourceFile(fileContent);
+        ParsingResult result = SourceAstTranslator.parseSourceFile(srcFile);
 
         assertThat(result).isNotNull();
         assertThat(result.getSpoonAstModel()).isNotNull();
@@ -39,15 +39,15 @@ class SourceAstTranslatorTest {
     void serialize_validSpoonAstModel_returnSerializedCode() {
         // given: simple source code
         String source = "class Demo { void m() {} }";
-        FileContent fileContent = new FileContent(source, Path.of("Demo.java"));
-        SpoonAstModel model = SourceAstTranslator.parseSourceFile(fileContent).getSpoonAstModel();
+        SrcFile srcFile = new SrcFile(source, Path.of("Demo.java"));
+        SpoonAstModel model = SourceAstTranslator.parseSourceFile(srcFile).getSpoonAstModel();
 
         // when
         SerializationResult result = SourceAstTranslator.serialize(model);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.getSerializedSourceCode()).contains("class Demo");
+        assertThat(result.getSerializedSrcCode()).contains("class Demo");
         assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
         assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
                 .isGreaterThan(0);

@@ -2,9 +2,11 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -26,30 +28,37 @@ public class CheckAllFlow implements IFlow {
 
     private final Formatter formatter;
     private final Sorter sorter;
+    private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(CHECK_ALL);
 
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull FileContent srcFileContent) {
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFileContent);
+    public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
         SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
         SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
         SerializationResult serializationResult = SourceAstTranslator.serialize(sortedSpoonAstModel);
-        FormatingResult formatingResult = formatter.formatSource(serializationResult.getSerializedSourceCode());
+        debugStageRecorder.recordSrcStage(
+                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
-        boolean hasChanges = !srcFileContent.getContent().equals(serializationResult.getSerializedSourceCode());
+        FormatingResult formatingResult =
+                formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
+        debugStageRecorder.recordSrcStage(
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
+
+        boolean hasChanges = !srcFile.getSrcCode().equals(serializationResult.getSerializedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
         String srcDiff;
         if (hasChanges) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            srcDiff = computeDiff(srcFileContent.getContent(), formatingResult.getFormatedSourceCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
         } else {
             elementRelocations = List.of();
             srcDiff = "";
         }
 
         return FlowProcessingResult.builder()
-                .path(srcFileContent.getPath())
+                .path(srcFile.getPath())
                 .relocations(elementRelocations)
                 .diff(srcDiff)
                 .parsingStatistic(parsingResult.getParsingStatistic())

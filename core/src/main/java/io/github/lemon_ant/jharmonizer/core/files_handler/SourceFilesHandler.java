@@ -54,15 +54,15 @@ public class SourceFilesHandler {
 
     @NonNull
     // TODO Hide in readJavaFiles method
-    public static FileContent readFile(@NonNull Path file) {
-        FileContent fileContent;
+    public static SourceFilesHandler.SrcFile readFile(@NonNull Path file) {
+        SrcFile srcFile;
         try {
-            fileContent = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
+            srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
         log.trace("File content has been read from {}", file);
-        return fileContent;
+        return srcFile;
     }
 
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
@@ -83,25 +83,25 @@ public class SourceFilesHandler {
     }
 
     @Value
-    public static class FileContent {
+    public static class SrcFile {
         @NonNull
-        String content;
+        String srcCode;
 
         @NonNull
         Path path;
 
         @Override
         public boolean equals(Object o) {
-            if (!(o instanceof FileContent that)) {
+            if (!(o instanceof SrcFile that)) {
                 return false;
             }
-            return path.equals(that.path) && content.equals(that.content);
+            return path.equals(that.path) && srcCode.equals(that.srcCode);
         }
 
         @Override
         public int hashCode() {
             int result = path.hashCode();
-            result = 31 * result + content.hashCode();
+            result = 31 * result + srcCode.hashCode();
             return result;
         }
     }

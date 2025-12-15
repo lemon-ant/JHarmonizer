@@ -22,7 +22,7 @@
         <maven-project-info-reports-plugin.version>3.9.0</maven-project-info-reports-plugin.version>
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
-        <palantir-java-format.version>2.72.0</palantir-java-format.version>
+        <palantir-java-format.version>2.83.0</palantir-java-format.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
         <spotbugs-maven-plugin.version>4.9.6.0</spotbugs-maven-plugin.version>

@@ -9,7 +9,7 @@ import lombok.Value;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class FormatingResult {
     @NonNull
-    String formatedSourceCode;
+    String formatedSrcCode;
 
     @NonNull
     FormatingStatistic formatingStatistic;
@@ -20,12 +20,12 @@ public class FormatingResult {
             return false;
         }
 
-        return formatedSourceCode.equals(that.formatedSourceCode) && formatingStatistic.equals(that.formatingStatistic);
+        return formatedSrcCode.equals(that.formatedSrcCode) && formatingStatistic.equals(that.formatingStatistic);
     }
 
     @Override
     public int hashCode() {
-        int result = formatedSourceCode.hashCode();
+        int result = formatedSrcCode.hashCode();
         result = 31 * result + formatingStatistic.hashCode();
         return result;
     }

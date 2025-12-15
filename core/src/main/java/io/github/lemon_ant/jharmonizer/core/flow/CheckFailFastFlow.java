@@ -4,7 +4,8 @@ import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -26,11 +27,14 @@ public class CheckFailFastFlow implements IFlow {
 
     private final Formatter formatter;
     private final Sorter sorter;
+    private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(FlowType.CHECK_FAIL_FAST);
 
     @Override
-    public @NonNull FlowProcessingResult processSource(@NonNull FileContent srcFileContent) {
+    public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
+        debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+
         // Parse
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFileContent);
+        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
 
         // Sort (Fail Fast)
         SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
@@ -38,21 +42,24 @@ public class CheckFailFastFlow implements IFlow {
         List<Pair<CtElement, Integer>> elementRelocations = findRelocations(
                 sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
         if (!elementRelocations.isEmpty()) {
-            throw new NotOrderedException(srcFileContent.getPath(), elementRelocations);
+            throw new NotOrderedException(srcFile.getPath(), elementRelocations);
         }
 
         // Serialize
         SerializationResult serializationResult = SourceAstTranslator.serialize(sortedSpoonAstModel);
+        debugStageRecorder.recordSrcStage(
+                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
         // Format (Fail Fast)
-        FormatingResult formatingResult = formatter.formatSource(serializationResult.getSerializedSourceCode());
-        if (!srcFileContent.getContent().equals(formatingResult.getFormatedSourceCode())) {
-            String srcDiff = computeDiff(srcFileContent.getContent(), formatingResult.getFormatedSourceCode());
-            throw new NotFormattedException(srcFileContent.getPath(), srcDiff);
+        FormatingResult formatingResult =
+                formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
+        if (!srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode())) {
+            String srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
+            throw new NotFormattedException(srcFile.getPath(), srcDiff);
         }
 
         return FlowProcessingResult.builder()
-                .path(srcFileContent.getPath())
+                .path(srcFile.getPath())
                 .relocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())

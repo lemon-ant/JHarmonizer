@@ -383,6 +383,7 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
  * CompiledGroupIndex:
  * - Minimum among baseline group and ALL transitive dependencies' compiled groups.
  */
+// TODO Use class
 record Analysis(int CompiledGroupIndex, Member representativeForCompare, boolean hasAnyDependency) {}
 
 /**

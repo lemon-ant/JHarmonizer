@@ -9,6 +9,7 @@ import com.palantir.javaformat.java.JavaFormatterOptions.Style;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -40,21 +41,6 @@ public final class Formatter {
     }
 
     /**
-     * Formats the given source code.
-     *
-     * @param sourceCode the source code to format
-     * @return a FormatingResult containing the formatted source code and statistics
-     */
-    @NonNull
-    public FormatingResult formatSource(String sourceCode) {
-        TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
-
-        String formattedSource = formatingResult.getResult();
-        return new FormatingResult(
-                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
-    }
-
-    /**
      * Single try/catch wrapper for any Palantir operation that takes only the source code.
      */
     private static Function<String, String> wrapFailableFunction(
@@ -66,6 +52,22 @@ public final class Formatter {
                 throw new IllegalArgumentException("Palantir formatting failure for the source code: " + src, e);
             }
         };
+    }
+
+    /**
+     * Formats the given source code.
+     *
+     * @param sourceCode the source code to format
+     * @return a FormatingResult containing the formatted source code and statistics
+     */
+    @NonNull
+    public FormatingResult formatSource(String sourceCode, Path srcPath) {
+        log.debug("Formatting {}", srcPath);
+        TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
+
+        String formattedSource = formatingResult.getResult();
+        return new FormatingResult(
+                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
     }
 
     private Function<String, String> prepareSrcFormattingMethod(

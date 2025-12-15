@@ -37,25 +37,21 @@ class ConfigModelSnapshotTest {
 
             String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
 
-            assertThat(actualJson)
-                    .as(
-                            """
-                        Config snapshot mismatch.
+            assertThat(actualJson).as("""
+                Config snapshot mismatch.
 
-                        If you intentionally changed the default configuration (default-config.yml) or the config model,
-                        you must refresh the JSON snapshot:
+                If you intentionally changed the default configuration (default-config.yml) or the config model,
+                you must refresh the JSON snapshot:
 
-                          1) Run ConfigModelSnapshotTest.regenerateSnapshot() — it will rewrite:
-                             %s
-                          2) Re-run this test.
+                  1) Run ConfigModelSnapshotTest.regenerateSnapshot() — it will rewrite:
+                     %s
+                  2) Re-run this test.
 
-                        IMPORTANT BEFORE COMMIT:
-                          • Verify that the diff in expected-default-jharmonizer-config.json EXACTLY reflects your YAML/model changes.
-                          • Make sure nothing accidental was lost or reordered.
-                          • Commit both the YAML change and the updated snapshot together.
-                        """,
-                            FILE_PATH_TO_SNAPSHOT)
-                    .isEqualToNormalizingNewlines(expectedJson);
+                IMPORTANT BEFORE COMMIT:
+                  • Verify that the diff in expected-default-jharmonizer-config.json EXACTLY reflects your YAML/model changes.
+                  • Make sure nothing accidental was lost or reordered.
+                  • Commit both the YAML change and the updated snapshot together.
+                """, FILE_PATH_TO_SNAPSHOT).isEqualToNormalizingNewlines(expectedJson);
         }
     }
 

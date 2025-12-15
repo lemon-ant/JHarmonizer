@@ -4,7 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities.getAllTy
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities.getAllTypes;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonUtilities.getRootTypes;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
@@ -21,14 +21,14 @@ import spoon.reflect.declaration.CtTypeMember;
 public final class SourceAstTranslator {
 
     @SuppressWarnings("PMD.GuardLogStatement")
-    public static ParsingResult parseSourceFile(FileContent sourceFileContent) {
-        log.debug("Parsing {}", sourceFileContent.getPath());
+    public static ParsingResult parseSourceFile(SrcFile sourceSrcFile) {
+        log.debug("Parsing {}", sourceSrcFile.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
-                () -> SpoonParser.parseJavaSourceResource(sourceFileContent.getPath(), sourceFileContent.getContent()));
+                () -> SpoonParser.parseJavaSourceResource(sourceSrcFile.getPath(), sourceSrcFile.getSrcCode()));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
-        ParsingStatistic statistic = createParsingStatistic(sourceFileContent.getContent(), parsingTimedResult);
+        ParsingStatistic statistic = createParsingStatistic(sourceSrcFile.getSrcCode(), parsingTimedResult);
         return new ParsingResult(statistic, spoonASTModel);
     }
 

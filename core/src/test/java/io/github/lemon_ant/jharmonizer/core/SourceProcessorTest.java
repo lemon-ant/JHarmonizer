@@ -4,15 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import org.junit.jupiter.api.Disabled;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,9 +32,67 @@ class SourceProcessorTest {
 
     private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
             "test-cases/core/parser/SampleAllJava21FeaturesList.java";
+    private static final Path DEBUG_DIR = Path.of("src/test/resources/test-cases/core/parser/tmp");
 
     @TempDir
     Path temporaryDirectory;
+
+    private static String loadSampleAllJava21FeaturesSource() throws Exception {
+        URL resourceUrl = Objects.requireNonNull(
+                SourceProcessorTest.class.getClassLoader().getResource(SAMPLE_ALL_JAVA21_RESOURCE_PATH),
+                "SampleAllJava21FeaturesList.java resource must exist");
+
+        Path resourcePath = Path.of(resourceUrl.toURI());
+        return Files.readString(resourcePath, StandardCharsets.UTF_8);
+    }
+
+    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
+        Path javaFilePath = baseDirectoryPath.resolve(fileName);
+        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    }
+
+    // ----------------------------------------------------------------------
+    // Helpers
+    // ----------------------------------------------------------------------
+
+    public static void wipeDirectory() {
+
+        try {
+            if (Files.exists(DEBUG_DIR)) {
+                // Deletes directory recursively
+                FileUtils.deleteDirectory(DEBUG_DIR.toFile()); // :contentReference[oaicite:2]{index=2}
+            }
+            Files.createDirectories(DEBUG_DIR);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to wipe directory: " + DEBUG_DIR, ioException);
+        }
+    }
+
+    public static void writeJavaStage(Path outputDirectory, String stageName, String javaSourceText) {
+        Objects.requireNonNull(outputDirectory, "outputDirectory must not be null");
+        Objects.requireNonNull(stageName, "stageName must not be null");
+        Objects.requireNonNull(javaSourceText, "javaSourceText must not be null");
+
+        String fileName = sanitizeFileName(stageName) + ".java";
+        Path outputFile = outputDirectory.resolve(fileName);
+
+        try {
+            Files.createDirectories(outputDirectory);
+            Files.writeString(
+                    outputFile,
+                    javaSourceText,
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to write stage file: " + outputFile, ioException);
+        }
+    }
+
+    private static String sanitizeFileName(String rawName) {
+        String trimmedName = rawName.trim();
+        return trimmedName.isEmpty() ? "stage" : trimmedName.replaceAll("[^a-zA-Z0-9._-]+", "_");
+    }
 
     @Test
     void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
@@ -82,7 +144,6 @@ class SourceProcessorTest {
     }
 
     @Test
-    @Disabled("TODO Fix it, it should work")
     void processSources_alreadyRestructuredFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
         // given
         String sampleSourceCode = loadSampleAllJava21FeaturesSource();
@@ -103,21 +164,8 @@ class SourceProcessorTest {
         assertThat(finalSourceCode).isNotBlank();
     }
 
-    // ----------------------------------------------------------------------
-    // Helpers
-    // ----------------------------------------------------------------------
-
-    private static String loadSampleAllJava21FeaturesSource() throws Exception {
-        URL resourceUrl = Objects.requireNonNull(
-                SourceProcessorTest.class.getClassLoader().getResource(SAMPLE_ALL_JAVA21_RESOURCE_PATH),
-                "SampleAllJava21FeaturesList.java resource must exist");
-
-        Path resourcePath = Path.of(resourceUrl.toURI());
-        return Files.readString(resourcePath, StandardCharsets.UTF_8);
-    }
-
-    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
-        Path javaFilePath = baseDirectoryPath.resolve(fileName);
-        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    @BeforeEach
+    void setUp() {
+        wipeDirectory();
     }
 }

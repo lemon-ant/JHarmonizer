@@ -83,57 +83,6 @@ public class MemberDescriptor {
                 this.memberKind, this.memberAccess, this.declarationModifiers);
     }
 
-    // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof MemberDescriptor that)) {
-            return false;
-        }
-        // featureMask покрывает: memberKind + memberAccess + declarationModifiers
-        return this.featureMask == that.featureMask
-                && Objects.equals(this.name, that.name)
-                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
-    }
-
-    /**
-     * Optional-returning getter for access level.
-     */
-    public Optional<MemberAccess> getMemberAccess() {
-        return Optional.ofNullable(memberAccess);
-    }
-
-    /**
-     * Optional-returning getter for name.
-     */
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = featureMask;
-        result = 31 * result + Objects.hashCode(name);
-        result = 31 * result + annotationQualifiedNames.hashCode();
-        return result;
-    }
-
-    /**
-     * True if this element is an initializer block (static or instance).
-     */
-    public boolean isInitializer() {
-        return memberKind.isInitializer();
-    }
-
-    /**
-     * True if this element is a (nested) type declaration.
-     */
-    public boolean isType() {
-        return memberKind.isType();
-    }
-
     private static void enforceAbstractNotPrivate(
             @NonNull TargetCategory targetCategory,
             @Nullable MemberAccess memberAccess,
@@ -219,5 +168,56 @@ public class MemberDescriptor {
         validateModifierApplicability(memberKind, targetCategory, declarationModifiers);
         validateModifierPairwiseConflicts(memberKind, declarationModifiers);
         enforceAbstractNotPrivate(targetCategory, memberAccess, declarationModifiers);
+    }
+
+    // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof MemberDescriptor that)) {
+            return false;
+        }
+        // featureMask покрывает: memberKind + memberAccess + declarationModifiers
+        return this.featureMask == that.featureMask
+                && Objects.equals(this.name, that.name)
+                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
+    }
+
+    /**
+     * Optional-returning getter for access level.
+     */
+    public Optional<MemberAccess> getMemberAccess() {
+        return Optional.ofNullable(memberAccess);
+    }
+
+    /**
+     * Optional-returning getter for name.
+     */
+    public Optional<String> getName() {
+        return Optional.ofNullable(name);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = featureMask;
+        result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + annotationQualifiedNames.hashCode();
+        return result;
+    }
+
+    /**
+     * True if this element is an initializer block (static or instance).
+     */
+    public boolean isInitializer() {
+        return memberKind.isInitializer();
+    }
+
+    /**
+     * True if this element is a (nested) type declaration.
+     */
+    public boolean isType() {
+        return memberKind.isType();
     }
 }

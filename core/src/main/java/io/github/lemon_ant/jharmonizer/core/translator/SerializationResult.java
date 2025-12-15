@@ -10,19 +10,19 @@ public class SerializationResult {
     SerializationStatistic serializationStatistic;
 
     @NonNull
-    String serializedSourceCode;
+    String serializedSrcCode;
 
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (SerializationResult) obj;
-        return Objects.equals(this.serializedSourceCode, that.serializedSourceCode)
+        return Objects.equals(this.serializedSrcCode, that.serializedSrcCode)
                 && Objects.equals(this.serializationStatistic, that.serializationStatistic);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(serializedSourceCode, serializationStatistic);
+        return Objects.hash(serializedSrcCode, serializationStatistic);
     }
 }

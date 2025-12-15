@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.detectDominantLineSeparator;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.findIndentationStart;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
@@ -11,6 +12,9 @@ import spoon.compiler.Environment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtCompilationUnit;
+import spoon.reflect.declaration.CtCompilationUnit.UNIT_TYPE;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtRecord;
@@ -18,13 +22,17 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.TokenWriter;
+import spoon.reflect.visitor.printer.CommentOffset;
 
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     private final String originalSourceCode;
 
+    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(Environment env, String originalSourceCode) {
         super(env);
         this.originalSourceCode = originalSourceCode;
+        String lineSeparator = detectDominantLineSeparator(originalSourceCode);
+        setLineSeparator(lineSeparator);
     }
 
     @Override
@@ -65,8 +73,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                     .writeCodeSnippet(originalCodeFragment)
                     .writeln();
         }
-        throw new IllegalStateException(
-            "Invalid source fragment range: start=" + start
+        throw new IllegalStateException("Invalid source fragment range: start=" + start
                 + ", end=" + end
                 + ", indentationStart=" + startWithIndent
                 + ", sourceLength=" + originalSourceCode.length()
@@ -74,6 +81,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     private void printTypeStructure(CtType<?> type) {
+        getPrinterTokenWriter().writeln();
         SourcePosition typePosition = type.getPosition();
 
         List<CtTypeMember> explicitTypeMembers = type.getTypeMembers().stream()
@@ -132,7 +140,37 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                 .orElseThrow(IllegalStateException::new);
 
         // TODO Check trailing comments
-        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd()).writeln();
+        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
         // TODO Check trailing indents
+    }
+
+    @Override
+    public void visitCtCompilationUnit(CtCompilationUnit compilationUnit) {
+        if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {
+            super.visitCtCompilationUnit(compilationUnit);
+        }
+        CtCompilationUnit outerCompilationUnit = this.sourceCompilationUnit;
+        try {
+            this.sourceCompilationUnit = compilationUnit;
+            int firstTypeStart = compilationUnit.getDeclaredTypes().stream()
+                    .map(CtElement::getPosition)
+                    .mapToInt(SourcePosition::getSourceStart)
+                    .min()
+                    .orElseThrow(IllegalStateException::new);
+            int typeDeclarationHeaderEnd = (firstTypeStart > 0) ? firstTypeStart - 1 : 0;
+            if (typeDeclarationHeaderEnd > 0) {
+                printOriginalFragment(0, typeDeclarationHeaderEnd);
+            }
+
+            compilationUnit.getDeclaredTypes().forEach(this::scan);
+            getElementPrinterHelper().writeComment(compilationUnit, CommentOffset.AFTER);
+        } finally {
+            this.sourceCompilationUnit = outerCompilationUnit;
+        }
+        // by convention, we add a newline at the end of the file
+        // we guard this with a check to avoid adding a newline if there is already one
+        if (!getResult().endsWith(getLineSeparator())) {
+            getPrinterTokenWriter().writeln();
+        }
     }
 }

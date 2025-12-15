@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonParser;
 import java.net.URL;
@@ -28,8 +28,8 @@ class ParseAllJava21FeaturesTest {
         // When
         @NonNull Path file = Path.of(VALID_SAMPLE_SOURCE_CODE.toURI());
 
-        FileContent fileContent = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(fileContent);
+        SrcFile srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then
@@ -58,7 +58,7 @@ class ParseAllJava21FeaturesTest {
 
         // Then
         assertThat(serializationResult).isNotNull();
-        assertThat(serializationResult.getSerializedSourceCode()).contains("SampleAllJava21FeaturesList");
+        assertThat(serializationResult.getSerializedSrcCode()).contains("SampleAllJava21FeaturesList");
         assertThat(serializationResult.getSerializationStatistic()).isNotNull();
         SerializationStatistic serializationStatistic = serializationResult.getSerializationStatistic();
         // Use withPercentage because serializator can add or remove additional new line separators

@@ -36,6 +36,48 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class MemberDescriptorTest {
 
+    private static Stream<DeclarationModifier> abstractConflicts() {
+        return Stream.of(FINAL, STATIC, NATIVE, SYNCHRONIZED);
+    }
+
+    private static Stream<MemberKind> accessApplicableKinds() {
+        return Stream.of(
+                FIELD, METHOD, CONSTRUCTOR, TYPE_CLASS, TYPE_INTERFACE, TYPE_ENUM, TYPE_RECORD, TYPE_ANNOTATION);
+    }
+
+    private static Stream<MemberKind> accessNotApplicableKinds() {
+        return Stream.of(STATIC_INIT_BLOCK, INSTANCE_INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
+    }
+
+    private static Stream<DeclarationModifier> defaultConflicts() {
+        return Stream.of(ABSTRACT, STATIC, FINAL, SYNCHRONIZED, NATIVE);
+    }
+
+    private static Stream<Arguments> kindsRequiringNonBlankName() {
+        return Stream.of(
+                Arguments.of(FIELD),
+                Arguments.of(METHOD),
+                Arguments.of(ENUM_CONSTANT),
+                Arguments.of(RECORD_COMPONENT),
+                Arguments.of(TYPE_CLASS),
+                Arguments.of(TYPE_INTERFACE),
+                Arguments.of(TYPE_ENUM),
+                Arguments.of(TYPE_RECORD),
+                Arguments.of(TYPE_ANNOTATION));
+    }
+
+    private static Stream<Arguments> kindsRequiringNullName() {
+        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(STATIC_INIT_BLOCK), Arguments.of(INSTANCE_INIT_BLOCK));
+    }
+
+    private static Stream<Arguments> noModifierCases() {
+        return Stream.of(
+                Arguments.of(STATIC_INIT_BLOCK, null, STATIC),
+                Arguments.of(INSTANCE_INIT_BLOCK, null, FINAL),
+                Arguments.of(ENUM_CONSTANT, null, STATIC),
+                Arguments.of(RECORD_COMPONENT, null, FINAL));
+    }
+
     @ParameterizedTest(name = "{0} access provided → IAE")
     @MethodSource("accessNotApplicableKinds")
     void builder_accessForbiddenAndProvided_throwsIAE(MemberKind kind) {
@@ -218,48 +260,6 @@ class MemberDescriptorTest {
         assertThat(base(STATIC_INIT_BLOCK, null, null).build().isInitializer()).isTrue();
         assertThat(mtd("x").build().isType()).isFalse();
         assertThat(mtd("x").build().isInitializer()).isFalse();
-    }
-
-    private static Stream<DeclarationModifier> abstractConflicts() {
-        return Stream.of(FINAL, STATIC, NATIVE, SYNCHRONIZED);
-    }
-
-    private static Stream<MemberKind> accessApplicableKinds() {
-        return Stream.of(
-                FIELD, METHOD, CONSTRUCTOR, TYPE_CLASS, TYPE_INTERFACE, TYPE_ENUM, TYPE_RECORD, TYPE_ANNOTATION);
-    }
-
-    private static Stream<MemberKind> accessNotApplicableKinds() {
-        return Stream.of(STATIC_INIT_BLOCK, INSTANCE_INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
-    }
-
-    private static Stream<DeclarationModifier> defaultConflicts() {
-        return Stream.of(ABSTRACT, STATIC, FINAL, SYNCHRONIZED, NATIVE);
-    }
-
-    private static Stream<Arguments> kindsRequiringNonBlankName() {
-        return Stream.of(
-                Arguments.of(FIELD),
-                Arguments.of(METHOD),
-                Arguments.of(ENUM_CONSTANT),
-                Arguments.of(RECORD_COMPONENT),
-                Arguments.of(TYPE_CLASS),
-                Arguments.of(TYPE_INTERFACE),
-                Arguments.of(TYPE_ENUM),
-                Arguments.of(TYPE_RECORD),
-                Arguments.of(TYPE_ANNOTATION));
-    }
-
-    private static Stream<Arguments> kindsRequiringNullName() {
-        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(STATIC_INIT_BLOCK), Arguments.of(INSTANCE_INIT_BLOCK));
-    }
-
-    private static Stream<Arguments> noModifierCases() {
-        return Stream.of(
-                Arguments.of(STATIC_INIT_BLOCK, null, STATIC),
-                Arguments.of(INSTANCE_INIT_BLOCK, null, FINAL),
-                Arguments.of(ENUM_CONSTANT, null, STATIC),
-                Arguments.of(RECORD_COMPONENT, null, FINAL));
     }
 
     private MemberDescriptor.MemberDescriptorBuilder base(MemberKind k, MemberAccess a, String n) {

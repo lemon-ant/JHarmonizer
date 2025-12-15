@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
@@ -19,6 +20,54 @@ public class SpoonSourcePrinterUtils {
             pos--;
         }
         return pos + 1;
+    }
+
+    @NonNull
+    @SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidReassigningLoopVariables"})
+    static String detectDominantLineSeparator(@NonNull String source) {
+        if (source.isEmpty()) {
+            return System.lineSeparator();
+        }
+
+        int crlfCount = 0;
+        int lfCount = 0;
+        int crCount = 0;
+
+        for (int index = 0; index < source.length(); index++) {
+            char currentChar = source.charAt(index);
+
+            if (currentChar == '\r') {
+                boolean hasNextChar = (index + 1) < source.length();
+                if (hasNextChar && source.charAt(index + 1) == '\n') {
+                    crlfCount++;
+                    index++; // skip '\n' in CRLF
+                } else {
+                    crCount++; // classic Mac style: CR only
+                }
+                continue;
+            }
+
+            if (currentChar == '\n') {
+                lfCount++; // Unix/macOS modern style: LF only
+            }
+        }
+
+        return selectDominantLineSeparator(crlfCount, lfCount, crCount);
+    }
+
+    private static String selectDominantLineSeparator(int crlfCount, int lfCount, int crCount) {
+        if (crlfCount == 0 && lfCount == 0 && crCount == 0) {
+            return System.lineSeparator();
+        }
+
+        // Pick the dominant one; if tie, prefer CRLF > LF > CR (can be adjusted).
+        if (crlfCount >= lfCount && crlfCount >= crCount) {
+            return "\r\n";
+        }
+        if (lfCount >= crCount) {
+            return "\n";
+        }
+        return "\r";
     }
 
     static boolean needsSeparatorAfter(CtTypeMember member) {

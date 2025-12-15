@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.files_handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.FileContent;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -45,9 +45,9 @@ class SourceFilesHandlerTest {
         Path path1 = tempDir.resolve("A.java");
         Path path2 = tempDir.resolve("B.java");
 
-        SourceFilesHandler.FileContent fc1a = new SourceFilesHandler.FileContent("x", path1);
-        SourceFilesHandler.FileContent fc1b = new SourceFilesHandler.FileContent("x", path1);
-        SourceFilesHandler.FileContent fc2 = new SourceFilesHandler.FileContent("y", path2);
+        SrcFile fc1a = new SrcFile("x", path1);
+        SrcFile fc1b = new SrcFile("x", path1);
+        SrcFile fc2 = new SrcFile("y", path2);
 
         assertThat(fc1a).isEqualTo(fc1b);
         assertThat(fc1a.hashCode()).isEqualTo(fc1b.hashCode());
@@ -71,9 +71,9 @@ class SourceFilesHandlerTest {
     @Test
     void overwrite_Unchecked_existingFile_replaceFileContent() throws IOException {
         Path sourceFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SourceFilesHandler.FileContent fileContent = new SourceFilesHandler.FileContent("new content", sourceFile);
+        SrcFile srcFile = new SrcFile("new content", sourceFile);
 
-        SourceFilesHandler.overwrite(fileContent.getPath(), fileContent.getContent());
+        SourceFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
 
         String newText = Files.readString(sourceFile);
         assertThat(newText).isEqualTo("new content");
@@ -83,9 +83,9 @@ class SourceFilesHandlerTest {
     void readFile_existingFile_returnFileContent() throws IOException {
         Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
 
-        SourceFilesHandler.FileContent content = new FileContent(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile content = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         assertThat(content.getPath()).isEqualTo(file);
-        assertThat(content.getContent()).isEqualTo("class R {}");
+        assertThat(content.getSrcCode()).isEqualTo("class R {}");
     }
 }

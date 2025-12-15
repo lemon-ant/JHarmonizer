@@ -16,6 +16,40 @@ class MemberDeclarationFlagsUtilTest {
 
     // ---- helpers (test-only), построены ТОЛЬКО на public API ----
 
+    private static int accessBit(MemberAccess access) {
+        // фиксируем kind и пустые модификаторы → разница масок = чистый access-бит
+        int base = mask(MemberKind.FIELD); // kind-only
+        int withAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                MemberKind.FIELD, access, EnumSet.noneOf(DeclarationModifier.class));
+        return withAccess ^ base;
+    }
+
+    private static int allAccessBits() {
+        int sum = 0;
+        for (MemberAccess a : MemberAccess.values()) {
+            sum |= accessBit(a);
+        }
+        return sum;
+    }
+
+    private static int mask(MemberKind kind, MemberAccess access, Set<DeclarationModifier> mods) {
+        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(kind, access, mods);
+    }
+
+    private static int mask(MemberKind kind) {
+        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                kind, null, EnumSet.noneOf(DeclarationModifier.class));
+    }
+
+    private static int modifiersBits(Set<DeclarationModifier> modifiers) {
+        // фиксируем kind и null-access; разница = чистые modifier-биты
+        int base = mask(MemberKind.FIELD);
+        int withMods = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, modifiers);
+        return withMods ^ base;
+    }
+
+    // -------------------- tests --------------------
+
     @Test
     @DisplayName("featureMaskContainsAllRequiredDeclarationModifiers: false when any required bit is missing")
     void containsAllRequiredMods_false() {
@@ -115,8 +149,6 @@ class MemberDeclarationFlagsUtilTest {
         assertThat(combined & typeBit).isEqualTo(typeBit);
     }
 
-    // -------------------- tests --------------------
-
     @Test
     @DisplayName("DeclarationModifier encodes to subset bits; order independent")
     void modifiers_subset_and_order_independent() {
@@ -183,37 +215,5 @@ class MemberDeclarationFlagsUtilTest {
                 .as("access vs modifiers must not overlap")
                 .isZero();
         assertThat(anyKind & anyMods).as("kind vs modifiers must not overlap").isZero();
-    }
-
-    private static int accessBit(MemberAccess access) {
-        // фиксируем kind и пустые модификаторы → разница масок = чистый access-бит
-        int base = mask(MemberKind.FIELD); // kind-only
-        int withAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                MemberKind.FIELD, access, EnumSet.noneOf(DeclarationModifier.class));
-        return withAccess ^ base;
-    }
-
-    private static int allAccessBits() {
-        int sum = 0;
-        for (MemberAccess a : MemberAccess.values()) {
-            sum |= accessBit(a);
-        }
-        return sum;
-    }
-
-    private static int mask(MemberKind kind, MemberAccess access, Set<DeclarationModifier> mods) {
-        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(kind, access, mods);
-    }
-
-    private static int mask(MemberKind kind) {
-        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                kind, null, EnumSet.noneOf(DeclarationModifier.class));
-    }
-
-    private static int modifiersBits(Set<DeclarationModifier> modifiers) {
-        // фиксируем kind и null-access; разница = чистые modifier-биты
-        int base = mask(MemberKind.FIELD);
-        int withMods = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, modifiers);
-        return withMods ^ base;
     }
 }

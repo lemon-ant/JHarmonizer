@@ -54,6 +54,11 @@ public enum DeclarationModifier {
         this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
     }
 
+    private static void conflict(DeclarationModifier a, DeclarationModifier b) {
+        a.conflicts.add(b);
+        b.conflicts.add(a);
+    }
+
     /**
      * Global conflict check. Category is ignored intentionally:
      * applicability per category is validated separately before conflicts are checked.
@@ -64,10 +69,5 @@ public enum DeclarationModifier {
 
     boolean isApplicableTo(TargetCategory targetCategory) {
         return applicableTargets.contains(targetCategory);
-    }
-
-    private static void conflict(DeclarationModifier a, DeclarationModifier b) {
-        a.conflicts.add(b);
-        b.conflicts.add(a);
     }
 }
