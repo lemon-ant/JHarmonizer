@@ -100,6 +100,10 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
                 (sameGroupOptions != null) ? sameGroupOptions : OptionsWithinSameGroup.keepOriginalThenByName();
     }
 
+    private static <T> Set<T> safeSet(Set<T> maybeNull) {
+        return (maybeNull == null) ? Collections.emptySet() : maybeNull;
+    }
+
     @Override
     public int compare(Member left, Member right) {
         // 0) Reflexivity: identical object -> 0
@@ -137,10 +141,6 @@ public final class MirrorAwareMemberComparator implements Comparator<Member> {
         if (actualPositionComparison != 0) return actualPositionComparison;
 
         return left.id().compareTo(right.id());
-    }
-
-    private static <T> Set<T> safeSet(Set<T> maybeNull) {
-        return (maybeNull == null) ? Collections.emptySet() : maybeNull;
     }
 
     // ======================================================================
