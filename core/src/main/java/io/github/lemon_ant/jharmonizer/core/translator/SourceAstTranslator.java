@@ -32,8 +32,9 @@ public final class SourceAstTranslator {
         return new ParsingResult(statistic, spoonASTModel);
     }
 
+    @SuppressWarnings("PMD.GuardLogStatement")
     public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
-        log.debug("Serializing");
+        log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
         TimedResult<String> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());

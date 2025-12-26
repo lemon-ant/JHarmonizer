@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -11,6 +10,9 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -59,7 +61,7 @@ public final class SourceProcessor {
      *
      * @param paths List of paths to source files to be processed.
      */
-    public void processSources(
+    public AggregatedProcessingStatistic processSources(
             Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs, FlowType flowType) {
         IFlow flow =
                 // TODO Move it into the flow factory
@@ -82,5 +84,6 @@ public final class SourceProcessor {
                 .collect(SourceProcessingStats.statsCollector());
 
         log.info(aggregatedProcessingStatistic.toString());
+        return aggregatedProcessingStatistic;
     }
 }

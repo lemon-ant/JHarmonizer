@@ -1,8 +1,12 @@
-package io.github.lemon_ant.jharmonizer.core;
+package io.github.lemon_ant.jharmonizer.core.processing_stat;
+
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatBytes;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatHmsMillisFromNanos;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatSecondsMicrosecondsFromNanos;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
@@ -28,6 +32,7 @@ public class SourceProcessingStats {
     // Aggregated statistics after full parse run
     @Value
     public static class AggregatedProcessingStatistic {
+        public static final int MAX_PATH_LENGTH = 100;
         long fileCount;
         long totalSize;
         long totalProcessingTimeNanos;
@@ -41,30 +46,30 @@ public class SourceProcessingStats {
         @Override
         public String toString() {
             return String.format(
-                    "Files processed: %,d%n" + "Total size: %,d bytes%n" + "Average size: %,d bytes%n"
-                            + "Min size: %,d byte%s%n"
-                            + "Max size: %,d bytes%s%n"
-                            + "Total processing time: %,d ms%n"
-                            + "Average processing time: %,d ms/file",
+                    "Harmonization result:%nFiles processed: %,d%n" + "Total size: %s%n" + "Average size: %s%n"
+                            + "Min size: %s %s%n"
+                            + "Max size: %s %s%n"
+                            + "Total processing time: %s%n"
+                            + "Average processing time: %s s/file",
                     fileCount,
-                    totalSize,
-                    calculateAverageSize(),
-                    Optional.ofNullable(smallestFile)
+                    formatBytes(totalSize),
+                    formatBytes(calculateAverageSize()),
+                    formatBytes(Optional.ofNullable(smallestFile)
                             .map(FileProcessingStatistic::getSize)
-                            .orElse(0L),
+                            .orElse(0L)),
                     Optional.ofNullable(smallestFile)
                             .map(FileProcessingStatistic::getPath)
-                            .map(path -> " (" + path + ")")
+                            .map(path -> " (" + abbreviatePathForDisplay(path, MAX_PATH_LENGTH) + ")")
                             .orElse(""),
-                    Optional.ofNullable(largestFile)
+                    formatBytes(Optional.ofNullable(largestFile)
                             .map(FileProcessingStatistic::getSize)
-                            .orElse(0L),
+                            .orElse(0L)),
                     Optional.ofNullable(largestFile)
                             .map(FileProcessingStatistic::getPath)
-                            .map(path -> " (" + path + ")")
+                            .map(path -> " (" + abbreviatePathForDisplay(path, MAX_PATH_LENGTH) + ")")
                             .orElse(""),
-                    TimeUnit.NANOSECONDS.toMillis(totalProcessingTimeNanos),
-                    TimeUnit.NANOSECONDS.toMillis(calculateAverageProcessingTime()));
+                    formatHmsMillisFromNanos(totalProcessingTimeNanos),
+                    formatSecondsMicrosecondsFromNanos(calculateAverageProcessingTime()));
         }
 
         // Average time spent on processing a file
@@ -80,7 +85,7 @@ public class SourceProcessingStats {
 
     // Statistics container for collector
     @NoArgsConstructor
-    class StatsContainer {
+    public class StatsContainer {
         private final LongAdder count = new LongAdder();
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();

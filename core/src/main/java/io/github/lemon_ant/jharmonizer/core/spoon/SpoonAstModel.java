@@ -5,6 +5,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -35,6 +36,9 @@ public class SpoonAstModel {
 
     @NonNull
     Map<SourcePosition, Integer> originalElements2OrderIndices;
+
+    @NonNull
+    Path path;
 
     @NonNull
     Supplier<String> serializedSourceCode;

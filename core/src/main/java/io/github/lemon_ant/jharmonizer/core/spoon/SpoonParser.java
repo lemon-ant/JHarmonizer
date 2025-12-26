@@ -33,10 +33,10 @@ public class SpoonParser {
                 .setPrettyPrinterCreator(
                         () -> new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode));
 
-        return buildSpoonAstModel(launcher);
+        return buildSpoonAstModel(originalSourceFile, launcher);
     }
 
-    private static SpoonAstModel buildSpoonAstModel(@NonNull Launcher launcher) {
+    private static SpoonAstModel buildSpoonAstModel(@NonNull Path path, @NonNull Launcher launcher) {
         var compilationUnit = extractCompilationUnit(launcher);
         var mainType = SpoonUtilities.findMainType(compilationUnit);
         Supplier<String> serializedSourceCode =
@@ -46,6 +46,7 @@ public class SpoonParser {
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .serializedSourceCode(serializedSourceCode)
+                .path(path)
                 .build();
     }
 
