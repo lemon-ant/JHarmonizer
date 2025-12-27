@@ -1,14 +1,15 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-final class PathDisplayFormatUtil {
+class PathDisplayFormatUtil {
 
     private static final String ELLIPSIS = "…";
+    private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
     @SuppressWarnings("PMD.CyclomaticComplexity")
     static String abbreviatePathForDisplay(Path path, int maxTotalLength) {
@@ -24,53 +25,46 @@ final class PathDisplayFormatUtil {
             return fullPathString;
         }
 
+        String fileSystemSeparator = path.getFileSystem().getSeparator();
+        int abbreviationPrefixLength = ELLIPSIS.length() + fileSystemSeparator.length();
+        int minJavaPathLength = abbreviationPrefixLength + MINIMAL_JAVA_FILE_NAME_LENGTH;
+
+        if (maxTotalLength <= minJavaPathLength) {
+            throw new IllegalArgumentException("maxTotalLength is too small to render an abbreviated Java path. "
+                    + "It must be greater than " + minJavaPathLength
+                    + " (abbreviation prefix " + abbreviationPrefixLength
+                    + " + minimal file name length " + MINIMAL_JAVA_FILE_NAME_LENGTH
+                    + "), but was: " + maxTotalLength);
+        }
+
         int nameElementCount = path.getNameCount();
         if (nameElementCount == 0) {
-            // Root-only path like "C:\" or "/"
+            // Root-only path like "C:\" or "/": keep the rightmost part within limit.
             return fullPathString;
         }
 
-        String fileSystemSeparator = path.getFileSystem().getSeparator();
-        int abbreviationPrefixLength = ELLIPSIS.length() + fileSystemSeparator.length(); // "…\"
         int availableTailLength = maxTotalLength - abbreviationPrefixLength;
+        String fileName = extractFileName(path);
 
-        if (availableTailLength <= 0) {
-            // No room for tail segments. Show only ".../<fileName.ext>" (shorten file name if needed).
-            String fileName = extractFileName(path);
-            return ELLIPSIS + fileSystemSeparator + fileName;
-        }
+        Deque<String> selectedTailElements = new ArrayDeque<>();
+        selectedTailElements.addFirst(fileName);
 
-        List<String> selectedTailElements = new ArrayList<>();
-        int selectedTailLength = 0;
+        int selectedTailLength = fileName.length();
+        int separatorLength = fileSystemSeparator.length();
 
-        for (int nameIndex = nameElementCount - 1; nameIndex >= 0; nameIndex--) {
+        // Add as many parent segments as fit.
+        for (int nameIndex = nameElementCount - 2; nameIndex >= 0; nameIndex--) {
             String candidateElement = path.getName(nameIndex).toString();
-            int separatorCost = selectedTailElements.isEmpty() ? 0 : fileSystemSeparator.length();
-            int candidateCost = separatorCost + candidateElement.length();
-
+            int candidateCost = separatorLength + candidateElement.length();
             if (selectedTailLength + candidateCost > availableTailLength) {
                 break;
             }
-
             selectedTailElements.addFirst(candidateElement);
             selectedTailLength += candidateCost;
         }
 
-        if (selectedTailElements.isEmpty()) {
-            String fileName = extractFileName(path);
-            return ELLIPSIS + fileSystemSeparator + fileName;
-        }
-
-        String joinedTail = String.join(fileSystemSeparator, selectedTailElements);
-        String abbreviatedPath = ELLIPSIS + fileSystemSeparator + joinedTail;
-
-        if (abbreviatedPath.length() <= maxTotalLength) {
-            return abbreviatedPath;
-        }
-
-        // Safety net (should be rare): keep the rightmost part within limit.
-        int keepLength = Math.max(0, maxTotalLength - ELLIPSIS.length());
-        return ELLIPSIS + abbreviatedPath.substring(Math.max(0, abbreviatedPath.length() - keepLength));
+        String abbreviatedTail = String.join(fileSystemSeparator, selectedTailElements);
+        return ELLIPSIS + fileSystemSeparator + abbreviatedTail;
     }
 
     private static String extractFileName(Path pathToFile) {
