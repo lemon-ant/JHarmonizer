@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.processing_stat;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -11,15 +12,8 @@ class PathDisplayFormatUtil {
     private static final String ELLIPSIS = "…";
     private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
-    @SuppressWarnings("PMD.CyclomaticComplexity")
-    static String abbreviatePathForDisplay(Path path, int maxTotalLength) {
-        if (path == null) {
-            return "";
-        }
-        if (maxTotalLength <= 0) {
-            throw new IllegalArgumentException("maxTotalLength must be positive, but was: " + maxTotalLength);
-        }
-
+    @NonNull
+    static String abbreviatePathForDisplay(@NonNull Path path, int maxTotalLength) {
         String fullPathString = path.toString();
         if (fullPathString.length() <= maxTotalLength) {
             return fullPathString;
@@ -27,19 +21,13 @@ class PathDisplayFormatUtil {
 
         String fileSystemSeparator = path.getFileSystem().getSeparator();
         int abbreviationPrefixLength = ELLIPSIS.length() + fileSystemSeparator.length();
-        int minJavaPathLength = abbreviationPrefixLength + MINIMAL_JAVA_FILE_NAME_LENGTH;
 
-        if (maxTotalLength <= minJavaPathLength) {
-            throw new IllegalArgumentException("maxTotalLength is too small to render an abbreviated Java path. "
-                    + "It must be greater than " + minJavaPathLength
-                    + " (abbreviation prefix " + abbreviationPrefixLength
-                    + " + minimal file name length " + MINIMAL_JAVA_FILE_NAME_LENGTH
-                    + "), but was: " + maxTotalLength);
-        }
+        validateMaxTotalLength(maxTotalLength, abbreviationPrefixLength);
 
         int nameElementCount = path.getNameCount();
         if (nameElementCount == 0) {
-            // Root-only path like "C:\" or "/": keep the rightmost part within limit.
+            // Root-only path like "C:\" or "/".
+            // Current behavior: return as-is even if it exceeds maxTotalLength.
             return fullPathString;
         }
 
@@ -63,6 +51,23 @@ class PathDisplayFormatUtil {
             selectedTailLength += candidateCost;
         }
 
+        return renderAbbreviatedPath(fileSystemSeparator, selectedTailElements);
+    }
+
+    private static void validateMaxTotalLength(int maxTotalLength, int abbreviationPrefixLength) {
+
+        int minJavaPathLength = abbreviationPrefixLength + PathDisplayFormatUtil.MINIMAL_JAVA_FILE_NAME_LENGTH;
+
+        if (maxTotalLength <= minJavaPathLength) {
+            throw new IllegalArgumentException("maxTotalLength is too small to render an abbreviated Java path. "
+                    + "It must be greater than " + minJavaPathLength
+                    + " (abbreviation prefix " + abbreviationPrefixLength
+                    + " + minimal file name length " + PathDisplayFormatUtil.MINIMAL_JAVA_FILE_NAME_LENGTH
+                    + "), but was: " + maxTotalLength);
+        }
+    }
+
+    private static String renderAbbreviatedPath(String fileSystemSeparator, Deque<String> selectedTailElements) {
         String abbreviatedTail = String.join(fileSystemSeparator, selectedTailElements);
         return ELLIPSIS + fileSystemSeparator + abbreviatedTail;
     }
