@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static java.util.Collections.unmodifiableList;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
@@ -16,7 +15,6 @@ import lombok.Value;
  * Top-level roots are checked top-to-bottom; the first matching root captures the member and DFS continues.
  */
 @Value
-@SuppressFBWarnings
 public class CompiledConfig {
     /**
      * Cohesive formatting definition (preferred API).
@@ -55,11 +53,9 @@ public class CompiledConfig {
     }
 
     @NonNull
-    public Optional<CompiledMemberGroup> matchGroup(@NonNull MemberDescriptor descriptor) {
-        for (CompiledMemberGroup typeRoot : rootMemberGroups) {
-            Optional<CompiledMemberGroup> hit = typeRoot.classify(descriptor);
-            if (hit.isPresent()) return hit;
-        }
-        return Optional.empty();
+    public Optional<CompiledMemberGroup> matchRootGroup(@NonNull MemberDescriptor descriptor) {
+        return rootMemberGroups.stream()
+                .filter(typeRoot -> typeRoot.getSelectorBlock().match(descriptor))
+                .findFirst();
     }
 }

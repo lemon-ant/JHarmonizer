@@ -1,19 +1,19 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 /**
  * A group node in the classification tree. Children are ordered. Includes/Excludes carry OR semantics across rule lines.
  */
 @Value
-// TODO Remove builder
-@Builder
 public class UnifiedMemberGroup {
 
     /**
@@ -21,51 +21,76 @@ public class UnifiedMemberGroup {
      */
     @Nullable
     String groupName;
+
+    /**
+     * Keep getter/setter pairs together where applicable.
+     */
+    @Nullable
+    Boolean keepAccessorsTogether;
+
     /**
      * Ordered list of child groups.
      */
     @NonNull
-    @Singular
     List<UnifiedMemberGroup> memberSubGroups;
+
     /**
      * Selectors for acceptance logic inside this node.
      */
     @NonNull
     UnifiedMemberGroupSelectorBlock selectorBlock;
+
     /**
      * Separator directive propagated from vendor config and used at the rendering stage.
      */
     @NonNull
     UnifiedSeparator separator;
+
     /**
-     * Sorting behavior hints to be applied within this group.
+     * Explicit internal members ordering for this group.
      */
     @NonNull
-    UnifiedSortingBehavior sortingBehavior;
+    List<UnifiedSortKey> sortKeys;
+
+    @Builder
+    private UnifiedMemberGroup(
+            @Nullable String groupName,
+            @Nullable Boolean keepAccessorsTogether,
+            @NonNull @Singular List<@NonNull UnifiedMemberGroup> memberSubGroups,
+            @NonNull UnifiedMemberGroupSelectorBlock selectorBlock,
+            @NonNull UnifiedSeparator separator,
+            @NonNull @Singular List<@NonNull UnifiedSortKey> sortKeys) {
+        this.groupName = groupName;
+        this.keepAccessorsTogether = keepAccessorsTogether;
+        this.memberSubGroups = memberSubGroups;
+        this.selectorBlock = selectorBlock;
+        this.separator = separator;
+        Validate.notEmpty(sortKeys, "Sort keys collection cannot be empty");
+        this.sortKeys = Collections.unmodifiableList(sortKeys);
+    }
 
     @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof UnifiedMemberGroup that)) {
+    public boolean equals(Object o) {
+        if (!(o instanceof UnifiedMemberGroup that)) {
             return false;
         }
 
         return Objects.equals(groupName, that.groupName)
-                && selectorBlock.equals(that.selectorBlock)
-                && sortingBehavior.equals(that.sortingBehavior)
+                && Objects.equals(keepAccessorsTogether, that.keepAccessorsTogether)
                 && memberSubGroups.equals(that.memberSubGroups)
-                && Objects.equals(separator, that.separator);
+                && selectorBlock.equals(that.selectorBlock)
+                && separator == that.separator
+                && sortKeys.equals(that.sortKeys);
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hashCode(groupName);
-        result = 31 * result + selectorBlock.hashCode();
-        result = 31 * result + sortingBehavior.hashCode();
+        result = 31 * result + Objects.hashCode(keepAccessorsTogether);
         result = 31 * result + memberSubGroups.hashCode();
-        result = 31 * result + Objects.hashCode(separator);
+        result = 31 * result + selectorBlock.hashCode();
+        result = 31 * result + separator.hashCode();
+        result = 31 * result + sortKeys.hashCode();
         return result;
     }
 }

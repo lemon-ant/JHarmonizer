@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-enum TargetCategory {
+public enum TargetCategory {
     FIELD(true),
     METHOD(true),
     CONSTRUCTOR(true),

@@ -72,7 +72,6 @@ class MemberDescriptorTest {
 
     private static Stream<Arguments> noModifierCases() {
         return Stream.of(
-                Arguments.of(STATIC_INIT_BLOCK, null, STATIC),
                 Arguments.of(INSTANCE_INIT_BLOCK, null, FINAL),
                 Arguments.of(ENUM_CONSTANT, null, STATIC),
                 Arguments.of(RECORD_COMPONENT, null, FINAL));
@@ -171,7 +170,7 @@ class MemberDescriptorTest {
                         .declarationModifier(mod)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Illegal modifier for " + kind);
+                .hasMessageContaining("Illegal modifier", kind);
     }
 
     @ParameterizedTest(name = "{0} with blank name → IAE")
@@ -180,7 +179,7 @@ class MemberDescriptorTest {
         MemberAccess access = kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null;
         assertThatThrownBy(() -> base(kind, access, "  ").build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Non-initializer elements must have a non-blank name");
+                .hasMessageContaining("non-initializer", "must have", "a non-blank name");
     }
 
     @ParameterizedTest(name = "{0} with name → IAE")

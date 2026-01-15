@@ -20,7 +20,6 @@ import spoon.reflect.declaration.CtType;
 @Value
 // TODO Remove builder
 @Builder(access = PACKAGE)
-@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 @AllArgsConstructor(access = PRIVATE)
 public class SpoonAstModel {
 

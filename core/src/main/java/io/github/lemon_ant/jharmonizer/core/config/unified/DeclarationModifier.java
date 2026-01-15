@@ -12,7 +12,7 @@ import lombok.NonNull;
  * Pairwise conflicts are declared globally (category-agnostic) and checked.
  */
 public enum DeclarationModifier {
-    STATIC(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
+    STATIC(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE, TargetCategory.INIT_BLOCK)),
     FINAL(EnumSet.of(TargetCategory.FIELD, TargetCategory.METHOD, TargetCategory.TYPE)),
     ABSTRACT(EnumSet.of(TargetCategory.METHOD, TargetCategory.TYPE)),
     DEFAULT(EnumSet.of(TargetCategory.METHOD)), // interface default methods
@@ -28,7 +28,6 @@ public enum DeclarationModifier {
     static {
         // METHOD-level pairs (but safe globally because of applicability filtering):
         conflict(ABSTRACT, FINAL);
-        conflict(ABSTRACT, STATIC);
         conflict(ABSTRACT, NATIVE);
         conflict(ABSTRACT, SYNCHRONIZED);
 

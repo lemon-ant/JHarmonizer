@@ -10,10 +10,13 @@
   },
   "rootMemberGroups" : [ {
     "groupName" : "Test Classes",
+    "keepAccessorsTogether" : false,
     "memberSubGroups" : [ {
       "groupName" : "JUnit Fields",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ {
         "groupName" : "JUnit Constants",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -32,12 +35,10 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "JUnit Static fields",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -50,10 +51,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -66,14 +64,13 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "JUnit Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ {
         "groupName" : "JUnit Setup Methods",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -98,12 +95,10 @@
           } ]
         },
         "separator" : "HEADER",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "PRESERVE" ]
-        }
+        "sortKeys" : [ "PRESERVE" ]
       }, {
         "groupName" : "JUnit Test Methods",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -119,12 +114,10 @@
           } ]
         },
         "separator" : "HEADER",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "ALPHA" ]
-        }
+        "sortKeys" : [ "ALPHA" ]
       }, {
         "groupName" : "JUnit Teardown Methods",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -149,12 +142,10 @@
           } ]
         },
         "separator" : "HEADER",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "PRESERVE" ]
-        }
+        "sortKeys" : [ "PRESERVE" ]
       }, {
         "groupName" : "Utility Methods",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -167,10 +158,7 @@
           } ]
         },
         "separator" : "HEADER",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "ALPHA", "SIGNATURE" ]
-        }
+        "sortKeys" : [ "ALPHA", "SIGNATURE" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -183,12 +171,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "JUnit Test Configuration",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -204,10 +190,7 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "ALPHA" ]
-      }
+      "sortKeys" : [ "ALPHA" ]
     } ],
     "selectorBlock" : {
       "excludes" : [ ],
@@ -250,14 +233,13 @@
       } ]
     },
     "separator" : "NONE",
-    "sortingBehavior" : {
-      "keepAccessorsTogether" : false,
-      "unifiedSortKeys" : [ "ALPHA", "SIGNATURE" ]
-    }
+    "sortKeys" : [ "ALPHA", "SIGNATURE" ]
   }, {
     "groupName" : "DTO and Entities",
+    "keepAccessorsTogether" : false,
     "memberSubGroups" : [ {
       "groupName" : "Serializable UID",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -291,16 +273,16 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Fields",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ {
         "groupName" : "Constants",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ {
           "groupName" : "Public Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -313,12 +295,10 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         }, {
           "groupName" : "Protected Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -331,12 +311,10 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         }, {
           "groupName" : "Package-Private Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -349,12 +327,10 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         }, {
           "groupName" : "Private Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -367,10 +343,7 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -389,12 +362,10 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Static Fields",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -407,12 +378,10 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Final Instance Fields",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -425,10 +394,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -441,12 +407,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Static Initializer Blocks",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -465,12 +429,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Static Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -489,12 +451,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Instance Initializer Blocks",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -507,12 +467,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Constructors",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -525,12 +483,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Accessor Methods",
+      "keepAccessorsTogether" : true,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -552,12 +508,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : true,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Instance Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ {
@@ -606,12 +560,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Basic Object Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -654,10 +606,7 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     } ],
     "selectorBlock" : {
       "excludes" : [ ],
@@ -745,14 +694,13 @@
       } ]
     },
     "separator" : "NONE",
-    "sortingBehavior" : {
-      "keepAccessorsTogether" : false,
-      "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-    }
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
   }, {
     "groupName" : "Default Rule",
+    "keepAccessorsTogether" : false,
     "memberSubGroups" : [ {
       "groupName" : "Serializable UID",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -786,12 +734,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Logger",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -807,16 +753,16 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Fields",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ {
         "groupName" : "Constants",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ {
           "groupName" : "Public Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -829,12 +775,10 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         }, {
           "groupName" : "Protected Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -847,12 +791,10 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         }, {
           "groupName" : "Package-Private Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -865,12 +807,10 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         }, {
           "groupName" : "Private Constants",
+          "keepAccessorsTogether" : false,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
             "excludes" : [ ],
@@ -883,10 +823,7 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "sortingBehavior" : {
-            "keepAccessorsTogether" : false,
-            "unifiedSortKeys" : [ "ALPHA" ]
-          }
+          "sortKeys" : [ "ALPHA" ]
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -905,12 +842,10 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Static Fields",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -923,12 +858,10 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Final Instance Fields",
+        "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -941,10 +874,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "sortingBehavior" : {
-          "keepAccessorsTogether" : false,
-          "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-        }
+        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -957,12 +887,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Static Initializer Blocks",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -981,12 +909,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Static Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1005,12 +931,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Instance Initializer Blocks",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1023,12 +947,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Constructors",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1041,12 +963,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Instance Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ {
@@ -1095,12 +1015,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-      }
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
     }, {
       "groupName" : "Basic Object Methods",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1143,12 +1061,10 @@
         } ]
       },
       "separator" : "NONE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "PRESERVE" ]
-      }
+      "sortKeys" : [ "PRESERVE" ]
     }, {
       "groupName" : "Classes & Records",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1167,12 +1083,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "ALPHA" ]
-      }
+      "sortKeys" : [ "ALPHA" ]
     }, {
       "groupName" : "Interfaces",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1185,12 +1099,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "ALPHA" ]
-      }
+      "sortKeys" : [ "ALPHA" ]
     }, {
       "groupName" : "Enums",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1203,12 +1115,10 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "ALPHA" ]
-      }
+      "sortKeys" : [ "ALPHA" ]
     }, {
       "groupName" : "Annotations",
+      "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1221,10 +1131,7 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "sortingBehavior" : {
-        "keepAccessorsTogether" : false,
-        "unifiedSortKeys" : [ "ALPHA" ]
-      }
+      "sortKeys" : [ "ALPHA" ]
     } ],
     "selectorBlock" : {
       "excludes" : [ ],
@@ -1240,10 +1147,7 @@
       } ]
     },
     "separator" : "NONE",
-    "sortingBehavior" : {
-      "keepAccessorsTogether" : false,
-      "unifiedSortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
-    }
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
   } ],
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,

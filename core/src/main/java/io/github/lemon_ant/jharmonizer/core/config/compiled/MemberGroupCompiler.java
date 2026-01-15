@@ -1,12 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupSortingBehavior.SortKey;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,7 +22,7 @@ class MemberGroupCompiler {
         int currentIndex = 0;
         List<CompiledMemberGroup> compiledRoots = new ArrayList<>(unifiedRoots.size());
         for (UnifiedMemberGroup unifiedRoot : unifiedRoots) {
-            Pair<CompiledMemberGroup, Integer> rootResult = compileGroupRecursively(unifiedRoot, currentIndex);
+            Pair<CompiledMemberGroup, Integer> rootResult = compileGroupRecursively(unifiedRoot, currentIndex, false);
             compiledRoots.add(rootResult.getLeft());
             currentIndex = rootResult.getRight();
         }
@@ -38,14 +37,17 @@ class MemberGroupCompiler {
      */
     @NonNull
     private static Pair<CompiledMemberGroup, Integer> compileGroupRecursively(
-            UnifiedMemberGroup unifiedGroup, int startIndex) {
+            UnifiedMemberGroup unifiedGroup, int startIndex, boolean inheritedKeepAccessorsTogether) {
         int runningIndex = startIndex;
 
         // 1) Build children first (DFS), threading the index forward
         List<CompiledMemberGroup> compiledChildren =
                 new ArrayList<>(unifiedGroup.getMemberSubGroups().size());
+        boolean keepAccessorsTogether =
+                Optional.ofNullable(unifiedGroup.getKeepAccessorsTogether()).orElse(inheritedKeepAccessorsTogether);
         for (UnifiedMemberGroup unifiedChild : unifiedGroup.getMemberSubGroups()) {
-            Pair<CompiledMemberGroup, Integer> childResult = compileGroupRecursively(unifiedChild, runningIndex);
+            Pair<CompiledMemberGroup, Integer> childResult =
+                    compileGroupRecursively(unifiedChild, runningIndex, keepAccessorsTogether);
             compiledChildren.add(childResult.getLeft());
             runningIndex = childResult.getRight(); // advance by everything created inside the child
         }
@@ -53,8 +55,7 @@ class MemberGroupCompiler {
         // 2) Compile selector/sorting for the current node (whatever your project uses)
         CompiledMemberGroupSelectorBlock compiledMemberGroupSelectorBlock =
                 compileSelectorBlock(unifiedGroup.getSelectorBlock());
-        CompiledMemberGroupSortingBehavior compiledSortingBehavior =
-                compileSortingBehavior(unifiedGroup.getSortingBehavior());
+        SortKey sortKey = mapSortKeys(unifiedGroup.getSortKeys());
 
         // 3) Assign post-order index to THIS node and advance index
         int assignedPostOrderIndex = runningIndex;
@@ -64,7 +65,8 @@ class MemberGroupCompiler {
         CompiledMemberGroup compiledCurrentGroup = CompiledMemberGroup.builder()
                 .name(unifiedGroup.getGroupName())
                 .selectorBlock(compiledMemberGroupSelectorBlock)
-                .groupSortingBehavior(compiledSortingBehavior)
+                .sortKey(sortKey)
+                .keepAccessorsTogether(keepAccessorsTogether)
                 .compiledSubGroups(compiledChildren)
                 .orderIndex(assignedPostOrderIndex)
                 .separator(unifiedGroup.getSeparator())
@@ -88,19 +90,8 @@ class MemberGroupCompiler {
 
     // TODO Complete model and mapper
     @NonNull
-    private static CompiledMemberGroupSortingBehavior compileSortingBehavior(
-            UnifiedSortingBehavior unifiedSortingBehavior) {
-        SortKey sortKey = mapSortKeys(unifiedSortingBehavior.getUnifiedSortKeys());
-        boolean keepAccessorsTogether = unifiedSortingBehavior.isKeepAccessorsTogether();
-        // Separator handling can be added to Compiled model later; keep a placeholder string for now (null ==
-        // unspecified).
-        return new CompiledMemberGroupSortingBehavior(keepAccessorsTogether, sortKey);
-    }
-
-    // TODO Complete model and mapper
-    @NonNull
     @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
-    private static SortKey mapSortKeys(List<UnifiedSortingBehavior.UnifiedSortKey> unifiedSortKeys) {
+    private static SortKey mapSortKeys(List<UnifiedSortKey> unifiedSortKeys) {
         // We currently support a single Compiled sort key knob; pick the first meaningful item.
         for (UnifiedSortKey key : unifiedSortKeys) {
             return switch (key) {

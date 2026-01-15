@@ -9,7 +9,9 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.Singular;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Tree node with precompiled include/exclude blocks and children.
@@ -20,8 +22,8 @@ public class CompiledMemberGroup {
     @NonNull
     List<CompiledMemberGroup> compiledSubGroups; // immutable, ordered
 
-    @NonNull
-    CompiledMemberGroupSortingBehavior groupSortingBehavior;
+    // TODO How to compile it???
+    boolean keepAccessorsTogether;
 
     @Nullable
     String name;
@@ -34,53 +36,68 @@ public class CompiledMemberGroup {
     @NonNull
     UnifiedSeparator separator;
 
+    @NonNull
+    @Singular
+    // TODO How to compile it???
+    List<@NonNull SortKey> sortKeys;
+
     @Builder
-    CompiledMemberGroup(
-            @Nullable String name,
-            int orderIndex,
-            @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
-            @NonNull CompiledMemberGroupSortingBehavior groupSortingBehavior,
+    private CompiledMemberGroup(
             @NonNull List<CompiledMemberGroup> compiledSubGroups,
-            @NonNull UnifiedSeparator separator) {
-        this.name = name;
-        this.orderIndex = orderIndex;
-        this.selectorBlock = selectorBlock;
-        this.groupSortingBehavior = groupSortingBehavior;
+            boolean keepAccessorsTogether,
+            int orderIndex,
+            @Nullable String name,
+            @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
+            @NonNull UnifiedSeparator separator,
+            @NonNull @Singular List<@NonNull SortKey> sortKeys) {
         this.compiledSubGroups = Collections.unmodifiableList(compiledSubGroups);
+        this.keepAccessorsTogether = keepAccessorsTogether;
+
+        this.orderIndex = orderIndex;
+        this.name = name;
+        this.selectorBlock = selectorBlock;
+
         this.separator = separator;
+        Validate.notEmpty(sortKeys, "Sort keys collection cannot be empty");
+        this.sortKeys = Collections.unmodifiableList(sortKeys);
     }
 
-    public Optional<CompiledMemberGroup> classify(@NonNull MemberDescriptor descriptor) {
+    public Optional<CompiledMemberGroup> classifyRecursively(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();
         }
-        for (CompiledMemberGroup child : compiledSubGroups) {
-            Optional<CompiledMemberGroup> hit = child.classify(descriptor);
-            if (hit.isPresent()) {
-                return hit;
-            }
-        }
-        return Optional.of(this); // fallback to parent bucket
+
+        return compiledSubGroups.stream()
+                .map(child -> child.classifyRecursively(descriptor))
+                .flatMap(Optional::stream)
+                .findFirst()
+                .or(() -> Optional.of(this)); // fallback to parent bucket
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof CompiledMemberGroup that)) return false;
+        if (!(o instanceof CompiledMemberGroup that)) {
+            return false;
+        }
 
-        return orderIndex == that.orderIndex
+        return keepAccessorsTogether == that.keepAccessorsTogether
+                && orderIndex == that.orderIndex
+                && compiledSubGroups.equals(that.compiledSubGroups)
                 && Objects.equals(name, that.name)
                 && selectorBlock.equals(that.selectorBlock)
-                && groupSortingBehavior.equals(that.groupSortingBehavior)
-                && compiledSubGroups.equals(that.compiledSubGroups);
+                && separator == that.separator
+                && sortKeys.equals(that.sortKeys);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(name);
+        int result = compiledSubGroups.hashCode();
+        result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
+        result = 31 * result + Objects.hashCode(name);
         result = 31 * result + orderIndex;
         result = 31 * result + selectorBlock.hashCode();
-        result = 31 * result + groupSortingBehavior.hashCode();
-        result = 31 * result + compiledSubGroups.hashCode();
+        result = 31 * result + separator.hashCode();
+        result = 31 * result + sortKeys.hashCode();
         return result;
     }
 }

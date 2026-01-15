@@ -65,20 +65,24 @@ public class MemberDescriptor {
             @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
             @NonNull @Singular Set<@NonNull String> annotationQualifiedNames) {
 
-        this.name = validateAndNormalizeName(name, memberKind);
+        this.name = validateAndNormalizeName(
+                name, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
+
+        String validationContext = formatValidationContext(
+                name, this.name, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
 
         // --- access invariants
-        validateAccessForMemberKind(memberKind, memberAccess);
+        validateAccessForMemberKind(memberKind, memberAccess, validationContext);
 
         // --- modifier legality checks (via TargetCategory + conflicts)
-        validateModifiers(memberKind, memberAccess, declarationModifiers);
+        validateModifiers(memberKind, memberAccess, declarationModifiers, validationContext);
 
         this.memberKind = memberKind;
         this.memberAccess = memberAccess; // validated above for presence/absence
         this.declarationModifiers = unmodifiableSet(new TreeSet<>(declarationModifiers));
         this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
 
-        // Предвычисляем featureMask один раз (kind + access + modifiers)
+        // Precompute featureMask once (kind + access + modifiers)
         this.featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 this.memberKind, this.memberAccess, this.declarationModifiers);
     }
@@ -86,72 +90,107 @@ public class MemberDescriptor {
     private static void enforceAbstractNotPrivate(
             @NonNull TargetCategory targetCategory,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull String validationContext) {
 
         if (targetCategory == TargetCategory.METHOD
                 && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
                 && memberAccess == MemberAccess.PRIVATE) {
-            throw new IllegalArgumentException("Illegal modifier/access for METHOD: abstract + private");
+            throw new IllegalArgumentException(
+                    "Illegal modifier/access combination for METHOD: abstract + private. " + validationContext);
+        }
+    }
+
+    private static void enforceAbstractNotStaticMethod(
+            @NonNull TargetCategory targetCategory, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+
+        if (targetCategory == TargetCategory.METHOD
+                && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
+                && declarationModifiers.contains(DeclarationModifier.STATIC)) {
+            throw new IllegalArgumentException("Illegal modifier combination for METHOD: abstract + static");
         }
     }
 
     private static void validateAccessForMemberKind(
-            @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess) {
+            @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess, @NonNull String validationContext) {
 
-        boolean applicable = memberKind.getTargetCategory().isAccessLevelApplicable();
-        boolean provided = (memberAccess != null);
+        boolean accessLevelApplicable = memberKind.getTargetCategory().isAccessLevelApplicable();
+        boolean accessLevelProvided = (memberAccess != null);
 
-        if (applicable != provided) {
-            String message = applicable
+        if (accessLevelApplicable != accessLevelProvided) {
+            String message = accessLevelApplicable
                     ? "Access level must be provided for " + memberKind
-                    : "Access level must be null for " + memberKind;
+                    : "Access level must be null for " + memberKind + ". " + validationContext;
             throw new IllegalArgumentException(message);
         }
     }
 
-    private static @Nullable String validateAndNormalizeName(@Nullable String rawName, @NonNull MemberKind memberKind) {
+    private static @Nullable String validateAndNormalizeName(
+            @Nullable String rawName,
+            @NonNull MemberKind memberKind,
+            @Nullable MemberAccess memberAccess,
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull Set<@NonNull String> annotationQualifiedNames) {
+
         String trimmedName = trimToNull(rawName);
+        if ("<init>".equals(trimmedName)) {
+            trimmedName = null;
+        }
 
         // Only INIT_BLOCK and CONSTRUCTOR must have null name; all other categories must provide a non-blank name.
-        TargetCategory category = memberKind.getTargetCategory();
-        boolean mustBeNull = (category == TargetCategory.INIT_BLOCK) || (category == TargetCategory.CONSTRUCTOR);
-        boolean isProvided = trimmedName != null;
+        TargetCategory targetCategory = memberKind.getTargetCategory();
+        boolean nameMustBeNull =
+                (targetCategory == TargetCategory.INIT_BLOCK) || (targetCategory == TargetCategory.CONSTRUCTOR);
+        boolean nameProvided = trimmedName != null;
 
-        if (mustBeNull == isProvided) {
-            throw new IllegalArgumentException(
-                    mustBeNull
-                            ? "Initializer/constructor elements must have null name"
-                            : "Non-initializer elements must have a non-blank name");
+        if (nameMustBeNull == nameProvided) {
+            // TODO Take it as a method parameter
+            String validationContext = formatValidationContext(
+                    rawName, trimmedName, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
+
+            String message = nameMustBeNull
+                    ? "Name invariant violated: initializer/constructor elements must have null name."
+                    : "Name invariant violated: non-initializer elements must have a non-blank name.";
+
+            throw new IllegalArgumentException(message + " " + validationContext);
         }
+
         return trimmedName;
     }
 
     private static void validateModifierApplicability(
             @NonNull MemberKind memberKind,
             @NonNull TargetCategory targetCategory,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull String validationContext) {
 
         declarationModifiers.stream()
                 .filter(declarationModifier -> !declarationModifier.isApplicableTo(targetCategory))
                 .findAny()
                 .ifPresent(illegalModifier -> {
-                    throw new IllegalArgumentException("Illegal modifier for " + memberKind + ": " + illegalModifier);
+                    throw new IllegalArgumentException("Illegal modifier for memberKind=" + memberKind
+                            + ", targetCategory=" + targetCategory
+                            + ", illegalModifier=" + illegalModifier
+                            + ". " + validationContext);
                 });
     }
 
     private static void validateModifierPairwiseConflicts(
-            @NonNull MemberKind memberKind, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+            @NonNull MemberKind memberKind,
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull String validationContext) {
 
         if (declarationModifiers.size() > ONE) {
-            final DeclarationModifier[] declarationModifierArray =
-                    declarationModifiers.toArray(new DeclarationModifier[0]);
+            DeclarationModifier[] declarationModifierArray = declarationModifiers.toArray(new DeclarationModifier[0]);
             for (int leftIndex = 0; leftIndex < declarationModifierArray.length - ONE; leftIndex++) {
-                final DeclarationModifier leftModifier = declarationModifierArray[leftIndex];
+                DeclarationModifier leftModifier = declarationModifierArray[leftIndex];
                 for (int rightIndex = leftIndex + ONE; rightIndex < declarationModifierArray.length; rightIndex++) {
-                    final DeclarationModifier rightModifier = declarationModifierArray[rightIndex];
+                    DeclarationModifier rightModifier = declarationModifierArray[rightIndex];
                     if (leftModifier.hasConflictWith(rightModifier)) {
-                        throw new IllegalArgumentException("Illegal modifier combination for " + memberKind + ": "
-                                + leftModifier + " + " + rightModifier);
+                        throw new IllegalArgumentException(
+                                "Illegal modifier combination for memberKind=" + memberKind + ": "
+                                        + leftModifier + " + " + rightModifier
+                                        + ". " + validationContext);
                     }
                 }
             }
@@ -161,13 +200,33 @@ public class MemberDescriptor {
     private static void validateModifiers(
             @NonNull MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull String validationContext) {
 
-        final TargetCategory targetCategory = memberKind.getTargetCategory();
+        TargetCategory targetCategory = memberKind.getTargetCategory();
 
-        validateModifierApplicability(memberKind, targetCategory, declarationModifiers);
-        validateModifierPairwiseConflicts(memberKind, declarationModifiers);
-        enforceAbstractNotPrivate(targetCategory, memberAccess, declarationModifiers);
+        validateModifierApplicability(memberKind, targetCategory, declarationModifiers, validationContext);
+        validateModifierPairwiseConflicts(memberKind, declarationModifiers, validationContext);
+        enforceAbstractNotPrivate(targetCategory, memberAccess, declarationModifiers, validationContext);
+        enforceAbstractNotStaticMethod(targetCategory, declarationModifiers);
+    }
+
+    private static @NonNull String formatValidationContext(
+            @Nullable String rawName,
+            @Nullable String normalizedName,
+            @NonNull MemberKind memberKind,
+            @Nullable MemberAccess memberAccess,
+            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull Set<@NonNull String> annotationQualifiedNames) {
+
+        return "\ncontext{memberKind=" + memberKind
+                + ",\ntargetCategory=" + memberKind.getTargetCategory()
+                + ",\nmemberAccess=" + memberAccess
+                + ",\nname.raw=" + rawName
+                + ",\nname.normalized=" + normalizedName
+                + ",\ndeclarationModifiers=" + declarationModifiers
+                + ",\nannotationQualifiedNames=" + annotationQualifiedNames
+                + "}";
     }
 
     // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
@@ -179,7 +238,7 @@ public class MemberDescriptor {
         if (!(other instanceof MemberDescriptor that)) {
             return false;
         }
-        // featureMask покрывает: memberKind + memberAccess + declarationModifiers
+        // featureMask covers: memberKind + memberAccess + declarationModifiers
         return this.featureMask == that.featureMask
                 && Objects.equals(this.name, that.name)
                 && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);

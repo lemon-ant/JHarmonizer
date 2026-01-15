@@ -5,8 +5,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarm
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.UnifiedMemberGroupBuilder;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortingBehavior.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
@@ -31,15 +30,11 @@ final class MemberGroupMapper {
                 .map(JHarmonizerSortKey::getUnifiedSortKey)
                 .toList();
 
-        UnifiedSortingBehavior sortingBehavior = UnifiedSortingBehavior.builder()
-                .unifiedSortKeys(sortKeys)
-                .keepAccessorsTogether(srcMemberGroup.isKeepAccessorsTogether())
-                .build();
-
         UnifiedMemberGroupBuilder unifiedMemberGroupBuilder = UnifiedMemberGroup.builder()
                 .groupName(srcMemberGroup.getName())
                 .selectorBlock(selectorBlock)
-                .sortingBehavior(sortingBehavior)
+                .sortKeys(sortKeys)
+                .keepAccessorsTogether(srcMemberGroup.isKeepAccessorsTogether())
                 .separator(srcMemberGroup.getSeparator().getUnifiedSeparator());
 
         srcMemberGroup.getMemberSubGroups().stream()
