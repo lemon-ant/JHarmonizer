@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
@@ -10,10 +10,10 @@ import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
-import io.github.lemon_ant.jharmonizer.core.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;

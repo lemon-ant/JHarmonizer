@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;

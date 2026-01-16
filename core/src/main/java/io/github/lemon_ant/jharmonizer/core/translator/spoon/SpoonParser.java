@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import java.io.IOException;
 import java.nio.file.Files;

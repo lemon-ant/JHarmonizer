@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.printRelocations;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.printRelocations;
 import static java.util.Collections.unmodifiableCollection;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

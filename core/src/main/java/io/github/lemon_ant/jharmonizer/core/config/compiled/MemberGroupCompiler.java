@@ -55,7 +55,7 @@ class MemberGroupCompiler {
         // 2) Compile selector/sorting for the current node (whatever your project uses)
         CompiledMemberGroupSelectorBlock compiledMemberGroupSelectorBlock =
                 compileSelectorBlock(unifiedGroup.getSelectorBlock());
-        SortKey sortKey = mapSortKeys(unifiedGroup.getSortKeys());
+        List<SortKey> compiledSortKeys = mapSortKeys(unifiedGroup.getSortKeys());
 
         // 3) Assign post-order index to THIS node and advance index
         int assignedPostOrderIndex = runningIndex;
@@ -65,7 +65,7 @@ class MemberGroupCompiler {
         CompiledMemberGroup compiledCurrentGroup = CompiledMemberGroup.builder()
                 .name(unifiedGroup.getGroupName())
                 .selectorBlock(compiledMemberGroupSelectorBlock)
-                .sortKey(sortKey)
+                .sortKeys(compiledSortKeys)
                 .keepAccessorsTogether(keepAccessorsTogether)
                 .compiledSubGroups(compiledChildren)
                 .orderIndex(assignedPostOrderIndex)
@@ -90,19 +90,18 @@ class MemberGroupCompiler {
 
     // TODO Complete model and mapper
     @NonNull
-    @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
-    private static SortKey mapSortKeys(List<UnifiedSortKey> unifiedSortKeys) {
-        // We currently support a single Compiled sort key knob; pick the first meaningful item.
-        for (UnifiedSortKey key : unifiedSortKeys) {
-            return switch (key) {
-                case ALPHA -> SortKey.ALPHA;
-                case PRESERVE -> SortKey.PRESERVE;
-                default ->
-                    // VISIBILITY_ASC / VISIBILITY_DESC / SIGNATURE fall back to a stable source order for now.
-                    SortKey.SOURCE_ORDER;
-            };
-        }
-        // Safety: default to PRESERVE if the list is somehow empty (should be validated earlier)
-        return SortKey.PRESERVE;
+    private static List<SortKey> mapSortKeys(@NonNull List<UnifiedSortKey> unifiedSortKeys) {
+        // Unified model guarantees non-empty list; preserve order and map 1:1.
+        return unifiedSortKeys.stream().map(MemberGroupCompiler::mapSortKey).toList();
+    }
+
+    private static SortKey mapSortKey(@NonNull UnifiedSortKey unifiedSortKey) {
+        return switch (unifiedSortKey) {
+            case ALPHA -> SortKey.ALPHA;
+            case PRESERVE -> SortKey.PRESERVE;
+            case SIGNATURE -> SortKey.SIGNATURE;
+            case VISIBILITY_ASC -> SortKey.VISIBILITY_ASC;
+            case VISIBILITY_DESC -> SortKey.VISIBILITY_DESC;
+        };
     }
 }

@@ -1,9 +1,9 @@
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.detectDominantLineSeparator;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.findIndentationStart;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.detectDominantLineSeparator;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.findIndentationStart;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
 import java.lang.annotation.Annotation;
 import java.util.List;

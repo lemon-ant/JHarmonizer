@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.SpoonSourcePrinterUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;

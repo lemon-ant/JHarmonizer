@@ -23,7 +23,6 @@ import spoon.reflect.declaration.CtTypeMember;
  *   <li>{@link MemberDependencyEdgeKind#ACCESSOR_BUNDLE} encodes a keep-together constraint for accessors.</li>
  * </ul>
  */
-// TODO Перепроверить
 public final class MemberDependencyGraph {
 
     private final Map<CtTypeMember, EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>>> directDependentsByProvider =
@@ -71,12 +70,12 @@ public final class MemberDependencyGraph {
     }
 
     @NonNull
-    Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
+    public Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
         return findTransitiveProviders(dependentMember, EnumSet.allOf(MemberDependencyEdgeKind.class));
     }
 
     @NonNull
-    Set<@NonNull CtTypeMember> findTransitiveProviders(
+    public Set<@NonNull CtTypeMember> findTransitiveProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 
         Set<CtTypeMember> visitedMembers = new LinkedHashSet<>();
@@ -97,13 +96,13 @@ public final class MemberDependencyGraph {
     }
 
     @NonNull
-    Set<@NonNull CtTypeMember> findDirectDependents(
+    public Set<@NonNull CtTypeMember> findDirectDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
         return findDirectNeighbors(directDependentsByProvider, providerMember, allowedEdgeKinds);
     }
 
     @NonNull
-    Set<@NonNull CtTypeMember> findDirectProviders(
+    public Set<@NonNull CtTypeMember> findDirectProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
         return findDirectNeighbors(directProvidersByDependent, dependentMember, allowedEdgeKinds);
     }
