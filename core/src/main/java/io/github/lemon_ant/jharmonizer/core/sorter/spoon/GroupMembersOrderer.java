@@ -56,7 +56,7 @@ class GroupMembersOrderer {
             List<CtTypeMember> unorderedGroupMembers = memberGroupBlock.getTypeMembers();
 
             List<CtTypeMember> orderedGroupMembers =
-                    orderMembersInsideSingleGroup(compiledMemberGroup, unorderedGroupMembers, memberDependencyGraph);
+                    orderMembersInsideGroup(compiledMemberGroup, unorderedGroupMembers, memberDependencyGraph);
 
             orderedBlocks.add(new MemberGroupBlock(compiledMemberGroup, orderedGroupMembers));
         }
@@ -65,7 +65,7 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static List<CtTypeMember> orderMembersInsideSingleGroup(
+    private static List<CtTypeMember> orderMembersInsideGroup(
             @NonNull CompiledMemberGroup compiledMemberGroup,
             @NonNull List<CtTypeMember> unorderedGroupMembers,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
@@ -410,7 +410,7 @@ class GroupMembersOrderer {
         for (SortKey sortKey : sortKeys) {
             Comparator<CtTypeMember> comparatorForKey =
                     switch (sortKey) {
-                        case PRESERVE, SOURCE_ORDER -> Comparator.comparingInt(GroupMembersOrderer::safeSourceStart);
+                        case PRESERVE -> Comparator.comparingInt(GroupMembersOrderer::safeSourceStart);
                         case ALPHA ->
                             Comparator.comparing(GroupMembersOrderer::safeNameForAlpha)
                                     .thenComparingInt(GroupMembersOrderer::safeSourceStart);

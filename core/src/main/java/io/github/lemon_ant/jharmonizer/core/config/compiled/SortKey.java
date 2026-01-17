@@ -4,7 +4,6 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 public enum SortKey {
     PRESERVE,
     ALPHA,
-    SOURCE_ORDER,
     VISIBILITY_ASC,
     VISIBILITY_DESC,
     SIGNATURE,
