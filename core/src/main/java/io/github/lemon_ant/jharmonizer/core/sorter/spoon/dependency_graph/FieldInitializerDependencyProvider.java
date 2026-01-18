@@ -18,8 +18,8 @@ final class FieldInitializerDependencyProvider implements MemberDependencyProvid
 
     @Override
     @NonNull
-    public Set<@NonNull MemberDependencyEdge> findDirectEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+    public Set<@NonNull DependencyEdge> findDirectEdges(
+            @NonNull CtTypeMember providerMember, boolean keepAccessorsTogether) {
 
         // TODO Implement Spoon-based reference extraction.
         // Recommended approach:

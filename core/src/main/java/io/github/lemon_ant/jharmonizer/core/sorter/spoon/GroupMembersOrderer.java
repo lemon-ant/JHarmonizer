@@ -1,26 +1,23 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
@@ -29,469 +26,579 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtTypeReference;
 
-/**
- * Orders members inside already resolved effective groups.
- *
- * <p>Rules:
- * <ul>
- *   <li>Declaration dependencies ({@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY}) are respected via
- *       a stable topo-ordering.</li>
- *   <li>Accessor bundle edges ({@link MemberDependencyEdgeKind#ACCESSOR_BUNDLE}) do not impose ordering, but
- *       force accessors of the same property to stay contiguous. Bundles are topo-ordered as atomic blocks.</li>
- *   <li>When multiple valid orders exist, group sort keys ({@link SortKey}) define a deterministic tie-break.</li>
- * </ul>
- */
 @UtilityClass
 class GroupMembersOrderer {
 
     @NonNull
-    List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
-            @NonNull List<@NonNull MemberGroupBlock> unorderedBlocks,
+    static List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
+            @NonNull List<@NonNull MemberGroupBlock> unorderedMemberGroupBlocks,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
 
-        List<MemberGroupBlock> orderedBlocks = new ArrayList<>(unorderedBlocks.size());
+        List<MemberGroupBlock> orderedBlocks = new ArrayList<>(unorderedMemberGroupBlocks.size());
 
-        for (MemberGroupBlock memberGroupBlock : unorderedBlocks) {
-            CompiledMemberGroup compiledMemberGroup = memberGroupBlock.getCompiledMemberGroup();
-            List<CtTypeMember> unorderedGroupMembers = memberGroupBlock.getTypeMembers();
+        for (MemberGroupBlock block : unorderedMemberGroupBlocks) {
+            CompiledMemberGroup compiledMemberGroup = block.getCompiledMemberGroup();
+            List<CtTypeMember> groupMembers = block.getTypeMembers();
 
-            List<CtTypeMember> orderedGroupMembers =
-                    orderMembersInsideGroup(compiledMemberGroup, unorderedGroupMembers, memberDependencyGraph);
+            List<CtTypeMember> orderedMembers =
+                    orderMembersInsideSingleGroup(compiledMemberGroup, groupMembers, memberDependencyGraph);
 
-            orderedBlocks.add(new MemberGroupBlock(compiledMemberGroup, orderedGroupMembers));
+            orderedBlocks.add(new MemberGroupBlock(compiledMemberGroup, orderedMembers));
         }
 
         return List.copyOf(orderedBlocks);
     }
 
     @NonNull
-    private static List<CtTypeMember> orderMembersInsideGroup(
+    private static List<@NonNull CtTypeMember> orderMembersInsideSingleGroup(
             @NonNull CompiledMemberGroup compiledMemberGroup,
-            @NonNull List<CtTypeMember> unorderedGroupMembers,
+            @NonNull List<@NonNull CtTypeMember> groupMembers,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
 
-        if (unorderedGroupMembers.size() <= 1) {
-            return List.copyOf(unorderedGroupMembers);
+        if (groupMembers.size() <= 1) {
+            return List.copyOf(groupMembers);
         }
 
-        Comparator<CtTypeMember> preferredMemberComparator = buildPreferredMemberComparator(compiledMemberGroup);
+        Comparator<CtTypeMember> baseComparator = buildComparatorForGroup(compiledMemberGroup);
 
-        List<CtTypeMember> preferredMemberOrder =
-                unorderedGroupMembers.stream().sorted(preferredMemberComparator).toList();
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        Map<CtTypeMember, Integer> preferredIndexByMember = buildPreferredIndexByMember(preferredMemberOrder);
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(unorderedGroupMembers);
+        // Reachability cache (provider -> all transitive dependents) restricted to the current group.
+        Map<CtTypeMember, Set<CtTypeMember>> transitiveDependentsByProvider = groupMembers.stream()
+                .collect(Collectors.toMap(providerMember -> providerMember, providerMember -> {
+                    Set<CtTypeMember> reachableMembers = new LinkedHashSet<>();
+                    reachableMembers.add(providerMember);
+                    reachableMembers.addAll(memberDependencyGraph.findTransitiveDependents(providerMember));
+                    reachableMembers.retainAll(groupMemberSet);
+                    return Set.copyOf(reachableMembers);
+                }));
 
-        List<MemberBundle> accessorBundles = splitIntoAccessorBundles(
-                preferredMemberOrder, groupMemberSet, preferredIndexByMember, memberDependencyGraph);
+        // 1) Build SCC-like units using mutual reachability. Accessor bundling typically creates such cycles.
+        List<MemberUnit> memberUnits = buildMemberUnits(groupMembers, transitiveDependentsByProvider, baseComparator);
 
-        Map<CtTypeMember, Integer> bundleIdByMember = buildBundleIdByMember(accessorBundles);
+        Map<CtTypeMember, MemberUnit> memberUnitByMember = memberUnits.stream()
+                .flatMap(memberUnit -> memberUnit.getMembers().stream().map(member -> Map.entry(member, memberUnit)))
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey, Map.Entry::getValue, (existingValue, newValue) -> {
+                            throw new IllegalStateException(
+                                    "Unexpected duplicate member while building member->unit map." + " member="
+                                            + describeTypeMember(existingValue.getRepresentativeMember()));
+                        }));
 
-        List<Integer> orderedBundleIds =
-                topoOrderBundles(accessorBundles, groupMemberSet, bundleIdByMember, memberDependencyGraph);
+        // 2) Build condensed dependency graph between units using reachability.
+        Map<MemberUnit, Set<MemberUnit>> dependentUnitsByProviderUnit =
+                buildDependentUnitsByProviderUnit(memberUnits, transitiveDependentsByProvider, memberUnitByMember);
 
-        List<CtTypeMember> orderedMembers = new ArrayList<>(unorderedGroupMembers.size());
-        for (Integer bundleId : orderedBundleIds) {
-            MemberBundle memberBundle = accessorBundles.get(bundleId);
-            orderedMembers.addAll(orderMembersInsideBundle(memberBundle.getMembers(), preferredMemberComparator));
+        // 3) Stable topo-sort of units using sort keys as tie-breakers.
+        List<MemberUnit> orderedUnits =
+                topologicallyOrderUnits(memberUnits, dependentUnitsByProviderUnit, baseComparator);
+
+        // 4) Expand units back to a flat list.
+        List<CtTypeMember> orderedMembers = new ArrayList<>(groupMembers.size());
+        for (MemberUnit memberUnit : orderedUnits) {
+            List<CtTypeMember> orderedMembersInsideUnit = new ArrayList<>(memberUnit.getMembers());
+            orderedMembersInsideUnit.sort(buildIntraUnitComparator(baseComparator));
+            orderedMembers.addAll(orderedMembersInsideUnit);
         }
 
         return List.copyOf(orderedMembers);
     }
 
-    @Value
-    private static class MemberBundle {
-        @NonNull
-        Set<@NonNull CtTypeMember> members;
-
-        int preferredRank;
-    }
-
     @NonNull
-    private static Map<CtTypeMember, Integer> buildPreferredIndexByMember(@NonNull List<CtTypeMember> preferredOrder) {
-        Map<CtTypeMember, Integer> preferredIndexByMember = new HashMap<>(preferredOrder.size());
-        for (int index = 0; index < preferredOrder.size(); index++) {
-            preferredIndexByMember.put(preferredOrder.get(index), index);
+    private static List<MemberUnit> buildMemberUnits(
+            @NonNull List<CtTypeMember> groupMembers,
+            @NonNull Map<CtTypeMember, Set<CtTypeMember>> transitiveDependentsByProvider,
+            @NonNull Comparator<CtTypeMember> baseComparator) {
+
+        UnionFind<CtTypeMember> unionFind = new UnionFind<>(groupMembers);
+
+        for (CtTypeMember leftMember : groupMembers) {
+            Set<CtTypeMember> leftReachableMembers = transitiveDependentsByProvider.getOrDefault(leftMember, Set.of());
+            for (CtTypeMember rightMember : leftReachableMembers) {
+                Set<CtTypeMember> rightReachableMembers =
+                        transitiveDependentsByProvider.getOrDefault(rightMember, Set.of());
+                if (rightReachableMembers.contains(leftMember)) {
+                    unionFind.union(leftMember, rightMember);
+                }
+            }
         }
-        return Map.copyOf(preferredIndexByMember);
+
+        Map<CtTypeMember, List<CtTypeMember>> membersByRoot = new LinkedHashMap<>();
+        for (CtTypeMember typeMember : groupMembers) {
+            CtTypeMember rootMember = unionFind.find(typeMember);
+            membersByRoot
+                    .computeIfAbsent(rootMember, ignored -> new ArrayList<>())
+                    .add(typeMember);
+        }
+
+        Comparator<CtTypeMember> intraUnitComparator = buildIntraUnitComparator(baseComparator);
+
+        List<MemberUnit> memberUnits = new ArrayList<>();
+        int assignedUnitId = 0;
+        for (List<CtTypeMember> unitMembers : membersByRoot.values()) {
+            List<CtTypeMember> sortedUnitMembers = new ArrayList<>(unitMembers);
+            sortedUnitMembers.sort(intraUnitComparator);
+
+            CtTypeMember representativeMember = sortedUnitMembers.getFirst();
+            int representativeSourceStart = extractSourceStart(representativeMember);
+
+            memberUnits.add(new MemberUnit(
+                    assignedUnitId++, List.copyOf(sortedUnitMembers), representativeMember, representativeSourceStart));
+        }
+
+        return List.copyOf(memberUnits);
     }
 
     @NonNull
-    private static List<MemberBundle> splitIntoAccessorBundles(
-            @NonNull List<CtTypeMember> preferredMemberOrder,
-            @NonNull Set<CtTypeMember> groupMemberSet,
-            @NonNull Map<CtTypeMember, Integer> preferredIndexByMember,
-            @NonNull MemberDependencyGraph memberDependencyGraph) {
+    private static Map<MemberUnit, Set<MemberUnit>> buildDependentUnitsByProviderUnit(
+            @NonNull List<MemberUnit> memberUnits,
+            @NonNull Map<CtTypeMember, Set<CtTypeMember>> transitiveDependentsByProvider,
+            @NonNull Map<CtTypeMember, MemberUnit> memberUnitByMember) {
 
-        Set<CtTypeMember> visitedMembers = new HashSet<>();
-        List<MemberBundle> bundlesInPreferredOrder = new ArrayList<>();
+        Map<MemberUnit, Set<MemberUnit>> dependentUnitsByProviderUnit = new LinkedHashMap<>();
+        for (MemberUnit memberUnit : memberUnits) {
+            dependentUnitsByProviderUnit.put(memberUnit, new LinkedHashSet<>());
+        }
 
-        EnumSet<MemberDependencyEdgeKind> accessorBundleEdges = EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
-
-        for (CtTypeMember startMember : preferredMemberOrder) {
-            if (!visitedMembers.add(startMember)) {
+        for (Map.Entry<CtTypeMember, Set<CtTypeMember>> entry : transitiveDependentsByProvider.entrySet()) {
+            CtTypeMember providerMember = entry.getKey();
+            MemberUnit providerUnit = memberUnitByMember.get(providerMember);
+            if (providerUnit == null) {
                 continue;
             }
 
-            Set<CtTypeMember> bundleMembers = new HashSet<>();
-            Deque<CtTypeMember> queue = new ArrayDeque<>();
-
-            bundleMembers.add(startMember);
-            queue.addLast(startMember);
-
-            while (!queue.isEmpty()) {
-                CtTypeMember currentMember = queue.removeFirst();
-
-                Set<CtTypeMember> directBundledDependents =
-                        memberDependencyGraph.findDirectDependents(currentMember, accessorBundleEdges).stream()
-                                .filter(groupMemberSet::contains)
-                                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-
-                Set<CtTypeMember> directBundledProviders =
-                        memberDependencyGraph.findDirectProviders(currentMember, accessorBundleEdges).stream()
-                                .filter(groupMemberSet::contains)
-                                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-
-                for (CtTypeMember neighbor : directBundledDependents) {
-                    if (visitedMembers.add(neighbor)) {
-                        bundleMembers.add(neighbor);
-                        queue.addLast(neighbor);
-                    }
-                }
-
-                for (CtTypeMember neighbor : directBundledProviders) {
-                    if (visitedMembers.add(neighbor)) {
-                        bundleMembers.add(neighbor);
-                        queue.addLast(neighbor);
-                    }
-                }
-            }
-
-            int preferredRank = bundleMembers.stream()
-                    .map(preferredIndexByMember::get)
-                    .filter(index -> index != null)
-                    .min(Integer::compareTo)
-                    .orElse(Integer.MAX_VALUE);
-
-            bundlesInPreferredOrder.add(new MemberBundle(Set.copyOf(bundleMembers), preferredRank));
-        }
-
-        return List.copyOf(bundlesInPreferredOrder);
-    }
-
-    @NonNull
-    private static Map<CtTypeMember, Integer> buildBundleIdByMember(@NonNull List<MemberBundle> bundles) {
-        Map<CtTypeMember, Integer> bundleIdByMember = new HashMap<>();
-
-        for (int bundleId = 0; bundleId < bundles.size(); bundleId++) {
-            for (CtTypeMember member : bundles.get(bundleId).getMembers()) {
-                Integer previousBundleId = bundleIdByMember.put(member, bundleId);
-                if (previousBundleId != null) {
-                    throw new IllegalStateException("Type member was assigned to multiple accessor bundles. member="
-                            + describeTypeMember(member)
-                            + ", previousBundleId=" + previousBundleId
-                            + ", newBundleId=" + bundleId);
-                }
-            }
-        }
-
-        return Map.copyOf(bundleIdByMember);
-    }
-
-    @NonNull
-    private static List<Integer> topoOrderBundles(
-            @NonNull List<MemberBundle> bundles,
-            @NonNull Set<CtTypeMember> groupMemberSet,
-            @NonNull Map<CtTypeMember, Integer> bundleIdByMember,
-            @NonNull MemberDependencyGraph memberDependencyGraph) {
-
-        int bundleCount = bundles.size();
-
-        List<Set<Integer>> dependentsByProviderBundle = new ArrayList<>(bundleCount);
-        for (int index = 0; index < bundleCount; index++) {
-            dependentsByProviderBundle.add(new HashSet<>());
-        }
-
-        int[] inDegreeByBundleId = new int[bundleCount];
-
-        EnumSet<MemberDependencyEdgeKind> declarationDependencyEdges =
-                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-
-        for (CtTypeMember providerMember : groupMemberSet) {
-            int providerBundleId = requireBundleId(bundleIdByMember, providerMember);
-
-            for (CtTypeMember dependentMember :
-                    memberDependencyGraph.findDirectDependents(providerMember, declarationDependencyEdges)) {
-
-                if (!groupMemberSet.contains(dependentMember)) {
+            for (CtTypeMember dependentMember : entry.getValue()) {
+                if (providerMember == dependentMember) {
                     continue;
                 }
 
-                int dependentBundleId = requireBundleId(bundleIdByMember, dependentMember);
-                if (providerBundleId == dependentBundleId) {
+                MemberUnit dependentUnit = memberUnitByMember.get(dependentMember);
+                if (dependentUnit == null || dependentUnit == providerUnit) {
                     continue;
                 }
 
-                boolean added = dependentsByProviderBundle.get(providerBundleId).add(dependentBundleId);
-                if (added) {
-                    inDegreeByBundleId[dependentBundleId]++;
+                dependentUnitsByProviderUnit.get(providerUnit).add(dependentUnit);
+            }
+        }
+
+        return dependentUnitsByProviderUnit.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
+    }
+
+    @NonNull
+    private static List<MemberUnit> topologicallyOrderUnits(
+            @NonNull List<MemberUnit> memberUnits,
+            @NonNull Map<MemberUnit, Set<MemberUnit>> dependentUnitsByProviderUnit,
+            @NonNull Comparator<CtTypeMember> baseComparator) {
+
+        Map<MemberUnit, Integer> incomingEdgesByUnit = new LinkedHashMap<>();
+        for (MemberUnit memberUnit : memberUnits) {
+            incomingEdgesByUnit.put(memberUnit, 0);
+        }
+
+        for (Map.Entry<MemberUnit, Set<MemberUnit>> entry : dependentUnitsByProviderUnit.entrySet()) {
+            for (MemberUnit dependentUnit : entry.getValue()) {
+                incomingEdgesByUnit.computeIfPresent(dependentUnit, (unit, previousValue) -> previousValue + 1);
+            }
+        }
+
+        Comparator<MemberUnit> unitTieBreakerComparator = Comparator.comparing(
+                        MemberUnit::getRepresentativeMember, baseComparator)
+                .thenComparingInt(MemberUnit::getRepresentativeSourceStart)
+                .thenComparingInt(MemberUnit::getUnitId);
+
+        PriorityQueue<MemberUnit> readyQueue = new PriorityQueue<>(unitTieBreakerComparator);
+        for (Map.Entry<MemberUnit, Integer> entry : incomingEdgesByUnit.entrySet()) {
+            if (entry.getValue() == 0) {
+                readyQueue.add(entry.getKey());
+            }
+        }
+
+        List<MemberUnit> orderedUnits = new ArrayList<>(memberUnits.size());
+        Map<MemberUnit, Integer> remainingIncomingEdgesByUnit = new LinkedHashMap<>(incomingEdgesByUnit);
+
+        while (!readyQueue.isEmpty()) {
+            MemberUnit currentUnit = readyQueue.poll();
+            orderedUnits.add(currentUnit);
+
+            for (MemberUnit dependentUnit : dependentUnitsByProviderUnit.getOrDefault(currentUnit, Set.of())) {
+                int updatedIncomingEdges = remainingIncomingEdgesByUnit.computeIfPresent(
+                        dependentUnit, (ignored, previousValue) -> previousValue - 1);
+
+                if (updatedIncomingEdges == 0) {
+                    readyQueue.add(dependentUnit);
                 }
             }
         }
 
-        PriorityQueue<Integer> readyBundleIds = new PriorityQueue<>(Comparator.comparingInt(
-                        (Integer bundleId) -> bundles.get(bundleId).getPreferredRank())
-                .thenComparingInt(Integer::intValue));
-
-        for (int bundleId = 0; bundleId < bundleCount; bundleId++) {
-            if (inDegreeByBundleId[bundleId] == 0) {
-                readyBundleIds.add(bundleId);
-            }
+        // This should not normally happen because SCC units should eliminate cycles.
+        if (orderedUnits.size() != memberUnits.size()) {
+            List<MemberUnit> fallback = new ArrayList<>(memberUnits);
+            fallback.sort(unitTieBreakerComparator);
+            return List.copyOf(fallback);
         }
 
-        List<Integer> orderedBundleIds = new ArrayList<>(bundleCount);
-
-        while (!readyBundleIds.isEmpty()) {
-            Integer providerBundleId = readyBundleIds.remove();
-            orderedBundleIds.add(providerBundleId);
-
-            for (Integer dependentBundleId : dependentsByProviderBundle.get(providerBundleId)) {
-                inDegreeByBundleId[dependentBundleId]--;
-                if (inDegreeByBundleId[dependentBundleId] == 0) {
-                    readyBundleIds.add(dependentBundleId);
-                }
-            }
-        }
-
-        if (orderedBundleIds.size() == bundleCount) {
-            return List.copyOf(orderedBundleIds);
-        }
-
-        // Cycle (or self-referential constraints) detected. Fall back to deterministic preferred order.
-        return java.util.stream.IntStream.range(0, bundleCount)
-                .boxed()
-                .sorted(Comparator.comparingInt(
-                                (Integer bundleId) -> bundles.get(bundleId).getPreferredRank())
-                        .thenComparingInt(Integer::intValue))
-                .toList();
-    }
-
-    private static int requireBundleId(@NonNull Map<CtTypeMember, Integer> bundleIdByMember, CtTypeMember member) {
-        Integer bundleId = bundleIdByMember.get(member);
-        if (bundleId == null) {
-            throw new IllegalStateException(
-                    "Bundle id was not resolved for type member. member=" + describeTypeMember(member));
-        }
-        return bundleId;
+        return List.copyOf(orderedUnits);
     }
 
     @NonNull
-    private static List<CtTypeMember> orderMembersInsideBundle(
-            @NonNull Set<@NonNull CtTypeMember> bundleMembers,
-            @NonNull Comparator<CtTypeMember> preferredMemberComparator) {
+    private static Comparator<CtTypeMember> buildComparatorForGroup(@NonNull CompiledMemberGroup compiledMemberGroup) {
+        List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
 
-        if (bundleMembers.size() <= 1) {
-            return List.copyOf(bundleMembers);
-        }
-
-        Comparator<CtTypeMember> accessorAwareComparator = Comparator.comparingInt(
-                        GroupMembersOrderer::resolveAccessorRank)
-                .thenComparing(preferredMemberComparator)
-                .thenComparingInt(GroupMembersOrderer::safeSourceStart);
-
-        return bundleMembers.stream().sorted(accessorAwareComparator).toList();
-    }
-
-    private enum AccessorKind {
-        GET,
-        IS,
-        HAS,
-        SET
-    }
-
-    private static int resolveAccessorRank(@NonNull CtTypeMember typeMember) {
-        if (!(typeMember instanceof CtMethod<?> method)) {
-            return Integer.MAX_VALUE;
-        }
-
-        return tryResolveAccessorKind(method)
-                .map(accessorKind -> switch (accessorKind) {
-                    case GET -> 0;
-                    case IS -> 1;
-                    case HAS -> 2;
-                    case SET -> 3;
-                })
-                .orElse(Integer.MAX_VALUE);
-    }
-
-    @NonNull
-    private static java.util.Optional<AccessorKind> tryResolveAccessorKind(@NonNull CtMethod<?> method) {
-        String methodName = method.getSimpleName();
-
-        java.util.Optional<AccessorKind> contractMatch =
-                tryMatchAccessorContract(method, methodName, "get", 0).map(ignored -> AccessorKind.GET);
-        if (contractMatch.isPresent()) {
-            return contractMatch;
-        }
-
-        contractMatch = tryMatchAccessorContract(method, methodName, "is", 0)
-                .filter(ignored -> returnsBoolean(method))
-                .map(ignored -> AccessorKind.IS);
-        if (contractMatch.isPresent()) {
-            return contractMatch;
-        }
-
-        contractMatch = tryMatchAccessorContract(method, methodName, "has", 0)
-                .filter(ignored -> returnsBoolean(method))
-                .map(ignored -> AccessorKind.HAS);
-        if (contractMatch.isPresent()) {
-            return contractMatch;
-        }
-
-        return tryMatchAccessorContract(method, methodName, "set", 1)
-                .filter(ignored -> returnsVoid(method))
-                .map(ignored -> AccessorKind.SET);
-    }
-
-    @NonNull
-    private static java.util.Optional<String> tryMatchAccessorContract(
-            @NonNull CtMethod<?> method,
-            @NonNull String methodName,
-            @NonNull String prefix,
-            int expectedParameterCount) {
-
-        if (!methodName.startsWith(prefix)) {
-            return java.util.Optional.empty();
-        }
-
-        if (method.getParameters().size() != expectedParameterCount) {
-            return java.util.Optional.empty();
-        }
-
-        int propertyNameStartIndex = prefix.length();
-        if (methodName.length() <= propertyNameStartIndex) {
-            return java.util.Optional.empty();
-        }
-
-        if (!Character.isUpperCase(methodName.charAt(propertyNameStartIndex))) {
-            return java.util.Optional.empty();
-        }
-
-        return java.util.Optional.of(methodName.substring(propertyNameStartIndex));
-    }
-
-    private static boolean returnsVoid(@NonNull CtMethod<?> method) {
-        CtTypeReference<?> returnTypeReference = method.getType();
-        return returnTypeReference != null && "void".equals(returnTypeReference.getQualifiedName());
-    }
-
-    private static boolean returnsBoolean(@NonNull CtMethod<?> method) {
-        CtTypeReference<?> returnTypeReference = method.getType();
-        if (returnTypeReference == null) {
-            return false;
-        }
-
-        CtTypeReference<?> erasedTypeReference = returnTypeReference.getTypeErasure();
-        CtTypeReference<?> boxedTypeReference =
-                erasedTypeReference.isPrimitive() ? erasedTypeReference.box() : erasedTypeReference;
-
-        return "java.lang.Boolean".equals(boxedTypeReference.getQualifiedName());
-    }
-
-    @NonNull
-    private static Comparator<CtTypeMember> buildPreferredMemberComparator(@NonNull CompiledMemberGroup group) {
-        List<SortKey> sortKeys = group.getSortKeys();
+        // If no keys are configured (should not happen), preserve source order as a safe default.
         if (sortKeys.isEmpty()) {
-            throw new IllegalStateException("Sort keys list must not be empty. groupName=" + group.getName());
+            return Comparator.comparingInt(GroupMembersOrderer::extractSourceStart)
+                    .thenComparing(GroupMembersOrderer::deriveAlphaKey);
         }
 
-        Comparator<CtTypeMember> combinedComparator = null;
+        Comparator<CtTypeMember> chainedComparator = null;
 
         for (SortKey sortKey : sortKeys) {
-            Comparator<CtTypeMember> comparatorForKey =
+            Comparator<CtTypeMember> keyComparator =
                     switch (sortKey) {
-                        case PRESERVE -> Comparator.comparingInt(GroupMembersOrderer::safeSourceStart);
-                        case ALPHA ->
-                            Comparator.comparing(GroupMembersOrderer::safeNameForAlpha)
-                                    .thenComparingInt(GroupMembersOrderer::safeSourceStart);
+                        case PRESERVE -> Comparator.comparingInt(GroupMembersOrderer::extractSourceStart);
+                        case ALPHA -> Comparator.comparing(GroupMembersOrderer::deriveAlphaKey);
+                        case SIGNATURE -> Comparator.comparing(GroupMembersOrderer::deriveSignatureKey);
                         case VISIBILITY_ASC ->
-                            Comparator.comparingInt(GroupMembersOrderer::resolveVisibilityRank)
-                                    .thenComparingInt(GroupMembersOrderer::safeSourceStart);
+                            Comparator.comparingInt(GroupMembersOrderer::deriveVisibilityRankAscending);
                         case VISIBILITY_DESC ->
-                            Comparator.comparingInt(GroupMembersOrderer::resolveVisibilityRank)
-                                    .reversed()
-                                    .thenComparingInt(GroupMembersOrderer::safeSourceStart);
-                        case SIGNATURE ->
-                            Comparator.comparing(GroupMembersOrderer::safeSignatureForOrdering)
-                                    .thenComparingInt(GroupMembersOrderer::safeSourceStart);
+                            Comparator.comparingInt(GroupMembersOrderer::deriveVisibilityRankDescending);
+                        default -> throw new IllegalStateException("TODO Normal message");
                     };
 
-            combinedComparator = (combinedComparator == null)
-                    ? comparatorForKey
-                    : combinedComparator.thenComparing(comparatorForKey);
+            chainedComparator =
+                    (chainedComparator == null) ? keyComparator : chainedComparator.thenComparing(keyComparator);
         }
 
-        requireNonNull(combinedComparator, "Expected non-null combined comparator");
-        return combinedComparator.thenComparingInt(GroupMembersOrderer::safeSourceStart);
+        // Deterministic tie-breakers regardless of configured keys.
+        return chainedComparator
+                .thenComparingInt(GroupMembersOrderer::extractSourceStart)
+                .thenComparing(GroupMembersOrderer::deriveSignatureKey);
     }
 
-    private static int resolveVisibilityRank(@NonNull CtTypeMember typeMember) {
-        Set<ModifierKind> modifierKinds = typeMember.getModifiers();
-        if (modifierKinds.contains(ModifierKind.PUBLIC)) {
+    @NonNull
+    private static Comparator<CtTypeMember> buildIntraUnitComparator(@NonNull Comparator<CtTypeMember> baseComparator) {
+        return (leftMember, rightMember) -> {
+            if (leftMember == rightMember) {
+                return 0;
+            }
+
+            Optional<AccessorDescriptor> leftAccessorDescriptor = tryParseAccessorDescriptor(leftMember);
+            Optional<AccessorDescriptor> rightAccessorDescriptor = tryParseAccessorDescriptor(rightMember);
+
+            if (leftAccessorDescriptor.isPresent() && rightAccessorDescriptor.isPresent()) {
+                AccessorDescriptor leftDescriptor = leftAccessorDescriptor.get();
+                AccessorDescriptor rightDescriptor = rightAccessorDescriptor.get();
+
+                boolean sameProperty = leftDescriptor.getPropertyName().equals(rightDescriptor.getPropertyName())
+                        && leftDescriptor
+                                .getPropertyTypeQualifiedName()
+                                .equals(rightDescriptor.getPropertyTypeQualifiedName());
+
+                if (sameProperty) {
+                    int accessorKindComparison = Integer.compare(
+                            leftDescriptor.getAccessorKind().getSortOrder(),
+                            rightDescriptor.getAccessorKind().getSortOrder());
+                    if (accessorKindComparison != 0) {
+                        return accessorKindComparison;
+                    }
+                }
+            }
+
+            return baseComparator.compare(leftMember, rightMember);
+        };
+    }
+
+    @NonNull
+    private static Optional<AccessorDescriptor> tryParseAccessorDescriptor(@NonNull CtTypeMember typeMember) {
+        if (!(typeMember instanceof CtMethod<?> method)) {
+            return Optional.empty();
+        }
+
+        String methodName = method.getSimpleName();
+        if (methodName == null || methodName.isBlank()) {
+            return Optional.empty();
+        }
+
+        // Getter: getX(): T
+        if (methodName.startsWith("get")
+                && methodName.length() > 3
+                && method.getParameters().isEmpty()
+                && method.getType() != null
+                && !"void".equalsIgnoreCase(method.getType().getSimpleName())) {
+
+            String propertyName = decapitalize(methodName.substring(3));
+            String propertyTypeQualifiedName = normalizeTypeQualifiedName(method.getType());
+
+            return Optional.of(new AccessorDescriptor(AccessorKind.GET, propertyName, propertyTypeQualifiedName));
+        }
+
+        // Boolean getter: isX(): boolean/Boolean
+        if (methodName.startsWith("is")
+                && methodName.length() > 2
+                && method.getParameters().isEmpty()
+                && method.getType() != null
+                && isBooleanLikeType(method.getType())) {
+
+            String propertyName = decapitalize(methodName.substring(2));
+            String propertyTypeQualifiedName = normalizeTypeQualifiedName(method.getType());
+
+            return Optional.of(new AccessorDescriptor(AccessorKind.IS, propertyName, propertyTypeQualifiedName));
+        }
+
+        // Boolean getter: hasX(): boolean/Boolean
+        if (methodName.startsWith("has")
+                && methodName.length() > 3
+                && method.getParameters().isEmpty()
+                && method.getType() != null
+                && isBooleanLikeType(method.getType())) {
+
+            String propertyName = decapitalize(methodName.substring(3));
+            String propertyTypeQualifiedName = normalizeTypeQualifiedName(method.getType());
+
+            return Optional.of(new AccessorDescriptor(AccessorKind.HAS, propertyName, propertyTypeQualifiedName));
+        }
+
+        // Setter: setX(T): void
+        if (methodName.startsWith("set")
+                && methodName.length() > 3
+                && method.getParameters().size() == 1) {
+
+            CtTypeReference<?> parameterType = method.getParameters().getFirst().getType();
+            if (parameterType == null) {
+                return Optional.empty();
+            }
+
+            String propertyName = decapitalize(methodName.substring(3));
+            String propertyTypeQualifiedName = normalizeTypeQualifiedName(parameterType);
+
+            return Optional.of(new AccessorDescriptor(AccessorKind.SET, propertyName, propertyTypeQualifiedName));
+        }
+
+        return Optional.empty();
+    }
+
+    private static boolean isBooleanLikeType(@NonNull CtTypeReference<?> typeReference) {
+        String qualifiedName = normalizeTypeQualifiedName(typeReference);
+        return "boolean".equals(qualifiedName) || "java.lang.Boolean".equals(qualifiedName);
+    }
+
+    @NonNull
+    private static String normalizeTypeQualifiedName(@NonNull CtTypeReference<?> typeReference) {
+        CtTypeReference<?> erasure = typeReference.getTypeErasure();
+        CtTypeReference<?> boxed = erasure == null ? typeReference : erasure.box();
+        CtTypeReference<?> normalized = boxed == null ? typeReference : boxed;
+        return Objects.requireNonNullElse(normalized.getQualifiedName(), "");
+    }
+
+    @NonNull
+    private static String decapitalize(@NonNull String input) {
+        if (input.isEmpty()) {
+            return input;
+        }
+
+        // Follow JavaBeans Introspector.decapitalize semantics in a simplified form:
+        // if first two chars are uppercase, keep as-is; otherwise lower the first char.
+        if (input.length() >= 2 && Character.isUpperCase(input.charAt(0)) && Character.isUpperCase(input.charAt(1))) {
+            return input;
+        }
+
+        return Character.toLowerCase(input.charAt(0)) + input.substring(1);
+    }
+
+    private static int deriveVisibilityRankAscending(@NonNull CtTypeMember typeMember) {
+        // Ascending: public (0) -> protected (1) -> package-private (2) -> private (3)
+        return deriveVisibilityRank(typeMember);
+    }
+
+    private static int deriveVisibilityRankDescending(@NonNull CtTypeMember typeMember) {
+        // Descending: private (0) -> package-private (1) -> protected (2) -> public (3)
+        int ascendingRank = deriveVisibilityRank(typeMember);
+        return switch (ascendingRank) {
+            case 0 -> 3;
+            case 1 -> 2;
+            case 2 -> 1;
+            case 3 -> 0;
+            default -> 1;
+        };
+    }
+
+    private static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
+        Set<ModifierKind> modifiers = typeMember.getModifiers();
+        if (modifiers.contains(ModifierKind.PUBLIC)) {
             return 0;
         }
-        if (modifierKinds.contains(ModifierKind.PROTECTED)) {
+        if (modifiers.contains(ModifierKind.PROTECTED)) {
             return 1;
         }
-        if (modifierKinds.contains(ModifierKind.PRIVATE)) {
+        if (modifiers.contains(ModifierKind.PRIVATE)) {
             return 3;
         }
         return 2; // package-private
     }
 
+    private static int extractSourceStart(@NonNull CtTypeMember typeMember) {
+        if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
+            return Integer.MAX_VALUE;
+        }
+        return typeMember.getPosition().getSourceStart();
+    }
+
     @NonNull
-    private static String safeSignatureForOrdering(@NonNull CtTypeMember typeMember) {
+    private static String deriveAlphaKey(@NonNull CtTypeMember typeMember) {
         return switch (typeMember) {
-            case CtMethod<?> method -> method.getSignature();
-            case CtConstructor<?> constructor -> constructor.getSignature();
-            case CtField<?> field -> safeTypeName(field.getType()) + " " + safeNameForAlpha(field);
-            case CtType<?> nestedType -> nestedType.getQualifiedName();
-            default -> typeMember.getClass().getSimpleName() + "(" + typeMember.getShortRepresentation() + ")";
+            case CtMethod<?> method ->
+                method.getSimpleName() + "(" + deriveParameterTypeList(method.getParameters()) + ")";
+            case CtConstructor<?> constructor -> "<init>(" + deriveParameterTypeList(constructor.getParameters()) + ")";
+            case CtField<?> field -> field.getSimpleName();
+            case CtType<?> nestedType -> nestedType.getSimpleName();
+            default -> typeMember.getSimpleName();
         };
     }
 
     @NonNull
-    private static String safeTypeName(CtTypeReference<?> typeReference) {
-        if (typeReference == null) {
-            return "<null>";
+    private static String deriveSignatureKey(@NonNull CtTypeMember typeMember) {
+        switch (typeMember) {
+            case CtMethod<?> method -> {
+                String methodName = method.getSimpleName();
+                String parameters = deriveParameterTypeList(method.getParameters());
+                String returnType = method.getType() == null ? "" : normalizeTypeQualifiedName(method.getType());
+                return methodName + "(" + parameters + "):" + returnType;
+            }
+            case CtConstructor<?> constructor -> {
+                String parameters = deriveParameterTypeList(constructor.getParameters());
+                return "<init>(" + parameters + ")";
+            }
+            case CtField<?> field -> {
+                String fieldName = field.getSimpleName();
+                String fieldType = field.getType() == null ? "" : normalizeTypeQualifiedName(field.getType());
+                return fieldName + ":" + fieldType;
+            }
+            case CtType<?> nestedType -> {
+                return nestedType.getQualifiedName();
+            }
+            default -> {}
         }
-        String qualifiedName = typeReference.getQualifiedName();
-        return StringUtils.isNotBlank(qualifiedName) ? qualifiedName : "<unknown>";
-    }
-
-    private static int safeSourceStart(@NonNull CtTypeMember typeMember) {
-        return typeMember.getPosition().isValidPosition()
-                ? typeMember.getPosition().getSourceStart()
-                : Integer.MAX_VALUE;
+        return typeMember.getSimpleName();
     }
 
     @NonNull
-    private static String safeNameForAlpha(@NonNull CtTypeMember typeMember) {
-        String simpleName = typeMember.getSimpleName();
-        if (StringUtils.isNotBlank(simpleName)) {
-            return simpleName;
-        }
-
-        String shortRepresentation = typeMember.getShortRepresentation();
-        if (StringUtils.isNotBlank(shortRepresentation)) {
-            return shortRepresentation;
-        }
-
-        return typeMember.getClass().getSimpleName();
+    private static String deriveParameterTypeList(@NonNull List<?> parameters) {
+        // Spoon's parameter list is typed, but we keep this helper generic to avoid a large type signature here.
+        return parameters.stream()
+                .map(parameter -> {
+                    if (parameter instanceof spoon.reflect.declaration.CtParameter<?> ctParameter) {
+                        CtTypeReference<?> parameterType = ctParameter.getType();
+                        return parameterType == null ? "" : normalizeTypeQualifiedName(parameterType);
+                    }
+                    return "";
+                })
+                .collect(Collectors.joining(","));
     }
 
     @NonNull
     private static String describeTypeMember(@NonNull CtTypeMember typeMember) {
-        return typeMember.getClass().getSimpleName() + "(" + typeMember.getShortRepresentation() + ")";
+        return typeMember.getClass().getSimpleName()
+                + "{signature=" + deriveSignatureKey(typeMember)
+                + ",sourceStart=" + extractSourceStart(typeMember)
+                + "}";
+    }
+
+    @Value
+    private static class MemberUnit {
+        int unitId;
+
+        @NonNull
+        List<@NonNull CtTypeMember> members;
+
+        @NonNull
+        CtTypeMember representativeMember;
+
+        int representativeSourceStart;
+    }
+
+    @Value
+    private static class AccessorDescriptor {
+        @NonNull
+        AccessorKind accessorKind;
+
+        @NonNull
+        String propertyName;
+
+        @NonNull
+        String propertyTypeQualifiedName;
+    }
+
+    private enum AccessorKind {
+        GET(0),
+        IS(0),
+        HAS(0),
+        SET(1);
+
+        private final int sortOrder;
+
+        AccessorKind(int sortOrder) {
+            this.sortOrder = sortOrder;
+        }
+
+        int getSortOrder() {
+            return sortOrder;
+        }
+    }
+
+    private static final class UnionFind<T> {
+
+        private final Map<T, T> parentByItem = new LinkedHashMap<>();
+        private final Map<T, Integer> rankByItem = new LinkedHashMap<>();
+
+        UnionFind(@NonNull Collection<T> items) {
+            for (T item : items) {
+                parentByItem.put(item, item);
+                rankByItem.put(item, 0);
+            }
+        }
+
+        @NonNull
+        T find(@NonNull T item) {
+            T parent = parentByItem.get(item);
+            if (parent == null) {
+                parentByItem.put(item, item);
+                rankByItem.put(item, 0);
+                return item;
+            }
+
+            if (Objects.equals(parent, item)) {
+                return item;
+            }
+
+            T root = find(parent);
+            parentByItem.put(item, root);
+            return root;
+        }
+
+        void union(@NonNull T leftItem, @NonNull T rightItem) {
+            T leftRoot = find(leftItem);
+            T rightRoot = find(rightItem);
+
+            if (Objects.equals(leftRoot, rightRoot)) {
+                return;
+            }
+
+            int leftRank = rankByItem.getOrDefault(leftRoot, 0);
+            int rightRank = rankByItem.getOrDefault(rightRoot, 0);
+
+            if (leftRank < rightRank) {
+                parentByItem.put(leftRoot, rightRoot);
+                return;
+            }
+
+            if (leftRank > rightRank) {
+                parentByItem.put(rightRoot, leftRoot);
+                return;
+            }
+
+            parentByItem.put(rightRoot, leftRoot);
+            rankByItem.put(leftRoot, leftRank + 1);
+        }
     }
 }

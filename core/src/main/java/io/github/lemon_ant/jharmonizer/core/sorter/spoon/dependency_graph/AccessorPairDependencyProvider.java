@@ -15,16 +15,16 @@ final class AccessorPairDependencyProvider implements MemberDependencyProvider {
 
     @NonNull
     @Override
-    public Set<@NonNull MemberDependencyEdge> findDirectEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+    public Set<@NonNull DependencyEdge> findDirectEdges(
+            @NonNull CtTypeMember providerMember, boolean keepAccessorsTogether) {
 
-        if (!keepAccessorsTogether || !(dependentMember instanceof CtMethod<?> dependentMethod)) {
+        if (!keepAccessorsTogether || !(providerMember instanceof CtMethod<?> providerMethod)) {
             return Set.of();
         }
 
-        return SpoonJavaBeansAccessorUtils.findPairedAccessorMethods(dependentMethod).stream()
-                .map(pairedAccessorMethod -> new MemberDependencyEdge(
-                        pairedAccessorMethod, dependentMethod, MemberDependencyEdgeKind.ACCESSOR_BUNDLE))
+        return SpoonJavaBeansAccessorUtils.findPairedAccessorMethods(providerMethod).stream()
+                .map(pairedAccessorMethod ->
+                        new DependencyEdge(pairedAccessorMethod, MemberDependencyEdgeKind.ACCESSOR_BUNDLE))
                 .collect(Collectors.toUnmodifiableSet());
     }
 }

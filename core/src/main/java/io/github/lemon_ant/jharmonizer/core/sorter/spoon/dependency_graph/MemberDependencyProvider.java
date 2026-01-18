@@ -16,6 +16,5 @@ interface MemberDependencyProvider {
      * Edge kind specifies whether the edge represents declaration dependency or just accessor bundling.
      */
     @NonNull
-    Set<@NonNull MemberDependencyEdge> findDirectEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether);
+    Set<@NonNull DependencyEdge> findDirectEdges(@NonNull CtTypeMember providerMember, boolean keepAccessorsTogether);
 }

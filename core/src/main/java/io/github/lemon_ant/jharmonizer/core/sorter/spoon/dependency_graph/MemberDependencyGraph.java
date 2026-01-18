@@ -1,15 +1,16 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -22,30 +23,36 @@ import spoon.reflect.declaration.CtTypeMember;
  *   <li>{@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} encodes a real declaration-order constraint.</li>
  *   <li>{@link MemberDependencyEdgeKind#ACCESSOR_BUNDLE} encodes a keep-together constraint for accessors.</li>
  * </ul>
+ *
+ * <p>Implementation note: edges are stored as "flat" neighbor+kind values.
+ * Filtering by edge kind is applied on query rather than being encoded into the storage structure.
  */
 public final class MemberDependencyGraph {
 
-    private final Map<CtTypeMember, EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>>> directDependentsByProvider =
-            new HashMap<>();
+    private final Map<CtTypeMember, Set<DependencyEdge>> outgoingEdgesByProvider = new HashMap<>();
+    private final Map<CtTypeMember, Set<DependencyEdge>> incomingEdgesByDependent = new HashMap<>();
 
-    private final Map<CtTypeMember, EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>>> directProvidersByDependent =
-            new HashMap<>();
-
-    void addEdge(@NonNull MemberDependencyEdge dependencyEdge) {
-        CtTypeMember providerMember = dependencyEdge.getProviderMember();
-        CtTypeMember dependentMember = dependencyEdge.getDependentMember();
-        MemberDependencyEdgeKind edgeKind = dependencyEdge.getEdgeKind();
+    void addEdge(
+            @NonNull CtTypeMember providerMember,
+            @NonNull CtTypeMember dependentMember,
+            @NonNull MemberDependencyEdgeKind edgeKind) {
 
         registerVertex(providerMember);
         registerVertex(dependentMember);
 
-        directDependentsByProvider.get(providerMember).get(edgeKind).add(dependentMember);
-        directProvidersByDependent.get(dependentMember).get(edgeKind).add(providerMember);
+        outgoingEdgesByProvider.get(providerMember).add(new DependencyEdge(dependentMember, edgeKind));
+        incomingEdgesByDependent.get(dependentMember).add(new DependencyEdge(providerMember, edgeKind));
+    }
+
+    @NonNull
+    Set<@NonNull CtTypeMember> getAllVertices() {
+        // Both maps are always kept in sync via registerVertex().
+        return Collections.unmodifiableSet(outgoingEdgesByProvider.keySet());
     }
 
     @NonNull
     public Set<@NonNull CtTypeMember> findTransitiveDependents(@NonNull CtTypeMember providerMember) {
-        return findTransitiveDependents(providerMember, EnumSet.allOf(MemberDependencyEdgeKind.class));
+        return findTransitiveDependents(providerMember, Set.of(MemberDependencyEdgeKind.values()));
     }
 
     @NonNull
@@ -59,23 +66,23 @@ public final class MemberDependencyGraph {
 
         while (!queue.isEmpty()) {
             CtTypeMember currentProviderMember = queue.removeFirst();
-            for (CtTypeMember directDependentMember : findDirectDependents(currentProviderMember, allowedEdgeKinds)) {
-                if (visitedMembers.add(directDependentMember)) {
-                    queue.addLast(directDependentMember);
-                }
-            }
+            findDirectDependents(currentProviderMember, allowedEdgeKinds).stream()
+                    .filter(visitedMembers::add)
+                    .forEach(queue::addLast);
         }
 
         return Collections.unmodifiableSet(visitedMembers);
     }
 
     @NonNull
-    public Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
-        return findTransitiveProviders(dependentMember, EnumSet.allOf(MemberDependencyEdgeKind.class));
+    // TODO Do we need it???
+    Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
+        return findTransitiveProviders(dependentMember, Set.of(MemberDependencyEdgeKind.values()));
     }
 
     @NonNull
-    public Set<@NonNull CtTypeMember> findTransitiveProviders(
+    // TODO Do we need it???
+    Set<@NonNull CtTypeMember> findTransitiveProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 
         Set<CtTypeMember> visitedMembers = new LinkedHashSet<>();
@@ -85,62 +92,63 @@ public final class MemberDependencyGraph {
 
         while (!queue.isEmpty()) {
             CtTypeMember currentDependentMember = queue.removeFirst();
-            for (CtTypeMember directProviderMember : findDirectProviders(currentDependentMember, allowedEdgeKinds)) {
-                if (visitedMembers.add(directProviderMember)) {
-                    queue.addLast(directProviderMember);
-                }
-            }
+            findDirectProviders(currentDependentMember, allowedEdgeKinds).stream()
+                    .filter(visitedMembers::add)
+                    .forEach(queue::addLast);
         }
 
         return Collections.unmodifiableSet(visitedMembers);
     }
 
     @NonNull
-    public Set<@NonNull CtTypeMember> findDirectDependents(
+    Set<@NonNull CtTypeMember> findDirectDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        return findDirectNeighbors(directDependentsByProvider, providerMember, allowedEdgeKinds);
+        return findDirectNeighbors(outgoingEdgesByProvider, providerMember, allowedEdgeKinds);
     }
 
     @NonNull
-    public Set<@NonNull CtTypeMember> findDirectProviders(
+    Set<@NonNull CtTypeMember> findDirectProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        return findDirectNeighbors(directProvidersByDependent, dependentMember, allowedEdgeKinds);
+        return findDirectNeighbors(incomingEdgesByDependent, dependentMember, allowedEdgeKinds);
     }
 
-    private void registerVertex(@NonNull CtTypeMember typeMember) {
-        directDependentsByProvider.computeIfAbsent(typeMember, ignored -> createEmptyAdjacencyByKind());
-        directProvidersByDependent.computeIfAbsent(typeMember, ignored -> createEmptyAdjacencyByKind());
+    private void registerVertex(CtTypeMember typeMember) {
+        outgoingEdgesByProvider.computeIfAbsent(typeMember, ignored -> new HashSet<>());
+        incomingEdgesByDependent.computeIfAbsent(typeMember, ignored -> new HashSet<>());
     }
 
-    private static EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>> createEmptyAdjacencyByKind() {
-        EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>> adjacencyByKind =
-                new EnumMap<>(MemberDependencyEdgeKind.class);
-        for (MemberDependencyEdgeKind edgeKind : MemberDependencyEdgeKind.values()) {
-            adjacencyByKind.put(edgeKind, new HashSet<>());
-        }
-        return adjacencyByKind;
-    }
-
-    private static Set<CtTypeMember> findDirectNeighbors(
-            Map<CtTypeMember, EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>>> adjacency,
+    @NonNull
+    private static Set<@NonNull CtTypeMember> findDirectNeighbors(
+            Map<CtTypeMember, Set<DependencyEdge>> adjacency,
             CtTypeMember vertex,
-            Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+            @Nullable Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 
-        EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>> neighborsByKind = adjacency.get(vertex);
-        if (neighborsByKind == null) {
+        Set<DependencyEdge> dependencyEdges = adjacency.get(vertex);
+        if (dependencyEdges == null || dependencyEdges.isEmpty()) {
             return Set.of();
         }
 
-        if (allowedEdgeKinds.size() == 1) {
-            MemberDependencyEdgeKind singleEdgeKind =
-                    allowedEdgeKinds.iterator().next();
-            return Collections.unmodifiableSet(neighborsByKind.getOrDefault(singleEdgeKind, Set.of()));
+        // If no filter is needed, keep the predicate null and avoid extra checks in the stream.
+        Predicate<DependencyEdge> edgeFilterPredicate = null;
+
+        boolean noFilteringRequested = allowedEdgeKinds == null
+                || allowedEdgeKinds.isEmpty()
+                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
+
+        if (!noFilteringRequested) {
+            if (allowedEdgeKinds.size() == 1) {
+                MemberDependencyEdgeKind singleEdgeKind =
+                        allowedEdgeKinds.iterator().next();
+                edgeFilterPredicate = dependencyEdge -> dependencyEdge.getEdgeKind() == singleEdgeKind;
+            } else {
+                edgeFilterPredicate = dependencyEdge -> allowedEdgeKinds.contains(dependencyEdge.getEdgeKind());
+            }
         }
 
-        Set<CtTypeMember> mergedNeighbors = new LinkedHashSet<>();
-        for (MemberDependencyEdgeKind edgeKind : allowedEdgeKinds) {
-            mergedNeighbors.addAll(neighborsByKind.getOrDefault(edgeKind, Set.of()));
-        }
-        return Collections.unmodifiableSet(mergedNeighbors);
+        return (edgeFilterPredicate == null
+                        ? dependencyEdges.stream()
+                        : dependencyEdges.stream().filter(edgeFilterPredicate))
+                .map(DependencyEdge::getDependentMember)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }
