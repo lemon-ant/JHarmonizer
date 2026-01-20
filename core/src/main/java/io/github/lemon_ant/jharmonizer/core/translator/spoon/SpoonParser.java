@@ -38,7 +38,7 @@ public class SpoonParser {
 
     private static SpoonAstModel buildSpoonAstModel(@NonNull Path path, @NonNull Launcher launcher) {
         var compilationUnit = extractCompilationUnit(launcher);
-        var mainType = SpoonUtilities.findMainType(compilationUnit);
+        var mainType = SpoonTypeUtils.findMainType(compilationUnit);
         Supplier<String> serializedSourceCode =
                 () -> launcher.createPrettyPrinter().printCompilationUnit(compilationUnit);
         return SpoonAstModel.builder()

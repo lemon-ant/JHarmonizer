@@ -6,5 +6,4 @@ public enum SortKey {
     ALPHA,
     VISIBILITY_ASC,
     VISIBILITY_DESC,
-    SIGNATURE,
 }

@@ -21,11 +21,8 @@ class ConfigModelSnapshotTest {
 
     @Test
     void configModel_serializationMatchesSnapshot() throws Exception {
-        // given
-        JHarmonizerConfig JHarmonizerConfig = DEFAULT_JHARMONIZER_CONFIG;
-
         // when
-        String actualJson = MAPPER.writeValueAsString(JHarmonizerConfig);
+        String actualJson = MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG);
 
         // then
         try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
@@ -58,11 +55,8 @@ class ConfigModelSnapshotTest {
     @Test
     @Disabled("Utility only. Run to regenerate expected-default-jharmonizer-config.json")
     void regenerateSnapshot() throws Exception {
-        // Load current default config
-        JHarmonizerConfig jHarmonizerConfig = DEFAULT_JHARMONIZER_CONFIG;
-
         // Serialize and overwrite snapshot
-        String newSnapshot = MAPPER.writeValueAsString(jHarmonizerConfig);
+        String newSnapshot = MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG);
         Path snapshotPath = Path.of(FILE_PATH_TO_SNAPSHOT);
         Files.writeString(snapshotPath, newSnapshot, StandardCharsets.UTF_8);
         // quick sanity: snapshot should be readable right away

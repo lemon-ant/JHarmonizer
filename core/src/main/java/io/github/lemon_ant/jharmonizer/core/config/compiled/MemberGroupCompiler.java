@@ -99,7 +99,6 @@ class MemberGroupCompiler {
         return switch (unifiedSortKey) {
             case ALPHA -> SortKey.ALPHA;
             case PRESERVE -> SortKey.PRESERVE;
-            case SIGNATURE -> SortKey.SIGNATURE;
             case VISIBILITY_ASC -> SortKey.VISIBILITY_ASC;
             case VISIBILITY_DESC -> SortKey.VISIBILITY_DESC;
         };

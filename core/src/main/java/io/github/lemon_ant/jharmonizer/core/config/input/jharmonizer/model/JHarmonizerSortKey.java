@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 public enum JHarmonizerSortKey {
     ALPHA(UnifiedSortKey.ALPHA),
     PRESERVE(UnifiedSortKey.PRESERVE),
-    SIGNATURE(UnifiedSortKey.SIGNATURE),
     VISIBILITY_ASC(UnifiedSortKey.VISIBILITY_ASC),
     VISIBILITY_DESC(UnifiedSortKey.VISIBILITY_DESC),
     ;

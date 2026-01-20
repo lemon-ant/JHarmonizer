@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonUtilities.getAllTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonUtilities.getAllTypes;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonUtilities.getRootTypes;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeUtils.getAllTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeUtils.getAllTypes;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeUtils.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;

@@ -56,6 +56,7 @@ public final class MemberDependencyGraph {
     }
 
     @NonNull
+    // TODO Optimize to do not compute on demand but find all transitive dependencies during population
     public Set<@NonNull CtTypeMember> findTransitiveDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 
@@ -82,6 +83,7 @@ public final class MemberDependencyGraph {
 
     @NonNull
     // TODO Do we need it???
+    // TODO Optimize to do not compute on demand but find all transitive dependencies during population
     Set<@NonNull CtTypeMember> findTransitiveProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 

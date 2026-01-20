@@ -23,7 +23,7 @@ class ElementsFlatOrderIndexer {
     // TODO Create a dedicated type instead of Map
     static Map<SourcePosition, Integer> indexElementsByOrder(CtCompilationUnit compilationUnit) {
         AtomicInteger runningIndex = new AtomicInteger(0);
-        return SpoonUtilities.streamDeclaredHierarchy(compilationUnit)
+        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit)
                 .map(CtElement::getPosition)
                 .filter(SourcePosition::isValidPosition)
                 .collect(Collectors.toMap(

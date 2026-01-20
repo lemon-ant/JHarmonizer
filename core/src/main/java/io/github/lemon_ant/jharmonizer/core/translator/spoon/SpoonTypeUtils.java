@@ -13,7 +13,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
 // TODO Reconsider methods and remove superfluous
-public class SpoonUtilities {
+public class SpoonTypeUtils {
     private static final int ONE_ROOT_TYPE = 1;
     private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
@@ -25,7 +25,7 @@ public class SpoonUtilities {
 
     public static List<CtType<?>> getAllTypes(CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit)
-                .flatMap(SpoonUtilities::streamTypesTree)
+                .flatMap(SpoonTypeUtils::streamTypesTree)
                 .toList();
     }
 
@@ -37,7 +37,7 @@ public class SpoonUtilities {
      * Current order for a whole compilation unit: declared types as-is.
      */
     public static Stream<CtElement> streamDeclaredHierarchy(CtCompilationUnit compilationUnit) {
-        return streamRootTypes(compilationUnit).flatMap(SpoonUtilities::streamTypeAndNestedElements);
+        return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
     static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
@@ -86,6 +86,6 @@ public class SpoonUtilities {
     }
 
     private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
-        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonUtilities::streamTypesTree));
+        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonTypeUtils::streamTypesTree));
     }
 }

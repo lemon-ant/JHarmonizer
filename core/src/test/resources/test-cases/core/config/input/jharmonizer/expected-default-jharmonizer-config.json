@@ -75,9 +75,9 @@
         "separator" : "HEADER",
         "keepAccessorsTogether" : false,
         "memberSubGroups" : [ ],
-        "sortKeys" : [ "ALPHA", "SIGNATURE" ]
+        "sortKeys" : [ "ALPHA" ]
       } ],
-      "sortKeys" : [ "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "ALPHA" ]
     }, {
       "name" : "JUnit Test Configuration",
       "includes" : [ [ "@TestConfiguration", "class", "static" ] ],
@@ -87,7 +87,7 @@
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     } ],
-    "sortKeys" : [ "ALPHA", "SIGNATURE" ]
+    "sortKeys" : [ "ALPHA" ]
   }, {
     "name" : "DTO and Entities",
     "includes" : [ [ "~.*(Dto|DTO)$" ], [ "@Entity" ], [ "@Embeddable" ], [ "@Document" ], [ "@Data" ], [ "~.*Entity$" ], [ "@Value" ], [ "@MappedSuperclass" ], [ "@ConfigurationProperties" ] ],
@@ -181,7 +181,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Initializer Blocks",
       "includes" : [ [ "initializer" ] ],
@@ -197,7 +197,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Accessor Methods",
       "includes" : [ [ "method" ], [ "~^(get|set|is|has).+$" ] ],
@@ -205,7 +205,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Methods",
       "includes" : [ [ "method" ] ],
@@ -213,7 +213,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Basic Object Methods",
       "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
@@ -223,7 +223,7 @@
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     } ],
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
   }, {
     "name" : "Default Rule",
     "includes" : [ [ "~.*" ] ],
@@ -325,7 +325,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Initializer Blocks",
       "includes" : [ [ "initializer" ] ],
@@ -341,7 +341,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Methods",
       "includes" : [ [ "method" ] ],
@@ -349,7 +349,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : false,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Basic Object Methods",
       "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
@@ -391,7 +391,7 @@
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     } ],
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA", "SIGNATURE" ]
+    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
   } ],
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,

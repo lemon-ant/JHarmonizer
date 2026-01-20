@@ -4,6 +4,7 @@ import static java.beans.Introspector.decapitalize;
 import static java.util.Objects.requireNonNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -173,7 +174,7 @@ class SpoonJavaBeansAccessorUtils {
             case NON_VOID -> !"void".equals(returnTypeQualifiedName);
             case BOOLEAN ->
                 "java.lang.Boolean"
-                        .equals(normalizePropertyTypeForMatching(returnTypeReference)
+                        .equals(SpoonTypeMemberUtils.normalizeTypeReferenceByErasureAndBoxing(returnTypeReference)
                                 .getQualifiedName());
         };
     }
@@ -188,7 +189,8 @@ class SpoonJavaBeansAccessorUtils {
             return null;
         }
 
-        CtTypeReference<?> propertyType = normalizePropertyTypeForMatching(propertyTypeReference);
+        CtTypeReference<?> propertyType =
+                SpoonTypeMemberUtils.normalizeTypeReferenceByErasureAndBoxing(propertyTypeReference);
 
         int propertyNameStartIndex =
                 accessorMethodContract.getMethodNamePrefix().length();
@@ -210,12 +212,5 @@ class SpoonJavaBeansAccessorUtils {
                         ? null
                         : candidateMethod.getParameters().getFirst().getType();
         };
-    }
-
-    @NonNull
-    private static CtTypeReference<?> normalizePropertyTypeForMatching(CtTypeReference<?> typeReference) {
-        // Use type erasure + boxing to match boolean/Boolean and to ignore generic parameters.
-        CtTypeReference<?> erasedTypeReference = typeReference.getTypeErasure();
-        return erasedTypeReference.isPrimitive() ? erasedTypeReference.box() : erasedTypeReference;
     }
 }

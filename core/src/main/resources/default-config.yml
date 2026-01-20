@@ -24,7 +24,7 @@ type-members-ordering:
       - [ class, '@ExtendWith' ]
       - [ class, '@RunWith' ]
       - [ class, ~.*Test$ ]
-    sort-keys: alpha, signature
+    sort-keys: alpha
     groups:
       - name: JUnit Fields
         separator: new-line
@@ -42,7 +42,7 @@ type-members-ordering:
 
       - name: JUnit Methods
         separator: new-line
-        sort-keys: alpha, signature
+        sort-keys: alpha
         includes: method
         groups:
           - name: JUnit Setup Methods
@@ -67,7 +67,7 @@ type-members-ordering:
           - name: Utility Methods
             separator: header
             includes: static
-            sort-keys: alpha, signature
+            sort-keys: alpha
 
       - name: JUnit Test Configuration
         separator: new-line
@@ -87,7 +87,7 @@ type-members-ordering:
       - '@Embeddable'
       - '@ConfigurationProperties'
       - '@Document'
-    sort-keys: [ visibility-desc, alpha, signature ]
+    sort-keys: [ visibility-desc, alpha ]
     groups:
       - name: Serializable UID
         separator: new-line
@@ -138,7 +138,7 @@ type-members-ordering:
 
       - name: Static Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
@@ -148,18 +148,18 @@ type-members-ordering:
 
       - name: Constructors
         separator: none
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: constructor
 
       - name: Accessor Methods
         separator: none
         keepAccessorsTogether: true
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: [ method, ~^(get|set|is|has).+$ ]
 
       - name: Instance Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: [ method ]
         excludes:
           - [ method, =toString ]
@@ -177,7 +177,7 @@ type-members-ordering:
 
   - name: Default Rule
     includes: ~.*
-    sort-keys: [ visibility-desc, alpha, signature ] # For subtypes
+    sort-keys: [ visibility-desc, alpha ] # For subtypes
     groups:
       - name: Serializable UID
         separator: new-line
@@ -234,7 +234,7 @@ type-members-ordering:
 
       - name: Static Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
@@ -244,12 +244,12 @@ type-members-ordering:
 
       - name: Constructors
         separator: none
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: constructor
 
       - name: Instance Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha, signature ]
+        sort-keys: [ visibility-desc, alpha ]
         includes: [ method ]
         excludes:
           - [ method, =toString ]
