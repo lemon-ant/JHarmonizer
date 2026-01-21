@@ -5,10 +5,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.declaration.CtRecordComponent;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
@@ -68,7 +70,6 @@ public class SpoonTypeMemberUtils {
             case CtMethod<?> method -> {
                 String methodName = method.getSimpleName();
                 String parameters = deriveParameterTypeList(method.getParameters());
-                // TODO  method.getType() == null, check it
                 String returnType =
                         method.getType() == null ? "" : method.getType().getQualifiedName();
                 return methodName + "(" + parameters + "):" + returnType;
@@ -79,16 +80,27 @@ public class SpoonTypeMemberUtils {
             }
             case CtField<?> field -> {
                 String fieldName = field.getSimpleName();
-                // TODO field.getType() == null, check it
                 String fieldType =
                         field.getType() == null ? "" : field.getType().getQualifiedName();
                 return fieldName + ":" + fieldType;
+            }
+            case CtAnonymousExecutable anonymousExecutable -> {
+                boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
+                return isStaticInitializer ? "<clinit>" : "<init>";
+            }
+            case CtRecordComponent recordComponent -> {
+                String componentName = recordComponent.getSimpleName();
+                String componentType = recordComponent.getType() == null
+                        ? ""
+                        : recordComponent.getType().getQualifiedName();
+                return componentName + ":" + componentType;
             }
             case CtType<?> nestedType -> {
                 return nestedType.getQualifiedName();
             }
             default -> {
-                throw new IllegalStateException("Unexpected value: " + typeMember);
+                // Defensive fallback for any unexpected Spoon CtTypeMember implementation.
+                return typeMember.getClass().getSimpleName() + ":" + extractSourceStart(typeMember);
             }
         }
     }
