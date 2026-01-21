@@ -11,10 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -64,16 +61,8 @@ class GroupMembersOrderer {
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
 
-        AccessorBundleLookup accessorBundleLookup = keepAccessorsTogether
-                ? buildAccessorBundleLookup(groupMembers, groupMemberSet, memberDependencyGraph, baseComparator)
-                : AccessorBundleLookup.identity(groupMembers);
-
         Map<CtTypeMember, CtTypeMember> representativeByMember = buildRepresentativeByMember(
-                groupMembers,
-                groupMemberSet,
-                memberDependencyGraph,
-                accessorBundleLookup.getBundleRepresentativeByMember(),
-                baseComparator);
+                groupMembers, groupMemberSet, memberDependencyGraph, baseComparator, keepAccessorsTogether);
 
         Comparator<CtTypeMember> groupComparator =
                 buildGroupComparator(baseComparator, memberDependencyGraph, representativeByMember);
@@ -82,82 +71,65 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static AccessorBundleLookup buildAccessorBundleLookup(
-            @NonNull List<CtTypeMember> groupMembers,
-            @NonNull Set<CtTypeMember> groupMemberSet,
-            @NonNull MemberDependencyGraph memberDependencyGraph,
-            @NonNull Comparator<CtTypeMember> baseComparator) {
-
-        Map<CtTypeMember, CtTypeMember> bundleRepresentativeByMember = new LinkedHashMap<>();
-        Set<CtTypeMember> visitedMembers = new LinkedHashSet<>();
-
-        for (CtTypeMember member : groupMembers) {
-            if (visitedMembers.contains(member)) {
-                continue;
-            }
-
-            Set<CtTypeMember> bundleMembers = new LinkedHashSet<>();
-            bundleMembers.add(member);
-
-            // ACCESSOR_BUNDLE edges are expected to be bidirectional.
-            // We still use transitive traversal to be robust if the bundle is not a "clique".
-            bundleMembers.addAll(memberDependencyGraph.findTransitiveDependents(member, ACCESSOR_BUNDLE_ONLY));
-            bundleMembers.retainAll(groupMemberSet);
-
-            visitedMembers.addAll(bundleMembers);
-
-            CtTypeMember bundleRepresentative =
-                    bundleMembers.stream().min(baseComparator).orElse(member);
-
-            bundleMembers.forEach(bundleMember -> bundleRepresentativeByMember.put(bundleMember, bundleRepresentative));
-        }
-
-        // Ensure identity mapping for members that are not in any accessor bundle.
-        groupMembers.forEach(member -> bundleRepresentativeByMember.putIfAbsent(member, member));
-
-        return new AccessorBundleLookup(Map.copyOf(bundleRepresentativeByMember));
-    }
-
-    @NonNull
     private static Map<CtTypeMember, CtTypeMember> buildRepresentativeByMember(
             @NonNull List<CtTypeMember> groupMembers,
             @NonNull Set<CtTypeMember> groupMemberSet,
             @NonNull MemberDependencyGraph memberDependencyGraph,
-            @NonNull Map<CtTypeMember, CtTypeMember> bundleRepresentativeByMember,
-            @NonNull Comparator<CtTypeMember> baseComparator) {
+            @NonNull Comparator<CtTypeMember> baseComparator,
+            boolean keepAccessorsTogether) {
 
-        // Representative rules:
-        // 1) Accessor bundle members share the same representative (the "first" member of the bundle).
-        // 2) A declaration provider is represented by the earliest element (by base comparator) from:
-        //    {provider} ∪ transitiveDependents(provider, DECLARATION_DEPENDENCY).
-        return Map.copyOf(groupMembers.stream()
-                .collect(Collectors.toMap(
-                        Function.identity(),
-                        member -> {
-                            CtTypeMember accessorBundleRepresentative =
-                                    bundleRepresentativeByMember.getOrDefault(member, member);
+        Map<CtTypeMember, CtTypeMember> representativeByMember = new LinkedHashMap<>();
+        Set<CtTypeMember> visitedAccessorBundleMembers = new LinkedHashSet<>();
 
-                            // Accessor bundling has priority and is orthogonal to declaration dependencies.
-                            if (accessorBundleRepresentative != member) {
-                                return accessorBundleRepresentative;
-                            }
+        for (CtTypeMember member : groupMembers) {
+            if (representativeByMember.containsKey(member)) {
+                continue;
+            }
 
-                            Set<CtTypeMember> declarationClosure = new LinkedHashSet<>();
-                            declarationClosure.add(member);
-                            declarationClosure.addAll(memberDependencyGraph.findTransitiveDependents(
-                                    member, DECLARATION_DEPENDENCY_ONLY));
-                            declarationClosure.retainAll(groupMemberSet);
+            // 1) Declaration provider representative: min({provider} ∪ transitiveDependents(provider)).
+            Set<CtTypeMember> declarationClosure = new LinkedHashSet<>();
+            declarationClosure.add(member);
+            declarationClosure.addAll(
+                    memberDependencyGraph.findTransitiveDependents(member, DECLARATION_DEPENDENCY_ONLY));
+            declarationClosure.retainAll(groupMemberSet);
 
-                            return declarationClosure.stream()
-                                    .min(baseComparator)
-                                    .orElse(member);
-                        },
-                        (existingValue, newValue) -> {
-                            throw new IllegalStateException(
-                                    "Unexpected duplicate member while building member->representative map. member="
-                                            + describeTypeMember(existingValue));
-                        },
-                        LinkedHashMap::new)));
+            boolean hasAnyDeclarationDependentInGroup = declarationClosure.size() > 1;
+            if (hasAnyDeclarationDependentInGroup) {
+                CtTypeMember providerRepresentative =
+                        declarationClosure.stream().min(baseComparator).orElse(member);
+                representativeByMember.put(member, providerRepresentative);
+                continue;
+            }
+
+            // 2) Accessor bundle representative (only when enabled and only for bundle members).
+            if (!keepAccessorsTogether || visitedAccessorBundleMembers.contains(member)) {
+                representativeByMember.put(member, member);
+                continue;
+            }
+
+            Set<CtTypeMember> accessorBundleMembers = new LinkedHashSet<>();
+            accessorBundleMembers.add(member);
+            accessorBundleMembers.addAll(memberDependencyGraph.findTransitiveDependents(member, ACCESSOR_BUNDLE_ONLY));
+            accessorBundleMembers.retainAll(groupMemberSet);
+
+            boolean isRealBundle = accessorBundleMembers.size() > 1;
+            if (!isRealBundle) {
+                representativeByMember.put(member, member);
+                continue;
+            }
+
+            CtTypeMember bundleRepresentative =
+                    accessorBundleMembers.stream().min(baseComparator).orElse(member);
+
+            accessorBundleMembers.forEach(
+                    bundleMember -> representativeByMember.put(bundleMember, bundleRepresentative));
+            visitedAccessorBundleMembers.addAll(accessorBundleMembers);
+        }
+
+        // Ensure total mapping.
+        groupMembers.forEach(member -> representativeByMember.putIfAbsent(member, member));
+
+        return Map.copyOf(representativeByMember);
     }
 
     @NonNull
@@ -188,7 +160,7 @@ class GroupMembersOrderer {
             }
 
             // Corner case: cycles in declaration dependencies. We must not break antisymmetry.
-            // Fall back to deterministic base ordering.
+            // TODO: move cycle handling into MemberDependencyGraph.
             if (leftMustBeBeforeRight && rightMustBeBeforeLeft) {
                 int cycleFallback = baseComparator.compare(leftMember, rightMember);
                 if (cycleFallback != 0) {
@@ -253,25 +225,5 @@ class GroupMembersOrderer {
                 + "{signature=" + SpoonTypeMemberUtils.deriveAlphaKey(typeMember)
                 + ",sourceStart=" + SpoonTypeMemberUtils.extractSourceStart(typeMember)
                 + "}";
-    }
-
-    @Value
-    private static class AccessorBundleLookup {
-
-        @NonNull
-        Map<@NonNull CtTypeMember, @NonNull CtTypeMember> bundleRepresentativeByMember;
-
-        static AccessorBundleLookup identity(@NonNull List<CtTypeMember> members) {
-            Map<CtTypeMember, CtTypeMember> identityMapping = members.stream()
-                    .collect(Collectors.toMap(
-                            Function.identity(),
-                            Function.identity(),
-                            (existingValue, newValue) -> {
-                                throw new IllegalStateException(
-                                        "Unexpected duplicate member while building identity mapping.");
-                            },
-                            LinkedHashMap::new));
-            return new AccessorBundleLookup(Map.copyOf(identityMapping));
-        }
     }
 }
