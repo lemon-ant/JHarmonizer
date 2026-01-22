@@ -64,11 +64,14 @@ class GroupMembersOrderer {
         List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
+        Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator = buildSortKeyValuesComparator(sortKeys);
+
         Map<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesByMember = new LinkedHashMap<>();
         Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider = typeMember ->
                 sortKeyValuesByMember.computeIfAbsent(typeMember, GroupMembersOrderer::deriveSortKeyValues);
 
-        Comparator<CtTypeMember> typeMemberBaseComparator = buildConfiguredComparator(sortKeys, sortKeyValuesProvider);
+        Comparator<CtTypeMember> typeMemberBaseComparator =
+                Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator);
 
         Map<CtTypeMember, CtTypeMember> accessorBundleRepresentativeByMember =
                 keepAccessorsTogether ? new LinkedHashMap<>() : Map.of();
@@ -94,7 +97,7 @@ class GroupMembersOrderer {
                 .toList();
 
         Comparator<SortableTypeMember> sortableBaseComparator =
-                buildConfiguredComparator(sortKeys, SortableTypeMember::getSortKeyValues);
+                Comparator.comparing(SortableTypeMember::getSortKeyValues, sortKeyValuesComparator);
 
         Comparator<SortableTypeMember> groupComparator =
                 buildGroupComparator(sortableBaseComparator, typeMemberBaseComparator);
@@ -244,58 +247,47 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(@NonNull CtTypeMember typeMember) {
-        return new SortableTypeMember.SortKeyValues(
-                SpoonTypeMemberUtils.extractSourceStart(typeMember),
-                SpoonTypeMemberUtils.deriveAlphaKey(typeMember),
-                SpoonTypeMemberUtils.deriveVisibilityRankAscending(typeMember),
-                SpoonTypeMemberUtils.deriveVisibilityRankDescending(typeMember));
-    }
+    private static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparator(
+            @NonNull List<SortKey> sortKeys) {
 
-    @NonNull
-    private static <TSortKeyProvider> Comparator<TSortKeyProvider> buildConfiguredComparator(
-            @NonNull List<SortKey> sortKeys,
-            @NonNull Function<TSortKeyProvider, SortableTypeMember.SortKeyValues> sortKeyValuesProvider) {
-
-        Comparator<TSortKeyProvider> configuredComparator = sortKeys.stream()
-                .map(sortKey -> buildComparatorForSortKey(sortKey, sortKeyValuesProvider))
+        Comparator<SortableTypeMember.SortKeyValues> configuredComparator = sortKeys.stream()
+                .map(GroupMembersOrderer::buildSortKeyValuesComparatorForSortKey)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.comparingInt((TSortKeyProvider element) ->
-                                sortKeyValuesProvider.apply(element).getSourceStart())
-                        .thenComparing(
-                                element -> sortKeyValuesProvider.apply(element).getAlphaKey()));
+                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart)
+                        .thenComparing(SortableTypeMember.SortKeyValues::getAlphaKey));
 
         // Deterministic tie-breakers regardless of configured keys.
         if (!sortKeys.contains(SortKey.PRESERVE)) {
-            configuredComparator = configuredComparator.thenComparingInt(
-                    element -> sortKeyValuesProvider.apply(element).getSourceStart());
+            configuredComparator =
+                    configuredComparator.thenComparingInt(SortableTypeMember.SortKeyValues::getSourceStart);
         }
         if (!sortKeys.contains(SortKey.ALPHA)) {
-            configuredComparator = configuredComparator.thenComparing(
-                    element -> sortKeyValuesProvider.apply(element).getAlphaKey());
+            configuredComparator = configuredComparator.thenComparing(SortableTypeMember.SortKeyValues::getAlphaKey);
         }
 
         return configuredComparator;
     }
 
     @NonNull
-    private static <TSortKeyProvider> Comparator<TSortKeyProvider> buildComparatorForSortKey(
-            @NonNull SortKey sortKey, @NonNull Function<TSortKeyProvider, SortableTypeMember.SortKeyValues> sortKeyValuesProvider) {
+    private static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparatorForSortKey(
+            @NonNull SortKey sortKey) {
 
         return switch (sortKey) {
-            case PRESERVE ->
-                Comparator.comparingInt(
-                        element -> sortKeyValuesProvider.apply(element).getSourceStart());
-            case ALPHA ->
-                Comparator.comparing(
-                        element -> sortKeyValuesProvider.apply(element).getAlphaKey());
-            case VISIBILITY_ASC ->
-                Comparator.comparingInt(
-                        element -> sortKeyValuesProvider.apply(element).getVisibilityRankAscending());
+            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart);
+            case ALPHA -> Comparator.comparing(SortableTypeMember.SortKeyValues::getAlphaKey);
+            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getVisibilityRank);
             case VISIBILITY_DESC ->
-                Comparator.comparingInt(
-                        element -> sortKeyValuesProvider.apply(element).getVisibilityRankDescending());
+                Comparator.comparingInt(SortableTypeMember.SortKeyValues::getVisibilityRank)
+                        .reversed();
         };
+    }
+
+    @NonNull
+    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(@NonNull CtTypeMember typeMember) {
+        return new SortableTypeMember.SortKeyValues(
+                SpoonTypeMemberUtils.extractSourceStart(typeMember),
+                SpoonTypeMemberUtils.deriveAlphaKey(typeMember),
+                SpoonTypeMemberUtils.deriveVisibilityRank(typeMember));
     }
 
     @Value
@@ -320,8 +312,7 @@ class GroupMembersOrderer {
             @NonNull
             String alphaKey;
 
-            int visibilityRankAscending;
-            int visibilityRankDescending;
+            int visibilityRank;
         }
     }
 }

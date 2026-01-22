@@ -36,7 +36,7 @@ public class SpoonTypeMemberUtils {
         return normalizeTypeReferenceByErasureAndBoxing(typeReference).getQualifiedName();
     }
 
-    static int deriveVisibilityRankAscending(@NonNull CtTypeMember typeMember) {
+    static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
         // Ascending: public (0) -> protected (1) -> package-private (2) -> private (3)
         Set<ModifierKind> modifiers = typeMember.getModifiers();
         if (modifiers.contains(ModifierKind.PUBLIC)) {
@@ -49,12 +49,6 @@ public class SpoonTypeMemberUtils {
             return 3;
         }
         return 2; // package-private
-    }
-
-    static int deriveVisibilityRankDescending(@NonNull CtTypeMember typeMember) {
-        // Descending: private (0) -> package-private (1) -> protected (2) -> public (3)
-        int ascendingRank = deriveVisibilityRankAscending(typeMember);
-        return 3 - ascendingRank;
     }
 
     static int extractSourceStart(@NonNull CtTypeMember typeMember) {
