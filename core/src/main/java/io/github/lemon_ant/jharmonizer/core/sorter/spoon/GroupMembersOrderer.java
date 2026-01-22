@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.Value;
@@ -60,250 +62,82 @@ class GroupMembersOrderer {
         }
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        Set<CtTypeMember> groupMemberSetInStableIterationOrder = new LinkedHashSet<>(groupMembers);
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMemberSetInStableIterationOrder);
+        GroupOrderingContext groupOrderingContext = new GroupOrderingContext(
+                compiledMemberGroup, groupMembers, groupMemberSet, keepAccessorsTogether, memberDependencyGraph);
 
-        Map<CtTypeMember, SortableTypeMember> baseSortableTypeMemberByMember = groupMembers.stream()
-                .collect(collectToLinkedHashMap(Function.identity(), SortableTypeMember::createBase));
+        Map<CtTypeMember, SortableTypeMember> sortableByMember = groupMembers.stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        groupOrderingContext::convertToSortableTypeMember,
+                        (existingValue, newValue) -> {
+                            throw new IllegalStateException(
+                                    "Unexpected duplicate member while building member->sortable mapping. member="
+                                            + describeTypeMember(existingValue.getTypeMember()));
+                        },
+                        LinkedHashMap::new));
 
         Comparator<SortableTypeMember> baseComparator = buildBaseComparatorForGroup(compiledMemberGroup);
-
-        Map<CtTypeMember, Set<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
-                ? buildAccessorBundleMembersByMember(groupMembers, groupMemberSet, memberDependencyGraph)
-                : Map.of();
-
-        Map<CtTypeMember, Set<CtTypeMember>> effectiveTransitiveDependentsByProviderInGroup =
-                buildEffectiveTransitiveDependentsByProviderInGroup(
-                        groupMembers,
-                        groupMemberSet,
-                        memberDependencyGraph,
-                        accessorBundleMembersByMember,
-                        keepAccessorsTogether);
-
-        Map<CtTypeMember, Set<CtTypeMember>> transitiveDeclarationProvidersByDependentInGroup =
-                invertDependentsToProviders(effectiveTransitiveDependentsByProviderInGroup);
-
-        Map<CtTypeMember, CtTypeMember> representativeMemberByMember = buildRepresentativeMemberByMember(
-                groupMembers,
-                baseSortableTypeMemberByMember,
-                baseComparator,
-                accessorBundleMembersByMember,
-                effectiveTransitiveDependentsByProviderInGroup,
-                keepAccessorsTogether);
-
-        Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = groupMembers.stream()
-                .collect(collectToLinkedHashMap(Function.identity(), groupMember -> {
-                    SortableTypeMember baseSortableTypeMember =
-                            requireSortableTypeMember(baseSortableTypeMemberByMember, groupMember);
-
-                    CtTypeMember representativeMember =
-                            representativeMemberByMember.getOrDefault(groupMember, groupMember);
-
-                    Set<CtTypeMember> transitiveDeclarationProvidersInGroup =
-                            transitiveDeclarationProvidersByDependentInGroup.getOrDefault(groupMember, Set.of());
-
-                    return baseSortableTypeMember.withRelationships(
-                            representativeMember, transitiveDeclarationProvidersInGroup);
-                }));
-
-        Comparator<SortableTypeMember> groupComparator =
-                buildGroupComparator(baseComparator, sortableTypeMemberByMember);
+        Comparator<SortableTypeMember> groupComparator = buildGroupComparator(baseComparator, sortableByMember);
 
         return groupMembers.stream()
-                .map(sortableTypeMemberByMember::get)
+                .map(sortableByMember::get)
                 .sorted(groupComparator)
                 .map(SortableTypeMember::getTypeMember)
                 .toList();
     }
 
     @NonNull
-    private static Map<CtTypeMember, Set<CtTypeMember>> buildAccessorBundleMembersByMember(
-            @NonNull List<CtTypeMember> groupMembers,
-            @NonNull Set<CtTypeMember> groupMemberSet,
-            @NonNull MemberDependencyGraph memberDependencyGraph) {
-
-        Map<CtTypeMember, Set<CtTypeMember>> accessorBundleMembersByMember = new LinkedHashMap<>();
-        Set<CtTypeMember> visitedMembers = new LinkedHashSet<>();
-
-        for (CtTypeMember member : groupMembers) {
-            if (visitedMembers.contains(member)) {
-                continue;
-            }
-
-            Set<CtTypeMember> bundleMembers = new LinkedHashSet<>();
-            bundleMembers.add(member);
-
-            // ACCESSOR_BUNDLE edges are expected to be bidirectional. We still use transitive traversal to be robust.
-            bundleMembers.addAll(memberDependencyGraph.findTransitiveDependents(member, ACCESSOR_BUNDLE_ONLY));
-            bundleMembers.retainAll(groupMemberSet);
-
-            if (bundleMembers.size() <= 1) {
-                continue;
-            }
-
-            visitedMembers.addAll(bundleMembers);
-
-            Set<CtTypeMember> immutableBundleMembers = Set.copyOf(bundleMembers);
-            bundleMembers.forEach(
-                    bundleMember -> accessorBundleMembersByMember.put(bundleMember, immutableBundleMembers));
-        }
-
-        return Map.copyOf(accessorBundleMembersByMember);
-    }
-
-    @NonNull
-    private static Map<CtTypeMember, Set<CtTypeMember>> buildEffectiveTransitiveDependentsByProviderInGroup(
-            @NonNull List<CtTypeMember> groupMembers,
-            @NonNull Set<CtTypeMember> groupMemberSet,
-            @NonNull MemberDependencyGraph memberDependencyGraph,
-            @NonNull Map<CtTypeMember, Set<CtTypeMember>> accessorBundleMembersByMember,
-            boolean keepAccessorsTogether) {
-
-        Map<CtTypeMember, Set<CtTypeMember>> effectiveTransitiveDependentsByProviderInGroup = new LinkedHashMap<>();
-
-        for (CtTypeMember providerMember : groupMembers) {
-            Set<CtTypeMember> transitiveDependentsInGroup =
-                    memberDependencyGraph.findTransitiveDependents(providerMember, DECLARATION_DEPENDENCY_ONLY).stream()
-                            .filter(groupMemberSet::contains)
-                            .collect(LinkedHashSet::new, Set::add, Set::addAll);
-
-            if (transitiveDependentsInGroup.isEmpty()) {
-                continue;
-            }
-
-            Set<CtTypeMember> effectiveDependentsInGroup = keepAccessorsTogether
-                    ? transitiveDependentsInGroup.stream()
-                            .flatMap(dependentMember ->
-                                    accessorBundleMembersByMember
-                                            .getOrDefault(dependentMember, Set.of(dependentMember))
-                                            .stream())
-                            .filter(groupMemberSet::contains)
-                            .collect(LinkedHashSet::new, Set::add, Set::addAll)
-                    : transitiveDependentsInGroup;
-
-            effectiveDependentsInGroup.remove(providerMember);
-
-            if (!effectiveDependentsInGroup.isEmpty()) {
-                effectiveTransitiveDependentsByProviderInGroup.put(
-                        providerMember, Set.copyOf(effectiveDependentsInGroup));
-            }
-        }
-
-        return Map.copyOf(effectiveTransitiveDependentsByProviderInGroup);
-    }
-
-    @NonNull
-    private static Map<CtTypeMember, Set<CtTypeMember>> invertDependentsToProviders(
-            @NonNull Map<CtTypeMember, Set<CtTypeMember>> transitiveDependentsByProvider) {
-
-        Map<CtTypeMember, Set<CtTypeMember>> providersByDependent = new LinkedHashMap<>();
-
-        transitiveDependentsByProvider.forEach(
-                (providerMember, dependentMembers) -> dependentMembers.forEach(dependent -> {
-                    providersByDependent
-                            .computeIfAbsent(dependent, ignored -> new LinkedHashSet<>())
-                            .add(providerMember);
-                }));
-
-        Map<CtTypeMember, Set<CtTypeMember>> immutableProvidersByDependent = new LinkedHashMap<>();
-        providersByDependent.forEach(
-                (dependent, providers) -> immutableProvidersByDependent.put(dependent, Set.copyOf(providers)));
-
-        return Map.copyOf(immutableProvidersByDependent);
-    }
-
-    @NonNull
-    private static Map<CtTypeMember, CtTypeMember> buildRepresentativeMemberByMember(
-            @NonNull List<CtTypeMember> groupMembers,
-            @NonNull Map<CtTypeMember, SortableTypeMember> baseSortableTypeMemberByMember,
-            @NonNull Comparator<SortableTypeMember> baseComparator,
-            @NonNull Map<CtTypeMember, Set<CtTypeMember>> accessorBundleMembersByMember,
-            @NonNull Map<CtTypeMember, Set<CtTypeMember>> effectiveTransitiveDependentsByProviderInGroup,
-            boolean keepAccessorsTogether) {
-
-        Map<CtTypeMember, CtTypeMember> representativeMemberByMember = new LinkedHashMap<>();
-        groupMembers.forEach(member -> representativeMemberByMember.put(member, member));
-
-        if (keepAccessorsTogether && !accessorBundleMembersByMember.isEmpty()) {
-            Set<Set<CtTypeMember>> uniqueBundlesInGroup = new LinkedHashSet<>(accessorBundleMembersByMember.values());
-
-            for (Set<CtTypeMember> bundleMembers : uniqueBundlesInGroup) {
-                CtTypeMember bundleRepresentative = bundleMembers.stream()
-                        .map(bundleMember -> requireSortableTypeMember(baseSortableTypeMemberByMember, bundleMember))
-                        .min(baseComparator)
-                        .map(SortableTypeMember::getTypeMember)
-                        .orElseThrow(() -> new IllegalStateException(
-                                "Failed to resolve accessor bundle representative. Bundle members: " + bundleMembers));
-
-                bundleMembers.forEach(
-                        bundleMember -> representativeMemberByMember.put(bundleMember, bundleRepresentative));
-            }
-        }
-
-        effectiveTransitiveDependentsByProviderInGroup.forEach((providerMember, effectiveDependentsInGroup) -> {
-            CtTypeMember providerRepresentative = Stream.concat(
-                            Stream.of(providerMember), effectiveDependentsInGroup.stream())
-                    .map(candidateMember -> requireSortableTypeMember(baseSortableTypeMemberByMember, candidateMember))
-                    .min(baseComparator)
-                    .map(SortableTypeMember::getTypeMember)
-                    .orElseThrow(() -> new IllegalStateException("Failed to resolve provider representative. Provider: "
-                            + describeTypeMember(providerMember)));
-
-            representativeMemberByMember.put(providerMember, providerRepresentative);
-        });
-
-        return Map.copyOf(representativeMemberByMember);
-    }
-
-    @NonNull
     private static Comparator<SortableTypeMember> buildGroupComparator(
             @NonNull Comparator<SortableTypeMember> baseComparator,
-            @NonNull Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember) {
+            @NonNull Map<CtTypeMember, SortableTypeMember> sortableByMember) {
 
         return (leftSortableMember, rightSortableMember) -> {
             CtTypeMember leftMember = leftSortableMember.getTypeMember();
             CtTypeMember rightMember = rightSortableMember.getTypeMember();
 
+            // Comparator contract: same reference must be equal.
             if (leftMember == rightMember) {
                 return 0;
             }
 
-            boolean leftIsProviderOfRight = rightSortableMember
+            // Ordering constraints (DECLARATION_DEPENDENCY): provider must be before dependent.
+            boolean leftMustBeBeforeRight = rightSortableMember
                     .getTransitiveDeclarationProvidersInGroup()
                     .contains(leftMember);
-
-            boolean rightIsProviderOfLeft = leftSortableMember
+            boolean rightMustBeBeforeLeft = leftSortableMember
                     .getTransitiveDeclarationProvidersInGroup()
                     .contains(rightMember);
 
-            if (leftIsProviderOfRight && rightIsProviderOfLeft) {
-                int fallbackComparison = baseComparator.compare(leftSortableMember, rightSortableMember);
-                if (fallbackComparison != 0) {
-                    return fallbackComparison;
+            if (leftMustBeBeforeRight && !rightMustBeBeforeLeft) {
+                return -1;
+            }
+            if (rightMustBeBeforeLeft && !leftMustBeBeforeRight) {
+                return 1;
+            }
+
+            // Corner case: cycles in declaration dependencies. We must not break antisymmetry.
+            // Fall back to deterministic base ordering.
+            if (leftMustBeBeforeRight && rightMustBeBeforeLeft) {
+                int cycleFallback = baseComparator.compare(leftSortableMember, rightSortableMember);
+                if (cycleFallback != 0) {
+                    return cycleFallback;
                 }
                 return Integer.compare(
                         leftSortableMember.getIdentityHashCode(), rightSortableMember.getIdentityHashCode());
-            }
-
-            if (leftIsProviderOfRight) {
-                return -1;
-            }
-            if (rightIsProviderOfLeft) {
-                return 1;
             }
 
             CtTypeMember leftRepresentativeMember = leftSortableMember.getRepresentativeMember();
             CtTypeMember rightRepresentativeMember = rightSortableMember.getRepresentativeMember();
 
             if (leftRepresentativeMember != rightRepresentativeMember) {
-                SortableTypeMember leftRepresentativeSortable =
-                        requireSortableTypeMember(sortableTypeMemberByMember, leftRepresentativeMember);
-                SortableTypeMember rightRepresentativeSortable =
-                        requireSortableTypeMember(sortableTypeMemberByMember, rightRepresentativeMember);
+                SortableTypeMember leftRepresentative =
+                        sortableByMember.getOrDefault(leftRepresentativeMember, leftSortableMember);
+                SortableTypeMember rightRepresentative =
+                        sortableByMember.getOrDefault(rightRepresentativeMember, rightSortableMember);
 
-                int representativeComparison =
-                        baseComparator.compare(leftRepresentativeSortable, rightRepresentativeSortable);
+                int representativeComparison = baseComparator.compare(leftRepresentative, rightRepresentative);
                 if (representativeComparison != 0) {
                     return representativeComparison;
                 }
@@ -314,7 +148,7 @@ class GroupMembersOrderer {
                 return directComparison;
             }
 
-            // Last-resort deterministic tie-breaker.
+            // Last-resort deterministic tie-breaker (should be very rare).
             return Integer.compare(leftSortableMember.getIdentityHashCode(), rightSortableMember.getIdentityHashCode());
         };
     }
@@ -322,6 +156,7 @@ class GroupMembersOrderer {
     @NonNull
     private static Comparator<SortableTypeMember> buildBaseComparatorForGroup(
             @NonNull CompiledMemberGroup compiledMemberGroup) {
+
         List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
 
         Comparator<SortableTypeMember> configuredComparator = sortKeys.stream()
@@ -337,7 +172,9 @@ class GroupMembersOrderer {
         if (!sortKeys.contains(SortKey.ALPHA)) {
             configuredComparator = configuredComparator.thenComparing(SortableTypeMember::getAlphaKey);
         }
-        return configuredComparator;
+
+        // Final deterministic tie-breaker.
+        return configuredComparator.thenComparingInt(SortableTypeMember::getIdentityHashCode);
     }
 
     @NonNull
@@ -351,18 +188,6 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static SortableTypeMember requireSortableTypeMember(
-            @NonNull Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember, @NonNull CtTypeMember member) {
-
-        SortableTypeMember sortableTypeMember = sortableTypeMemberByMember.get(member);
-        if (sortableTypeMember == null) {
-            throw new IllegalStateException(
-                    "SortableTypeMember was not found for member: " + describeTypeMember(member));
-        }
-        return sortableTypeMember;
-    }
-
-    @NonNull
     private static String describeTypeMember(@NonNull CtTypeMember typeMember) {
         return typeMember.getClass().getSimpleName()
                 + "{signature=" + SpoonTypeMemberUtils.deriveAlphaKey(typeMember)
@@ -370,38 +195,22 @@ class GroupMembersOrderer {
                 + "}";
     }
 
-    private static <K, V> java.util.stream.Collector<Map.Entry<K, V>, ?, Map<K, V>> unused() {
-        throw new UnsupportedOperationException();
-    }
-
-    private static <K, V> java.util.stream.Collector<K, ?, Map<K, V>> collectToLinkedHashMap(
-            Function<K, K> keyMapper, Function<K, V> valueMapper) {
-
-        return java.util.stream.Collectors.toMap(
-                keyMapper,
-                valueMapper,
-                (existingValue, newValue) -> {
-                    throw new IllegalStateException("Unexpected duplicate key while building a map.");
-                },
-                LinkedHashMap::new);
-    }
-
     @Value
-    private static class SortableTypeMember {
-
-        @NonNull
-        CtTypeMember typeMember;
-
+    private static class SortKeysSnapshot {
         int sourceStart;
 
         @NonNull
         String alphaKey;
 
         int visibilityRankAscending;
-
         int visibilityRankDescending;
-
         int identityHashCode;
+    }
+
+    @Value
+    private static class SortableTypeMember {
+        @NonNull
+        CtTypeMember typeMember;
 
         @NonNull
         CtTypeMember representativeMember;
@@ -409,32 +218,241 @@ class GroupMembersOrderer {
         @NonNull
         Set<@NonNull CtTypeMember> transitiveDeclarationProvidersInGroup;
 
-        static SortableTypeMember createBase(@NonNull CtTypeMember typeMember) {
-            return new SortableTypeMember(
-                    typeMember,
-                    SpoonTypeMemberUtils.extractSourceStart(typeMember),
-                    SpoonTypeMemberUtils.deriveAlphaKey(typeMember),
-                    SpoonTypeMemberUtils.deriveVisibilityRankAscending(typeMember),
-                    SpoonTypeMemberUtils.deriveVisibilityRankDescending(typeMember),
-                    System.identityHashCode(typeMember),
-                    typeMember,
-                    Set.of());
+        int sourceStart;
+
+        @NonNull
+        String alphaKey;
+
+        int visibilityRankAscending;
+        int visibilityRankDescending;
+        int identityHashCode;
+    }
+
+    private static class GroupOrderingContext {
+        @NonNull
+        private final CompiledMemberGroup compiledMemberGroup;
+
+        @NonNull
+        private final List<CtTypeMember> groupMembers;
+
+        @NonNull
+        private final Set<CtTypeMember> groupMemberSet;
+
+        private final boolean keepAccessorsTogether;
+
+        @NonNull
+        private final MemberDependencyGraph memberDependencyGraph;
+
+        @NonNull
+        private final Map<CtTypeMember, SortKeysSnapshot> sortKeysSnapshotByMember = new LinkedHashMap<>();
+
+        @NonNull
+        private final Map<CtTypeMember, Set<CtTypeMember>> accessorBundleMembersByMember = new LinkedHashMap<>();
+
+        @NonNull
+        private final Map<CtTypeMember, Set<CtTypeMember>> effectiveTransitiveDependentsByProvider =
+                new LinkedHashMap<>();
+
+        @NonNull
+        private final Map<CtTypeMember, Set<CtTypeMember>> transitiveDeclarationProvidersByDependent =
+                new LinkedHashMap<>();
+
+        @NonNull
+        private final Map<CtTypeMember, CtTypeMember> representativeByMember = new LinkedHashMap<>();
+
+        @NonNull
+        private final Comparator<CtTypeMember> typeMemberBaseComparator;
+
+        @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
+        private GroupOrderingContext(
+                @NonNull CompiledMemberGroup compiledMemberGroup,
+                @NonNull List<CtTypeMember> groupMembers,
+                @NonNull Set<CtTypeMember> groupMemberSet,
+                boolean keepAccessorsTogether,
+                @NonNull MemberDependencyGraph memberDependencyGraph) {
+            this.compiledMemberGroup = compiledMemberGroup;
+            this.groupMembers = groupMembers;
+            this.groupMemberSet = groupMemberSet;
+            this.keepAccessorsTogether = keepAccessorsTogether;
+            this.memberDependencyGraph = memberDependencyGraph;
+            this.typeMemberBaseComparator =
+                    buildTypeMemberBaseComparatorForGroup(compiledMemberGroup, this::requireSortKeysSnapshot);
         }
 
         @NonNull
-        SortableTypeMember withRelationships(
-                @NonNull CtTypeMember representativeMember,
-                @NonNull Set<@NonNull CtTypeMember> transitiveDeclarationProvidersInGroup) {
+        private SortableTypeMember convertToSortableTypeMember(@NonNull CtTypeMember typeMember) {
+            SortKeysSnapshot sortKeysSnapshot = requireSortKeysSnapshot(typeMember);
+            Set<CtTypeMember> transitiveDeclarationProvidersInGroup =
+                    resolveTransitiveDeclarationProvidersInGroup(typeMember);
+            CtTypeMember representativeMember = resolveRepresentativeMember(typeMember);
 
             return new SortableTypeMember(
                     typeMember,
-                    sourceStart,
-                    alphaKey,
-                    visibilityRankAscending,
-                    visibilityRankDescending,
-                    identityHashCode,
                     representativeMember,
-                    Set.copyOf(transitiveDeclarationProvidersInGroup));
+                    transitiveDeclarationProvidersInGroup,
+                    sortKeysSnapshot.getSourceStart(),
+                    sortKeysSnapshot.getAlphaKey(),
+                    sortKeysSnapshot.getVisibilityRankAscending(),
+                    sortKeysSnapshot.getVisibilityRankDescending(),
+                    sortKeysSnapshot.getIdentityHashCode());
         }
+
+        @NonNull
+        private SortKeysSnapshot requireSortKeysSnapshot(@NonNull CtTypeMember typeMember) {
+            return sortKeysSnapshotByMember.computeIfAbsent(
+                    typeMember,
+                    ignored -> new SortKeysSnapshot(
+                            SpoonTypeMemberUtils.extractSourceStart(typeMember),
+                            SpoonTypeMemberUtils.deriveAlphaKey(typeMember),
+                            SpoonTypeMemberUtils.deriveVisibilityRankAscending(typeMember),
+                            SpoonTypeMemberUtils.deriveVisibilityRankDescending(typeMember),
+                            System.identityHashCode(typeMember)));
+        }
+
+        @NonNull
+        private Set<CtTypeMember> resolveTransitiveDeclarationProvidersInGroup(@NonNull CtTypeMember dependentMember) {
+            return transitiveDeclarationProvidersByDependent.computeIfAbsent(dependentMember, ignored -> {
+                Set<CtTypeMember> providerMembers = groupMembers.stream()
+                        .filter(providerCandidate -> resolveEffectiveTransitiveDependentsInGroup(providerCandidate)
+                                .contains(dependentMember))
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+                return Set.copyOf(providerMembers);
+            });
+        }
+
+        @NonNull
+        private Set<CtTypeMember> resolveEffectiveTransitiveDependentsInGroup(@NonNull CtTypeMember providerMember) {
+            return effectiveTransitiveDependentsByProvider.computeIfAbsent(providerMember, ignored -> {
+                Set<CtTypeMember> transitiveDependentsInGroup =
+                        memberDependencyGraph
+                                .findTransitiveDependents(providerMember, DECLARATION_DEPENDENCY_ONLY)
+                                .stream()
+                                .filter(groupMemberSet::contains)
+                                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+                // The transitive traversal may return the provider itself; remove to avoid self-dependency.
+                transitiveDependentsInGroup.remove(providerMember);
+
+                if (transitiveDependentsInGroup.isEmpty() || !keepAccessorsTogether) {
+                    return Set.copyOf(transitiveDependentsInGroup);
+                }
+
+                // If a provider is required by any accessor in a bundle, we want it to be ordered before the whole
+                // bundle.
+                // We achieve it by expanding provider dependents to include full accessor bundles for all dependent
+                // members.
+                Set<CtTypeMember> expandedDependents = transitiveDependentsInGroup.stream()
+                        .flatMap(dependent -> resolveAccessorBundleMembersInGroup(dependent).stream())
+                        .filter(groupMemberSet::contains)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+                expandedDependents.remove(providerMember);
+                return Set.copyOf(expandedDependents);
+            });
+        }
+
+        @NonNull
+        private Set<CtTypeMember> resolveAccessorBundleMembersInGroup(@NonNull CtTypeMember typeMember) {
+            if (!keepAccessorsTogether) {
+                return Set.of(typeMember);
+            }
+
+            Set<CtTypeMember> cachedBundleMembers = accessorBundleMembersByMember.get(typeMember);
+            if (cachedBundleMembers != null) {
+                return cachedBundleMembers;
+            }
+
+            Set<CtTypeMember> bundleMembers = new LinkedHashSet<>();
+            bundleMembers.add(typeMember);
+
+            // ACCESSOR_BUNDLE edges are expected to be bidirectional.
+            // We still use transitive traversal to be robust if the bundle is not a "clique".
+            bundleMembers.addAll(memberDependencyGraph.findTransitiveDependents(typeMember, ACCESSOR_BUNDLE_ONLY));
+            bundleMembers.retainAll(groupMemberSet);
+
+            Set<CtTypeMember> unmodifiableBundleMembers = Set.copyOf(bundleMembers);
+            bundleMembers.forEach(
+                    bundleMember -> accessorBundleMembersByMember.put(bundleMember, unmodifiableBundleMembers));
+            return unmodifiableBundleMembers;
+        }
+
+        @NonNull
+        private CtTypeMember resolveRepresentativeMember(@NonNull CtTypeMember typeMember) {
+            CtTypeMember cachedRepresentative = representativeByMember.get(typeMember);
+            if (cachedRepresentative != null) {
+                return cachedRepresentative;
+            }
+
+            if (keepAccessorsTogether) {
+                Set<CtTypeMember> bundleMembers = resolveAccessorBundleMembersInGroup(typeMember);
+                if (bundleMembers.size() > 1) {
+                    CtTypeMember bundleRepresentative =
+                            bundleMembers.stream().min(typeMemberBaseComparator).orElse(typeMember);
+
+                    // All bundle members must share the same representative.
+                    bundleMembers.forEach(
+                            bundleMember -> representativeByMember.put(bundleMember, bundleRepresentative));
+                    return bundleRepresentative;
+                }
+            }
+
+            Set<CtTypeMember> effectiveTransitiveDependents = resolveEffectiveTransitiveDependentsInGroup(typeMember);
+            CtTypeMember providerOrSelfRepresentative = Stream.concat(
+                            Stream.of(typeMember), effectiveTransitiveDependents.stream())
+                    .min(typeMemberBaseComparator)
+                    .orElse(typeMember);
+
+            representativeByMember.put(typeMember, providerOrSelfRepresentative);
+            return providerOrSelfRepresentative;
+        }
+    }
+
+    @NonNull
+    private static Comparator<CtTypeMember> buildTypeMemberBaseComparatorForGroup(
+            @NonNull CompiledMemberGroup compiledMemberGroup,
+            @NonNull Function<CtTypeMember, SortKeysSnapshot> sortKeysSnapshotProvider) {
+
+        List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
+
+        Comparator<CtTypeMember> configuredComparator = sortKeys.stream()
+                .map(sortKey -> buildComparatorForSortKey(sortKey, sortKeysSnapshotProvider))
+                .reduce((leftComparator, rightComparator) -> leftComparator.thenComparing(rightComparator))
+                .orElseGet(() -> Comparator.comparingInt((CtTypeMember member) ->
+                                sortKeysSnapshotProvider.apply(member).getSourceStart())
+                        .thenComparing((CtTypeMember member) ->
+                                sortKeysSnapshotProvider.apply(member).getAlphaKey()));
+
+        // Deterministic tie-breakers regardless of configured keys.
+        if (!sortKeys.contains(SortKey.PRESERVE)) {
+            configuredComparator = configuredComparator.thenComparingInt(
+                    member -> sortKeysSnapshotProvider.apply(member).getSourceStart());
+        }
+        if (!sortKeys.contains(SortKey.ALPHA)) {
+            configuredComparator = configuredComparator.thenComparing(
+                    member -> sortKeysSnapshotProvider.apply(member).getAlphaKey());
+        }
+
+        return configuredComparator.thenComparingInt(
+                member -> sortKeysSnapshotProvider.apply(member).getIdentityHashCode());
+    }
+
+    @NonNull
+    private static Comparator<CtTypeMember> buildComparatorForSortKey(
+            @NonNull SortKey sortKey, @NonNull Function<CtTypeMember, SortKeysSnapshot> sortKeysSnapshotProvider) {
+
+        return switch (sortKey) {
+            case PRESERVE ->
+                Comparator.comparingInt(
+                        member -> sortKeysSnapshotProvider.apply(member).getSourceStart());
+            case ALPHA ->
+                Comparator.comparing(
+                        member -> sortKeysSnapshotProvider.apply(member).getAlphaKey());
+            case VISIBILITY_ASC ->
+                Comparator.comparingInt(
+                        member -> sortKeysSnapshotProvider.apply(member).getVisibilityRankAscending());
+            case VISIBILITY_DESC ->
+                Comparator.comparingInt(
+                        member -> sortKeysSnapshotProvider.apply(member).getVisibilityRankDescending());
+        };
     }
 }
