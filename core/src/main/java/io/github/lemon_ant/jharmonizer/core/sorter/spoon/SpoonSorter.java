@@ -8,7 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.Member
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -19,7 +19,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * - recursively processes nested types (depth-first),
  * - applies member sorting to each type via
  */
-@RequiredArgsConstructor
+@UtilityClass
 public class SpoonSorter {
 
     /**
@@ -60,7 +60,7 @@ public class SpoonSorter {
      * 1) process nested types,
      * 2) sort current type members,
      * 3) apply group boundary markers and flatten.
-     *
+     * <p>
      * This order keeps the logic deterministic and ensures nested types are already "clean"
      * when the outer type is printed.
      */

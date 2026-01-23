@@ -1,0 +1,157 @@
+package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
+
+import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.SortKeyValues;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtTypeMember;
+
+@UtilityClass
+class ComparatorUtils {
+
+    static @NonNull Comparator<CtTypeMember> buildTypeMemberComparator(
+            @NonNull Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider,
+            Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator) {
+        return Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator);
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    static Comparator<SortableTypeMember> buildGroupComparator(
+            @NonNull Comparator<SortableTypeMember> sortableBaseComparator,
+            @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
+
+        return (leftSortable, rightSortable) -> {
+            CtTypeMember leftMember = leftSortable.getTypeMember();
+            CtTypeMember rightMember = rightSortable.getTypeMember();
+
+            // Comparator contract: same reference must be equal.
+            if (leftMember == rightMember) {
+                return 0;
+            }
+
+            boolean leftMustBeBeforeRight =
+                    leftSortable.getOrderingDependentsInGroup().contains(rightMember);
+
+            boolean rightMustBeBeforeLeft =
+                    rightSortable.getOrderingDependentsInGroup().contains(leftMember);
+
+            if (leftMustBeBeforeRight && !rightMustBeBeforeLeft) {
+                return -1;
+            }
+            if (rightMustBeBeforeLeft && !leftMustBeBeforeRight) {
+                return 1;
+            }
+
+            // Cycles in declaration dependencies (mutual reachability).
+            if (leftMustBeBeforeRight) {
+                throw new IllegalStateException(composeCyclicDeclarationDependencyMessage(leftSortable, rightSortable));
+            }
+
+            CtTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
+            CtTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
+
+            if (leftRepresentative != rightRepresentative) {
+                int representativeComparison =
+                        typeMemberBaseComparator.compare(leftRepresentative, rightRepresentative);
+                if (representativeComparison != 0) {
+                    return representativeComparison;
+                }
+                throw new IllegalStateException(composeEqualRepresentativesMessage(leftSortable, rightSortable));
+            }
+
+            int directComparison = sortableBaseComparator.compare(leftSortable, rightSortable);
+            if (directComparison != 0) {
+                return directComparison;
+            }
+            throw new IllegalStateException(composeEqualMembersMessage(leftSortable, rightSortable));
+        };
+    }
+
+    @NonNull
+    static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparator(@NonNull List<SortKey> sortKeys) {
+
+        Comparator<SortableTypeMember.SortKeyValues> configuredComparator = sortKeys.stream()
+                .map(ComparatorUtils::buildSortKeyValuesComparatorForSortKey)
+                .reduce(Comparator::thenComparing)
+                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart)
+                        .thenComparing(SortableTypeMember.SortKeyValues::getAlphaKey));
+
+        // Deterministic tie-breakers regardless of configured keys.
+        if (!sortKeys.contains(SortKey.PRESERVE)) {
+            configuredComparator =
+                    configuredComparator.thenComparing(buildSortKeyValuesComparatorForSortKey(SortKey.PRESERVE));
+        }
+        if (!sortKeys.contains(SortKey.ALPHA)) {
+            configuredComparator =
+                    configuredComparator.thenComparing(buildSortKeyValuesComparatorForSortKey(SortKey.ALPHA));
+        }
+
+        return configuredComparator;
+    }
+
+    @NonNull
+    private static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparatorForSortKey(
+            @NonNull SortKey sortKey) {
+
+        return switch (sortKey) {
+            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart);
+            case ALPHA -> Comparator.comparing(SortableTypeMember.SortKeyValues::getAlphaKey);
+            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getVisibilityRank);
+            case VISIBILITY_DESC ->
+                buildSortKeyValuesComparatorForSortKey(SortKey.VISIBILITY_ASC).reversed();
+        };
+    }
+
+    @NonNull
+    private static String composeCyclicDeclarationDependencyMessage(
+            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
+        return "Detected a cyclic DECLARATION_DEPENDENCY ordering inside a member group. "
+                + "Both members are mutually reachable via declaration dependency edges, so a strict provider-before-dependent "
+                + "order cannot be derived for this pair.\n"
+                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
+                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
+                + "Hint: validate and report cycles in MemberDependencyGraph (or in a dedicated validator) before ordering.";
+    }
+
+    @NonNull
+    private static String describeTypeMemberForDebug(@NonNull CtTypeMember typeMember) {
+        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
+    }
+
+    @NonNull
+    private static String composeEqualRepresentativesMessage(
+            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
+        return "Two different representative members compare as equal by the base comparator. "
+                + "This breaks deterministic representative ordering.\n"
+                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
+                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
+                + "Left representative:  " + describeTypeMemberForDebug(leftSortable.getRepresentativeTypeMember())
+                + "\n"
+                + "Right representative: " + describeTypeMemberForDebug(rightSortable.getRepresentativeTypeMember())
+                + "\n"
+                + "Hint: ensure the SortKeyValues comparator has a deterministic tie-breaker for representatives.";
+    }
+
+    @NonNull
+    private static String describeSortableTypeMember(@NonNull SortableTypeMember sortableTypeMember) {
+        return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
+                + ", sortKeyValues=" + sortableTypeMember.getSortKeyValues()
+                + ", representative=" + describeTypeMemberForDebug(sortableTypeMember.getRepresentativeTypeMember())
+                + ", orderingDependentsInGroupCount="
+                + sortableTypeMember.getOrderingDependentsInGroup().size();
+    }
+
+    @NonNull
+    private static String composeEqualMembersMessage(
+            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
+        return "Two distinct members compare as equal by the configured base comparator, which violates deterministic ordering.\n"
+                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
+                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
+                + "Hint: ensure the SortKeyValues comparator produces a strict order for distinct members "
+                + "(e.g., add a stable tie-breaker when all configured keys match).";
+    }
+}

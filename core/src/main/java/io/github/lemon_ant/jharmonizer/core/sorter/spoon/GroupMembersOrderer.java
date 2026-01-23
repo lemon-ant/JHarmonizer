@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.ComparatorUtils.buildTypeMemberComparator;
+
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
@@ -17,18 +19,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
 class GroupMembersOrderer {
 
-    private static final EnumSet<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
+    private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
-    private static final EnumSet<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
+    private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+    private static final int ONE = 1;
 
     @NonNull
     static List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
@@ -58,7 +60,7 @@ class GroupMembersOrderer {
             @NonNull List<@NonNull CtTypeMember> groupMembers,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
 
-        if (groupMembers.size() <= 1) {
+        if (groupMembers.size() <= ONE) {
             return List.copyOf(groupMembers);
         }
 
@@ -66,21 +68,21 @@ class GroupMembersOrderer {
         List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator = buildSortKeyValuesComparator(sortKeys);
+        Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator =
+                ComparatorUtils.buildSortKeyValuesComparator(sortKeys);
 
-        Map<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesByMember = new HashMap<>();
-        Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider = typeMember ->
-                sortKeyValuesByMember.computeIfAbsent(typeMember, GroupMembersOrderer::deriveSortKeyValues);
+        Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider =
+                SortableTypeMember.getSortKeyValuesProvider();
 
         Comparator<CtTypeMember> typeMemberBaseComparator =
-                Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator);
+                buildTypeMemberComparator(sortKeyValuesProvider, sortKeyValuesComparator);
 
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
                 : Map.of();
 
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(typeMember -> convertToSortableTypeMember(
+                .map(typeMember -> convertTypeMember2SortableTypeMember(
                         typeMember,
                         groupMemberSet,
                         memberDependencyGraph,
@@ -94,7 +96,7 @@ class GroupMembersOrderer {
                 Comparator.comparing(SortableTypeMember::getSortKeyValues, sortKeyValuesComparator);
 
         Comparator<SortableTypeMember> groupComparator =
-                buildGroupComparator(sortableBaseComparator, typeMemberBaseComparator);
+                ComparatorUtils.buildGroupComparator(sortableBaseComparator, typeMemberBaseComparator);
 
         return sortableTypeMembers.stream()
                 .sorted(groupComparator)
@@ -103,7 +105,7 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static SortableTypeMember convertToSortableTypeMember(
+    private static SortableTypeMember convertTypeMember2SortableTypeMember(
             @NonNull CtTypeMember typeMember,
             @NonNull Set<CtTypeMember> groupMembers,
             @NonNull MemberDependencyGraph memberDependencyGraph,
@@ -111,8 +113,6 @@ class GroupMembersOrderer {
             @NonNull Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
             @NonNull Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider,
             @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
-
-        SortableTypeMember.SortKeyValues sortKeyValues = sortKeyValuesProvider.apply(typeMember);
 
         Set<CtTypeMember> declarationDependentsInGroup =
                 memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
@@ -136,7 +136,7 @@ class GroupMembersOrderer {
         }
 
         return new SortableTypeMember(
-                typeMember, sortKeyValues, representativeTypeMember, declarationDependentsInGroup);
+                typeMember, representativeTypeMember, declarationDependentsInGroup, sortKeyValuesProvider);
     }
 
     @NonNull
@@ -156,6 +156,7 @@ class GroupMembersOrderer {
             @NonNull MemberDependencyGraph memberDependencyGraph,
             @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
 
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = new HashMap<>();
         Set<CtTypeMember> alreadyIndexedMembers = new HashSet<>();
 
@@ -174,7 +175,7 @@ class GroupMembersOrderer {
             alreadyIndexedMembers.addAll(sortedBundleMembersInGroup);
 
             // Store only real bundles (size > 1). Singletons are not accessor bundles semantically.
-            if (sortedBundleMembersInGroup.size() <= 1) {
+            if (sortedBundleMembersInGroup.size() <= ONE) {
                 continue;
             }
 
@@ -192,176 +193,5 @@ class GroupMembersOrderer {
 
         List<CtTypeMember> sortedBundleMembersInGroup = accessorBundleMembersByMember.get(typeMember);
         return sortedBundleMembersInGroup == null ? typeMember : sortedBundleMembersInGroup.getFirst();
-    }
-
-    @NonNull
-    private static Comparator<SortableTypeMember> buildGroupComparator(
-            @NonNull Comparator<SortableTypeMember> sortableBaseComparator,
-            @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
-
-        return (leftSortable, rightSortable) -> {
-            CtTypeMember leftMember = leftSortable.getTypeMember();
-            CtTypeMember rightMember = rightSortable.getTypeMember();
-
-            // Comparator contract: same reference must be equal.
-            if (leftMember == rightMember) {
-                return 0;
-            }
-
-            boolean leftMustBeBeforeRight =
-                    leftSortable.getOrderingDependentsInGroup().contains(rightMember);
-
-            boolean rightMustBeBeforeLeft =
-                    rightSortable.getOrderingDependentsInGroup().contains(leftMember);
-
-            if (leftMustBeBeforeRight && !rightMustBeBeforeLeft) {
-                return -1;
-            }
-            if (rightMustBeBeforeLeft && !leftMustBeBeforeRight) {
-                return 1;
-            }
-
-            // Cycles in declaration dependencies (mutual reachability).
-            if (leftMustBeBeforeRight) {
-                throw new IllegalStateException(composeCyclicDeclarationDependencyMessage(leftSortable, rightSortable));
-            }
-
-            CtTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
-            CtTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
-
-            if (leftRepresentative != rightRepresentative) {
-                int representativeComparison =
-                        typeMemberBaseComparator.compare(leftRepresentative, rightRepresentative);
-                if (representativeComparison != 0) {
-                    return representativeComparison;
-                }
-                throw new IllegalStateException(composeEqualRepresentativesMessage(leftSortable, rightSortable));
-            }
-
-            int directComparison = sortableBaseComparator.compare(leftSortable, rightSortable);
-            if (directComparison != 0) {
-                return directComparison;
-            }
-            throw new IllegalStateException(composeEqualMembersMessage(leftSortable, rightSortable));
-        };
-    }
-
-    @NonNull
-    private static String composeCyclicDeclarationDependencyMessage(
-            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
-        return "Detected a cyclic DECLARATION_DEPENDENCY ordering inside a member group. "
-                + "Both members are mutually reachable via declaration dependency edges, so a strict provider-before-dependent "
-                + "order cannot be derived for this pair.\n"
-                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
-                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Hint: validate and report cycles in MemberDependencyGraph (or in a dedicated validator) before ordering.";
-    }
-
-    @NonNull
-    private static String composeEqualRepresentativesMessage(
-            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
-        return "Two different representative members compare as equal by the base comparator. "
-                + "This breaks deterministic representative ordering.\n"
-                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
-                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Left representative:  " + describeTypeMemberForDebug(leftSortable.getRepresentativeTypeMember())
-                + "\n"
-                + "Right representative: " + describeTypeMemberForDebug(rightSortable.getRepresentativeTypeMember())
-                + "\n"
-                + "Hint: ensure the SortKeyValues comparator has a deterministic tie-breaker for representatives.";
-    }
-
-    @NonNull
-    private static String composeEqualMembersMessage(
-            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
-        return "Two distinct members compare as equal by the configured base comparator, which violates deterministic ordering.\n"
-                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
-                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Hint: ensure the SortKeyValues comparator produces a strict order for distinct members "
-                + "(e.g., add a stable tie-breaker when all configured keys match).";
-    }
-
-    @NonNull
-    private static String describeSortableTypeMember(@NonNull SortableTypeMember sortableTypeMember) {
-        return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
-                + ", sortKeyValues=" + sortableTypeMember.getSortKeyValues()
-                + ", representative=" + describeTypeMemberForDebug(sortableTypeMember.getRepresentativeTypeMember())
-                + ", orderingDependentsInGroupCount="
-                + sortableTypeMember.getOrderingDependentsInGroup().size();
-    }
-
-    @NonNull
-    private static String describeTypeMemberForDebug(@NonNull CtTypeMember typeMember) {
-        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
-    }
-
-    @NonNull
-    private static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparator(
-            @NonNull List<SortKey> sortKeys) {
-
-        Comparator<SortableTypeMember.SortKeyValues> configuredComparator = sortKeys.stream()
-                .map(GroupMembersOrderer::buildSortKeyValuesComparatorForSortKey)
-                .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart)
-                        .thenComparing(SortableTypeMember.SortKeyValues::getAlphaKey));
-
-        // Deterministic tie-breakers regardless of configured keys.
-        if (!sortKeys.contains(SortKey.PRESERVE)) {
-            configuredComparator =
-                    configuredComparator.thenComparing(buildSortKeyValuesComparatorForSortKey(SortKey.PRESERVE));
-        }
-        if (!sortKeys.contains(SortKey.ALPHA)) {
-            configuredComparator =
-                    configuredComparator.thenComparing(buildSortKeyValuesComparatorForSortKey(SortKey.ALPHA));
-        }
-
-        return configuredComparator;
-    }
-
-    @NonNull
-    private static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparatorForSortKey(
-            @NonNull SortKey sortKey) {
-
-        return switch (sortKey) {
-            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart);
-            case ALPHA -> Comparator.comparing(SortableTypeMember.SortKeyValues::getAlphaKey);
-            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getVisibilityRank);
-            case VISIBILITY_DESC ->
-                buildSortKeyValuesComparatorForSortKey(SortKey.VISIBILITY_ASC).reversed();
-        };
-    }
-
-    @NonNull
-    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(@NonNull CtTypeMember typeMember) {
-        return new SortableTypeMember.SortKeyValues(
-                SpoonTypeMemberUtils.extractSourceStart(typeMember),
-                SpoonTypeMemberUtils.deriveAlphaKey(typeMember),
-                SpoonTypeMemberUtils.deriveVisibilityRank(typeMember));
-    }
-
-    @Value
-    private static class SortableTypeMember {
-
-        @NonNull
-        CtTypeMember typeMember;
-
-        @NonNull
-        SortKeyValues sortKeyValues;
-
-        @NonNull
-        CtTypeMember representativeTypeMember;
-
-        @NonNull
-        Set<@NonNull CtTypeMember> orderingDependentsInGroup;
-
-        @Value
-        private static class SortKeyValues {
-            int sourceStart;
-
-            @NonNull
-            String alphaKey;
-
-            int visibilityRank;
-        }
     }
 }

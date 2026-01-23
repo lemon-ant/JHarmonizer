@@ -37,6 +37,8 @@ import spoon.reflect.declaration.ModifierKind;
 @UtilityClass
 class SpoonMemberDescriptorFactory {
 
+    private static final String INIT_NAME = "<init>";
+
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
         return describeMembers(type.getTypeMembers());
@@ -66,79 +68,54 @@ class SpoonMemberDescriptorFactory {
     }
 
     private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
-        try {
-            return switch (typeMember) {
-                case CtField<?> ctField -> MemberKind.FIELD;
-                case CtMethod<?> ctMethod -> MemberKind.METHOD;
-                case CtConstructor<?> ctConstructor -> MemberKind.CONSTRUCTOR;
+        return switch (typeMember) {
+            case CtField<?> ctField -> MemberKind.FIELD;
+            case CtMethod<?> ctMethod -> MemberKind.METHOD;
+            case CtConstructor<?> ctConstructor -> MemberKind.CONSTRUCTOR;
 
-                // Initializer blocks (Spoon: CtAnonymousExecutable; static init has ModifierKind.STATIC)
-                case CtAnonymousExecutable ctAnonymousExecutable ->
-                    ctAnonymousExecutable.getModifiers().contains(ModifierKind.STATIC)
-                            ? MemberKind.STATIC_INIT_BLOCK
-                            : MemberKind.INSTANCE_INIT_BLOCK;
+            // Initializer blocks (Spoon: CtAnonymousExecutable; static init has ModifierKind.STATIC)
+            case CtAnonymousExecutable ctAnonymousExecutable ->
+                ctAnonymousExecutable.getModifiers().contains(ModifierKind.STATIC)
+                        ? MemberKind.STATIC_INIT_BLOCK
+                        : MemberKind.INSTANCE_INIT_BLOCK;
 
-                // Nested types:
-                case CtType<?> ctType -> resolveNestedTypeKind(ctType);
+            // Nested types:
+            case CtType<?> ctType -> resolveNestedTypeKind(ctType);
 
-                default -> throw new IllegalArgumentException("Unsupported CtTypeMember kind.");
-            };
-        } catch (RuntimeException exception) {
-            Class<?> runtimeClass = typeMember.getClass();
+            default ->
+                throw new IllegalArgumentException(
+                        "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
+        };
+    }
 
-            String implementedInterfaces =
-                    Stream.of(runtimeClass.getInterfaces()).map(Class::getName).collect(Collectors.joining(", "));
+    private static String composeDebugExceptionMessage(CtTypeMember typeMember) {
+        Class<?> runtimeClass = typeMember.getClass();
 
-            String declaringTypeQualifiedName;
-            try {
-                declaringTypeQualifiedName = typeMember.getDeclaringType() == null
-                        ? "<null>"
-                        : typeMember.getDeclaringType().getQualifiedName();
-            } catch (RuntimeException ignored) {
-                declaringTypeQualifiedName = "<failed to resolve declaring type>";
-            }
+        String implementedInterfaces =
+                Stream.of(runtimeClass.getInterfaces()).map(Class::getName).collect(Collectors.joining(", "));
 
-            String positionText;
-            try {
-                positionText = String.valueOf(typeMember.getPosition());
-            } catch (RuntimeException ignored) {
-                positionText = "<failed to resolve position>";
-            }
+        String declaringTypeQualifiedName = typeMember.getDeclaringType() == null
+                ? "<null>"
+                : String.valueOf(typeMember.getDeclaringType().getQualifiedName());
 
-            String modifiersText;
-            try {
-                modifiersText = String.valueOf(typeMember.getModifiers());
-            } catch (RuntimeException ignored) {
-                modifiersText = "<failed to resolve modifiers>";
-            }
+        String positionText =
+                typeMember.getPosition().isValidPosition() ? String.valueOf(typeMember.getPosition()) : "<invalid>";
 
-            String simpleNameText;
-            try {
-                simpleNameText = String.valueOf(typeMember.getSimpleName());
-            } catch (RuntimeException ignored) {
-                simpleNameText = "<failed to resolve simpleName>";
-            }
+        String modifiersText = String.valueOf(typeMember.getModifiers());
 
-            String shortRepresentationText;
-            try {
-                shortRepresentationText = String.valueOf(typeMember.getShortRepresentation());
-            } catch (RuntimeException ignored) {
-                shortRepresentationText = "<failed to resolve shortRepresentation>";
-            }
+        String simpleNameText = String.valueOf(typeMember.getSimpleName());
 
-            String debugContext = "context{"
-                    + "\nruntimeClass=" + runtimeClass.getName()
-                    + ",\ndirectInterfaces=[" + implementedInterfaces + "]"
-                    + ",\ndeclaringType=" + declaringTypeQualifiedName
-                    + ",\nsimpleName=" + simpleNameText
-                    + ",\nshortRepresentation=" + shortRepresentationText
-                    + ",\nmodifiers=" + modifiersText
-                    + ",\nposition=" + positionText
-                    + "}";
+        String shortRepresentationText = String.valueOf(typeMember.getShortRepresentation());
 
-            throw new IllegalArgumentException(
-                    "Failed to resolve MemberKind for CtTypeMember. " + debugContext, exception);
-        }
+        return "context{"
+                + "\nruntimeClass=" + runtimeClass.getName()
+                + ",\ndirectInterfaces=[" + implementedInterfaces + "]"
+                + ",\ndeclaringType=" + declaringTypeQualifiedName
+                + ",\nsimpleName=" + simpleNameText
+                + ",\nshortRepresentation=" + shortRepresentationText
+                + ",\nmodifiers=" + modifiersText
+                + ",\nposition=" + positionText
+                + "}";
     }
 
     private static MemberKind resolveNestedTypeKind(CtType<?> nestedType) {
@@ -207,6 +184,10 @@ class SpoonMemberDescriptorFactory {
 
     @Nullable
     private static String resolveMemberName(CtTypeMember typeMember) {
-        return trimToNull(typeMember.getSimpleName());
+        String name = trimToNull(typeMember.getSimpleName());
+        if (INIT_NAME.equals(name)) {
+            return null;
+        }
+        return name;
     }
 }

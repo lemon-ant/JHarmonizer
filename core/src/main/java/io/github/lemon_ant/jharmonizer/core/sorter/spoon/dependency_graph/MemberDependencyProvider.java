@@ -7,6 +7,7 @@ import spoon.reflect.declaration.CtTypeMember;
 /**
  * Contributes dependency edges to the graph.
  */
+@SuppressWarnings("PMD.ImplicitFunctionalInterface")
 interface MemberDependencyProvider {
 
     /**

@@ -78,6 +78,7 @@ class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
@@ -149,15 +150,10 @@ class SpoonJavaBeansAccessorUtils {
         }
 
         int propertyNameStartIndex = methodNamePrefix.length();
-        if (candidateMethodName.length() <= propertyNameStartIndex) {
-            return false;
-        }
 
-        if (!Character.isUpperCase(candidateMethodName.charAt(propertyNameStartIndex))) {
-            return false;
-        }
-
-        return matchesReturnTypeContract(candidateMethod, accessorMethodContract.getAccessorMethodReturnType());
+        return candidateMethodName.length() > propertyNameStartIndex
+                && Character.isUpperCase(candidateMethodName.charAt(propertyNameStartIndex))
+                && matchesReturnTypeContract(candidateMethod, accessorMethodContract.getAccessorMethodReturnType());
     }
 
     private static boolean matchesReturnTypeContract(

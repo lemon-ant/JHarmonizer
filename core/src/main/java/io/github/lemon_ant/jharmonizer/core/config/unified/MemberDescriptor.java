@@ -133,9 +133,6 @@ public class MemberDescriptor {
             @NonNull Set<@NonNull String> annotationQualifiedNames) {
 
         String trimmedName = trimToNull(rawName);
-        if ("<init>".equals(trimmedName)) {
-            trimmedName = null;
-        }
 
         // Only INIT_BLOCK and CONSTRUCTOR must have null name; all other categories must provide a non-blank name.
         TargetCategory targetCategory = memberKind.getTargetCategory();

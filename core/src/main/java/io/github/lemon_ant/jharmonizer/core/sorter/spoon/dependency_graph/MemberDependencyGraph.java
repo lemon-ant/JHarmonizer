@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -26,11 +27,27 @@ import spoon.reflect.declaration.CtTypeMember;
  *
  * <p>Implementation note: edges are stored as "flat" neighbor+kind values.
  * Filtering by edge kind is applied on query rather than being encoded into the storage structure.
+ *
+ * <p>Performance note: transitive queries are cached per (start member, edge-kind mask).
+ * The graph is expected to be populated first and queried afterwards; any edge insertion invalidates caches.
  */
+@SuppressWarnings("PMD.UseConcurrentHashMap")
 public final class MemberDependencyGraph {
 
+    private static final int ALL_EDGE_KIND_MASK = (1 << MemberDependencyEdgeKind.values().length) - 1;
+
+    private static final Set<MemberDependencyEdgeKind> ALL_EDGE_KINDS = EnumSet.allOf(MemberDependencyEdgeKind.class);
+    private static final int ONE = 1;
+
     private final Map<CtTypeMember, Set<DependencyEdge>> outgoingEdgesByProvider = new HashMap<>();
+
     private final Map<CtTypeMember, Set<DependencyEdge>> incomingEdgesByDependent = new HashMap<>();
+
+    private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveDependentsCacheByProvider =
+            new HashMap<>();
+
+    private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveProvidersCacheByDependent =
+            new HashMap<>();
 
     void addEdge(
             @NonNull CtTypeMember providerMember,
@@ -42,49 +59,91 @@ public final class MemberDependencyGraph {
 
         outgoingEdgesByProvider.get(providerMember).add(new DependencyEdge(dependentMember, edgeKind));
         incomingEdgesByDependent.get(dependentMember).add(new DependencyEdge(providerMember, edgeKind));
-    }
 
-    @NonNull
-    Set<@NonNull CtTypeMember> getAllVertices() {
-        // Both maps are always kept in sync via registerVertex().
-        return Collections.unmodifiableSet(outgoingEdgesByProvider.keySet());
+        invalidateTransitiveCaches();
     }
 
     @NonNull
     public Set<@NonNull CtTypeMember> findTransitiveDependents(@NonNull CtTypeMember providerMember) {
-        return findTransitiveDependents(providerMember, Set.of(MemberDependencyEdgeKind.values()));
+        return findTransitiveDependents(providerMember, ALL_EDGE_KINDS);
     }
 
     @NonNull
-    // TODO Optimize to do not compute on demand but find all transitive dependencies during population
     public Set<@NonNull CtTypeMember> findTransitiveDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 
-        Set<CtTypeMember> visitedMembers = new HashSet<>();
-        Deque<CtTypeMember> queue = new ArrayDeque<>();
+        int allowedEdgeKindsMask = toEdgeKindMask(allowedEdgeKinds);
 
-        queue.add(providerMember);
+        Map<Integer, Set<CtTypeMember>> cachedDependentsByEdgeKindMask =
+                transitiveDependentsCacheByProvider.get(providerMember);
 
-        while (!queue.isEmpty()) {
-            CtTypeMember currentProviderMember = queue.removeFirst();
-            findDirectDependents(currentProviderMember, allowedEdgeKinds).stream()
-                    .filter(visitedMembers::add)
-                    .forEach(queue::addLast);
+        if (cachedDependentsByEdgeKindMask != null) {
+            Set<CtTypeMember> cachedDependents = cachedDependentsByEdgeKindMask.get(allowedEdgeKindsMask);
+            if (cachedDependents != null) {
+                return cachedDependents;
+            }
         }
 
-        return Collections.unmodifiableSet(visitedMembers);
+        Set<CtTypeMember> computedDependents = computeTransitiveDependents(providerMember, allowedEdgeKinds);
+        transitiveDependentsCacheByProvider
+                .computeIfAbsent(providerMember, ignored -> new HashMap<>())
+                .put(allowedEdgeKindsMask, computedDependents);
+
+        return computedDependents;
+    }
+
+    @NonNull
+    private Set<CtTypeMember> computeTransitiveDependents(
+            @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+
+        Set<CtTypeMember> foundDependents = new HashSet<>();
+        Deque<CtTypeMember> processingProviders = new ArrayDeque<>();
+
+        processingProviders.add(providerMember);
+
+        while (!processingProviders.isEmpty()) {
+            CtTypeMember currentProviderMember = processingProviders.removeFirst();
+            findDirectDependents(currentProviderMember, allowedEdgeKinds).stream()
+                    .filter(foundDependents::add)
+                    .forEach(processingProviders::addLast);
+        }
+
+        return Collections.unmodifiableSet(foundDependents);
     }
 
     @NonNull
     // TODO Do we need it???
     Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
-        return findTransitiveProviders(dependentMember, Set.of(MemberDependencyEdgeKind.values()));
+        return findTransitiveProviders(dependentMember, ALL_EDGE_KINDS);
     }
 
     @NonNull
     // TODO Do we need it???
-    // TODO Optimize to do not compute on demand but find all transitive dependencies during population
     Set<@NonNull CtTypeMember> findTransitiveProviders(
+            @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+
+        int allowedEdgeKindsMask = toEdgeKindMask(allowedEdgeKinds);
+
+        Map<Integer, Set<CtTypeMember>> cachedProvidersByEdgeKindMask =
+                transitiveProvidersCacheByDependent.get(dependentMember);
+
+        if (cachedProvidersByEdgeKindMask != null) {
+            Set<CtTypeMember> cachedProviders = cachedProvidersByEdgeKindMask.get(allowedEdgeKindsMask);
+            if (cachedProviders != null) {
+                return cachedProviders;
+            }
+        }
+
+        Set<CtTypeMember> computedProviders = computeTransitiveProviders(dependentMember, allowedEdgeKinds);
+        transitiveProvidersCacheByDependent
+                .computeIfAbsent(dependentMember, ignored -> new HashMap<>())
+                .put(allowedEdgeKindsMask, computedProviders);
+
+        return computedProviders;
+    }
+
+    @NonNull
+    private Set<CtTypeMember> computeTransitiveProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
 
         Set<CtTypeMember> visitedMembers = new LinkedHashSet<>();
@@ -119,6 +178,27 @@ public final class MemberDependencyGraph {
         incomingEdgesByDependent.computeIfAbsent(typeMember, ignored -> new HashSet<>());
     }
 
+    private void invalidateTransitiveCaches() {
+        transitiveDependentsCacheByProvider.clear();
+        transitiveProvidersCacheByDependent.clear();
+    }
+
+    private static int toEdgeKindMask(@Nullable Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        if (allowedEdgeKinds == null || allowedEdgeKinds.isEmpty()) {
+            return ALL_EDGE_KIND_MASK;
+        }
+
+        if (allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
+            return ALL_EDGE_KIND_MASK;
+        }
+
+        int mask = 0;
+        for (MemberDependencyEdgeKind allowedEdgeKind : allowedEdgeKinds) {
+            mask |= (1 << allowedEdgeKind.ordinal());
+        }
+        return mask;
+    }
+
     @NonNull
     private static Set<@NonNull CtTypeMember> findDirectNeighbors(
             Map<CtTypeMember, Set<DependencyEdge>> adjacency,
@@ -138,7 +218,7 @@ public final class MemberDependencyGraph {
                 || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
 
         if (!noFilteringRequested) {
-            if (allowedEdgeKinds.size() == 1) {
+            if (allowedEdgeKinds.size() == ONE) {
                 MemberDependencyEdgeKind singleEdgeKind =
                         allowedEdgeKinds.iterator().next();
                 edgeFilterPredicate = dependencyEdge -> dependencyEdge.getEdgeKind() == singleEdgeKind;

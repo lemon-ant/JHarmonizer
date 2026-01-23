@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtType;
@@ -17,9 +18,9 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 public class MemberDependencyGraphBuilder {
 
-    private static final EnumSet<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
+    private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
-    private static final EnumSet<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
+    private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
     private static final Collection<@NonNull MemberDependencyProvider> memberDependencyProviders = List.of(

@@ -26,16 +26,6 @@ public class SpoonTypeMemberUtils {
         return erasedTypeReference.isPrimitive() ? erasedTypeReference.box() : erasedTypeReference;
     }
 
-    static boolean isBooleanLikeType(@NonNull CtTypeReference<?> typeReference) {
-        String qualifiedName = normalizeTypeQualifiedName(typeReference);
-        return "boolean".equals(qualifiedName) || "java.lang.Boolean".equals(qualifiedName);
-    }
-
-    @NonNull
-    static String normalizeTypeQualifiedName(@NonNull CtTypeReference<?> typeReference) {
-        return normalizeTypeReferenceByErasureAndBoxing(typeReference).getQualifiedName();
-    }
-
     static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
         // Ascending: public (0) -> protected (1) -> package-private (2) -> private (3)
         Set<ModifierKind> modifiers = typeMember.getModifiers();
