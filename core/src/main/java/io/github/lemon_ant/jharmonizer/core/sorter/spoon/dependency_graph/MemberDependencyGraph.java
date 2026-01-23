@@ -103,7 +103,7 @@ public final class MemberDependencyGraph {
     }
 
     @NonNull
-    Set<@NonNull CtTypeMember> findDirectDependents(
+    public Set<@NonNull CtTypeMember> findDirectDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
         return findDirectNeighbors(outgoingEdgesByProvider, providerMember, allowedEdgeKinds);
     }
