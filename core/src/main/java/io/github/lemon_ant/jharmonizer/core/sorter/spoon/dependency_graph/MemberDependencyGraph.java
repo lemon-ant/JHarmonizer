@@ -44,6 +44,73 @@ public final class MemberDependencyGraph {
     private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveProvidersCacheByDependent =
             new HashMap<>();
 
+    @NonNull
+    private static Set<CtTypeMember> computeTransitiveNeighbors(
+            CtTypeMember startMember,
+            Set<MemberDependencyEdgeKind> allowedEdgeKinds,
+            Map<CtTypeMember, Set<DependencyEdge>> adjacency) {
+        Set<CtTypeMember> visitedMembers = new HashSet<>();
+        Deque<CtTypeMember> processingQueue = new ArrayDeque<>();
+
+        processingQueue.add(startMember);
+
+        while (!processingQueue.isEmpty()) {
+            CtTypeMember currentMember = processingQueue.removeFirst();
+            findDirectNeighbors(adjacency, currentMember, allowedEdgeKinds).stream()
+                    .filter(visitedMembers::add)
+                    .forEach(processingQueue::addLast);
+        }
+
+        return Collections.unmodifiableSet(visitedMembers);
+    }
+
+    private static int toEdgeKindMask(Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        if (allowedEdgeKinds == null || allowedEdgeKinds.isEmpty()) {
+            return ALL_EDGE_KIND_MASK;
+        }
+
+        if (allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
+            return ALL_EDGE_KIND_MASK;
+        }
+
+        int mask = 0;
+        for (MemberDependencyEdgeKind allowedEdgeKind : allowedEdgeKinds) {
+            mask |= (1 << allowedEdgeKind.ordinal());
+        }
+        return mask;
+    }
+
+    @NonNull
+    private static Set<@NonNull CtTypeMember> findDirectNeighbors(
+            Map<CtTypeMember, Set<DependencyEdge>> adjacency,
+            CtTypeMember vertex,
+            Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        Set<DependencyEdge> dependencyEdges = adjacency.get(vertex);
+        if (dependencyEdges == null || dependencyEdges.isEmpty()) {
+            return Set.of();
+        }
+
+        boolean noFilteringRequested = allowedEdgeKinds == null
+                || allowedEdgeKinds.isEmpty()
+                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
+
+        Stream<DependencyEdge> dependencyEdgeStream = dependencyEdges.stream();
+
+        if (!noFilteringRequested) {
+            if (allowedEdgeKinds.size() == ONE) {
+                MemberDependencyEdgeKind singleEdgeKind =
+                        allowedEdgeKinds.iterator().next();
+                dependencyEdgeStream =
+                        dependencyEdgeStream.filter(dependencyEdge -> dependencyEdge.getEdgeKind() == singleEdgeKind);
+            } else {
+                dependencyEdgeStream = dependencyEdgeStream.filter(
+                        dependencyEdge -> allowedEdgeKinds.contains(dependencyEdge.getEdgeKind()));
+            }
+        }
+
+        return dependencyEdgeStream.map(DependencyEdge::getDependentMember).collect(Collectors.toUnmodifiableSet());
+    }
+
     void addEdge(
             @NonNull CtTypeMember providerMember,
             @NonNull CtTypeMember dependentMember,
@@ -120,75 +187,8 @@ public final class MemberDependencyGraph {
         return computedNeighbors;
     }
 
-    @NonNull
-    private static Set<CtTypeMember> computeTransitiveNeighbors(
-            CtTypeMember startMember,
-            Set<MemberDependencyEdgeKind> allowedEdgeKinds,
-            Map<CtTypeMember, Set<DependencyEdge>> adjacency) {
-        Set<CtTypeMember> visitedMembers = new HashSet<>();
-        Deque<CtTypeMember> processingQueue = new ArrayDeque<>();
-
-        processingQueue.add(startMember);
-
-        while (!processingQueue.isEmpty()) {
-            CtTypeMember currentMember = processingQueue.removeFirst();
-            findDirectNeighbors(adjacency, currentMember, allowedEdgeKinds).stream()
-                    .filter(visitedMembers::add)
-                    .forEach(processingQueue::addLast);
-        }
-
-        return Collections.unmodifiableSet(visitedMembers);
-    }
-
     private void invalidateTransitiveCaches() {
         transitiveDependentsCacheByProvider.clear();
         transitiveProvidersCacheByDependent.clear();
-    }
-
-    private static int toEdgeKindMask(Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        if (allowedEdgeKinds == null || allowedEdgeKinds.isEmpty()) {
-            return ALL_EDGE_KIND_MASK;
-        }
-
-        if (allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
-            return ALL_EDGE_KIND_MASK;
-        }
-
-        int mask = 0;
-        for (MemberDependencyEdgeKind allowedEdgeKind : allowedEdgeKinds) {
-            mask |= (1 << allowedEdgeKind.ordinal());
-        }
-        return mask;
-    }
-
-    @NonNull
-    private static Set<@NonNull CtTypeMember> findDirectNeighbors(
-            Map<CtTypeMember, Set<DependencyEdge>> adjacency,
-            CtTypeMember vertex,
-            Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        Set<DependencyEdge> dependencyEdges = adjacency.get(vertex);
-        if (dependencyEdges == null || dependencyEdges.isEmpty()) {
-            return Set.of();
-        }
-
-        boolean noFilteringRequested = allowedEdgeKinds == null
-                || allowedEdgeKinds.isEmpty()
-                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
-
-        Stream<DependencyEdge> dependencyEdgeStream = dependencyEdges.stream();
-
-        if (!noFilteringRequested) {
-            if (allowedEdgeKinds.size() == ONE) {
-                MemberDependencyEdgeKind singleEdgeKind =
-                        allowedEdgeKinds.iterator().next();
-                dependencyEdgeStream =
-                        dependencyEdgeStream.filter(dependencyEdge -> dependencyEdge.getEdgeKind() == singleEdgeKind);
-            } else {
-                dependencyEdgeStream = dependencyEdgeStream.filter(
-                        dependencyEdge -> allowedEdgeKinds.contains(dependencyEdge.getEdgeKind()));
-            }
-        }
-
-        return dependencyEdgeStream.map(DependencyEdge::getDependentMember).collect(Collectors.toUnmodifiableSet());
     }
 }

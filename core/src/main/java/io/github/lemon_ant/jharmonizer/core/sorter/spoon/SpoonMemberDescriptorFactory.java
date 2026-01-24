@@ -38,6 +38,17 @@ import spoon.reflect.declaration.ModifierKind;
 class SpoonMemberDescriptorFactory {
 
     private static final String INIT_NAME = "<init>";
+    private static final List<Map.Entry<ModifierKind, MemberAccess>> ACCESS_BY_MODIFIER = List.of(
+            Map.entry(ModifierKind.PUBLIC, MemberAccess.PUBLIC),
+            Map.entry(ModifierKind.PROTECTED, MemberAccess.PROTECTED),
+            Map.entry(ModifierKind.PRIVATE, MemberAccess.PRIVATE));
+    private static final Map<ModifierKind, DeclarationModifier> DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND = Map.of(
+            ModifierKind.STATIC, DeclarationModifier.STATIC,
+            ModifierKind.FINAL, DeclarationModifier.FINAL,
+            ModifierKind.ABSTRACT, DeclarationModifier.ABSTRACT
+            // TODO Research: map ModifierKind.DEFAULT once semantics are confirmed for your model.
+            // TODO Map SEALED / NON_SEALED once Spoon exposes them (Java 17+ features).
+            );
 
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
@@ -135,11 +146,6 @@ class SpoonMemberDescriptorFactory {
         };
     }
 
-    private static final List<Map.Entry<ModifierKind, MemberAccess>> ACCESS_BY_MODIFIER = List.of(
-            Map.entry(ModifierKind.PUBLIC, MemberAccess.PUBLIC),
-            Map.entry(ModifierKind.PROTECTED, MemberAccess.PROTECTED),
-            Map.entry(ModifierKind.PRIVATE, MemberAccess.PRIVATE));
-
     @Nullable
     private static MemberAccess resolveMemberAccessIfApplicable(CtTypeMember typeMember) {
         // Init blocks are not expected to have access level by MemberDescriptor invariants.
@@ -157,14 +163,6 @@ class SpoonMemberDescriptorFactory {
         // No explicit access modifier means package-private.
         return MemberAccess.PACKAGE;
     }
-
-    private static final Map<ModifierKind, DeclarationModifier> DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND = Map.of(
-            ModifierKind.STATIC, DeclarationModifier.STATIC,
-            ModifierKind.FINAL, DeclarationModifier.FINAL,
-            ModifierKind.ABSTRACT, DeclarationModifier.ABSTRACT
-            // TODO Research: map ModifierKind.DEFAULT once semantics are confirmed for your model.
-            // TODO Map SEALED / NON_SEALED once Spoon exposes them (Java 17+ features).
-            );
 
     private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
         return typeMember.getModifiers().stream()

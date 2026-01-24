@@ -12,7 +12,7 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Default resolver: finds the first matching root group, then the deepest matching subgroup (via CompiledMemberGroup#classify).
- *
+ * <p>
  * Important: this assumes the config contains a "catch-all" group (e.g., empty includes) so every member is classified.
  */
 @UtilityClass

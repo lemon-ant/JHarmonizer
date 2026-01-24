@@ -9,7 +9,7 @@ import spoon.reflect.declaration.CtTypeMember;
 /**
  * Default marker:
  * - sets START_OF_GROUP marker on the first member of each non-empty group.
- *
+ * <p>
  * Note: current printer only checks a boolean marker; we keep separator enum in the block for future enhancements.
  */
 // TODO Useless class???

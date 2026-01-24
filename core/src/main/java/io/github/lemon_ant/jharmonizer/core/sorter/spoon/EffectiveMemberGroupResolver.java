@@ -12,12 +12,12 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Effective-group resolver based on transitive dependents.
- *
+ * <p>
  * effectiveGroup(provider) = min(
- *   naturalGroup(provider),
- *   naturalGroup(dependent) for all transitive dependents(provider)
+ * naturalGroup(provider),
+ * naturalGroup(dependent) for all transitive dependents(provider)
  * )
- *
+ * <p>
  * Since {@link MemberDependencyGraph#findTransitiveDependents(CtTypeMember)} already provides transitive closure,
  * a single pass is sufficient.
  */

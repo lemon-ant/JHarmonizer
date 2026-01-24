@@ -6,11 +6,11 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Placeholder provider for field initializer dependencies (provider -> dependent).
- *
+ * <p>
  * Intended behavior:
  * - if fieldB initializer references fieldA, then fieldA -> fieldB
  * - if init-block references a field, then field -> init-block
- *
+ * <p>
  * Implementation should rely on Spoon model analysis (CtField initializers, CtAnonymousExecutable bodies, etc.)
  * and map references to CtField/CtTypeMember nodes within the same owner type.
  */

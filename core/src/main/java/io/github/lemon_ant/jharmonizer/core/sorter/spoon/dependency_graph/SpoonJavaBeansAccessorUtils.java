@@ -25,47 +25,6 @@ import spoon.reflect.reference.CtTypeReference;
 @UtilityClass
 class SpoonJavaBeansAccessorUtils {
 
-    private enum AccessorKind {
-        GET,
-        SET,
-        IS,
-        HAS
-    }
-
-    private enum AccessorMethodReturnType {
-        VOID,
-        NON_VOID,
-        BOOLEAN
-    }
-
-    @Value
-    private static class AccessorMethodContract {
-
-        @NonNull
-        String methodNamePrefix;
-
-        @NonNull
-        AccessorKind accessorKind;
-
-        int expectedParameterCount;
-
-        @NonNull
-        AccessorMethodReturnType accessorMethodReturnType;
-    }
-
-    @Value
-    private static class AccessorMethodDescriptor {
-
-        @NonNull
-        AccessorKind accessorKind;
-
-        @NonNull
-        String propertyName;
-
-        @NonNull
-        CtTypeReference<?> propertyType;
-    }
-
     private static final List<AccessorMethodContract> ACCESSOR_METHOD_CONTRACTS = List.of(
             new AccessorMethodContract("get", AccessorKind.GET, 0, AccessorMethodReturnType.NON_VOID),
             new AccessorMethodContract("set", AccessorKind.SET, 1, AccessorMethodReturnType.VOID),
@@ -208,5 +167,46 @@ class SpoonJavaBeansAccessorUtils {
                         ? null
                         : candidateMethod.getParameters().getFirst().getType();
         };
+    }
+
+    private enum AccessorKind {
+        GET,
+        SET,
+        IS,
+        HAS
+    }
+
+    private enum AccessorMethodReturnType {
+        VOID,
+        NON_VOID,
+        BOOLEAN
+    }
+
+    @Value
+    private static class AccessorMethodContract {
+
+        @NonNull
+        String methodNamePrefix;
+
+        @NonNull
+        AccessorKind accessorKind;
+
+        int expectedParameterCount;
+
+        @NonNull
+        AccessorMethodReturnType accessorMethodReturnType;
+    }
+
+    @Value
+    private static class AccessorMethodDescriptor {
+
+        @NonNull
+        AccessorKind accessorKind;
+
+        @NonNull
+        String propertyName;
+
+        @NonNull
+        CtTypeReference<?> propertyType;
     }
 }
