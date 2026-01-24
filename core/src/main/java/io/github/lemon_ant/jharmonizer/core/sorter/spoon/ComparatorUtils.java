@@ -10,6 +10,7 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
+@SuppressWarnings("PMD.TooManyMethods")
 class ComparatorUtils {
 
     static @NonNull Comparator<CtTypeMember> buildTypeMemberComparator(
@@ -33,42 +34,79 @@ class ComparatorUtils {
                 return 0;
             }
 
-            boolean leftMustBeBeforeRight =
-                    leftSortable.getOrderingDependentsInGroup().contains(rightMember);
-
-            boolean rightMustBeBeforeLeft =
-                    rightSortable.getOrderingDependentsInGroup().contains(leftMember);
-
-            if (leftMustBeBeforeRight && !rightMustBeBeforeLeft) {
-                return -1;
-            }
-            if (rightMustBeBeforeLeft && !leftMustBeBeforeRight) {
-                return 1;
+            int declarationDependencyComparison = compareByDeclarationDependency(leftSortable, rightSortable);
+            if (declarationDependencyComparison != 0) {
+                return declarationDependencyComparison;
             }
 
-            // Cycles in declaration dependencies (mutual reachability).
-            if (leftMustBeBeforeRight) {
-                throw new IllegalStateException(composeCyclicDeclarationDependencyMessage(leftSortable, rightSortable));
+            int representativeComparison =
+                    compareByRepresentatives(leftSortable, rightSortable, typeMemberBaseComparator);
+            if (representativeComparison != 0) {
+                return representativeComparison;
             }
 
-            CtTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
-            CtTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
-
-            if (leftRepresentative != rightRepresentative) {
-                int representativeComparison =
-                        typeMemberBaseComparator.compare(leftRepresentative, rightRepresentative);
-                if (representativeComparison != 0) {
-                    return representativeComparison;
-                }
-                throw new IllegalStateException(composeEqualRepresentativesMessage(leftSortable, rightSortable));
-            }
-
-            int directComparison = sortableBaseComparator.compare(leftSortable, rightSortable);
-            if (directComparison != 0) {
-                return directComparison;
-            }
-            throw new IllegalStateException(composeEqualMembersMessage(leftSortable, rightSortable));
+            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, sortableBaseComparator);
         };
+    }
+
+    private static int compareByDeclarationDependency(
+            @NonNull SortableTypeMember leftSortable, @NonNull SortableTypeMember rightSortable) {
+
+        CtTypeMember leftMember = leftSortable.getTypeMember();
+        CtTypeMember rightMember = rightSortable.getTypeMember();
+
+        boolean leftMustBeBeforeRight =
+                leftSortable.getOrderingDependentsInGroup().contains(rightMember);
+
+        boolean rightMustBeBeforeLeft =
+                rightSortable.getOrderingDependentsInGroup().contains(leftMember);
+
+        if (leftMustBeBeforeRight && !rightMustBeBeforeLeft) {
+            return -1;
+        }
+        if (rightMustBeBeforeLeft && !leftMustBeBeforeRight) {
+            return 1;
+        }
+
+        if (leftMustBeBeforeRight) {
+            throw new IllegalStateException(composeCyclicDeclarationDependencyMessage(leftSortable, rightSortable));
+        }
+
+        return 0;
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static int compareByRepresentatives(
+            @NonNull SortableTypeMember leftSortable,
+            @NonNull SortableTypeMember rightSortable,
+            @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
+
+        CtTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
+        CtTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
+
+        if (leftRepresentative == rightRepresentative) {
+            return 0;
+        }
+
+        int representativeComparison = typeMemberBaseComparator.compare(leftRepresentative, rightRepresentative);
+        if (representativeComparison != 0) {
+            return representativeComparison;
+        }
+
+        throw new IllegalStateException(composeEqualRepresentativesMessage(leftSortable, rightSortable));
+    }
+
+    private static int compareByBaseComparatorOrThrow(
+            @NonNull SortableTypeMember leftSortable,
+            @NonNull SortableTypeMember rightSortable,
+            @NonNull Comparator<SortableTypeMember> sortableBaseComparator) {
+
+        int directComparison = sortableBaseComparator.compare(leftSortable, rightSortable);
+        if (directComparison != 0) {
+            return directComparison;
+        }
+
+        throw new IllegalStateException(composeEqualMembersMessage(leftSortable, rightSortable));
     }
 
     @NonNull
