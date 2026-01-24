@@ -53,12 +53,12 @@ public final class MemberDependencyGraph {
             @NonNull CtTypeMember providerMember,
             @NonNull CtTypeMember dependentMember,
             @NonNull MemberDependencyEdgeKind edgeKind) {
-
-        registerVertex(providerMember);
-        registerVertex(dependentMember);
-
-        outgoingEdgesByProvider.get(providerMember).add(new DependencyEdge(dependentMember, edgeKind));
-        incomingEdgesByDependent.get(dependentMember).add(new DependencyEdge(providerMember, edgeKind));
+        outgoingEdgesByProvider
+                .computeIfAbsent(providerMember, ignored -> new HashSet<>())
+                .add(new DependencyEdge(dependentMember, edgeKind));
+        incomingEdgesByDependent
+                .computeIfAbsent(dependentMember, ignored -> new HashSet<>())
+                .add(new DependencyEdge(providerMember, edgeKind));
 
         invalidateTransitiveCaches();
     }
@@ -171,11 +171,6 @@ public final class MemberDependencyGraph {
     Set<@NonNull CtTypeMember> findDirectProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
         return findDirectNeighbors(incomingEdgesByDependent, dependentMember, allowedEdgeKinds);
-    }
-
-    private void registerVertex(CtTypeMember typeMember) {
-        outgoingEdgesByProvider.computeIfAbsent(typeMember, ignored -> new HashSet<>());
-        incomingEdgesByDependent.computeIfAbsent(typeMember, ignored -> new HashSet<>());
     }
 
     private void invalidateTransitiveCaches() {
