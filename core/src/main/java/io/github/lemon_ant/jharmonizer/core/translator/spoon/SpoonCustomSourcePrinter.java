@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.GROUP_HEADER_METADATA;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.detectDominantLineSeparator;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.findIndentationStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
@@ -7,6 +8,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import spoon.compiler.Environment;
 import spoon.reflect.cu.SourcePosition;
@@ -123,6 +125,20 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                 printTypeStructure(typeMember);
                 continue;
             }
+
+            // The member was marked as the first member of a group
+            Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
+                    .map(Object::toString);
+
+            groupHeaderMetadata.ifPresent(groupHeader -> {
+                if (!groupHeader.isEmpty()) {
+                    getPrinterTokenWriter()
+                            .writeCodeSnippet("// " + groupHeader)
+                            .writeln();
+                } else {
+                    getPrinterTokenWriter().writeln();
+                }
+            });
 
             // Copy class member code from the original code without changes
             int nextElementStart = explicitTypeMembers.stream()

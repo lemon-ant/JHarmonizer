@@ -82,11 +82,9 @@ public class SpoonSorter {
         List<MemberGroupBlock> memberGroupBlocks =
                 TypeMemberGrouper.groupMembersByEffectiveGroups(effectiveGroupByMember);
 
-        // TODO Check it
         List<MemberGroupBlock> orderedMemberGroupBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(memberGroupBlocks, memberDependencyGraph);
 
-        // TODO Check it
         GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
 
         List<CtTypeMember> flattenedSortedMembers = flattenMembers(orderedMemberGroupBlocks);

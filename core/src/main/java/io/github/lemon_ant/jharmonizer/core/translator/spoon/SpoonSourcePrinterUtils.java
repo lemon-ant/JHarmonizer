@@ -8,7 +8,7 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 public class SpoonSourcePrinterUtils {
 
-    public static final String START_OF_GROUP_METADATA_MARKER = "START_OF_GROUP";
+    public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
 
     static int findIndentationStart(int start, String sourceCode) {
         int pos = start - 1;
@@ -86,12 +86,9 @@ public class SpoonSourcePrinterUtils {
                 .anyMatch(comment -> comment.getPosition().getEndLine()
                         < member.getPosition().getLine());
 
-        // The member was marked as the first member of a group
-        boolean isStartOfGroup = member.getMetadata(START_OF_GROUP_METADATA_MARKER) != null;
-
         // Add the separator in any way if it's not field
         boolean isNotField = !(member instanceof CtField);
 
-        return hasAnnotations || hasCommentsAbove || !first && (isNotField || isStartOfGroup);
+        return hasAnnotations || hasCommentsAbove || !first && isNotField;
     }
 }
