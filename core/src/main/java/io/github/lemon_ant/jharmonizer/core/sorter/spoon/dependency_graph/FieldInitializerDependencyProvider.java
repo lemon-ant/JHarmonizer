@@ -1,35 +1,68 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireDeclaringType;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 import lombok.NonNull;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Placeholder provider for field initializer dependencies (provider -> dependent).
- * <p>
- * Intended behavior:
- * - if fieldB initializer references fieldA, then fieldA -> fieldB
- * - if init-block references a field, then field -> init-block
- * <p>
- * Implementation should rely on Spoon model analysis (CtField initializers, CtAnonymousExecutable bodies, etc.)
- * and map references to CtField/CtTypeMember nodes within the same owner type.
- */
 final class FieldInitializerDependencyProvider implements MemberDependencyProvider {
 
-    @Override
-    @NonNull
-    public Set<@NonNull DependencyEdge> findDirectEdges(
-            @NonNull CtTypeMember providerMember, boolean keepAccessorsTogether) {
+    private final Map<CtType<?>, Map<CtTypeMember, Set<DependencyEdge>>> outgoingEdgesByProviderMemberByType =
+            new WeakHashMap<>();
 
-        // TODO Implement Spoon-based reference extraction.
-        // Recommended approach:
-        // 1) Build a lookup: simpleName -> CtTypeMember (fields + maybe methods if needed for future)
-        // 2) For each field with initializer:
-        //    - collect referenced field names within initializer expression
-        //    - add edges referencedField -> currentField
-        // 3) For each init-block (CtAnonymousExecutable):
-        //    - collect referenced field names within block
-        //    - add edges referencedField -> initBlockMember
-        return Set.of();
+    @NonNull
+    @Override
+    public Set<DependencyEdge> findDirectEdges(@NonNull CtTypeMember providerMember, boolean keepAccessorsTogether) {
+        if (!(providerMember instanceof CtField<?> providerField)) {
+            return Set.of();
+        }
+
+        CtType<?> declaringType = requireDeclaringType(providerField);
+
+        Map<CtTypeMember, Set<DependencyEdge>> outgoingEdgesByProviderMember =
+                outgoingEdgesByProviderMemberByType.computeIfAbsent(
+                        declaringType, FieldInitializerDependencyProvider::buildOutgoingEdgesByProviderMember);
+
+        return outgoingEdgesByProviderMember.getOrDefault(providerMember, Set.of());
+    }
+
+    private static Map<CtTypeMember, Set<DependencyEdge>> buildOutgoingEdgesByProviderMember(
+            @NonNull CtType<?> declaringType) {
+        Map<CtTypeMember, Set<DependencyEdge>> mutableOutgoingEdgesByProviderMember = new HashMap<>();
+
+        for (CtTypeMember typeMember : declaringType.getTypeMembers()) {
+            if (!(typeMember instanceof CtField<?> dependentField)) {
+                continue;
+            }
+
+            if (dependentField.getDefaultExpression() == null) {
+                continue;
+            }
+
+            Set<CtField<?>> referencedFields = OrderDependentFieldReferenceUtils.findReferencedFields(
+                    dependentField.getDefaultExpression(), declaringType);
+
+            for (CtField<?> referencedField : referencedFields) {
+                if (OrderDependentFieldReferenceUtils.shouldCreateDeclarationDependencyEdge(
+                        referencedField, dependentField)) {
+                    continue;
+                }
+
+                mutableOutgoingEdgesByProviderMember
+                        .computeIfAbsent(referencedField, ignored -> new HashSet<>())
+                        .add(new DependencyEdge(dependentField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+            }
+        }
+
+        return mutableOutgoingEdgesByProviderMember.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
     }
 }
