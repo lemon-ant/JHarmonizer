@@ -18,7 +18,7 @@ final class FieldInitializerDependencyProvider implements MemberDependencyProvid
 
     @NonNull
     @Override
-    public Set<@NonNull ProviderEdge> findDirectProviderEdges(
+    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Set.of();
@@ -34,7 +34,7 @@ final class FieldInitializerDependencyProvider implements MemberDependencyProvid
                         dependentField.getDefaultExpression(), declaringType)
                 .stream()
                 .map(referencedField ->
-                        new ProviderEdge(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                        new MemberDependencyArc(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
     }
 }

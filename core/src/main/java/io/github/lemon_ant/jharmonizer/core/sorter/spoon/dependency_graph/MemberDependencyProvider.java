@@ -14,6 +14,6 @@ import spoon.reflect.declaration.CtTypeMember;
 interface MemberDependencyProvider {
 
     @NonNull
-    Set<@NonNull ProviderEdge> findDirectProviderEdges(
+    Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether);
 }

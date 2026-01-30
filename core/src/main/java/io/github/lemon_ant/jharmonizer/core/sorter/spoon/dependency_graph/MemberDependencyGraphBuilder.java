@@ -39,7 +39,7 @@ public class MemberDependencyGraphBuilder {
                                     .findDirectProviderEdges(dependentMember, keepAccessorsTogether)
                                     .stream())
                     .forEach(providerEdge -> memberDependencyGraph.addEdge(
-                            providerEdge.getProviderMember(), dependentMember, providerEdge.getEdgeKind()));
+                            providerEdge.getAdjacentMember(), dependentMember, providerEdge.getEdgeKind()));
         });
 
         return memberDependencyGraph;

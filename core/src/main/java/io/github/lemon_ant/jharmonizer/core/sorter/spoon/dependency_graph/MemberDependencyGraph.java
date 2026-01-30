@@ -36,8 +36,8 @@ public final class MemberDependencyGraph {
     private static final Set<MemberDependencyEdgeKind> ALL_EDGE_KINDS = EnumSet.allOf(MemberDependencyEdgeKind.class);
     private static final int ONE = 1;
 
-    private final Map<CtTypeMember, Set<DependencyEdge>> outgoingEdgesByProvider = new HashMap<>();
-    private final Map<CtTypeMember, Set<DependencyEdge>> incomingEdgesByDependent = new HashMap<>();
+    private final Map<CtTypeMember, Set<MemberDependencyArc>> outgoingEdgesByProvider = new HashMap<>();
+    private final Map<CtTypeMember, Set<MemberDependencyArc>> incomingEdgesByDependent = new HashMap<>();
 
     private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveDependentsCacheByProvider =
             new HashMap<>();
@@ -48,7 +48,7 @@ public final class MemberDependencyGraph {
     private static Set<CtTypeMember> computeTransitiveNeighbors(
             CtTypeMember startMember,
             Set<MemberDependencyEdgeKind> allowedEdgeKinds,
-            Map<CtTypeMember, Set<DependencyEdge>> adjacency) {
+            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency) {
         Set<CtTypeMember> visitedMembers = new HashSet<>();
         Deque<CtTypeMember> processingQueue = new ArrayDeque<>();
 
@@ -82,11 +82,11 @@ public final class MemberDependencyGraph {
 
     @NonNull
     private static Set<@NonNull CtTypeMember> findDirectNeighbors(
-            Map<CtTypeMember, Set<DependencyEdge>> adjacency,
+            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency,
             CtTypeMember vertex,
             Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        Set<DependencyEdge> dependencyEdges = adjacency.get(vertex);
-        if (dependencyEdges == null || dependencyEdges.isEmpty()) {
+        Set<MemberDependencyArc> memberDependencyArcs = adjacency.get(vertex);
+        if (memberDependencyArcs == null || memberDependencyArcs.isEmpty()) {
             return Set.of();
         }
 
@@ -94,21 +94,21 @@ public final class MemberDependencyGraph {
                 || allowedEdgeKinds.isEmpty()
                 || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
 
-        Stream<DependencyEdge> dependencyEdgeStream = dependencyEdges.stream();
+        Stream<MemberDependencyArc> dependencyEdgeStream = memberDependencyArcs.stream();
 
         if (!noFilteringRequested) {
             if (allowedEdgeKinds.size() == ONE) {
                 MemberDependencyEdgeKind singleEdgeKind =
                         allowedEdgeKinds.iterator().next();
                 dependencyEdgeStream =
-                        dependencyEdgeStream.filter(dependencyEdge -> dependencyEdge.getEdgeKind() == singleEdgeKind);
+                        dependencyEdgeStream.filter(memberEdge -> memberEdge.getEdgeKind() == singleEdgeKind);
             } else {
-                dependencyEdgeStream = dependencyEdgeStream.filter(
-                        dependencyEdge -> allowedEdgeKinds.contains(dependencyEdge.getEdgeKind()));
+                dependencyEdgeStream =
+                        dependencyEdgeStream.filter(memberEdge -> allowedEdgeKinds.contains(memberEdge.getEdgeKind()));
             }
         }
 
-        return dependencyEdgeStream.map(DependencyEdge::getDependentMember).collect(Collectors.toUnmodifiableSet());
+        return dependencyEdgeStream.map(MemberDependencyArc::getAdjacentMember).collect(Collectors.toUnmodifiableSet());
     }
 
     void addEdge(
@@ -117,10 +117,10 @@ public final class MemberDependencyGraph {
             @NonNull MemberDependencyEdgeKind edgeKind) {
         outgoingEdgesByProvider
                 .computeIfAbsent(providerMember, ignored -> new HashSet<>())
-                .add(new DependencyEdge(dependentMember, edgeKind));
+                .add(new MemberDependencyArc(dependentMember, edgeKind));
         incomingEdgesByDependent
                 .computeIfAbsent(dependentMember, ignored -> new HashSet<>())
-                .add(new DependencyEdge(providerMember, edgeKind));
+                .add(new MemberDependencyArc(providerMember, edgeKind));
 
         invalidateTransitiveCaches();
     }
@@ -166,7 +166,7 @@ public final class MemberDependencyGraph {
             CtTypeMember startMember,
             Set<MemberDependencyEdgeKind> allowedEdgeKinds,
             Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveCacheByStartMember,
-            Map<CtTypeMember, Set<DependencyEdge>> adjacency) {
+            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency) {
         int allowedEdgeKindsMask = toEdgeKindMask(allowedEdgeKinds);
 
         Map<Integer, Set<CtTypeMember>> cachedNeighborsByEdgeKindMask = transitiveCacheByStartMember.get(startMember);

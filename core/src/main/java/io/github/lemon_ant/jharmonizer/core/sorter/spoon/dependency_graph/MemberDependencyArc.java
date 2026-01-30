@@ -5,10 +5,10 @@ import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
 @Value
-class ProviderEdge {
+class MemberDependencyArc {
 
     @NonNull
-    CtTypeMember providerMember;
+    CtTypeMember adjacentMember;
 
     @NonNull
     MemberDependencyEdgeKind edgeKind;

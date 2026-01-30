@@ -18,7 +18,7 @@ final class InitializerBlockDependencyProvider implements MemberDependencyProvid
 
     @NonNull
     @Override
-    public Set<@NonNull ProviderEdge> findDirectProviderEdges(
+    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
         if (!(dependentMember instanceof CtAnonymousExecutable dependentInitializerBlock)) {
             return Set.of();
@@ -34,7 +34,7 @@ final class InitializerBlockDependencyProvider implements MemberDependencyProvid
                         dependentInitializerBlock.getBody(), declaringType)
                 .stream()
                 .map(referencedField ->
-                        new ProviderEdge(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                        new MemberDependencyArc(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
     }
 }
