@@ -5,10 +5,10 @@ import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
 @Value
-@Deprecated
-class DependencyEdge {
+class ProviderEdge {
+
     @NonNull
-    CtTypeMember dependentMember;
+    CtTypeMember providerMember;
 
     @NonNull
     MemberDependencyEdgeKind edgeKind;

@@ -2,11 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtType;
@@ -17,11 +15,6 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @UtilityClass
 public class MemberDependencyGraphBuilder {
-
-    private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
-            EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
-    private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
-            EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
     private static final Collection<@NonNull MemberDependencyProvider> memberDependencyProviders = List.of(
             new AccessorPairDependencyProvider(),
@@ -34,29 +27,31 @@ public class MemberDependencyGraphBuilder {
 
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
 
-        type.getTypeMembers().forEach(providerMember -> {
-            CompiledMemberGroup providerNaturalGroup =
-                    resolveNaturalGroupOrThrow(providerMember, typeMember2NaturalMemberGroup);
+        type.getTypeMembers().forEach(dependentMember -> {
+            CompiledMemberGroup dependentNaturalGroup =
+                    resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
-            boolean keepAccessorsTogether = providerNaturalGroup.isKeepAccessorsTogether();
+            boolean keepAccessorsTogether = dependentNaturalGroup.isKeepAccessorsTogether();
 
             memberDependencyProviders.stream()
                     .flatMap(memberDependencyProvider ->
-                            memberDependencyProvider.findDirectEdges(providerMember, keepAccessorsTogether).stream())
-                    .forEach(directEdge -> memberDependencyGraph.addEdge(
-                            providerMember, directEdge.getDependentMember(), directEdge.getEdgeKind()));
+                            memberDependencyProvider
+                                    .findDirectProviderEdges(dependentMember, keepAccessorsTogether)
+                                    .stream())
+                    .forEach(providerEdge -> memberDependencyGraph.addEdge(
+                            providerEdge.getProviderMember(), dependentMember, providerEdge.getEdgeKind()));
         });
 
         return memberDependencyGraph;
     }
 
     private static CompiledMemberGroup resolveNaturalGroupOrThrow(
-            CtTypeMember dependentMember, Map<CtTypeMember, CompiledMemberGroup> typeMember2CompiledMemberGroup) {
+            CtTypeMember typeMember, Map<CtTypeMember, CompiledMemberGroup> typeMember2CompiledMemberGroup) {
 
-        return Optional.ofNullable(typeMember2CompiledMemberGroup.get(dependentMember))
+        return Optional.ofNullable(typeMember2CompiledMemberGroup.get(typeMember))
                 .orElseThrow(() -> new IllegalStateException("Natural group was not resolved for type member. "
                         + "Expected typeMember2CompiledMemberGroup to contain all CtType.getTypeMembers(). "
                         + "Missing member: "
-                        + dependentMember));
+                        + typeMember));
     }
 }
