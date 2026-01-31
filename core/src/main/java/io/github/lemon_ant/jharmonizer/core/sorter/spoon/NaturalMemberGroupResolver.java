@@ -30,7 +30,6 @@ class NaturalMemberGroupResolver {
 
     private static CompiledMemberGroup resolveSingleMemberGroup(
             CompiledMemberGroup rootMemberGroup, MemberDescriptor memberDescriptor) {
-
         return rootMemberGroup.getCompiledSubGroups().stream()
                 .map(compiledSubGroup -> compiledSubGroup.classifyRecursively(memberDescriptor))
                 .flatMap(Optional::stream)

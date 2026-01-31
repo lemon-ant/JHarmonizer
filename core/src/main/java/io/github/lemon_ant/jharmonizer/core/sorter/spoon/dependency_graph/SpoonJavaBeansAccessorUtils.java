@@ -63,7 +63,7 @@ class SpoonJavaBeansAccessorUtils {
     }
 
     private static boolean isPairedAccessor(
-            @NonNull AccessorMethodDescriptor leftDescriptor, @NonNull AccessorMethodDescriptor rightDescriptor) {
+            AccessorMethodDescriptor leftDescriptor, AccessorMethodDescriptor rightDescriptor) {
         boolean samePropertyName = leftDescriptor.getPropertyName().equals(rightDescriptor.getPropertyName());
         boolean samePropertyType = leftDescriptor
                 .getPropertyType()
@@ -86,7 +86,6 @@ class SpoonJavaBeansAccessorUtils {
 
     @NonNull
     private static Optional<AccessorMethodDescriptor> tryParseAccessorMethodDescriptor(CtMethod<?> candidateMethod) {
-
         return ACCESSOR_METHOD_CONTRACTS.stream()
                 .filter(accessorMethodContract ->
                         matchesAccessorMethodContract(candidateMethod, accessorMethodContract))

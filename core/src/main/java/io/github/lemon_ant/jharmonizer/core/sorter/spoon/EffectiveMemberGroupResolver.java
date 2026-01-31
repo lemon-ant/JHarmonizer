@@ -22,14 +22,12 @@ import spoon.reflect.declaration.CtTypeMember;
  * a single pass is sufficient.
  */
 @UtilityClass
-// TODO Перепроверить
 class EffectiveMemberGroupResolver {
 
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> resolveEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> typeMember2NaturalMemberGroup,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
-
         return typeMember2NaturalMemberGroup.keySet().stream()
                 .collect(Collectors.toUnmodifiableMap(
                         providerMember -> providerMember,

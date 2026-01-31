@@ -18,6 +18,8 @@ public class MemberDependencyGraphBuilder {
 
     private static final Collection<@NonNull MemberDependencyProvider> memberDependencyProviders = List.of(
             new AccessorPairDependencyProvider(),
+            new EnumConstantInitializerDependencyProvider(),
+            new BlankFinalDefiniteAssignmentDependencyProvider(),
             new FieldInitializerDependencyProvider(),
             new InitializerBlockDependencyProvider());
 

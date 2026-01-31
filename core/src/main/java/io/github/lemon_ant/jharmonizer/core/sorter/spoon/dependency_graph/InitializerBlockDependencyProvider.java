@@ -1,12 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireDeclaringType;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtAnonymousExecutable;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -24,14 +21,13 @@ final class InitializerBlockDependencyProvider implements MemberDependencyProvid
             return Set.of();
         }
 
+        // TODO Can it be???
         if (dependentInitializerBlock.getBody() == null) {
             return Set.of();
         }
 
-        CtType<?> declaringType = requireDeclaringType(dependentInitializerBlock);
-
         return OrderDependentFieldReferenceUtils.findReferencedFields(
-                        dependentInitializerBlock.getBody(), declaringType)
+                        dependentMember, dependentInitializerBlock.getBody())
                 .stream()
                 .map(referencedField ->
                         new MemberDependencyArc(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))

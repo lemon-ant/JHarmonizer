@@ -29,7 +29,7 @@ class SortableTypeMember {
     @NonNull
     Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
-    public SortableTypeMember(
+    SortableTypeMember(
             @NonNull CtTypeMember typeMember,
             @NonNull CtTypeMember representativeTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
@@ -47,7 +47,7 @@ class SortableTypeMember {
     }
 
     @NonNull
-    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(@NonNull CtTypeMember typeMember) {
+    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(CtTypeMember typeMember) {
         return new SortableTypeMember.SortKeyValues(
                 extractSourceStart(typeMember), deriveAlphaKey(typeMember), deriveVisibilityRank(typeMember));
     }

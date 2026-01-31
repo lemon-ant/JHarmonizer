@@ -22,7 +22,6 @@ class TypeMemberGrouper {
     @NonNull
     List<@NonNull MemberGroupBlock> groupMembersByEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> member2effectiveGroup) {
-
         Map<CompiledMemberGroup, List<CtTypeMember>> membersByGroup = member2effectiveGroup.entrySet().stream()
                 .collect(Collectors.groupingBy(
                         Map.Entry::getValue,

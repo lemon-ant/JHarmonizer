@@ -55,7 +55,7 @@ class SpoonMemberDescriptorFactory {
         return describeMembers(type.getTypeMembers());
     }
 
-    private Map<CtTypeMember, MemberDescriptor> describeMembers(@NonNull List<CtTypeMember> typeMembers) {
+    private Map<CtTypeMember, MemberDescriptor> describeMembers(List<CtTypeMember> typeMembers) {
         return typeMembers.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableMap(

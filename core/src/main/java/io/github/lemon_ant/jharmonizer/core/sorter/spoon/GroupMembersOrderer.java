@@ -36,7 +36,6 @@ class GroupMembersOrderer {
     static List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
             @NonNull List<@NonNull MemberGroupBlock> unorderedMemberGroupBlocks,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
-
         return unorderedMemberGroupBlocks.stream()
                 .map(memberGroupBlock -> orderMembersInsideGroup(memberGroupBlock, memberDependencyGraph))
                 .toList();
@@ -56,10 +55,9 @@ class GroupMembersOrderer {
 
     @NonNull
     private static List<@NonNull CtTypeMember> orderMembersInsideGroup(
-            @NonNull CompiledMemberGroup compiledMemberGroup,
-            @NonNull List<@NonNull CtTypeMember> groupMembers,
-            @NonNull MemberDependencyGraph memberDependencyGraph) {
-
+            CompiledMemberGroup compiledMemberGroup,
+            List<@NonNull CtTypeMember> groupMembers,
+            MemberDependencyGraph memberDependencyGraph) {
         if (groupMembers.size() <= ONE) {
             return List.copyOf(groupMembers);
         }
@@ -106,13 +104,13 @@ class GroupMembersOrderer {
 
     @NonNull
     private static SortableTypeMember convertTypeMember2SortableTypeMember(
-            @NonNull CtTypeMember typeMember,
-            @NonNull Set<CtTypeMember> groupMembers,
-            @NonNull MemberDependencyGraph memberDependencyGraph,
+            CtTypeMember typeMember,
+            Set<CtTypeMember> groupMembers,
+            MemberDependencyGraph memberDependencyGraph,
             boolean keepAccessorsTogether,
-            @NonNull Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
-            @NonNull Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider,
-            @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
+            Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider,
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
 
         Set<CtTypeMember> declarationDependentsInGroup =
                 memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
@@ -141,8 +139,8 @@ class GroupMembersOrderer {
 
     @NonNull
     private static Set<@NonNull CtTypeMember> expandDependentsWithAccessorBundles(
-            @NonNull Set<CtTypeMember> declarationDependentsInGroup,
-            @NonNull Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
+            Set<CtTypeMember> declarationDependentsInGroup,
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
         return declarationDependentsInGroup.stream()
                 .flatMap(dependentMember -> Optional.ofNullable(accessorBundleMembersByMember.get(dependentMember))
                         .map(List::stream)
@@ -152,10 +150,9 @@ class GroupMembersOrderer {
 
     @NonNull
     private static Map<CtTypeMember, List<CtTypeMember>> buildAccessorBundleMembersByMember(
-            @NonNull Set<@NonNull CtTypeMember> groupMembers,
-            @NonNull MemberDependencyGraph memberDependencyGraph,
-            @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
-
+            Set<@NonNull CtTypeMember> groupMembers,
+            MemberDependencyGraph memberDependencyGraph,
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = new HashMap<>();
         Set<CtTypeMember> alreadyIndexedMembers = new HashSet<>();
@@ -188,9 +185,7 @@ class GroupMembersOrderer {
 
     @NonNull
     private static CtTypeMember resolveAccessorBundleRepresentative(
-            @NonNull CtTypeMember typeMember,
-            @NonNull Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
-
+            CtTypeMember typeMember, Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
         List<CtTypeMember> sortedBundleMembersInGroup = accessorBundleMembersByMember.get(typeMember);
         return sortedBundleMembersInGroup == null ? typeMember : sortedBundleMembersInGroup.getFirst();
     }

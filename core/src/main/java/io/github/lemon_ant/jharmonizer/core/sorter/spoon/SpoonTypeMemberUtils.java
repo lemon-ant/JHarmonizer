@@ -90,7 +90,7 @@ public class SpoonTypeMemberUtils {
     }
 
     @NonNull
-    private static String deriveParameterTypeList(@NonNull List<CtParameter<?>> parameters) {
+    private static String deriveParameterTypeList(List<CtParameter<?>> parameters) {
         // Spoon's parameter list is typed, but we keep this helper generic to avoid a large type signature here.
         return parameters.stream()
                 .map(parameter -> {
