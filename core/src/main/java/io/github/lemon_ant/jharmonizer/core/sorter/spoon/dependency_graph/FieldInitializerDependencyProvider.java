@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import lombok.NonNull;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -11,25 +11,15 @@ import spoon.reflect.declaration.CtTypeMember;
  *
  * <p>If fieldB initializer references fieldA, then fieldA -> fieldB.
  */
-final class FieldInitializerDependencyProvider implements MemberDependencyProvider {
+final class FieldInitializerDependencyProvider extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
     @NonNull
     @Override
-    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
-            return Set.of();
+            return Optional.empty();
         }
 
-        if (dependentField.getDefaultExpression() == null) {
-            return Set.of();
-        }
-
-        return OrderDependentFieldReferenceUtils.findReferencedFields(
-                        dependentMember, dependentField.getDefaultExpression())
-                .stream()
-                .map(referencedField ->
-                        new MemberDependencyArc(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .collect(Collectors.toUnmodifiableSet());
+        return Optional.ofNullable(dependentField.getDefaultExpression());
     }
 }

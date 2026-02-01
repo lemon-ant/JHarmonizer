@@ -1,9 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import lombok.NonNull;
-import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -14,25 +13,15 @@ import spoon.reflect.declaration.CtTypeMember;
  * Any (order-dependent) field access from an enum constant initializer must not be reordered past
  * its provider.
  */
-final class EnumConstantInitializerDependencyProvider implements MemberDependencyProvider {
+final class EnumConstantInitializerDependencyProvider extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
     @NonNull
     @Override
-    public Set<MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
         if (!(dependentMember instanceof CtEnumValue<?> dependentEnumValue)) {
-            return Set.of();
+            return Optional.empty();
         }
 
-        CtExpression<?> enumValueInitializerExpression = dependentEnumValue.getDefaultExpression();
-        if (enumValueInitializerExpression == null) {
-            return Set.of();
-        }
-
-        return OrderDependentFieldReferenceUtils.findReferencedFields(dependentMember, enumValueInitializerExpression)
-                .stream()
-                .map(referencedField ->
-                        new MemberDependencyArc(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .collect(Collectors.toUnmodifiableSet());
+        return Optional.ofNullable(dependentEnumValue.getDefaultExpression());
     }
 }

@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtAnonymousExecutable;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -11,26 +11,15 @@ import spoon.reflect.declaration.CtTypeMember;
  *
  * <p>If init-block references fieldA, then fieldA -> init-block.
  */
-final class InitializerBlockDependencyProvider implements MemberDependencyProvider {
+final class InitializerBlockDependencyProvider extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
     @NonNull
     @Override
-    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
         if (!(dependentMember instanceof CtAnonymousExecutable dependentInitializerBlock)) {
-            return Set.of();
+            return Optional.empty();
         }
 
-        // TODO Can it be???
-        if (dependentInitializerBlock.getBody() == null) {
-            return Set.of();
-        }
-
-        return OrderDependentFieldReferenceUtils.findReferencedFields(
-                        dependentMember, dependentInitializerBlock.getBody())
-                .stream()
-                .map(referencedField ->
-                        new MemberDependencyArc(referencedField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .collect(Collectors.toUnmodifiableSet());
+        return Optional.ofNullable(dependentInitializerBlock.getBody());
     }
 }

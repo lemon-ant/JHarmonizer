@@ -2,10 +2,10 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -17,8 +17,9 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 final class OrderDependentFieldReferenceUtils {
+
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
         CtType<?> declaringType = typeMember.getDeclaringType();
         if (declaringType != null) {
@@ -73,28 +74,29 @@ final class OrderDependentFieldReferenceUtils {
      * <p>
      * Goal: fewer artificial edges (still correct), better flexibility for grouping/sorting.
      */
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtField<?>> findReferencedFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         int dependentSourceStart = requireSourceStart(dependentMember);
 
-        @SuppressWarnings("unchecked")
-        Class<CtFieldAccess<?>> fieldAccessClass = (Class<CtFieldAccess<?>>) (Class<?>) CtFieldAccess.class;
-        TypeFilter<CtFieldAccess<?>> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
+        return collectDeclaringTypeFields(
+                astRoot,
+                declaringType,
+                CtFieldAccess.class,
+                referencedField -> shouldCreateDeclarationDependencyEdge(referencedField, dependentSourceStart));
+    }
 
-        return astRoot.getElements(fieldAccessTypeFilter).stream()
-                .map(CtFieldAccess::getVariable)
-                .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
-                .filter(referencedField -> shouldCreateDeclarationDependencyEdge(referencedField, dependentSourceStart))
-                .collect(Collectors.toUnmodifiableSet());
+    static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+        return collectDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
+    }
+
+    static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+        return collectDeclaringTypeFields(astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
     private static boolean shouldCreateDeclarationDependencyEdge(
             CtTypeMember providerMember, int dependentSourceStart) {
-
         int providerSourceStart = requireSourceStart(providerMember);
         return providerSourceStart < dependentSourceStart;
     }
@@ -113,30 +115,28 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
-        @SuppressWarnings("unchecked")
-        Class<CtFieldRead<?>> fieldReadClass = (Class<CtFieldRead<?>>) (Class<?>) CtFieldRead.class;
-        TypeFilter<CtFieldRead<?>> fieldReadTypeFilter = new TypeFilter<>(fieldReadClass);
-        return astRoot.getElements(fieldReadTypeFilter).stream()
-                .map(CtFieldRead::getVariable)
+    private static Set<CtField<?>> collectDeclaringTypeFields(
+            CtElement astRoot,
+            CtType<?> declaringType,
+            Class<?> rawFieldAccessClass,
+            Predicate<CtField<?>> additionalFieldFilter) {
+
+        TypeFilter<? extends CtFieldAccess<?>> fieldAccessTypeFilter = createFieldAccessTypeFilter(rawFieldAccessClass);
+
+        return astRoot.getElements(fieldAccessTypeFilter).stream()
+                .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
                 .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
+                .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
+    private static TypeFilter<? extends CtFieldAccess<?>> createFieldAccessTypeFilter(Class<?> rawFieldAccessClass) {
         @SuppressWarnings("unchecked")
-        Class<CtFieldWrite<?>> fieldWriteClass = (Class<CtFieldWrite<?>>) (Class<?>) CtFieldWrite.class;
-        TypeFilter<CtFieldWrite<?>> fieldWriteTypeFilter = new TypeFilter<>(fieldWriteClass);
-        return astRoot.getElements(fieldWriteTypeFilter).stream()
-                .map(CtFieldWrite::getVariable)
-                .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
-                .collect(Collectors.toUnmodifiableSet());
+        Class<? extends CtFieldAccess<?>> typedFieldAccessClass =
+                (Class<? extends CtFieldAccess<?>>) rawFieldAccessClass;
+
+        return new TypeFilter<>(typedFieldAccessClass);
     }
 }
