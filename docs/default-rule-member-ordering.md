@@ -1,5 +1,69 @@
 # JHarmonizer default rule — member ordering specification (draft)
 
+## Tree view (single hierarchy)
+
+```
+Default Rule (fallback root group)
+├─ 1) Fields
+│  ├─ 1.1) Static fields
+│  │  ├─ 1.1.1) Static final fields (constants)
+│  │  │  ├─ 1.1.1.1) serialVersionUID (if present) — first
+│  │  │  ├─ 1.1.1.2) Logger fields (if present) — next
+│  │  │  └─ 1.1.1.3) Other static final fields — sort: visibility → ALPHA
+│  │  └─ 1.1.2) Static non-final fields — sort: visibility → ALPHA
+│  └─ 1.2) Instance fields
+│     ├─ 1.2.1) Instance final fields — sort: visibility → ALPHA
+│     └─ 1.2.2) Instance non-final fields — sort: visibility → ALPHA
+├─ 2) Initializers
+│  ├─ 2.1) Static initializers — preserve/source order
+│  └─ 2.2) Instance initializers — preserve/source order
+├─ 3) Methods (including constructors)
+│  ├─ note: keepAccessorsTogether = ON (applied here; inherited by all subgroups)
+│  ├─ 3.1) Public
+│  │  ├─ Static methods — sort: ALPHA
+│  │  ├─ Constructors — sort: ALPHA
+│  │  └─ Instance methods — sort: ALPHA
+│  ├─ 3.2) Protected
+│  │  ├─ Static methods — sort: ALPHA
+│  │  ├─ Constructors — sort: ALPHA
+│  │  └─ Instance methods — sort: ALPHA
+│  ├─ 3.3) Package-private
+│  │  ├─ Static methods — sort: ALPHA
+│  │  ├─ Constructors — sort: ALPHA
+│  │  └─ Instance methods — sort: ALPHA
+│  └─ 3.4) Private
+│     ├─ Static methods — sort: ALPHA
+│     ├─ Constructors — sort: ALPHA
+│     └─ Instance methods — sort: ALPHA
+└─ 4) Nested types
+   ├─ 4.1) Public
+   │  ├─ Annotations (@interface) — sort: ALPHA
+   │  ├─ Enums — sort: ALPHA
+   │  ├─ Records — sort: ALPHA
+   │  ├─ Interfaces — sort: ALPHA
+   │  └─ Classes — sort: ALPHA
+   ├─ 4.2) Protected
+   │  ├─ Annotations (@interface) — sort: ALPHA
+   │  ├─ Enums — sort: ALPHA
+   │  ├─ Records — sort: ALPHA
+   │  ├─ Interfaces — sort: ALPHA
+   │  └─ Classes — sort: ALPHA
+   ├─ 4.3) Package-private
+   │  ├─ Annotations (@interface) — sort: ALPHA
+   │  ├─ Enums — sort: ALPHA
+   │  ├─ Records — sort: ALPHA
+   │  ├─ Interfaces — sort: ALPHA
+   │  └─ Classes — sort: ALPHA
+   └─ 4.4) Private
+      ├─ Annotations (@interface) — sort: ALPHA
+      ├─ Enums — sort: ALPHA
+      ├─ Records — sort: ALPHA
+      ├─ Interfaces — sort: ALPHA
+      └─ Classes — sort: ALPHA
+```
+
+---
+
 ## Scope
 
 This specification describes the **Default Rule** ordering (the fallback root member group that applies when no specialized root group matches).
@@ -19,12 +83,15 @@ Visibility levels are:
 - `package-private`
 - `private`
 
+> Note: for Methods and Nested Types, visibility is modeled as **explicit structural groups** (not a sort-key).
+> The exact visibility group order is determined by configuration structure.
+
 ### Alpha sort key
 
 **ALPHA** is a deterministic key that includes *all relevant signature parts* in one string:
 - for a **field**: `fieldName + ":" + fieldType`
 - for a **method**: `methodName + "(" + parameterTypes + ")" + ":" + returnType`
-- for a **constructor**: `constructorName + "(" + parameterTypes + ")"`  
+- for a **constructor**: `constructorName + "(" + parameterTypes + ")"`
   (constructor name is the declaring type name; parameters drive the order)
 
 This means overloaded methods/constructors are naturally ordered by their parameter list as part of ALPHA.
@@ -52,84 +119,6 @@ For the **Methods** subtree, `keepAccessorsTogether = ON` is applied at the grou
 2. **Initializers**
 3. **Methods** (including constructors)
 4. **Nested types**
-
----
-
-## 1) Fields
-
-### 1.1 Static fields
-
-#### 1.1.1 Static final fields (constants)
-1. `serialVersionUID` (if present) — first
-2. Logger fields (if present) — next
-3. All other static final fields — sorted by:
-   - **visibility**
-   - **ALPHA**
-
-#### 1.1.2 Static non-final fields
-Sorted by:
-- **visibility**
-- **ALPHA**
-
-### 1.2 Instance fields
-
-#### 1.2.1 Instance final fields
-Sorted by:
-- **visibility**
-- **ALPHA**
-
-#### 1.2.2 Instance non-final fields
-Sorted by:
-- **visibility**
-- **ALPHA**
-
----
-
-## 2) Initializers
-
-### 2.1 Static initializers
-- order: **preserve/source order**
-
-### 2.2 Instance initializers
-- order: **preserve/source order**
-
----
-
-## 3) Methods (including constructors)
-
-> Note: `keepAccessorsTogether = ON` at this level; inherited by all method subgroups.
-
-Methods are first split into explicit **visibility groups** (the order is defined structurally in config, not by a sort-key):
-1. `public`
-2. `protected`
-3. `package-private`
-4. `private`
-
-Inside **each** visibility group, members are ordered as three sequential subgroups:
-
-1. **Static methods** — sort: **ALPHA**
-2. **Constructors** — sort: **ALPHA**
-3. **Instance methods** — sort: **ALPHA**
-
----
-
-## 4) Nested types
-
-Nested types are first split into explicit **visibility groups** (the order is defined structurally in config, not by a sort-key):
-1. `public`
-2. `protected`
-3. `package-private`
-4. `private`
-
-Inside **each** visibility group, nested type declarations are ordered by kind:
-
-1. **Annotations** (`@interface`) — sort: **ALPHA**
-2. **Enums** — sort: **ALPHA**
-3. **Records** — sort: **ALPHA**
-4. **Interfaces** — sort: **ALPHA**
-5. **Classes** — sort: **ALPHA**
-
-No additional split by `static` vs `non-static` is applied for nested types; ordering is purely kind order + ALPHA.
 
 ---
 
