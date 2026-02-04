@@ -16,10 +16,9 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess.P
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.CONSTRUCTOR;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.ENUM_CONSTANT;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.FIELD;
-import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.INSTANCE_INIT_BLOCK;
+import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.INIT_BLOCK;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.METHOD;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.RECORD_COMPONENT;
-import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.STATIC_INIT_BLOCK;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ANNOTATION;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_CLASS;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ENUM;
@@ -46,7 +45,7 @@ class MemberDescriptorTest {
     }
 
     private static Stream<MemberKind> accessNotApplicableKinds() {
-        return Stream.of(STATIC_INIT_BLOCK, INSTANCE_INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
+        return Stream.of(INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
     }
 
     private static Stream<DeclarationModifier> defaultConflicts() {
@@ -67,12 +66,12 @@ class MemberDescriptorTest {
     }
 
     private static Stream<Arguments> kindsRequiringNullName() {
-        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(STATIC_INIT_BLOCK), Arguments.of(INSTANCE_INIT_BLOCK));
+        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(INIT_BLOCK));
     }
 
     private static Stream<Arguments> noModifierCases() {
         return Stream.of(
-                Arguments.of(INSTANCE_INIT_BLOCK, null, FINAL),
+                Arguments.of(INIT_BLOCK, null, FINAL),
                 Arguments.of(ENUM_CONSTANT, null, STATIC),
                 Arguments.of(RECORD_COMPONENT, null, FINAL));
     }
@@ -256,7 +255,7 @@ class MemberDescriptorTest {
     @Test
     void flags_typeAndInitializer_asExpected() {
         assertThat(typ(TYPE_INTERFACE, "Api").build().isType()).isTrue();
-        assertThat(base(STATIC_INIT_BLOCK, null, null).build().isInitializer()).isTrue();
+        assertThat(base(INIT_BLOCK, null, null).build().isInitializer()).isTrue();
         assertThat(mtd("x").build().isType()).isFalse();
         assertThat(mtd("x").build().isInitializer()).isFalse();
     }

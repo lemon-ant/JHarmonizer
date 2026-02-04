@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static org.apache.commons.lang3.StringUtils.trimToNull;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
@@ -17,15 +15,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtEnum;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtRecord;
+import spoon.reflect.declaration.CtRecordComponent;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
@@ -35,6 +36,7 @@ import spoon.reflect.declaration.ModifierKind;
  * Note: mapping rules are intentionally explicit and conservative.
  */
 @UtilityClass
+@SuppressWarnings("PMD.ExcessiveImports")
 class SpoonMemberDescriptorFactory {
 
     private static final String INIT_NAME = "<init>";
@@ -80,17 +82,16 @@ class SpoonMemberDescriptorFactory {
 
     private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
         return switch (typeMember) {
+            case CtEnumValue<?> ctEnumValue -> MemberKind.ENUM_CONSTANT;
+            case CtRecordComponent ctRecordComponent -> MemberKind.RECORD_COMPONENT;
+
             case CtField<?> ctField -> MemberKind.FIELD;
             case CtMethod<?> ctMethod -> MemberKind.METHOD;
             case CtConstructor<?> ctConstructor -> MemberKind.CONSTRUCTOR;
 
-            // Initializer blocks (Spoon: CtAnonymousExecutable; static init has ModifierKind.STATIC)
             case CtAnonymousExecutable ctAnonymousExecutable ->
-                ctAnonymousExecutable.getModifiers().contains(ModifierKind.STATIC)
-                        ? MemberKind.STATIC_INIT_BLOCK
-                        : MemberKind.INSTANCE_INIT_BLOCK;
+                        MemberKind.INIT_BLOCK;
 
-            // Nested types:
             case CtType<?> ctType -> resolveNestedTypeKind(ctType);
 
             default ->
@@ -148,8 +149,9 @@ class SpoonMemberDescriptorFactory {
 
     @Nullable
     private static MemberAccess resolveMemberAccessIfApplicable(CtTypeMember typeMember) {
-        // Init blocks are not expected to have access level by MemberDescriptor invariants.
-        if (typeMember instanceof CtAnonymousExecutable) {
+        if (typeMember instanceof CtAnonymousExecutable
+                || typeMember instanceof CtEnumValue<?>
+                || typeMember instanceof CtRecordComponent) {
             return null;
         }
 
@@ -182,7 +184,7 @@ class SpoonMemberDescriptorFactory {
 
     @Nullable
     private static String resolveMemberName(CtTypeMember typeMember) {
-        String name = trimToNull(typeMember.getSimpleName());
+        String name = StringUtils.trimToNull(typeMember.getSimpleName());
         if (INIT_NAME.equals(name)) {
             return null;
         }

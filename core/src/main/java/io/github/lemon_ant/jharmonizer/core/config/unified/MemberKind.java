@@ -14,8 +14,7 @@ public enum MemberKind {
     CONSTRUCTOR(TargetCategory.CONSTRUCTOR),
 
     // Initializer blocks:
-    STATIC_INIT_BLOCK(TargetCategory.INIT_BLOCK),
-    INSTANCE_INIT_BLOCK(TargetCategory.INIT_BLOCK),
+    INIT_BLOCK(TargetCategory.INIT_BLOCK),
 
     // Non-block entries that must have names (distinct from init blocks):
     ENUM_CONSTANT(TargetCategory.ENUM_CONSTANT),

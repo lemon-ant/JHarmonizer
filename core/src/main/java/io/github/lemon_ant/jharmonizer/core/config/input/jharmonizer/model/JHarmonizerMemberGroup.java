@@ -10,6 +10,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
@@ -30,7 +31,8 @@ public class JHarmonizerMemberGroup implements Serializable {
     @NonNull
     Set<Set<String>> includes;
 
-    boolean keepAccessorsTogether;
+    @Nullable
+    Boolean keepAccessorsTogether;
 
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
@@ -68,12 +70,12 @@ public class JHarmonizerMemberGroup implements Serializable {
 
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
 
-        Validate.notEmpty(includes, "sort-keys cannot be empty");
+        Validate.notEmpty(sortKeys, "sort-keys cannot be empty");
         this.sortKeys = Collections.unmodifiableList(sortKeys);
 
         this.separator = ofNullable(separator).orElse(JHarmonizerSeparator.NONE);
 
-        this.keepAccessorsTogether = ofNullable(keepAccessorsTogether).orElse(false);
+        this.keepAccessorsTogether = keepAccessorsTogether;
 
         this.memberSubGroups =
                 ofNullable(memberSubGroups).map(Collections::unmodifiableList).orElse(List.of());
@@ -85,7 +87,7 @@ public class JHarmonizerMemberGroup implements Serializable {
             return false;
         }
 
-        return keepAccessorsTogether == that.keepAccessorsTogether
+        return Objects.equals(keepAccessorsTogether, that.keepAccessorsTogether)
                 && name.equals(that.name)
                 && includes.equals(that.includes)
                 && excludes.equals(that.excludes)
@@ -101,7 +103,7 @@ public class JHarmonizerMemberGroup implements Serializable {
         result = 31 * result + excludes.hashCode();
         result = 31 * result + sortKeys.hashCode();
         result = 31 * result + separator.hashCode();
-        result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
+        result = 31 * result + Objects.hashCode(keepAccessorsTogether);
         result = 31 * result + memberSubGroups.hashCode();
         return result;
     }

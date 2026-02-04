@@ -34,7 +34,7 @@ final class MemberGroupMapper {
                 .groupName(srcMemberGroup.getName())
                 .selectorBlock(selectorBlock)
                 .sortKeys(sortKeys)
-                .keepAccessorsTogether(srcMemberGroup.isKeepAccessorsTogether())
+                .keepAccessorsTogether(srcMemberGroup.getKeepAccessorsTogether())
                 .separator(srcMemberGroup.getSeparator().getUnifiedSeparator());
 
         srcMemberGroup.getMemberSubGroups().stream()

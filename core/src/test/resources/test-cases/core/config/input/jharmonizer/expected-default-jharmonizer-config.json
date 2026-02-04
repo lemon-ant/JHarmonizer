@@ -13,19 +13,19 @@
     "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
     "excludes" : [ ],
     "separator" : "NONE",
-    "keepAccessorsTogether" : false,
+    "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "JUnit Fields",
       "includes" : [ [ "field" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Constants",
         "includes" : [ [ "static" ], [ "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
@@ -33,7 +33,7 @@
         "includes" : [ [ "static" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
@@ -43,13 +43,13 @@
       "includes" : [ [ "method" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Setup Methods",
         "includes" : [ [ "@BeforeAll" ], [ "@BeforeEach" ] ],
         "excludes" : [ ],
         "separator" : "HEADER",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "PRESERVE" ]
       }, {
@@ -57,7 +57,7 @@
         "includes" : [ [ "@Test" ] ],
         "excludes" : [ ],
         "separator" : "HEADER",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "ALPHA" ]
       }, {
@@ -65,7 +65,7 @@
         "includes" : [ [ "@AfterEach" ], [ "@AfterAll" ] ],
         "excludes" : [ ],
         "separator" : "HEADER",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "PRESERVE" ]
       }, {
@@ -73,7 +73,7 @@
         "includes" : [ [ "static" ] ],
         "excludes" : [ ],
         "separator" : "HEADER",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "ALPHA" ]
       } ],
@@ -83,7 +83,7 @@
       "includes" : [ [ "@TestConfiguration", "class", "static" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     } ],
@@ -93,13 +93,13 @@
     "includes" : [ [ "~.*(Dto|DTO)$" ], [ "@Entity" ], [ "@Embeddable" ], [ "@Document" ], [ "@Data" ], [ "~.*Entity$" ], [ "@Value" ], [ "@MappedSuperclass" ], [ "@ConfigurationProperties" ] ],
     "excludes" : [ ],
     "separator" : "NONE",
-    "keepAccessorsTogether" : false,
+    "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "Serializable UID",
       "includes" : [ [ "=serialVersionUID" ], [ "static" ], [ "field" ], [ "final" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -107,19 +107,19 @@
       "includes" : [ [ "field" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Constants",
         "includes" : [ [ "static" ], [ "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Public Constants",
           "includes" : [ [ "public" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
@@ -127,7 +127,7 @@
           "includes" : [ [ "protected" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
@@ -135,7 +135,7 @@
           "includes" : [ [ "package-private" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
@@ -143,7 +143,7 @@
           "includes" : [ [ "private" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         } ],
@@ -153,7 +153,7 @@
         "includes" : [ [ "static" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
@@ -161,7 +161,7 @@
         "includes" : [ [ "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
@@ -171,7 +171,7 @@
       "includes" : [ [ "static" ], [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -179,7 +179,7 @@
       "includes" : [ [ "static" ], [ "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -187,7 +187,7 @@
       "includes" : [ [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -195,7 +195,7 @@
       "includes" : [ [ "constructor" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -211,7 +211,7 @@
       "includes" : [ [ "method" ] ],
       "excludes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -219,7 +219,7 @@
       "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     } ],
@@ -229,13 +229,13 @@
     "includes" : [ [ "~.*" ] ],
     "excludes" : [ ],
     "separator" : "NONE",
-    "keepAccessorsTogether" : false,
+    "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "Serializable UID",
       "includes" : [ [ "=serialVersionUID" ], [ "static" ], [ "field" ], [ "final" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -243,7 +243,7 @@
       "includes" : [ [ "field", "final", "static", "~(?i)(log|.*logger)$" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -251,19 +251,19 @@
       "includes" : [ [ "field" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Constants",
         "includes" : [ [ "static" ], [ "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Public Constants",
           "includes" : [ [ "public" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
@@ -271,7 +271,7 @@
           "includes" : [ [ "protected" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
@@ -279,7 +279,7 @@
           "includes" : [ [ "package-private" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
@@ -287,7 +287,7 @@
           "includes" : [ [ "private" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : false,
+          "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         } ],
@@ -297,7 +297,7 @@
         "includes" : [ [ "static" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
@@ -305,7 +305,7 @@
         "includes" : [ [ "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
-        "keepAccessorsTogether" : false,
+        "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
         "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
@@ -315,7 +315,7 @@
       "includes" : [ [ "static" ], [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -323,7 +323,7 @@
       "includes" : [ [ "static" ], [ "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -331,7 +331,7 @@
       "includes" : [ [ "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -339,7 +339,7 @@
       "includes" : [ [ "constructor" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -347,7 +347,7 @@
       "includes" : [ [ "method" ] ],
       "excludes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -355,7 +355,7 @@
       "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
@@ -363,7 +363,7 @@
       "includes" : [ [ "record" ], [ "class" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     }, {
@@ -371,7 +371,7 @@
       "includes" : [ [ "interface" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     }, {
@@ -379,7 +379,7 @@
       "includes" : [ [ "enum" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     }, {
@@ -387,7 +387,7 @@
       "includes" : [ [ "annotation" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : false,
+      "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     } ],

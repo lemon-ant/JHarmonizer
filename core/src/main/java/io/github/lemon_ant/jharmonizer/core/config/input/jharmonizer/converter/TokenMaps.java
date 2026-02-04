@@ -18,19 +18,21 @@ final class TokenMaps {
             entry("package", MemberAccess.PACKAGE),
             entry("package-private", MemberAccess.PACKAGE),
             entry("private", MemberAccess.PRIVATE));
+
     static final Map<String, MemberKind> KIND_BY_TOKEN = Map.ofEntries(
             entry("field", MemberKind.FIELD),
             entry("method", MemberKind.METHOD),
             entry("constructor", MemberKind.CONSTRUCTOR),
-            entry("init", MemberKind.INSTANCE_INIT_BLOCK),
-            entry("initializer", MemberKind.INSTANCE_INIT_BLOCK),
-            entry("static-init", MemberKind.STATIC_INIT_BLOCK),
-            entry("static-initializer", MemberKind.STATIC_INIT_BLOCK),
+            entry("init", MemberKind.INIT_BLOCK),
+            entry("initializer", MemberKind.INIT_BLOCK),
             entry("class", MemberKind.TYPE_CLASS),
             entry("interface", MemberKind.TYPE_INTERFACE),
             entry("enum", MemberKind.TYPE_ENUM),
             entry("record", MemberKind.TYPE_RECORD),
-            entry("annotation", MemberKind.TYPE_ANNOTATION));
+            entry("annotation", MemberKind.TYPE_ANNOTATION),
+            entry("enum-constant", MemberKind.ENUM_CONSTANT),
+            entry("record-component", MemberKind.RECORD_COMPONENT));
+
     static final Map<String, DeclarationModifier> MOD_BY_TOKEN = Map.ofEntries(
             entry("static", DeclarationModifier.STATIC),
             entry("final", DeclarationModifier.FINAL),
