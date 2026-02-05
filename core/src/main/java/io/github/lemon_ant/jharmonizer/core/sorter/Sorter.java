@@ -11,7 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public final class Sorter {
-    private final CompiledConfig config;
+    private final SpoonSorter spoonSorter;
+
+    public Sorter(CompiledConfig config) {
+        this.spoonSorter = new SpoonSorter(config);
+    }
 
     /**
      * Sorts the given SpoonASTModel.
@@ -21,7 +25,7 @@ public final class Sorter {
      */
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
-            SpoonSorter.sortCompilationUnitRecursively(config, spoonAstModel.getCompilationUnit());
+            spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit());
             return spoonAstModel;
         });
 

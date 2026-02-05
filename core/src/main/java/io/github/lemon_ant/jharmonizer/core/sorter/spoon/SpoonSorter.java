@@ -7,8 +7,8 @@ import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.Member
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -19,30 +19,20 @@ import spoon.reflect.declaration.CtTypeMember;
  * - recursively processes nested types (depth-first),
  * - applies member sorting to each type via
  */
-@UtilityClass
+@AllArgsConstructor
 public class SpoonSorter {
 
+    @NonNull
+    CompiledConfig compiledConfig;
     /**
      * Entry point used by Sorter: sorts all types (top-level + nested) in the compilation unit.
      */
-    public static void sortCompilationUnitRecursively(
-            @NonNull CompiledConfig compiledConfig, @NonNull CtCompilationUnit compilationUnit) {
+    public void sortCompilationUnitRecursively(@NonNull CtCompilationUnit compilationUnit) {
 
         // TODO Implement top-level types ordering:
         // reorderTopLevelTypes(compilationUnit, compiledConfig);
 
-        compilationUnit.getDeclaredTypes().forEach(declaredTopLevelType -> {
-            MemberDescriptor topLevelTypeDescriptor = SpoonMemberDescriptorFactory.describeMember(declaredTopLevelType);
-
-            CompiledMemberGroup rootMemberGroup = compiledConfig
-                    .matchRootGroup(topLevelTypeDescriptor)
-                    .orElseThrow(() ->
-                            new IllegalStateException("No matching root member group for top-level type: qualifiedName="
-                                    + declaredTopLevelType.getQualifiedName()
-                                    + ", descriptor=" + topLevelTypeDescriptor));
-
-            sortTypeRecursively(rootMemberGroup, declaredTopLevelType);
-        });
+        compilationUnit.getDeclaredTypes().forEach(this::sortTypeRecursively);
     }
 
     /**
@@ -64,9 +54,16 @@ public class SpoonSorter {
      * This order keeps the logic deterministic and ensures nested types are already "clean"
      * when the outer type is printed.
      */
-    private static void sortTypeRecursively(CompiledMemberGroup rootMemberGroup, CtType<?> currentType) {
-        // TODO Add detection of the Bind method parameters to fields for each type here
-        currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(rootMemberGroup, nestedType));
+    private void sortTypeRecursively(CtType<?> currentType) {
+        MemberDescriptor topLevelTypeDescriptor = SpoonMemberDescriptorFactory.describeMember(currentType);
+
+        CompiledMemberGroup rootMemberGroup = compiledConfig
+                .matchRootGroup(topLevelTypeDescriptor)
+                .orElseThrow(() ->
+                        new IllegalStateException("No matching root member group for top-level type: qualifiedName="
+                                + currentType.getQualifiedName()
+                                + ", descriptor=" + topLevelTypeDescriptor));
+        currentType.getNestedTypes().forEach(this::sortTypeRecursively);
 
         Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor =
                 SpoonMemberDescriptorFactory.describeMembers(currentType);
