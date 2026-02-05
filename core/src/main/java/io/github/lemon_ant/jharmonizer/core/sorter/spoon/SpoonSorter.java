@@ -65,6 +65,7 @@ public class SpoonSorter {
      * when the outer type is printed.
      */
     private static void sortTypeRecursively(CompiledMemberGroup rootMemberGroup, CtType<?> currentType) {
+        // TODO Add detection of the Bind method parameters to fields for each type here
         currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(rootMemberGroup, nestedType));
 
         Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor =

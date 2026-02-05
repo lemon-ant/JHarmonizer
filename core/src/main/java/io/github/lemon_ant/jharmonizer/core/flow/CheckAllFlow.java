@@ -33,7 +33,10 @@ public class CheckAllFlow implements IFlow {
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+        debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+
         SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
         SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
         SerializationResult serializationResult = SourceAstTranslator.serialize(sortedSpoonAstModel);

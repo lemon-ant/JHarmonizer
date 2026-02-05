@@ -15,7 +15,7 @@ top-level-types-ordering:
     - interface
     - enum
     - annotation
-  sort-keys: [ visibility-desc, alpha ]
+  sort-keys: [ visibility-asc, alpha ]
 
 type-members-ordering:
   - name: Test Classes
@@ -28,16 +28,16 @@ type-members-ordering:
     groups:
       - name: JUnit Fields
         separator: new-line
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: field
         groups:
           - name: JUnit Constants
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: [ static, final ]
           - name: JUnit Static fields
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: static
 
       - name: JUnit Methods
@@ -87,7 +87,7 @@ type-members-ordering:
       - '@Embeddable'
       - '@ConfigurationProperties'
       - '@Document'
-    sort-keys: [ visibility-desc, alpha ]
+    sort-keys: [ visibility-asc, alpha ]
     groups:
       - name: Serializable UID
         separator: new-line
@@ -96,12 +96,12 @@ type-members-ordering:
 
       - name: Fields
         separator: new-line
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: field
         groups:
           - name: Constants
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: [ static, final ]
             groups:
               - name: Public Constants
@@ -123,12 +123,12 @@ type-members-ordering:
 
           - name: Static Fields
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: static
 
           - name: Final Instance Fields
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: final
 
       - name: Static Initializer Blocks
@@ -138,28 +138,29 @@ type-members-ordering:
 
       - name: Static Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
         separator: none
         sort-keys: preserve
         includes: [ initializer ]
+        excludes: static
 
       - name: Constructors
         separator: none
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: constructor
 
       - name: Accessor Methods
         separator: none
         keepAccessorsTogether: true
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: [ method, ~^(get|set|is|has).+$ ]
 
       - name: Instance Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: [ method ]
         excludes:
           - [ method, =toString ]
@@ -177,111 +178,254 @@ type-members-ordering:
 
   - name: Default Rule
     includes: ~.*
-    sort-keys: [ visibility-desc, alpha ] # For subtypes
+    sort-keys: preserve
     groups:
-      - name: Serializable UID
-        separator: new-line
+      # Record components live in the record header; keep them stable.
+      - name: Record components
+        separator: none
         sort-keys: preserve
-        includes: [ field, static, final, =serialVersionUID ]
+        includes: [ record-component ]
 
-      - name: Logger
-        separator: new-line
+      # Enum constants must stay at the top of enum bodies; keep them stable.
+      - name: Enum constants
+        separator: none
         sort-keys: preserve
-        includes:
-          - [ field, static, final, '~(?i)(log|.*logger)$' ]
+        includes: [ enum-constant ]
 
       - name: Fields
         separator: new-line
-        sort-keys: [ visibility-desc, alpha ]
+        sort-keys: [ visibility-asc, alpha ]
         includes: field
         groups:
-          - name: Constants
+          - name: Static fields
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
-            includes: [ static, final ]
-            groups:
-              - name: Public Constants
-                separator: new-line
-                sort-keys: alpha
-                includes: public
-              - name: Protected Constants
-                separator: new-line
-                sort-keys: alpha
-                includes: protected
-              - name: Package-Private Constants
-                separator: new-line
-                sort-keys: alpha
-                includes: package-private
-              - name: Private Constants
-                separator: new-line
-                sort-keys: alpha
-                includes: private
-
-          - name: Static Fields
-            separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: static
+            groups:
+              - name: Static final fields
+                separator: new-line
+                sort-keys: [ visibility-asc, alpha ]
+                includes: final
+                groups:
+                  - name: serialVersionUID
+                    separator: new-line
+                    sort-keys: preserve
+                    includes: [ =serialVersionUID ]
 
-          - name: Final Instance Fields
+                  - name: Logger fields
+                    separator: new-line
+                    sort-keys: preserve
+                    includes: [ '~(?i)(log|.*logger)$' ]
+
+          - name: Instance final fields
             separator: new-line
-            sort-keys: [ visibility-desc, alpha ]
+            sort-keys: [ visibility-asc, alpha ]
             includes: final
 
-      - name: Static Initializer Blocks
-        separator: none
-        sort-keys: preserve
-        includes: [ static, initializer ]
-
-      - name: Static Methods
-        separator: none
-        sort-keys: [ visibility-desc, alpha ]
-        includes: [ static, method ]
-
-      - name: Instance Initializer Blocks
+      - name: Initializers
         separator: none
         sort-keys: preserve
         includes: [ initializer ]
+        groups:
+          - name: Static initializers
+            separator: none
+            sort-keys: preserve
+            includes: [ static, initializer ]
 
-      - name: Constructors
+          - name: Instance initializers
+            separator: none
+            sort-keys: preserve
+            includes: [ initializer ]
+            excludes: static
+
+      - name: Methods
         separator: none
-        sort-keys: [ visibility-desc, alpha ]
-        includes: constructor
+        sort-keys: alpha
+        keepAccessorsTogether: true
+        includes: [ method, constructor ]
+        groups:
+          - name: Public
+            separator: none
+            sort-keys: alpha
+            includes: public
+            groups:
+              - name: Static methods
+                separator: none
+                sort-keys: alpha
+                includes: [ method, static ]
 
-      - name: Instance Methods
-        separator: none
-        sort-keys: [ visibility-desc, alpha ]
-        includes: [ method ]
-        excludes:
-          - [ method, =toString ]
-          - [ method, =equals ]
-          - [ method, =hashCode ]
-          - [ method, =clone ]
+              - name: Constructors
+                separator: none
+                sort-keys: alpha
+                includes: constructor
 
-      - name: Basic Object Methods
-        separator: none
-        sort-keys: preserve
-        includes:
-          - [ method, =toString ]
-          - [ method, =equals ]
-          - [ method, =hashCode ]
-          - [ method, =clone ]
+              - name: Instance methods
+                separator: none
+                sort-keys: alpha
+                includes: method
 
-      - name: Classes & Records
+          - name: Protected
+            separator: none
+            sort-keys: alpha
+            includes: protected
+            groups:
+              - name: Static methods
+                separator: none
+                sort-keys: alpha
+                includes: [ method, static ]
+
+              - name: Constructors
+                separator: none
+                sort-keys: alpha
+                includes: constructor
+
+              - name: Instance methods
+                separator: none
+                sort-keys: alpha
+                includes: method
+
+          - name: Package-private
+            separator: none
+            sort-keys: alpha
+            includes: package-private
+            groups:
+              - name: Static methods
+                separator: none
+                sort-keys: alpha
+                includes: [ method, static ]
+
+              - name: Constructors
+                separator: none
+                sort-keys: alpha
+                includes: constructor
+
+              - name: Instance methods
+                separator: none
+                sort-keys: alpha
+                includes: method
+
+          - name: Private
+            separator: none
+            sort-keys: alpha
+            includes: private
+            groups:
+              - name: Static methods
+                separator: none
+                sort-keys: alpha
+                includes: [ method, static ]
+
+              - name: Constructors
+                separator: none
+                sort-keys: alpha
+                includes: constructor
+
+              - name: Instance methods
+                separator: none
+                sort-keys: alpha
+                includes: method
+
+      - name: Nested types
         separator: new-line
-        sort-keys: [ alpha ]
-        includes: [ class, record ]
-
-      - name: Interfaces
-        separator: new-line
-        sort-keys: [ alpha ]
-        includes: [ interface ]
-
-      - name: Enums
-        separator: new-line
-        sort-keys: [ alpha ]
-        includes: [ enum ]
-
-      - name: Annotations
-        separator: new-line
-        sort-keys: [ alpha ]
-        includes: [ annotation ]
+        sort-keys: alpha
+        includes: [ annotation, enum, record, interface, class ]
+        groups:
+          - name: Public
+            separator: new-line
+            sort-keys: alpha
+            includes: public
+            groups:
+              - name: Annotations
+                separator: new-line
+                sort-keys: alpha
+                includes: annotation
+              - name: Enums
+                separator: new-line
+                sort-keys: alpha
+                includes: enum
+              - name: Records
+                separator: new-line
+                sort-keys: alpha
+                includes: record
+              - name: Interfaces
+                separator: new-line
+                sort-keys: alpha
+                includes: interface
+              - name: Classes
+                separator: new-line
+                sort-keys: alpha
+                includes: class
+          - name: Protected
+            separator: new-line
+            sort-keys: alpha
+            includes: protected
+            groups:
+              - name: Annotations
+                separator: new-line
+                sort-keys: alpha
+                includes: annotation
+              - name: Enums
+                separator: new-line
+                sort-keys: alpha
+                includes: enum
+              - name: Records
+                separator: new-line
+                sort-keys: alpha
+                includes: record
+              - name: Interfaces
+                separator: new-line
+                sort-keys: alpha
+                includes: interface
+              - name: Classes
+                separator: new-line
+                sort-keys: alpha
+                includes: class
+          - name: Package-private
+            separator: new-line
+            sort-keys: alpha
+            includes: package-private
+            groups:
+              - name: Annotations
+                separator: new-line
+                sort-keys: alpha
+                includes: annotation
+              - name: Enums
+                separator: new-line
+                sort-keys: alpha
+                includes: enum
+              - name: Records
+                separator: new-line
+                sort-keys: alpha
+                includes: record
+              - name: Interfaces
+                separator: new-line
+                sort-keys: alpha
+                includes: interface
+              - name: Classes
+                separator: new-line
+                sort-keys: alpha
+                includes: class
+          - name: Private
+            separator: new-line
+            sort-keys: alpha
+            includes: private
+            groups:
+              - name: Annotations
+                separator: new-line
+                sort-keys: alpha
+                includes: annotation
+              - name: Enums
+                separator: new-line
+                sort-keys: alpha
+                includes: enum
+              - name: Records
+                separator: new-line
+                sort-keys: alpha
+                includes: record
+              - name: Interfaces
+                separator: new-line
+                sort-keys: alpha
+                includes: interface
+              - name: Classes
+                separator: new-line
+                sort-keys: alpha
+                includes: class

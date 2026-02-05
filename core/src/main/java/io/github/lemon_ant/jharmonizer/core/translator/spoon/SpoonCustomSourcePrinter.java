@@ -88,6 +88,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
         List<CtTypeMember> explicitTypeMembers = type.getTypeMembers().stream()
                 // Spoon creates implicit constructors which don't exist in the source code
+                .filter(typeMember -> typeMember.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
                 .filter(typeMember -> !typeMember.isImplicit())
                 .toList();
 

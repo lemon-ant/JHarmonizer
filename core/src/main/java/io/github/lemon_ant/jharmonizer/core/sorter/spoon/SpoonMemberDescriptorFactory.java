@@ -59,7 +59,7 @@ class SpoonMemberDescriptorFactory {
 
     private Map<CtTypeMember, MemberDescriptor> describeMembers(List<CtTypeMember> typeMembers) {
         return typeMembers.stream()
-                .filter(Objects::nonNull)
+                // TODO.filter(typeMember -> !typeMember.isImplicit())
                 .collect(Collectors.toUnmodifiableMap(
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
@@ -89,8 +89,7 @@ class SpoonMemberDescriptorFactory {
             case CtMethod<?> ctMethod -> MemberKind.METHOD;
             case CtConstructor<?> ctConstructor -> MemberKind.CONSTRUCTOR;
 
-            case CtAnonymousExecutable ctAnonymousExecutable ->
-                        MemberKind.INIT_BLOCK;
+            case CtAnonymousExecutable ctAnonymousExecutable -> MemberKind.INIT_BLOCK;
 
             case CtType<?> ctType -> resolveNestedTypeKind(ctType);
 

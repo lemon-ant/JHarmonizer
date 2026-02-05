@@ -42,7 +42,7 @@ public class SpoonParser {
         Supplier<String> serializedSourceCode =
                 () -> launcher.createPrettyPrinter().printCompilationUnit(compilationUnit);
         return SpoonAstModel.builder()
-                .originalElements2OrderIndices(ElementsFlatOrderIndexer.indexElementsByOrder(compilationUnit))
+                .originalElements2OrderIndices(RelocationDetector.indexElementsByOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .serializedSourceCode(serializedSourceCode)

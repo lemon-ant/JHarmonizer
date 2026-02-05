@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.cu.SourcePosition;
@@ -67,6 +69,9 @@ public class RelocationDetector {
 
         return streamDeclaredHierarchy(reorderedCompilationUnit)
                 .filter(element -> element.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
+                .filter(typeMember -> !typeMember.isImplicit())
                 // compute offset on the fly using the running encounter index
                 .map(element -> {
                     int current = runningIndex.getAndIncrement();
@@ -114,7 +119,7 @@ public class RelocationDetector {
                             return String.format(
                                     "%s expected to relocate %s by %d",
                                     computeParentSimpleName(member),
-                                    relocation.getRight() > 0 ? "UP" : "DOWN",
+                                    relocation.getRight() < 0 ? "UP" : "DOWN",
                                     relocation.getRight());
                         })
                         .collect(joining(lineSeparator())));
@@ -142,5 +147,23 @@ public class RelocationDetector {
             return member.getDeclaringType().getQualifiedName() + "$" + nonBlankName;
         }
         return "<nameless>";
+    }
+
+    /**
+     * Main entry: map of CtElement to its current encounter index.
+     */
+    // TODO Create a dedicated type instead of Map
+    static Map<SourcePosition, Integer> indexElementsByOrder(CtCompilationUnit compilationUnit) {
+        AtomicInteger runningIndex = new AtomicInteger(0);
+        return streamDeclaredHierarchy(compilationUnit)
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
+                .filter(typeMember -> !typeMember.isImplicit())
+                .map(CtElement::getPosition)
+                .filter(SourcePosition::isValidPosition)
+                .collect(Collectors.toMap(
+                        Function.identity(), // key: the element itself
+                        e -> runningIndex.getAndIncrement() // value: the element's sequential index
+                        ));
     }
 }

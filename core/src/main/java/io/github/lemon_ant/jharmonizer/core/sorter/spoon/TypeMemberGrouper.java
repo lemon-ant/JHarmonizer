@@ -17,6 +17,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * - uses group.separator for the block.
  */
 @UtilityClass
+// TODO .filter(typeMember -> !typeMember.isImplicit())
 class TypeMemberGrouper {
 
     @NonNull

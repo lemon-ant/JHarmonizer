@@ -41,18 +41,22 @@ public class CheckFailFastFlow implements IFlow {
         SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
         List<Pair<CtElement, Integer>> elementRelocations = findRelocations(
                 sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-        if (!elementRelocations.isEmpty()) {
-            throw new NotOrderedException(srcFile.getPath(), elementRelocations);
-        }
 
         // Serialize
         SerializationResult serializationResult = SourceAstTranslator.serialize(sortedSpoonAstModel);
         debugStageRecorder.recordSrcStage(
                 srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
+        if (!elementRelocations.isEmpty()) {
+            throw new NotOrderedException(srcFile.getPath(), elementRelocations);
+        }
+
         // Format (Fail Fast)
         FormatingResult formatingResult =
                 formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
+        debugStageRecorder.recordSrcStage(
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
+
         if (!srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode())) {
             String srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
             throw new NotFormattedException(srcFile.getPath(), srcDiff);

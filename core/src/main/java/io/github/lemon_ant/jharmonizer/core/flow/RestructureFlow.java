@@ -33,11 +33,17 @@ public class RestructureFlow implements IFlow {
         debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
 
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+
         SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
         SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
         SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+        debugStageRecorder.recordSrcStage(
+                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
+
         FormatingResult formatingResult =
                 formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
+        debugStageRecorder.recordSrcStage(
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
 
         boolean hasChanged = !srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode());
         if (hasChanged) {

@@ -27,7 +27,7 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
       }, {
         "name" : "JUnit Static fields",
         "includes" : [ [ "static" ] ],
@@ -35,9 +35,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
       } ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "JUnit Methods",
       "includes" : [ [ "method" ] ],
@@ -147,7 +147,7 @@
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         } ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
       }, {
         "name" : "Static Fields",
         "includes" : [ [ "static" ] ],
@@ -155,7 +155,7 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
       }, {
         "name" : "Final Instance Fields",
         "includes" : [ [ "final" ] ],
@@ -163,9 +163,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
       } ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Static Initializer Blocks",
       "includes" : [ [ "static" ], [ "initializer" ] ],
@@ -181,11 +181,11 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Instance Initializer Blocks",
       "includes" : [ [ "initializer" ] ],
-      "excludes" : [ ],
+      "excludes" : [ [ "static" ] ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
@@ -197,7 +197,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Accessor Methods",
       "includes" : [ [ "method" ], [ "~^(get|set|is|has).+$" ] ],
@@ -205,7 +205,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Instance Methods",
       "includes" : [ [ "method" ] ],
@@ -213,7 +213,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Basic Object Methods",
       "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
@@ -223,7 +223,7 @@
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     } ],
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+    "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
   }, {
     "name" : "Default Rule",
     "includes" : [ [ "~.*" ] ],
@@ -231,18 +231,18 @@
     "separator" : "NONE",
     "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
-      "name" : "Serializable UID",
-      "includes" : [ [ "=serialVersionUID" ], [ "static" ], [ "field" ], [ "final" ] ],
+      "name" : "Record components",
+      "includes" : [ [ "record-component" ] ],
       "excludes" : [ ],
-      "separator" : "NEW_LINE",
+      "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
     }, {
-      "name" : "Logger",
-      "includes" : [ [ "field", "final", "static", "~(?i)(log|.*logger)$" ] ],
+      "name" : "Enum constants",
+      "includes" : [ [ "enum-constant" ] ],
       "excludes" : [ ],
-      "separator" : "NEW_LINE",
+      "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "PRESERVE" ]
@@ -253,149 +253,413 @@
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
-        "name" : "Constants",
-        "includes" : [ [ "static" ], [ "final" ] ],
+        "name" : "Static fields",
+        "includes" : [ [ "static" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Public Constants",
-          "includes" : [ [ "public" ] ],
+          "name" : "Static final fields",
+          "includes" : [ [ "final" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ {
+            "name" : "serialVersionUID",
+            "includes" : [ [ "=serialVersionUID" ] ],
+            "excludes" : [ ],
+            "separator" : "NEW_LINE",
+            "keepAccessorsTogether" : null,
+            "memberSubGroups" : [ ],
+            "sortKeys" : [ "PRESERVE" ]
+          }, {
+            "name" : "Logger fields",
+            "includes" : [ [ "~(?i)(log|.*logger)$" ] ],
+            "excludes" : [ ],
+            "separator" : "NEW_LINE",
+            "keepAccessorsTogether" : null,
+            "memberSubGroups" : [ ],
+            "sortKeys" : [ "PRESERVE" ]
+          } ],
+          "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
+        } ],
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
+      }, {
+        "name" : "Instance final fields",
+        "includes" : [ [ "final" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ ],
+        "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
+      } ],
+      "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
+    }, {
+      "name" : "Initializers",
+      "includes" : [ [ "initializer" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : null,
+      "memberSubGroups" : [ {
+        "name" : "Static initializers",
+        "includes" : [ [ "static" ], [ "initializer" ] ],
+        "excludes" : [ ],
+        "separator" : "NONE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ ],
+        "sortKeys" : [ "PRESERVE" ]
+      }, {
+        "name" : "Instance initializers",
+        "includes" : [ [ "initializer" ] ],
+        "excludes" : [ [ "static" ] ],
+        "separator" : "NONE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ ],
+        "sortKeys" : [ "PRESERVE" ]
+      } ],
+      "sortKeys" : [ "PRESERVE" ]
+    }, {
+      "name" : "Methods",
+      "includes" : [ [ "method" ], [ "constructor" ] ],
+      "excludes" : [ ],
+      "separator" : "NONE",
+      "keepAccessorsTogether" : true,
+      "memberSubGroups" : [ {
+        "name" : "Public",
+        "includes" : [ [ "public" ] ],
+        "excludes" : [ ],
+        "separator" : "NONE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [ [ "static" ], [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Constructors",
+          "includes" : [ [ "constructor" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Instance methods",
+          "includes" : [ [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
+      }, {
+        "name" : "Protected",
+        "includes" : [ [ "protected" ] ],
+        "excludes" : [ ],
+        "separator" : "NONE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [ [ "static" ], [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Constructors",
+          "includes" : [ [ "constructor" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Instance methods",
+          "includes" : [ [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
+      }, {
+        "name" : "Package-private",
+        "includes" : [ [ "package-private" ] ],
+        "excludes" : [ ],
+        "separator" : "NONE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [ [ "static" ], [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Constructors",
+          "includes" : [ [ "constructor" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Instance methods",
+          "includes" : [ [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
+      }, {
+        "name" : "Private",
+        "includes" : [ [ "private" ] ],
+        "excludes" : [ ],
+        "separator" : "NONE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [ [ "static" ], [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Constructors",
+          "includes" : [ [ "constructor" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Instance methods",
+          "includes" : [ [ "method" ] ],
+          "excludes" : [ ],
+          "separator" : "NONE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
+      } ],
+      "sortKeys" : [ "ALPHA" ]
+    }, {
+      "name" : "Nested types",
+      "includes" : [ [ "annotation" ], [ "record" ], [ "interface" ], [ "class" ], [ "enum" ] ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : null,
+      "memberSubGroups" : [ {
+        "name" : "Public",
+        "includes" : [ [ "public" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ {
+          "name" : "Annotations",
+          "includes" : [ [ "annotation" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
-          "name" : "Protected Constants",
-          "includes" : [ [ "protected" ] ],
+          "name" : "Enums",
+          "includes" : [ [ "enum" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
-          "name" : "Package-Private Constants",
-          "includes" : [ [ "package-private" ] ],
+          "name" : "Records",
+          "includes" : [ [ "record" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         }, {
-          "name" : "Private Constants",
-          "includes" : [ [ "private" ] ],
+          "name" : "Interfaces",
+          "includes" : [ [ "interface" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Classes",
+          "includes" : [ [ "class" ] ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "sortKeys" : [ "ALPHA" ]
         } ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "sortKeys" : [ "ALPHA" ]
       }, {
-        "name" : "Static Fields",
-        "includes" : [ [ "static" ] ],
+        "name" : "Protected",
+        "includes" : [ [ "protected" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
-        "memberSubGroups" : [ ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "memberSubGroups" : [ {
+          "name" : "Annotations",
+          "includes" : [ [ "annotation" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Enums",
+          "includes" : [ [ "enum" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Records",
+          "includes" : [ [ "record" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Interfaces",
+          "includes" : [ [ "interface" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Classes",
+          "includes" : [ [ "class" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
       }, {
-        "name" : "Final Instance Fields",
-        "includes" : [ [ "final" ] ],
+        "name" : "Package-private",
+        "includes" : [ [ "package-private" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
-        "memberSubGroups" : [ ],
-        "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "memberSubGroups" : [ {
+          "name" : "Annotations",
+          "includes" : [ [ "annotation" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Enums",
+          "includes" : [ [ "enum" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Records",
+          "includes" : [ [ "record" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Interfaces",
+          "includes" : [ [ "interface" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Classes",
+          "includes" : [ [ "class" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
+      }, {
+        "name" : "Private",
+        "includes" : [ [ "private" ] ],
+        "excludes" : [ ],
+        "separator" : "NEW_LINE",
+        "keepAccessorsTogether" : null,
+        "memberSubGroups" : [ {
+          "name" : "Annotations",
+          "includes" : [ [ "annotation" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Enums",
+          "includes" : [ [ "enum" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Records",
+          "includes" : [ [ "record" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Interfaces",
+          "includes" : [ [ "interface" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        }, {
+          "name" : "Classes",
+          "includes" : [ [ "class" ] ],
+          "excludes" : [ ],
+          "separator" : "NEW_LINE",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "sortKeys" : [ "ALPHA" ]
+        } ],
+        "sortKeys" : [ "ALPHA" ]
       } ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-    }, {
-      "name" : "Static Initializer Blocks",
-      "includes" : [ [ "static" ], [ "initializer" ] ],
-      "excludes" : [ ],
-      "separator" : "NONE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "PRESERVE" ]
-    }, {
-      "name" : "Static Methods",
-      "includes" : [ [ "static" ], [ "method" ] ],
-      "excludes" : [ ],
-      "separator" : "NONE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-    }, {
-      "name" : "Instance Initializer Blocks",
-      "includes" : [ [ "initializer" ] ],
-      "excludes" : [ ],
-      "separator" : "NONE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "PRESERVE" ]
-    }, {
-      "name" : "Constructors",
-      "includes" : [ [ "constructor" ] ],
-      "excludes" : [ ],
-      "separator" : "NONE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-    }, {
-      "name" : "Instance Methods",
-      "includes" : [ [ "method" ] ],
-      "excludes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
-      "separator" : "NONE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
-    }, {
-      "name" : "Basic Object Methods",
-      "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
-      "excludes" : [ ],
-      "separator" : "NONE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "PRESERVE" ]
-    }, {
-      "name" : "Classes & Records",
-      "includes" : [ [ "record" ], [ "class" ] ],
-      "excludes" : [ ],
-      "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "ALPHA" ]
-    }, {
-      "name" : "Interfaces",
-      "includes" : [ [ "interface" ] ],
-      "excludes" : [ ],
-      "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "ALPHA" ]
-    }, {
-      "name" : "Enums",
-      "includes" : [ [ "enum" ] ],
-      "excludes" : [ ],
-      "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "sortKeys" : [ "ALPHA" ]
-    }, {
-      "name" : "Annotations",
-      "includes" : [ [ "annotation" ] ],
-      "excludes" : [ ],
-      "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
       "sortKeys" : [ "ALPHA" ]
     } ],
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ]
+    "sortKeys" : [ "PRESERVE" ]
   } ],
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
-    "sortKeys" : [ "VISIBILITY_DESC", "ALPHA" ],
+    "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ],
     "topLevelTypeSelectors" : [ {
       "typeKinds" : [ "CLASS", "RECORD" ]
     }, {
