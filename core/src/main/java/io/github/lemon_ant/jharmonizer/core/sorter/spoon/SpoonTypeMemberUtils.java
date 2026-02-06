@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtAnonymousExecutable;
@@ -98,5 +99,15 @@ public class SpoonTypeMemberUtils {
                     return parameterType.getQualifiedName();
                 })
                 .collect(Collectors.joining(","));
+    }
+
+    @NonNull
+    public static Stream<@NonNull CtTypeMember> streamExplicitSourceTypeMembers(@NonNull CtType<?> declaringType) {
+        return declaringType.getTypeMembers().stream()
+                .filter(typeMember -> typeMember.getPosition() != null
+                        && typeMember.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
+                .filter(typeMember -> !typeMember.isImplicit());
     }
 }

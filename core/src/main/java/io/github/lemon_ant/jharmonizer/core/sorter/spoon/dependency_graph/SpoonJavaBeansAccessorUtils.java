@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
 import static java.beans.Introspector.decapitalize;
 import static java.util.Objects.requireNonNull;
 
@@ -37,7 +38,6 @@ class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
@@ -49,12 +49,7 @@ class SpoonJavaBeansAccessorUtils {
                 "Expected CtMethod to have a declaring type, but it is detached from the Spoon model. methodName="
                         + accessorMethod.getSimpleName());
 
-        return declaringType.getTypeMembers().stream()
-                // Spoon creates implicit members (e.g., default constructors) which don't exist in the source code.
-                .filter(typeMember -> typeMember.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit())
+        return streamExplicitSourceTypeMembers(declaringType)
                 .filter(typeMember -> typeMember instanceof CtMethod<?>)
                 .map(typeMember -> (CtMethod<?>) typeMember)
                 .filter(candidateMethod -> candidateMethod != accessorMethod)

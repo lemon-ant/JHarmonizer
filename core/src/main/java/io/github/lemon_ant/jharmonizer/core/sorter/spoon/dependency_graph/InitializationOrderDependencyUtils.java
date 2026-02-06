@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireDeclaringType;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireSourceStart;
 
@@ -55,19 +56,13 @@ final class InitializationOrderDependencyUtils {
      * causing "variable might not have been initialized" compilation errors.
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember, @NonNull CtField<?> blankFinalField, int dependentSourceStart) {
 
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         boolean blankFinalFieldIsStatic = blankFinalField.getModifiers().contains(ModifierKind.STATIC);
 
-        return declaringType.getTypeMembers().stream()
-                // Spoon creates implicit members (e.g., default constructors) which don't exist in the source code.
-                .filter(typeMember -> typeMember.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit())
+        return streamExplicitSourceTypeMembers(declaringType)
                 .filter(typeMember -> typeMember != dependentMember)
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->

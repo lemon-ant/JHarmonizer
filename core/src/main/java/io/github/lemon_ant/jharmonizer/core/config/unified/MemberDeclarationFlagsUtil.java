@@ -130,8 +130,8 @@ public class MemberDeclarationFlagsUtil {
      */
     private static int encodeDeclarationModifiersToFlags(Set<DeclarationModifier> declarationModifiers) {
         return declarationModifiers.stream()
-                .mapToInt(declarationModifier -> 1 << (DECLARATION_MODIFIER_OFFSET + declarationModifier.ordinal()))
-                .reduce(0, (leftMask, modifierBit) -> leftMask | modifierBit);
+                .mapToInt(modifier -> 1 << (DECLARATION_MODIFIER_OFFSET + modifier.ordinal()))
+                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
     }
 
     /**

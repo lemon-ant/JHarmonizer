@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
@@ -54,16 +56,7 @@ class SpoonMemberDescriptorFactory {
 
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
-        return describeMembers(type.getTypeMembers());
-    }
-
-    private Map<CtTypeMember, MemberDescriptor> describeMembers(List<CtTypeMember> typeMembers) {
-        return typeMembers.stream()
-                // Spoon creates implicit members (e.g., default constructors) which don't exist in the source code.
-                .filter(typeMember -> typeMember.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit())
+        return streamExplicitSourceTypeMembers(type)
                 .collect(Collectors.toUnmodifiableMap(
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
@@ -160,7 +153,6 @@ class SpoonMemberDescriptorFactory {
 
         Set<ModifierKind> typeMemberModifierKinds = typeMember.getModifiers();
 
-        // Preserve priority order: public -> protected -> private.
         return ACCESS_BY_MODIFIER.stream()
                 .filter(modifierToAccessEntry -> typeMemberModifierKinds.contains(modifierToAccessEntry.getKey()))
                 .map(Map.Entry::getValue)

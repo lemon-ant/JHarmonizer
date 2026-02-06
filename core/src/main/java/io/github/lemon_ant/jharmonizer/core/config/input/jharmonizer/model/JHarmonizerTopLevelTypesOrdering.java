@@ -40,14 +40,14 @@ public class JHarmonizerTopLevelTypesOrdering {
     }
 
     private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
-        Set<JHarmonizerTypeKind> allTypes = new HashSet<>();
-        for (JHarmonizerTopLevelTypeSelector group : typeGroups) {
-            for (JHarmonizerTypeKind kind : group.getTypeKinds()) {
-                if (!allTypes.add(kind)) {
-                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + kind);
-                }
-            }
-        }
+        Set<JHarmonizerTypeKind> encounteredTypeKinds = new HashSet<>();
+        typeGroups.stream()
+                .flatMap(typeGroup -> typeGroup.getTypeKinds().stream())
+                .filter(typeKind -> !encounteredTypeKinds.add(typeKind))
+                .findFirst()
+                .ifPresent(duplicateKind -> {
+                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + duplicateKind);
+                });
     }
 
     @Override
