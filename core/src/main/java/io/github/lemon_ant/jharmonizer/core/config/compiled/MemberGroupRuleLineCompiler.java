@@ -13,7 +13,9 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationMatc
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedNameMatcher;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -46,18 +48,11 @@ class MemberGroupRuleLineCompiler {
     @NonNull
     @SafeVarargs
     private static Predicate<MemberDescriptor> assembleRuleLine(Predicate<MemberDescriptor>... predicates) {
-        // AND of all non-null predicates; require at least one
-        Predicate<MemberDescriptor> combined = null;
-        for (Predicate<MemberDescriptor> predicate : predicates) {
-            if (predicate == null) {
-                continue;
-            }
-            combined = (combined == null) ? predicate : combined.and(predicate);
-        }
-        if (combined == null) {
-            throw new IllegalStateException("Rule line doesn't contain any rules");
-        }
-        return combined;
+        // AND of all non-null predicates; require at least one.
+        return Arrays.stream(predicates)
+                .filter(Objects::nonNull)
+                .reduce(Predicate::and)
+                .orElseThrow(() -> new IllegalStateException("Rule line doesn't contain any rules"));
     }
 
     @Nullable

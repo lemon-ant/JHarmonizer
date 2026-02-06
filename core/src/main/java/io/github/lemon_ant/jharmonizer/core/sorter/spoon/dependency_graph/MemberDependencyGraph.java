@@ -103,20 +103,16 @@ public final class MemberDependencyGraph {
         return Collections.unmodifiableSet(visitedMembers);
     }
 
-    private static int toEdgeKindMask(Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        if (allowedEdgeKinds == null || allowedEdgeKinds.isEmpty()) {
+    private static int calculateAllowedEdgeKindsMask(Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        if (allowedEdgeKinds == null
+                || allowedEdgeKinds.isEmpty()
+                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
             return ALL_EDGE_KIND_MASK;
         }
 
-        if (allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
-            return ALL_EDGE_KIND_MASK;
-        }
-
-        int mask = 0;
-        for (MemberDependencyEdgeKind allowedEdgeKind : allowedEdgeKinds) {
-            mask |= (1 << allowedEdgeKind.ordinal());
-        }
-        return mask;
+        return allowedEdgeKinds.stream()
+                .mapToInt(allowedEdgeKind -> 1 << allowedEdgeKind.ordinal())
+                .reduce(0, (leftMask, edgeKindBit) -> leftMask | edgeKindBit);
     }
 
     @NonNull
@@ -206,7 +202,7 @@ public final class MemberDependencyGraph {
             Set<MemberDependencyEdgeKind> allowedEdgeKinds,
             Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveCacheByStartMember,
             Map<CtTypeMember, Set<MemberDependencyArc>> adjacency) {
-        int allowedEdgeKindsMask = toEdgeKindMask(allowedEdgeKinds);
+        int allowedEdgeKindsMask = calculateAllowedEdgeKindsMask(allowedEdgeKinds);
 
         Map<Integer, Set<CtTypeMember>> cachedNeighborsByEdgeKindMask = transitiveCacheByStartMember.get(startMember);
 

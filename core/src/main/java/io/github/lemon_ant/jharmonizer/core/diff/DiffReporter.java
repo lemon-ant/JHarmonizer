@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.diff;
 
 import com.github.difflib.DiffUtils;
-import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,22 +27,23 @@ public class DiffReporter {
     }
 
     private static String format(Patch<String> diffs) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder diffBuilder = new StringBuilder();
 
-        List<AbstractDelta<String>> deltas = diffs.getDeltas();
-        deltas.sort(Comparator.comparingInt(d -> d.getSource().getPosition()));
-        for (AbstractDelta<String> delta : deltas) {
-            List<String> original = delta.getSource().getLines();
-            List<String> revised = delta.getTarget().getLines();
+        diffs.getDeltas().stream()
+                .sorted(Comparator.comparingInt(delta -> delta.getSource().getPosition()))
+                .forEach(delta -> {
+                    List<String> originalLines = delta.getSource().getLines();
+                    List<String> revisedLines = delta.getTarget().getLines();
 
-            int startLine = delta.getSource().getPosition();
-            int maxLines = Math.min(original.size(), revised.size());
+                    int deltaStartLine = delta.getSource().getPosition();
+                    int comparableLineCount = Math.min(originalLines.size(), revisedLines.size());
 
-            for (int i = 0; i < maxLines; i++) {
-                processDelta(startLine, i, original, revised, sb);
-            }
-        }
-        return sb.toString();
+                    IntStream.range(0, comparableLineCount)
+                            .forEach(relativeLineIndex -> processDelta(
+                                    deltaStartLine, relativeLineIndex, originalLines, revisedLines, diffBuilder));
+                });
+
+        return diffBuilder.toString();
     }
 
     private static String getLineSafe(List<String> list, int index) {

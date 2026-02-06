@@ -129,11 +129,9 @@ public class MemberDeclarationFlagsUtil {
      * Encode a set of declaration modifiers to a multi-bit subset mask.
      */
     private static int encodeDeclarationModifiersToFlags(Set<DeclarationModifier> declarationModifiers) {
-        int mask = 0;
-        for (DeclarationModifier modifier : declarationModifiers) {
-            mask |= 1 << (DECLARATION_MODIFIER_OFFSET + modifier.ordinal());
-        }
-        return mask;
+        return declarationModifiers.stream()
+                .mapToInt(declarationModifier -> 1 << (DECLARATION_MODIFIER_OFFSET + declarationModifier.ordinal()))
+                .reduce(0, (leftMask, modifierBit) -> leftMask | modifierBit);
     }
 
     /**

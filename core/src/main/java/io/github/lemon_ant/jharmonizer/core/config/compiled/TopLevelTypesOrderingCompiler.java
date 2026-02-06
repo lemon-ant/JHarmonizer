@@ -6,10 +6,8 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -33,17 +31,20 @@ class TopLevelTypesOrderingCompiler {
      */
     CompiledTopLevelTypesOrdering compileTopLevelTypesOrdering(
             UnifiedTopLevelTypesOrdering unifiedTopLevelTypesOrdering) {
-        List<Predicate<MemberDescriptor>> compiledTopLevelTypesSelectors = new ArrayList<>();
-        // For each type group: OR over kinds
-        for (UnifiedTopLevelTypeSelector topLevelTypeSelector :
-                unifiedTopLevelTypesOrdering.getTopLevelTypeSelectors()) {
-            Set<MemberKind> memberKinds = topLevelTypeSelector.getTypeKinds().stream()
-                    .map(UnifiedTypeKind::getMemberKind)
-                    .collect(toUnmodifiableSet());
-            int requiredMemberDeclarationFlags = encodeMemberDeclarationFlags(memberKinds, Set.of(), Set.of());
-            compiledTopLevelTypesSelectors.add(memberDescriptor -> containsAllRequiredDeclarationFlags(
-                    memberDescriptor.getFeatureMask(), requiredMemberDeclarationFlags));
-        }
+        List<Predicate<MemberDescriptor>> compiledTopLevelTypesSelectors =
+                unifiedTopLevelTypesOrdering.getTopLevelTypeSelectors().stream()
+                        .<Predicate<MemberDescriptor>>map(topLevelTypeSelector -> {
+                            Set<MemberKind> memberKinds = topLevelTypeSelector.getTypeKinds().stream()
+                                    .map(UnifiedTypeKind::getMemberKind)
+                                    .collect(toUnmodifiableSet());
+
+                            int requiredMemberDeclarationFlags =
+                                    encodeMemberDeclarationFlags(memberKinds, Set.of(), Set.of());
+                            return memberDescriptor -> containsAllRequiredDeclarationFlags(
+                                    memberDescriptor.getFeatureMask(), requiredMemberDeclarationFlags);
+                        })
+                        .toList();
+
         return new CompiledTopLevelTypesOrdering(
                 unifiedTopLevelTypesOrdering.isMainTypeFirst(),
                 unifiedTopLevelTypesOrdering.getSortKeys(),

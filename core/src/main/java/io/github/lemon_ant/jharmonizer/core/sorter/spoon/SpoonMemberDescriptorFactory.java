@@ -158,15 +158,15 @@ class SpoonMemberDescriptorFactory {
             return null;
         }
 
-        Set<ModifierKind> modifierKinds = typeMember.getModifiers();
-        for (Map.Entry<ModifierKind, MemberAccess> modifierToAccessMapping : ACCESS_BY_MODIFIER) {
-            if (modifierKinds.contains(modifierToAccessMapping.getKey())) {
-                return modifierToAccessMapping.getValue();
-            }
-        }
+        Set<ModifierKind> typeMemberModifierKinds = typeMember.getModifiers();
 
-        // No explicit access modifier means package-private.
-        return MemberAccess.PACKAGE;
+        // Preserve priority order: public -> protected -> private.
+        return ACCESS_BY_MODIFIER.stream()
+                .filter(modifierToAccessEntry -> typeMemberModifierKinds.contains(modifierToAccessEntry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                // No explicit access modifier means package-private.
+                .orElse(MemberAccess.PACKAGE);
     }
 
     private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
