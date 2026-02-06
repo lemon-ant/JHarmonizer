@@ -74,7 +74,11 @@ public class SpoonTypeUtils {
     private static Stream<CtElement> streamTypeAndNestedElements(CtType<?> ownerType) {
         Stream<CtElement> self = Stream.of(ownerType);
         Stream<CtElement> membersAndNested = ownerType.getTypeMembers().stream()
-                // .filter(ElementsFlatIndexer::isSourceDeclarativeMember)
+                // Spoon creates implicit members (e.g., default constructors) which don't exist in the source code.
+                .filter(typeMember -> typeMember.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
+                .filter(typeMember -> !typeMember.isImplicit())
                 .flatMap(member -> {
                     if (member instanceof CtType<?> nestedType) {
                         // include the nested type declaration, then descend into its own members

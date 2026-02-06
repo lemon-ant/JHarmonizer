@@ -72,7 +72,7 @@ public class SpoonSorter {
                 NaturalMemberGroupResolver.resolveNaturalGroups(rootMemberGroup, typeMember2Descriptor);
 
         MemberDependencyGraph memberDependencyGraph =
-                MemberDependencyGraphBuilder.buildDependencyGraph(currentType, naturalGroupByMember);
+                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupByMember);
 
         Map<CtTypeMember, CompiledMemberGroup> effectiveGroupByMember =
                 EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupByMember, memberDependencyGraph);

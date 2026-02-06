@@ -68,10 +68,6 @@ public class RelocationDetector {
         AtomicInteger runningIndex = new AtomicInteger(0);
 
         return streamDeclaredHierarchy(reorderedCompilationUnit)
-                .filter(element -> element.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit())
                 // compute offset on the fly using the running encounter index
                 .map(element -> {
                     int current = runningIndex.getAndIncrement();
@@ -156,9 +152,6 @@ public class RelocationDetector {
     static Map<SourcePosition, Integer> indexElementsByOrder(CtCompilationUnit compilationUnit) {
         AtomicInteger runningIndex = new AtomicInteger(0);
         return streamDeclaredHierarchy(compilationUnit)
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit())
                 .map(CtElement::getPosition)
                 .filter(SourcePosition::isValidPosition)
                 .collect(Collectors.toMap(

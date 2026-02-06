@@ -25,11 +25,12 @@ public class MemberDependencyGraphBuilder {
 
     @NonNull
     public static MemberDependencyGraph buildDependencyGraph(
-            @NonNull CtType<?> type, @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
+            @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
 
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
 
-        type.getTypeMembers().forEach(dependentMember -> {
+        // typeMember2NaturalMemberGroup is expected to contain only explicit source members.
+        typeMember2NaturalMemberGroup.keySet().forEach(dependentMember -> {
             CompiledMemberGroup dependentNaturalGroup =
                     resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
@@ -52,8 +53,7 @@ public class MemberDependencyGraphBuilder {
 
         return Optional.ofNullable(typeMember2CompiledMemberGroup.get(typeMember))
                 .orElseThrow(() -> new IllegalStateException("Natural group was not resolved for type member. "
-                        + "Expected typeMember2CompiledMemberGroup to contain all CtType.getTypeMembers(). "
-                        + "Missing member: "
-                        + typeMember));
+                        + "Expected typeMember2CompiledMemberGroup to contain all explicit (source) type members. "
+                        + "Missing member: " + typeMember));
     }
 }

@@ -59,7 +59,11 @@ class SpoonMemberDescriptorFactory {
 
     private Map<CtTypeMember, MemberDescriptor> describeMembers(List<CtTypeMember> typeMembers) {
         return typeMembers.stream()
-                // TODO.filter(typeMember -> !typeMember.isImplicit())
+                // Spoon creates implicit members (e.g., default constructors) which don't exist in the source code.
+                .filter(typeMember -> typeMember.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
+                .filter(typeMember -> !typeMember.isImplicit())
                 .collect(Collectors.toUnmodifiableMap(
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
