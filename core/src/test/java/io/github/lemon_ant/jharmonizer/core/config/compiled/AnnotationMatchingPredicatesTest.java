@@ -13,11 +13,10 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-// TODO Refactor
 class AnnotationMatchingPredicatesTest {
 
     @Test
-    void createAnnotationExactFqnOrSimple_expectedSimpleNameMatchesQualifiedAnnotationName() {
+    void createAnnotationExactFqnOrSimple_whenMatcherUsesSimpleName_shouldMatchQualifiedAnnotationName() {
         MemberDescriptor memberDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
@@ -31,7 +30,8 @@ class AnnotationMatchingPredicatesTest {
     }
 
     @Test
-    void createAnnotationExactFqnOrSimple_expectedQualifiedNameMatchesQualifiedAnnotationName() {
+    void createAnnotationExactFqnOrSimple_whenMatcherUsesQualifiedName_shouldMatchQualifiedAnnotationName() {
+        // Given
         MemberDescriptor memberDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
@@ -39,13 +39,16 @@ class AnnotationMatchingPredicatesTest {
                 .annotationQualifiedName("a.b.Foo")
                 .build();
 
+        // When
         Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("a.b.Foo");
 
+        // Then
         assertThat(predicate.test(memberDescriptor)).isTrue();
     }
 
     @Test
     void createAnnotationExactFqnOrSimple_expectedNameDoesNotMatch_returnsFalse() {
+        //  Given
         MemberDescriptor memberDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
@@ -53,78 +56,88 @@ class AnnotationMatchingPredicatesTest {
                 .annotationQualifiedName("a.b.Foo")
                 .build();
 
+        // When
         Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("Bar");
 
+        // Then
         assertThat(predicate.test(memberDescriptor)).isFalse();
     }
 
     @Test
     void createAnnotationRegexFqnOrSimple_patternMatchesSimpleNameDerivedFromFqcn_returnsTrue() {
+        // Given
         MemberDescriptor memberDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
                 .name("field")
                 .annotationQualifiedName("a.b.Foo")
                 .build();
-
+        // When
         Predicate<MemberDescriptor> predicate =
                 RuleAtomPredicates.createAnnotationRegexFqnOrSimple(Pattern.compile("F.."));
 
+        // Then
         assertThat(predicate.test(memberDescriptor)).isTrue();
     }
 
     @Test
     void compileRuleLine_annotationExact_compiledPredicateMatchesBySimpleName() {
+        //  Given
         UnifiedMemberGroupRuleLine unifiedRuleLine = UnifiedMemberGroupRuleLine.builder()
                 .annotationMatcher(new UnifiedAnnotationMatcher(EXACT, "Foo"))
                 .build();
 
+        // When
         Predicate<MemberDescriptor> compiledPredicate = MemberGroupRuleLineCompiler.compileRuleLine(unifiedRuleLine);
 
+        //  Then
         MemberDescriptor annotatedDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
                 .name("field")
                 .annotationQualifiedName("a.b.Foo")
                 .build();
-
         MemberDescriptor notAnnotatedDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
                 .name("field")
                 .build();
-
         assertThat(compiledPredicate.test(annotatedDescriptor)).isTrue();
         assertThat(compiledPredicate.test(notAnnotatedDescriptor)).isFalse();
     }
 
     @Test
     void compileRuleLine_annotationRegex_compiledPredicateMatchesBySimpleNameOrFqcn() {
+        // Given
         UnifiedMemberGroupRuleLine unifiedRuleLine = UnifiedMemberGroupRuleLine.builder()
                 .annotationMatcher(new UnifiedAnnotationMatcher(REGEX, ".*Foo"))
                 .build();
 
+        // When
         Predicate<MemberDescriptor> compiledPredicate = MemberGroupRuleLineCompiler.compileRuleLine(unifiedRuleLine);
 
+        // Then
         MemberDescriptor annotatedDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
                 .name("field")
                 .annotationQualifiedName("a.b.Foo")
                 .build();
-
         assertThat(compiledPredicate.test(annotatedDescriptor)).isTrue();
     }
 
     @Test
     void compileRuleLine_twoAnnotationMatchers_allMatchersMustMatch() {
+        // Given
         UnifiedMemberGroupRuleLine unifiedRuleLine = UnifiedMemberGroupRuleLine.builder()
                 .annotationMatcher(new UnifiedAnnotationMatcher(EXACT, "Foo"))
                 .annotationMatcher(new UnifiedAnnotationMatcher(EXACT, "Bar"))
                 .build();
 
+        //  When
         Predicate<MemberDescriptor> compiledPredicate = MemberGroupRuleLineCompiler.compileRuleLine(unifiedRuleLine);
 
+        // Then
         MemberDescriptor descriptorWithTwoAnnotations = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
@@ -132,14 +145,12 @@ class AnnotationMatchingPredicatesTest {
                 .annotationQualifiedName("a.b.Foo")
                 .annotationQualifiedName("c.d.Bar")
                 .build();
-
         MemberDescriptor descriptorWithOnlyOneAnnotation = MemberDescriptor.builder()
                 .memberKind(FIELD)
                 .memberAccess(PUBLIC)
                 .name("field")
                 .annotationQualifiedName("a.b.Foo")
                 .build();
-
         assertThat(compiledPredicate.test(descriptorWithTwoAnnotations)).isTrue();
         assertThat(compiledPredicate.test(descriptorWithOnlyOneAnnotation)).isFalse();
     }

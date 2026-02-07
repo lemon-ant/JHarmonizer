@@ -33,7 +33,6 @@ class GroupMembersOrderer {
     private static final int ONE = 1;
 
     @NonNull
-    // TODO .filter(typeMember -> !typeMember.isImplicit())
     static List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
             @NonNull List<@NonNull MemberGroupBlock> unorderedMemberGroupBlocks,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
