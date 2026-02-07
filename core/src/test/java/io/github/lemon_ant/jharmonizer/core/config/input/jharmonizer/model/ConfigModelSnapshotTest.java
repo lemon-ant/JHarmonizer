@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-// TODO Refactor
 class ConfigModelSnapshotTest {
 
     private static final String CLASS_PATH_TO_SNAPSHOT =
@@ -21,20 +20,16 @@ class ConfigModelSnapshotTest {
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Test
-    void configModel_serializationMatchesSnapshot() throws Exception {
+    void serializeDefaultJHarmonizerConfig_whenSerialized_shouldMatchSnapshot() throws Exception {
         // When
         String actualJson = MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG);
 
         // Then
         try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
-
-            // Defensive: make missing snapshot an explicit test failure with instructions.
             assertThat(expectedJsonStream)
                     .as("Missing snapshot file: " + CLASS_PATH_TO_SNAPSHOT)
                     .isNotNull();
-
             String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
-
             assertThat(actualJson).as("""
                 Config snapshot mismatch.
 
