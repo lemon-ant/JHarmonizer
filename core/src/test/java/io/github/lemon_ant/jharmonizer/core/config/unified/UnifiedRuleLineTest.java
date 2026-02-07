@@ -12,10 +12,10 @@ class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
     void build_withoutSelectors_isNotAllowed() {
-        // given
+        // Given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
 
-        // when / then
+        // When / Then
         assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("at least one selector");
@@ -23,15 +23,15 @@ class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
     void nameMatcher_assignedOnce_buildsSuccessfully() {
-        // given
+        // Given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
         UnifiedNameMatcher expectedUnifiedNameMatcher = new UnifiedNameMatcher(UnifiedMatchMethod.EXACT, "methodName");
 
-        // when
+        // When
         builder.nameMatcher(expectedUnifiedNameMatcher); // single assignment is fine
         UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = builder.build();
 
-        // then
+        // Then
         assertThat(unifiedMemberGroupRuleLine).isNotNull();
         assertThat(unifiedMemberGroupRuleLine.getNameMatcher())
                 .isNotNull()
@@ -40,13 +40,13 @@ class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
     void nameMatcher_secondAssignment_throwsIllegalStateException() {
-        // given
+        // Given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
 
-        // when
+        // When
         builder.nameMatcher(null); // first assignment is allowed (null means "no constraint")
 
-        // then
+        // Then
         assertThatThrownBy(() -> builder.nameMatcher(null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already been assigned");

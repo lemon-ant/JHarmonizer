@@ -33,7 +33,7 @@ final class TokenMaps {
             entry("enum-constant", MemberKind.ENUM_CONSTANT),
             entry("record-component", MemberKind.RECORD_COMPONENT));
 
-    static final Map<String, DeclarationModifier> MOD_BY_TOKEN = Map.ofEntries(
+    static final Map<String, DeclarationModifier> MODIFIER_BY_TOKEN = Map.ofEntries(
             entry("static", DeclarationModifier.STATIC),
             entry("final", DeclarationModifier.FINAL),
             entry("abstract", DeclarationModifier.ABSTRACT),

@@ -31,25 +31,22 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     @Test
     @DisplayName("configUnified_serializationMatchesSnapshot")
     void configUnified_serializationMatchesSnapshot() throws Exception {
-        // given
+        // Given
         JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig)
                 .as("Default vendor config must be loadable via JHarmonizerConfigLoader.loadDefault()")
                 .isNotNull();
 
-        // when
+        // When
         UnifiedConfig unifiedConfig = JHarmonizer2UnifiedConverter.convert2Unified(vendorConfig);
         String actualJson = MAPPER.writeValueAsString(unifiedConfig);
 
-        // then
+        // Then
         try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
-
             assertThat(expectedJsonStream)
                     .as("Missing snapshot file: %s", CLASS_PATH_TO_SNAPSHOT)
                     .isNotNull();
-
             String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
-
             assertThat(actualJson).as("""
                 UnifiedConfig snapshot mismatch.
 
@@ -71,18 +68,17 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     @Disabled("Click to (re)generate snapshot after intentional conversion/model changes")
     @DisplayName("regenerateSnapshot_whenRun_overwritesSnapshotFile")
     void regenerateSnapshot_whenRun_overwritesSnapshotFile() throws Exception {
-        // given
+        // Given
         JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig).as("Default vendor config must be loadable").isNotNull();
 
-        // when
+        // When
         UnifiedConfig unifiedConfig = JHarmonizer2UnifiedConverter.convert2Unified(vendorConfig);
         String expectedJson = MAPPER.writeValueAsString(unifiedConfig);
 
-        // then
+        // Then
         Path pathToSnapshot = Path.of(FILE_PATH_TO_SNAPSHOT);
         Files.writeString(pathToSnapshot, expectedJson, StandardCharsets.UTF_8);
-
         // quick sanity: snapshot should be readable right away
         assertThat(Files.readString(pathToSnapshot, StandardCharsets.UTF_8))
                 .as("Snapshot file should be readable immediately after write")

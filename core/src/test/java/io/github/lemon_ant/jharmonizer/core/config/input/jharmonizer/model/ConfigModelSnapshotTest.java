@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+// TODO Refactor
 class ConfigModelSnapshotTest {
 
     private static final String CLASS_PATH_TO_SNAPSHOT =
@@ -21,10 +22,10 @@ class ConfigModelSnapshotTest {
 
     @Test
     void configModel_serializationMatchesSnapshot() throws Exception {
-        // when
+        // When
         String actualJson = MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG);
 
-        // then
+        // Then
         try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
 
             // Defensive: make missing snapshot an explicit test failure with instructions.

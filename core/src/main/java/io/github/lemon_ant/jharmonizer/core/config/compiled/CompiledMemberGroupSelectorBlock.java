@@ -47,11 +47,11 @@ public class CompiledMemberGroupSelectorBlock {
     }
 
     private boolean matchExcludes(MemberDescriptor descriptor) {
-
         return excludePredicate.stream().anyMatch(excludePredicate -> excludePredicate.test(descriptor));
     }
 
     private boolean matchIncludes(MemberDescriptor descriptor) {
-        return includePredicate.stream().anyMatch(includePredicate -> includePredicate.test(descriptor));
+        return includePredicate.isEmpty()
+                || includePredicate.stream().anyMatch(includePredicate -> includePredicate.test(descriptor));
     }
 }

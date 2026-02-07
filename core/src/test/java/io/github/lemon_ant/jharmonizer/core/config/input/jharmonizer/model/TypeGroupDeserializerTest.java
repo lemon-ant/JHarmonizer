@@ -15,15 +15,15 @@ class TypeGroupDeserializerTest {
 
     @Test
     void deserialize_listOfTypeKindStrings_returnsEntryWithMultipleKinds() throws IOException {
-        // given
+        // Given
         String yaml = "- [class, INTERFACE, RECORD]";
 
-        // when
+        // When
         List<JHarmonizerTopLevelTypeSelector> result = mapper.readValue(
                 yaml,
                 mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTopLevelTypeSelector.class));
 
-        // then
+        // Then
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTypeKinds())
                 .containsExactly(JHarmonizerTypeKind.CLASS, JHarmonizerTypeKind.INTERFACE, JHarmonizerTypeKind.RECORD);
@@ -31,10 +31,10 @@ class TypeGroupDeserializerTest {
 
     @Test
     void deserialize_unknownTypeKind_throwsException() {
-        // given
+        // Given
         String yaml = "- UNICORN";
 
-        // when/then
+        // When/Then
         assertThatThrownBy(() -> mapper.readValue(
                         yaml,
                         mapper.getTypeFactory()

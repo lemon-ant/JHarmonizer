@@ -10,7 +10,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -51,12 +50,7 @@ class SourceProcessorTest {
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 
-    // ----------------------------------------------------------------------
-    // Helpers
-    // ----------------------------------------------------------------------
-
-    public static void wipeDirectory() {
-
+    private static void wipeDirectory() {
         try {
             if (Files.exists(DEBUG_DIR)) {
                 // Deletes directory recursively
@@ -68,76 +62,42 @@ class SourceProcessorTest {
         }
     }
 
-    public static void writeJavaStage(Path outputDirectory, String stageName, String javaSourceText) {
-        Objects.requireNonNull(outputDirectory, "outputDirectory must not be null");
-        Objects.requireNonNull(stageName, "stageName must not be null");
-        Objects.requireNonNull(javaSourceText, "javaSourceText must not be null");
-
-        String fileName = sanitizeFileName(stageName) + ".java";
-        Path outputFile = outputDirectory.resolve(fileName);
-
-        try {
-            Files.createDirectories(outputDirectory);
-            Files.writeString(
-                    outputFile,
-                    javaSourceText,
-                    StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException("Failed to write stage file: " + outputFile, ioException);
-        }
-    }
-
-    private static String sanitizeFileName(String rawName) {
-        String trimmedName = rawName.trim();
-        return trimmedName.isEmpty() ? "stage" : trimmedName.replaceAll("[^a-zA-Z0-9._-]+", "_");
-    }
-
     @Test
     void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
-        // given
+        // Given
         String sampleSourceCode = loadSampleAllJava21FeaturesSource();
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
-
         String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SourceProcessor sourceProcessor = new SourceProcessor();
 
-        // when
+        // When
         sourceProcessor.processSources(temporaryDirectory, ALL_JAVA_GLOBS, NO_EXCLUDES, FlowType.RESTRUCTURE);
-
         String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
-        // then
+        // Then
         assertThat(processedSourceCode).isNotBlank().isNotEqualTo(originalSourceCode);
     }
 
     @Test
     void processSources_multipleJavaFiles_onlyIncludedFilesAreProcessed() throws Exception {
-        // given
+        // Given
         String unformattedSourceCode = "package demo; public class Included {private int x;}";
         Path includedJavaFilePath = writeJavaFile(temporaryDirectory, "IncludedSample.java", unformattedSourceCode);
         Path excludedJavaFilePath = writeJavaFile(temporaryDirectory, "ExcludedSample.java", unformattedSourceCode);
-
         String includedOriginalSourceCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
         String excludedOriginalSourceCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
-
         Collection<String> includeGlobs = Set.of("Included*.java");
-        Collection<String> excludeGlobs = NO_EXCLUDES;
-
         SourceProcessor sourceProcessor = new SourceProcessor();
 
-        // when
-        sourceProcessor.processSources(temporaryDirectory, includeGlobs, excludeGlobs, FlowType.RESTRUCTURE);
-
+        // When
+        sourceProcessor.processSources(temporaryDirectory, includeGlobs, NO_EXCLUDES, FlowType.RESTRUCTURE);
         String includedProcessedSourceCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
         String excludedProcessedSourceCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
 
-        // then
+        // Then
         assertThat(includedProcessedSourceCode)
                 .as("Included file must be processed")
                 .isNotEqualTo(includedOriginalSourceCode);
-
         assertThat(excludedProcessedSourceCode)
                 .as("Excluded file must remain unchanged")
                 .isEqualTo(excludedOriginalSourceCode);
@@ -145,20 +105,17 @@ class SourceProcessorTest {
 
     @Test
     void processSources_alreadyRestructuredFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
-        // given
+        // Given
         String sampleSourceCode = loadSampleAllJava21FeaturesSource();
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
-
         SourceProcessor sourceProcessor = new SourceProcessor();
-
         // First bring the file into a fully restructured and formatted state
         sourceProcessor.processSources(temporaryDirectory, ALL_JAVA_GLOBS, NO_EXCLUDES, FlowType.RESTRUCTURE);
 
-        // when / then
+        // When / Then
         assertThatCode(() -> sourceProcessor.processSources(
                         temporaryDirectory, ALL_JAVA_GLOBS, NO_EXCLUDES, FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
-
         // sanity check that the file is still readable and not empty
         String finalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSourceCode).isNotBlank();
