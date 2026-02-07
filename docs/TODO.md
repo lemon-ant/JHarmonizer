@@ -8,6 +8,23 @@ when the pipeline is proven end-to-end.
 
 ---
 
+## 0. Must-have: allow opting out of harmonization per file/type
+
+Add a suppression mechanism to skip JHarmonizer processing for selected Java sources (or specific top-level types):
+- Skip sorting (member reordering)
+- Skip formatting (Palantir Java Format)
+- Skip “check” validations
+
+Rationale:
+Sometimes the formatter/printer behaves incorrectly for a specific class, or the file is intentionally maintained manually. The user must be able to mark such sources so the tool does not touch them on every run.
+
+Acceptance idea:
+- Introduce a well-defined marker (e.g., a special comment or a dedicated suppress annotation with a stable token/code).
+- When the marker is present, the file/type is excluded from all harmonization steps (restructure + check + formatting).
+- The marker must be easy to search for across the codebase and safe to keep in VCS.
+
+---
+
 ## 1. Compile group sorting once and precompute sort keys in `MemberDescriptor`
 
 ### Status

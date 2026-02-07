@@ -21,30 +21,6 @@ Everything below is **still missing** and is the focus of this plan.
 
 ---
 
-## 2) Spoon classification (Ct* → MemberDescriptor)
-
-- [ ] **Member kind classification matrix**
-  - **Type:** component (Spoon)
-  - **Targets:** `SpoonMemberDescriptorFactory`, `MemberKind`
-  - **Goal:** Ensure correct mapping for:
-    - fields (static/instance, final),
-    - constructors,
-    - methods,
-    - initializer blocks (static/instance via modifiers),
-    - nested types (class/interface/record/enum/annotation),
-    - enum constants (if supported),
-    - record components (if supported),
-    - annotations on members.
-  - **Must assert:** access levels + modifiers are extracted consistently.
-
-- [ ] **Annotation matching: simple name vs FQCN; EXACT vs REGEX**
-  - **Type:** unit/component
-  - **Targets:** `UnifiedAnnotationMatcher`, `RuleAtomPredicates`
-  - **Goal:** Confirm predicate behavior for `@Foo` vs `@a.b.Foo`, and regex variants.
-  - **Must assert:** “FQCN-or-simple” semantics used by compiler.
-
----
-
 ## 3) Natural group resolution (what group a member belongs to)
 
 - [ ] **Deepest-match-wins for nested groups**

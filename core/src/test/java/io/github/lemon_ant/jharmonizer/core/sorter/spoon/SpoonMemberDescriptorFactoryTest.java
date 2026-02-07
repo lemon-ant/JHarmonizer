@@ -34,7 +34,7 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-// TODO Review
+// TODO Review and guarantee test-case compilation
 class SpoonMemberDescriptorFactoryTest {
 
     private static final String EXAMPLES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor";
