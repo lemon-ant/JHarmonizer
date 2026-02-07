@@ -8,194 +8,201 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlag
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import java.util.EnumSet;
 import java.util.Set;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-// TODO Refactor
-@DisplayName("MemberDeclarationFlagsUtil (public API only)")
 class MemberDeclarationFlagsUtilTest {
 
-    // ---- helpers (test-only), построены ТОЛЬКО на public API ----
-
-    private static int accessBit(MemberAccess access) {
-        // фиксируем kind и пустые модификаторы → разница масок = чистый access-бит
-        int base = mask(MemberKind.FIELD); // kind-only
-        int withAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                MemberKind.FIELD, access, EnumSet.noneOf(DeclarationModifier.class));
-        return withAccess ^ base;
+    private static int deriveAccessSegmentBit(MemberAccess memberAccess) {
+        int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
+        int encodedWithAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                MemberKind.FIELD, memberAccess, EnumSet.noneOf(DeclarationModifier.class));
+        return encodedWithAccess ^ kindOnlyMask;
     }
 
-    private static int allAccessBits() {
-        int sum = 0;
-        for (MemberAccess a : MemberAccess.values()) {
-            sum |= accessBit(a);
+    private static int deriveAllMemberAccessBitsMask() {
+        int combinedAccessBitsMask = 0;
+        for (MemberAccess memberAccess : MemberAccess.values()) {
+            combinedAccessBitsMask |= deriveAccessSegmentBit(memberAccess);
         }
-        return sum;
+        return combinedAccessBitsMask;
     }
 
-    private static int mask(MemberKind kind, MemberAccess access, Set<DeclarationModifier> mods) {
-        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(kind, access, mods);
-    }
-
-    private static int mask(MemberKind kind) {
+    private static int encodeKindOnlyMask(MemberKind memberKind) {
         return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                kind, null, EnumSet.noneOf(DeclarationModifier.class));
+                memberKind, null, EnumSet.noneOf(DeclarationModifier.class));
     }
 
-    private static int modifiersBits(Set<DeclarationModifier> modifiers) {
-        // фиксируем kind и null-access; разница = чистые modifier-биты
-        int base = mask(MemberKind.FIELD);
-        int withMods = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, modifiers);
-        return withMods ^ base;
+    private static int deriveModifiersSegmentBitsMask(Set<DeclarationModifier> declarationModifiers) {
+        // Fix kind and null-access; XOR delta yields pure modifier bits.
+        int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
+        int encodedWithModifiers =
+                MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, declarationModifiers);
+        return encodedWithModifiers ^ kindOnlyMask;
     }
 
     @Test
-    @DisplayName("featureMaskContainsAllRequiredDeclarationModifiers: false when any required bit is missing")
-    void containsAllRequiredMods_false() {
+    void containsAllRequiredDeclarationFlags_whenAnyRequiredBitMissing_shouldReturnFalse() {
         // Given
         int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.FIELD, MemberAccess.PRIVATE, EnumSet.of(DeclarationModifier.FINAL));
-        int required = modifiersBits(EnumSet.of(DeclarationModifier.STATIC));
+        int requiredDeclarationFlagsMask = deriveModifiersSegmentBitsMask(EnumSet.of(DeclarationModifier.STATIC));
 
         // When
-        boolean ok = MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(featureMask, required);
+        boolean containsAllRequiredDeclarationFlags = MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
+                featureMask, requiredDeclarationFlagsMask);
 
         // Then
-        assertThat(ok).isFalse();
+        assertThat(containsAllRequiredDeclarationFlags).isFalse();
     }
 
     @Test
-    @DisplayName("featureMaskContainsAllRequiredDeclarationModifiers: true when all required bits present")
-    void containsAllRequiredMods_true() {
+    void containsAllRequiredDeclarationFlags_whenAllRequiredBitsPresent_shouldReturnTrue() {
         // Given
         int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.FIELD,
                 MemberAccess.PRIVATE,
                 EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL));
-        int required = modifiersBits(EnumSet.of(DeclarationModifier.STATIC));
+        int requiredDeclarationFlagsMask = deriveModifiersSegmentBitsMask(EnumSet.of(DeclarationModifier.STATIC));
 
         // When
-        boolean ok = MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(featureMask, required);
+        boolean containsAllRequiredDeclarationFlags = MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
+                featureMask, requiredDeclarationFlagsMask);
 
         // Then
-        assertThat(ok).isTrue();
+        assertThat(containsAllRequiredDeclarationFlags).isTrue();
     }
 
     @Test
-    @DisplayName("buildFeatureMask equals OR of (kind ⊕ access ⊕ modifiers) parts")
-    void encodeMemberDeclarationFlags_equals_or_of_parts() {
+    void encodeMemberDeclarationFlags_whenComposedFromSegments_shouldEqualBitwiseOrOfSegments() {
         // Given
-        MemberKind kind = MemberKind.METHOD;
-        MemberAccess access = MemberAccess.PROTECTED;
-        Set<DeclarationModifier> mods = EnumSet.of(DeclarationModifier.ABSTRACT, DeclarationModifier.STRICTFP);
-        int kindOnly = mask(kind);
-        int accOnly = accessBit(access);
-        int modsOnly = modifiersBits(mods);
+        MemberKind memberKind = MemberKind.METHOD;
+        MemberAccess memberAccess = MemberAccess.PROTECTED;
+        Set<DeclarationModifier> declarationModifiers =
+                EnumSet.of(DeclarationModifier.ABSTRACT, DeclarationModifier.STRICTFP);
+        int kindOnlyMask = encodeKindOnlyMask(memberKind);
+        int accessOnlyMask = deriveAccessSegmentBit(memberAccess);
+        int modifiersOnlyMask = deriveModifiersSegmentBitsMask(declarationModifiers);
 
         // When
-        int composite = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(kind, access, mods);
+        int compositeMask =
+                MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(memberKind, memberAccess, declarationModifiers);
 
         // Then
-        assertThat(composite).isEqualTo(kindOnly | accOnly | modsOnly);
+        assertThat(compositeMask).isEqualTo(kindOnlyMask | accessOnlyMask | modifiersOnlyMask);
     }
 
     @Test
-    @DisplayName("MemberAccess encodes to unique one-hot bits; null yields zero access segment")
-    void memberAccess_oneHot_and_null_is_zero() {
+    void encodeMemberDeclarationFlags_whenMemberAccessProvided_shouldEncodeOneHotBitsAndNullShouldEncodeZeroSegment() {
         // Given
-        int publicBit = accessBit(MemberAccess.PUBLIC);
-        int privateBit = accessBit(MemberAccess.PRIVATE);
-        int packageBit = accessBit(MemberAccess.PACKAGE);
-        int baseKindOnly = mask(MemberKind.CONSTRUCTOR); // access=null, no mods
+        int publicAccessBit = deriveAccessSegmentBit(MemberAccess.PUBLIC);
+        int privateAccessBit = deriveAccessSegmentBit(MemberAccess.PRIVATE);
+        int packageAccessBit = deriveAccessSegmentBit(MemberAccess.PACKAGE);
+        int constructorKindOnlyMask = encodeKindOnlyMask(MemberKind.CONSTRUCTOR);
+        int allAccessBitsMask = deriveAllMemberAccessBitsMask();
+
+        // When
+        int publicAndPrivateOverlap = publicAccessBit & privateAccessBit;
+        int publicAndPackageOverlap = publicAccessBit & packageAccessBit;
+        int privateAndPackageOverlap = privateAccessBit & packageAccessBit;
+        int accessSegmentInKindOnlyMask = constructorKindOnlyMask & allAccessBitsMask;
 
         // Then
-        assertThat(publicBit).isNotZero();
-        assertThat(privateBit).isNotZero();
-        assertThat(packageBit).isNotZero();
-
-        assertThat(publicBit & privateBit).isZero();
-        assertThat(publicBit & packageBit).isZero();
-        assertThat(privateBit & packageBit).isZero();
-        // null access → access segment = 0
-        int allAcc = allAccessBits();
-        assertThat(baseKindOnly & allAcc).isZero();
+        assertThat(publicAccessBit).isNotZero();
+        assertThat(privateAccessBit).isNotZero();
+        assertThat(packageAccessBit).isNotZero();
+        assertThat(publicAndPrivateOverlap).isZero();
+        assertThat(publicAndPackageOverlap).isZero();
+        assertThat(privateAndPackageOverlap).isZero();
+        assertThat(accessSegmentInKindOnlyMask).isZero();
     }
 
     @Test
-    @DisplayName("MemberKind encodes to unique one-hot bits (no overlap)")
-    void memberKind_oneHot_noOverlap() {
+    void encodeMemberDeclarationFlags_whenMemberKindsDiffer_shouldEncodeNonOverlappingBits() {
         // Given
-        int methodBit = mask(MemberKind.METHOD);
-        int fieldBit = mask(MemberKind.FIELD);
-        int typeBit = mask(MemberKind.TYPE_CLASS);
+        int methodKindMask = encodeKindOnlyMask(MemberKind.METHOD);
+        int fieldKindMask = encodeKindOnlyMask(MemberKind.FIELD);
+        int typeKindMask = encodeKindOnlyMask(MemberKind.TYPE_CLASS);
 
-        // Then (one-hot uniqueness)
-        assertThat(methodBit).isNotZero();
-        assertThat(fieldBit).isNotZero();
-        assertThat(typeBit).isNotZero();
-        assertThat(methodBit & fieldBit).isZero();
-        assertThat(methodBit & typeBit).isZero();
-        assertThat(fieldBit & typeBit).isZero();
-        int combined = methodBit | fieldBit | typeBit;
-        assertThat(combined & methodBit).isEqualTo(methodBit);
-        assertThat(combined & fieldBit).isEqualTo(fieldBit);
-        assertThat(combined & typeBit).isEqualTo(typeBit);
+        // When
+        int methodAndFieldOverlap = methodKindMask & fieldKindMask;
+        int methodAndTypeOverlap = methodKindMask & typeKindMask;
+        int fieldAndTypeOverlap = fieldKindMask & typeKindMask;
+        int combinedMask = methodKindMask | fieldKindMask | typeKindMask;
+
+        // Then
+        assertThat(methodKindMask).isNotZero();
+        assertThat(fieldKindMask).isNotZero();
+        assertThat(typeKindMask).isNotZero();
+        assertThat(methodAndFieldOverlap).isZero();
+        assertThat(methodAndTypeOverlap).isZero();
+        assertThat(fieldAndTypeOverlap).isZero();
+        assertThat(combinedMask & methodKindMask).isEqualTo(methodKindMask);
+        assertThat(combinedMask & fieldKindMask).isEqualTo(fieldKindMask);
+        assertThat(combinedMask & typeKindMask).isEqualTo(typeKindMask);
     }
 
     @Test
-    @DisplayName("DeclarationModifier encodes to subset bits; order independent")
-    void modifiers_subset_and_order_independent() {
+    void encodeMemberDeclarationFlags_whenModifiersOrderDiffers_shouldBeOrderIndependentAndSupportSubsetChecks() {
         // Given
-        Set<DeclarationModifier> a = EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL);
-        Set<DeclarationModifier> b = EnumSet.of(DeclarationModifier.FINAL, DeclarationModifier.STATIC);
-        Set<DeclarationModifier> superset =
+        Set<DeclarationModifier> firstModifierSet = EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL);
+        Set<DeclarationModifier> secondModifierSet = EnumSet.of(DeclarationModifier.FINAL, DeclarationModifier.STATIC);
+        Set<DeclarationModifier> supersetModifierSet =
                 EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL, DeclarationModifier.STRICTFP);
 
         // When
-        int aBits = modifiersBits(a);
-        int bBits = modifiersBits(b);
-        int supBits = modifiersBits(superset);
+        int firstModifierMask = deriveModifiersSegmentBitsMask(firstModifierSet);
+        int secondModifierMask = deriveModifiersSegmentBitsMask(secondModifierSet);
+        int supersetModifierMask = deriveModifiersSegmentBitsMask(supersetModifierSet);
+        int subsetIntersectionMask = supersetModifierMask & firstModifierMask;
 
         // Then
-        assertThat(aBits).isEqualTo(bBits); // порядок не важен
-        assertThat((supBits & aBits)).isEqualTo(aBits); // A — подмножество супермаски
+        assertThat(firstModifierMask).isEqualTo(secondModifierMask);
+        assertThat(subsetIntersectionMask).isEqualTo(firstModifierMask);
     }
 
     @Test
-    @DisplayName("Null access affects only access segment; clearing access makes masks equal")
-    void null_access_affects_only_access_segment() {
+    void encodeMemberDeclarationFlags_whenAccessIsNull_shouldAffectOnlyAccessSegment() {
         // Given
         int withNullAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.CONSTRUCTOR, null, EnumSet.noneOf(DeclarationModifier.class));
         int withPackageAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.CONSTRUCTOR, MemberAccess.PACKAGE, EnumSet.noneOf(DeclarationModifier.class));
-        int allAccess = allAccessBits();
+        int allAccessBitsMask = deriveAllMemberAccessBitsMask();
+        int packageAccessBit = deriveAccessSegmentBit(MemberAccess.PACKAGE);
+
+        // When
+        int nullAccessSegment = withNullAccess & allAccessBitsMask;
+        int accessOnlyDifferenceMask = (withNullAccess ^ withPackageAccess) & allAccessBitsMask;
+        int nullAccessClearedMask = withNullAccess & ~allAccessBitsMask;
+        int packageAccessClearedMask = withPackageAccess & ~allAccessBitsMask;
 
         // Then
-        assertThat(withNullAccess & allAccess).isZero();
-        int packageBit = accessBit(MemberAccess.PACKAGE);
-        assertThat(withPackageAccess & packageBit).isEqualTo(packageBit);
-        int onlyAccessDiff = (withNullAccess ^ withPackageAccess) & allAccess;
-        assertThat(onlyAccessDiff).isEqualTo(packageBit);
-        int nullCleared = withNullAccess & ~allAccess;
-        int packageCleared = withPackageAccess & ~allAccess;
-        assertThat(nullCleared).isEqualTo(packageCleared);
+        assertThat(nullAccessSegment).isZero();
+        assertThat(withPackageAccess & packageAccessBit).isEqualTo(packageAccessBit);
+        assertThat(accessOnlyDifferenceMask).isEqualTo(packageAccessBit);
+        assertThat(nullAccessClearedMask).isEqualTo(packageAccessClearedMask);
         assertThat(withNullAccess).isNotZero();
     }
 
     @Test
-    @DisplayName("Segments do not overlap: access vs kind vs modifiers")
-    void segments_do_not_overlap() {
+    void encodeMemberDeclarationFlags_whenSegmentsCompared_shouldNotOverlapAcrossKindAccessAndModifiers() {
         // Given
-        int anyAccess = accessBit(MemberAccess.PUBLIC);
-        int anyKind = mask(MemberKind.TYPE_INTERFACE);
-        int anyMods = modifiersBits(EnumSet.of(DeclarationModifier.STATIC));
+        int anyAccessBit = deriveAccessSegmentBit(MemberAccess.PUBLIC);
+        int anyKindBit = encodeKindOnlyMask(MemberKind.TYPE_INTERFACE);
+        int anyModifiersBit = deriveModifiersSegmentBitsMask(EnumSet.of(DeclarationModifier.STATIC));
+
+        // When
+        int accessAndKindOverlap = anyAccessBit & anyKindBit;
+        int accessAndModifiersOverlap = anyAccessBit & anyModifiersBit;
+        int kindAndModifiersOverlap = anyKindBit & anyModifiersBit;
 
         // Then
-        assertThat(anyAccess & anyKind).as("access vs kind must not overlap").isZero();
-        assertThat(anyAccess & anyMods)
+        assertThat(accessAndKindOverlap).as("access vs kind must not overlap").isZero();
+        assertThat(accessAndModifiersOverlap)
                 .as("access vs modifiers must not overlap")
                 .isZero();
-        assertThat(anyKind & anyMods).as("kind vs modifiers must not overlap").isZero();
+        assertThat(kindAndModifiersOverlap)
+                .as("kind vs modifiers must not overlap")
+                .isZero();
     }
 }
