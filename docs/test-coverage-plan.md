@@ -21,22 +21,6 @@ Everything below is **still missing** and is the focus of this plan.
 
 ---
 
-## 3) Natural group resolution (what group a member belongs to)
-
-- [ ] **Deepest-match-wins for nested groups**
-  - **Type:** component
-  - **Targets:** `NaturalMemberGroupResolver`
-  - **Goal:** A member matches a parent and a child → child group selected.
-  - **Must assert:** deterministic resolution order, no dependence on hash iteration.
-
-- [ ] **Fallback behavior to “Default Rule”**
-  - **Type:** component
-  - **Targets:** `NaturalMemberGroupResolver`, default compiled groups
-  - **Goal:** If no specific group matches, member is placed into the default rule group.
-  - **Must assert:** all members are classified into some group (unless explicitly excluded by design).
-
----
-
 ## 4) Effective group resolution (dependency-driven “pulling”)
 
 - [ ] **Effective group pulling across dependencies**
