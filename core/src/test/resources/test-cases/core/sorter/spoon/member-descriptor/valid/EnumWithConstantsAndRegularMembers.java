@@ -1,4 +1,4 @@
-package example;
+package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 public enum EnumWithConstantsAndRegularMembers {
   FIRST,
