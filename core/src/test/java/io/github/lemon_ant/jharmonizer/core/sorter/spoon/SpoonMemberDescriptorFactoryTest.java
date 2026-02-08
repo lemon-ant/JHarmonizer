@@ -18,9 +18,9 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYP
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.io.InputStream;
@@ -38,6 +38,62 @@ import spoon.reflect.declaration.CtTypeMember;
 class SpoonMemberDescriptorFactoryTest {
 
     private static final String EXAMPLES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor";
+
+    private static CtType<?> parseMainTypeFromResource(String fileName) {
+        String resourcePath = EXAMPLES_RESOURCE_ROOT + "/" + fileName;
+        String sourceCode = readResourceAsString(resourcePath);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of(fileName), sourceCode);
+        Optional<CtType<?>> mainType = spoonAstModel.getMainType();
+        if (mainType.isEmpty()) {
+            fail("Expected a main type to be detected for resource: " + resourcePath);
+        }
+        return mainType.orElseThrow();
+    }
+
+    private static String readResourceAsString(String classpathResourcePath) {
+        try (InputStream inputStream =
+                SpoonMemberDescriptorFactoryTest.class.getResourceAsStream(classpathResourcePath)) {
+            if (inputStream == null) {
+                fail("Missing test resource: " + classpathResourcePath);
+            }
+            assertNotNull(inputStream);
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to read test resource: " + classpathResourcePath, exception);
+        }
+    }
+
+    private static MemberDescriptor findDescriptorByNameOrFail(
+            Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedName) {
+
+        return describedMembers.values().stream()
+                .filter(memberDescriptor ->
+                        memberDescriptor.getName().orElse("").equals(expectedName))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No member descriptor found for name: " + expectedName
+                        + ". Available named members: "
+                        + describedMembers.values().stream()
+                                .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
+                                .sorted()
+                                .toList()));
+    }
+
+    private static MemberDescriptor findUniqueDescriptorByKindOrFail(
+            Map<CtTypeMember, MemberDescriptor> describedMembers) {
+
+        List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
+                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == CONSTRUCTOR)
+                .sorted(java.util.Comparator.comparing(
+                        memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
+                .toList();
+
+        assertThat(matchingDescriptors)
+                .withFailMessage(
+                        "Expected exactly one descriptor with kind %s, but found: %s", CONSTRUCTOR, matchingDescriptors)
+                .hasSize(1);
+
+        return matchingDescriptors.getFirst();
+    }
 
     @Test
     void describeMembers_whenClassTypeParsed_shouldDescribeAllExplicitMembers() {
@@ -127,7 +183,7 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor constructorDescriptor = findUniqueDescriptorByKindOrFail(describedMembers, CONSTRUCTOR);
+        MemberDescriptor constructorDescriptor = findUniqueDescriptorByKindOrFail(describedMembers);
 
         // Then
         assertThat(constructorDescriptor.getName()).isEmpty();
@@ -258,61 +314,5 @@ class SpoonMemberDescriptorFactoryTest {
         // Then
         assertThat(describedFieldNames).doesNotContain("alpha");
         assertThat(describedFieldNames).doesNotContain("beta");
-    }
-
-    private static CtType<?> parseMainTypeFromResource(String fileName) {
-        String resourcePath = EXAMPLES_RESOURCE_ROOT + "/" + fileName;
-        String sourceCode = readResourceAsString(resourcePath);
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of(fileName), sourceCode);
-        Optional<CtType<?>> mainType = spoonAstModel.getMainType();
-        if (mainType.isEmpty()) {
-            fail("Expected a main type to be detected for resource: " + resourcePath);
-        }
-        return mainType.get();
-    }
-
-    private static String readResourceAsString(String classpathResourcePath) {
-        try (InputStream inputStream =
-                SpoonMemberDescriptorFactoryTest.class.getResourceAsStream(classpathResourcePath)) {
-            if (inputStream == null) {
-                fail("Missing test resource: " + classpathResourcePath);
-            }
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (Exception exception) {
-            throw new RuntimeException("Failed to read test resource: " + classpathResourcePath, exception);
-        }
-    }
-
-    private static MemberDescriptor findDescriptorByNameOrFail(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedName) {
-
-        return describedMembers.values().stream()
-                .filter(memberDescriptor ->
-                        memberDescriptor.getName().orElse("").equals(expectedName))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("No member descriptor found for name: " + expectedName
-                        + ". Available named members: "
-                        + describedMembers.values().stream()
-                                .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
-                                .sorted()
-                                .toList()));
-    }
-
-    private static MemberDescriptor findUniqueDescriptorByKindOrFail(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, MemberKind expectedKind) {
-
-        List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
-                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == expectedKind)
-                .sorted(java.util.Comparator.comparing(
-                        memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
-                .toList();
-
-        assertThat(matchingDescriptors)
-                .withFailMessage(
-                        "Expected exactly one descriptor with kind %s, but found: %s",
-                        expectedKind, matchingDescriptors)
-                .hasSize(1);
-
-        return matchingDescriptors.getFirst();
     }
 }

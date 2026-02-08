@@ -16,6 +16,34 @@ import org.junit.jupiter.api.Test;
 
 class MemberGroupCompilerTest {
 
+    private static UnifiedMemberGroup createGroup(
+            String groupName,
+            Boolean keepAccessorsTogether,
+            List<UnifiedMemberGroup> memberSubGroups,
+            List<UnifiedSortKey> sortKeys) {
+        UnifiedMemberGroupSelectorBlock selectorBlock =
+                UnifiedMemberGroupSelectorBlock.builder().build();
+        return UnifiedMemberGroup.builder()
+                .groupName(groupName)
+                .keepAccessorsTogether(keepAccessorsTogether)
+                .memberSubGroups(memberSubGroups)
+                .selectorBlock(selectorBlock)
+                .separator(UnifiedSeparator.NONE)
+                .sortKeys(sortKeys)
+                .build();
+    }
+
+    private static List<CompiledMemberGroup> collectAllGroups(List<CompiledMemberGroup> rootGroups) {
+        Deque<CompiledMemberGroup> queue = new ArrayDeque<>(rootGroups);
+        List<CompiledMemberGroup> collectedGroups = new java.util.ArrayList<>();
+        while (!queue.isEmpty()) {
+            CompiledMemberGroup currentGroup = queue.removeFirst();
+            collectedGroups.add(currentGroup);
+            currentGroup.getCompiledSubGroups().forEach(queue::addLast);
+        }
+        return collectedGroups;
+    }
+
     @Test
     void compileTopLevelGroups_treeAndForest_postOrderIndexesAreStableAndContiguous() {
         // Given
@@ -113,33 +141,5 @@ class MemberGroupCompilerTest {
         // Then
         assertThat(compiledRoot.getSortKeys())
                 .containsExactly(SortKey.VISIBILITY_DESC, SortKey.ALPHA, SortKey.PRESERVE);
-    }
-
-    private static UnifiedMemberGroup createGroup(
-            String groupName,
-            Boolean keepAccessorsTogether,
-            List<UnifiedMemberGroup> memberSubGroups,
-            List<UnifiedSortKey> sortKeys) {
-        UnifiedMemberGroupSelectorBlock selectorBlock =
-                UnifiedMemberGroupSelectorBlock.builder().build();
-        return UnifiedMemberGroup.builder()
-                .groupName(groupName)
-                .keepAccessorsTogether(keepAccessorsTogether)
-                .memberSubGroups(memberSubGroups)
-                .selectorBlock(selectorBlock)
-                .separator(UnifiedSeparator.NONE)
-                .sortKeys(sortKeys)
-                .build();
-    }
-
-    private static List<CompiledMemberGroup> collectAllGroups(List<CompiledMemberGroup> rootGroups) {
-        Deque<CompiledMemberGroup> queue = new ArrayDeque<>(rootGroups);
-        List<CompiledMemberGroup> collectedGroups = new java.util.ArrayList<>();
-        while (!queue.isEmpty()) {
-            CompiledMemberGroup currentGroup = queue.removeFirst();
-            collectedGroups.add(currentGroup);
-            currentGroup.getCompiledSubGroups().forEach(queue::addLast);
-        }
-        return collectedGroups;
     }
 }

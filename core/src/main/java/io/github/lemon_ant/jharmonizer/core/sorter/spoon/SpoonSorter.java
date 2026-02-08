@@ -24,16 +24,6 @@ public class SpoonSorter {
 
     @NonNull
     CompiledConfig compiledConfig;
-    /**
-     * Entry point used by Sorter: sorts all types (top-level + nested) in the compilation unit.
-     */
-    public void sortCompilationUnitRecursively(@NonNull CtCompilationUnit compilationUnit) {
-
-        // TODO Implement top-level types ordering:
-        // reorderTopLevelTypes(compilationUnit, compiledConfig);
-
-        compilationUnit.getDeclaredTypes().forEach(this::sortTypeRecursively);
-    }
 
     /**
      * Flattens blocks into a single member list preserving the block order.
@@ -43,6 +33,17 @@ public class SpoonSorter {
         return memberGroupBlocks.stream()
                 .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream())
                 .toList();
+    }
+
+    /**
+     * Entry point used by Sorter: sorts all types (top-level + nested) in the compilation unit.
+     */
+    public void sortCompilationUnitRecursively(@NonNull CtCompilationUnit compilationUnit) {
+
+        // TODO Implement top-level types ordering:
+        // reorderTopLevelTypes(compilationUnit, compiledConfig);
+
+        compilationUnit.getDeclaredTypes().forEach(this::sortTypeRecursively);
     }
 
     /**
