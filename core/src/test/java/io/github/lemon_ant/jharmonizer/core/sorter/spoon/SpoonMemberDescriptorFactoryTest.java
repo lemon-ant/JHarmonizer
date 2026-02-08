@@ -18,9 +18,9 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYP
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.io.InputStream;
@@ -37,10 +37,10 @@ import spoon.reflect.declaration.CtTypeMember;
 // TODO Review and guarantee test-case compilation
 class SpoonMemberDescriptorFactoryTest {
 
-    private static final String EXAMPLES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor";
+    private static final String TEST_CASES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor";
 
     private static CtType<?> parseMainTypeFromResource(String fileName) {
-        String resourcePath = EXAMPLES_RESOURCE_ROOT + "/" + fileName;
+        String resourcePath = TEST_CASES_RESOURCE_ROOT + "/" + fileName;
         String sourceCode = readResourceAsString(resourcePath);
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of(fileName), sourceCode);
         Optional<CtType<?>> mainType = spoonAstModel.getMainType();
@@ -56,7 +56,7 @@ class SpoonMemberDescriptorFactoryTest {
             if (inputStream == null) {
                 fail("Missing test resource: " + classpathResourcePath);
             }
-            assertNotNull(inputStream);
+            assertThat(inputStream).isNotNull();
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to read test resource: " + classpathResourcePath, exception);
@@ -65,7 +65,6 @@ class SpoonMemberDescriptorFactoryTest {
 
     private static MemberDescriptor findDescriptorByNameOrFail(
             Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedName) {
-
         return describedMembers.values().stream()
                 .filter(memberDescriptor ->
                         memberDescriptor.getName().orElse("").equals(expectedName))
@@ -79,17 +78,17 @@ class SpoonMemberDescriptorFactoryTest {
     }
 
     private static MemberDescriptor findUniqueDescriptorByKindOrFail(
-            Map<CtTypeMember, MemberDescriptor> describedMembers) {
-
+            Map<CtTypeMember, MemberDescriptor> describedMembers, MemberKind expectedKind) {
         List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
-                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == CONSTRUCTOR)
+                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == expectedKind)
                 .sorted(java.util.Comparator.comparing(
                         memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
                 .toList();
 
         assertThat(matchingDescriptors)
                 .withFailMessage(
-                        "Expected exactly one descriptor with kind %s, but found: %s", CONSTRUCTOR, matchingDescriptors)
+                        "Expected exactly one descriptor with kind %s, but found: %s",
+                        expectedKind, matchingDescriptors)
                 .hasSize(1);
 
         return matchingDescriptors.getFirst();
@@ -98,7 +97,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldDescribeAllExplicitMembers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
         List<String> expectedNamedMembers = List.of(
                 "PUBLIC_STATIC_FINAL_FIELD",
                 "protectedField",
@@ -130,7 +129,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyFieldsWithAccessAndModifiers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -156,7 +155,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyMethodsWithAccessAndModifiers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -179,11 +178,11 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldDescribeConstructorAsUnnamedMember() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor constructorDescriptor = findUniqueDescriptorByKindOrFail(describedMembers);
+        MemberDescriptor constructorDescriptor = findUniqueDescriptorByKindOrFail(describedMembers, CONSTRUCTOR);
 
         // Then
         assertThat(constructorDescriptor.getName()).isEmpty();
@@ -193,7 +192,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyInitializerBlocksByStaticModifier() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -216,7 +215,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyNestedTypesByKind() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -238,7 +237,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenEnumTypeParsed_shouldSkipEnumConstantsInThisVersion() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleEnum.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidEnum.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -258,7 +257,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenEnumTypeParsed_shouldDescribeRegularEnumMembers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleEnum.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidEnum.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -273,7 +272,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenRecordTypeParsed_shouldNotReturnImplicitTypeMembers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleRecord.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidRecord.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -287,7 +286,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenRecordTypeParsed_shouldDescribeExplicitMethods() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleRecord.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidRecord.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -301,7 +300,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenRecordTypeParsed_shouldNotClassifyImplicitBackingFieldsAsExplicitFields() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ExampleRecord.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ValidRecord.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
