@@ -14,7 +14,7 @@ import lombok.Singular;
 import lombok.Value;
 
 /**
- * Java AST parser-agnostic descriptor for selection and sorting rules.
+ * Java AST translator-agnostic descriptor for selection and sorting rules.
  * Unifies members and nested types via MemberKind and TargetCategory; access level and declaration modifiers
  * are captured explicitly to drive selectors and ordering logic.
  */

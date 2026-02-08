@@ -37,7 +37,7 @@ import spoon.reflect.declaration.CtTypeMember;
 // TODO Review and guarantee test-case compilation
 class SpoonMemberDescriptorFactoryTest {
 
-    private static final String TEST_CASES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor";
+    private static final String TEST_CASES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor/valid";
 
     private static CtType<?> parseMainTypeFromResource(String fileName) {
         String resourcePath = TEST_CASES_RESOURCE_ROOT + "/" + fileName;
@@ -97,7 +97,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldDescribeAllExplicitMembers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
         List<String> expectedNamedMembers = List.of(
                 "PUBLIC_STATIC_FINAL_FIELD",
                 "protectedField",
@@ -129,7 +129,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyFieldsWithAccessAndModifiers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -155,7 +155,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyMethodsWithAccessAndModifiers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -178,7 +178,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldDescribeConstructorAsUnnamedMember() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -192,7 +192,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyInitializerBlocksByStaticModifier() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -215,7 +215,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenClassTypeParsed_shouldClassifyNestedTypesByKind() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidClass.java");
+        CtType<?> parsedType = parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -237,7 +237,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenEnumTypeParsed_shouldSkipEnumConstantsInThisVersion() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidEnum.java");
+        CtType<?> parsedType = parseMainTypeFromResource("EnumWithConstantsAndRegularMembers.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -257,7 +257,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenEnumTypeParsed_shouldDescribeRegularEnumMembers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidEnum.java");
+        CtType<?> parsedType = parseMainTypeFromResource("EnumWithConstantsAndRegularMembers.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -272,7 +272,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenRecordTypeParsed_shouldNotReturnImplicitTypeMembers() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidRecord.java");
+        CtType<?> parsedType = parseMainTypeFromResource("RecordWithExplicitMethodAndNoImplicitMembers.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -286,7 +286,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenRecordTypeParsed_shouldDescribeExplicitMethods() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidRecord.java");
+        CtType<?> parsedType = parseMainTypeFromResource("RecordWithExplicitMethodAndNoImplicitMembers.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
@@ -300,7 +300,7 @@ class SpoonMemberDescriptorFactoryTest {
     @Test
     void describeMembers_whenRecordTypeParsed_shouldNotClassifyImplicitBackingFieldsAsExplicitFields() {
         // Given
-        CtType<?> parsedType = parseMainTypeFromResource("ValidRecord.java");
+        CtType<?> parsedType = parseMainTypeFromResource("RecordWithExplicitMethodAndNoImplicitMembers.java");
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);

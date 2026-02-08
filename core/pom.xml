@@ -57,10 +57,35 @@
                         --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argLine>
                     </configuration>
                 </plugin>
-
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-java-test-cases</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <phase>process-test-resources</phase>
+                        <configuration>
+                            <!-- Compile ONLY test-cases Java fixtures -->
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/test/resources/test-cases</compileSourceRoot>
+                            </compileSourceRoots>
+                            <testIncludes>
+                                <include>**/valid/*.java</include>
+                            </testIncludes>
+                            <outputDirectory>${project.build.directory}/test-cases-compile-check-classes</outputDirectory>
+                            <!-- Use same release as tests/project (or set explicitly) -->
+                            <testRelease>${maven.compiler.release}</testRelease>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>

@@ -1,6 +1,6 @@
 package example;
 
-public enum ExampleEnum {
+public enum EnumWithConstantsAndRegularMembers {
   FIRST,
   SECOND;
 

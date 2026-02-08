@@ -1,6 +1,6 @@
 package example;
 
-public abstract class ExampleClass {
+public abstract class ClassWithFieldsMethodsInitBlocksAndNestedTypes {
 
   @Deprecated
   public static final int PUBLIC_STATIC_FINAL_FIELD = 1;
@@ -13,7 +13,7 @@ public abstract class ExampleClass {
 
   public abstract void abstractMethod();
 
-  public ExampleClass() { }
+  public ClassWithFieldsMethodsInitBlocksAndNestedTypes() { }
 
   static { int staticValue = 1; }
   { int instanceValue = 2; }

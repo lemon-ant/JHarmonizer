@@ -1,4 +1,4 @@
-package io.github.antonlem.jrestructor.poc.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,7 +49,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * Ultimate Java Syntax Test File (Java 1.0 - 21)
  * Contains every valid Java syntax feature with minimal functionality
- * Designed for exhaustive parser testing
+ * Designed for exhaustive translator testing
  */
 @SuppressWarnings("PMD")
 @SuppressFBWarnings

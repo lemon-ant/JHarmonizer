@@ -22,7 +22,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * Integration-like tests for SourceProcessor.processSources.
  * They work against a real temporary file system and exercise
- * the full flow: config → parser → sorter → formatter.
+ * the full flow: config → translator → sorter → formatter.
  */
 class SourceProcessorTest {
 
@@ -30,8 +30,8 @@ class SourceProcessorTest {
     private static final Collection<String> NO_EXCLUDES = List.of();
 
     private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
-            "test-cases/core/parser/SampleAllJava21FeaturesList.java";
-    private static final Path DEBUG_DIR = Path.of("src/test/resources/test-cases/core/parser/tmp");
+            "test-cases/core/translator/valid/SampleAllJava21FeaturesList.java";
+    private static final Path DEBUG_DIR = Path.of("src/test/resources/test-cases/core/translator/tmp");
 
     @TempDir
     Path temporaryDirectory;

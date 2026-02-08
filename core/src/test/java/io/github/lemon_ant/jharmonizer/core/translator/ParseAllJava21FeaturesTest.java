@@ -19,7 +19,7 @@ class ParseAllJava21FeaturesTest {
     private static final int ORIGINAL_SOURCE_CODE_LENGTH = 10053;
     private static final URL VALID_SAMPLE_SOURCE_CODE = Objects.requireNonNull(ParseAllJava21FeaturesTest.class
             .getClassLoader()
-            .getResource("test-cases/core/parser/SampleAllJava21FeaturesList.java"));
+            .getResource("test-cases/core/translator/valid/SampleAllJava21FeaturesList.java"));
 
     private SourceFilesHandler sourceFilesHandler;
 
