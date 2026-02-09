@@ -38,9 +38,24 @@ class JHarmonizerConfigLoader {
     }
 
     @NonNull
-    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) throws IOException {
+    public static JHarmonizerConfig loadFromClasspathResource(String classpathResourcePath) {
+        try (InputStream inputStream = JHarmonizerConfigLoader.class.getResourceAsStream(classpathResourcePath)) {
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Missing test resource: " + classpathResourcePath);
+            }
+            return JHarmonizerConfigLoader.loadFrom(inputStream);
+        } catch (IOException e) {
+            throw new UncheckedIOException(
+                    "Failed to load JHarmonizer config from resource: " + classpathResourcePath, e);
+        }
+    }
+
+    @NonNull
+    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) {
         try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
             return loadFrom(configYaml);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load JHarmonizer config from file: " + yamlFile, e);
         }
     }
 }

@@ -8,8 +8,14 @@ import lombok.experimental.UtilityClass;
 // TODO Merge with JHarmonizerConfigLoader
 @UtilityClass
 public class JHarmonizerConfigurationManager {
-    public static UnifiedConfig getUnifiedDefaultConfig() {
+    public static UnifiedConfig parseUnifiedDefaultConfig() {
         JHarmonizerConfig defaultJHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
         return JHarmonizer2UnifiedConverter.convert2Unified(defaultJHarmonizerConfig);
+    }
+
+    // TODO Make parameter as URI
+    public static UnifiedConfig parseUnifiedConfigFromClasspathResource(String resourceName) {
+        return JHarmonizer2UnifiedConverter.convert2Unified(
+                JHarmonizerConfigLoader.loadFromClasspathResource(resourceName));
     }
 }

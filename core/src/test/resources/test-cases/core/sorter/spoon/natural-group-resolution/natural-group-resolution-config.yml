@@ -1,0 +1,66 @@
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - class
+  sort-keys: preserve
+
+formatting:
+  fix-imports: true
+  formatter-style: palantir
+
+backups-enabled: false
+
+header-line:
+  character: '#'
+  left-padding: 1
+
+type-members-ordering:
+  - name: Synthetic root
+    sort-keys: preserve
+    includes:
+      - field
+      - method
+      - constructor
+      - initializer
+      - class
+      - interface
+      - enum
+      - record
+      - annotation
+
+    groups:
+      - name: Fields
+        sort-keys: preserve
+        includes: field
+
+        groups:
+          - name: Any fields
+            sort-keys: preserve
+            includes: field
+
+            groups:
+              - name: Alpha fields
+                sort-keys: preserve
+                includes:
+                  - [field, =alpha]
+
+          - name: Other fields
+            sort-keys: preserve
+            includes: field
+
+      - name: Methods
+        sort-keys: preserve
+        includes: method
+
+      - name: Default Rule
+        sort-keys: preserve
+        includes:
+          - field
+          - method
+          - constructor
+          - initializer
+          - class
+          - interface
+          - enum
+          - record
+          - annotation

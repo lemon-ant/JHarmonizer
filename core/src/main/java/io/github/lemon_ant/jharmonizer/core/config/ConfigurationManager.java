@@ -30,7 +30,7 @@ public class ConfigurationManager {
      */
     @NonNull
     public static CompiledConfig loadDefaultConfig() {
-        UnifiedConfig dafaultUnifiedConfig = JHarmonizerConfigurationManager.getUnifiedDefaultConfig();
+        UnifiedConfig dafaultUnifiedConfig = JHarmonizerConfigurationManager.parseUnifiedDefaultConfig();
         return Unified2CompiledModelCompiler.compile(dafaultUnifiedConfig);
     }
 
@@ -40,7 +40,7 @@ public class ConfigurationManager {
             return loadDefaultConfig();
         }
 
-        UnifiedConfig defaultUnifiedConfig = JHarmonizerConfigurationManager.getUnifiedDefaultConfig();
+        UnifiedConfig defaultUnifiedConfig = JHarmonizerConfigurationManager.parseUnifiedDefaultConfig();
         UnifiedConfig mergedUnifiedConfig = UnifiedConfigMerger.merge(defaultUnifiedConfig, externalConfig);
         return Unified2CompiledModelCompiler.compile(mergedUnifiedConfig);
     }
