@@ -3,32 +3,26 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
-import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
     private static final int ORIGINAL_SOURCE_CODE_LENGTH = 10053;
-    private static final URL VALID_SAMPLE_SOURCE_CODE = Objects.requireNonNull(ParseAllJava21FeaturesTest.class
-            .getClassLoader()
-            .getResource("test-cases/core/translator/valid/SampleAllJava21FeaturesList.java"));
-
-    private SourceFilesHandler sourceFilesHandler;
+    private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
+            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java";
+    private static final Path SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH = Path.of(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
 
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() throws Exception {
-        // When
-        @NonNull Path file = Path.of(VALID_SAMPLE_SOURCE_CODE.toURI());
+        // Given
+        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
 
-        SrcFile srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+        // When
+        SrcFile srcFile = new SrcFile(sampleSourceCode, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
@@ -51,7 +45,9 @@ class ParseAllJava21FeaturesTest {
     @Test
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() throws Exception {
         // Given
-        SpoonAstModel spoonASTModel = SpoonParser.parseJavaSourceResource(Path.of(VALID_SAMPLE_SOURCE_CODE.toURI()));
+        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
+        SpoonAstModel spoonASTModel =
+                SpoonParser.parseJavaSourceResource(SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH, sampleSourceCode);
 
         // When
         SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);

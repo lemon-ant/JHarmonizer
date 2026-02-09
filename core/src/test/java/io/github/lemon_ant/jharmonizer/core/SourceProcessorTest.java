@@ -4,22 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import java.io.InputStream;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Integration-like tests for SourceProcessor.processSources.
  * They work against a real temporary file system and exercise
- * the full flow: config → translator → sorter → formatter.
+ * the full flow: config → parser → sorter → formatter.
  */
 class SourceProcessorTest {
 
@@ -27,17 +25,13 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
 
     private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
-            "test-cases/core/translator/valid/SampleAllJava21FeaturesList.java";
+            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java";
 
     @TempDir
     Path temporaryDirectory;
 
-    private static String readClasspathResourceAsString(String classpathResourcePath) throws Exception {
-        try (InputStream inputStream = Objects.requireNonNull(
-                SourceProcessorTest.class.getClassLoader().getResourceAsStream(classpathResourcePath),
-                "Missing test resource: " + classpathResourcePath)) {
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+    private static String loadSampleAllJava21FeaturesSource() throws Exception {
+        return TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
     }
 
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
@@ -46,9 +40,9 @@ class SourceProcessorTest {
     }
 
     @Test
-    void processSources_whenSingleJavaFileRestructureFlow_shouldRewriteFile() throws Exception {
+    void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
         // Given
-        String sampleSourceCode = readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
+        String sampleSourceCode = loadSampleAllJava21FeaturesSource();
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
         String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SourceProcessor sourceProcessor = new SourceProcessor();
@@ -63,14 +57,11 @@ class SourceProcessorTest {
     }
 
     @Test
-    void processSources_whenIncludeGlobsUsed_shouldProcessOnlyIncludedFiles() throws Exception {
+    void processSources_multipleJavaFiles_onlyIncludedFilesAreProcessed() throws Exception {
         // Given
-        String includedUnformattedSourceCode = "public class IncludedSample{private int x;}";
-        String excludedUnformattedSourceCode = "public class ExcludedSample{private int x;}";
-        Path includedJavaFilePath =
-                writeJavaFile(temporaryDirectory, "IncludedSample.java", includedUnformattedSourceCode);
-        Path excludedJavaFilePath =
-                writeJavaFile(temporaryDirectory, "ExcludedSample.java", excludedUnformattedSourceCode);
+        String unformattedSourceCode = "package demo; public class Included {private int x;}";
+        Path includedJavaFilePath = writeJavaFile(temporaryDirectory, "IncludedSample.java", unformattedSourceCode);
+        Path excludedJavaFilePath = writeJavaFile(temporaryDirectory, "ExcludedSample.java", unformattedSourceCode);
         String includedOriginalSourceCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
         String excludedOriginalSourceCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
         Collection<String> includeGlobs = Set.of("Included*.java");
@@ -91,20 +82,20 @@ class SourceProcessorTest {
     }
 
     @Test
-    void processSources_whenAlreadyRestructured_shouldNotThrowInCheckFailFastFlow() throws Exception {
+    void processSources_alreadyRestructuredFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
         // Given
-        String sampleSourceCode = readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
+        String sampleSourceCode = loadSampleAllJava21FeaturesSource();
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
         SourceProcessor sourceProcessor = new SourceProcessor();
+        // First bring the file into a fully restructured and formatted state
         sourceProcessor.processSources(
                 temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
-        // When
-        ThrowingCallable checkFailFastInvocation = () -> sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
-
-        // Then
-        assertThatCode(checkFailFastInvocation).doesNotThrowAnyException();
+        // When / Then
+        assertThatCode(() -> sourceProcessor.processSources(
+                        temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST))
+                .doesNotThrowAnyException();
+        // sanity check that the file is still readable and not empty
         String finalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSourceCode).isNotBlank();
     }

@@ -16,6 +16,7 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYP
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ENUM;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_INTERFACE;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -23,8 +24,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -34,33 +33,20 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-// TODO Review and guarantee test-case compilation
+// TODO Review
 class SpoonMemberDescriptorFactoryTest {
 
     private static final String TEST_CASES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor/valid";
 
     private static CtType<?> parseMainTypeFromResource(String fileName) {
         String resourcePath = TEST_CASES_RESOURCE_ROOT + "/" + fileName;
-        String sourceCode = readResourceAsString(resourcePath);
+        String sourceCode = readClasspathResourceAsString(resourcePath);
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of(fileName), sourceCode);
         Optional<CtType<?>> mainType = spoonAstModel.getMainType();
         if (mainType.isEmpty()) {
             fail("Expected a main type to be detected for resource: " + resourcePath);
         }
         return mainType.orElseThrow();
-    }
-
-    private static String readResourceAsString(String classpathResourcePath) {
-        try (InputStream inputStream =
-                SpoonMemberDescriptorFactoryTest.class.getResourceAsStream(classpathResourcePath)) {
-            if (inputStream == null) {
-                fail("Missing test resource: " + classpathResourcePath);
-            }
-            assertThat(inputStream).isNotNull();
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (Exception exception) {
-            throw new RuntimeException("Failed to read test resource: " + classpathResourcePath, exception);
-        }
     }
 
     private static MemberDescriptor findDescriptorByNameOrFail(
