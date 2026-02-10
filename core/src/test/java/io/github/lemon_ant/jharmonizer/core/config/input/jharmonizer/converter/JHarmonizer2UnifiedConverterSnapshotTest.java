@@ -47,19 +47,19 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
         // Then
         String expectedJson = TestCaseResourceUtils.readClasspathResourceAsString(SNAPSHOT_RESOURCE_URL);
         assertThat(actualJson).as("""
-                UnifiedConfig snapshot mismatch.
+            UnifiedConfig snapshot mismatch.
 
-                If you intentionally changed the default vendor YAML, the converter, or the unified model,
-                regenerate the snapshot locally:
+            If you intentionally changed the default vendor YAML, the converter, or the unified model,
+            regenerate the snapshot locally:
 
-                  1) Run: UnifiedConfigSnapshotTest#regenerateSnapshot_whenRun_overwritesSnapshotFile
-                  2) Re-run this test.
+              1) Run: UnifiedConfigSnapshotTest#regenerateSnapshot_whenRun_overwritesSnapshotFile
+              2) Re-run this test.
 
-                IMPORTANT BEFORE COMMIT:
-                  • Review the diff in expected-unified.json to ensure it exactly reflects your intended changes.
-                  • Commit the YAML/model changes together with the updated snapshot.
-                  • Actual JSON dumped to: %s
-                """, FILE_PATH_TO_SNAPSHOT).isEqualToNormalizingNewlines(expectedJson);
+            IMPORTANT BEFORE COMMIT:
+              • Review the diff in expected-unified.json to ensure it exactly reflects your intended changes.
+              • Commit the YAML/model changes together with the updated snapshot.
+              • Actual JSON dumped to: %s
+            """, FILE_PATH_TO_SNAPSHOT).isEqualToNormalizingNewlines(expectedJson);
     }
 
     @Test
