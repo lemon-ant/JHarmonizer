@@ -8,7 +8,6 @@ import io.github.lemon_ant.jharmonizer.core.testutils.CompiledConfigTestCaseUtil
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
@@ -16,22 +15,24 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class NaturalMemberGroupResolverTest {
 
-    private static final URL CONFIG_RESOURCE_URL = NaturalMemberGroupResolverTest.class.getResource("/test-cases/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml");
+    private static final URL CONFIG_RESOURCE_URL = NaturalMemberGroupResolverTest.class.getResource(
+            "/test-cases/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml");
     private static final URL FIXTURE_DIRECTORY_RESOURCE_URL = NaturalMemberGroupResolverTest.class.getResource(
             "/test-cases/core/sorter/spoon/natural-group-resolution/valid/");
 
     @Test
     void resolveNaturalGroups_whenFieldMatchesNestedGroups_shouldSelectDeepestMatchingGroup() {
         // Given
-        URL javaFixtureResourceUrl =
-                TestCaseResourceUtils.resolveRelativeUrl(FIXTURE_DIRECTORY_RESOURCE_URL, "NaturalGroupResolutionType.java");
-        CtType<?> parsedMainType =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResourceUrl, Path.of("NaturalGroupResolutionType.java"));
-        Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedMainType);
+        URL javaFixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(
+                FIXTURE_DIRECTORY_RESOURCE_URL, "NaturalGroupResolutionType.java");
+        CtType<?> parsedMainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResourceUrl);
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(parsedMainType);
         CtTypeMember alphaFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(describedMembers, "alpha");
         CtTypeMember betaFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(describedMembers, "beta");
         CompiledMemberGroup rootMemberGroup =
-                CompiledConfigTestCaseUtils.compileSingleRootMemberGroupFromJHarmonizerConfigResource(CONFIG_RESOURCE_URL);
+                CompiledConfigTestCaseUtils.compileSingleRootMemberGroupFromJHarmonizerConfigResource(
+                        CONFIG_RESOURCE_URL);
 
         // When
         Map<CtTypeMember, CompiledMemberGroup> resolvedNaturalGroups =
@@ -46,14 +47,16 @@ class NaturalMemberGroupResolverTest {
     @Test
     void resolveNaturalGroups_whenNoSpecificGroupMatches_shouldFallbackToDefaultRuleGroup() {
         // Given
-        URL javaFixtureResourceUrl =
-                TestCaseResourceUtils.resolveRelativeUrl(FIXTURE_DIRECTORY_RESOURCE_URL, "NaturalGroupResolutionType.java");
-        CtType<?> parsedMainType =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResourceUrl, Path.of("NaturalGroupResolutionType.java"));
-        Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedMainType);
-        CtTypeMember nestedTypeMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(describedMembers, "NestedType");
+        URL javaFixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(
+                FIXTURE_DIRECTORY_RESOURCE_URL, "NaturalGroupResolutionType.java");
+        CtType<?> parsedMainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResourceUrl);
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(parsedMainType);
+        CtTypeMember nestedTypeMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(describedMembers, "NestedType");
         CompiledMemberGroup rootMemberGroup =
-                CompiledConfigTestCaseUtils.compileSingleRootMemberGroupFromJHarmonizerConfigResource(CONFIG_RESOURCE_URL);
+                CompiledConfigTestCaseUtils.compileSingleRootMemberGroupFromJHarmonizerConfigResource(
+                        CONFIG_RESOURCE_URL);
 
         // When
         Map<CtTypeMember, CompiledMemberGroup> resolvedNaturalGroups =

@@ -7,7 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
-import java.io.InputStream;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,8 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
 
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/test-cases/core/config/input/jharmonizer/expected-default-unified-config.json";
+    private static final URL SNAPSHOT_RESOURCE_URL =
+            JHarmonizer2UnifiedConverterSnapshotTest.class.getResource(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -42,12 +45,8 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
         String actualJson = MAPPER.writeValueAsString(unifiedConfig);
 
         // Then
-        try (InputStream expectedJsonStream = getClass().getResourceAsStream(CLASS_PATH_TO_SNAPSHOT)) {
-            assertThat(expectedJsonStream)
-                    .as("Missing snapshot file: %s", CLASS_PATH_TO_SNAPSHOT)
-                    .isNotNull();
-            String expectedJson = new String(expectedJsonStream.readAllBytes(), StandardCharsets.UTF_8);
-            assertThat(actualJson).as("""
+        String expectedJson = TestCaseResourceUtils.readClasspathResourceAsString(SNAPSHOT_RESOURCE_URL);
+        assertThat(actualJson).as("""
                 UnifiedConfig snapshot mismatch.
 
                 If you intentionally changed the default vendor YAML, the converter, or the unified model,
@@ -61,7 +60,6 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
                   • Commit the YAML/model changes together with the updated snapshot.
                   • Actual JSON dumped to: %s
                 """, FILE_PATH_TO_SNAPSHOT).isEqualToNormalizingNewlines(expectedJson);
-        }
     }
 
     @Test
@@ -79,7 +77,6 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
         // Then
         Path pathToSnapshot = Path.of(FILE_PATH_TO_SNAPSHOT);
         Files.writeString(pathToSnapshot, expectedJson, StandardCharsets.UTF_8);
-        // quick sanity: snapshot should be readable right away
         assertThat(Files.readString(pathToSnapshot, StandardCharsets.UTF_8))
                 .as("Snapshot file should be readable immediately after write")
                 .isEqualTo(expectedJson);

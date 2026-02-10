@@ -44,8 +44,7 @@ class JHarmonizerConfigLoader {
             return JHarmonizerConfigLoader.loadFrom(inputStream);
         } catch (IOException ioException) {
             throw new UncheckedIOException(
-                    "Failed to load JHarmonizer config from classpath URL: " + classpathResource,
-                    ioException);
+                    "Failed to load JHarmonizer config from classpath URL: " + classpathResource, ioException);
         }
     }
 

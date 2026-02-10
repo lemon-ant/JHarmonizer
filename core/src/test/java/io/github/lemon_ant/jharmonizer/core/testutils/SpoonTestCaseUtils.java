@@ -15,51 +15,61 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/** Test-only utilities for Spoon-based fixtures. */
 @UtilityClass
-public final class SpoonTestCaseUtils {
+public class SpoonTestCaseUtils {
 
-    //TODO Refactor
-    public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource, Path pseudoSourcePath) {
+    public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource) {
         requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
-        requireNonNull(pseudoSourcePath, "pseudoSourcePath cannot be null");
 
         String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(pseudoSourcePath, sourceCode);
+        SpoonAstModel spoonAstModel = null;
+        spoonAstModel = SpoonParser.parseJavaSourceResource(
+                Path.of(extractFileNameWithExtension(javaFixtureResource)), sourceCode);
         return spoonAstModel
                 .getMainType()
                 .orElseThrow(() -> new IllegalStateException(
                         "Expected a main type to be detected for fixture URL: " + javaFixtureResource));
     }
 
+    /**
+     * Extracts the last path segment from the given URL, e.g. "File.java".
+     * <p>
+     * Notes:
+     * - Uses {@link URL#getPath()} to avoid parsing full external form.
+     * - Does not URL-decode (%20 etc.). If you need decoding, use a URI-based variant.
+     */
+    private static String extractFileNameWithExtension(URL resourceUrl) {
+        String urlPath = resourceUrl.getPath();
+        if (urlPath == null || urlPath.isEmpty()) {
+            throw new IllegalArgumentException("URL has no path: " + resourceUrl);
+        }
+
+        int lastSlashIndex = urlPath.lastIndexOf('/');
+        int fileNameStartIndex = lastSlashIndex + 1;
+
+        if (fileNameStartIndex >= urlPath.length()) {
+            throw new IllegalArgumentException("URL path ends with '/': " + resourceUrl);
+        }
+
+        return urlPath.substring(fileNameStartIndex);
+    }
+
     public static CtTypeMember requireTypeMemberBySimpleName(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedSimpleName) {
-        requireNonNull(describedMembers, "describedMembers cannot be null");
+            Map<CtTypeMember, ?> typeMembers, String expectedSimpleName) {
+        requireNonNull(typeMembers, "typeMembers cannot be null");
         requireNonNull(expectedSimpleName, "expectedSimpleName cannot be null");
 
-        List<CtTypeMember> matchingMembers = describedMembers.keySet().stream()
+        return typeMembers.keySet().stream()
                 .filter(typeMember -> expectedSimpleName.equals(typeMember.getSimpleName()))
-                .sorted(Comparator.comparing(CtTypeMember::getSimpleName))
-                .toList();
-
-        if (matchingMembers.isEmpty()) {
-            throw new IllegalStateException(
-                    "No CtTypeMember found for simple name: '%s'. Available simple names: %s"
-                            .formatted(
-                                    expectedSimpleName,
-                                    describedMembers.keySet().stream()
-                                            .map(CtTypeMember::getSimpleName)
-                                            .sorted()
-                                            .toList()));
-        }
-
-        if (matchingMembers.size() != 1) {
-            throw new IllegalStateException(
-                    "Expected exactly one CtTypeMember with simple name '%s', but found %s: %s"
-                            .formatted(expectedSimpleName, matchingMembers.size(), matchingMembers));
-        }
-
-        return matchingMembers.getFirst();
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("No type member found for simple name: %s. Available members: %s"
+                                .formatted(
+                                        expectedSimpleName,
+                                        typeMembers.keySet().stream()
+                                                .map(CtTypeMember::getSimpleName)
+                                                .sorted()
+                                                .toList())));
     }
 
     public static MemberDescriptor requireMemberDescriptorByName(
@@ -67,29 +77,18 @@ public final class SpoonTestCaseUtils {
         requireNonNull(describedMembers, "describedMembers cannot be null");
         requireNonNull(expectedName, "expectedName cannot be null");
 
-        List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
-                .filter(memberDescriptor -> memberDescriptor.getName().stream().anyMatch(expectedName::equals))
-                .sorted(Comparator.comparing(memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
-                .toList();
-
-        if (matchingDescriptors.isEmpty()) {
-            throw new IllegalStateException(
-                    "No MemberDescriptor found for name: '%s'. Available named members: %s"
-                            .formatted(
-                                    expectedName,
-                                    describedMembers.values().stream()
-                                            .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
-                                            .sorted()
-                                            .toList()));
-        }
-
-        if (matchingDescriptors.size() != 1) {
-            throw new IllegalStateException(
-                    "Expected exactly one MemberDescriptor with name '%s', but found %s: %s"
-                            .formatted(expectedName, matchingDescriptors.size(), matchingDescriptors));
-        }
-
-        return matchingDescriptors.getFirst();
+        return describedMembers.values().stream()
+                .filter(memberDescriptor ->
+                        memberDescriptor.getName().filter(expectedName::equals).isPresent())
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("No member descriptor found for name: %s. Available named members: %s"
+                                .formatted(
+                                        expectedName,
+                                        describedMembers.values().stream()
+                                                .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
+                                                .sorted()
+                                                .toList())));
     }
 
     public static MemberDescriptor requireUniqueMemberDescriptorByKind(
@@ -99,13 +98,13 @@ public final class SpoonTestCaseUtils {
 
         List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
                 .filter(memberDescriptor -> memberDescriptor.getMemberKind() == expectedKind)
-                .sorted(Comparator.comparing(memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
+                .sorted(Comparator.comparing(
+                        memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
                 .toList();
 
         if (matchingDescriptors.size() != 1) {
-            throw new IllegalStateException(
-                    "Expected exactly one descriptor with kind %s, but found: %s"
-                            .formatted(expectedKind, matchingDescriptors));
+            throw new IllegalStateException("Expected exactly one descriptor with kind %s, but found: %s"
+                    .formatted(expectedKind, matchingDescriptors));
         }
 
         return matchingDescriptors.getFirst();

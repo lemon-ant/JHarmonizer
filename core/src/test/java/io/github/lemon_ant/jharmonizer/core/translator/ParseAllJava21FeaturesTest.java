@@ -18,7 +18,7 @@ class ParseAllJava21FeaturesTest {
     private static final Path SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH = Path.of("SampleAllJava21FeaturesList.java");
 
     @Test
-    void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult()  {
+    void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
         String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
 
@@ -33,7 +33,6 @@ class ParseAllJava21FeaturesTest {
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         assertThat(spoonAstModel.getMainType()).isNotNull();
         assertThat(spoonAstModel.getCompilationUnit()).isNotNull();
-
         assertThat(parsingStatistic).isNotNull();
         assertThat(parsingStatistic.getOriginalSourceCodeLength())
                 .isCloseTo(ORIGINAL_SOURCE_CODE_LENGTH, withPercentage(10));
@@ -44,7 +43,7 @@ class ParseAllJava21FeaturesTest {
     }
 
     @Test
-    void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode()  {
+    void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
         // Given
         String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         SpoonAstModel spoonASTModel =
@@ -58,7 +57,7 @@ class ParseAllJava21FeaturesTest {
         assertThat(serializationResult.getSerializedSrcCode()).contains("SampleAllJava21FeaturesList");
         assertThat(serializationResult.getSerializationStatistic()).isNotNull();
         SerializationStatistic serializationStatistic = serializationResult.getSerializationStatistic();
-        // Use withPercentage because serializator can add or remove additional new line separators
+        // Use withPercentage because the serializer may add or remove a few line separators.
         assertThat(serializationStatistic.getSerializedCodeLength())
                 .isCloseTo(ORIGINAL_SOURCE_CODE_LENGTH, withPercentage(10));
         assertThat(serializationStatistic.getProcessingTimeInNanos()).isGreaterThan(1000000);

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import lombok.experimental.UtilityClass;
@@ -20,15 +19,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TestCaseResourceUtils {
 
-    public static String readClasspathResourceAsString(URL classpathResource) {
-        requireNonNull(classpathResource, "classpathResource cannot be null");
-        try (InputStream inputStream = classpathResource.openStream()) {
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException(
-                    "Failed to read classpath resource from URL: " + classpathResource, ioException);
-        }
-    }
     public static URL resolveRelativeUrl(URL directoryResource, String relativePathSegment) {
         requireNonNull(directoryResource, "directoryResource cannot be null");
         requireNonNull(relativePathSegment, "relativePathSegment cannot be null");
@@ -44,6 +34,15 @@ public class TestCaseResourceUtils {
                     "Failed to resolve relative URL segment '%s' under directory URL: %s"
                             .formatted(relativePathSegment, directoryResource),
                     malformedURLException);
+        }
+    }
+
+    public static String readClasspathResourceAsString(URL resourceUrl) {
+        requireNonNull(resourceUrl, "resourceUrl cannot be null");
+        try (InputStream inputStream = resourceUrl.openStream()) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to read resource URL: " + resourceUrl, ioException);
         }
     }
 }

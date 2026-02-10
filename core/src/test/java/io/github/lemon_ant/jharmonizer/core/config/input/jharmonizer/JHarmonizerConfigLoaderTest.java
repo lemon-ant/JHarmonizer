@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+// TODO Refactor
 class JHarmonizerConfigLoaderTest {
 
     @Test
@@ -79,7 +80,7 @@ class JHarmonizerConfigLoaderTest {
     }
 
     @Test
-    void loadFrom_validDefaultConfig_returnsParsedConfigRoot() throws IOException {
+    void loadFrom_validDefaultConfig_returnsParsedConfigRoot() {
         // When
         JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
 

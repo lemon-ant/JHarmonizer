@@ -24,14 +24,13 @@ class SourceProcessorTest {
 
     private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
-
-    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = SourceProcessorTest.class.getResource(
-            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL =
+            SourceProcessorTest.class.getResource("/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
 
     @TempDir
     Path temporaryDirectory;
 
-    private static String loadSampleAllJava21FeaturesSource() throws Exception {
+    private static String loadSampleAllJava21FeaturesSource() {
         return TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
     }
 
@@ -88,7 +87,6 @@ class SourceProcessorTest {
         String sampleSourceCode = loadSampleAllJava21FeaturesSource();
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
         SourceProcessor sourceProcessor = new SourceProcessor();
-        // First bring the file into a fully restructured and formatted state
         sourceProcessor.processSources(
                 temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
@@ -96,7 +94,6 @@ class SourceProcessorTest {
         assertThatCode(() -> sourceProcessor.processSources(
                         temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
-        // sanity check that the file is still readable and not empty
         String finalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSourceCode).isNotBlank();
     }

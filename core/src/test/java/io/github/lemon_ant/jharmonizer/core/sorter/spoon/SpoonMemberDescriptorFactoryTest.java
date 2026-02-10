@@ -22,7 +22,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -33,12 +32,12 @@ import spoon.reflect.declaration.CtTypeMember;
 // TODO Review
 class SpoonMemberDescriptorFactoryTest {
 
-    private static final URL TEST_CASES_RESOURCE_ROOT_URL =SpoonMemberDescriptorFactoryTest.class.getResource(
+    private static final URL TEST_CASES_RESOURCE_ROOT_URL = SpoonMemberDescriptorFactoryTest.class.getResource(
             "/test-cases/core/sorter/spoon/member-descriptor/valid/");
 
     private static CtType<?> parseMainTypeFromResource(String fileName) {
         URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(TEST_CASES_RESOURCE_ROOT_URL, fileName);
-        return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResource, Path.of(fileName));
+        return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResource);
     }
 
     @Test
@@ -216,7 +215,8 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor valueFieldDescriptor = SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "value");
+        MemberDescriptor valueFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "value");
 
         // Then
         assertThat(valueFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
@@ -245,7 +245,8 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor sumMethodDescriptor = SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "sum");
+        MemberDescriptor sumMethodDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "sum");
 
         // Then
         assertThat(sumMethodDescriptor.getMemberKind()).isEqualTo(METHOD);
