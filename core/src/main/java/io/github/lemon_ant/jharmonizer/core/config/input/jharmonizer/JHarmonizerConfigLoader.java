@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Files;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -38,15 +39,13 @@ class JHarmonizerConfigLoader {
     }
 
     @NonNull
-    public static JHarmonizerConfig loadFromClasspathResource(String classpathResourcePath) {
-        try (InputStream inputStream = JHarmonizerConfigLoader.class.getResourceAsStream(classpathResourcePath)) {
-            if (inputStream == null) {
-                throw new IllegalArgumentException("Missing test resource: " + classpathResourcePath);
-            }
+    public static JHarmonizerConfig loadFromClasspathResource(@NonNull URL classpathResource) {
+        try (InputStream inputStream = classpathResource.openStream()) {
             return JHarmonizerConfigLoader.loadFrom(inputStream);
-        } catch (IOException e) {
+        } catch (IOException ioException) {
             throw new UncheckedIOException(
-                    "Failed to load JHarmonizer config from resource: " + classpathResourcePath, e);
+                    "Failed to load JHarmonizer config from classpath URL: " + classpathResource,
+                    ioException);
         }
     }
 

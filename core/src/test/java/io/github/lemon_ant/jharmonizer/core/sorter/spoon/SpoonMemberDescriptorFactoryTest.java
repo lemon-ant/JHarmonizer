@@ -16,18 +16,15 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYP
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ENUM;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_INTERFACE;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
-import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
-import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
@@ -36,48 +33,12 @@ import spoon.reflect.declaration.CtTypeMember;
 // TODO Review
 class SpoonMemberDescriptorFactoryTest {
 
-    private static final String TEST_CASES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/member-descriptor/valid";
+    private static final URL TEST_CASES_RESOURCE_ROOT_URL =SpoonMemberDescriptorFactoryTest.class.getResource(
+            "/test-cases/core/sorter/spoon/member-descriptor/valid/");
 
     private static CtType<?> parseMainTypeFromResource(String fileName) {
-        String resourcePath = TEST_CASES_RESOURCE_ROOT + "/" + fileName;
-        String sourceCode = readClasspathResourceAsString(resourcePath);
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of(fileName), sourceCode);
-        Optional<CtType<?>> mainType = spoonAstModel.getMainType();
-        if (mainType.isEmpty()) {
-            fail("Expected a main type to be detected for resource: " + resourcePath);
-        }
-        return mainType.orElseThrow();
-    }
-
-    private static MemberDescriptor findDescriptorByNameOrFail(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedName) {
-        return describedMembers.values().stream()
-                .filter(memberDescriptor ->
-                        memberDescriptor.getName().orElse("").equals(expectedName))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("No member descriptor found for name: " + expectedName
-                        + ". Available named members: "
-                        + describedMembers.values().stream()
-                                .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
-                                .sorted()
-                                .toList()));
-    }
-
-    private static MemberDescriptor findUniqueDescriptorByKindOrFail(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, MemberKind expectedKind) {
-        List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
-                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == expectedKind)
-                .sorted(java.util.Comparator.comparing(
-                        memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
-                .toList();
-
-        assertThat(matchingDescriptors)
-                .withFailMessage(
-                        "Expected exactly one descriptor with kind %s, but found: %s",
-                        expectedKind, matchingDescriptors)
-                .hasSize(1);
-
-        return matchingDescriptors.getFirst();
+        URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(TEST_CASES_RESOURCE_ROOT_URL, fileName);
+        return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResource, Path.of(fileName));
     }
 
     @Test
@@ -120,9 +81,11 @@ class SpoonMemberDescriptorFactoryTest {
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
         MemberDescriptor publicStaticFinalFieldDescriptor =
-                findDescriptorByNameOrFail(describedMembers, "PUBLIC_STATIC_FINAL_FIELD");
-        MemberDescriptor protectedFieldDescriptor = findDescriptorByNameOrFail(describedMembers, "protectedField");
-        MemberDescriptor packageFieldDescriptor = findDescriptorByNameOrFail(describedMembers, "packageField");
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "PUBLIC_STATIC_FINAL_FIELD");
+        MemberDescriptor protectedFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "protectedField");
+        MemberDescriptor packageFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "packageField");
 
         // Then
         assertThat(publicStaticFinalFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
@@ -146,8 +109,9 @@ class SpoonMemberDescriptorFactoryTest {
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
         MemberDescriptor privateStaticMethodDescriptor =
-                findDescriptorByNameOrFail(describedMembers, "privateStaticMethod");
-        MemberDescriptor abstractMethodDescriptor = findDescriptorByNameOrFail(describedMembers, "abstractMethod");
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "privateStaticMethod");
+        MemberDescriptor abstractMethodDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "abstractMethod");
 
         // Then
         assertThat(privateStaticMethodDescriptor.getMemberKind()).isEqualTo(METHOD);
@@ -168,7 +132,8 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor constructorDescriptor = findUniqueDescriptorByKindOrFail(describedMembers, CONSTRUCTOR);
+        MemberDescriptor constructorDescriptor =
+                SpoonTestCaseUtils.requireUniqueMemberDescriptorByKind(describedMembers, CONSTRUCTOR);
 
         // Then
         assertThat(constructorDescriptor.getName()).isEmpty();
@@ -205,12 +170,16 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor nestedClassDescriptor = findDescriptorByNameOrFail(describedMembers, "PublicNestedClass");
+        MemberDescriptor nestedClassDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "PublicNestedClass");
         MemberDescriptor nestedInterfaceDescriptor =
-                findDescriptorByNameOrFail(describedMembers, "ProtectedNestedInterface");
-        MemberDescriptor nestedEnumDescriptor = findDescriptorByNameOrFail(describedMembers, "NestedEnum");
-        MemberDescriptor nestedAnnotationDescriptor = findDescriptorByNameOrFail(describedMembers, "NestedAnnotation");
-        MemberDescriptor nestedRecordDescriptor = findDescriptorByNameOrFail(describedMembers, "NestedRecord");
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "ProtectedNestedInterface");
+        MemberDescriptor nestedEnumDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedEnum");
+        MemberDescriptor nestedAnnotationDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedAnnotation");
+        MemberDescriptor nestedRecordDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedRecord");
 
         // Then
         assertThat(nestedClassDescriptor.getMemberKind()).isEqualTo(TYPE_CLASS);
@@ -247,7 +216,7 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor valueFieldDescriptor = findDescriptorByNameOrFail(describedMembers, "value");
+        MemberDescriptor valueFieldDescriptor = SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "value");
 
         // Then
         assertThat(valueFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
@@ -276,7 +245,7 @@ class SpoonMemberDescriptorFactoryTest {
 
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers = SpoonMemberDescriptorFactory.describeMembers(parsedType);
-        MemberDescriptor sumMethodDescriptor = findDescriptorByNameOrFail(describedMembers, "sum");
+        MemberDescriptor sumMethodDescriptor = SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "sum");
 
         // Then
         assertThat(sumMethodDescriptor.getMemberKind()).isEqualTo(METHOD);

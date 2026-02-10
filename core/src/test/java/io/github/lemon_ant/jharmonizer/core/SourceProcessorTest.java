@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,14 +25,14 @@ class SourceProcessorTest {
     private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
 
-    private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
-            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java";
+    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = SourceProcessorTest.class.getResource(
+            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
 
     @TempDir
     Path temporaryDirectory;
 
     private static String loadSampleAllJava21FeaturesSource() throws Exception {
-        return TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
+        return TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
     }
 
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {

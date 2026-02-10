@@ -5,6 +5,9 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import lombok.experimental.UtilityClass;
 
@@ -17,21 +20,30 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TestCaseResourceUtils {
 
-    public static String readClasspathResourceAsString(String absoluteClasspathResourcePath) {
-        requireNonNull(absoluteClasspathResourcePath, "absoluteClasspathResourcePath cannot be null");
-        if (!absoluteClasspathResourcePath.startsWith("/")) {
-            throw new IllegalArgumentException(
-                    "Expected an absolute classpath resource path starting with '/', but got: "
-                            + absoluteClasspathResourcePath);
-        }
-
-        try (InputStream inputStream = requireNonNull(
-                TestCaseResourceUtils.class.getResourceAsStream(absoluteClasspathResourcePath),
-                "Missing test resource: " + absoluteClasspathResourcePath)) {
+    public static String readClasspathResourceAsString(URL classpathResource) {
+        requireNonNull(classpathResource, "classpathResource cannot be null");
+        try (InputStream inputStream = classpathResource.openStream()) {
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException ioException) {
             throw new UncheckedIOException(
-                    "Failed to read test resource from classpath: " + absoluteClasspathResourcePath, ioException);
+                    "Failed to read classpath resource from URL: " + classpathResource, ioException);
+        }
+    }
+    public static URL resolveRelativeUrl(URL directoryResource, String relativePathSegment) {
+        requireNonNull(directoryResource, "directoryResource cannot be null");
+        requireNonNull(relativePathSegment, "relativePathSegment cannot be null");
+        String directoryUrlString = directoryResource.toString();
+        if (!directoryUrlString.endsWith("/")) {
+            throw new IllegalArgumentException(
+                    "Expected a directory URL ending with '/', but got: " + directoryResource);
+        }
+        try {
+            return new URL(directoryResource, relativePathSegment);
+        } catch (MalformedURLException malformedURLException) {
+            throw new IllegalArgumentException(
+                    "Failed to resolve relative URL segment '%s' under directory URL: %s"
+                            .formatted(relativePathSegment, directoryResource),
+                    malformedURLException);
         }
     }
 }
