@@ -8,9 +8,11 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -54,19 +56,23 @@ public class SpoonTestCaseUtils {
         return urlPath.substring(fileNameStartIndex);
     }
 
+    @NonNull
     public static CtTypeMember requireTypeMemberBySimpleName(
             Map<CtTypeMember, ?> typeMembers, String expectedSimpleName) {
-        requireNonNull(typeMembers, "typeMembers cannot be null");
-        requireNonNull(expectedSimpleName, "expectedSimpleName cannot be null");
+        return requireTypeMemberBySimpleName(typeMembers.keySet(), expectedSimpleName);
+    }
 
-        return typeMembers.keySet().stream()
+    @NonNull
+    public static CtTypeMember requireTypeMemberBySimpleName(
+            @NonNull Collection<CtTypeMember> typeMembers, @NonNull String expectedSimpleName) {
+        return typeMembers.stream()
                 .filter(typeMember -> expectedSimpleName.equals(typeMember.getSimpleName()))
                 .findFirst()
                 .orElseThrow(() ->
                         new IllegalStateException("No type member found for simple name: %s. Available members: %s"
                                 .formatted(
                                         expectedSimpleName,
-                                        typeMembers.keySet().stream()
+                                        typeMembers.stream()
                                                 .map(CtTypeMember::getSimpleName)
                                                 .sorted()
                                                 .toList())));
