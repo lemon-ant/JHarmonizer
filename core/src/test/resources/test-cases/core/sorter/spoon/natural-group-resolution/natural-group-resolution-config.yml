@@ -27,17 +27,14 @@ type-members-ordering:
       - enum
       - record
       - annotation
-
     groups:
       - name: Fields
         sort-keys: preserve
         includes: field
-
         groups:
           - name: Any fields
             sort-keys: preserve
             includes: field
-
             groups:
               - name: Alpha fields
                 sort-keys: preserve

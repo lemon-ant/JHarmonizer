@@ -20,11 +20,11 @@ import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
+// TODO All types of TypeMembers
 class NaturalMemberGroupResolverTest {
 
     private static final String CONFIG_RESOURCE_PATH =
             "/test-cases/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml";
-
     private static final String FIXTURE_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/natural-group-resolution/valid";
 
     @Test
