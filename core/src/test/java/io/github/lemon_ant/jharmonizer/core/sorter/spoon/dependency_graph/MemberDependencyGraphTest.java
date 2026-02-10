@@ -13,166 +13,173 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class MemberDependencyGraphTest {
 
-    private static final URL DEPENDENCY_GRAPH_FIXTURE_URL = MemberDependencyGraphTest.class.getResource(
-            "/test-cases/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
+    private static final URL DEPENDENCY_GRAPH_FIXTURE_URL =
+            resolveFixtureUrl("/test-cases/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
     private static final CtType<?> PARSED_FIXTURE_MAIN_TYPE =
             SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(DEPENDENCY_GRAPH_FIXTURE_URL);
-
-    private final CtTypeMember deltaFieldMember =
-            SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "DELTA");
-    private final CtTypeMember charlieFieldMember =
-            SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "CHARLIE");
-    private final CtTypeMember echoFieldMember =
-            SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "ECHO");
-    private final CtTypeMember alphaFieldMember =
+    private static final CtTypeMember ALPHA_FIELD_MEMBER =
             SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "ALPHA");
-    private final CtTypeMember bravoFieldMember =
+    private static final CtTypeMember BRAVO_FIELD_MEMBER =
             SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "BRAVO");
+    private static final CtTypeMember CHARLIE_FIELD_MEMBER =
+            SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "CHARLIE");
+    private static final CtTypeMember DELTA_FIELD_MEMBER =
+            SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "DELTA");
+    private static final CtTypeMember ECHO_FIELD_MEMBER =
+            SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_FIXTURE_MAIN_TYPE.getTypeMembers(), "ECHO");
 
     @Test
-    void findDirectDependents_whenAllowedKindsEmpty_shouldReturnDependentsOfAllKinds() {
+    void findDirectDependents_allowedKindsEmpty_dependentsOfAllKindsReturned() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        memberDependencyGraph.addEdge(alphaFieldMember, deltaFieldMember, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(ALPHA_FIELD_MEMBER, DELTA_FIELD_MEMBER, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
 
         // When
         Set<CtTypeMember> directDependents = memberDependencyGraph.findDirectDependents(
-                alphaFieldMember, EnumSet.noneOf(MemberDependencyEdgeKind.class));
+                ALPHA_FIELD_MEMBER, EnumSet.noneOf(MemberDependencyEdgeKind.class));
 
         // Then
-        assertThat(directDependents).containsExactlyInAnyOrder(bravoFieldMember, deltaFieldMember);
+        assertThat(directDependents).containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, DELTA_FIELD_MEMBER);
     }
 
     @Test
-    void findDirectDependents_whenAllowedKindsRestricted_shouldFilterByEdgeKind() {
+    void findDirectDependents_allowedKindsRestricted_dependentsFilteredByEdgeKind() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        memberDependencyGraph.addEdge(alphaFieldMember, deltaFieldMember, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(ALPHA_FIELD_MEMBER, DELTA_FIELD_MEMBER, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
 
         // When
         Set<CtTypeMember> directDeclarationDependents = memberDependencyGraph.findDirectDependents(
-                alphaFieldMember, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
         Set<CtTypeMember> directAccessorBundleDependents = memberDependencyGraph.findDirectDependents(
-                alphaFieldMember, EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
 
         // Then
-        assertThat(directDeclarationDependents).containsExactly(bravoFieldMember);
-        assertThat(directAccessorBundleDependents).containsExactly(deltaFieldMember);
+        assertThat(directDeclarationDependents).containsExactly(BRAVO_FIELD_MEMBER);
+        assertThat(directAccessorBundleDependents).containsExactly(DELTA_FIELD_MEMBER);
     }
 
     @Test
-    void findTransitiveDependents_whenAllowedKindsRestricted_shouldComputeTransitiveClosureForThatKind() {
+    void findTransitiveDependents_allowedKindsRestricted_transitiveClosureComputedForThatKind() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
         memberDependencyGraph.addEdge(
-                bravoFieldMember, charlieFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        memberDependencyGraph.addEdge(alphaFieldMember, deltaFieldMember, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+                BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(ALPHA_FIELD_MEMBER, DELTA_FIELD_MEMBER, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
 
         // When
         Set<CtTypeMember> declarationDependents = memberDependencyGraph.findTransitiveDependents(
-                alphaFieldMember, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
         Set<CtTypeMember> accessorBundleDependents = memberDependencyGraph.findTransitiveDependents(
-                alphaFieldMember, EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
         Set<CtTypeMember> allDependents = memberDependencyGraph.findTransitiveDependents(
-                alphaFieldMember, EnumSet.noneOf(MemberDependencyEdgeKind.class));
+                ALPHA_FIELD_MEMBER, EnumSet.noneOf(MemberDependencyEdgeKind.class));
 
         // Then
-        assertThat(declarationDependents).containsExactlyInAnyOrder(bravoFieldMember, charlieFieldMember);
-        assertThat(accessorBundleDependents).containsExactly(deltaFieldMember);
-        assertThat(allDependents).containsExactlyInAnyOrder(bravoFieldMember, charlieFieldMember, deltaFieldMember);
+        assertThat(declarationDependents).containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER);
+        assertThat(accessorBundleDependents).containsExactly(DELTA_FIELD_MEMBER);
+        assertThat(allDependents)
+                .containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, DELTA_FIELD_MEMBER);
     }
 
     @Test
-    void findTransitiveDependents_whenCalledTwice_shouldReturnCachedInstance() {
+    void findTransitiveDependents_calledTwice_cachedInstanceReturned() {
         // Given
-
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
         memberDependencyGraph.addEdge(
-                bravoFieldMember, charlieFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        memberDependencyGraph.addEdge(alphaFieldMember, deltaFieldMember, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+                BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(ALPHA_FIELD_MEMBER, DELTA_FIELD_MEMBER, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
 
         // When
         Set<CtTypeMember> firstCallResult = memberDependencyGraph.findTransitiveDependents(
-                alphaFieldMember, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
         Set<CtTypeMember> secondCallResult = memberDependencyGraph.findTransitiveDependents(
-                alphaFieldMember, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
         Set<CtTypeMember> differentEdgeKindMaskResult = memberDependencyGraph.findTransitiveDependents(
-                alphaFieldMember, EnumSet.noneOf(MemberDependencyEdgeKind.class));
+                ALPHA_FIELD_MEMBER, EnumSet.noneOf(MemberDependencyEdgeKind.class));
 
         // Then
         assertThat(secondCallResult).isSameAs(firstCallResult);
-        assertThat(firstCallResult).containsExactlyInAnyOrder(bravoFieldMember, charlieFieldMember);
+        assertThat(firstCallResult).containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER);
         assertThat(differentEdgeKindMaskResult)
                 .isNotSameAs(firstCallResult)
-                .containsExactlyInAnyOrder(bravoFieldMember, charlieFieldMember, deltaFieldMember);
+                .containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, DELTA_FIELD_MEMBER);
     }
 
     @Test
-    void findTransitiveDependents_whenEdgeAdded_shouldInvalidateCachedResults() {
+    void findTransitiveDependents_edgeAdded_cachedResultsInvalidated() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
         memberDependencyGraph.addEdge(
-                bravoFieldMember, charlieFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        Set<MemberDependencyEdgeKind> allowedEdgeKinds = EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        Set<MemberDependencyEdgeKind> declarationEdgeKinds =
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
         // When
         Set<CtTypeMember> firstCallResult =
-                memberDependencyGraph.findTransitiveDependents(alphaFieldMember, allowedEdgeKinds);
+                memberDependencyGraph.findTransitiveDependents(ALPHA_FIELD_MEMBER, declarationEdgeKinds);
         memberDependencyGraph.addEdge(
-                charlieFieldMember, echoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                CHARLIE_FIELD_MEMBER, ECHO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
         Set<CtTypeMember> secondCallResult =
-                memberDependencyGraph.findTransitiveDependents(alphaFieldMember, allowedEdgeKinds);
+                memberDependencyGraph.findTransitiveDependents(ALPHA_FIELD_MEMBER, declarationEdgeKinds);
         Set<CtTypeMember> thirdCallResult =
-                memberDependencyGraph.findTransitiveDependents(alphaFieldMember, allowedEdgeKinds);
+                memberDependencyGraph.findTransitiveDependents(ALPHA_FIELD_MEMBER, declarationEdgeKinds);
 
         // Then
         assertThat(secondCallResult)
                 .isNotSameAs(firstCallResult)
-                .containsExactlyInAnyOrder(bravoFieldMember, charlieFieldMember, echoFieldMember);
+                .containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, ECHO_FIELD_MEMBER);
         assertThat(thirdCallResult).isSameAs(secondCallResult);
     }
 
     @Test
-    void findTransitiveProviders_whenGraphAcyclic_shouldReturnTransitiveProviders() {
+    void findTransitiveProviders_graphAcyclic_transitiveProvidersReturned() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
         memberDependencyGraph.addEdge(
-                bravoFieldMember, charlieFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
         // When
         Set<CtTypeMember> transitiveProviders = memberDependencyGraph.findTransitiveProviders(
-                charlieFieldMember, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+                CHARLIE_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
 
         // Then
-        assertThat(transitiveProviders).containsExactlyInAnyOrder(alphaFieldMember, bravoFieldMember);
+        assertThat(transitiveProviders).containsExactlyInAnyOrder(ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER);
     }
 
     @Test
-    void findTransitiveDependents_whenResultReturned_shouldBeUnmodifiable() {
+    void findTransitiveDependents_resultReturned_resultUnmodifiable() {
         // Given
-
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(
-                alphaFieldMember, bravoFieldMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
         // When
-        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(alphaFieldMember);
+        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(ALPHA_FIELD_MEMBER);
 
         // Then
-        assertThat(transitiveDependents).containsExactly(bravoFieldMember);
-        assertThatThrownBy(() -> transitiveDependents.add(alphaFieldMember))
+        assertThat(transitiveDependents).containsExactly(BRAVO_FIELD_MEMBER);
+        assertThatThrownBy(() -> transitiveDependents.add(ALPHA_FIELD_MEMBER))
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    private static URL resolveFixtureUrl(String classpathAbsolutePath) {
+        URL resolvedUrl = MemberDependencyGraphTest.class.getResource(classpathAbsolutePath);
+        if (resolvedUrl == null) {
+            throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
+        }
+        return resolvedUrl;
     }
 }

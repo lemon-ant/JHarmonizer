@@ -122,6 +122,25 @@ Recommended API shape:
 - Keep resource paths absolute (start with `/`).
 - If you need to resolve a file under a directory, resolve via a dedicated helper, not via deprecated URL constructors.
 
+### Shared test setup and one-time initialization (avoid repeated work)
+
+If multiple tests in the same test class use the same expensive or repetitive setup (e.g., parsing, compilation, model construction, large object graphs, heavy calculations, or any other non-trivial preparation), initialize it **once** at the test-class level instead of re-creating it in every test.
+
+Preferred options (in order):
+
+- Use `private static final` constants for immutable, shareable objects created once.
+- Use `private final` fields when per-instance initialization is sufficient and the object is safe to share across tests in the class.
+- Use `@BeforeAll` to perform one-time initialization that cannot be expressed as a simple field initializer.
+    - If `@BeforeAll` must be non-static, use `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`.
+
+Important rules:
+
+- Do **not** share mutable objects across tests if the code under test may modify them.
+    - In that case, keep a single immutable “base” representation and create a fresh copy per test, or initialize the mutable object in `@BeforeEach`.
+- Avoid duplicating the same setup snippet across multiple tests in the same class.
+    - If repeated setup appears, refactor it into a shared field initializer or a dedicated setup method.
+- Keep the `// Given` section focused on *test-specific* inputs; common setup belongs to fields / `@BeforeAll` / `@BeforeEach`.
+
 ## Assertions and test utilities
 
 ### Assertions
