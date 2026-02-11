@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnonymousExecutable;
@@ -70,10 +71,11 @@ class MemberDependencyGraphBuilderTest {
     private static final Map<CtTypeMember, CompiledMemberGroup> ENUM_CONSTANT_INITIALIZER_MEMBERS =
             buildTypeMember2NaturalGroup(
                     ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-    /*private static final CtTypeMember ENUM_CONSTANT_BRAVO_MEMBER =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
-        private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
+    /*
+    private static final CtTypeMember ENUM_CONSTANT_BRAVO_MEMBER =
+              SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
+    private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
+              SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
     */
     private static final URL BLANK_FINAL_FIXTURE_URL = MemberDependencyGraphBuilderTest.class.getResource(
             "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalDefiniteAssignmentBuilderFixture.java");
@@ -89,7 +91,7 @@ class MemberDependencyGraphBuilderTest {
             requireUniqueInitializerBlockMember(BLANK_FINAL_FIXTURE_MAIN_TYPE, false);
 
     @Test
-    void buildDependencyGraph_whenKeepAccessorsTogetherEnabled_shouldCreateAccessorBundleEdgesBetweenPairedAccessors() {
+    void buildDependencyGraph_keepAccessorsTogetherEnabled_accessorBundleEdgesCreatedBetweenPairedAccessors() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(ACCESSOR_PAIR_MEMBERS_WITH_ACCESSOR_BUNDLING);
@@ -104,7 +106,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_whenKeepAccessorsTogetherDisabled_shouldNotCreateAccessorBundleEdges() {
+    void buildDependencyGraph_keepAccessorsTogetherDisabled_noAccessorBundleEdgesCreated() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(ACCESSOR_PAIR_MEMBERS_WITHOUT_ACCESSOR_BUNDLING);
@@ -116,7 +118,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_whenFieldInitializerReferencesEarlierField_shouldCreateDeclarationDependencyEdge() {
+    void buildDependencyGraph_fieldInitializerReferencesEarlierField_declarationDependencyEdgeCreated() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(FIELD_INITIALIZER_MEMBERS);
@@ -128,7 +130,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_whenInitializerBlockReferencesEarlierField_shouldCreateDeclarationDependencyEdge() {
+    void buildDependencyGraph_initializerBlockReferencesEarlierField_declarationDependencyEdgeCreated() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(INITIALIZER_BLOCK_MEMBERS);
@@ -140,20 +142,22 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void
-            buildDependencyGraph_whenEnumConstantInitializerReferencesEarlierConstant_shouldCreateDeclarationDependencyEdge() {
+    @Disabled("TODO Enable when enum constants are supported in tests and graph building")
+    void buildDependencyGraph_enumConstantInitializerReferencesEarlierConstant_declarationDependencyEdgeCreated() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(ENUM_CONSTANT_INITIALIZER_MEMBERS);
-        /* // When
+        /*
+        // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
                 ENUM_CONSTANT_ALPHA_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
         // Then
-        assertThat(directProviders).containsExactly(ENUM_CONSTANT_BRAVO_MEMBER);*/
+        assertThat(directProviders).containsExactly(ENUM_CONSTANT_BRAVO_MEMBER);
+        */
     }
 
     @Test
-    void buildDependencyGraph_whenBlankFinalReadOccursAfterAssignment_shouldDependOnAssignmentProvider() {
+    void buildDependencyGraph_blankFinalReadOccursAfterAssignment_assignmentProviderAddedAsDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(BLANK_FINAL_MEMBERS);
@@ -166,7 +170,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_whenNaturalGroupNull_shouldThrow() {
+    void buildDependencyGraph_naturalGroupNull_illegalStateExceptionThrown() {
         // Given
         Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalGroup = new HashMap<>(FIELD_INITIALIZER_MEMBERS);
         typeMember2NaturalGroup.put(ALPHA_FIELD_MEMBER, null);
@@ -197,7 +201,7 @@ class MemberDependencyGraphBuilderTest {
 
         if (initializerBlocks.size() != 1) {
             throw new IllegalStateException("Expected exactly one initializer block. requiredStaticness="
-                    + requiredStaticness + ", found=" + initializerBlocks.size());
+                    + requiredStaticness + ", found=" + requiredStaticness + ", found=" + initializerBlocks.size());
         }
 
         return initializerBlocks.getFirst();
