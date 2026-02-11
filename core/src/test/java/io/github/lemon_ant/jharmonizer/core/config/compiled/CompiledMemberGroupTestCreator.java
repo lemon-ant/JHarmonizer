@@ -12,12 +12,18 @@ public final class CompiledMemberGroupTestCreator {
     @NonNull
     public static CompiledMemberGroup createTrivialMemberGroup(
             @NonNull String groupName, boolean keepAccessorsTogether) {
+        return createTrivialMemberGroup(groupName, keepAccessorsTogether, 0);
+    }
+
+    @NonNull
+    public static CompiledMemberGroup createTrivialMemberGroup(
+            @NonNull String groupName, boolean keepAccessorsTogether, int orderIndex) {
         CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(List.of(), List.of());
 
         return CompiledMemberGroup.builder()
                 .compiledSubGroups(List.of())
                 .keepAccessorsTogether(keepAccessorsTogether)
-                .orderIndex(0)
+                .orderIndex(orderIndex)
                 .name(groupName)
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
