@@ -22,7 +22,7 @@ class ConfigModelSnapshotTest {
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Test
-    void serializeDefaultJHarmonizerConfig_whenSerialized_shouldMatchSnapshot() throws Exception {
+    void serializeDefaultJHarmonizerConfig_serializedDefaultConfig_matchesSnapshot() throws Exception {
         // When
         String actualJson = MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG);
 

@@ -68,6 +68,13 @@ Rules:
 - Do not insert an empty line at the very beginning of the method body before `// Given`.
 - Keep each block contiguous and focused.
 
+Notes:
+
+- In some tests, it is valid to **merge blocks** when it improves readability.
+  - Common case: exception tests can use `// When / Then` together because the assertion captures both the action and the expectation.
+  - Another common case: very small tests may use `// Given / When` together if separating them would add noise.
+  - This is allowed as long as the combined block stays contiguous and clear.
+
 Recommended skeleton:
 
 ```java
@@ -140,6 +147,18 @@ Important rules:
 - Avoid duplicating the same setup snippet across multiple tests in the same class.
     - If repeated setup appears, refactor it into a shared field initializer or a dedicated setup method.
 - Keep the `// Given` section focused on *test-specific* inputs; common setup belongs to fields / `@BeforeAll` / `@BeforeEach`.
+
+### Grouping large constant sets
+
+If a test class needs a **large number of constants** (paths, fixture names, member names, etc.), avoid letting them dominate the beginning of the file.
+
+Guideline:
+
+- If the test class has **more than ~8 constant declarations** (rule of thumb), prefer grouping them into a nested class:
+  - `private static final class Constants { ... }`
+  - Or multiple nested classes, if there are distinct domains (e.g. `FixturePaths`, `MemberNames`).
+
+This is only about readability. It must not change test logic.
 
 ## Assertions and test utilities
 
