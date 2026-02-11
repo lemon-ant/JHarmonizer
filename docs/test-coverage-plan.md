@@ -37,45 +37,13 @@ Everything below is **still missing** and is the focus of this plan.
 
 ---
 
+## 4.1) TypeMemberGrouper test ???
+
+---
+
 ## 5) Dependency graph: provider-by-provider contracts
 
 > These are the “trust anchors” for ordering correctness.
-
-- [ ] **Field initializer dependencies**
-  - **Type:** component
-  - **Targets:** `FieldInitializerDependencyProvider`
-  - **Goal:** `fieldA = fieldB + 1` creates `fieldA -> fieldB` (declaration dependency).
-  - **Must assert:** order-dependent references are detected; non-order-dependent cases do not over-constrain.
-
-- [ ] **Initializer block dependencies (static and instance)**
-  - **Type:** component
-  - **Targets:** `InitializerBlockDependencyProvider`, `InitializationOrderDependencyUtils`
-  - **Goal:** init-block references produce correct edges; staticness treated via modifier (not kind).
-  - **Must assert:** static init-block depends on required prior fields; instance init-block uses excludes static behavior.
-
-- [ ] **Blank final definite assignment dependencies**
-  - **Type:** component
-  - **Targets:** `BlankFinalDefiniteAssignmentDependencyProvider`
-  - **Goal:** reads of blank final are ordered after assignments.
-  - **Must assert:** ordering constraints are created only where necessary.
-
-- [ ] **Enum constant initializer dependencies**
-  - **Type:** component
-  - **Targets:** `EnumConstantInitializerDependencyProvider`
-  - **Goal:** dependencies introduced by enum constants’ init expressions are respected.
-  - **Must assert:** enum constants don’t get reordered illegally due to dependencies.
-
-- [ ] **Accessor bundling edges (keepAccessorsTogether)**
-  - **Type:** component
-  - **Targets:** `AccessorPairDependencyProvider`, `SpoonJavaBeansAccessorUtils`
-  - **Goal:** getters/setters of the same property are bundled; getter-like precedes setter-like inside the unit.
-  - **Must assert:** “property” normalization and type normalization are stable.
-
-- [ ] **Graph builder correctness (merged provider output)**
-  - **Type:** component
-  - **Targets:** `MemberDependencyGraphBuilder`, `MemberDependencyGraph`, `MemberDependencyArc`
-  - **Goal:** combining all providers yields a consistent graph with correct incoming/outgoing arcs.
-  - **Must assert:** no duplicate arcs if contract says so; stable graph query behavior.
 
 - [ ] **Cycle handling contract (SCC-like bundling)**
   - **Type:** component

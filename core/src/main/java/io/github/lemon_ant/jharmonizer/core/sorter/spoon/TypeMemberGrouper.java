@@ -21,6 +21,7 @@ import spoon.reflect.declaration.CtTypeMember;
 class TypeMemberGrouper {
 
     @NonNull
+    // TODO Review it
     List<@NonNull MemberGroupBlock> groupMembersByEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> member2effectiveGroup) {
         Map<CompiledMemberGroup, List<CtTypeMember>> membersByGroup = member2effectiveGroup.entrySet().stream()
