@@ -237,3 +237,28 @@ The test decides which one to use:
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.
+
+
+---
+
+### Avoid meaningless Given blocks
+
+Do not introduce a `// Given` block for a single obvious local variable assignment.
+
+Bad (adds noise without improving readability):
+
+```java
+// Given
+DeclarationModifier declarationModifier = DeclarationModifier.SEALED;
+```
+
+If the setup is trivial and self-explanatory, omit `// Given` entirely or use a combined block:
+
+```java
+DeclarationModifier declarationModifier = DeclarationModifier.SEALED;
+
+// When / Then
+assertThat(declarationModifier.isApplicableTo(TargetCategory.TYPE)).isTrue();
+```
+
+`// Given` must be used only when it groups multiple setup statements or improves readability.
