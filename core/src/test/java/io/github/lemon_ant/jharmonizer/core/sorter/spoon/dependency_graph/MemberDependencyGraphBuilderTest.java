@@ -92,10 +92,10 @@ class MemberDependencyGraphBuilderTest {
         /*
         // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
-                ENUM_CONSTANT_ALPHA_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+                Constants.ENUM_CONSTANT_ALPHA_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
 
         // Then
-        assertThat(directProviders).containsExactly(ENUM_CONSTANT_BRAVO_MEMBER);
+        assertThat(directProviders).containsExactly(Constants.ENUM_CONSTANT_BRAVO_MEMBER);
         */
     }
 
@@ -157,7 +157,6 @@ class MemberDependencyGraphBuilderTest {
     }
 
     private static final class Constants {
-
         private static final CompiledMemberGroup MEMBER_GROUP_WITH_ACCESSOR_BUNDLING =
                 createTrivialMemberGroup("test-group-with-accessor-bundling", true);
         private static final CompiledMemberGroup MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING =
@@ -210,9 +209,9 @@ class MemberDependencyGraphBuilderTest {
                         ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         /*
         private static final CtTypeMember ENUM_CONSTANT_BRAVO_MEMBER =
-                  SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
         private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
-                  SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
         */
 
         private static final URL BLANK_FINAL_FIXTURE_URL = MemberDependencyGraphBuilderTest.class.getResource(

@@ -148,17 +148,17 @@ Important rules:
     - If repeated setup appears, refactor it into a shared field initializer or a dedicated setup method.
 - Keep the `// Given` section focused on *test-specific* inputs; common setup belongs to fields / `@BeforeAll` / `@BeforeEach`.
 
-### Grouping large constant sets
+### Constants grouping (readability)
 
-If a test class needs a **large number of constants** (paths, fixture names, member names, etc.), avoid letting them dominate the beginning of the file.
+If a test class contains many shared constants (URLs, resource paths, pre-parsed models, etc.) and they start cluttering the top of the file, group them into a nested class:
 
-Guideline:
+```java
+private static final class Constants {
+    private static final URL FIXTURE_URL = ...;
+}
+```
 
-- If the test class has **more than ~8 constant declarations** (rule of thumb), prefer grouping them into a nested class:
-  - `private static final class Constants { ... }`
-  - Or multiple nested classes, if there are distinct domains (e.g. `FixturePaths`, `MemberNames`).
-
-This is only about readability. It must not change test logic.
+Place the `Constants` nested class at the end of the test class to keep the beginning focused on test methods.
 
 ## Assertions and test utilities
 
