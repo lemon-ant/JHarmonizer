@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,22 +30,23 @@ class JHarmonizerConfigLoaderTest {
         assertThat(empty.createNewFile()).isTrue();
         try (InputStream configYaml = Files.newInputStream(empty.toPath())) {
 
-            // When/Then
+            // When / Then
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
                     .isInstanceOf(MismatchedInputException.class);
         }
     }
 
     @Test
-    void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() {
+    void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() throws Exception {
         // Given
-        InputStream config = Objects.requireNonNull(getClass()
-                .getResourceAsStream("/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml"));
+        try (InputStream configYaml = Objects.requireNonNull(getClass()
+                .getResourceAsStream("/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml"))) {
 
-        // When / Then
-        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(config))
-                .isInstanceOf(ValueInstantiationException.class)
-                .hasMessageContaining("Duplicate", "found"); // уточнение, если проверка сообщает контекст
+            // When / Then
+            assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
+                    .isInstanceOf(ValueInstantiationException.class)
+                    .hasMessageContaining("Duplicate", "found");
+        }
     }
 
     @Test
@@ -54,11 +54,11 @@ class JHarmonizerConfigLoaderTest {
         // Given
         File badFile = tempDir.resolve("bad.yml").toFile();
         try (FileWriter writer = new FileWriter(badFile)) {
-            writer.write("top-level-types-ordering:\n main-type-first: true\n"); // type-order отсутствует
+            writer.write("top-level-types-ordering:\n main-type-first: true\n"); // Missing required "type-order"
         }
         try (InputStream configYaml = Files.newInputStream(badFile.toPath())) {
 
-            // When/Then
+            // When / Then
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
                     .isInstanceOf(MismatchedInputException.class);
         }
@@ -67,26 +67,23 @@ class JHarmonizerConfigLoaderTest {
     @Test
     void loadFrom_simpleWorkingConfigFile_doesNotThrow() throws Exception {
         // Given
-        try (InputStream stream = getClass()
+        try (InputStream configYaml = getClass()
                 .getResourceAsStream("/test-cases/core/config/input/jharmonizer/simplest-working-config.yml")) {
+            assertThat(configYaml).isNotNull();
 
             // When / Then
-            assertThatCode(() -> {
-                        Assertions.assertNotNull(stream);
-                        JHarmonizerConfigLoader.loadFrom(stream);
-                    })
-                    .doesNotThrowAnyException();
+            assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(configYaml)).doesNotThrowAnyException();
         }
     }
 
     @Test
     void loadFrom_validDefaultConfig_returnsParsedConfigRoot() {
         // When
-        JHarmonizerConfig JHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
+        JHarmonizerConfig jharmonizerConfig = JHarmonizerConfigLoader.loadDefault();
 
         // Then
-        assertThat(JHarmonizerConfig).isNotNull();
-        JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = JHarmonizerConfig.getTopLevelTypesOrdering();
+        assertThat(jharmonizerConfig).isNotNull();
+        JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = jharmonizerConfig.getTopLevelTypesOrdering();
         assertThat(topLevelTypesOrdering).isNotNull();
         assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
         assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).isNotEmpty();
@@ -94,7 +91,7 @@ class JHarmonizerConfigLoaderTest {
                 .isNotEmpty());
         assertThat(topLevelTypesOrdering.getSortKeys())
                 .containsExactly(JHarmonizerSortKey.VISIBILITY_ASC, JHarmonizerSortKey.ALPHA);
-        assertThat(JHarmonizerConfig.getFormatting().isFixImports()).isTrue();
-        assertThat(JHarmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+        assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
+        assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
     }
 }

@@ -31,15 +31,14 @@ class TokenNormalizerAndTokenMapsTest {
 
     @Test
     void tokenMaps_commonAliasesAndSynonyms_areRegistered() {
-        // kind aliases
+        // When / Then
+        // Kind aliases
         assertThat(TokenMaps.KIND_BY_TOKEN.get("init")).isEqualTo(MemberKind.INIT_BLOCK);
         assertThat(TokenMaps.KIND_BY_TOKEN.get("initializer")).isEqualTo(MemberKind.INIT_BLOCK);
-
-        // access aliases
+        // Access aliases
         assertThat(TokenMaps.ACCESS_BY_TOKEN.get("package")).isEqualTo(MemberAccess.PACKAGE);
         assertThat(TokenMaps.ACCESS_BY_TOKEN.get("package-private")).isEqualTo(MemberAccess.PACKAGE);
-
-        // modifier aliases
+        // Modifier aliases
         assertThat(TokenMaps.MODIFIER_BY_TOKEN.get("nonsealed")).isEqualTo(DeclarationModifier.NON_SEALED);
         assertThat(TokenMaps.MODIFIER_BY_TOKEN.get("non-sealed")).isEqualTo(DeclarationModifier.NON_SEALED);
     }
