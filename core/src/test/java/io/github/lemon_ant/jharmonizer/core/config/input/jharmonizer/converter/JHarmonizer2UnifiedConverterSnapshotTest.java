@@ -13,14 +13,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
  * Snapshot test: default vendor YAML -> UnifiedConfig JSON equals expected snapshot (raw JSON compare).
  * <p>
  * If the test fails after intentional changes, run the disabled generator below to refresh:
- * JHarmonizer2UnifiedConverterSnapshotTest#regenerateSnapshot_whenRun_overwritesSnapshotFile
+ * JHarmonizer2UnifiedConverterSnapshotTest#regenerateUnifiedConfigSnapshot_whenRun_overwritesSnapshotFile
  */
 class JHarmonizer2UnifiedConverterSnapshotTest {
 
@@ -32,8 +31,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Test
-    @DisplayName("configUnified_serializationMatchesSnapshot")
-    void configUnified_serializationMatchesSnapshot() throws Exception {
+    void compareUnifiedConfigSnapshot_defaultVendorConfig_matchesExpectedJson() throws Exception {
         // Given
         JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig)
@@ -52,7 +50,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
             If you intentionally changed the default vendor YAML, the converter, or the unified model,
             regenerate the snapshot locally:
 
-              1) Run: UnifiedConfigSnapshotTest#regenerateSnapshot_whenRun_overwritesSnapshotFile
+              1) Run: JHarmonizer2UnifiedConverterSnapshotTest#regenerateUnifiedConfigSnapshot_whenRun_overwritesSnapshotFile
               2) Re-run this test.
 
             IMPORTANT BEFORE COMMIT:
@@ -64,8 +62,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
 
     @Test
     @Disabled("Click to (re)generate snapshot after intentional conversion/model changes")
-    @DisplayName("regenerateSnapshot_whenRun_overwritesSnapshotFile")
-    void regenerateSnapshot_whenRun_overwritesSnapshotFile() throws Exception {
+    void regenerateUnifiedConfigSnapshot_whenRun_overwritesSnapshotFile() throws Exception {
         // Given
         JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig).as("Default vendor config must be loadable").isNotNull();
