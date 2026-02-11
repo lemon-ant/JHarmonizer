@@ -79,10 +79,13 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "{0} access provided → IAE")
     @MethodSource("accessNotApplicableKinds")
     void builder_accessForbiddenAndProvided_throwsIAE(MemberKind kind) {
-        String name = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
+        // Given
+        String memberName = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
+
+        // When / Then
         assertThatThrownBy(() -> MemberDescriptor.builder()
                         .memberKind(kind)
-                        .name(name)
+                        .name(memberName)
                         .memberAccess(PUBLIC)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -92,28 +95,38 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "{0} null access → IAE")
     @MethodSource("accessApplicableKinds")
     void builder_accessRequiredAndNull_throwsIAE(MemberKind kind) {
-        String name = kind.getTargetCategory() == TargetCategory.CONSTRUCTOR ? null : "Valid";
-        assertThatThrownBy(() ->
-                        MemberDescriptor.builder().memberKind(kind).name(name).build())
+        // Given
+        String memberName = kind.getTargetCategory() == TargetCategory.CONSTRUCTOR ? null : "Valid";
+
+        // When / Then
+        assertThatThrownBy(() -> MemberDescriptor.builder()
+                        .memberKind(kind)
+                        .name(memberName)
+                        .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Access level must be provided for " + kind);
     }
 
     @Test
     void builder_constructorNullNameWithAccess_returnsDescriptor() {
-        var d = base(CONSTRUCTOR, PUBLIC, null).build();
-        assertThat(d.getMemberAccess()).contains(PUBLIC);
-        assertThat(d.getDeclarationModifiers()).isEmpty();
+        // When
+        MemberDescriptor memberDescriptor = base(CONSTRUCTOR, PUBLIC, null).build();
+
+        // Then
+        assertThat(memberDescriptor.getMemberAccess()).contains(PUBLIC);
+        assertThat(memberDescriptor.getDeclarationModifiers()).isEmpty();
     }
 
     @Test
     void builder_fieldWithTransient_returnsDescriptor() {
+        // When / Then
         assertThat(fld("x").declarationModifier(TRANSIENT).build().getDeclarationModifiers())
                 .containsExactly(TRANSIENT);
     }
 
     @Test
     void builder_fieldWithVolatile_returnsDescriptor() {
+        // When / Then
         assertThat(fld("y").declarationModifier(VOLATILE).build().getDeclarationModifiers())
                 .containsExactly(VOLATILE);
     }
@@ -121,6 +134,7 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "abstract + {0} → IAE")
     @MethodSource("abstractConflicts")
     void builder_methodAbstractWithConflict_throwsIAE(DeclarationModifier conflicting) {
+        // When / Then
         assertThatThrownBy(() -> mtd("process")
                         .declarationModifier(ABSTRACT)
                         .declarationModifier(conflicting)
@@ -130,6 +144,7 @@ class MemberDescriptorTest {
 
     @Test
     void builder_methodAbstractWithPrivate_throwsIAE() {
+        // When / Then
         assertThatThrownBy(() ->
                         base(METHOD, PRIVATE, "p").declarationModifier(ABSTRACT).build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -139,6 +154,7 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "default + {0} → IAE")
     @MethodSource("defaultConflicts")
     void builder_methodDefaultWithConflict_throwsIAE(DeclarationModifier conflicting) {
+        // When / Then
         assertThatThrownBy(() -> mtd("q").declarationModifier(DEFAULT)
                         .declarationModifier(conflicting)
                         .build())
@@ -147,12 +163,14 @@ class MemberDescriptorTest {
 
     @Test
     void builder_methodWithDefault_returnsDescriptor() {
+        // When / Then
         assertThat(mtd("m").declarationModifier(DEFAULT).build().getDeclarationModifiers())
                 .containsExactly(DEFAULT);
     }
 
     @Test
     void builder_methodWithStrictfp_returnsDescriptor() {
+        // When / Then
         assertThat(mtd("n").declarationModifier(STRICTFP).build().getDeclarationModifiers())
                 .containsExactly(STRICTFP);
     }
@@ -161,10 +179,13 @@ class MemberDescriptorTest {
     @MethodSource("noModifierCases")
     void builder_modifierInapplicableAndProvided_throwsIAE(
             MemberKind kind, MemberAccess access, DeclarationModifier mod) {
-        String name = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
+        // Given
+        String memberName = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
+
+        // When / Then
         assertThatThrownBy(() -> MemberDescriptor.builder()
                         .memberKind(kind)
-                        .name(name)
+                        .name(memberName)
                         .memberAccess(access)
                         .declarationModifier(mod)
                         .build())
@@ -175,7 +196,10 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "{0} with blank name → IAE")
     @MethodSource("kindsRequiringNonBlankName")
     void builder_nameRequiredAndBlank_throwsIAE(MemberKind kind) {
+        // Given
         MemberAccess access = kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null;
+
+        // When / Then
         assertThatThrownBy(() -> base(kind, access, "  ").build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("non-initializer", "must have", "a non-blank name");
@@ -184,6 +208,7 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "{0} with name → IAE")
     @MethodSource("kindsRequiringNullName")
     void builder_nullNameRequiredAndProvided_throwsIAE(MemberKind kind) {
+        // When / Then
         assertThatThrownBy(() -> base(kind, kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null, "X")
                         .build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -192,6 +217,7 @@ class MemberDescriptorTest {
 
     @Test
     void builder_typeAbstractPlusFinal_throwsIAE() {
+        // When / Then
         assertThatThrownBy(() -> typ(TYPE_CLASS, "T")
                         .declarationModifier(ABSTRACT)
                         .declarationModifier(FINAL)
@@ -202,6 +228,7 @@ class MemberDescriptorTest {
 
     @Test
     void builder_typeSealedPlusNonSealed_throwsIAE() {
+        // When / Then
         assertThatThrownBy(() -> typ(TYPE_CLASS, "T")
                         .declarationModifier(SEALED)
                         .declarationModifier(NON_SEALED)
@@ -212,48 +239,57 @@ class MemberDescriptorTest {
 
     @Test
     void builder_typeWithSealed_returnsDescriptor() {
+        // When / Then
         assertThat(typ(TYPE_CLASS, "T2").declarationModifier(SEALED).build().getDeclarationModifiers())
                 .containsExactly(SEALED);
     }
 
     @Test
     void builder_typeWithStrictfp_returnsDescriptor() {
+        // When / Then
         assertThat(typ(TYPE_CLASS, "T").declarationModifier(STRICTFP).build().getDeclarationModifiers())
                 .containsExactly(STRICTFP);
     }
 
     @Test
     void equalsHashCode_differentName_notEqual() {
-        var a = fld("VALUE")
+        // Given
+        MemberDescriptor firstDescriptor = fld("VALUE")
                 .declarationModifier(STATIC)
                 .declarationModifier(FINAL)
                 .annotationQualifiedName("javax.annotation.Nullable")
                 .build();
-        var c = fld("OTHER")
+        MemberDescriptor secondDescriptor = fld("OTHER")
                 .declarationModifier(STATIC)
                 .declarationModifier(FINAL)
                 .annotationQualifiedName("javax.annotation.Nullable")
                 .build();
-        assertThat(a).isNotEqualTo(c);
+
+        // Then
+        assertThat(firstDescriptor).isNotEqualTo(secondDescriptor);
     }
 
     @Test
     void equalsHashCode_sameContent_equalAndSameHash() {
-        var a = fld("VALUE")
+        // Given
+        MemberDescriptor firstDescriptor = fld("VALUE")
                 .declarationModifier(STATIC)
                 .declarationModifier(FINAL)
                 .annotationQualifiedName("javax.annotation.Nullable")
                 .build();
-        var b = fld("VALUE")
+        MemberDescriptor secondDescriptor = fld("VALUE")
                 .declarationModifier(FINAL)
                 .declarationModifier(STATIC)
                 .annotationQualifiedName("javax.annotation.Nullable")
                 .build();
-        assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
+
+        // Then
+        assertThat(firstDescriptor).isEqualTo(secondDescriptor).hasSameHashCodeAs(secondDescriptor);
     }
 
     @Test
     void flags_typeAndInitializer_asExpected() {
+        // Then
         assertThat(typ(TYPE_INTERFACE, "Api").build().isType()).isTrue();
         assertThat(base(INIT_BLOCK, null, null).build().isInitializer()).isTrue();
         assertThat(mtd("x").build().isType()).isFalse();
