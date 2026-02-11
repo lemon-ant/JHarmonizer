@@ -70,7 +70,7 @@ class MemberDependencyGraphBuilderTest {
     private static final Map<CtTypeMember, CompiledMemberGroup> ENUM_CONSTANT_INITIALIZER_MEMBERS =
             buildTypeMember2NaturalGroup(
                     ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-    /*
+    /* TODO Enable when enum constants are supported in tests and graph building
     private static final CtTypeMember ENUM_CONSTANT_BRAVO_MEMBER =
               SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
     private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
@@ -146,7 +146,7 @@ class MemberDependencyGraphBuilderTest {
         // Given
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(ENUM_CONSTANT_INITIALIZER_MEMBERS);
-        /*
+        /* TODO Enable when enum constants are supported in tests and graph building
         // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
                 ENUM_CONSTANT_ALPHA_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
