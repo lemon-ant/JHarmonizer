@@ -5,49 +5,45 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for UnifiedMemberGroupRuleLine.Builder custom setter behavior (nameMatcher single-assignment guard).
- */
 class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
-    void build_withoutSelectors_isNotAllowed() {
+    void build_selectorsMissing_illegalArgumentExceptionThrown() {
         // Given
-        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
+        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
+                UnifiedMemberGroupRuleLine.builder();
 
         // When / Then
-        assertThatThrownBy(builder::build)
+        assertThatThrownBy(unifiedMemberGroupRuleLineBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("at least one selector");
     }
 
     @Test
-    void nameMatcher_assignedOnce_buildsSuccessfully() {
+    void build_nameMatcherAssignedOnce_ruleLineBuilt() {
         // Given
-        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
+        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
+                UnifiedMemberGroupRuleLine.builder();
         UnifiedNameMatcher expectedUnifiedNameMatcher = new UnifiedNameMatcher(UnifiedMatchMethod.EXACT, "methodName");
 
         // When
-        builder.nameMatcher(expectedUnifiedNameMatcher); // single assignment is fine
-        UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = builder.build();
+        unifiedMemberGroupRuleLineBuilder.nameMatcher(expectedUnifiedNameMatcher);
+        UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine = unifiedMemberGroupRuleLineBuilder.build();
 
         // Then
         assertThat(unifiedMemberGroupRuleLine).isNotNull();
-        assertThat(unifiedMemberGroupRuleLine.getNameMatcher())
-                .isNotNull()
-                .isSameAs(expectedUnifiedNameMatcher); // explicit null preserved
+        assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isSameAs(expectedUnifiedNameMatcher);
     }
 
     @Test
-    void nameMatcher_secondAssignment_throwsIllegalStateException() {
+    void nameMatcher_secondAssignment_illegalStateExceptionThrown() {
         // Given
-        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder builder = UnifiedMemberGroupRuleLine.builder();
+        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
+                UnifiedMemberGroupRuleLine.builder();
+        unifiedMemberGroupRuleLineBuilder.nameMatcher(null);
 
-        // When
-        builder.nameMatcher(null); // first assignment is allowed (null means "no constraint")
-
-        // Then
-        assertThatThrownBy(() -> builder.nameMatcher(null))
+        // When / Then
+        assertThatThrownBy(() -> unifiedMemberGroupRuleLineBuilder.nameMatcher(null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already been assigned");
     }
