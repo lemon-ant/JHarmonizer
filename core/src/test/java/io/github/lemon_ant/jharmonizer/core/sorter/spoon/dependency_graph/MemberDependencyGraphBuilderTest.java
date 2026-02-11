@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -162,10 +161,13 @@ class MemberDependencyGraphBuilderTest {
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(BLANK_FINAL_MEMBERS);
         // When
-        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+        Set<CtTypeMember> initializerBlockDirectProviders = memberDependencyGraph.findDirectProviders(
+                INSTANCE_INITIALIZER_BLOCK_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+        Set<CtTypeMember> readAfterFieldDirectProviders = memberDependencyGraph.findDirectProviders(
                 READ_AFTER_ASSIGNMENT_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
         // Then
-        assertThat(directProviders)
+        assertThat(initializerBlockDirectProviders).containsExactlyInAnyOrder(BLANK_FINAL_FIELD_MEMBER);
+        assertThat(readAfterFieldDirectProviders)
                 .containsExactlyInAnyOrder(BLANK_FINAL_FIELD_MEMBER, INSTANCE_INITIALIZER_BLOCK_MEMBER);
     }
 
@@ -196,7 +198,6 @@ class MemberDependencyGraphBuilderTest {
                 .map(typeMember -> (CtAnonymousExecutable) typeMember)
                 .filter(initializerBlock ->
                         initializerBlock.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness)
-                .sorted((left, right) -> Integer.compare(requireSourceStart(left), requireSourceStart(right)))
                 .toList();
 
         if (initializerBlocks.size() != 1) {
@@ -205,14 +206,5 @@ class MemberDependencyGraphBuilderTest {
         }
 
         return initializerBlocks.getFirst();
-    }
-
-    private static int requireSourceStart(CtTypeMember typeMember) {
-        SourcePosition sourcePosition = typeMember.getPosition();
-        if (sourcePosition != null && sourcePosition.isValidPosition()) {
-            return sourcePosition.getSourceStart();
-        }
-
-        throw new IllegalStateException("Expected valid SourcePosition. member=" + typeMember);
     }
 }
