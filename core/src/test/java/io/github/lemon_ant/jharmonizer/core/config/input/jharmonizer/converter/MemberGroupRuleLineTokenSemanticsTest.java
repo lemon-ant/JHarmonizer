@@ -26,27 +26,6 @@ import org.junit.jupiter.api.Test;
 
 class MemberGroupRuleLineTokenSemanticsTest {
 
-    private static CompiledMemberGroup compileSingleRootGroup(UnifiedMemberGroup rootGroup) {
-        UnifiedConfig unifiedConfig = UnifiedConfig.builder()
-                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
-                .backupsEnabled(false)
-                .headerLine(new UnifiedHeaderLine('-', 0))
-                .topLevelTypesOrdering(createMinimalTopLevelTypesOrdering())
-                .rootMemberGroup(rootGroup)
-                .build();
-
-        CompiledConfig compiledConfig = Unified2CompiledModelCompiler.compile(unifiedConfig);
-        return compiledConfig.getRootMemberGroups().getFirst();
-    }
-
-    private static UnifiedTopLevelTypesOrdering createMinimalTopLevelTypesOrdering() {
-        return UnifiedTopLevelTypesOrdering.builder()
-                .mainTypeFirst(false)
-                .topLevelTypeSelectors(List.of(new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.CLASS))))
-                .sortKeys(List.of(UnifiedSortKey.ALPHA))
-                .build();
-    }
-
     @Test
     void compileSelectorBlock_staticInitializerTokens_requireInitializerKindAndStaticModifier() {
         // Given
@@ -107,5 +86,26 @@ class MemberGroupRuleLineTokenSemanticsTest {
         // Then
         assertThat(matchesStaticInitializer).isFalse();
         assertThat(matchesInstanceInitializer).isTrue();
+    }
+
+    private static CompiledMemberGroup compileSingleRootGroup(UnifiedMemberGroup rootGroup) {
+        UnifiedConfig unifiedConfig = UnifiedConfig.builder()
+                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
+                .backupsEnabled(false)
+                .headerLine(new UnifiedHeaderLine('-', 0))
+                .topLevelTypesOrdering(createMinimalTopLevelTypesOrdering())
+                .rootMemberGroup(rootGroup)
+                .build();
+
+        CompiledConfig compiledConfig = Unified2CompiledModelCompiler.compile(unifiedConfig);
+        return compiledConfig.getRootMemberGroups().getFirst();
+    }
+
+    private static UnifiedTopLevelTypesOrdering createMinimalTopLevelTypesOrdering() {
+        return UnifiedTopLevelTypesOrdering.builder()
+                .mainTypeFirst(false)
+                .topLevelTypeSelectors(List.of(new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.CLASS))))
+                .sortKeys(List.of(UnifiedSortKey.ALPHA))
+                .build();
     }
 }

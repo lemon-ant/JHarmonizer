@@ -10,18 +10,10 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Default grouping strategy:
- * - groups by CompiledMemberGroup identity,
- * - orders blocks by group.orderIndex,
- * - uses group.separator for the block.
- */
 @UtilityClass
-// TODO .filter(typeMember -> !typeMember.isImplicit())
 class TypeMemberGrouper {
 
     @NonNull
-    // TODO Review it
     List<@NonNull MemberGroupBlock> groupMembersByEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> member2effectiveGroup) {
         Map<CompiledMemberGroup, List<CtTypeMember>> membersByGroup = member2effectiveGroup.entrySet().stream()

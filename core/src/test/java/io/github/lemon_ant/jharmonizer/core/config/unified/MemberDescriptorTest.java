@@ -35,47 +35,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class MemberDescriptorTest {
 
-    private static Stream<DeclarationModifier> abstractConflicts() {
-        return Stream.of(FINAL, STATIC, NATIVE, SYNCHRONIZED);
-    }
-
-    private static Stream<MemberKind> accessApplicableKinds() {
-        return Stream.of(
-                FIELD, METHOD, CONSTRUCTOR, TYPE_CLASS, TYPE_INTERFACE, TYPE_ENUM, TYPE_RECORD, TYPE_ANNOTATION);
-    }
-
-    private static Stream<MemberKind> accessNotApplicableKinds() {
-        return Stream.of(INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
-    }
-
-    private static Stream<DeclarationModifier> defaultConflicts() {
-        return Stream.of(ABSTRACT, STATIC, FINAL, SYNCHRONIZED, NATIVE);
-    }
-
-    private static Stream<Arguments> kindsRequiringNonBlankName() {
-        return Stream.of(
-                Arguments.of(FIELD),
-                Arguments.of(METHOD),
-                Arguments.of(ENUM_CONSTANT),
-                Arguments.of(RECORD_COMPONENT),
-                Arguments.of(TYPE_CLASS),
-                Arguments.of(TYPE_INTERFACE),
-                Arguments.of(TYPE_ENUM),
-                Arguments.of(TYPE_RECORD),
-                Arguments.of(TYPE_ANNOTATION));
-    }
-
-    private static Stream<Arguments> kindsRequiringNullName() {
-        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(INIT_BLOCK));
-    }
-
-    private static Stream<Arguments> noModifierCases() {
-        return Stream.of(
-                Arguments.of(INIT_BLOCK, null, FINAL),
-                Arguments.of(ENUM_CONSTANT, null, STATIC),
-                Arguments.of(RECORD_COMPONENT, null, FINAL));
-    }
-
     @ParameterizedTest(name = "{0} access provided → IAE")
     @MethodSource("accessNotApplicableKinds")
     void builder_accessForbiddenAndProvided_throwsIAE(MemberKind kind) {
@@ -320,6 +279,47 @@ class MemberDescriptorTest {
                 .isTrue();
         assertThat(buildMethodDescriptor("x").build().isType()).isFalse();
         assertThat(buildMethodDescriptor("x").build().isInitializer()).isFalse();
+    }
+
+    private static Stream<DeclarationModifier> abstractConflicts() {
+        return Stream.of(FINAL, STATIC, NATIVE, SYNCHRONIZED);
+    }
+
+    private static Stream<MemberKind> accessApplicableKinds() {
+        return Stream.of(
+                FIELD, METHOD, CONSTRUCTOR, TYPE_CLASS, TYPE_INTERFACE, TYPE_ENUM, TYPE_RECORD, TYPE_ANNOTATION);
+    }
+
+    private static Stream<MemberKind> accessNotApplicableKinds() {
+        return Stream.of(INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
+    }
+
+    private static Stream<DeclarationModifier> defaultConflicts() {
+        return Stream.of(ABSTRACT, STATIC, FINAL, SYNCHRONIZED, NATIVE);
+    }
+
+    private static Stream<Arguments> kindsRequiringNonBlankName() {
+        return Stream.of(
+                Arguments.of(FIELD),
+                Arguments.of(METHOD),
+                Arguments.of(ENUM_CONSTANT),
+                Arguments.of(RECORD_COMPONENT),
+                Arguments.of(TYPE_CLASS),
+                Arguments.of(TYPE_INTERFACE),
+                Arguments.of(TYPE_ENUM),
+                Arguments.of(TYPE_RECORD),
+                Arguments.of(TYPE_ANNOTATION));
+    }
+
+    private static Stream<Arguments> kindsRequiringNullName() {
+        return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(INIT_BLOCK));
+    }
+
+    private static Stream<Arguments> noModifierCases() {
+        return Stream.of(
+                Arguments.of(INIT_BLOCK, null, FINAL),
+                Arguments.of(ENUM_CONSTANT, null, STATIC),
+                Arguments.of(RECORD_COMPONENT, null, FINAL));
     }
 
     private MemberDescriptor.MemberDescriptorBuilder buildBaseDescriptor(
