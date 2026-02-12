@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtType;
@@ -32,33 +32,32 @@ class EffectiveMemberGroupResolverTest {
         CompiledMemberGroup unrelatedEarlierGroup = createTrivialMemberGroup("unrelated", false, 5);
         CompiledMemberGroup initializerBlockLateGroup = createTrivialMemberGroup("initializer-late", false, 1_000);
         Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup = Map.of(
-                Constants.PROVIDER_FIELD_MEMBER, lateGroup,
-                Constants.DIRECT_DEPENDENT_FIELD_MEMBER, middleGroup,
-                Constants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
-                Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, earlyGroup,
-                Constants.UNRELATED_FIELD_MEMBER, unrelatedEarlierGroup,
-                Constants.STATIC_INITIALIZER_BLOCK_MEMBER, initializerBlockLateGroup);
+                FixtureConstants.PROVIDER_FIELD_MEMBER, lateGroup,
+                FixtureConstants.DIRECT_DEPENDENT_FIELD_MEMBER, middleGroup,
+                FixtureConstants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
+                FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, earlyGroup,
+                FixtureConstants.UNRELATED_FIELD_MEMBER, unrelatedEarlierGroup,
+                FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER, initializerBlockLateGroup);
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(typeMember2NaturalMemberGroup);
-
         // When
         Map<CtTypeMember, CompiledMemberGroup> resolvedEffectiveGroups =
                 EffectiveMemberGroupResolver.resolveEffectiveGroups(
                         typeMember2NaturalMemberGroup, memberDependencyGraph);
-
         // Then
-        assertThat(resolvedEffectiveGroups.get(Constants.PROVIDER_FIELD_MEMBER)).isSameAs(earlyGroup);
-        assertThat(resolvedEffectiveGroups.get(Constants.DIRECT_DEPENDENT_FIELD_MEMBER))
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.PROVIDER_FIELD_MEMBER))
+                .isSameAs(earlyGroup);
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.DIRECT_DEPENDENT_FIELD_MEMBER))
                 .isSameAs(middleGroup);
-        assertThat(resolvedEffectiveGroups.get(Constants.TRANSITIVE_PROVIDER_FIELD_MEMBER))
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.TRANSITIVE_PROVIDER_FIELD_MEMBER))
                 .isSameAs(earlyGroup);
-        assertThat(resolvedEffectiveGroups.get(Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER))
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER))
                 .isSameAs(earlyGroup);
-        assertThat(resolvedEffectiveGroups.get(Constants.UNRELATED_FIELD_MEMBER))
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.UNRELATED_FIELD_MEMBER))
                 .isSameAs(unrelatedEarlierGroup);
-        assertThat(resolvedEffectiveGroups.get(Constants.STATIC_INITIALIZER_BLOCK_MEMBER))
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER))
                 .isSameAs(initializerBlockLateGroup);
-        assertThatThrownBy(() -> resolvedEffectiveGroups.put(Constants.PROVIDER_FIELD_MEMBER, lateGroup))
+        assertThatThrownBy(() -> resolvedEffectiveGroups.put(FixtureConstants.PROVIDER_FIELD_MEMBER, lateGroup))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -68,12 +67,12 @@ class EffectiveMemberGroupResolverTest {
         CompiledMemberGroup earlyRootGroup = createTrivialMemberGroup("root-alpha", false, 1);
         CompiledMemberGroup lateRootGroup = createTrivialMemberGroup("root-bravo", false, 100);
         Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup = Map.of(
-                Constants.PROVIDER_FIELD_MEMBER, lateRootGroup,
-                Constants.DIRECT_DEPENDENT_FIELD_MEMBER, lateRootGroup,
-                Constants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateRootGroup,
-                Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, lateRootGroup,
-                Constants.UNRELATED_FIELD_MEMBER, lateRootGroup,
-                Constants.STATIC_INITIALIZER_BLOCK_MEMBER, earlyRootGroup);
+                FixtureConstants.PROVIDER_FIELD_MEMBER, lateRootGroup,
+                FixtureConstants.DIRECT_DEPENDENT_FIELD_MEMBER, lateRootGroup,
+                FixtureConstants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateRootGroup,
+                FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, lateRootGroup,
+                FixtureConstants.UNRELATED_FIELD_MEMBER, lateRootGroup,
+                FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER, earlyRootGroup);
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(typeMember2NaturalMemberGroup);
 
@@ -83,8 +82,9 @@ class EffectiveMemberGroupResolverTest {
                         typeMember2NaturalMemberGroup, memberDependencyGraph);
 
         // Then
-        assertThat(resolvedEffectiveGroups.get(Constants.PROVIDER_FIELD_MEMBER)).isSameAs(earlyRootGroup);
-        assertThat(resolvedEffectiveGroups.get(Constants.STATIC_INITIALIZER_BLOCK_MEMBER))
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.PROVIDER_FIELD_MEMBER))
+                .isSameAs(earlyRootGroup);
+        assertThat(resolvedEffectiveGroups.get(FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER))
                 .isSameAs(earlyRootGroup);
     }
 
@@ -93,24 +93,19 @@ class EffectiveMemberGroupResolverTest {
         // Given
         CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
+        Map<CtTypeMember, CompiledMemberGroup> baseNaturalGroupMapping = Map.of(
+                FixtureConstants.PROVIDER_FIELD_MEMBER, lateGroup,
+                FixtureConstants.DIRECT_DEPENDENT_FIELD_MEMBER, lateGroup,
+                FixtureConstants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
+                FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, earlyGroup,
+                FixtureConstants.UNRELATED_FIELD_MEMBER, lateGroup,
+                FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER, lateGroup);
         Map<CtTypeMember, CompiledMemberGroup> firstNaturalGroupMapping = createNaturalGroupMappingInOrder(
-                List.of(Constants.PROVIDER_FIELD_MEMBER, Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER),
-                Map.of(
-                        Constants.PROVIDER_FIELD_MEMBER, lateGroup,
-                        Constants.DIRECT_DEPENDENT_FIELD_MEMBER, lateGroup,
-                        Constants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
-                        Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, earlyGroup,
-                        Constants.UNRELATED_FIELD_MEMBER, lateGroup,
-                        Constants.STATIC_INITIALIZER_BLOCK_MEMBER, lateGroup));
+                List.of(FixtureConstants.PROVIDER_FIELD_MEMBER, FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER),
+                baseNaturalGroupMapping);
         Map<CtTypeMember, CompiledMemberGroup> secondNaturalGroupMapping = createNaturalGroupMappingInOrder(
-                List.of(Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, Constants.PROVIDER_FIELD_MEMBER),
-                Map.of(
-                        Constants.PROVIDER_FIELD_MEMBER, lateGroup,
-                        Constants.DIRECT_DEPENDENT_FIELD_MEMBER, lateGroup,
-                        Constants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
-                        Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, earlyGroup,
-                        Constants.UNRELATED_FIELD_MEMBER, lateGroup,
-                        Constants.STATIC_INITIALIZER_BLOCK_MEMBER, lateGroup));
+                List.of(FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, FixtureConstants.PROVIDER_FIELD_MEMBER),
+                baseNaturalGroupMapping);
         MemberDependencyGraph firstDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(firstNaturalGroupMapping);
         MemberDependencyGraph secondDependencyGraph =
@@ -124,7 +119,86 @@ class EffectiveMemberGroupResolverTest {
 
         // Then
         assertThat(firstResolvedMapping).isEqualTo(secondResolvedMapping);
-        assertThat(firstResolvedMapping.get(Constants.PROVIDER_FIELD_MEMBER)).isSameAs(earlyGroup);
+        assertThat(firstResolvedMapping.get(FixtureConstants.PROVIDER_FIELD_MEMBER))
+                .isSameAs(earlyGroup);
+    }
+
+    @Test
+    void resolveEffectiveGroups_accessorBundlingEnabled_shouldPullPairedAccessorsToEarliestGroup() {
+        // Given
+        CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", true, 10);
+        CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", true, 100);
+        Map<CtTypeMember, CompiledMemberGroup> naturalGroupsByMember = Map.of(
+                AccessorFixtureConstants.GET_VALUE_METHOD_MEMBER, lateGroup,
+                AccessorFixtureConstants.SET_VALUE_METHOD_MEMBER, earlyGroup,
+                AccessorFixtureConstants.IS_ENABLED_METHOD_MEMBER, lateGroup,
+                AccessorFixtureConstants.SET_ENABLED_METHOD_MEMBER, earlyGroup);
+        MemberDependencyGraph dependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupsByMember);
+
+        // When
+        Map<CtTypeMember, CompiledMemberGroup> effectiveGroupsByMember =
+                EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupsByMember, dependencyGraph);
+
+        // Then
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.GET_VALUE_METHOD_MEMBER))
+                .isSameAs(earlyGroup);
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.SET_VALUE_METHOD_MEMBER))
+                .isSameAs(earlyGroup);
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.IS_ENABLED_METHOD_MEMBER))
+                .isSameAs(earlyGroup);
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.SET_ENABLED_METHOD_MEMBER))
+                .isSameAs(earlyGroup);
+    }
+
+    @Test
+    void resolveEffectiveGroups_accessorBundlingDisabled_shouldKeepNaturalGroups() {
+        // Given
+        CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
+        CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
+        Map<CtTypeMember, CompiledMemberGroup> naturalGroupsByMember = Map.of(
+                AccessorFixtureConstants.GET_VALUE_METHOD_MEMBER, lateGroup,
+                AccessorFixtureConstants.SET_VALUE_METHOD_MEMBER, earlyGroup,
+                AccessorFixtureConstants.IS_ENABLED_METHOD_MEMBER, lateGroup,
+                AccessorFixtureConstants.SET_ENABLED_METHOD_MEMBER, earlyGroup);
+        MemberDependencyGraph dependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupsByMember);
+
+        // When
+        Map<CtTypeMember, CompiledMemberGroup> effectiveGroupsByMember =
+                EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupsByMember, dependencyGraph);
+
+        // Then
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.GET_VALUE_METHOD_MEMBER))
+                .isSameAs(lateGroup);
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.SET_VALUE_METHOD_MEMBER))
+                .isSameAs(earlyGroup);
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.IS_ENABLED_METHOD_MEMBER))
+                .isSameAs(lateGroup);
+        assertThat(effectiveGroupsByMember.get(AccessorFixtureConstants.SET_ENABLED_METHOD_MEMBER))
+                .isSameAs(earlyGroup);
+    }
+
+    @Test
+    void resolveEffectiveGroups_blankFinalRead_shouldPullAssignmentProviderToDependentGroup() {
+        // Given
+        CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
+        CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
+        Map<CtTypeMember, CompiledMemberGroup> naturalGroupsByMember = Map.of(
+                BlankFinalFixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER, lateGroup,
+                BlankFinalFixtureConstants.READS_BLANK_FINAL_FIELD_MEMBER, earlyGroup);
+        MemberDependencyGraph dependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupsByMember);
+
+        // When
+        Map<CtTypeMember, CompiledMemberGroup> effectiveGroupsByMember =
+                EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupsByMember, dependencyGraph);
+
+        // Then
+        assertThat(effectiveGroupsByMember.get(BlankFinalFixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER))
+                .isSameAs(earlyGroup);
+        assertThat(effectiveGroupsByMember.get(BlankFinalFixtureConstants.READS_BLANK_FINAL_FIELD_MEMBER))
+                .isSameAs(earlyGroup);
     }
 
     @Test
@@ -132,20 +206,20 @@ class EffectiveMemberGroupResolverTest {
         // Given
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
         Map<CtTypeMember, CompiledMemberGroup> completeNaturalGroupMapping = Map.of(
-                Constants.PROVIDER_FIELD_MEMBER, lateGroup,
-                Constants.DIRECT_DEPENDENT_FIELD_MEMBER, lateGroup,
-                Constants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
-                Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, lateGroup,
-                Constants.UNRELATED_FIELD_MEMBER, lateGroup,
-                Constants.STATIC_INITIALIZER_BLOCK_MEMBER, lateGroup);
+                FixtureConstants.PROVIDER_FIELD_MEMBER, lateGroup,
+                FixtureConstants.DIRECT_DEPENDENT_FIELD_MEMBER, lateGroup,
+                FixtureConstants.TRANSITIVE_PROVIDER_FIELD_MEMBER, lateGroup,
+                FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER, lateGroup,
+                FixtureConstants.UNRELATED_FIELD_MEMBER, lateGroup,
+                FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER, lateGroup);
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(completeNaturalGroupMapping);
         Map<CtTypeMember, CompiledMemberGroup> incompleteNaturalGroupMapping =
                 new HashMap<>(completeNaturalGroupMapping);
-        incompleteNaturalGroupMapping.remove(Constants.TRANSITIVE_DEPENDENT_FIELD_MEMBER);
+        incompleteNaturalGroupMapping.remove(FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER);
 
         // When
-        ThrowingCallable resolveAction = () -> EffectiveMemberGroupResolver.resolveEffectiveGroups(
+        ThrowableAssert.ThrowingCallable resolveAction = () -> EffectiveMemberGroupResolver.resolveEffectiveGroups(
                 Map.copyOf(incompleteNaturalGroupMapping), memberDependencyGraph);
 
         // Then
@@ -163,9 +237,8 @@ class EffectiveMemberGroupResolverTest {
         return orderedMapping;
     }
 
-    private static CtTypeMember requireFixtureMember(String simpleName) {
-        return SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                Constants.FIXTURE_MAIN_TYPE.getTypeMembers(), simpleName);
+    private static CtTypeMember requireFixtureMember(CtType<?> fixtureMainType, String simpleName) {
+        return SpoonTestCaseUtils.requireTypeMemberBySimpleName(fixtureMainType.getTypeMembers(), simpleName);
     }
 
     private static URL requireFixtureUrl(String classpathAbsolutePath) {
@@ -193,8 +266,7 @@ class EffectiveMemberGroupResolverTest {
         return initializerBlocks.getFirst();
     }
 
-    private static final class Constants {
-
+    private static final class FixtureConstants {
         private static final String FIXTURE_RESOURCE_PATH =
                 "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionFixture.java";
         private static final URL FIXTURE_URL = requireFixtureUrl(FIXTURE_RESOURCE_PATH);
@@ -202,21 +274,45 @@ class EffectiveMemberGroupResolverTest {
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
         private static final CtTypeMember STATIC_INITIALIZER_BLOCK_MEMBER =
                 requireUniqueInitializerBlockMember(FIXTURE_MAIN_TYPE, true);
-
-        private static final String PROVIDER_FIELD_NAME = "PROVIDER";
-        private static final CtTypeMember PROVIDER_FIELD_MEMBER = requireFixtureMember(PROVIDER_FIELD_NAME);
-        private static final String DIRECT_DEPENDENT_FIELD_NAME = "DIRECT_DEPENDENT";
+        private static final CtTypeMember PROVIDER_FIELD_MEMBER = requireFixtureMember(FIXTURE_MAIN_TYPE, "PROVIDER");
         private static final CtTypeMember DIRECT_DEPENDENT_FIELD_MEMBER =
-                requireFixtureMember(DIRECT_DEPENDENT_FIELD_NAME);
-        private static final String TRANSITIVE_PROVIDER_FIELD_NAME = "TRANSITIVE_PROVIDER";
+                requireFixtureMember(FIXTURE_MAIN_TYPE, "DIRECT_DEPENDENT");
         private static final CtTypeMember TRANSITIVE_PROVIDER_FIELD_MEMBER =
-                requireFixtureMember(TRANSITIVE_PROVIDER_FIELD_NAME);
-        private static final String TRANSITIVE_DEPENDENT_FIELD_NAME = "TRANSITIVE_DEPENDENT";
+                requireFixtureMember(FIXTURE_MAIN_TYPE, "TRANSITIVE_PROVIDER");
         private static final CtTypeMember TRANSITIVE_DEPENDENT_FIELD_MEMBER =
-                requireFixtureMember(TRANSITIVE_DEPENDENT_FIELD_NAME);
-        private static final String UNRELATED_FIELD_NAME = "UNRELATED";
-        private static final CtTypeMember UNRELATED_FIELD_MEMBER = requireFixtureMember(UNRELATED_FIELD_NAME);
+                requireFixtureMember(FIXTURE_MAIN_TYPE, "TRANSITIVE_DEPENDENT");
+        private static final CtTypeMember UNRELATED_FIELD_MEMBER = requireFixtureMember(FIXTURE_MAIN_TYPE, "UNRELATED");
 
-        private Constants() {}
+        private FixtureConstants() {}
+    }
+
+    private static final class AccessorFixtureConstants {
+        private static final String FIXTURE_RESOURCE_PATH =
+                "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionAccessorBundleFixture.java";
+        private static final URL FIXTURE_URL = requireFixtureUrl(FIXTURE_RESOURCE_PATH);
+        private static final CtType<?> FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
+        private static final CtTypeMember GET_VALUE_METHOD_MEMBER = requireFixtureMember(FIXTURE_MAIN_TYPE, "getValue");
+        private static final CtTypeMember SET_VALUE_METHOD_MEMBER = requireFixtureMember(FIXTURE_MAIN_TYPE, "setValue");
+        private static final CtTypeMember IS_ENABLED_METHOD_MEMBER =
+                requireFixtureMember(FIXTURE_MAIN_TYPE, "isEnabled");
+        private static final CtTypeMember SET_ENABLED_METHOD_MEMBER =
+                requireFixtureMember(FIXTURE_MAIN_TYPE, "setEnabled");
+
+        private AccessorFixtureConstants() {}
+    }
+
+    private static final class BlankFinalFixtureConstants {
+        private static final String FIXTURE_RESOURCE_PATH =
+                "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionBlankFinalFixture.java";
+        private static final URL FIXTURE_URL = requireFixtureUrl(FIXTURE_RESOURCE_PATH);
+        private static final CtType<?> FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
+        private static final CtTypeMember STATIC_INITIALIZER_BLOCK_MEMBER =
+                requireUniqueInitializerBlockMember(FIXTURE_MAIN_TYPE, true);
+        private static final CtTypeMember READS_BLANK_FINAL_FIELD_MEMBER =
+                requireFixtureMember(FIXTURE_MAIN_TYPE, "READS_BLANK_FINAL");
+
+        private BlankFinalFixtureConstants() {}
     }
 }

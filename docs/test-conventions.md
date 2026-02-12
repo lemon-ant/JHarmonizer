@@ -36,13 +36,14 @@ Rules:
 
 Examples:
 
-- `compileConfig_validYaml_shouldProduceSingleRootGroup`
-- `resolveGroups_nestedMatch_shouldWinOverParentGroup`
-- `describeMembers_recordType_shouldNotReturnImplicitMembers`
+- `compileConfig_validYaml_produceSingleRootGroup`
+- `resolveGroups_nestedMatch_winOverParentGroup`
+- `describeMembers_recordType_returnImplicitMembers`
 
 Guidelines:
 
-- `methodName` must start with a verb (e.g., `compile`, `resolve`, `describe`, `render`, `convert`).
+- `methodName` must start with a verb
+- Do not use `should` or `must` in test method names (these words add noise and violate the 3-segment naming intent). (e.g., `compile`, `resolve`, `describe`, `render`, `convert`).
 - Avoid vague words (`works`, `ok`, `smoke1`). Prefer intent-revealing words.
 - Keep the condition minimal but specific.
 
@@ -65,6 +66,8 @@ Guidelines:
 Rules:
 
 - Do not insert empty lines **inside** a block.
+- Insert **exactly one** empty line **between blocks**.
+  - In particular, there must be a blank line **before** `// When` and a blank line **before** `// Then` (and before combined blocks such as `// When / Then`).
 - Do not insert an empty line at the very beginning of the method body before `// Given`.
 - Keep each block contiguous and focused.
 
@@ -161,6 +164,12 @@ private static final class Constants {
 Place the `Constants` nested class at the end of the test class to keep the beginning focused on test methods.
 
 ## Assertions and test utilities
+
+### Placement of test utilities
+
+- Place **private static** helper methods and **test-only utility** code at the **end of the test class**, after all test methods (and after nested `Constants`, if present).
+- The top of the test class should stay focused on test scenarios, not helper implementation details.
+
 
 ### Assertions
 
