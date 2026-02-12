@@ -160,6 +160,25 @@ class MemberDependencyGraphTest {
     }
 
     @Test
+    void findTransitiveDependents_dependencyCycle_returnFiniteClosure() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
+        memberDependencyGraph.addEdge(
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(
+                BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(
+                CHARLIE_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+
+        // When
+        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(transitiveDependents).containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER);
+    }
+
+    @Test
     void findTransitiveDependents_resultReturned_resultUnmodifiable() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
