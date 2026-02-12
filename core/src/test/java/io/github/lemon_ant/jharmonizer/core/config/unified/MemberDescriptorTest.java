@@ -110,7 +110,8 @@ class MemberDescriptorTest {
     @Test
     void builder_constructorNullNameWithAccess_returnsDescriptor() {
         // When
-        MemberDescriptor memberDescriptor = base(CONSTRUCTOR, PUBLIC, null).build();
+        MemberDescriptor memberDescriptor =
+                buildBaseDescriptor(CONSTRUCTOR, PUBLIC, null).build();
 
         // Then
         assertThat(memberDescriptor.getMemberAccess()).contains(PUBLIC);
@@ -119,23 +120,29 @@ class MemberDescriptorTest {
 
     @Test
     void builder_fieldWithTransient_returnsDescriptor() {
-        // When / Then
-        assertThat(fld("x").declarationModifier(TRANSIENT).build().getDeclarationModifiers())
-                .containsExactly(TRANSIENT);
+        // When
+        MemberDescriptor descriptor =
+                buildFieldDescriptor("x").declarationModifier(TRANSIENT).build();
+
+        // Then
+        assertThat(descriptor.getDeclarationModifiers()).containsExactly(TRANSIENT);
     }
 
     @Test
     void builder_fieldWithVolatile_returnsDescriptor() {
-        // When / Then
-        assertThat(fld("y").declarationModifier(VOLATILE).build().getDeclarationModifiers())
-                .containsExactly(VOLATILE);
+        // When
+        MemberDescriptor descriptor =
+                buildFieldDescriptor("y").declarationModifier(VOLATILE).build();
+
+        // Then
+        assertThat(descriptor.getDeclarationModifiers()).containsExactly(VOLATILE);
     }
 
     @ParameterizedTest(name = "abstract + {0} → IAE")
     @MethodSource("abstractConflicts")
     void builder_methodAbstractWithConflict_throwsIAE(DeclarationModifier conflicting) {
         // When / Then
-        assertThatThrownBy(() -> mtd("process")
+        assertThatThrownBy(() -> buildMethodDescriptor("process")
                         .declarationModifier(ABSTRACT)
                         .declarationModifier(conflicting)
                         .build())
@@ -145,8 +152,9 @@ class MemberDescriptorTest {
     @Test
     void builder_methodAbstractWithPrivate_throwsIAE() {
         // When / Then
-        assertThatThrownBy(() ->
-                        base(METHOD, PRIVATE, "p").declarationModifier(ABSTRACT).build())
+        assertThatThrownBy(() -> buildBaseDescriptor(METHOD, PRIVATE, "p")
+                        .declarationModifier(ABSTRACT)
+                        .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("abstract + private");
     }
@@ -155,7 +163,8 @@ class MemberDescriptorTest {
     @MethodSource("defaultConflicts")
     void builder_methodDefaultWithConflict_throwsIAE(DeclarationModifier conflicting) {
         // When / Then
-        assertThatThrownBy(() -> mtd("q").declarationModifier(DEFAULT)
+        assertThatThrownBy(() -> buildMethodDescriptor("q")
+                        .declarationModifier(DEFAULT)
                         .declarationModifier(conflicting)
                         .build())
                 .isInstanceOf(IllegalArgumentException.class);
@@ -163,16 +172,22 @@ class MemberDescriptorTest {
 
     @Test
     void builder_methodWithDefault_returnsDescriptor() {
-        // When / Then
-        assertThat(mtd("m").declarationModifier(DEFAULT).build().getDeclarationModifiers())
-                .containsExactly(DEFAULT);
+        // When
+        MemberDescriptor descriptor =
+                buildMethodDescriptor("m").declarationModifier(DEFAULT).build();
+
+        // Then
+        assertThat(descriptor.getDeclarationModifiers()).containsExactly(DEFAULT);
     }
 
     @Test
     void builder_methodWithStrictfp_returnsDescriptor() {
-        // When / Then
-        assertThat(mtd("n").declarationModifier(STRICTFP).build().getDeclarationModifiers())
-                .containsExactly(STRICTFP);
+        // When
+        MemberDescriptor descriptor =
+                buildMethodDescriptor("n").declarationModifier(STRICTFP).build();
+
+        // Then
+        assertThat(descriptor.getDeclarationModifiers()).containsExactly(STRICTFP);
     }
 
     @ParameterizedTest(name = "{0} + {2} → IAE")
@@ -200,7 +215,7 @@ class MemberDescriptorTest {
         MemberAccess access = kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null;
 
         // When / Then
-        assertThatThrownBy(() -> base(kind, access, "  ").build())
+        assertThatThrownBy(() -> buildBaseDescriptor(kind, access, "  ").build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("non-initializer", "must have", "a non-blank name");
     }
@@ -208,9 +223,11 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "{0} with name → IAE")
     @MethodSource("kindsRequiringNullName")
     void builder_nullNameRequiredAndProvided_throwsIAE(MemberKind kind) {
+        // Given
+        MemberAccess access = kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null;
+
         // When / Then
-        assertThatThrownBy(() -> base(kind, kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null, "X")
-                        .build())
+        assertThatThrownBy(() -> buildBaseDescriptor(kind, access, "X").build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("null name");
     }
@@ -218,7 +235,7 @@ class MemberDescriptorTest {
     @Test
     void builder_typeAbstractPlusFinal_throwsIAE() {
         // When / Then
-        assertThatThrownBy(() -> typ(TYPE_CLASS, "T")
+        assertThatThrownBy(() -> buildTypeDescriptor(TYPE_CLASS, "T")
                         .declarationModifier(ABSTRACT)
                         .declarationModifier(FINAL)
                         .build())
@@ -229,7 +246,7 @@ class MemberDescriptorTest {
     @Test
     void builder_typeSealedPlusNonSealed_throwsIAE() {
         // When / Then
-        assertThatThrownBy(() -> typ(TYPE_CLASS, "T")
+        assertThatThrownBy(() -> buildTypeDescriptor(TYPE_CLASS, "T")
                         .declarationModifier(SEALED)
                         .declarationModifier(NON_SEALED)
                         .build())
@@ -239,27 +256,35 @@ class MemberDescriptorTest {
 
     @Test
     void builder_typeWithSealed_returnsDescriptor() {
-        // When / Then
-        assertThat(typ(TYPE_CLASS, "T2").declarationModifier(SEALED).build().getDeclarationModifiers())
-                .containsExactly(SEALED);
+        // When
+        MemberDescriptor descriptor = buildTypeDescriptor(TYPE_CLASS, "T2")
+                .declarationModifier(SEALED)
+                .build();
+
+        // Then
+        assertThat(descriptor.getDeclarationModifiers()).containsExactly(SEALED);
     }
 
     @Test
     void builder_typeWithStrictfp_returnsDescriptor() {
-        // When / Then
-        assertThat(typ(TYPE_CLASS, "T").declarationModifier(STRICTFP).build().getDeclarationModifiers())
-                .containsExactly(STRICTFP);
+        // When
+        MemberDescriptor descriptor = buildTypeDescriptor(TYPE_CLASS, "T")
+                .declarationModifier(STRICTFP)
+                .build();
+
+        // Then
+        assertThat(descriptor.getDeclarationModifiers()).containsExactly(STRICTFP);
     }
 
     @Test
     void equalsHashCode_differentName_notEqual() {
         // Given
-        MemberDescriptor firstDescriptor = fld("VALUE")
+        MemberDescriptor firstDescriptor = buildFieldDescriptor("VALUE")
                 .declarationModifier(STATIC)
                 .declarationModifier(FINAL)
                 .annotationQualifiedName("javax.annotation.Nullable")
                 .build();
-        MemberDescriptor secondDescriptor = fld("OTHER")
+        MemberDescriptor secondDescriptor = buildFieldDescriptor("OTHER")
                 .declarationModifier(STATIC)
                 .declarationModifier(FINAL)
                 .annotationQualifiedName("javax.annotation.Nullable")
@@ -272,12 +297,12 @@ class MemberDescriptorTest {
     @Test
     void equalsHashCode_sameContent_equalAndSameHash() {
         // Given
-        MemberDescriptor firstDescriptor = fld("VALUE")
+        MemberDescriptor firstDescriptor = buildFieldDescriptor("VALUE")
                 .declarationModifier(STATIC)
                 .declarationModifier(FINAL)
                 .annotationQualifiedName("javax.annotation.Nullable")
                 .build();
-        MemberDescriptor secondDescriptor = fld("VALUE")
+        MemberDescriptor secondDescriptor = buildFieldDescriptor("VALUE")
                 .declarationModifier(FINAL)
                 .declarationModifier(STATIC)
                 .annotationQualifiedName("javax.annotation.Nullable")
@@ -289,27 +314,32 @@ class MemberDescriptorTest {
 
     @Test
     void flags_typeAndInitializer_asExpected() {
-        // Then
-        assertThat(typ(TYPE_INTERFACE, "Api").build().isType()).isTrue();
-        assertThat(base(INIT_BLOCK, null, null).build().isInitializer()).isTrue();
-        assertThat(mtd("x").build().isType()).isFalse();
-        assertThat(mtd("x").build().isInitializer()).isFalse();
+        // When / Then
+        assertThat(buildTypeDescriptor(TYPE_INTERFACE, "Api").build().isType()).isTrue();
+        assertThat(buildBaseDescriptor(INIT_BLOCK, null, null).build().isInitializer())
+                .isTrue();
+        assertThat(buildMethodDescriptor("x").build().isType()).isFalse();
+        assertThat(buildMethodDescriptor("x").build().isInitializer()).isFalse();
     }
 
-    private MemberDescriptor.MemberDescriptorBuilder base(MemberKind k, MemberAccess a, String n) {
-        return MemberDescriptor.builder().memberKind(k).memberAccess(a).name(n);
+    private MemberDescriptor.MemberDescriptorBuilder buildBaseDescriptor(
+            MemberKind memberKind, MemberAccess memberAccess, String name) {
+        return MemberDescriptor.builder()
+                .memberKind(memberKind)
+                .memberAccess(memberAccess)
+                .name(name);
     }
 
-    private MemberDescriptor.MemberDescriptorBuilder fld(String n) {
-        return base(FIELD, PUBLIC, n);
+    private MemberDescriptor.MemberDescriptorBuilder buildFieldDescriptor(String name) {
+        return buildBaseDescriptor(FIELD, PUBLIC, name);
     }
 
-    private MemberDescriptor.MemberDescriptorBuilder mtd(String n) {
-        return base(METHOD, PUBLIC, n);
+    private MemberDescriptor.MemberDescriptorBuilder buildMethodDescriptor(String name) {
+        return buildBaseDescriptor(METHOD, PUBLIC, name);
     }
 
-    private MemberDescriptor.MemberDescriptorBuilder typ(MemberKind k, String n) {
-        assertThat(k.isType()).isTrue();
-        return base(k, PUBLIC, n);
+    private MemberDescriptor.MemberDescriptorBuilder buildTypeDescriptor(MemberKind memberKind, String name) {
+        assertThat(memberKind.isType()).isTrue();
+        return buildBaseDescriptor(memberKind, PUBLIC, name);
     }
 }
