@@ -21,22 +21,6 @@ Everything below is **still missing** and is the focus of this plan.
 
 ---
 
-## 4) Effective group resolution (dependency-driven “pulling”)
-
-- [ ] **Effective group pulling across dependencies**
-  - **Type:** component
-  - **Targets:** `EffectiveMemberGroupResolver`
-  - **Goal:** If a member depends on another member, the dependent is moved/pulled to an effective group per rules.
-  - **Must assert:** final effective grouping is deterministic and consistent with dependency edges.
-
-- [ ] **Group boundary rules for pulling**
-  - **Type:** component
-  - **Targets:** `EffectiveMemberGroupResolver`
-  - **Goal:** Confirm whether pulling is allowed across root-level groups or restricted (current intended behavior).
-  - **Must assert:** the chosen policy is fixed as a contract.
-
----
-
 ## 4.1) TypeMemberGrouper test ???
 
 ---

@@ -100,6 +100,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             return;
         }
 
+        // TODO Optimize algorithm by precalculating of the original member sequence
         // Find the minimal nested element start position
         int minMemberStart = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
@@ -143,6 +144,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                 }
             });
 
+            // TODO Optimize algorithm by precalculating of the original member sequence
             // Copy class member code from the original code without changes
             int nextElementStart = explicitTypeMembers.stream()
                     .mapToInt(nextMember -> nextMember.getPosition().getSourceStart())
@@ -152,6 +154,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
         }
 
+        // TODO Optimize algorithm by precalculating of the original member sequence
         // Print the type footer from the end of the bottommost nested element until end of the type fragment
         int maxMemberEnd = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
