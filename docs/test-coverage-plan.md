@@ -21,22 +21,6 @@ Everything below is **still missing** and is the focus of this plan.
 
 ---
 
-## 4.1) TypeMemberGrouper test ???
-
----
-
-## 5) Dependency graph: provider-by-provider contracts
-
-> These are the “trust anchors” for ordering correctness.
-
-- [ ] **Cycle handling contract (SCC-like bundling)**
-  - **Type:** component
-  - **Targets:** `GroupMembersOrderer` (unit bundling logic), dependency graph reachability
-  - **Goal:** cycles do not crash; they become a “unit/bundle” and are topologically sorted as a whole.
-  - **Must assert:** deterministic tie-breakers inside and between units.
-
----
-
 ## 6) Ordering inside a group (sort keys + tie-breakers)
 
 - [ ] **SortKey.PRESERVE**
