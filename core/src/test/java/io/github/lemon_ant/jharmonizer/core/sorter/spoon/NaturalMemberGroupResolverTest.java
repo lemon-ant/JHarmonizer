@@ -21,7 +21,7 @@ class NaturalMemberGroupResolverTest {
             "/test-cases/core/sorter/spoon/natural-group-resolution/valid/");
 
     @Test
-    void resolveNaturalGroups_whenFieldMatchesNestedGroups_shouldSelectDeepestMatchingGroup() {
+    void resolveNaturalGroups_fieldMatchesNestedGroups_selectDeepestMatchingGroup() {
         // Given
         URL javaFixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(
                 FIXTURE_DIRECTORY_RESOURCE_URL, "NaturalGroupResolutionType.java");
@@ -45,7 +45,7 @@ class NaturalMemberGroupResolverTest {
     }
 
     @Test
-    void resolveNaturalGroups_whenNoSpecificGroupMatches_shouldFallbackToDefaultRuleGroup() {
+    void resolveNaturalGroups_noSpecificGroupMatches_fallbackToDefaultRuleGroup() {
         // Given
         URL javaFixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(
                 FIXTURE_DIRECTORY_RESOURCE_URL, "NaturalGroupResolutionType.java");

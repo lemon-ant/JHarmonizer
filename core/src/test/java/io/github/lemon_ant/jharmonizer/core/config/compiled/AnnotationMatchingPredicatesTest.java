@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class AnnotationMatchingPredicatesTest {
 
     @Test
-    void createAnnotationExactFqnOrSimple_whenMatcherUsesSimpleName_shouldMatchQualifiedAnnotationName() {
+    void createAnnotationExactFqnOrSimple_matcherUsesSimpleName_matchQualifiedAnnotationName() {
         // Given
         MemberDescriptor memberDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)
@@ -33,7 +33,7 @@ class AnnotationMatchingPredicatesTest {
     }
 
     @Test
-    void createAnnotationExactFqnOrSimple_whenMatcherUsesQualifiedName_shouldMatchQualifiedAnnotationName() {
+    void createAnnotationExactFqnOrSimple_matcherUsesQualifiedName_matchQualifiedAnnotationName() {
         // Given
         MemberDescriptor memberDescriptor = MemberDescriptor.builder()
                 .memberKind(FIELD)

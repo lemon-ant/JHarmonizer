@@ -21,11 +21,10 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
 
-// TODO Review
 class EffectiveMemberGroupResolverTest {
 
     @Test
-    void resolveEffectiveGroups_transitiveDependentInEarlierGroup_shouldPullProviderToThatGroup() {
+    void resolveEffectiveGroups_transitiveDependentInEarlierGroup_pullProviderToThatGroup() {
         // Given
         CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
         CompiledMemberGroup middleGroup = createTrivialMemberGroup("middle", false, 20);
@@ -41,10 +40,12 @@ class EffectiveMemberGroupResolverTest {
                 FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER, initializerBlockLateGroup);
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(typeMember2NaturalMemberGroup);
+
         // When
         Map<CtTypeMember, CompiledMemberGroup> resolvedEffectiveGroups =
                 EffectiveMemberGroupResolver.resolveEffectiveGroups(
                         typeMember2NaturalMemberGroup, memberDependencyGraph);
+
         // Then
         assertThat(resolvedEffectiveGroups.get(FixtureConstants.PROVIDER_FIELD_MEMBER))
                 .isSameAs(earlyGroup);
@@ -63,7 +64,7 @@ class EffectiveMemberGroupResolverTest {
     }
 
     @Test
-    void resolveEffectiveGroups_dependentInEarlierRootGroup_shouldPullAcrossRootGroups() {
+    void resolveEffectiveGroups_dependentInEarlierRootGroup_pullAcrossRootGroups() {
         // Given
         CompiledMemberGroup earlyRootGroup = createTrivialMemberGroup("root-alpha", false, 1);
         CompiledMemberGroup lateRootGroup = createTrivialMemberGroup("root-bravo", false, 100);
@@ -90,7 +91,7 @@ class EffectiveMemberGroupResolverTest {
     }
 
     @Test
-    void resolveEffectiveGroups_inputMappingOrderDifferent_shouldResolveSameGroups() {
+    void resolveEffectiveGroups_inputMappingOrderDifferent_resolveSameGroups() {
         // Given
         CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
@@ -125,7 +126,7 @@ class EffectiveMemberGroupResolverTest {
     }
 
     @Test
-    void resolveEffectiveGroups_accessorBundlingEnabled_shouldPullPairedAccessorsToEarliestGroup() {
+    void resolveEffectiveGroups_accessorBundlingEnabled_pullPairedAccessorsToEarliestGroup() {
         // Given
         CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", true, 10);
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", true, 100);
@@ -153,7 +154,7 @@ class EffectiveMemberGroupResolverTest {
     }
 
     @Test
-    void resolveEffectiveGroups_accessorBundlingDisabled_shouldKeepNaturalGroups() {
+    void resolveEffectiveGroups_accessorBundlingDisabled_keepNaturalGroups() {
         // Given
         CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
@@ -181,7 +182,7 @@ class EffectiveMemberGroupResolverTest {
     }
 
     @Test
-    void resolveEffectiveGroups_blankFinalRead_shouldPullAssignmentProviderToDependentGroup() {
+    void resolveEffectiveGroups_blankFinalRead_pullAssignmentProviderToDependentGroup() {
         // Given
         CompiledMemberGroup earlyGroup = createTrivialMemberGroup("early", false, 10);
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
@@ -203,7 +204,7 @@ class EffectiveMemberGroupResolverTest {
     }
 
     @Test
-    void resolveEffectiveGroups_missingNaturalGroupForTransitiveDependent_shouldThrow() {
+    void resolveEffectiveGroups_missingNaturalGroupForTransitiveDependent_throwException() {
         // Given
         CompiledMemberGroup lateGroup = createTrivialMemberGroup("late", false, 100);
         Map<CtTypeMember, CompiledMemberGroup> completeNaturalGroupMapping = Map.of(

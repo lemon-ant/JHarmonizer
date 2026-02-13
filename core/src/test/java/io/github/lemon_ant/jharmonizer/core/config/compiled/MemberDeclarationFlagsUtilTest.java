@@ -12,36 +12,8 @@ import org.junit.jupiter.api.Test;
 
 class MemberDeclarationFlagsUtilTest {
 
-    private static int deriveAccessSegmentBit(MemberAccess memberAccess) {
-        int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
-        int encodedWithAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                MemberKind.FIELD, memberAccess, EnumSet.noneOf(DeclarationModifier.class));
-        return encodedWithAccess ^ kindOnlyMask;
-    }
-
-    private static int deriveAllMemberAccessBitsMask() {
-        int combinedAccessBitsMask = 0;
-        for (MemberAccess memberAccess : MemberAccess.values()) {
-            combinedAccessBitsMask |= deriveAccessSegmentBit(memberAccess);
-        }
-        return combinedAccessBitsMask;
-    }
-
-    private static int encodeKindOnlyMask(MemberKind memberKind) {
-        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                memberKind, null, EnumSet.noneOf(DeclarationModifier.class));
-    }
-
-    private static int deriveModifiersSegmentBitsMask(Set<DeclarationModifier> declarationModifiers) {
-        // Fix kind and null-access; XOR delta yields pure modifier bits.
-        int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
-        int encodedWithModifiers =
-                MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, declarationModifiers);
-        return encodedWithModifiers ^ kindOnlyMask;
-    }
-
     @Test
-    void containsAllRequiredDeclarationFlags_whenAnyRequiredBitMissing_shouldReturnFalse() {
+    void containsAllRequiredDeclarationFlags_anyRequiredBitMissing_returnFalse() {
         // Given
         int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.FIELD, MemberAccess.PRIVATE, EnumSet.of(DeclarationModifier.FINAL));
@@ -56,7 +28,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void containsAllRequiredDeclarationFlags_whenAllRequiredBitsPresent_shouldReturnTrue() {
+    void containsAllRequiredDeclarationFlags_allRequiredBitsPresent_returnTrue() {
         // Given
         int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.FIELD,
@@ -73,7 +45,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_whenComposedFromSegments_shouldEqualBitwiseOrOfSegments() {
+    void encodeMemberDeclarationFlags_composedFromSegments_equalBitwiseOrOfSegments() {
         // Given
         MemberKind memberKind = MemberKind.METHOD;
         MemberAccess memberAccess = MemberAccess.PROTECTED;
@@ -92,7 +64,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_whenMemberAccessProvided_shouldEncodeOneHotBitsAndNullShouldEncodeZeroSegment() {
+    void encodeMemberDeclarationFlags_memberAccessProvided_encodeOneHotAndZeroForNullAccess() {
         // Given
         int publicAccessBit = deriveAccessSegmentBit(MemberAccess.PUBLIC);
         int privateAccessBit = deriveAccessSegmentBit(MemberAccess.PRIVATE);
@@ -117,7 +89,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_whenMemberKindsDiffer_shouldEncodeNonOverlappingBits() {
+    void encodeMemberDeclarationFlags_memberKindsDiffer_encodeNonOverlappingBits() {
         // Given
         int methodKindMask = encodeKindOnlyMask(MemberKind.METHOD);
         int fieldKindMask = encodeKindOnlyMask(MemberKind.FIELD);
@@ -142,7 +114,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_whenModifiersOrderDiffers_shouldBeOrderIndependentAndSupportSubsetChecks() {
+    void encodeMemberDeclarationFlags_modifiersOrderDiffers_supportOrderIndependenceAndSubsetChecks() {
         // Given
         Set<DeclarationModifier> firstModifierSet = EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL);
         Set<DeclarationModifier> secondModifierSet = EnumSet.of(DeclarationModifier.FINAL, DeclarationModifier.STATIC);
@@ -161,7 +133,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_whenAccessIsNull_shouldAffectOnlyAccessSegment() {
+    void encodeMemberDeclarationFlags_accessIsNull_affectOnlyAccessSegment() {
         // Given
         int withNullAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
                 MemberKind.CONSTRUCTOR, null, EnumSet.noneOf(DeclarationModifier.class));
@@ -185,7 +157,7 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_whenSegmentsCompared_shouldNotOverlapAcrossKindAccessAndModifiers() {
+    void encodeMemberDeclarationFlags_segmentsCompared_notOverlapAcrossKindAccessAndModifiers() {
         // Given
         int anyAccessBit = deriveAccessSegmentBit(MemberAccess.PUBLIC);
         int anyKindBit = encodeKindOnlyMask(MemberKind.TYPE_INTERFACE);
@@ -204,5 +176,32 @@ class MemberDeclarationFlagsUtilTest {
         assertThat(kindAndModifiersOverlap)
                 .as("kind vs modifiers must not overlap")
                 .isZero();
+    }
+
+    private static int deriveAccessSegmentBit(MemberAccess memberAccess) {
+        int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
+        int encodedWithAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                MemberKind.FIELD, memberAccess, EnumSet.noneOf(DeclarationModifier.class));
+        return encodedWithAccess ^ kindOnlyMask;
+    }
+
+    private static int deriveAllMemberAccessBitsMask() {
+        int combinedAccessBitsMask = 0;
+        for (MemberAccess memberAccess : MemberAccess.values()) {
+            combinedAccessBitsMask |= deriveAccessSegmentBit(memberAccess);
+        }
+        return combinedAccessBitsMask;
+    }
+
+    private static int encodeKindOnlyMask(MemberKind memberKind) {
+        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                memberKind, null, EnumSet.noneOf(DeclarationModifier.class));
+    }
+
+    private static int deriveModifiersSegmentBitsMask(Set<DeclarationModifier> declarationModifiers) {
+        int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
+        int encodedWithModifiers =
+                MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, declarationModifiers);
+        return encodedWithModifiers ^ kindOnlyMask;
     }
 }
