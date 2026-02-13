@@ -35,23 +35,11 @@ Everything below is **still missing** and is the focus of this plan.
   - **Goal:** alphabetical ordering is deterministic (and locale-independent).
   - **Must assert:** tie-breakers (sourceStart/signature) are applied consistently.
 
-- [ ] **SortKey.SOURCE_ORDER**
-  - **Type:** component
-  - **Targets:** `RelocationDetector`, `SpoonTypeMemberUtils`
-  - **Goal:** ordering respects original positions as the primary key.
-  - **Must assert:** correct handling after reordering (stable referencing to original positions).
-
 - [ ] **SortKey.VISIBILITY_ASC / VISIBILITY_DESC**
   - **Type:** component
   - **Targets:** `ComparatorUtils`
   - **Goal:** visibility rank mapping is correct and both directions are correct.
   - **Must assert:** exact rank ordering for public/protected/package-private/private.
-
-- [ ] **SortKey.SIGNATURE**
-  - **Type:** component
-  - **Targets:** `ComparatorUtils`, signature builder used in sorter
-  - **Goal:** signature ordering is stable and does not depend on environment-specific Spoon output.
-  - **Must assert:** deterministic order for overload sets and generics.
 
 - [ ] **keepAccessorsTogether effect on final order**
   - **Type:** component
