@@ -26,9 +26,10 @@ class GroupMembersOrdererComplexDependenciesTest {
     @Test
     void orderMembersInsideGroups_dependencyGraphOverridesAlpha_expectedDependencyOrder() {
         // Given
-        CtType<?> mainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                COMPLEX_FIXTURE_CLASSPATH_RESOURCE_PATH);
-        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup("complex", true, List.of(SortKey.ALPHA));
+        CtType<?> mainType =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(COMPLEX_FIXTURE_CLASSPATH_RESOURCE_PATH);
+        CompiledMemberGroup compiledMemberGroup =
+                CompiledMemberGroupTestCreator.createCompiledMemberGroup("complex", true, List.of(SortKey.ALPHA));
         Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup = streamExplicitSourceTypeMembers(mainType)
                 .collect(toUnmodifiableMap(member -> member, member -> compiledMemberGroup));
         MemberDependencyGraph memberDependencyGraph =
