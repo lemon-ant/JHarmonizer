@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -241,14 +242,6 @@ class EffectiveMemberGroupResolverTest {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(fixtureMainType.getTypeMembers(), simpleName);
     }
 
-    private static URL requireFixtureUrl(String classpathAbsolutePath) {
-        URL resolvedUrl = EffectiveMemberGroupResolverTest.class.getResource(classpathAbsolutePath);
-        if (resolvedUrl == null) {
-            throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
-        }
-        return resolvedUrl;
-    }
-
     private static CtTypeMember requireUniqueInitializerBlockMember(
             CtType<?> declaringType, boolean requiredStaticness) {
         List<CtAnonymousExecutable> initializerBlocks = declaringType.getTypeMembers().stream()
@@ -269,7 +262,7 @@ class EffectiveMemberGroupResolverTest {
     private static final class FixtureConstants {
         private static final String FIXTURE_RESOURCE_PATH =
                 "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionFixture.java";
-        private static final URL FIXTURE_URL = requireFixtureUrl(FIXTURE_RESOURCE_PATH);
+        private static final URL FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURE_RESOURCE_PATH);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
         private static final CtTypeMember STATIC_INITIALIZER_BLOCK_MEMBER =
@@ -289,7 +282,7 @@ class EffectiveMemberGroupResolverTest {
     private static final class AccessorFixtureConstants {
         private static final String FIXTURE_RESOURCE_PATH =
                 "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionAccessorBundleFixture.java";
-        private static final URL FIXTURE_URL = requireFixtureUrl(FIXTURE_RESOURCE_PATH);
+        private static final URL FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURE_RESOURCE_PATH);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
         private static final CtTypeMember GET_VALUE_METHOD_MEMBER = requireFixtureMember(FIXTURE_MAIN_TYPE, "getValue");
@@ -305,7 +298,7 @@ class EffectiveMemberGroupResolverTest {
     private static final class BlankFinalFixtureConstants {
         private static final String FIXTURE_RESOURCE_PATH =
                 "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionBlankFinalFixture.java";
-        private static final URL FIXTURE_URL = requireFixtureUrl(FIXTURE_RESOURCE_PATH);
+        private static final URL FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURE_RESOURCE_PATH);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
         private static final CtTypeMember STATIC_INITIALIZER_BLOCK_MEMBER =

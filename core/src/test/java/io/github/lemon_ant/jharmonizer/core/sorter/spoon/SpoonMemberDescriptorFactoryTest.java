@@ -31,7 +31,7 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class SpoonMemberDescriptorFactoryTest {
 
-    private static final URL TEST_CASES_RESOURCE_ROOT_URL = SpoonMemberDescriptorFactoryTest.class.getResource(
+    private static final URL TEST_CASES_RESOURCE_ROOT_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(
             "/test-cases/core/sorter/spoon/member-descriptor/valid/");
     private static final CtType<?> CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES =
             parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");

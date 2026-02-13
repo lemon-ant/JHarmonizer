@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createFormatting;
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createHeaderLine;
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createTopLevelTypesOrdering;
-import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.CreationHelper.createTypeGroup;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfigCreator.createFormatting;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfigCreator.createHeaderLine;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfigCreator.createTopLevelTypesOrdering;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfigCreator.createTypeGroup;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;

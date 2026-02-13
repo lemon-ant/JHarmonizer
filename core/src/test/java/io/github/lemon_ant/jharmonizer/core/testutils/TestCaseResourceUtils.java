@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.testutils;
 
-import static java.util.Objects.requireNonNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -13,13 +11,63 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Test-only utilities for reading test-case resources from the classpath.
+ * Test-only utilities for working with resources from the classpath.
  *
  * <p>We intentionally avoid resolving resources to {@link java.nio.file.Path} because resources may be packed into a
  * JAR or provided by a non-standard class loader in some runners.
  */
 @UtilityClass
 public class TestCaseResourceUtils {
+
+    @NonNull
+    public static URL requireClasspathResourceUrl(@NonNull String classpathAbsolutePath) {
+        if (!classpathAbsolutePath.startsWith("/")) {
+            throw new IllegalArgumentException(
+                    "Expected an absolute classpath resource path starting with '/', but got: "
+                            + classpathAbsolutePath);
+        }
+
+        URL resolvedUrl = TestCaseResourceUtils.class.getResource(classpathAbsolutePath);
+        if (resolvedUrl == null) {
+            throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
+        }
+
+        return resolvedUrl;
+    }
+
+    @NonNull
+    public static URL requireClasspathDirectoryUrl(@NonNull String classpathAbsoluteDirectoryPath) {
+        if (!classpathAbsoluteDirectoryPath.endsWith("/")) {
+            throw new IllegalArgumentException(
+                    "Expected an absolute classpath directory path ending with '/', but got: "
+                            + classpathAbsoluteDirectoryPath);
+        }
+
+        URL resolvedUrl = requireClasspathResourceUrl(classpathAbsoluteDirectoryPath);
+        if (!resolvedUrl.toExternalForm().endsWith("/")) {
+            throw new IllegalStateException("Classpath directory URL must end with '/', but got: " + resolvedUrl);
+        }
+
+        return resolvedUrl;
+    }
+
+    @NonNull
+    @Deprecated
+    public static InputStream openClasspathResourceStream(
+            @NonNull Class<?> anchorClass, @NonNull String classpathAbsolutePath) {
+        if (!classpathAbsolutePath.startsWith("/")) {
+            throw new IllegalArgumentException(
+                    "Expected an absolute classpath resource path starting with '/', but got: "
+                            + classpathAbsolutePath);
+        }
+
+        InputStream inputStream = anchorClass.getResourceAsStream(classpathAbsolutePath);
+        if (inputStream == null) {
+            throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
+        }
+
+        return inputStream;
+    }
 
     @NonNull
     public static URL resolveRelativeUrl(@NonNull URL directoryResourceUrl, @NonNull String relativePathSegment) {
@@ -54,11 +102,16 @@ public class TestCaseResourceUtils {
 
     @NonNull
     public static String readClasspathResourceAsString(@NonNull URL resourceUrl) {
-        requireNonNull(resourceUrl, "resourceUrl cannot be null");
         try (InputStream inputStream = resourceUrl.openStream()) {
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException ioException) {
             throw new UncheckedIOException("Failed to read resource URL: " + resourceUrl, ioException);
         }
+    }
+
+    @NonNull
+    public static String readClasspathResourceAsString(@NonNull String classpathAbsolutePath) {
+        URL resourceUrl = requireClasspathResourceUrl(classpathAbsolutePath);
+        return readClasspathResourceAsString(resourceUrl);
     }
 }

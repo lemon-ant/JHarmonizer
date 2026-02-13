@@ -7,23 +7,24 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.Src
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
-import java.net.URL;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
+
     private static final int ORIGINAL_SOURCE_CODE_LENGTH = 10053;
-    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = ParseAllJava21FeaturesTest.class.getResource(
-            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
+            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java";
+    private static final String SAMPLE_ALL_JAVA21_SOURCE_CODE =
+            TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
     private static final Path SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH = Path.of("SampleAllJava21FeaturesList.java");
 
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
-        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
+        SrcFile srcFile = new SrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        SrcFile srcFile = new SrcFile(sampleSourceCode, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
@@ -45,9 +46,8 @@ class ParseAllJava21FeaturesTest {
     @Test
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
         // Given
-        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
-        SpoonAstModel spoonASTModel =
-                SpoonParser.parseJavaSourceResource(SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH, sampleSourceCode);
+        SpoonAstModel spoonASTModel = SpoonParser.parseJavaSourceResource(
+                SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH, SAMPLE_ALL_JAVA21_SOURCE_CODE);
 
         // When
         SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);

@@ -34,7 +34,7 @@ class TypeGroupDeserializerTest {
         // Given
         String yaml = "- UNICORN";
 
-        // When/Then
+        // When / Then
         assertThatThrownBy(() -> mapper.readValue(
                         yaml,
                         mapper.getTypeFactory()

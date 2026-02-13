@@ -15,9 +15,9 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class NaturalMemberGroupResolverTest {
 
-    private static final URL CONFIG_RESOURCE_URL = NaturalMemberGroupResolverTest.class.getResource(
+    private static final URL CONFIG_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml");
-    private static final URL FIXTURE_DIRECTORY_RESOURCE_URL = NaturalMemberGroupResolverTest.class.getResource(
+    private static final URL FIXTURE_DIRECTORY_RESOURCE_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(
             "/test-cases/core/sorter/spoon/natural-group-resolution/valid/");
 
     @Test

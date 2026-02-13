@@ -10,13 +10,13 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.Forma
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -37,10 +37,11 @@ class JHarmonizerConfigLoaderTest {
     }
 
     @Test
-    void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() throws Exception {
+    void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() throws IOException {
         // Given
-        try (InputStream configYaml = Objects.requireNonNull(getClass()
-                .getResourceAsStream("/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml"))) {
+        try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(
+                JHarmonizerConfigLoaderTest.class,
+                "/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml")) {
 
             // When / Then
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
@@ -65,11 +66,11 @@ class JHarmonizerConfigLoaderTest {
     }
 
     @Test
-    void loadFrom_simpleWorkingConfigFile_doesNotThrow() throws Exception {
+    void loadFrom_simpleWorkingConfigFile_doesNotThrow() throws IOException {
         // Given
-        try (InputStream configYaml = getClass()
-                .getResourceAsStream("/test-cases/core/config/input/jharmonizer/simplest-working-config.yml")) {
-            assertThat(configYaml).isNotNull();
+        try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(
+                JHarmonizerConfigLoaderTest.class,
+                "/test-cases/core/config/input/jharmonizer/simplest-working-config.yml")) {
 
             // When / Then
             assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(configYaml)).doesNotThrowAnyException();

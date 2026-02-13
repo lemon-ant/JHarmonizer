@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -89,7 +90,7 @@ class MemberDependencyGraphBuilderTest {
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(Constants.ENUM_CONSTANT_INITIALIZER_MEMBERS);
 
-        /*
+        /* TODO Enable when enum constants are supported
         // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
                 Constants.ENUM_CONSTANT_ALPHA_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
@@ -162,7 +163,7 @@ class MemberDependencyGraphBuilderTest {
         private static final CompiledMemberGroup MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING =
                 createTrivialMemberGroup("test-group-without-accessor-bundling", false);
 
-        private static final URL ACCESSOR_PAIR_FIXTURE_URL = MemberDependencyGraphBuilderTest.class.getResource(
+        private static final URL ACCESSOR_PAIR_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/test-cases/core/sorter/spoon/dependency-graph/valid/AccessorPairBuilderFixture.java");
         private static final CtType<?> ACCESSOR_PAIR_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(ACCESSOR_PAIR_FIXTURE_URL);
@@ -175,7 +176,7 @@ class MemberDependencyGraphBuilderTest {
         private static final CtTypeMember SET_VALUE_METHOD_MEMBER = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                 ACCESSOR_PAIR_MEMBERS_WITH_ACCESSOR_BUNDLING, "setValue");
 
-        private static final URL FIELD_INITIALIZER_FIXTURE_URL = MemberDependencyGraphBuilderTest.class.getResource(
+        private static final URL FIELD_INITIALIZER_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/test-cases/core/sorter/spoon/dependency-graph/valid/FieldInitializerBuilderFixture.java");
         private static final CtType<?> FIELD_INITIALIZER_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIELD_INITIALIZER_FIXTURE_URL);
@@ -187,7 +188,7 @@ class MemberDependencyGraphBuilderTest {
         private static final CtTypeMember ALPHA_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIELD_INITIALIZER_MEMBERS, "ALPHA");
 
-        private static final URL INITIALIZER_BLOCK_FIXTURE_URL = MemberDependencyGraphBuilderTest.class.getResource(
+        private static final URL INITIALIZER_BLOCK_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/test-cases/core/sorter/spoon/dependency-graph/valid/InitializerBlockBuilderFixture.java");
         private static final CtType<?> INITIALIZER_BLOCK_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(INITIALIZER_BLOCK_FIXTURE_URL);
@@ -200,21 +201,21 @@ class MemberDependencyGraphBuilderTest {
                 requireUniqueInitializerBlockMember(INITIALIZER_BLOCK_FIXTURE_MAIN_TYPE, true);
 
         private static final URL ENUM_CONSTANT_INITIALIZER_FIXTURE_URL =
-                MemberDependencyGraphBuilderTest.class.getResource(
+                TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/EnumConstantInitializerBuilderFixture.java");
         private static final CtType<?> ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(ENUM_CONSTANT_INITIALIZER_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup> ENUM_CONSTANT_INITIALIZER_MEMBERS =
                 buildTypeMember2NaturalGroup(
                         ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-        /*
+        /* TODO Enable when enum constants are supported
         private static final CtTypeMember ENUM_CONSTANT_BRAVO_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
         private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
         */
 
-        private static final URL BLANK_FINAL_FIXTURE_URL = MemberDependencyGraphBuilderTest.class.getResource(
+        private static final URL BLANK_FINAL_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalDefiniteAssignmentBuilderFixture.java");
         private static final CtType<?> BLANK_FINAL_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(BLANK_FINAL_FIXTURE_URL);

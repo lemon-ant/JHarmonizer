@@ -17,7 +17,8 @@ class ConfigModelSnapshotTest {
 
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/test-cases/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
-    private static final URL SNAPSHOT_RESOURCE_URL = ConfigModelSnapshotTest.class.getResource(CLASS_PATH_TO_SNAPSHOT);
+    private static final URL SNAPSHOT_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 

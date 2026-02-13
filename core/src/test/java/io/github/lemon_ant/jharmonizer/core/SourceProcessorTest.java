@@ -24,25 +24,16 @@ class SourceProcessorTest {
 
     private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
-    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL =
-            SourceProcessorTest.class.getResource("/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
+            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
 
     @TempDir
     Path temporaryDirectory;
 
-    private static String loadSampleAllJava21FeaturesSource() {
-        return TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
-    }
-
-    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
-        Path javaFilePath = baseDirectoryPath.resolve(fileName);
-        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
-    }
-
     @Test
     void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
         // Given
-        String sampleSourceCode = loadSampleAllJava21FeaturesSource();
+        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
         String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SourceProcessor sourceProcessor = new SourceProcessor();
@@ -84,7 +75,7 @@ class SourceProcessorTest {
     @Test
     void processSources_alreadyRestructuredFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
         // Given
-        String sampleSourceCode = loadSampleAllJava21FeaturesSource();
+        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
         SourceProcessor sourceProcessor = new SourceProcessor();
         sourceProcessor.processSources(
@@ -96,5 +87,10 @@ class SourceProcessorTest {
                 .doesNotThrowAnyException();
         String finalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSourceCode).isNotBlank();
+    }
+
+    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
+        Path javaFilePath = baseDirectoryPath.resolve(fileName);
+        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 }

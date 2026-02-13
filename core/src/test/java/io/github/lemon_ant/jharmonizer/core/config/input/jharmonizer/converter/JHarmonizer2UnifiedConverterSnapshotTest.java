@@ -26,7 +26,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/test-cases/core/config/input/jharmonizer/expected-default-unified-config.json";
     private static final URL SNAPSHOT_RESOURCE_URL =
-            JHarmonizer2UnifiedConverterSnapshotTest.class.getResource(CLASS_PATH_TO_SNAPSHOT);
+            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 

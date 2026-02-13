@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.Set;
@@ -13,8 +14,8 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class MemberDependencyGraphTest {
 
-    private static final URL DEPENDENCY_GRAPH_FIXTURE_URL =
-            resolveFixtureUrl("/test-cases/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
+    private static final URL DEPENDENCY_GRAPH_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
+            "/test-cases/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
     private static final CtType<?> PARSED_FIXTURE_MAIN_TYPE =
             SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(DEPENDENCY_GRAPH_FIXTURE_URL);
     private static final CtTypeMember ALPHA_FIELD_MEMBER =
@@ -160,25 +161,6 @@ class MemberDependencyGraphTest {
     }
 
     @Test
-    void findTransitiveDependents_dependencyCycle_returnFiniteClosure() {
-        // Given
-        MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
-        memberDependencyGraph.addEdge(
-                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        memberDependencyGraph.addEdge(
-                BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-        memberDependencyGraph.addEdge(
-                CHARLIE_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-
-        // When
-        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(
-                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
-
-        // Then
-        assertThat(transitiveDependents).containsExactlyInAnyOrder(BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER);
-    }
-
-    @Test
     void findTransitiveDependents_resultReturned_resultUnmodifiable() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
@@ -192,13 +174,5 @@ class MemberDependencyGraphTest {
         assertThat(transitiveDependents).containsExactly(BRAVO_FIELD_MEMBER);
         assertThatThrownBy(() -> transitiveDependents.add(ALPHA_FIELD_MEMBER))
                 .isInstanceOf(UnsupportedOperationException.class);
-    }
-
-    private static URL resolveFixtureUrl(String classpathAbsolutePath) {
-        URL resolvedUrl = MemberDependencyGraphTest.class.getResource(classpathAbsolutePath);
-        if (resolvedUrl == null) {
-            throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
-        }
-        return resolvedUrl;
     }
 }

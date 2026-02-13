@@ -6,8 +6,8 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-//TODO Rename
-public class CreationHelper {
+// TODO Rename
+public class JHarmonizerConfigCreator {
     public static JHarmonizerHeaderLine createHeaderLine(char character, int leftPadding) {
         return new JHarmonizerHeaderLine(character, leftPadding);
     }
