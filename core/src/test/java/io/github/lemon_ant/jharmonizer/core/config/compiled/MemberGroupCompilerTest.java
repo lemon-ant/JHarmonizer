@@ -35,24 +35,18 @@ class MemberGroupCompilerTest {
         CompiledMemberGroup compiledB = compiledA.getCompiledSubGroups().getFirst();
         CompiledMemberGroup compiledC = compiledA.getCompiledSubGroups().get(1);
         CompiledMemberGroup compiledD = compiledC.getCompiledSubGroups().getFirst();
-
         assertThat(compiledB.getOrderIndex()).isEqualTo(0);
         assertThat(compiledD.getOrderIndex()).isEqualTo(1);
         assertThat(compiledC.getOrderIndex()).isEqualTo(2);
         assertThat(compiledA.getOrderIndex()).isEqualTo(3);
         assertThat(compiledE.getOrderIndex()).isEqualTo(4);
-
         List<CompiledMemberGroup> allCompiledGroups = collectAllGroups(compiledRoots);
-
         Set<Integer> uniqueOrderIndexes = new HashSet<>();
         allCompiledGroups.stream().map(CompiledMemberGroup::getOrderIndex).forEach(uniqueOrderIndexes::add);
-
         assertThat(uniqueOrderIndexes).hasSize(allCompiledGroups.size());
-
         List<Integer> expectedIndexes =
                 IntStream.range(0, allCompiledGroups.size()).boxed().toList();
         assertThat(uniqueOrderIndexes).containsExactlyInAnyOrderElementsOf(expectedIndexes);
-
         // Each parent must have a greater index than any of its descendants.
         assertThat(compiledA.getOrderIndex()).isGreaterThan(compiledB.getOrderIndex());
         assertThat(compiledA.getOrderIndex()).isGreaterThan(compiledC.getOrderIndex());
@@ -90,7 +84,6 @@ class MemberGroupCompilerTest {
                 compiledOverrideContainer.getCompiledSubGroups().getFirst();
         CompiledMemberGroup compiledInheritedUnderOverride =
                 compiledOverrideContainer.getCompiledSubGroups().get(1);
-
         assertThat(compiledRoot.isKeepAccessorsTogether()).isTrue();
         assertThat(compiledInheritedChild.isKeepAccessorsTogether()).isTrue();
         assertThat(compiledOverrideContainer.isKeepAccessorsTogether()).isFalse();

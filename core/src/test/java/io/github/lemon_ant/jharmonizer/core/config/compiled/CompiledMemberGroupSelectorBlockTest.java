@@ -13,19 +13,6 @@ import org.junit.jupiter.api.Test;
 
 class CompiledMemberGroupSelectorBlockTest {
 
-    private static MemberDescriptor createFieldDescriptor(
-            String fieldName, MemberAccess memberAccess, DeclarationModifier... declarationModifiers) {
-        EnumSet<DeclarationModifier> declarationModifiersSet = declarationModifiers.length == 0
-                ? EnumSet.noneOf(DeclarationModifier.class)
-                : EnumSet.copyOf(Set.of(declarationModifiers));
-        return MemberDescriptor.builder()
-                .name(fieldName)
-                .memberKind(MemberKind.FIELD)
-                .memberAccess(memberAccess)
-                .declarationModifiers(declarationModifiersSet)
-                .build();
-    }
-
     @Test
     void match_includesAndExcludesEmpty_returnTrue() {
         // Given
@@ -95,5 +82,18 @@ class CompiledMemberGroupSelectorBlockTest {
 
         // Then
         assertThat(matches).isFalse();
+    }
+
+    private static MemberDescriptor createFieldDescriptor(
+            String fieldName, MemberAccess memberAccess, DeclarationModifier... declarationModifiers) {
+        EnumSet<DeclarationModifier> declarationModifiersSet = declarationModifiers.length == 0
+                ? EnumSet.noneOf(DeclarationModifier.class)
+                : EnumSet.copyOf(Set.of(declarationModifiers));
+        return MemberDescriptor.builder()
+                .name(fieldName)
+                .memberKind(MemberKind.FIELD)
+                .memberAccess(memberAccess)
+                .declarationModifiers(declarationModifiersSet)
+                .build();
     }
 }
