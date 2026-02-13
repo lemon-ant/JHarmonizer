@@ -7,4 +7,5 @@ public enum EnumScenario {
     void alpha() {}
 
     void beta() {}
+
 }

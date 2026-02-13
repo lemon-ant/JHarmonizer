@@ -15,7 +15,8 @@ import org.assertj.core.api.Assertions;
 @UtilityClass
 final class JavaCompileTestUtils {
 
-    static void assertJavaSourcesCompileWithRelease21(@NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
+    static void assertJavaSourcesCompileWithRelease21(
+            @NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
         List<Path> javaSources;
         try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {

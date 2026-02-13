@@ -8,4 +8,5 @@ public record RecordScenario(int value) {
     String zeta() {
         return "z";
     }
+
 }

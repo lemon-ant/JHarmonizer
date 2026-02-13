@@ -24,8 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SourceProcessorE2EFixtureTest {
 
-    private static final Path E2E_FIXTURES_ROOT =
-            Path.of("src/test/resources/test-cases/core/e2e/restructure");
+    private static final Path E2E_FIXTURES_ROOT = Path.of("src/test/resources/test-cases/core/e2e/restructure");
     private static final List<String> REQUIRED_SCENARIO_NAMES = List.of(
             "01-baseline-ordering",
             "02-static-vs-instance-initializers",
@@ -46,15 +45,18 @@ class SourceProcessorE2EFixtureTest {
         List<Path> scenarioDirectoryPaths = loadScenarioDirectories();
         Path workingInputRootDirectoryPath = temporaryDirectoryPath.resolve("working-input");
         List<ScenarioContext> scenarioContexts = scenarioDirectoryPaths.stream()
-                .map(scenarioDirectoryPath -> prepareScenarioContext(scenarioDirectoryPath, workingInputRootDirectoryPath))
+                .map(scenarioDirectoryPath ->
+                        prepareScenarioContext(scenarioDirectoryPath, workingInputRootDirectoryPath))
                 .toList();
         Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("before-compile");
         Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
 
         // When
-        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
+                workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
         scenarioContexts.forEach(this::runAndAssertSingleScenario);
-        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
+                workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
 
         // Then
         assertThat(temporaryDirectoryPath).exists();
@@ -81,8 +83,8 @@ class SourceProcessorE2EFixtureTest {
             Path fixtureInputDirectoryPath = scenarioDirectoryPath.resolve("input");
             Path fixtureExpectedDirectoryPath = scenarioDirectoryPath.resolve("expected");
             Path fixtureConfigPath = scenarioDirectoryPath.resolve("config.yml");
-            Path scenarioWorkingInputDirectoryPath =
-                    workingInputRootDirectoryPath.resolve(scenarioDirectoryPath.getFileName().toString());
+            Path scenarioWorkingInputDirectoryPath = workingInputRootDirectoryPath.resolve(
+                    scenarioDirectoryPath.getFileName().toString());
             copyDirectory(fixtureInputDirectoryPath, scenarioWorkingInputDirectoryPath);
             return new ScenarioContext(
                     scenarioDirectoryPath.getFileName().toString(),
@@ -90,7 +92,8 @@ class SourceProcessorE2EFixtureTest {
                     fixtureConfigPath,
                     scenarioWorkingInputDirectoryPath);
         } catch (Exception exception) {
-            throw new IllegalStateException("Failed to prepare E2E scenario: " + scenarioDirectoryPath.getFileName(), exception);
+            throw new IllegalStateException(
+                    "Failed to prepare E2E scenario: " + scenarioDirectoryPath.getFileName(), exception);
         }
     }
 
@@ -107,8 +110,9 @@ class SourceProcessorE2EFixtureTest {
     private static void runRestructureFlow(Path sourceDirectoryPath, Path configPath) throws Exception {
         CompiledConfig compiledConfig = Unified2CompiledModelCompiler.compile(
                 JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(toUrl(configPath)));
-        Formatter formatter =
-                new Formatter(compiledConfig.getFormatting().getFormatterStyle(), compiledConfig.getFormatting().isFixImports());
+        Formatter formatter = new Formatter(
+                compiledConfig.getFormatting().getFormatterStyle(),
+                compiledConfig.getFormatting().isFixImports());
         RestructureFlow restructureFlow =
                 new RestructureFlow(formatter, compiledConfig.isBackupsEnabled(), new Sorter(compiledConfig));
 
@@ -138,7 +142,8 @@ class SourceProcessorE2EFixtureTest {
                             String actualSourceCode = Files.readString(actualSourcePath, StandardCharsets.UTF_8);
                             assertThat(JavaCompileTestUtils.normalizeSourceForFixtureComparison(actualSourceCode))
                                     .as("Normalized output mismatch for %s", relativeSourcePath)
-                                    .isEqualTo(JavaCompileTestUtils.normalizeSourceForFixtureComparison(expectedSourceCode));
+                                    .isEqualTo(JavaCompileTestUtils.normalizeSourceForFixtureComparison(
+                                            expectedSourceCode));
                         } catch (IOException ioException) {
                             throw new IllegalStateException(
                                     "Failed to compare sources for " + relativeSourcePath, ioException);
