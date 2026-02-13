@@ -15,9 +15,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -42,8 +43,25 @@ class SourceProcessorE2EFixtureTest {
     void processFixtureScenarios_allScenarios_matchExpectedAndCompileAfter() throws Exception {
         // Given
         assertThat(E2E_FIXTURES_ROOT).exists().isDirectory();
+        List<Path> scenarioDirectoryPaths = loadScenarioDirectories();
+        Path workingInputRootDirectoryPath = temporaryDirectoryPath.resolve("working-input");
+        List<ScenarioContext> scenarioContexts = scenarioDirectoryPaths.stream()
+                .map(scenarioDirectoryPath -> prepareScenarioContext(scenarioDirectoryPath, workingInputRootDirectoryPath))
+                .toList();
+        Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("before-compile");
+        Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
 
         // When
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
+        scenarioContexts.forEach(this::runAndAssertSingleScenario);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
+
+        // Then
+        assertThat(temporaryDirectoryPath).exists();
+    }
+
+    @NonNull
+    private List<Path> loadScenarioDirectories() throws IOException {
         try (Stream<Path> scenarioPathStream = Files.list(E2E_FIXTURES_ROOT)) {
             List<Path> scenarioDirectoryPaths = scenarioPathStream
                     .filter(Files::isDirectory)
@@ -53,49 +71,46 @@ class SourceProcessorE2EFixtureTest {
                     .map(path -> path.getFileName().toString())
                     .toList();
             assertThat(actualScenarioNames).containsExactlyElementsOf(REQUIRED_SCENARIO_NAMES);
-            scenarioDirectoryPaths.forEach(this::verifyScenario);
+            return scenarioDirectoryPaths;
         }
-
-        // Then
-        assertThat(temporaryDirectoryPath).exists();
     }
 
-    private void verifyScenario(Path scenarioDirectoryPath) {
+    @NonNull
+    private ScenarioContext prepareScenarioContext(Path scenarioDirectoryPath, Path workingInputRootDirectoryPath) {
         try {
-            // Given
             Path fixtureInputDirectoryPath = scenarioDirectoryPath.resolve("input");
             Path fixtureExpectedDirectoryPath = scenarioDirectoryPath.resolve("expected");
             Path fixtureConfigPath = scenarioDirectoryPath.resolve("config.yml");
-            Path scenarioWorkingInputDirectoryPath = temporaryDirectoryPath.resolve(
-                    scenarioDirectoryPath.getFileName().toString() + "-input");
+            Path scenarioWorkingInputDirectoryPath =
+                    workingInputRootDirectoryPath.resolve(scenarioDirectoryPath.getFileName().toString());
             copyDirectory(fixtureInputDirectoryPath, scenarioWorkingInputDirectoryPath);
-            Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve(
-                    scenarioDirectoryPath.getFileName().toString() + "-before-compile");
-            Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve(
-                    scenarioDirectoryPath.getFileName().toString() + "-after-compile");
-
-            // When
-            JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
-                    scenarioWorkingInputDirectoryPath, beforeCompileOutputDirectoryPath);
-            runRestructureFlow(scenarioWorkingInputDirectoryPath, fixtureConfigPath);
-            JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
-                    scenarioWorkingInputDirectoryPath, afterCompileOutputDirectoryPath);
-
-            // Then
-            assertDirectoriesEqualWithNormalization(fixtureExpectedDirectoryPath, scenarioWorkingInputDirectoryPath);
+            return new ScenarioContext(
+                    scenarioDirectoryPath.getFileName().toString(),
+                    fixtureExpectedDirectoryPath,
+                    fixtureConfigPath,
+                    scenarioWorkingInputDirectoryPath);
         } catch (Exception exception) {
-            throw new IllegalStateException("Failed E2E scenario: " + scenarioDirectoryPath.getFileName(), exception);
+            throw new IllegalStateException("Failed to prepare E2E scenario: " + scenarioDirectoryPath.getFileName(), exception);
+        }
+    }
+
+    private void runAndAssertSingleScenario(ScenarioContext scenarioContext) {
+        try {
+            runRestructureFlow(scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath());
+            assertDirectoriesEqualWithNormalization(
+                    scenarioContext.expectedDirectoryPath(), scenarioContext.workingInputDirectoryPath());
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed E2E scenario: " + scenarioContext.name(), exception);
         }
     }
 
     private static void runRestructureFlow(Path sourceDirectoryPath, Path configPath) throws Exception {
         CompiledConfig compiledConfig = Unified2CompiledModelCompiler.compile(
                 JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(toUrl(configPath)));
-        Formatter formatter = new Formatter(
-                compiledConfig.getFormatting().getFormatterStyle(),
-                compiledConfig.getFormatting().isFixImports());
-        RestructureFlow restructureFlow = new RestructureFlow(
-                formatter, compiledConfig.isBackupsEnabled(), new Sorter(compiledConfig));
+        Formatter formatter =
+                new Formatter(compiledConfig.getFormatting().getFormatterStyle(), compiledConfig.getFormatting().isFixImports());
+        RestructureFlow restructureFlow =
+                new RestructureFlow(formatter, compiledConfig.isBackupsEnabled(), new Sorter(compiledConfig));
 
         try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
             sourcePathStream
@@ -154,4 +169,7 @@ class SourceProcessorE2EFixtureTest {
             throw new IllegalArgumentException("Cannot convert path to URL: " + path, exception);
         }
     }
+
+    private record ScenarioContext(
+            String name, Path expectedDirectoryPath, Path configPath, Path workingInputDirectoryPath) {}
 }
