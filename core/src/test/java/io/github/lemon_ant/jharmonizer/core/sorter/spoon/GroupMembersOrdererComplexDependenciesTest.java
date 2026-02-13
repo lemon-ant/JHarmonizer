@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
+// TODO Review
 class GroupMembersOrdererComplexDependenciesTest {
 
     @Test
@@ -81,16 +82,16 @@ class GroupMembersOrdererComplexDependenciesTest {
 
     private static void assertTransitiveDependencyChainIsRespected(@NonNull List<String> orderedAlphaKeys) {
         int aDependentIndex = requireIndex(orderedAlphaKeys, Constants.A_DEPENDENT_ALPHA_KEY);
-        int a0Dependent2Index = requireIndex(orderedAlphaKeys, Constants.A0_DEPENDENT2_ALPHA_KEY);
+        int cDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int bDependentIndex = requireIndex(orderedAlphaKeys, Constants.B_DEPENDENT_ALPHA_KEY);
-        int b0Dependent2Index = requireIndex(orderedAlphaKeys, Constants.B0_DEPENDENT2_ALPHA_KEY);
-        assertThat(aDependentIndex).isLessThan(a0Dependent2Index);
-        assertThat(a0Dependent2Index).isLessThan(bDependentIndex);
-        assertThat(bDependentIndex).isLessThan(b0Dependent2Index);
+        int dDependentIndex = requireIndex(orderedAlphaKeys, Constants.D_DEPENDENT_ALPHA_KEY);
+        assertThat(aDependentIndex).isLessThan(cDependentIndex);
+        assertThat(cDependentIndex).isLessThan(bDependentIndex);
+        assertThat(bDependentIndex).isLessThan(dDependentIndex);
     }
 
     private static void assertInitializerBlockIsAfterTheDeepestDependent(@NonNull List<String> orderedAlphaKeys) {
-        int deepestDependentIndex = requireIndex(orderedAlphaKeys, Constants.B0_DEPENDENT2_ALPHA_KEY);
+        int deepestDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int initializerBlockIndex = requireIndex(orderedAlphaKeys, Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY);
         assertThat(initializerBlockIndex).isGreaterThan(deepestDependentIndex);
     }
@@ -151,9 +152,9 @@ class GroupMembersOrdererComplexDependenciesTest {
         private static final Set<String> PROVIDER_ALPHA_KEYS =
                 Set.of(W_PROVIDER_ALPHA_KEY, X_PROVIDER_ALPHA_KEY, Y_PROVIDER_ALPHA_KEY, Z_PROVIDER_ALPHA_KEY);
         private static final String A_DEPENDENT_ALPHA_KEY = "a_dependent:int";
-        private static final String A0_DEPENDENT2_ALPHA_KEY = "a0_dependent2:int";
         private static final String B_DEPENDENT_ALPHA_KEY = "b_dependent:int";
-        private static final String B0_DEPENDENT2_ALPHA_KEY = "b0_dependent2:int";
+        private static final String C_DEPENDENT_ALPHA_KEY = "c_dependent:int";
+        private static final String D_DEPENDENT_ALPHA_KEY = "d_dependent:int";
         private static final String INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY = "<init>";
         private static final String GET_ENABLED_FLAG_ALPHA_KEY = "getEnabledFlag():java.lang.Boolean";
         private static final String HAS_ENABLED_FLAG_ALPHA_KEY = "hasEnabledFlag():boolean";

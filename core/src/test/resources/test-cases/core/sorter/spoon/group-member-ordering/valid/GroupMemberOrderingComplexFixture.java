@@ -8,11 +8,18 @@ public class GroupMemberOrderingComplexFixture {
     private static final int x_provider = 3;
 
     private static final int a_dependent = w_provider + x_provider + y_provider + z_provider;
-    private static final int a0_dependent2 = a_dependent + y_provider;
-    private static final int b_dependent = a0_dependent2 + z_provider;
-    private static final int b0_dependent2 = b_dependent + x_provider;
+    private static final int c_dependent = a_dependent + y_provider;
 
     private boolean enabledFlag;
+    {
+        int localValue = c_dependent;
+        if (localValue > 0) {
+            enabledFlag = true;
+        }
+    }
+
+    private static final int b_dependent = c_dependent + z_provider;
+    private static final int d_dependent = b_dependent + x_provider;
 
     public void setEnabledFlag(boolean enabledFlag) {
         this.enabledFlag = enabledFlag;
@@ -32,12 +39,5 @@ public class GroupMemberOrderingComplexFixture {
 
     public boolean hasEnabledFlag() {
         return enabledFlag;
-    }
-
-    {
-        int localValue = b0_dependent2;
-        if (localValue > 0) {
-            enabledFlag = true;
-        }
     }
 }
