@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 
 @UtilityClass
@@ -30,16 +31,21 @@ final class JavaCompileTestUtils {
 
         Files.createDirectories(outputDirectoryPath);
         Path diagnosticsPath = outputDirectoryPath.resolve("javac-diagnostics.txt");
+        Path javacSourcesArgFilePath = outputDirectoryPath.resolve("javac-sources.argfile");
+        String javacArgFileContent = javaSources.stream()
+                .map(JavaCompileTestUtils::toJavacArgFileEntry)
+                .collect(Collectors.joining(System.lineSeparator()));
+        Files.writeString(javacSourcesArgFilePath, javacArgFileContent, StandardCharsets.UTF_8);
 
-        List<String> command = new ArrayList<>();
-        command.add("javac");
-        command.add("--release");
-        command.add("21");
-        command.add("-encoding");
-        command.add(StandardCharsets.UTF_8.name());
-        command.add("-d");
-        command.add(outputDirectoryPath.toString());
-        javaSources.stream().map(Path::toString).forEach(command::add);
+        List<String> command = List.of(
+                "javac",
+                "--release",
+                "21",
+                "-encoding",
+                StandardCharsets.UTF_8.name(),
+                "-d",
+                outputDirectoryPath.toString(),
+                "@" + javacSourcesArgFilePath);
 
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         String javacOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
@@ -67,10 +73,13 @@ final class JavaCompileTestUtils {
 
     @NonNull
     private static String trimTrailingWhitespace(@NonNull String textLine) {
-        int endIndex = textLine.length();
-        while (endIndex > 0 && Character.isWhitespace(textLine.charAt(endIndex - 1))) {
-            endIndex--;
-        }
-        return textLine.substring(0, endIndex);
+        return StringUtils.stripEnd(textLine, null);
+    }
+
+    @NonNull
+    private static String toJavacArgFileEntry(@NonNull Path sourcePath) {
+        String absolutePath = sourcePath.toAbsolutePath().toString();
+        String escapedPath = absolutePath.replace("\\", "\\\\").replace("\"", "\\\"");
+        return '"' + escapedPath + '"';
     }
 }
