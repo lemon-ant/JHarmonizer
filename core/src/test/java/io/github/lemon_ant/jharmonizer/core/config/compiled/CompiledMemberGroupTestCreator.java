@@ -30,4 +30,17 @@ public final class CompiledMemberGroupTestCreator {
                 .sortKey(SortKey.PRESERVE)
                 .build();
     }
+
+    public static CompiledMemberGroup createCompiledMemberGroup(
+            String groupName, boolean keepAccessorsTogether, List<SortKey> sortKeys) {
+        return CompiledMemberGroup.builder()
+                .name(groupName)
+                .orderIndex(1)
+                .keepAccessorsTogether(keepAccessorsTogether)
+                .sortKeys(sortKeys)
+                .compiledSubGroups(List.of())
+                .selectorBlock(new CompiledMemberGroupSelectorBlock(List.of(), List.of()))
+                .separator(UnifiedSeparator.NONE)
+                .build();
+    }
 }
