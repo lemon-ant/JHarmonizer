@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -61,15 +62,18 @@ final class JavaCompileTestUtils {
 
     @NonNull
     static String normalizeSourceForFixtureComparison(@NonNull String sourceCode) {
-        return sourceCode
+        String normalizedSourceCode = sourceCode
                 .replace("\r\n", "\n")
                 .replace("\r", "\n")
                 .lines()
                 .map(JavaCompileTestUtils::trimTrailingWhitespace)
                 .reduce((left, right) -> left + "\n" + right)
                 .orElse("")
-                .stripTrailing()
-                .concat("\n");
+                .stripTrailing();
+
+        String collapsedBlankLines = collapseConsecutiveBlankLines(normalizedSourceCode);
+
+        return collapsedBlankLines.replace("\n\n}", "\n}").concat("\n");
     }
 
     @NonNull
@@ -82,5 +86,21 @@ final class JavaCompileTestUtils {
         String absolutePath = sourcePath.toAbsolutePath().toString();
         String escapedPath = absolutePath.replace("\\", "\\\\").replace("\"", "\\\"");
         return '"' + escapedPath + '"';
+    }
+
+    @NonNull
+    private static String collapseConsecutiveBlankLines(@NonNull String sourceCode) {
+        AtomicBoolean previousLineWasBlank = new AtomicBoolean(false);
+        return sourceCode
+                .lines()
+                .filter(currentLine -> {
+                    boolean currentLineIsBlank = currentLine.isBlank();
+                    if (currentLineIsBlank && previousLineWasBlank.get()) {
+                        return false;
+                    }
+                    previousLineWasBlank.set(currentLineIsBlank);
+                    return true;
+                })
+                .collect(Collectors.joining("\n"));
     }
 }

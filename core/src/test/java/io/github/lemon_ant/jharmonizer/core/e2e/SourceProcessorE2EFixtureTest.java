@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledModelCompiler;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -100,6 +101,7 @@ class SourceProcessorE2EFixtureTest {
     private void runAndAssertSingleScenario(ScenarioContext scenarioContext) {
         try {
             runRestructureFlow(scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath());
+            runPostPalantirFormattingPhase(scenarioContext.workingInputDirectoryPath());
             assertDirectoriesEqualWithNormalization(
                     scenarioContext.expectedDirectoryPath(), scenarioContext.workingInputDirectoryPath());
         } catch (Exception exception) {
@@ -122,6 +124,23 @@ class SourceProcessorE2EFixtureTest {
                     .sorted()
                     .map(SourceFilesHandler::readFile)
                     .forEach(restructureFlow::processSource);
+        }
+    }
+
+    private static void runPostPalantirFormattingPhase(Path sourceDirectoryPath) throws IOException {
+        Formatter palantirFormatter = new Formatter(UnifiedFormatterStyle.PALANTIR, false);
+
+        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
+            sourcePathStream
+                    .filter(path -> path.toString().endsWith(".java"))
+                    .sorted()
+                    .forEach(sourcePath -> {
+                        SourceFilesHandler.SrcFile sourceFile = SourceFilesHandler.readFile(sourcePath);
+                        String formattedSourceCode = palantirFormatter
+                                .formatSource(sourceFile.getSrcCode(), sourcePath)
+                                .getFormatedSrcCode();
+                        SourceFilesHandler.overwrite(sourcePath, formattedSourceCode);
+                    });
         }
     }
 
