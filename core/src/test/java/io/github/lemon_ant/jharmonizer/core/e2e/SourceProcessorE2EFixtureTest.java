@@ -10,13 +10,14 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -25,8 +26,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SourceProcessorE2EFixtureTest {
 
-    private static final Path E2E_FIXTURES_ROOT = Path.of("src/test/resources/test-cases/core/e2e/restructure");
+    private static final String E2E_FIXTURES_ROOT_RESOURCE_PATH = "/test-cases/core/e2e/restructure/";
     private static final String INPUT_DIRECTORY_NAME = "input";
+    private static final String EXPECTED_DIRECTORY_NAME = "expected";
+    private static final String CONFIG_FILE_NAME = "config.yml";
 
     @TempDir
     Path temporaryDirectoryPath;
@@ -34,41 +37,50 @@ class SourceProcessorE2EFixtureTest {
     @Test
     void processFixtureScenarios_allScenarios_matchExpectedAndCompileAfter() throws Exception {
         // Given
-        assertThat(E2E_FIXTURES_ROOT).exists().isDirectory();
+        Path e2eFixturesRootPath = resolveFixturesRootPath();
         Path workingInputRootDirectoryPath = temporaryDirectoryPath.resolve("working-input");
-        copyOnlyInputJavaFiles(workingInputRootDirectoryPath);
+        copyOnlyInputJavaFiles(e2eFixturesRootPath, workingInputRootDirectoryPath);
         Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("before-compile");
         Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
 
         JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
                 workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
-        assertAllScenarioInputsAreNotStableForCurrentConfig(workingInputRootDirectoryPath);
+        assertAllScenarioInputsAreNotStableForCurrentConfig(e2eFixturesRootPath, workingInputRootDirectoryPath);
 
         // When
-        runFlowForAllScenarios(workingInputRootDirectoryPath, FlowType.RESTRUCTURE);
+        runFlowForAllScenarios(e2eFixturesRootPath, workingInputRootDirectoryPath, FlowType.RESTRUCTURE);
 
         // Then
-        assertAllScenarioInputsAreStableForCurrentConfig(workingInputRootDirectoryPath);
+        assertAllScenarioInputsAreStableForCurrentConfig(e2eFixturesRootPath, workingInputRootDirectoryPath);
         JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
                 workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
-        assertAllScenarioOutputsMatchExpectedExactly(workingInputRootDirectoryPath);
+        assertAllScenarioOutputsMatchExpectedExactly(e2eFixturesRootPath, workingInputRootDirectoryPath);
     }
 
-    private static void assertAllScenarioInputsAreNotStableForCurrentConfig(Path workingInputRootDirectoryPath)
-            throws IOException {
-        assertThatThrownBy(() -> runFlowForAllScenarios(workingInputRootDirectoryPath, FlowType.CHECK_FAIL_FAST))
+    private static Path resolveFixturesRootPath() {
+        URL fixturesRootUrl = TestCaseResourceUtils.requireClasspathDirectoryUrl(E2E_FIXTURES_ROOT_RESOURCE_PATH);
+        try {
+            return Path.of(fixturesRootUrl.toURI());
+        } catch (URISyntaxException exception) {
+            throw new IllegalArgumentException("Cannot convert fixtures URL to URI: " + fixturesRootUrl, exception);
+        }
+    }
+
+    private static void assertAllScenarioInputsAreNotStableForCurrentConfig(
+            Path e2eFixturesRootPath, Path workingInputRootDirectoryPath) throws IOException {
+        assertThatThrownBy(() -> runFlowForAllScenarios(e2eFixturesRootPath, workingInputRootDirectoryPath, FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
     }
 
-    private static void assertAllScenarioInputsAreStableForCurrentConfig(Path workingInputRootDirectoryPath)
-            throws IOException {
-        assertThatCode(() -> runFlowForAllScenarios(workingInputRootDirectoryPath, FlowType.CHECK_FAIL_FAST))
+    private static void assertAllScenarioInputsAreStableForCurrentConfig(
+            Path e2eFixturesRootPath, Path workingInputRootDirectoryPath) throws IOException {
+        assertThatCode(() -> runFlowForAllScenarios(e2eFixturesRootPath, workingInputRootDirectoryPath, FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
     }
 
-    private static void runFlowForAllScenarios(Path workingInputRootDirectoryPath, FlowType flowType)
+    private static void runFlowForAllScenarios(Path e2eFixturesRootPath, Path workingInputRootDirectoryPath, FlowType flowType)
             throws IOException {
-        forEachScenarioDirectory(scenarioDirectoryPath -> runSourceProcessor(
+        forEachScenarioDirectory(e2eFixturesRootPath, scenarioDirectoryPath -> runSourceProcessor(
                 workingInputPathForScenario(workingInputRootDirectoryPath, scenarioDirectoryPath),
                 scenarioConfigPath(scenarioDirectoryPath),
                 flowType));
@@ -86,10 +98,12 @@ class SourceProcessorE2EFixtureTest {
         sourceProcessor.processSources(sourceDirectoryPath, List.of(), List.of(), flowType);
     }
 
-    private static void assertAllScenarioOutputsMatchExpectedExactly(Path workingInputRootDirectoryPath)
-            throws IOException {
+    private static void assertAllScenarioOutputsMatchExpectedExactly(
+            Path e2eFixturesRootPath, Path workingInputRootDirectoryPath) throws IOException {
         forEachScenarioDirectory(
-                scenarioDirectoryPath -> assertScenarioOutputMatchesExpectedExactly(scenarioDirectoryPath, workingInputRootDirectoryPath));
+                e2eFixturesRootPath,
+                scenarioDirectoryPath -> assertScenarioOutputMatchesExpectedExactly(
+                        scenarioDirectoryPath, workingInputRootDirectoryPath));
     }
 
     private static void assertScenarioOutputMatchesExpectedExactly(
@@ -100,7 +114,6 @@ class SourceProcessorE2EFixtureTest {
         try (Stream<Path> expectedPathStream = Files.walk(expectedDirectoryPath)) {
             expectedPathStream
                     .filter(path -> path.toString().endsWith(".java"))
-                    .sorted()
                     .forEach(expectedSourcePath -> {
                         Path relativeSourcePath = expectedDirectoryPath.relativize(expectedSourcePath);
                         Path actualSourcePath = actualDirectoryPath.resolve(relativeSourcePath);
@@ -122,25 +135,20 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
-    private static void copyOnlyInputJavaFiles(Path workingInputRootDirectoryPath) throws IOException {
+    private static void copyOnlyInputJavaFiles(Path e2eFixturesRootPath, Path workingInputRootDirectoryPath)
+            throws IOException {
         try (Stream<Path> inputJavaPathStream = SourceFilesHandler.findJavaFiles(
-                E2E_FIXTURES_ROOT,
-                List.of("**/" + INPUT_DIRECTORY_NAME + "/**/*.java"),
+                e2eFixturesRootPath,
+                List.of("**/" + INPUT_DIRECTORY_NAME + "/*.java"),
                 List.of())) {
-            inputJavaPathStream.sorted().forEach(inputJavaPath -> copyInputJavaFile(inputJavaPath, workingInputRootDirectoryPath));
+            inputJavaPathStream.forEach(inputJavaPath -> copyInputJavaFile(inputJavaPath, e2eFixturesRootPath, workingInputRootDirectoryPath));
         }
     }
 
-    private static void copyInputJavaFile(Path inputJavaPath, Path workingInputRootDirectoryPath) {
-        Path relativeSourcePath = E2E_FIXTURES_ROOT.relativize(inputJavaPath);
-        int inputDirectoryIndex = findInputDirectorySegmentIndex(relativeSourcePath);
-        if (inputDirectoryIndex <= 0 || inputDirectoryIndex >= relativeSourcePath.getNameCount() - 1) {
-            throw new IllegalArgumentException("Invalid input java path: " + inputJavaPath);
-        }
-
-        Path scenarioRelativePath = relativeSourcePath.subpath(0, inputDirectoryIndex);
-        Path sourcePathRelativeToInput = relativeSourcePath.subpath(inputDirectoryIndex + 1, relativeSourcePath.getNameCount());
-        Path targetPath = workingInputRootDirectoryPath.resolve(scenarioRelativePath).resolve(sourcePathRelativeToInput);
+    private static void copyInputJavaFile(Path inputJavaPath, Path e2eFixturesRootPath, Path workingInputRootDirectoryPath) {
+        Path relativeSourcePath = e2eFixturesRootPath.relativize(inputJavaPath);
+        Path scenarioRelativePath = relativeSourcePath.getParent().getParent();
+        Path targetPath = workingInputRootDirectoryPath.resolve(scenarioRelativePath).resolve(inputJavaPath.getFileName());
 
         try {
             Files.createDirectories(targetPath.getParent());
@@ -150,34 +158,25 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
-    private static int findInputDirectorySegmentIndex(Path relativeSourcePath) {
-        for (int index = 0; index < relativeSourcePath.getNameCount(); index++) {
-            if (INPUT_DIRECTORY_NAME.equals(relativeSourcePath.getName(index).toString())) {
-                return index;
-            }
-        }
-        return -1;
-    }
-
-    private static void forEachScenarioDirectory(Consumer<Path> scenarioDirectoryConsumer) throws IOException {
-        try (Stream<Path> scenarioPathStream = Files.list(E2E_FIXTURES_ROOT)) {
+    private static void forEachScenarioDirectory(Path e2eFixturesRootPath, Consumer<Path> scenarioDirectoryConsumer)
+            throws IOException {
+        try (Stream<Path> scenarioPathStream = Files.list(e2eFixturesRootPath)) {
             scenarioPathStream
                     .filter(Files::isDirectory)
-                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
                     .forEach(scenarioDirectoryConsumer);
         }
     }
 
     private static Path scenarioConfigPath(Path scenarioDirectoryPath) {
-        return scenarioDirectoryPath.resolve("config.yml");
+        return scenarioDirectoryPath.resolve(CONFIG_FILE_NAME);
     }
 
     private static Path scenarioExpectedPath(Path scenarioDirectoryPath) {
-        return scenarioDirectoryPath.resolve("expected");
+        return scenarioDirectoryPath.resolve(EXPECTED_DIRECTORY_NAME);
     }
 
     private static Path workingInputPathForScenario(Path workingInputRootDirectoryPath, Path scenarioDirectoryPath) {
-        return workingInputRootDirectoryPath.resolve(scenarioDirectoryPath.getFileName().toString());
+        return workingInputRootDirectoryPath.resolve(scenarioDirectoryPath.getFileName());
     }
 
     private static URL toUrl(Path path) {

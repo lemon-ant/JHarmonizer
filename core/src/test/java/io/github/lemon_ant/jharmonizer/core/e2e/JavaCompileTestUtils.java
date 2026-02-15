@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 @UtilityClass
@@ -47,6 +47,9 @@ class JavaCompileTestUtils {
 
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         String javacOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        if (!javacOutput.isBlank()) {
+            System.out.print(javacOutput);
+        }
         int processExitCode = process.waitFor();
         Files.writeString(diagnosticsPath, javacOutput, StandardCharsets.UTF_8);
 
@@ -57,22 +60,8 @@ class JavaCompileTestUtils {
     }
 
     private static void resetOutputDirectory(Path outputDirectoryPath) throws IOException {
-        if (Files.notExists(outputDirectoryPath)) {
-            Files.createDirectories(outputDirectoryPath);
-            return;
-        }
-
-        try (Stream<Path> pathStream = Files.walk(outputDirectoryPath)) {
-            pathStream.sorted(Comparator.reverseOrder())
-                    .filter(path -> !path.equals(outputDirectoryPath))
-                    .forEach(path -> {
-                        try {
-                            Files.delete(path);
-                        } catch (IOException ioException) {
-                            throw new IllegalStateException("Failed to clean output directory: " + outputDirectoryPath, ioException);
-                        }
-                    });
-        }
+        FileUtils.forceMkdir(outputDirectoryPath.toFile());
+        FileUtils.cleanDirectory(outputDirectoryPath.toFile());
     }
 
     private static boolean writeJavaSourcePathsArgFile(Path sourceDirectoryPath, Path javacSourcesArgFilePath)
@@ -81,8 +70,11 @@ class JavaCompileTestUtils {
             String argFileContent = javaPathStream
                     .map(JavaCompileTestUtils::toJavacArgFileEntry)
                     .collect(Collectors.joining(System.lineSeparator()));
+            if (argFileContent.isBlank()) {
+                return false;
+            }
             Files.writeString(javacSourcesArgFilePath, argFileContent, StandardCharsets.UTF_8);
-            return !argFileContent.isBlank();
+            return true;
         }
     }
 
