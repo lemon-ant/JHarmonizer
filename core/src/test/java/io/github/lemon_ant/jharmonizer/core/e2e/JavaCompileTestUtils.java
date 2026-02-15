@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -7,10 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.assertj.core.api.Assertions;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 @UtilityClass
 class JavaCompileTestUtils {
@@ -26,8 +29,8 @@ class JavaCompileTestUtils {
         Path diagnosticsPath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-diagnostics.txt");
         Path javacSourcesArgFilePath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-sources.argfile");
 
-        int javaSourceCount = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
-        if (javaSourceCount == 0) {
+        boolean hasJavaSources = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
+        if (!hasJavaSources) {
             throw new IllegalStateException("No Java sources found in directory: " + sourceDirectoryPath);
         }
 
@@ -46,34 +49,26 @@ class JavaCompileTestUtils {
         int processExitCode = process.waitFor();
         Files.writeString(diagnosticsPath, javacOutput, StandardCharsets.UTF_8);
 
-        Assertions.assertThat(processExitCode)
+        assertThat(processExitCode)
                 .as("Expected javac --release %s to compile fixtures under %s. Diagnostics:%n%s"
                         .formatted(JAVA_RELEASE, sourceDirectoryPath, javacOutput))
                 .isZero();
     }
 
-    private static int writeJavaSourcePathsArgFile(Path sourceDirectoryPath, Path javacSourcesArgFilePath)
+    private static boolean writeJavaSourcePathsArgFile(Path sourceDirectoryPath, Path javacSourcesArgFilePath)
             throws IOException {
         try (Stream<Path> javaPathStream = SourceFilesHandler.findJavaFiles(sourceDirectoryPath, Set.of(), List.of())) {
-            StringBuilder argFileContentBuilder = new StringBuilder();
-            int[] javaSourceCount = {0};
-            javaPathStream.map(JavaCompileTestUtils::toJavacArgFileEntry)
-                    .forEachOrdered(argFileEntry -> {
-                        if (javaSourceCount[0] > 0) {
-                            argFileContentBuilder.append(System.lineSeparator());
-                        }
-                        argFileContentBuilder.append(argFileEntry);
-                        javaSourceCount[0]++;
-                    });
-            Files.writeString(javacSourcesArgFilePath, argFileContentBuilder.toString(), StandardCharsets.UTF_8);
-            return javaSourceCount[0];
+            String argFileContent = javaPathStream
+                    .map(JavaCompileTestUtils::toJavacArgFileEntry)
+                    .collect(Collectors.joining(System.lineSeparator()));
+            Files.writeString(javacSourcesArgFilePath, argFileContent, StandardCharsets.UTF_8);
+            return !argFileContent.isBlank();
         }
     }
 
     @NonNull
     private static String toJavacArgFileEntry(@NonNull Path sourcePath) {
         String absolutePath = sourcePath.toAbsolutePath().toString();
-        String escapedPath = absolutePath.replace("\\", "\\\\").replace("\"", "\\\"");
-        return '"' + escapedPath + '"';
+        return '"' + StringEscapeUtils.escapeJava(absolutePath) + '"';
     }
 }
