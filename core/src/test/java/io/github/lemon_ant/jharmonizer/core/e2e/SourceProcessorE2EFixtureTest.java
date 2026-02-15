@@ -8,16 +8,17 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -54,32 +55,35 @@ class SourceProcessorE2EFixtureTest {
         Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
 
         // When
-        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
+                workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
         assertAllScenarioInputsAreNotStableForCurrentConfig(scenarioContexts);
         runRestructureForAllScenarios(scenarioContexts);
-        runPostPalantirFormattingPhase(workingInputRootDirectoryPath);
-        assertAllScenarioInputsAreStableForCurrentConfig(scenarioContexts);
-        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
 
         // Then
+        assertAllScenarioInputsAreStableForCurrentConfig(scenarioContexts);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
+                workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
         scenarioContexts.forEach(SourceProcessorE2EFixtureTest::assertScenarioOutputMatchesExpectedExactly);
     }
 
     private void assertAllScenarioInputsAreNotStableForCurrentConfig(List<ScenarioContext> scenarioContexts) {
-        assertThatThrownBy(() -> scenarioContexts.forEach(scenarioContext -> runSourceProcessor(
-                        scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), FlowType.CHECK_FAIL_FAST)))
+        assertThatThrownBy(() -> runFlowForAllScenarios(scenarioContexts, FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
     }
 
     private static void runRestructureForAllScenarios(List<ScenarioContext> scenarioContexts) {
-        scenarioContexts.forEach(
-                scenarioContext -> runSourceProcessor(scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), FlowType.RESTRUCTURE));
+        runFlowForAllScenarios(scenarioContexts, FlowType.RESTRUCTURE);
     }
 
     private void assertAllScenarioInputsAreStableForCurrentConfig(List<ScenarioContext> scenarioContexts) {
-        assertThatCode(() -> scenarioContexts.forEach(scenarioContext -> runSourceProcessor(
-                        scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), FlowType.CHECK_FAIL_FAST)))
+        assertThatCode(() -> runFlowForAllScenarios(scenarioContexts, FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
+    }
+
+    private static void runFlowForAllScenarios(List<ScenarioContext> scenarioContexts, FlowType flowType) {
+        scenarioContexts.forEach(
+                scenarioContext -> runSourceProcessor(scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), flowType));
     }
 
     private static void runSourceProcessor(Path sourceDirectoryPath, Path configPath, FlowType flowType) {
@@ -92,19 +96,6 @@ class SourceProcessorE2EFixtureTest {
                 unifiedConfig.getRootMemberGroups());
         SourceProcessor sourceProcessor = new SourceProcessor(flexibleUnifiedConfig);
         sourceProcessor.processSources(sourceDirectoryPath, List.of(), List.of(), flowType);
-    }
-
-    private static void runPostPalantirFormattingPhase(Path sourceDirectoryPath) throws IOException {
-        Formatter palantirFormatter = new Formatter(UnifiedFormatterStyle.PALANTIR, false);
-
-        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
-            sourcePathStream.filter(path -> path.toString().endsWith(".java")).sorted().forEach(sourcePath -> {
-                SourceFilesHandler.SrcFile sourceFile = SourceFilesHandler.readFile(sourcePath);
-                String formattedSourceCode =
-                        palantirFormatter.formatSource(sourceFile.getSrcCode(), sourcePath).getFormatedSrcCode();
-                SourceFilesHandler.overwrite(sourcePath, formattedSourceCode);
-            });
-        }
     }
 
     private static void assertScenarioOutputMatchesExpectedExactly(ScenarioContext scenarioContext) {
@@ -168,18 +159,21 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void copyDirectory(Path sourceDirectoryPath, Path targetDirectoryPath) throws IOException {
-        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
-            for (Path sourcePath : sourcePathStream.sorted().toList()) {
+        Files.walkFileTree(sourceDirectoryPath, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path sourcePath, BasicFileAttributes attributes) throws IOException {
                 Path relativePath = sourceDirectoryPath.relativize(sourcePath);
-                Path targetPath = targetDirectoryPath.resolve(relativePath);
-                if (Files.isDirectory(sourcePath)) {
-                    Files.createDirectories(targetPath);
-                } else {
-                    Files.createDirectories(targetPath.getParent());
-                    Files.copy(sourcePath, targetPath);
-                }
+                Files.createDirectories(targetDirectoryPath.resolve(relativePath));
+                return FileVisitResult.CONTINUE;
             }
-        }
+
+            @Override
+            public FileVisitResult visitFile(Path sourcePath, BasicFileAttributes attributes) throws IOException {
+                Path relativePath = sourceDirectoryPath.relativize(sourcePath);
+                Files.copy(sourcePath, targetDirectoryPath.resolve(relativePath), StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private static URL toUrl(Path path) {

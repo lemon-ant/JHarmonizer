@@ -15,17 +15,16 @@ import org.assertj.core.api.Assertions;
 @UtilityClass
 class JavaCompileTestUtils {
 
-    private static final String JAVA_RELEASE = "21";
+    private static final int JAVA_RELEASE = 21;
+    private static final String E2E_TEST_ARTIFACT_PREFIX = "source-processor-e2e";
 
-    static void assertJavaSourcesCompileWithRelease21(@NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
+    static void assertJavaSourcesCompileWithRelease21(
+            @NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
         Files.createDirectories(outputDirectoryPath);
 
-        String sourceDirectoryName = sourceDirectoryPath.getFileName() == null
-                ? "source-root"
-                : sourceDirectoryPath.getFileName().toString();
-        Path diagnosticsPath = outputDirectoryPath.resolve(sourceDirectoryName + "-javac-diagnostics.txt");
-        Path javacSourcesArgFilePath = outputDirectoryPath.resolve(sourceDirectoryName + "-javac-sources.argfile");
+        Path diagnosticsPath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-diagnostics.txt");
+        Path javacSourcesArgFilePath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-sources.argfile");
 
         int javaSourceCount = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
         if (javaSourceCount == 0) {
@@ -35,7 +34,7 @@ class JavaCompileTestUtils {
         List<String> command = List.of(
                 "javac",
                 "--release",
-                JAVA_RELEASE,
+                Integer.toString(JAVA_RELEASE),
                 "-encoding",
                 StandardCharsets.UTF_8.name(),
                 "-d",
@@ -56,14 +55,18 @@ class JavaCompileTestUtils {
     private static int writeJavaSourcePathsArgFile(Path sourceDirectoryPath, Path javacSourcesArgFilePath)
             throws IOException {
         try (Stream<Path> javaPathStream = SourceFilesHandler.findJavaFiles(sourceDirectoryPath, Set.of(), List.of())) {
-            List<String> javacArgFileEntries = javaPathStream
-                    .map(JavaCompileTestUtils::toJavacArgFileEntry)
-                    .toList();
-            Files.writeString(
-                    javacSourcesArgFilePath,
-                    String.join(System.lineSeparator(), javacArgFileEntries),
-                    StandardCharsets.UTF_8);
-            return javacArgFileEntries.size();
+            StringBuilder argFileContentBuilder = new StringBuilder();
+            int[] javaSourceCount = {0};
+            javaPathStream.map(JavaCompileTestUtils::toJavacArgFileEntry)
+                    .forEachOrdered(argFileEntry -> {
+                        if (javaSourceCount[0] > 0) {
+                            argFileContentBuilder.append(System.lineSeparator());
+                        }
+                        argFileContentBuilder.append(argFileEntry);
+                        javaSourceCount[0]++;
+                    });
+            Files.writeString(javacSourcesArgFilePath, argFileContentBuilder.toString(), StandardCharsets.UTF_8);
+            return javaSourceCount[0];
         }
     }
 
