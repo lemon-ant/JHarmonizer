@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,14 +25,14 @@ class JavaCompileTestUtils {
     static void assertJavaSourcesCompileWithRelease21(
             @NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
-        Files.createDirectories(outputDirectoryPath);
+        resetOutputDirectory(outputDirectoryPath);
 
         Path diagnosticsPath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-diagnostics.txt");
         Path javacSourcesArgFilePath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-sources.argfile");
 
         boolean hasJavaSources = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
         if (!hasJavaSources) {
-            throw new IllegalStateException("No Java sources found in directory: " + sourceDirectoryPath);
+            throw new IllegalArgumentException("No Java sources found in directory: " + sourceDirectoryPath);
         }
 
         List<String> command = List.of(
@@ -53,6 +54,25 @@ class JavaCompileTestUtils {
                 .as("Expected javac --release %s to compile fixtures under %s. Diagnostics:%n%s"
                         .formatted(JAVA_RELEASE, sourceDirectoryPath, javacOutput))
                 .isZero();
+    }
+
+    private static void resetOutputDirectory(Path outputDirectoryPath) throws IOException {
+        if (Files.notExists(outputDirectoryPath)) {
+            Files.createDirectories(outputDirectoryPath);
+            return;
+        }
+
+        try (Stream<Path> pathStream = Files.walk(outputDirectoryPath)) {
+            pathStream.sorted(Comparator.reverseOrder())
+                    .filter(path -> !path.equals(outputDirectoryPath))
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException ioException) {
+                            throw new IllegalStateException("Failed to clean output directory: " + outputDirectoryPath, ioException);
+                        }
+                    });
+        }
     }
 
     private static boolean writeJavaSourcePathsArgFile(Path sourceDirectoryPath, Path javacSourcesArgFilePath)
