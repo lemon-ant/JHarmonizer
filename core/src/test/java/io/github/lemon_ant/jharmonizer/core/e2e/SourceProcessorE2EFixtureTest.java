@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -19,13 +20,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class SourceProcessorE2EFixtureTest {
 
     private static final Path E2E_FIXTURES_ROOT = Path.of("src/test/resources/test-cases/core/e2e/restructure");
+    private static final String INPUT_DIRECTORY_NAME = "input";
 
     @TempDir
     Path temporaryDirectoryPath;
@@ -35,11 +36,9 @@ class SourceProcessorE2EFixtureTest {
         // Given
         assertThat(E2E_FIXTURES_ROOT).exists().isDirectory();
         Path workingInputRootDirectoryPath = temporaryDirectoryPath.resolve("working-input");
-        prepareWorkingInputDirectories(workingInputRootDirectoryPath);
+        copyOnlyInputJavaFiles(workingInputRootDirectoryPath);
         Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("before-compile");
         Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
-
-        assertScenarioAuxiliaryFilesAreNotCopied(workingInputRootDirectoryPath);
 
         JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
                 workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
@@ -123,26 +122,41 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
-    private static void assertScenarioAuxiliaryFilesAreNotCopied(Path workingInputRootDirectoryPath) throws IOException {
-        forEachScenarioDirectory(scenarioDirectoryPath -> {
-            Path scenarioWorkingInputDirectoryPath =
-                    workingInputPathForScenario(workingInputRootDirectoryPath, scenarioDirectoryPath);
-            assertThat(scenarioWorkingInputDirectoryPath.resolve("config.yml")).doesNotExist();
-            assertThat(scenarioWorkingInputDirectoryPath.resolve("expected")).doesNotExist();
-        });
+    private static void copyOnlyInputJavaFiles(Path workingInputRootDirectoryPath) throws IOException {
+        try (Stream<Path> inputJavaPathStream = SourceFilesHandler.findJavaFiles(
+                E2E_FIXTURES_ROOT,
+                List.of("**/" + INPUT_DIRECTORY_NAME + "/**/*.java"),
+                List.of())) {
+            inputJavaPathStream.sorted().forEach(inputJavaPath -> copyInputJavaFile(inputJavaPath, workingInputRootDirectoryPath));
+        }
     }
 
-    private static void prepareWorkingInputDirectories(Path workingInputRootDirectoryPath) throws IOException {
-        forEachScenarioDirectory(scenarioDirectoryPath -> {
-            try {
-                FileUtils.copyDirectory(
-                        scenarioInputPath(scenarioDirectoryPath).toFile(),
-                        workingInputPathForScenario(workingInputRootDirectoryPath, scenarioDirectoryPath).toFile());
-            } catch (IOException ioException) {
-                throw new IllegalStateException(
-                        "Failed to prepare E2E scenario: " + scenarioDirectoryPath.getFileName(), ioException);
+    private static void copyInputJavaFile(Path inputJavaPath, Path workingInputRootDirectoryPath) {
+        Path relativeSourcePath = E2E_FIXTURES_ROOT.relativize(inputJavaPath);
+        int inputDirectoryIndex = findInputDirectorySegmentIndex(relativeSourcePath);
+        if (inputDirectoryIndex <= 0 || inputDirectoryIndex >= relativeSourcePath.getNameCount() - 1) {
+            throw new IllegalArgumentException("Invalid input java path: " + inputJavaPath);
+        }
+
+        Path scenarioRelativePath = relativeSourcePath.subpath(0, inputDirectoryIndex);
+        Path sourcePathRelativeToInput = relativeSourcePath.subpath(inputDirectoryIndex + 1, relativeSourcePath.getNameCount());
+        Path targetPath = workingInputRootDirectoryPath.resolve(scenarioRelativePath).resolve(sourcePathRelativeToInput);
+
+        try {
+            Files.createDirectories(targetPath.getParent());
+            Files.copy(inputJavaPath, targetPath);
+        } catch (IOException ioException) {
+            throw new IllegalStateException("Failed to copy scenario input file: " + inputJavaPath, ioException);
+        }
+    }
+
+    private static int findInputDirectorySegmentIndex(Path relativeSourcePath) {
+        for (int index = 0; index < relativeSourcePath.getNameCount(); index++) {
+            if (INPUT_DIRECTORY_NAME.equals(relativeSourcePath.getName(index).toString())) {
+                return index;
             }
-        });
+        }
+        return -1;
     }
 
     private static void forEachScenarioDirectory(Consumer<Path> scenarioDirectoryConsumer) throws IOException {
@@ -156,10 +170,6 @@ class SourceProcessorE2EFixtureTest {
 
     private static Path scenarioConfigPath(Path scenarioDirectoryPath) {
         return scenarioDirectoryPath.resolve("config.yml");
-    }
-
-    private static Path scenarioInputPath(Path scenarioDirectoryPath) {
-        return scenarioDirectoryPath.resolve("input");
     }
 
     private static Path scenarioExpectedPath(Path scenarioDirectoryPath) {
