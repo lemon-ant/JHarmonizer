@@ -1,15 +1,17 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledModelCompiler;
+import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -46,21 +48,89 @@ class SourceProcessorE2EFixtureTest {
         List<Path> scenarioDirectoryPaths = loadScenarioDirectories();
         Path workingInputRootDirectoryPath = temporaryDirectoryPath.resolve("working-input");
         List<ScenarioContext> scenarioContexts = scenarioDirectoryPaths.stream()
-                .map(scenarioDirectoryPath ->
-                        prepareScenarioContext(scenarioDirectoryPath, workingInputRootDirectoryPath))
+                .map(scenarioDirectoryPath -> prepareScenarioContext(scenarioDirectoryPath, workingInputRootDirectoryPath))
                 .toList();
         Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("before-compile");
         Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
 
         // When
-        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
-                workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
-        scenarioContexts.forEach(this::runAndAssertSingleScenario);
-        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
-                workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
+        assertAllScenarioInputsAreNotStableForCurrentConfig(scenarioContexts);
+        runRestructureForAllScenarios(scenarioContexts);
+        runPostPalantirFormattingPhase(workingInputRootDirectoryPath);
+        assertAllScenarioInputsAreStableForCurrentConfig(scenarioContexts);
+        JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(workingInputRootDirectoryPath, afterCompileOutputDirectoryPath);
 
         // Then
-        assertThat(temporaryDirectoryPath).exists();
+        scenarioContexts.forEach(SourceProcessorE2EFixtureTest::assertScenarioOutputMatchesExpectedExactly);
+    }
+
+    private void assertAllScenarioInputsAreNotStableForCurrentConfig(List<ScenarioContext> scenarioContexts) {
+        assertThatThrownBy(() -> scenarioContexts.forEach(scenarioContext -> runSourceProcessor(
+                        scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), FlowType.CHECK_FAIL_FAST)))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    private static void runRestructureForAllScenarios(List<ScenarioContext> scenarioContexts) {
+        scenarioContexts.forEach(
+                scenarioContext -> runSourceProcessor(scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), FlowType.RESTRUCTURE));
+    }
+
+    private void assertAllScenarioInputsAreStableForCurrentConfig(List<ScenarioContext> scenarioContexts) {
+        assertThatCode(() -> scenarioContexts.forEach(scenarioContext -> runSourceProcessor(
+                        scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath(), FlowType.CHECK_FAIL_FAST)))
+                .doesNotThrowAnyException();
+    }
+
+    private static void runSourceProcessor(Path sourceDirectoryPath, Path configPath, FlowType flowType) {
+        UnifiedConfig unifiedConfig = JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(toUrl(configPath));
+        FlexibleUnifiedConfig flexibleUnifiedConfig = new FlexibleUnifiedConfig(
+                unifiedConfig.getTopLevelTypesOrdering(),
+                unifiedConfig.getFormatting(),
+                unifiedConfig.isBackupsEnabled(),
+                unifiedConfig.getHeaderLine(),
+                unifiedConfig.getRootMemberGroups());
+        SourceProcessor sourceProcessor = new SourceProcessor(flexibleUnifiedConfig);
+        sourceProcessor.processSources(sourceDirectoryPath, List.of(), List.of(), flowType);
+    }
+
+    private static void runPostPalantirFormattingPhase(Path sourceDirectoryPath) throws IOException {
+        Formatter palantirFormatter = new Formatter(UnifiedFormatterStyle.PALANTIR, false);
+
+        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
+            sourcePathStream.filter(path -> path.toString().endsWith(".java")).sorted().forEach(sourcePath -> {
+                SourceFilesHandler.SrcFile sourceFile = SourceFilesHandler.readFile(sourcePath);
+                String formattedSourceCode =
+                        palantirFormatter.formatSource(sourceFile.getSrcCode(), sourcePath).getFormatedSrcCode();
+                SourceFilesHandler.overwrite(sourcePath, formattedSourceCode);
+            });
+        }
+    }
+
+    private static void assertScenarioOutputMatchesExpectedExactly(ScenarioContext scenarioContext) {
+        try (Stream<Path> expectedPathStream = Files.walk(scenarioContext.expectedDirectoryPath())) {
+            expectedPathStream
+                    .filter(path -> path.toString().endsWith(".java"))
+                    .sorted()
+                    .forEach(expectedSourcePath -> {
+                        Path relativeSourcePath = scenarioContext.expectedDirectoryPath().relativize(expectedSourcePath);
+                        Path actualSourcePath = scenarioContext.workingInputDirectoryPath().resolve(relativeSourcePath);
+                        assertThat(actualSourcePath)
+                                .as("Processed source must exist: %s", relativeSourcePath)
+                                .exists();
+                        try {
+                            String expectedSourceCode = Files.readString(expectedSourcePath, StandardCharsets.UTF_8);
+                            String actualSourceCode = Files.readString(actualSourcePath, StandardCharsets.UTF_8);
+                            assertThat(actualSourceCode).isEqualToNormalizingNewlines(expectedSourceCode);
+                        } catch (IOException ioException) {
+                            throw new IllegalStateException(
+                                    "Failed to compare sources for " + relativeSourcePath, ioException);
+                        }
+                    });
+        } catch (IOException ioException) {
+            throw new IllegalStateException(
+                    "Failed to verify scenario output for " + scenarioContext.name(), ioException);
+        }
     }
 
     @NonNull
@@ -84,8 +154,8 @@ class SourceProcessorE2EFixtureTest {
             Path fixtureInputDirectoryPath = scenarioDirectoryPath.resolve("input");
             Path fixtureExpectedDirectoryPath = scenarioDirectoryPath.resolve("expected");
             Path fixtureConfigPath = scenarioDirectoryPath.resolve("config.yml");
-            Path scenarioWorkingInputDirectoryPath = workingInputRootDirectoryPath.resolve(
-                    scenarioDirectoryPath.getFileName().toString());
+            Path scenarioWorkingInputDirectoryPath =
+                    workingInputRootDirectoryPath.resolve(scenarioDirectoryPath.getFileName().toString());
             copyDirectory(fixtureInputDirectoryPath, scenarioWorkingInputDirectoryPath);
             return new ScenarioContext(
                     scenarioDirectoryPath.getFileName().toString(),
@@ -93,81 +163,7 @@ class SourceProcessorE2EFixtureTest {
                     fixtureConfigPath,
                     scenarioWorkingInputDirectoryPath);
         } catch (Exception exception) {
-            throw new IllegalStateException(
-                    "Failed to prepare E2E scenario: " + scenarioDirectoryPath.getFileName(), exception);
-        }
-    }
-
-    private void runAndAssertSingleScenario(ScenarioContext scenarioContext) {
-        try {
-            runRestructureFlow(scenarioContext.workingInputDirectoryPath(), scenarioContext.configPath());
-            runPostPalantirFormattingPhase(scenarioContext.workingInputDirectoryPath());
-            assertDirectoriesEqualWithNormalization(
-                    scenarioContext.expectedDirectoryPath(), scenarioContext.workingInputDirectoryPath());
-        } catch (Exception exception) {
-            throw new IllegalStateException("Failed E2E scenario: " + scenarioContext.name(), exception);
-        }
-    }
-
-    private static void runRestructureFlow(Path sourceDirectoryPath, Path configPath) throws Exception {
-        CompiledConfig compiledConfig = Unified2CompiledModelCompiler.compile(
-                JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(toUrl(configPath)));
-        Formatter formatter = new Formatter(
-                compiledConfig.getFormatting().getFormatterStyle(),
-                compiledConfig.getFormatting().isFixImports());
-        RestructureFlow restructureFlow =
-                new RestructureFlow(formatter, compiledConfig.isBackupsEnabled(), new Sorter(compiledConfig));
-
-        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
-            sourcePathStream
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .sorted()
-                    .map(SourceFilesHandler::readFile)
-                    .forEach(restructureFlow::processSource);
-        }
-    }
-
-    private static void runPostPalantirFormattingPhase(Path sourceDirectoryPath) throws IOException {
-        Formatter palantirFormatter = new Formatter(UnifiedFormatterStyle.PALANTIR, false);
-
-        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
-            sourcePathStream
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .sorted()
-                    .forEach(sourcePath -> {
-                        SourceFilesHandler.SrcFile sourceFile = SourceFilesHandler.readFile(sourcePath);
-                        String formattedSourceCode = palantirFormatter
-                                .formatSource(sourceFile.getSrcCode(), sourcePath)
-                                .getFormatedSrcCode();
-                        SourceFilesHandler.overwrite(sourcePath, formattedSourceCode);
-                    });
-        }
-    }
-
-    private static void assertDirectoriesEqualWithNormalization(Path expectedDirectoryPath, Path actualDirectoryPath)
-            throws IOException {
-        try (Stream<Path> expectedPathStream = Files.walk(expectedDirectoryPath)) {
-            expectedPathStream
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .sorted()
-                    .forEach(expectedSourcePath -> {
-                        Path relativeSourcePath = expectedDirectoryPath.relativize(expectedSourcePath);
-                        Path actualSourcePath = actualDirectoryPath.resolve(relativeSourcePath);
-                        assertThat(actualSourcePath)
-                                .as("Processed source must exist: %s", relativeSourcePath)
-                                .exists();
-                        try {
-                            String expectedSourceCode = Files.readString(expectedSourcePath, StandardCharsets.UTF_8);
-                            String actualSourceCode = Files.readString(actualSourcePath, StandardCharsets.UTF_8);
-                            assertThat(JavaCompileTestUtils.normalizeSourceForFixtureComparison(actualSourceCode))
-                                    .as("Normalized output mismatch for %s", relativeSourcePath)
-                                    .isEqualTo(JavaCompileTestUtils.normalizeSourceForFixtureComparison(
-                                            expectedSourceCode));
-                        } catch (IOException ioException) {
-                            throw new IllegalStateException(
-                                    "Failed to compare sources for " + relativeSourcePath, ioException);
-                        }
-                    });
+            throw new IllegalStateException("Failed to prepare E2E scenario: " + scenarioDirectoryPath.getFileName(), exception);
         }
     }
 

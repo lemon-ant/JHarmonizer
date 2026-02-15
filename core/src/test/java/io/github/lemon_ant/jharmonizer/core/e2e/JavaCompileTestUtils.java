@@ -1,48 +1,41 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 
 @UtilityClass
-final class JavaCompileTestUtils {
+class JavaCompileTestUtils {
 
-    static void assertJavaSourcesCompileWithRelease21(
-            @NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
+    private static final String JAVA_RELEASE = "21";
+
+    static void assertJavaSourcesCompileWithRelease21(@NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
-        List<Path> javaSources;
-        try (Stream<Path> sourcePathStream = Files.walk(sourceDirectoryPath)) {
-            javaSources = sourcePathStream
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .sorted()
-                    .toList();
-        }
+        Files.createDirectories(outputDirectoryPath);
 
-        if (javaSources.isEmpty()) {
+        String sourceDirectoryName = sourceDirectoryPath.getFileName() == null
+                ? "source-root"
+                : sourceDirectoryPath.getFileName().toString();
+        Path diagnosticsPath = outputDirectoryPath.resolve(sourceDirectoryName + "-javac-diagnostics.txt");
+        Path javacSourcesArgFilePath = outputDirectoryPath.resolve(sourceDirectoryName + "-javac-sources.argfile");
+
+        int javaSourceCount = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
+        if (javaSourceCount == 0) {
             throw new IllegalStateException("No Java sources found in directory: " + sourceDirectoryPath);
         }
-
-        Files.createDirectories(outputDirectoryPath);
-        Path diagnosticsPath = outputDirectoryPath.resolve("javac-diagnostics.txt");
-        Path javacSourcesArgFilePath = outputDirectoryPath.resolve("javac-sources.argfile");
-        String javacArgFileContent = javaSources.stream()
-                .map(JavaCompileTestUtils::toJavacArgFileEntry)
-                .collect(Collectors.joining(System.lineSeparator()));
-        Files.writeString(javacSourcesArgFilePath, javacArgFileContent, StandardCharsets.UTF_8);
 
         List<String> command = List.of(
                 "javac",
                 "--release",
-                "21",
+                JAVA_RELEASE,
                 "-encoding",
                 StandardCharsets.UTF_8.name(),
                 "-d",
@@ -55,30 +48,23 @@ final class JavaCompileTestUtils {
         Files.writeString(diagnosticsPath, javacOutput, StandardCharsets.UTF_8);
 
         Assertions.assertThat(processExitCode)
-                .as("Expected javac --release 21 to compile fixtures under %s. Diagnostics:%n%s"
-                        .formatted(sourceDirectoryPath, javacOutput))
+                .as("Expected javac --release %s to compile fixtures under %s. Diagnostics:%n%s"
+                        .formatted(JAVA_RELEASE, sourceDirectoryPath, javacOutput))
                 .isZero();
     }
 
-    @NonNull
-    static String normalizeSourceForFixtureComparison(@NonNull String sourceCode) {
-        String normalizedSourceCode = sourceCode
-                .replace("\r\n", "\n")
-                .replace("\r", "\n")
-                .lines()
-                .map(JavaCompileTestUtils::trimTrailingWhitespace)
-                .reduce((left, right) -> left + "\n" + right)
-                .orElse("")
-                .stripTrailing();
-
-        String collapsedBlankLines = collapseConsecutiveBlankLines(normalizedSourceCode);
-
-        return collapsedBlankLines.replace("\n\n}", "\n}").concat("\n");
-    }
-
-    @NonNull
-    private static String trimTrailingWhitespace(@NonNull String textLine) {
-        return StringUtils.stripEnd(textLine, null);
+    private static int writeJavaSourcePathsArgFile(Path sourceDirectoryPath, Path javacSourcesArgFilePath)
+            throws IOException {
+        try (Stream<Path> javaPathStream = SourceFilesHandler.findJavaFiles(sourceDirectoryPath, Set.of(), List.of())) {
+            List<String> javacArgFileEntries = javaPathStream
+                    .map(JavaCompileTestUtils::toJavacArgFileEntry)
+                    .toList();
+            Files.writeString(
+                    javacSourcesArgFilePath,
+                    String.join(System.lineSeparator(), javacArgFileEntries),
+                    StandardCharsets.UTF_8);
+            return javacArgFileEntries.size();
+        }
     }
 
     @NonNull
@@ -86,21 +72,5 @@ final class JavaCompileTestUtils {
         String absolutePath = sourcePath.toAbsolutePath().toString();
         String escapedPath = absolutePath.replace("\\", "\\\\").replace("\"", "\\\"");
         return '"' + escapedPath + '"';
-    }
-
-    @NonNull
-    private static String collapseConsecutiveBlankLines(@NonNull String sourceCode) {
-        AtomicBoolean previousLineWasBlank = new AtomicBoolean(false);
-        return sourceCode
-                .lines()
-                .filter(currentLine -> {
-                    boolean currentLineIsBlank = currentLine.isBlank();
-                    if (currentLineIsBlank && previousLineWasBlank.get()) {
-                        return false;
-                    }
-                    previousLineWasBlank.set(currentLineIsBlank);
-                    return true;
-                })
-                .collect(Collectors.joining("\n"));
     }
 }
