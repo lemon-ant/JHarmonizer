@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +28,7 @@ class JavaCompileTestUtils {
             throws IOException, InterruptedException {
         resetOutputDirectory(outputDirectoryPath);
 
-        Path diagnosticsPath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-diagnostics.txt");
+        Path diagnosticsPath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-compile-logs.txt");
         Path javacSourcesArgFilePath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-sources.argfile");
 
         boolean hasJavaSources = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
@@ -73,7 +74,9 @@ class JavaCompileTestUtils {
             if (argFileContent.isBlank()) {
                 return false;
             }
-            Files.writeString(javacSourcesArgFilePath, argFileContent, StandardCharsets.UTF_8);
+            try (Writer argFileWriter = Files.newBufferedWriter(javacSourcesArgFilePath, StandardCharsets.UTF_8)) {
+                argFileWriter.write(argFileContent);
+            }
             return true;
         }
     }
