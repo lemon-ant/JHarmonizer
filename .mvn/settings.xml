@@ -20,7 +20,7 @@
     <proxies>
         <proxy>
             <id>default-http-proxy</id>
-            <active>true</active>
+            <active>${env.JHARMONIZER_MAVEN_PROXY_ACTIVE}</active>
             <protocol>http</protocol>
             <host>proxy</host>
             <port>8080</port>
