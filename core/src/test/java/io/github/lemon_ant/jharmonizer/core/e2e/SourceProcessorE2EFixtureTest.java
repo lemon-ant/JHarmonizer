@@ -39,6 +39,8 @@ class SourceProcessorE2EFixtureTest {
         Path beforeCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("before-compile");
         Path afterCompileOutputDirectoryPath = temporaryDirectoryPath.resolve("after-compile");
 
+        assertScenarioAuxiliaryFilesAreNotCopied(workingInputRootDirectoryPath);
+
         JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21(
                 workingInputRootDirectoryPath, beforeCompileOutputDirectoryPath);
         assertAllScenarioInputsAreNotStableForCurrentConfig(workingInputRootDirectoryPath);
@@ -119,6 +121,15 @@ class SourceProcessorE2EFixtureTest {
             throw new IllegalStateException(
                     "Failed to verify scenario output for " + scenarioDirectoryPath.getFileName(), ioException);
         }
+    }
+
+    private static void assertScenarioAuxiliaryFilesAreNotCopied(Path workingInputRootDirectoryPath) throws IOException {
+        forEachScenarioDirectory(scenarioDirectoryPath -> {
+            Path scenarioWorkingInputDirectoryPath =
+                    workingInputPathForScenario(workingInputRootDirectoryPath, scenarioDirectoryPath);
+            assertThat(scenarioWorkingInputDirectoryPath.resolve("config.yml")).doesNotExist();
+            assertThat(scenarioWorkingInputDirectoryPath.resolve("expected")).doesNotExist();
+        });
     }
 
     private static void prepareWorkingInputDirectories(Path workingInputRootDirectoryPath) throws IOException {
