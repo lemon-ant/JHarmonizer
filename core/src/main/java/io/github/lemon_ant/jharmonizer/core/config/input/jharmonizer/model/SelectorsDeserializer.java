@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -87,10 +88,10 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
         }
 
         if (allItemsTextual && allTextItemsOnSingleLine) {
-            return Set.of(Set.copyOf(singleLineFlowGroup));
+            return Set.of(Collections.unmodifiableSet(singleLineFlowGroup));
         }
 
-        return Set.copyOf(alternatives);
+        return Collections.unmodifiableSet(alternatives);
     }
 
     private Set<String> parseNestedArrayItem(JsonParser jsonParser) throws IOException {
@@ -104,13 +105,13 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
             group.addAll(parseCommaSeparated(jsonParser.getText()));
         }
 
-        return Set.copyOf(group);
+        return Collections.unmodifiableSet(group);
     }
 
     private Set<String> parseCommaSeparated(String text) {
         return Set.copyOf(Arrays.stream(StringUtils.split(text, ','))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toCollection(HashSet::new)));
+                .collect(Collectors.toUnmodifiableSet()));
     }
 }

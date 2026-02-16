@@ -83,5 +83,5 @@ class SelectorsDeserializerTest {
 
     private record IncludesHolder(
             @JsonDeserialize(using = SelectorsDeserializer.class)
-                    Set<Set<String>> include) {}
+            Set<Set<String>> include) {}
 }
