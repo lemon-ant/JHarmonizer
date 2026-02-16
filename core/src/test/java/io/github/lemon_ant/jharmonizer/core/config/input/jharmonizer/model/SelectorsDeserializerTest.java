@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -55,21 +56,24 @@ class SelectorsDeserializerTest {
     @Test
     void deserialize_unsupportedTopLevelNodeType_throwsClearException() {
         assertThatThrownBy(() -> parseIncludes("include:\n  key: value\n"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(JsonMappingException.class)
+                .hasRootCauseInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported selector value type");
     }
 
     @Test
     void deserialize_unsupportedArrayItemType_throwsClearException() {
         assertThatThrownBy(() -> parseIncludes("include:\n  - key: value\n"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(JsonMappingException.class)
+                .hasRootCauseInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported selector array item type");
     }
 
     @Test
     void deserialize_unsupportedNestedArrayItemType_throwsClearException() {
         assertThatThrownBy(() -> parseIncludes("include:\n  - [a, { key: value }]\n"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(JsonMappingException.class)
+                .hasRootCauseInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported nested selector item type");
     }
 
