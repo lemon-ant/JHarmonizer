@@ -5,22 +5,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 > Scope: `jharmonizer-core` (config pipeline, Spoon-based sorting, dependency graph, printing, formatting, flows).
 
----
-
-## What is already covered (context, no action)
-Already present tests give us confidence in:
-- Vendor YAML loading and model deserialization (including snapshots),
-- Vendor → Unified conversion (including snapshot),
-- Unified DTO invariants and flag/mask encoding,
-- Files discovery/backup/write via globs,
-- Palantir formatter integration (basic cases),
-- Spoon parse/serialize smoke + Java 21 syntax smoke,
-- A thin `SourceProcessor` smoke on temp FS.
-
-Everything below is **still missing** and is the focus of this plan.
-
----
-
 ## 6) Ordering inside a group (sort keys + tie-breakers)
 
 - [ ] **SortKey.PRESERVE**
@@ -35,23 +19,11 @@ Everything below is **still missing** and is the focus of this plan.
   - **Goal:** alphabetical ordering is deterministic (and locale-independent).
   - **Must assert:** tie-breakers (sourceStart/signature) are applied consistently.
 
-- [ ] **SortKey.SOURCE_ORDER**
-  - **Type:** component
-  - **Targets:** `RelocationDetector`, `SpoonTypeMemberUtils`
-  - **Goal:** ordering respects original positions as the primary key.
-  - **Must assert:** correct handling after reordering (stable referencing to original positions).
-
 - [ ] **SortKey.VISIBILITY_ASC / VISIBILITY_DESC**
   - **Type:** component
   - **Targets:** `ComparatorUtils`
   - **Goal:** visibility rank mapping is correct and both directions are correct.
   - **Must assert:** exact rank ordering for public/protected/package-private/private.
-
-- [ ] **SortKey.SIGNATURE**
-  - **Type:** component
-  - **Targets:** `ComparatorUtils`, signature builder used in sorter
-  - **Goal:** signature ordering is stable and does not depend on environment-specific Spoon output.
-  - **Must assert:** deterministic order for overload sets and generics.
 
 - [ ] **keepAccessorsTogether effect on final order**
   - **Type:** component
