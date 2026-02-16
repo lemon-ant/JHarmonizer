@@ -86,6 +86,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         int cDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int bDependentIndex = requireIndex(orderedAlphaKeys, Constants.B_DEPENDENT_ALPHA_KEY);
         int dDependentIndex = requireIndex(orderedAlphaKeys, Constants.D_DEPENDENT_ALPHA_KEY);
+        // TODO Explore flaky tests
         assertThat(aDependentIndex).isLessThan(cDependentIndex);
         assertThat(cDependentIndex).isLessThan(bDependentIndex);
         assertThat(bDependentIndex).isLessThan(dDependentIndex);

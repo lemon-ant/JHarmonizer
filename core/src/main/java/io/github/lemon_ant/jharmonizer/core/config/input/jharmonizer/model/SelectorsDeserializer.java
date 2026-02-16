@@ -109,9 +109,9 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
     }
 
     private Set<String> parseCommaSeparated(String text) {
-        return Set.copyOf(Arrays.stream(StringUtils.split(text, ','))
+        return Arrays.stream(StringUtils.split(text, ','))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toUnmodifiableSet()));
+                .collect(Collectors.toUnmodifiableSet());
     }
 }
