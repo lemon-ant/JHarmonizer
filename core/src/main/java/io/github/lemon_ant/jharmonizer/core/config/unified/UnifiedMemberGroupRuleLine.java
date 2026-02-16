@@ -53,7 +53,7 @@ public class UnifiedMemberGroupRuleLine {
             @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
             @Nullable UnifiedNameMatcher nameMatcher,
             @NonNull @Singular Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers) {
-        this.memberKinds = Collections.unmodifiableSet(memberKinds);
+        this.memberKinds = Collections.unmodifiableSet(new TreeSet<>(memberKinds));
         this.memberAccesses = Collections.unmodifiableSet(memberAccesses);
         this.declarationModifiers = Collections.unmodifiableSet(new TreeSet<>(declarationModifiers));
         this.nameMatcher = nameMatcher;
