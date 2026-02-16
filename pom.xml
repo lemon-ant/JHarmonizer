@@ -131,7 +131,7 @@
     <repositories>
         <repository>
             <releases>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </releases>
             <snapshots>
                 <enabled>true</enabled>

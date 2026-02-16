@@ -1,0 +1,26 @@
+formatting:
+  fix-imports: false
+  formatter-style: NONE
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  sort-keys: [ preserve ]
+type-members-ordering:
+  - name: Initializers
+    includes: ~.*
+    sort-keys: preserve
+    groups:
+      - name: Static initializers
+        separator: none
+        sort-keys: preserve
+        includes: [ static, initializer ]
+      - name: Instance initializers
+        separator: none
+        sort-keys: preserve
+        includes: [ initializer ]
+        excludes: [ static ]

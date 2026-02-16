@@ -63,6 +63,14 @@ public final class SourceProcessor {
      */
     public AggregatedProcessingStatistic processSources(
             Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs, FlowType flowType) {
+        log.info(
+                "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
+                flowType,
+                baseDir.toAbsolutePath(),
+                includeGlobs,
+                excludeGlobs,
+                config.isBackupsEnabled());
+
         IFlow flow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
@@ -70,6 +78,8 @@ public final class SourceProcessor {
                     case CHECK_ALL -> new CheckAllFlow(formatter, sorter);
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };
+
+        log.info("Resolved processing flow implementation: {}", flow.getClass().getSimpleName());
 
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SourceFilesHandler.findJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)

@@ -22,12 +22,15 @@ public class UnifiedConfigMerger {
 
         UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
 
+        Boolean backupsEnabled = overlay.getBackupsEnabled().orElse(baseline.isBackupsEnabled());
+
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups().orElse(baseline.getRootMemberGroups());
 
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
                 .formatting(formatting)
                 .headerLine(header)
+                .backupsEnabled(backupsEnabled)
                 .rootMemberGroups(root)
                 .build();
     }

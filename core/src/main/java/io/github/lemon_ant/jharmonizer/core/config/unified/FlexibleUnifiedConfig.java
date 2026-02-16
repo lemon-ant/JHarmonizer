@@ -69,6 +69,11 @@ public class FlexibleUnifiedConfig {
     }
 
     @NonNull
+    public Optional<Boolean> getBackupsEnabled() {
+        return ofNullable(backupsEnabled);
+    }
+
+    @NonNull
     public Optional<UnifiedHeaderLine> getHeaderLine() {
         return ofNullable(headerLine);
     }

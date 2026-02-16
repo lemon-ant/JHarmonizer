@@ -1,0 +1,25 @@
+formatting:
+  fix-imports: false
+  formatter-style: NONE
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 0
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  sort-keys: [ preserve ]
+type-members-ordering:
+  - name: Separator contract
+    includes: ~.*
+    sort-keys: preserve
+    groups:
+      - name: Header fields
+        separator: header
+        sort-keys: alpha
+        includes: field
+      - name: New line methods
+        separator: new-line
+        sort-keys: alpha
+        includes: method
