@@ -7,10 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import java.net.URL;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,24 +47,33 @@ class GroupMembersOrdererComplexDependenciesTest {
         List<MemberGroupBlock> orderedGroupBlocks = orderMembersInsideGroups(groupBlocks, dependencyGraph);
 
         // Then
-        List<String> sourceAlphaKeys = deriveAlphaKeys(explicitSourceTypeMembers);
         assertThat(orderedGroupBlocks)
                 .withFailMessage(
                         "Expected a single ordered block but got %s.%n%s",
                         orderedGroupBlocks.size(),
-                        buildDiagnosticReport(sourceAlphaKeys, List.of(), dependencyGraph))
+                        buildDiagnosticReport(explicitSourceTypeMembers, List.of(), dependencyGraph))
                 .hasSize(1);
+
         MemberGroupBlock orderedGroupBlock = orderedGroupBlocks.getFirst();
-        List<String> orderedAlphaKeys = deriveAlphaKeys(orderedGroupBlock.getTypeMembers());
-        assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph);
-        assertTransitiveDependencyChainIsRespected(orderedAlphaKeys, dependencyGraph, sourceAlphaKeys);
-        assertInitializerBlockIsAfterTheDeepestDependent(orderedAlphaKeys, dependencyGraph, sourceAlphaKeys);
-        assertAccessorBundlingPreventsInterleaving(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph);
+        List<CtTypeMember> orderedTypeMembers = orderedGroupBlock.getTypeMembers();
+        List<String> sourceAlphaKeys = deriveAlphaKeys(explicitSourceTypeMembers);
+        List<String> orderedAlphaKeys = deriveAlphaKeys(orderedTypeMembers);
+
+        assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
+                sourceAlphaKeys, orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
+        assertTransitiveDependencyChainIsRespected(
+                orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
+        assertInitializerBlockIsAfterTheDeepestDependent(
+                orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
+        assertAccessorBundlingPreventsInterleaving(
+                sourceAlphaKeys, orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
     }
 
     private static void assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
             @NonNull List<String> sourceAlphaKeys,
             @NonNull List<String> orderedAlphaKeys,
+            @NonNull List<CtTypeMember> sourceTypeMembers,
+            @NonNull List<CtTypeMember> orderedTypeMembers,
             @NonNull MemberDependencyGraph dependencyGraph) {
         List<String> providerKeysInSourceOrder = sourceAlphaKeys.stream()
                 .filter(Constants.PROVIDER_ALPHA_KEYS::contains)
@@ -90,15 +101,16 @@ class GroupMembersOrdererComplexDependenciesTest {
                             "Provider key '%s' should be before dependent '%s'.%n%s",
                             providerAlphaKey,
                             Constants.A_DEPENDENT_ALPHA_KEY,
-                            buildDiagnosticReport(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph))
+                            buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                     .isLessThan(dependentIndex);
         });
     }
 
     private static void assertTransitiveDependencyChainIsRespected(
             @NonNull List<String> orderedAlphaKeys,
-            @NonNull MemberDependencyGraph dependencyGraph,
-            @NonNull List<String> sourceAlphaKeys) {
+            @NonNull List<CtTypeMember> sourceTypeMembers,
+            @NonNull List<CtTypeMember> orderedTypeMembers,
+            @NonNull MemberDependencyGraph dependencyGraph) {
         int aDependentIndex = requireIndex(orderedAlphaKeys, Constants.A_DEPENDENT_ALPHA_KEY);
         int cDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int bDependentIndex = requireIndex(orderedAlphaKeys, Constants.B_DEPENDENT_ALPHA_KEY);
@@ -108,41 +120,44 @@ class GroupMembersOrdererComplexDependenciesTest {
                         "Expected '%s' before '%s'.%n%s",
                         Constants.A_DEPENDENT_ALPHA_KEY,
                         Constants.C_DEPENDENT_ALPHA_KEY,
-                        buildDiagnosticReport(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph))
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .isLessThan(cDependentIndex);
         assertThat(cDependentIndex)
                 .withFailMessage(
                         "Expected '%s' before '%s'.%n%s",
                         Constants.C_DEPENDENT_ALPHA_KEY,
                         Constants.B_DEPENDENT_ALPHA_KEY,
-                        buildDiagnosticReport(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph))
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .isLessThan(bDependentIndex);
         assertThat(bDependentIndex)
                 .withFailMessage(
                         "Expected '%s' before '%s'.%n%s",
                         Constants.B_DEPENDENT_ALPHA_KEY,
                         Constants.D_DEPENDENT_ALPHA_KEY,
-                        buildDiagnosticReport(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph))
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .isLessThan(dDependentIndex);
     }
 
     private static void assertInitializerBlockIsAfterTheDeepestDependent(
             @NonNull List<String> orderedAlphaKeys,
-            @NonNull MemberDependencyGraph dependencyGraph,
-            @NonNull List<String> sourceAlphaKeys) {
+            @NonNull List<CtTypeMember> sourceTypeMembers,
+            @NonNull List<CtTypeMember> orderedTypeMembers,
+            @NonNull MemberDependencyGraph dependencyGraph) {
         int deepestDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int initializerBlockIndex = requireIndex(orderedAlphaKeys, Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY);
         assertThat(initializerBlockIndex)
                 .withFailMessage(
                         "Initializer block should be after '%s'.%n%s",
                         Constants.C_DEPENDENT_ALPHA_KEY,
-                        buildDiagnosticReport(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph))
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .isGreaterThan(deepestDependentIndex);
     }
 
     private static void assertAccessorBundlingPreventsInterleaving(
             @NonNull List<String> sourceAlphaKeys,
             @NonNull List<String> orderedAlphaKeys,
+            @NonNull List<CtTypeMember> sourceTypeMembers,
+            @NonNull List<CtTypeMember> orderedTypeMembers,
             @NonNull MemberDependencyGraph dependencyGraph) {
         List<String> methodKeysInSourceOrder = sourceAlphaKeys.stream()
                 .filter(Constants.METHOD_ALPHA_KEYS::contains)
@@ -177,19 +192,38 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .withFailMessage(
                         "Method '%s' should be after accessor bundle.%n%s",
                         Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
-                        buildDiagnosticReport(sourceAlphaKeys, orderedAlphaKeys, dependencyGraph))
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .isGreaterThan(lastAccessorIndex);
     }
 
     private static String buildDiagnosticReport(
-            @NonNull List<String> sourceAlphaKeys,
-            @NonNull List<String> orderedAlphaKeys,
+            @NonNull List<CtTypeMember> sourceTypeMembers,
+            @NonNull List<CtTypeMember> orderedTypeMembers,
             @NonNull MemberDependencyGraph dependencyGraph) {
+        List<String> sourceAlphaKeys = deriveAlphaKeys(sourceTypeMembers);
+        List<String> orderedAlphaKeys = deriveAlphaKeys(orderedTypeMembers);
+        Map<String, CtTypeMember> sourceMembersByAlphaKey = sourceTypeMembers.stream()
+                .collect(Collectors.toMap(
+                        SpoonTypeMemberUtils::deriveAlphaKey,
+                        Function.identity(),
+                        (leftMember, ignored) -> leftMember,
+                        LinkedHashMap::new));
+
         StringBuilder diagnostic = new StringBuilder("Diagnostic report for flaky ordering test:\n");
         diagnostic.append("- sourceAlphaKeys=").append(sourceAlphaKeys).append('\n');
         diagnostic.append("- orderedAlphaKeys=").append(orderedAlphaKeys).append('\n');
         diagnostic.append("- trackedIndexes=").append(renderTrackedIndexes(orderedAlphaKeys)).append('\n');
-        diagnostic.append("- dependencyGraph=\n").append(dependencyGraph);
+        diagnostic
+                .append("- declarationDirectDependencies=")
+                .append(renderDirectDependenciesByMember(sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .append('\n');
+        diagnostic
+                .append("- declarationTransitiveDependencies=")
+                .append(renderTransitiveDependenciesByMember(sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .append('\n');
+        diagnostic
+                .append("- accessorBundleDirectDependencies=")
+                .append(renderDirectDependenciesByMember(sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
         return diagnostic.toString();
     }
 
@@ -222,6 +256,40 @@ class GroupMembersOrdererComplexDependenciesTest {
                 Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
                 orderedAlphaKeys.indexOf(Constants.HELLO_ENABLED_FLAG_ALPHA_KEY));
         return trackedIndexes;
+    }
+
+    private static Map<String, List<String>> renderDirectDependenciesByMember(
+            @NonNull Map<String, CtTypeMember> sourceMembersByAlphaKey,
+            @NonNull MemberDependencyGraph dependencyGraph,
+            @NonNull MemberDependencyEdgeKind edgeKind) {
+        return sourceMembersByAlphaKey.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        sourceEntry -> dependencyGraph
+                                .findDirectDependents(sourceEntry.getValue(), EnumSet.of(edgeKind))
+                                .stream()
+                                .map(SpoonTypeMemberUtils::deriveAlphaKey)
+                                .sorted()
+                                .toList(),
+                        (leftEntry, ignored) -> leftEntry,
+                        LinkedHashMap::new));
+    }
+
+    private static Map<String, List<String>> renderTransitiveDependenciesByMember(
+            @NonNull Map<String, CtTypeMember> sourceMembersByAlphaKey,
+            @NonNull MemberDependencyGraph dependencyGraph,
+            @NonNull MemberDependencyEdgeKind edgeKind) {
+        return sourceMembersByAlphaKey.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        sourceEntry -> dependencyGraph
+                                .findTransitiveDependents(sourceEntry.getValue(), EnumSet.of(edgeKind))
+                                .stream()
+                                .map(SpoonTypeMemberUtils::deriveAlphaKey)
+                                .sorted()
+                                .toList(),
+                        (leftEntry, ignored) -> leftEntry,
+                        LinkedHashMap::new));
     }
 
     private static int requireIndex(@NonNull List<String> alphaKeys, @NonNull String alphaKey) {
