@@ -38,7 +38,8 @@ class JavaRunMainTestUtils {
         List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
 
         try {
-            Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+            Process process =
+                    new ProcessBuilder(command).redirectErrorStream(true).start();
             String javaOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             int processExitCode = process.waitFor();
 
@@ -58,9 +59,7 @@ class JavaRunMainTestUtils {
 
     private static List<String> resolveTopLevelClassNames(Path sourceDirectoryPath) throws IOException {
         try (Stream<Path> javaPathStream = SourceFilesHandler.findJavaFiles(sourceDirectoryPath, Set.of(), List.of())) {
-            return javaPathStream
-                    .map(JavaRunMainTestUtils::resolveClassName)
-                    .toList();
+            return javaPathStream.map(JavaRunMainTestUtils::resolveClassName).toList();
         }
     }
 
@@ -75,7 +74,8 @@ class JavaRunMainTestUtils {
             return lines.map(String::trim)
                     .filter(line -> line.startsWith("package ") && line.endsWith(";"))
                     .findFirst()
-                    .map(line -> line.substring("package ".length(), line.length() - 1).trim())
+                    .map(line -> line.substring("package ".length(), line.length() - 1)
+                            .trim())
                     .orElse("");
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to resolve package for source file: " + javaFile, exception);
