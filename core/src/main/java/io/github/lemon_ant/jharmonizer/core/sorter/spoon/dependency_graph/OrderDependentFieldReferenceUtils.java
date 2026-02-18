@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -74,14 +75,16 @@ final class OrderDependentFieldReferenceUtils {
      * <p>
      * Goal: fewer artificial edges (still correct), better flexibility for grouping/sorting.
      */
-    static Set<CtField<?>> findReferencedFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
+    static Set<CtField<?>> findReferencedFields(
+            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentAstRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         int dependentSourceStart = requireSourceStart(dependentMember);
 
         return collectDeclaringTypeFields(
-                astRoot,
+                dependentAstRoot,
                 declaringType,
                 CtFieldAccess.class,
+                // TODO Reconsider to use shouldCreateDeclarationDependencyEdge for each case
                 referencedField -> shouldCreateDeclarationDependencyEdge(referencedField, dependentSourceStart));
     }
 
@@ -116,14 +119,16 @@ final class OrderDependentFieldReferenceUtils {
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static Set<CtField<?>> collectDeclaringTypeFields(
-            CtElement astRoot,
+            CtElement dependentAstRoot,
             CtType<?> declaringType,
             Class<?> rawFieldAccessClass,
             Predicate<CtField<?>> additionalFieldFilter) {
 
         TypeFilter<? extends CtFieldAccess<?>> fieldAccessTypeFilter = createFieldAccessTypeFilter(rawFieldAccessClass);
 
-        return astRoot.getElements(fieldAccessTypeFilter).stream()
+        List<? extends CtFieldAccess<?>> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
+
+        return dependentAstRootElements.stream()
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)

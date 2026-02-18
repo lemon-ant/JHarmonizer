@@ -40,13 +40,13 @@ class SourceProcessorE2EFixtureTest {
     @Test
     void processFixtureScenarios_allScenarios_matchExpectedAndCompileAfter() throws Exception {
         Path fixturesRoot = resolveFixturesRoot();
-        Path workingRoot = temporaryDirectory.resolve("SourceProcessorE2E-working-input");
+        Path workingRoot = temporaryDirectory.resolve("SourceProcessorE2E-working-dir");
         copyInputJavaFiles(fixturesRoot, workingRoot);
         Path compileBeforeOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-before");
         Path compileAfterOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-after");
 
-        // assertJavaSourcesCompileWithRelease21(workingRoot, compileBeforeOutput);
-        // assertScenariosAreNotStable(fixturesRoot,workingRoot);
+        assertJavaSourcesCompileWithRelease21(workingRoot, compileBeforeOutput);
+        assertScenariosAreNotStable(fixturesRoot, workingRoot);
 
         runFlowForScenarios(fixturesRoot, workingRoot, FlowType.RESTRUCTURE);
 
