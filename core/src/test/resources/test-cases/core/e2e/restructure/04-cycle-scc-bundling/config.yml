@@ -1,6 +1,6 @@
 formatting:
   fix-imports: false
-  formatter-style: NONE
+  formatter-style: PALANTIR
 backups-enabled: false
 header-line:
   character: "-"

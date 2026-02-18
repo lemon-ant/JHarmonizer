@@ -15,4 +15,11 @@ public class AccessorBundleSample {
         this.value = value;
     }
 
+    public static void main(String[] args) {
+        AccessorBundleSample sample = new AccessorBundleSample();
+        sample.setValue(7);
+        if (sample.getValue() != 7) {
+            throw new IllegalStateException("Unexpected accessor value: " + sample.getValue());
+        }
+    }
 }
