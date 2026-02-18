@@ -64,7 +64,7 @@ class GroupMembersOrderer {
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
         List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
+        Map<String, CtTypeMember> groupMembersByAlphaKey = indexGroupMembersByAlphaKey(groupMembers);
 
         Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator =
                 ComparatorUtils.buildSortKeyValuesComparator(sortKeys);
@@ -76,13 +76,14 @@ class GroupMembersOrderer {
                 buildTypeMemberComparator(sortKeyValuesProvider, sortKeyValuesComparator);
 
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
-                ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
+                ? buildAccessorBundleMembersByMember(
+                        groupMembersByAlphaKey, memberDependencyGraph, typeMemberBaseComparator)
                 : Map.of();
 
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
                 .map(typeMember -> convertTypeMember2SortableTypeMember(
                         typeMember,
-                        groupMemberSet,
+                        groupMembersByAlphaKey,
                         memberDependencyGraph,
                         keepAccessorsTogether,
                         accessorBundleMembersByMember,
@@ -105,17 +106,17 @@ class GroupMembersOrderer {
     @NonNull
     private static SortableTypeMember convertTypeMember2SortableTypeMember(
             CtTypeMember typeMember,
-            Set<CtTypeMember> groupMembers,
+            Map<String, CtTypeMember> groupMembersByAlphaKey,
             MemberDependencyGraph memberDependencyGraph,
             boolean keepAccessorsTogether,
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
             Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
 
-        Set<CtTypeMember> declarationDependentsInGroup =
-                memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
-                        .filter(groupMembers::contains)
-                        .collect(Collectors.toUnmodifiableSet());
+        Set<CtTypeMember> declarationDependentsInGroup = canonicalizeToGroupMembers(
+                memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream(),
+                groupMembersByAlphaKey);
+
 
         if (keepAccessorsTogether) {
             declarationDependentsInGroup =
@@ -150,22 +151,26 @@ class GroupMembersOrderer {
 
     @NonNull
     private static Map<CtTypeMember, List<CtTypeMember>> buildAccessorBundleMembersByMember(
-            Set<@NonNull CtTypeMember> groupMembers,
+            Map<String, CtTypeMember> groupMembersByAlphaKey,
             MemberDependencyGraph memberDependencyGraph,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = new HashMap<>();
         Set<CtTypeMember> alreadyIndexedMembers = new HashSet<>();
 
-        for (CtTypeMember groupMember : groupMembers) {
+        for (CtTypeMember groupMember : groupMembersByAlphaKey.values()) {
             if (alreadyIndexedMembers.contains(groupMember)) {
                 continue;
             }
 
-            List<CtTypeMember> sortedBundleMembersInGroup = Stream.concat(
-                            Stream.of(groupMember),
-                            memberDependencyGraph.findDirectDependents(groupMember, ACCESSOR_BUNDLE_ONLY).stream())
-                    .filter(groupMembers::contains)
+            List<CtTypeMember> sortedBundleMembersInGroup = canonicalizeToGroupMembers(
+                            Stream.concat(
+                                    Stream.of(groupMember),
+                                    memberDependencyGraph
+                                            .findDirectDependents(groupMember, ACCESSOR_BUNDLE_ONLY)
+                                            .stream()),
+                            groupMembersByAlphaKey)
+                    .stream()
                     .sorted(typeMemberBaseComparator)
                     .toList();
 
@@ -188,5 +193,25 @@ class GroupMembersOrderer {
             CtTypeMember typeMember, Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
         List<CtTypeMember> sortedBundleMembersInGroup = accessorBundleMembersByMember.get(typeMember);
         return sortedBundleMembersInGroup == null ? typeMember : sortedBundleMembersInGroup.getFirst();
+    }
+
+    @NonNull
+    private static Map<String, CtTypeMember> indexGroupMembersByAlphaKey(@NonNull List<CtTypeMember> groupMembers) {
+        return groupMembers.stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        SpoonTypeMemberUtils::deriveAlphaKey,
+                        Function.identity(),
+                        (leftMember, ignored) -> leftMember));
+    }
+
+    @NonNull
+    private static Set<CtTypeMember> canonicalizeToGroupMembers(
+            @NonNull Stream<CtTypeMember> dependencyMembers,
+            @NonNull Map<String, CtTypeMember> groupMembersByAlphaKey) {
+        return dependencyMembers
+                .map(SpoonTypeMemberUtils::deriveAlphaKey)
+                .map(groupMembersByAlphaKey::get)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }
