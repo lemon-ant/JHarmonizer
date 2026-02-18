@@ -1,0 +1,25 @@
+formatting:
+  fix-imports: false
+  formatter-style: NONE
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ enum ]
+  sort-keys: [ preserve ]
+type-members-ordering:
+  - name: Enum ordering
+    includes: ~.*
+    sort-keys: preserve
+    groups:
+      - name: Enum constants
+        separator: none
+        sort-keys: preserve
+        includes: enum-constant
+      - name: Methods
+        separator: new-line
+        sort-keys: alpha
+        includes: method

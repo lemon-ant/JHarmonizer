@@ -36,8 +36,8 @@ class RuleAtomPredicates {
         if (requiredDeclarationFlagsMask == 0) {
             throw new IllegalArgumentException(/*TODO*/ );
         }
-        return CompiledMemberDescriptor -> MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
-                CompiledMemberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
+        return memberDescriptor -> MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
+                memberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
     }
 
     /**
@@ -45,7 +45,8 @@ class RuleAtomPredicates {
      */
     @NonNull
     static Predicate<MemberDescriptor> createNameExact(@NonNull String expectedName) {
-        return CompiledMemberDescriptor -> CompiledMemberDescriptor.getName()
+        return memberDescriptor -> memberDescriptor
+                .getName()
                 .map(actualName -> actualName.equals(expectedName))
                 .orElse(false);
     }
@@ -56,7 +57,8 @@ class RuleAtomPredicates {
     @NonNull
     static Predicate<MemberDescriptor> createNameRegex(@NonNull String expectedPattern) {
         Pattern pattern = Pattern.compile(expectedPattern);
-        return CompiledMemberDescriptor -> CompiledMemberDescriptor.getName()
+        return memberDescriptor -> memberDescriptor
+                .getName()
                 .map(actualName -> pattern.matcher(actualName).matches())
                 .orElse(false);
     }

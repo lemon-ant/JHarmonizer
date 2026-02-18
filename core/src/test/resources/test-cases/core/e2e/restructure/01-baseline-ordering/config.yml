@@ -1,0 +1,33 @@
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  sort-keys: [ preserve ]
+type-members-ordering:
+  - name: Baseline
+    includes: ~.*
+    sort-keys: preserve
+    groups:
+      - name: Fields
+        separator: new-line
+        sort-keys: alpha
+        includes: field
+      - name: Initializers
+        separator: new-line
+        sort-keys: preserve
+        includes: initializer
+      - name: Methods
+        separator: new-line
+        sort-keys: alpha
+        includes: method
+      - name: Nested types
+        separator: new-line
+        sort-keys: alpha
+        includes: [ class ]

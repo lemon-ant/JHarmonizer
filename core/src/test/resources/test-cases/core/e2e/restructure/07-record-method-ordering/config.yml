@@ -1,0 +1,25 @@
+formatting:
+  fix-imports: false
+  formatter-style: NONE
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ record ]
+  sort-keys: [ preserve ]
+type-members-ordering:
+  - name: Record ordering
+    includes: ~.*
+    sort-keys: preserve
+    groups:
+      - name: Record components
+        separator: none
+        sort-keys: preserve
+        includes: record-component
+      - name: Methods
+        separator: none
+        sort-keys: alpha
+        includes: method
