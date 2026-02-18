@@ -21,15 +21,15 @@ import org.apache.commons.lang3.StringEscapeUtils;
 class JavaCompileTestUtils {
 
     private static final int JAVA_RELEASE = 21;
-    private static final String E2E_TEST_ARTIFACT_PREFIX = "source-processor-e2e";
+    private static final String TEST_COMPILE_PREFIX = "test-compile-";
 
     static void assertJavaSourcesCompileWithRelease21(
             @NonNull Path sourceDirectoryPath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
         resetOutputDirectory(outputDirectoryPath);
 
-        Path diagnosticsPath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-compile-logs.txt");
-        Path javacSourcesArgFilePath = outputDirectoryPath.resolve(E2E_TEST_ARTIFACT_PREFIX + "-javac-sources.argfile");
+        Path diagnosticsPath = outputDirectoryPath.resolve(TEST_COMPILE_PREFIX + "logs.txt");
+        Path javacSourcesArgFilePath = outputDirectoryPath.resolve(TEST_COMPILE_PREFIX + "javac-sources.argfile");
 
         boolean hasJavaSources = writeJavaSourcePathsArgFile(sourceDirectoryPath, javacSourcesArgFilePath);
         if (!hasJavaSources) {

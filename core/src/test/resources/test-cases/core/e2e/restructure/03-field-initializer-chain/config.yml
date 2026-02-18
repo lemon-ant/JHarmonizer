@@ -1,6 +1,6 @@
 formatting:
   fix-imports: false
-  formatter-style: NONE
+  formatter-style: PALANTIR
 backups-enabled: false
 header-line:
   character: "-"
@@ -17,5 +17,5 @@ type-members-ordering:
     groups:
       - name: Fields
         separator: none
-        sort-keys: preserve
+        sort-keys: alpha
         includes: field

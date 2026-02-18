@@ -10,7 +10,7 @@
   },
   "memberGroups" : [ {
     "name" : "Test Classes",
-    "includes" : [ [ "class", "~.*Test$" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
+    "includes" : [ [ "~.*Test$", "class" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
     "excludes" : [ ],
     "separator" : "NONE",
     "keepAccessorsTogether" : null,
@@ -22,7 +22,7 @@
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Constants",
-        "includes" : [ [ "static" ], [ "final" ] ],
+        "includes" : [ [ "static", "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -80,7 +80,7 @@
       "sortKeys" : [ "ALPHA" ]
     }, {
       "name" : "JUnit Test Configuration",
-      "includes" : [ [ "@TestConfiguration", "class", "static" ] ],
+      "includes" : [ [ "@TestConfiguration", "static", "class" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
@@ -96,7 +96,7 @@
     "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "Serializable UID",
-      "includes" : [ [ "=serialVersionUID" ], [ "static" ], [ "field" ], [ "final" ] ],
+      "includes" : [ [ "=serialVersionUID", "static", "field", "final" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
@@ -110,7 +110,7 @@
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Constants",
-        "includes" : [ [ "static" ], [ "final" ] ],
+        "includes" : [ [ "static", "final" ] ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -168,7 +168,7 @@
       "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Static Initializer Blocks",
-      "includes" : [ [ "static" ], [ "initializer" ] ],
+      "includes" : [ [ "static", "initializer" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -176,7 +176,7 @@
       "sortKeys" : [ "PRESERVE" ]
     }, {
       "name" : "Static Methods",
-      "includes" : [ [ "static" ], [ "method" ] ],
+      "includes" : [ [ "static", "method" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -200,7 +200,7 @@
       "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Accessor Methods",
-      "includes" : [ [ "method" ], [ "~^(get|set|is|has).+$" ] ],
+      "includes" : [ [ "method", "~^(get|set|is|has).+$" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
@@ -209,14 +209,14 @@
     }, {
       "name" : "Instance Methods",
       "includes" : [ [ "method" ] ],
-      "excludes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
+      "excludes" : [ [ "method", "=toString" ], [ "method", "=clone" ], [ "method", "=equals" ], [ "method", "=hashCode" ] ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "sortKeys" : [ "VISIBILITY_ASC", "ALPHA" ]
     }, {
       "name" : "Basic Object Methods",
-      "includes" : [ [ "=toString", "method" ], [ "=clone", "method" ], [ "=equals", "method" ], [ "=hashCode", "method" ] ],
+      "includes" : [ [ "method", "=toString" ], [ "method", "=clone" ], [ "method", "=equals" ], [ "method", "=hashCode" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -302,7 +302,7 @@
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Static initializers",
-        "includes" : [ [ "static" ], [ "initializer" ] ],
+        "includes" : [ [ "static", "initializer" ] ],
         "excludes" : [ ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
@@ -320,7 +320,7 @@
       "sortKeys" : [ "PRESERVE" ]
     }, {
       "name" : "Methods",
-      "includes" : [ [ "method" ], [ "constructor" ] ],
+      "includes" : [ [ "method", "constructor" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
@@ -332,7 +332,7 @@
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static" ], [ "method" ] ],
+          "includes" : [ [ "static", "method" ] ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -364,7 +364,7 @@
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static" ], [ "method" ] ],
+          "includes" : [ [ "static", "method" ] ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -396,7 +396,7 @@
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static" ], [ "method" ] ],
+          "includes" : [ [ "static", "method" ] ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -428,7 +428,7 @@
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static" ], [ "method" ] ],
+          "includes" : [ [ "static", "method" ] ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -456,7 +456,7 @@
       "sortKeys" : [ "ALPHA" ]
     }, {
       "name" : "Nested types",
-      "includes" : [ [ "annotation" ], [ "record" ], [ "interface" ], [ "class" ], [ "enum" ] ],
+      "includes" : [ [ "annotation", "record", "interface", "class", "enum" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,

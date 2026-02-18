@@ -63,6 +63,7 @@ final class FlowDebugStageRecorder {
         }
 
         String outputFileName = runTimestampPrefix
+                + "_" + Clock.systemDefaultZone().millis()
                 + "__" + flowType
                 + "__" + fileName.getFileName()
                 + "__" + stage.getPhaseNumber() + "_" + stage
