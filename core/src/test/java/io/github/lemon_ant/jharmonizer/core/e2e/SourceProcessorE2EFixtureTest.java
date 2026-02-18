@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21;
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.assertJavaMainMethodsRunSuccessfully;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,12 +47,14 @@ class SourceProcessorE2EFixtureTest {
         Path compileAfterOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-after");
 
         assertJavaSourcesCompileWithRelease21(workingRoot, compileBeforeOutput);
+        assertJavaMainMethodsRunSuccessfully(workingRoot, compileBeforeOutput);
         assertScenariosAreNotStable(fixturesRoot, workingRoot);
 
         runFlowForScenarios(fixturesRoot, workingRoot, FlowType.RESTRUCTURE);
 
         assertScenariosAreStable(fixturesRoot, workingRoot);
         assertJavaSourcesCompileWithRelease21(workingRoot, compileAfterOutput);
+        assertJavaMainMethodsRunSuccessfully(workingRoot, compileAfterOutput);
         assertOutputsMatchExpected(fixturesRoot, workingRoot);
     }
 

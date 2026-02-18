@@ -10,4 +10,10 @@ public class SeparatorScenario {
 
     void gamma() {}
 
+    public static void main(String[] args) {
+        SeparatorScenario sample = new SeparatorScenario();
+        if (sample.a != 1 || sample.z != 2) {
+            throw new IllegalStateException("Unexpected separator scenario fields");
+        }
+    }
 }
