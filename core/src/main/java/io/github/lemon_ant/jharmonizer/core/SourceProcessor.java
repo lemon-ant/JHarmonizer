@@ -79,15 +79,13 @@ public final class SourceProcessor {
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };
 
-        log.info("Resolved processing flow implementation: {}", flow.getClass().getSimpleName());
-
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SourceFilesHandler.findJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
                 // TODO Possibly include into the one method inside SourceFilesHandler
                 .map(SourceFilesHandler::readFile)
                 .map(flow::processSource)
                 .peek(flowProcessingResult -> log.info(
-                        "Processing result: {}: {}",
+                        "Harmonization finished for {} with status {}",
                         flowProcessingResult.getPath(),
                         flowProcessingResult.getFlowProcessingStatus()))
                 .map(FileProcessingStatistic::convert)
