@@ -24,3 +24,5 @@ type-members-ordering:
         sort-keys: preserve
         includes: [ initializer ]
         excludes: [ static ]
+      # Fields are not explicitly grouped here and fall back to the root bucket,
+      # but dependency-aware ordering may still pull provider fields before dependent initializers.

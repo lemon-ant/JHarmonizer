@@ -2,11 +2,12 @@ package e2e;
 
 public class StaticInstanceInitializerSample {
     private static String staticOrder = "";
-    private String instanceOrder = "";
 
     static {
         staticOrder += "S1";
     }
+
+    private String instanceOrder = "";
 
     {
         instanceOrder += "I1";
