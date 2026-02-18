@@ -212,18 +212,24 @@ class GroupMembersOrdererComplexDependenciesTest {
         StringBuilder diagnostic = new StringBuilder("Diagnostic report for flaky ordering test:\n");
         diagnostic.append("- sourceAlphaKeys=").append(sourceAlphaKeys).append('\n');
         diagnostic.append("- orderedAlphaKeys=").append(orderedAlphaKeys).append('\n');
-        diagnostic.append("- trackedIndexes=").append(renderTrackedIndexes(orderedAlphaKeys)).append('\n');
+        diagnostic
+                .append("- trackedIndexes=")
+                .append(renderTrackedIndexes(orderedAlphaKeys))
+                .append('\n');
         diagnostic
                 .append("- declarationDirectDependencies=")
-                .append(renderDirectDependenciesByMember(sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .append(renderDirectDependenciesByMember(
+                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .append('\n');
         diagnostic
                 .append("- declarationTransitiveDependencies=")
-                .append(renderTransitiveDependenciesByMember(sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .append(renderTransitiveDependenciesByMember(
+                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .append('\n');
         diagnostic
                 .append("- accessorBundleDirectDependencies=")
-                .append(renderDirectDependenciesByMember(sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
+                .append(renderDirectDependenciesByMember(
+                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
         return diagnostic.toString();
     }
 
@@ -241,17 +247,13 @@ class GroupMembersOrdererComplexDependenciesTest {
                 Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY,
                 orderedAlphaKeys.indexOf(Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY));
         trackedIndexes.put(
-                Constants.GET_ENABLED_FLAG_ALPHA_KEY,
-                orderedAlphaKeys.indexOf(Constants.GET_ENABLED_FLAG_ALPHA_KEY));
+                Constants.GET_ENABLED_FLAG_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.GET_ENABLED_FLAG_ALPHA_KEY));
         trackedIndexes.put(
-                Constants.HAS_ENABLED_FLAG_ALPHA_KEY,
-                orderedAlphaKeys.indexOf(Constants.HAS_ENABLED_FLAG_ALPHA_KEY));
+                Constants.HAS_ENABLED_FLAG_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.HAS_ENABLED_FLAG_ALPHA_KEY));
         trackedIndexes.put(
-                Constants.IS_ENABLED_FLAG_ALPHA_KEY,
-                orderedAlphaKeys.indexOf(Constants.IS_ENABLED_FLAG_ALPHA_KEY));
+                Constants.IS_ENABLED_FLAG_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.IS_ENABLED_FLAG_ALPHA_KEY));
         trackedIndexes.put(
-                Constants.SET_ENABLED_FLAG_ALPHA_KEY,
-                orderedAlphaKeys.indexOf(Constants.SET_ENABLED_FLAG_ALPHA_KEY));
+                Constants.SET_ENABLED_FLAG_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.SET_ENABLED_FLAG_ALPHA_KEY));
         trackedIndexes.put(
                 Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
                 orderedAlphaKeys.indexOf(Constants.HELLO_ENABLED_FLAG_ALPHA_KEY));
@@ -265,12 +267,13 @@ class GroupMembersOrdererComplexDependenciesTest {
         return sourceMembersByAlphaKey.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        sourceEntry -> dependencyGraph
-                                .findDirectDependents(sourceEntry.getValue(), EnumSet.of(edgeKind))
-                                .stream()
-                                .map(SpoonTypeMemberUtils::deriveAlphaKey)
-                                .sorted()
-                                .toList(),
+                        sourceEntry ->
+                                dependencyGraph
+                                        .findDirectDependents(sourceEntry.getValue(), EnumSet.of(edgeKind))
+                                        .stream()
+                                        .map(SpoonTypeMemberUtils::deriveAlphaKey)
+                                        .sorted()
+                                        .toList(),
                         (leftEntry, ignored) -> leftEntry,
                         LinkedHashMap::new));
     }
@@ -282,12 +285,13 @@ class GroupMembersOrdererComplexDependenciesTest {
         return sourceMembersByAlphaKey.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        sourceEntry -> dependencyGraph
-                                .findTransitiveDependents(sourceEntry.getValue(), EnumSet.of(edgeKind))
-                                .stream()
-                                .map(SpoonTypeMemberUtils::deriveAlphaKey)
-                                .sorted()
-                                .toList(),
+                        sourceEntry ->
+                                dependencyGraph
+                                        .findTransitiveDependents(sourceEntry.getValue(), EnumSet.of(edgeKind))
+                                        .stream()
+                                        .map(SpoonTypeMemberUtils::deriveAlphaKey)
+                                        .sorted()
+                                        .toList(),
                         (leftEntry, ignored) -> leftEntry,
                         LinkedHashMap::new));
     }
