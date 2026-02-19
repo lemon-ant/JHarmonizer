@@ -15,7 +15,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
 
     @NonNull
     @Override
-    public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
+    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
 
         Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentMember);

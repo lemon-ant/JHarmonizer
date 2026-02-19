@@ -10,6 +10,7 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -93,6 +94,19 @@ final class OrderDependentFieldReferenceUtils {
         return collectDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
     }
 
+    static Set<CtField<?>> findExplicitThisReferencedFields(
+            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+
+        return dependentAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class)).stream()
+                .filter(OrderDependentFieldReferenceUtils::isExplicitThisQualifiedAccess)
+                .map(CtFieldAccess::getVariable)
+                .map(CtFieldReference::getDeclaration)
+                .filter(Objects::nonNull)
+                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         return collectDeclaringTypeFields(astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
@@ -143,5 +157,13 @@ final class OrderDependentFieldReferenceUtils {
                 (Class<? extends CtFieldAccess<?>>) rawFieldAccessClass;
 
         return new TypeFilter<>(typedFieldAccessClass);
+    }
+
+    private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess) {
+        if (!(fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess)) {
+            return false;
+        }
+
+        return !thisAccess.isImplicit();
     }
 }
