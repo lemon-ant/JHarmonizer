@@ -103,7 +103,7 @@ final class OrderDependentFieldReferenceUtils {
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
-                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
+                .filter(referencedField -> Objects.equals(referencedField.getDeclaringType(), declaringType))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -146,7 +146,7 @@ final class OrderDependentFieldReferenceUtils {
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
-                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
+                .filter(referencedField -> Objects.equals(referencedField.getDeclaringType(), declaringType))
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -160,10 +160,6 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess) {
-        if (!(fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess)) {
-            return false;
-        }
-
-        return !thisAccess.isImplicit();
+        return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
     }
 }
