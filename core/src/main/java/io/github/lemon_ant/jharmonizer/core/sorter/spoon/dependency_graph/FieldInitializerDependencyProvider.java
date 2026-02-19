@@ -31,12 +31,13 @@ final class FieldInitializerDependencyProvider extends AbstractReferencedFieldsD
             return Set.of();
         }
 
-        Set<CtTypeMember> providers = new HashSet<>(OrderDependentFieldReferenceUtils.findReferencedFields(
-                dependentMember, dependentAstRoot.get()));
+        Set<CtTypeMember> providers = new HashSet<>(
+                OrderDependentFieldReferenceUtils.findReferencedFields(dependentMember, dependentAstRoot.get()));
         providers.addAll(findEarlierThisQualifiedReferrers(dependentField));
 
         return providers.stream()
-                .map(providerMember -> new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .map(providerMember ->
+                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
     }
 

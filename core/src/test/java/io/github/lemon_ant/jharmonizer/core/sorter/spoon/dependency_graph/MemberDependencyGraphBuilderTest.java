@@ -69,7 +69,6 @@ class MemberDependencyGraphBuilderTest {
         assertThat(directProviders).containsExactly(Constants.BRAVO_FIELD_MEMBER);
     }
 
-
     @Test
     void buildDependencyGraph_explicitThisForwardReference_preservesSourceDeclarationOrder() {
         // Given
@@ -203,7 +202,6 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIELD_INITIALIZER_MEMBERS, "BRAVO");
         private static final CtTypeMember ALPHA_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIELD_INITIALIZER_MEMBERS, "ALPHA");
-
 
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
