@@ -20,7 +20,7 @@
     <proxies>
         <proxy>
             <id>default-http-proxy</id>
-            <active>true</active>
+            <active>${env.CODEX_PROXY_ACTIVE}</active>
             <protocol>http</protocol>
             <host>proxy</host>
             <port>8080</port>
@@ -28,7 +28,7 @@
         </proxy>
         <proxy>
             <id>default-https-proxy</id>
-            <active>true</active>
+            <active>${env.CODEX_PROXY_ACTIVE}</active>
             <protocol>https</protocol>
             <host>proxy</host>
             <port>8080</port>
