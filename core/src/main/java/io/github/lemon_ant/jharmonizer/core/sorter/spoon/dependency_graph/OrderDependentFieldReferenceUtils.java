@@ -104,6 +104,7 @@ final class OrderDependentFieldReferenceUtils {
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
+                .map(referencedField -> (CtField<?>) referencedField)
                 .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .collect(Collectors.toUnmodifiableSet());
     }
