@@ -94,6 +94,7 @@ final class OrderDependentFieldReferenceUtils {
         return collectDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtField<?>> findExplicitThisReferencedFields(
             @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentAstRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
@@ -103,7 +104,7 @@ final class OrderDependentFieldReferenceUtils {
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
-                .filter(referencedField -> Objects.equals(referencedField.getDeclaringType(), declaringType))
+                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -146,7 +147,7 @@ final class OrderDependentFieldReferenceUtils {
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
-                .filter(referencedField -> Objects.equals(referencedField.getDeclaringType(), declaringType))
+                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
     }
