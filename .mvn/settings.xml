@@ -20,8 +20,16 @@
     <proxies>
         <proxy>
             <id>default-http-proxy</id>
-            <active>${env.CODEX_PROXY_ACTIVE}</active>
+            <active>true</active>
             <protocol>http</protocol>
+            <host>proxy</host>
+            <port>8080</port>
+            <nonProxyHosts>localhost|127.0.0.1|::1|browser</nonProxyHosts>
+        </proxy>
+        <proxy>
+            <id>default-https-proxy</id>
+            <active>true</active>
+            <protocol>https</protocol>
             <host>proxy</host>
             <port>8080</port>
             <nonProxyHosts>localhost|127.0.0.1|::1|browser</nonProxyHosts>
