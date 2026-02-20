@@ -15,6 +15,8 @@
     </modules>
 
     <properties>
+        <jackson.version>2.21.0</jackson.version>
+        <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
