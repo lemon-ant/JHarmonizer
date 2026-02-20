@@ -16,7 +16,7 @@ import spoon.reflect.declaration.CtTypeMember;
  *
  * <p>If fieldB initializer references fieldA, then fieldA -> fieldB.
  */
-final class FieldInitializerDependencyProvider extends AbstractReferencedFieldsDeclarationDependencyProvider {
+final class FieldInitializerDependencyProvider implements MemberDependencyProvider {
 
     @NonNull
     @Override
@@ -43,11 +43,29 @@ final class FieldInitializerDependencyProvider extends AbstractReferencedFieldsD
 
     @NonNull
     @Override
-    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
+    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
-            return Optional.empty();
+            return Set.of();
         }
 
+        Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentField);
+        if (dependentAstRoot.isEmpty()) {
+            return Set.of();
+        }
+
+        Set<CtTypeMember> providers = new HashSet<>(OrderDependentFieldReferenceUtils.findReferencedFields(
+                dependentField, dependentAstRoot.get()));
+        providers.addAll(findEarlierThisQualifiedReferrers(dependentField));
+
+        return providers.stream()
+                .map(providerMember ->
+                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    private static Optional<CtElement> resolveDependentAstRoot(@NonNull CtField<?> dependentField) {
         return Optional.ofNullable(dependentField.getDefaultExpression());
     }
 
