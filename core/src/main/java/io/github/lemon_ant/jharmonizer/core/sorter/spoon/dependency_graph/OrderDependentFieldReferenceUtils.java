@@ -95,10 +95,13 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    static Set<CtField<?>> findExplicitThisReferencedFields(
-            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentAstRoot) {
+    // TODO Return boolean, rename method, and compare with the referenced field
+    static Set<CtField<?>> findExplicitThisReferencedFields(@NonNull CtField<?> /* TODO Rename*/ dependentMember) {
+        /*TODO Rename*/
+        CtElement dependentAstRoot = dependentMember.getDefaultExpression();
         CtType<?> declaringType = requireDeclaringType(dependentMember);
 
+        // TODO Make a explanatory variable with the getElements result
         return dependentAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class)).stream()
                 .filter(OrderDependentFieldReferenceUtils::isExplicitThisQualifiedAccess)
                 .map(CtFieldAccess::getVariable)
@@ -134,6 +137,7 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    // TODO Rename
     private static Set<CtField<?>> collectDeclaringTypeFields(
             CtElement dependentAstRoot,
             CtType<?> declaringType,

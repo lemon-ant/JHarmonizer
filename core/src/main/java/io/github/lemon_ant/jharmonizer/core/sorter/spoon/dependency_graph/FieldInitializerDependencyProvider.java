@@ -26,36 +26,14 @@ final class FieldInitializerDependencyProvider implements MemberDependencyProvid
             return Set.of();
         }
 
-        Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentMember);
-        if (dependentAstRoot.isEmpty()) {
-            return Set.of();
-        }
-
-        Set<CtTypeMember> providers = new HashSet<>(
-                OrderDependentFieldReferenceUtils.findReferencedFields(dependentMember, dependentAstRoot.get()));
-        providers.addAll(findEarlierThisQualifiedReferrers(dependentField));
-
-        return providers.stream()
-                .map(providerMember ->
-                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    @NonNull
-    @Override
-    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
-        if (!(dependentMember instanceof CtField<?> dependentField)) {
-            return Set.of();
-        }
-
         Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentField);
         if (dependentAstRoot.isEmpty()) {
             return Set.of();
         }
 
-        Set<CtTypeMember> providers = new HashSet<>(OrderDependentFieldReferenceUtils.findReferencedFields(
-                dependentField, dependentAstRoot.get()));
+        Set<CtTypeMember> providers = new HashSet<>(
+                OrderDependentFieldReferenceUtils.findReferencedFields(dependentField, dependentAstRoot.get()));
+        // TODO Build a dedicated provider???
         providers.addAll(findEarlierThisQualifiedReferrers(dependentField));
 
         return providers.stream()
@@ -69,6 +47,7 @@ final class FieldInitializerDependencyProvider implements MemberDependencyProvid
         return Optional.ofNullable(dependentField.getDefaultExpression());
     }
 
+    // TODO Rename the dependentField parameter and add a comment
     private static Set<CtTypeMember> findEarlierThisQualifiedReferrers(CtField<?> dependentField) {
         int dependentFieldSourceStart = requireSourceStart(dependentField);
 
@@ -77,8 +56,8 @@ final class FieldInitializerDependencyProvider implements MemberDependencyProvid
                 .filter(typeMember -> requireSourceStart(typeMember) < dependentFieldSourceStart)
                 .map(typeMember -> (CtField<?>) typeMember)
                 .filter(field -> field.getDefaultExpression() != null)
-                .filter(field -> OrderDependentFieldReferenceUtils.findExplicitThisReferencedFields(
-                                field, field.getDefaultExpression())
+                .filter(field -> OrderDependentFieldReferenceUtils.findExplicitThisReferencedFields(field)
+                        // TODO Move into the findExplicitThisReferencedFields method
                         .contains(dependentField))
                 .map(field -> (CtTypeMember) field)
                 .collect(Collectors.toUnmodifiableSet());
