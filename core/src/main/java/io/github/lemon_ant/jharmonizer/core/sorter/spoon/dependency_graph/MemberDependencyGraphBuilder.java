@@ -20,7 +20,8 @@ public class MemberDependencyGraphBuilder {
             new AccessorPairDependencyProvider(),
             new EnumConstantInitializerDependencyProvider(),
             new BlankFinalDefiniteAssignmentDependencyProvider(),
-            new FieldInitializerDependencyProvider(),
+            new FieldInitializerBackwardReferenceDependencyProvider(),
+            new ExplicitThisInitializerFieldDependencyProvider(),
             new InitializerBlockDependencyProvider());
 
     @NonNull
