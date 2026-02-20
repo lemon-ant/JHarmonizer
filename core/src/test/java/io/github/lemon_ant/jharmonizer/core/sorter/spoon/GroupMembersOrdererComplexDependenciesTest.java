@@ -58,6 +58,13 @@ class GroupMembersOrdererComplexDependenciesTest {
         List<CtTypeMember> orderedTypeMembers = orderedGroupBlock.getTypeMembers();
         List<String> sourceAlphaKeys = deriveAlphaKeys(explicitSourceTypeMembers);
         List<String> orderedAlphaKeys = deriveAlphaKeys(orderedTypeMembers);
+        String stateSnapshot = buildStateSnapshot(
+                explicitSourceTypeMembers,
+                orderedTypeMembers,
+                dependencyGraph,
+                memberToNaturalGroup,
+                groupBlocks,
+                orderedGroupBlocks);
 
         // TODO Flaky test
         assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
@@ -68,6 +75,8 @@ class GroupMembersOrdererComplexDependenciesTest {
                 orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
         assertAccessorBundlingPreventsInterleaving(
                 sourceAlphaKeys, orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
+
+        emitSuccessfulRunSnapshot(stateSnapshot);
     }
 
     private static void assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
@@ -90,6 +99,9 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .toList();
         // TODO Flaky test
         assertThat(providerKeysInOrderedResult)
+                .withFailMessage(
+                        "Provider keys are expected to be alphabetically ordered in the result.%n%s",
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .containsExactly(
                         Constants.W_PROVIDER_ALPHA_KEY,
                         Constants.X_PROVIDER_ALPHA_KEY,
@@ -175,6 +187,9 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .filter(Constants.ACCESSOR_ALPHA_KEYS::contains)
                 .toList();
         assertThat(accessorKeysInOrderedResult)
+                .withFailMessage(
+                        "Accessor methods should stay bundled and alphabetically ordered.%n%s",
+                        buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph))
                 .containsExactly(
                         Constants.GET_ENABLED_FLAG_ALPHA_KEY,
                         Constants.HAS_ENABLED_FLAG_ALPHA_KEY,
@@ -233,6 +248,49 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .append(renderDirectDependenciesByMember(
                         sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
         return diagnostic.toString();
+    }
+
+    private static String buildStateSnapshot(
+            @NonNull List<CtTypeMember> sourceTypeMembers,
+            @NonNull List<CtTypeMember> orderedTypeMembers,
+            @NonNull MemberDependencyGraph dependencyGraph,
+            @NonNull Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup,
+            @NonNull List<MemberGroupBlock> sourceGroupBlocks,
+            @NonNull List<MemberGroupBlock> orderedGroupBlocks) {
+        StringBuilder snapshot = new StringBuilder("State snapshot for complex ordering test:\n");
+        snapshot.append("- memberToNaturalGroup=")
+                .append(renderMemberToGroup(memberToNaturalGroup))
+                .append('\n');
+        snapshot.append("- sourceGroupBlocks=")
+                .append(renderGroupBlocks(sourceGroupBlocks))
+                .append('\n');
+        snapshot.append("- orderedGroupBlocks=")
+                .append(renderGroupBlocks(orderedGroupBlocks))
+                .append('\n');
+        snapshot.append(buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph));
+        return snapshot.toString();
+    }
+
+    private static Map<String, String> renderMemberToGroup(
+            @NonNull Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup) {
+        return memberToNaturalGroup.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> SpoonTypeMemberUtils.deriveAlphaKey(entry.getKey()),
+                        entry -> entry.getValue().getName(),
+                        (leftEntry, ignored) -> leftEntry,
+                        LinkedHashMap::new));
+    }
+
+    private static List<List<String>> renderGroupBlocks(@NonNull List<MemberGroupBlock> groupBlocks) {
+        return groupBlocks.stream()
+                .map(groupBlock -> deriveAlphaKeys(groupBlock.getTypeMembers()))
+                .toList();
+    }
+
+    private static void emitSuccessfulRunSnapshot(@NonNull String stateSnapshot) {
+        System.out.println("PASS_SNAPSHOT_START");
+        System.out.println(stateSnapshot);
+        System.out.println("PASS_SNAPSHOT_END");
     }
 
     private static Map<String, Integer> renderTrackedIndexes(@NonNull List<String> orderedAlphaKeys) {
