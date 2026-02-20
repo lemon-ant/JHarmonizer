@@ -81,7 +81,7 @@ final class OrderDependentFieldReferenceUtils {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         int dependentSourceStart = requireSourceStart(dependentMember);
 
-        return collectDeclaringTypeFields(
+        return collectReferencedDeclaringTypeFields(
                 dependentAstRoot,
                 declaringType,
                 CtFieldAccess.class,
@@ -91,30 +91,36 @@ final class OrderDependentFieldReferenceUtils {
 
     static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
+        return collectReferencedDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    // TODO Return boolean, rename method, and compare with the referenced field
-    static Set<CtField<?>> findExplicitThisReferencedFields(@NonNull CtField<?> /* TODO Rename*/ dependentMember) {
-        /*TODO Rename*/
-        CtElement dependentAstRoot = dependentMember.getDefaultExpression();
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
+    static boolean hasExplicitThisReferenceTo(
+            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        CtElement referrerAstRoot = referrerField.getDefaultExpression();
+        if (referrerAstRoot == null) {
+            return false;
+        }
 
-        // TODO Make a explanatory variable with the getElements result
-        return dependentAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class)).stream()
+        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
+        if (referencedField.getDeclaringType() != referrerDeclaringType) {
+            return false;
+        }
+
+        List<CtFieldAccess<?>> fieldAccesses = referrerAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class));
+
+        return fieldAccesses.stream()
                 .filter(OrderDependentFieldReferenceUtils::isExplicitThisQualifiedAccess)
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
-                .map(referencedField -> (CtField<?>) referencedField)
-                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
-                .collect(Collectors.toUnmodifiableSet());
+                .map(declaredField -> (CtField<?>) declaredField)
+                .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
     }
 
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectDeclaringTypeFields(astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
+        return collectReferencedDeclaringTypeFields(astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
     private static boolean shouldCreateDeclarationDependencyEdge(
@@ -137,16 +143,13 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    // TODO Rename
-    private static Set<CtField<?>> collectDeclaringTypeFields(
+    private static <T extends CtFieldAccess<?>> Set<CtField<?>> collectReferencedDeclaringTypeFields(
             CtElement dependentAstRoot,
             CtType<?> declaringType,
-            Class<?> rawFieldAccessClass,
+            Class<T> fieldAccessClass,
             Predicate<CtField<?>> additionalFieldFilter) {
-
-        TypeFilter<? extends CtFieldAccess<?>> fieldAccessTypeFilter = createFieldAccessTypeFilter(rawFieldAccessClass);
-
-        List<? extends CtFieldAccess<?>> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
+        TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
+        List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
 
         return dependentAstRootElements.stream()
                 .map(CtFieldAccess::getVariable)
@@ -155,14 +158,6 @@ final class OrderDependentFieldReferenceUtils {
                 .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
-    }
-
-    private static TypeFilter<? extends CtFieldAccess<?>> createFieldAccessTypeFilter(Class<?> rawFieldAccessClass) {
-        @SuppressWarnings("unchecked")
-        Class<? extends CtFieldAccess<?>> typedFieldAccessClass =
-                (Class<? extends CtFieldAccess<?>>) rawFieldAccessClass;
-
-        return new TypeFilter<>(typedFieldAccessClass);
     }
 
     private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess) {
