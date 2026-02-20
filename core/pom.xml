@@ -20,12 +20,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.19.1</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.19.1</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -34,7 +34,7 @@
         <dependency>
             <groupId>io.github.java-diff-utils</groupId>
             <artifactId>java-diff-utils</artifactId>
-            <version>4.15</version>
+            <version>4.16</version>
         </dependency>
         <dependency>
             <groupId>fr.inria.gforge.spoon</groupId>
@@ -89,23 +89,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
-                <!-- Актуальная версия на 2025 год; проверь на maven.apache.org если нужно обновить -->
+                <version>${maven-assembly-plugin.version}</version>
+                <!-- Keep this plugin aligned with the latest stable release used by the project -->
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/project-zip.xml</descriptor>
-                        <!-- Ссылка на дескриптор; создадим его ниже -->
+                        <!-- Assembly descriptor location -->
                     </descriptors>
                     <outputDirectory>${project.basedir}</outputDirectory>
                     <finalName>${project.artifactId}-${project.version}-sources</finalName>
-                    <!-- Имя ZIP: например, myproject-1.0-sources.zip -->
+                    <!-- Output ZIP name, e.g. myproject-1.0-sources.zip -->
                     <appendAssemblyId>false</appendAssemblyId>
-                    <!-- Не добавлять суффикс к имени файла -->
+                    <!-- Do not append the assembly id suffix to the filename -->
                 </configuration>
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <!-- Привязка к фазе package: после компиляции и тестов, но перед установкой -->
+                        <!-- Bind to package phase: after compilation/tests, before install -->
                         <goals>
                             <goal>single</goal>
                         </goals>
