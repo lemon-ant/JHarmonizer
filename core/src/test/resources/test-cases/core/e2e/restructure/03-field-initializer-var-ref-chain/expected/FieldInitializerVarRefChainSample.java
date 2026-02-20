@@ -1,15 +1,15 @@
 package e2e;
 
 public class FieldInitializerVarRefChainSample {
-    int a = 12;
-    int h = 1;
-    int d = h + 3;
-    int b = d + 9;
-    int c = 5;
-    int e = 15;
-    int g = 25;
-    int f = 21 + g;
-    int i = g + 27;
+    int a = 12; // literal 12; independent constant field
+    int h = 1; // literal 1; anchor for the h -> d -> b dependency chain
+    int d = h + 3; // expects 4; depends on h, so h must stay before d
+    int b = d + 9; // expects 13; depends on d, so d must stay before b
+    int c = 5; // literal 5; independent constant field
+    int e = 15; // literal 15; independent constant field
+    int g = 25; // literal 25; independent constant field
+    int f = 21 + g; // expects 46; depends on g, so g must stay before f
+    int i = g + 27; // expects 52; depends on g, so g must stay before i
 
     public static void main(String[] args) {
         FieldInitializerVarRefChainSample sample = new FieldInitializerVarRefChainSample();
