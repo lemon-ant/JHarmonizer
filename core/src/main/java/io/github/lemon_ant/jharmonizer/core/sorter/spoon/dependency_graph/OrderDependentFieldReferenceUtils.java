@@ -10,6 +10,7 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -93,6 +94,24 @@ final class OrderDependentFieldReferenceUtils {
         return collectDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    // TODO Return boolean, rename method, and compare with the referenced field
+    static Set<CtField<?>> findExplicitThisReferencedFields(@NonNull CtField<?> /* TODO Rename*/ dependentMember) {
+        /*TODO Rename*/
+        CtElement dependentAstRoot = dependentMember.getDefaultExpression();
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+
+        // TODO Make a explanatory variable with the getElements result
+        return dependentAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class)).stream()
+                .filter(OrderDependentFieldReferenceUtils::isExplicitThisQualifiedAccess)
+                .map(CtFieldAccess::getVariable)
+                .map(CtFieldReference::getDeclaration)
+                .filter(Objects::nonNull)
+                .map(referencedField -> (CtField<?>) referencedField)
+                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         return collectDeclaringTypeFields(astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
@@ -118,6 +137,7 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    // TODO Rename
     private static Set<CtField<?>> collectDeclaringTypeFields(
             CtElement dependentAstRoot,
             CtType<?> declaringType,
@@ -143,5 +163,9 @@ final class OrderDependentFieldReferenceUtils {
                 (Class<? extends CtFieldAccess<?>>) rawFieldAccessClass;
 
         return new TypeFilter<>(typedFieldAccessClass);
+    }
+
+    private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess) {
+        return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
     }
 }

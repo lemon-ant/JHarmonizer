@@ -9,7 +9,7 @@ public class FieldInitializerInstanceRefChainSample {
         FieldInitializerInstanceRefChainSample sample = new FieldInitializerInstanceRefChainSample();
         if (sample.a != 10 || sample.b != 3 || sample.c != 1) {
             throw new IllegalStateException(
-                "Unexpected field chain values: a=" + sample.a + ", b=" + sample.b + ", c=" + sample.c);
+                    "Unexpected field chain values: a=" + sample.a + ", b=" + sample.b + ", c=" + sample.c);
         }
     }
 }
