@@ -13,9 +13,35 @@ public class FieldInitializerInstanceRefChainSample {
 
     public static void main(String[] args) {
         FieldInitializerInstanceRefChainSample sample = new FieldInitializerInstanceRefChainSample();
-        if (sample.b != 10 || sample.e != 3 || sample.h != 1) {
+        if (sample.a != 0
+                || sample.b != 10
+                || sample.c != 8
+                || sample.d != 11
+                || sample.e != 3
+                || sample.f != 9
+                || sample.g != 15
+                || sample.h != 1
+                || sample.i != 17) {
             throw new IllegalStateException(
-                    "Unexpected field chain values: b=" + sample.b + ", e=" + sample.e + ", h=" + sample.h);
+                    "Unexpected field values after initialization:"
+                            + " a="
+                            + sample.a
+                            + ", b="
+                            + sample.b
+                            + ", c="
+                            + sample.c
+                            + ", d="
+                            + sample.d
+                            + ", e="
+                            + sample.e
+                            + ", f="
+                            + sample.f
+                            + ", g="
+                            + sample.g
+                            + ", h="
+                            + sample.h
+                            + ", i="
+                            + sample.i);
         }
     }
 }
