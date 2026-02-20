@@ -22,26 +22,25 @@ public class FieldInitializerInstanceRefChainSample {
                 || sample.g != 15
                 || sample.h != 1
                 || sample.i != 17) {
-            throw new IllegalStateException(
-                    "Unexpected field values after initialization:"
-                            + " a="
-                            + sample.a
-                            + ", b="
-                            + sample.b
-                            + ", c="
-                            + sample.c
-                            + ", d="
-                            + sample.d
-                            + ", e="
-                            + sample.e
-                            + ", f="
-                            + sample.f
-                            + ", g="
-                            + sample.g
-                            + ", h="
-                            + sample.h
-                            + ", i="
-                            + sample.i);
+            throw new IllegalStateException("Unexpected field values after initialization:"
+                    + " a="
+                    + sample.a
+                    + ", b="
+                    + sample.b
+                    + ", c="
+                    + sample.c
+                    + ", d="
+                    + sample.d
+                    + ", e="
+                    + sample.e
+                    + ", f="
+                    + sample.f
+                    + ", g="
+                    + sample.g
+                    + ", h="
+                    + sample.h
+                    + ", i="
+                    + sample.i);
         }
     }
 }
