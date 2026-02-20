@@ -59,6 +59,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         List<String> sourceAlphaKeys = deriveAlphaKeys(explicitSourceTypeMembers);
         List<String> orderedAlphaKeys = deriveAlphaKeys(orderedTypeMembers);
 
+        // TODO Flaky test
         assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
                 sourceAlphaKeys, orderedAlphaKeys, explicitSourceTypeMembers, orderedTypeMembers, dependencyGraph);
         assertTransitiveDependencyChainIsRespected(
