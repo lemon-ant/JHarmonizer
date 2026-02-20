@@ -95,8 +95,7 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    static boolean hasExplicitThisReferenceTo(
-            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+    static boolean hasExplicitThisReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
         CtElement referrerAstRoot = referrerField.getDefaultExpression();
         if (referrerAstRoot == null) {
             return false;
@@ -120,7 +119,8 @@ final class OrderDependentFieldReferenceUtils {
 
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectReferencedDeclaringTypeFields(astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
+        return collectReferencedDeclaringTypeFields(
+                astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
     private static boolean shouldCreateDeclarationDependencyEdge(
