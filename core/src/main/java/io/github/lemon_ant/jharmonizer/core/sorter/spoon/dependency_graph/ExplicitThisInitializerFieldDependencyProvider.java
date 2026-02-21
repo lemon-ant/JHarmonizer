@@ -79,11 +79,7 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
     }
 
     private static boolean isNumericZeroLiteral(Object literalValue) {
-        if (!(literalValue instanceof Number numericLiteral)) {
-            return false;
-        }
-
-        return numericLiteral.doubleValue() == 0D;
+        return literalValue instanceof Number numericLiteral && numericLiteral.doubleValue() == 0D;
     }
 
     private static boolean isUnaryMinusZeroLiteral(@NonNull CtExpression<?> expression) {
