@@ -1,8 +1,8 @@
 package e2e;
 
 public class FieldInitializerInstanceRefChainSample {
-    int i = this.a + 17;
     int a = 0; // TODO Exception
+    int i = this.a + 17;
     int h = this.e + 1;
     int e = this.b + 3;
     int b = this.h + 9;
