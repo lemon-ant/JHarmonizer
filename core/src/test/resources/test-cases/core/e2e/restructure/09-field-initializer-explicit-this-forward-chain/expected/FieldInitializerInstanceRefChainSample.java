@@ -1,7 +1,6 @@
 package e2e;
 
 public class FieldInitializerInstanceRefChainSample {
-    int i = this.a + 17; // a is default 0 here, so i initializes to 17 (forward ref)
     int a = 0; // explicit 0; same value as default, included for clarity
     int h = this.e + 1; // e is default 0 here, so h initializes to 1 (forward ref)
     int e = this.b + 3; // b is default 0 here, so e initializes to 3 (forward ref)
@@ -10,6 +9,7 @@ public class FieldInitializerInstanceRefChainSample {
     int d = this.g + 11; // g is default 0 here, so d initializes to 11 (forward ref)
     int f = this.g + 9; // g is default 0 here, so f initializes to 9 (forward ref)
     int g = 15; // literal 15; later assignment does not recalc d/f
+    int i = this.a + 17; // a is default 0 here, so i initializes to 17 (forward ref)
 
     public static void main(String[] args) {
         FieldInitializerInstanceRefChainSample sample = new FieldInitializerInstanceRefChainSample();
