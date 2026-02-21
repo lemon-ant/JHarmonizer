@@ -57,17 +57,14 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
         }
 
         CtExpression<?> foldedExpression = defaultExpression.partiallyEvaluate();
-        if (isUnaryMinusZeroLiteral(foldedExpression)) {
-            return true;
-        }
-
-        return extractLiteralValue(foldedExpression)
-                .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
-                .orElse(false);
+        return isUnaryMinusZeroLiteral(foldedExpression)
+                || castLiteralExpression(foldedExpression)
+                        .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
+                        .orElse(false);
     }
 
-    private static Optional<CtLiteral<?>> extractLiteralValue(@NonNull CtExpression<?> expression) {
-        if (expression instanceof CtLiteral<?> literalExpression) {
+    private static <T> Optional<CtLiteral<T>> castLiteralExpression(@NonNull CtExpression<T> expression) {
+        if (expression instanceof CtLiteral<T> literalExpression) {
             return Optional.of(literalExpression);
         }
 
