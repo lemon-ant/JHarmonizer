@@ -26,7 +26,7 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
             return Set.of();
         }
 
-        if (!hasOrderSensitiveInitialization(referencedField)) {
+        if (isDefaultValueInitializer(referencedField)) {
             return Set.of();
         }
 
@@ -49,17 +49,12 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean hasOrderSensitiveInitialization(@NonNull CtField<?> referencedField) {
+    private static boolean isDefaultValueInitializer(@NonNull CtField<?> referencedField) {
         CtExpression<?> defaultExpression = referencedField.getDefaultExpression();
         if (defaultExpression == null) {
-            return false;
+            return true;
         }
 
-        return !isExplicitDefaultValueInitializer(referencedField, defaultExpression);
-    }
-
-    private static boolean isExplicitDefaultValueInitializer(
-            @NonNull CtField<?> referencedField, @NonNull CtExpression<?> defaultExpression) {
         CtExpression<?> foldedExpression = defaultExpression.partiallyEvaluate();
         if (isUnaryMinusZeroLiteral(foldedExpression)) {
             return true;
