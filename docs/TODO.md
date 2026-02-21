@@ -249,3 +249,67 @@ Placement rule (still mandatory):
   - [ ] alpha ordering in both directions
   - [ ] interaction with dependency constraints (if any are later introduced)
 
+
+---
+
+## 4. Inter-procedural initializer dependencies (field default expression -> method calls)
+
+### Status
+- [ ] Not implemented (verified against current dependency providers)
+- [ ] Deferred to a future version because it is complex and can significantly increase analysis cost
+
+### Why this is needed
+Current declaration dependency detection handles direct field references found in initializer-like AST roots
+(field initializer, init blocks, enum constant initializer, etc.).
+
+A missing case:
+- field `A` default expression calls method `m()`;
+- `m()` reads field `B` (or calls `m2()` that reads `B`);
+- therefore `A` is implicitly order-dependent on `B`, even if `B` is not referenced directly in `A` initializer expression.
+
+If we ignore this case, we may reorder members in a way that is unsafe for initialization semantics.
+
+### Verified current behavior (why this item stays TODO)
+- Dependency providers currently collect dependencies from direct field access scanning in initializer roots.
+- No provider in the graph builder performs inter-procedural traversal of method bodies from initializer call sites.
+- No call-graph / recursion-aware traversal is present in dependency provider chain.
+
+Conclusion: indirect dependencies through called methods are not modeled yet.
+
+### Proposed solution (future)
+Add a new declaration dependency provider for initializer call chains:
+
+1) For initializer-like dependent members, find method invocations in the initializer AST.
+2) Resolve called methods that belong to the same declaring type.
+3) Traverse method bodies to collect field reads relevant to initialization ordering.
+4) Recursively follow nested same-type method calls to build transitive dependencies.
+5) Add `DECLARATION_DEPENDENCY` edges from referenced provider fields to the original dependent member.
+
+### Safety / complexity requirements
+- Recursion and cycles:
+  - maintain a visited call stack per traversal to avoid infinite recursion;
+  - strongly connected call components should not crash analysis.
+- Conservative mode:
+  - unresolved/dynamic dispatch cases should degrade safely (do not produce unsound reorderings).
+- Performance:
+  - cache per-method analyzed field reads;
+  - avoid repeated traversal for the same method.
+- Scope control:
+  - first iteration can be limited to same-type, non-overridden method resolution.
+
+### Non-goals (first iteration)
+- Full inter-class call graph.
+- Precise runtime dispatch modeling across inheritance hierarchies.
+- Side-effect inference beyond field read/write dependencies required for declaration safety.
+
+### Implementation outline (when we revisit this)
+- [ ] Add `InitializerMethodCallDependencyProvider` to dependency providers chain.
+- [ ] Implement same-type call resolution utility for Spoon method invocations.
+- [ ] Implement recursion-safe transitive method traversal and field-read extraction.
+- [ ] Add memoization/cache for per-method dependency summaries.
+- [ ] Add tests:
+  - [ ] direct method call from field initializer to field read
+  - [ ] nested method-call chain (`a -> m1 -> m2 -> field`)
+  - [ ] recursive method self-call / mutual recursion stability
+  - [ ] unresolved invocation fallback behavior
+  - [ ] interaction with existing direct initializer dependencies

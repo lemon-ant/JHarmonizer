@@ -1,0 +1,24 @@
+# JHarmonizer
+
+JHarmonizer is a Java source harmonization tool that keeps class member layout deterministic and readable.
+It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output.
+
+## Current status
+
+- Core pipeline is available: parse -> classify -> sort -> print -> format.
+- Declaration-order dependency graph is implemented for direct initializer/read-write scenarios and accessor bundling.
+- Advanced inter-procedural dependency tracing for field initializers through called methods is **not implemented yet**.
+
+## Roadmap (next versions)
+
+- Add opt-out suppression markers per file/type.
+- Compile sorting behavior once per group and precompute reusable sort keys in member descriptors.
+- Add selector matching by type (field type / method return type).
+- Add explicit enum constant ordering strategies.
+- Add inter-procedural initializer dependency analysis:
+  - if a field default expression calls a method, inspect method body reads/writes;
+  - recursively follow nested method calls inside the same declaring type;
+  - build declaration dependencies based on transitively accessed fields;
+  - handle recursion/cycles safely and conservatively.
+
+Details and implementation notes are tracked in [docs/TODO.md](docs/TODO.md).
