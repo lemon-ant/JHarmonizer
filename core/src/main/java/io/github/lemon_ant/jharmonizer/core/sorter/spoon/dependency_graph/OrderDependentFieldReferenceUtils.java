@@ -135,5 +135,4 @@ final class OrderDependentFieldReferenceUtils {
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
     }
-
 }

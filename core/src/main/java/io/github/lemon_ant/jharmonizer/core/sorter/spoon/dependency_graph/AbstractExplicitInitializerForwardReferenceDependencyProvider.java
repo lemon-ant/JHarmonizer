@@ -53,7 +53,10 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
     protected final boolean hasExplicitThisReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
-        return hasExplicitQualifiedReferenceTo(referrerField, referencedField, this::isExplicitThisQualifiedAccess);
+        return hasExplicitQualifiedReferenceTo(
+                referrerField,
+                referencedField,
+                AbstractExplicitInitializerForwardReferenceDependencyProvider::isExplicitThisQualifiedAccess);
     }
 
     protected final boolean hasExplicitDeclaringTypeReferenceTo(
@@ -67,10 +70,11 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                         isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private boolean hasExplicitQualifiedReferenceTo(
-            @NonNull CtField<?> referrerField,
-            @NonNull CtField<?> referencedField,
-            @NonNull BiPredicate<CtFieldAccess<?>, CtType<?>> qualifierMatcher) {
+            CtField<?> referrerField,
+            CtField<?> referencedField,
+            BiPredicate<CtFieldAccess<?>, CtType<?>> qualifierMatcher) {
         CtElement referrerAstRoot = referrerField.getDefaultExpression();
         if (referrerAstRoot == null) {
             return false;
@@ -96,6 +100,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
         return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static boolean isExplicitDeclaringTypeQualifiedAccess(
             CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
         if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess) || typeAccess.isImplicit()) {
@@ -106,7 +111,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 && typeAccess.getAccessedType().getTypeDeclaration() == declaringType;
     }
 
-    private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(@NonNull CtField<?> referencedField) {
+    private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(CtField<?> referencedField) {
         int referencedFieldSourceStart = requireSourceStart(referencedField);
 
         return referencedField.getDeclaringType().getTypeMembers().stream()
@@ -120,7 +125,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean isDefaultValueInitializer(@NonNull CtField<?> referencedField) {
+    private static boolean isDefaultValueInitializer(CtField<?> referencedField) {
         CtExpression<?> defaultExpression = referencedField.getDefaultExpression();
         if (defaultExpression == null) {
             return true;
@@ -133,7 +138,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                         .orElse(false);
     }
 
-    private static <T> Optional<CtLiteral<T>> castLiteralExpression(@NonNull CtExpression<T> expression) {
+    private static <T> Optional<CtLiteral<T>> castLiteralExpression(CtExpression<T> expression) {
         if (expression instanceof CtLiteral<T> literalExpression) {
             return Optional.of(literalExpression);
         }
@@ -141,7 +146,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
         return Optional.empty();
     }
 
-    private static boolean isDefaultLiteralValue(@NonNull CtField<?> referencedField, Object literalValue) {
+    private static boolean isDefaultLiteralValue(CtField<?> referencedField, Object literalValue) {
         if (!referencedField.getType().isPrimitive()) {
             return literalValue == null;
         }
@@ -149,7 +154,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
         return isDefaultPrimitiveLiteralValue(referencedField.getType().getQualifiedName(), literalValue);
     }
 
-    private static boolean isDefaultPrimitiveLiteralValue(@NonNull String primitiveTypeName, Object literalValue) {
+    private static boolean isDefaultPrimitiveLiteralValue(String primitiveTypeName, Object literalValue) {
         return switch (primitiveTypeName) {
             case "boolean" -> Objects.equals(Boolean.FALSE, literalValue);
             case "char" -> literalValue instanceof Character characterValue && characterValue == 0;
@@ -162,7 +167,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
         return literalValue instanceof Number numericLiteral && numericLiteral.doubleValue() == 0D;
     }
 
-    private static boolean isUnaryMinusZeroLiteral(@NonNull CtExpression<?> expression) {
+    private static boolean isUnaryMinusZeroLiteral(CtExpression<?> expression) {
         return expression instanceof CtUnaryOperator<?> unaryOperator
                 && unaryOperator.getKind() == UnaryOperatorKind.NEG
                 && unaryOperator.getOperand() instanceof CtLiteral<?> operandLiteral
