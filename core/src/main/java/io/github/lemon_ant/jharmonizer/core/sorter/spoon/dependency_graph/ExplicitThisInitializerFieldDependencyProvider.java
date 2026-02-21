@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
-import spoon.reflect.code.CtTypeCast;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtField;
@@ -90,18 +89,13 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
     }
 
     private static CtExpression<?> unwrapTypeCasts(@NonNull CtExpression<?> expression) {
-        CtExpression<?> currentExpression = expression;
-        while (currentExpression instanceof CtTypeCast<?> typeCastExpression) {
-            currentExpression = typeCastExpression.getExpression();
-        }
-
-        if (currentExpression instanceof CtUnaryOperator<?> unaryOperator
+        if (expression instanceof CtUnaryOperator<?> unaryOperator
                 && unaryOperator.getKind() == UnaryOperatorKind.NEG
                 && unaryOperator.getOperand() instanceof CtLiteral<?> operandLiteral
                 && isNumericZeroLiteral(operandLiteral.getValue())) {
             return operandLiteral;
         }
 
-        return currentExpression;
+        return expression;
     }
 }
