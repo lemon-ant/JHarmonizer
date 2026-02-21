@@ -129,9 +129,9 @@ class MemberDependencyGraphBuilderTest {
         assertThat(directProviders).isEmpty();
     }
 
-
     @Test
-    void buildDependencyGraph_explicitThisForwardReferenceToFieldWithBooleanFalseDefaultValue_noDeclarationDependency() {
+    void
+            buildDependencyGraph_explicitThisForwardReferenceToFieldWithBooleanFalseDefaultValue_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_MEMBERS);
@@ -329,9 +329,10 @@ class MemberDependencyGraphBuilderTest {
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_URL);
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_MEMBERS = buildTypeMember2NaturalGroup(
                         FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_MAIN_TYPE,
@@ -343,13 +344,15 @@ class MemberDependencyGraphBuilderTest {
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceImplicitDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_URL);
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
-                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_MEMBERS = buildTypeMember2NaturalGroup(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_MAIN_TYPE,
-                        MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_MEMBERS, "bravo");
@@ -357,40 +360,45 @@ class MemberDependencyGraphBuilderTest {
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceFoldedDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_URL);
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
-                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_MEMBERS = buildTypeMember2NaturalGroup(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_MAIN_TYPE,
-                        MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FOLDED_DEFAULT_VALUE_MEMBERS, "bravo");
 
-
-        private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_URL =
-                TestCaseResourceUtils.requireClasspathResourceUrl(
-                        "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceBooleanFalseDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_URL);
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceBooleanFalseDefaultValueFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_MEMBERS =
                         buildTypeMember2NaturalGroup(
                                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_FIXTURE_MAIN_TYPE,
                                 MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-        private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_MEMBERS,
-                        "bravo");
+        private static final CtTypeMember
+                EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
+                        SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_MEMBERS,
+                                "bravo");
 
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceCharZeroDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_FIXTURE_URL);
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_MEMBERS =
                         buildTypeMember2NaturalGroup(
@@ -398,15 +406,15 @@ class MemberDependencyGraphBuilderTest {
                                 MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_MEMBERS,
-                        "bravo");
+                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_CHAR_ZERO_DEFAULT_VALUE_MEMBERS, "bravo");
 
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceNullDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_FIXTURE_URL);
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_MEMBERS =
                         buildTypeMember2NaturalGroup(
@@ -414,15 +422,16 @@ class MemberDependencyGraphBuilderTest {
                                 MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_MEMBERS,
-                        "bravo");
+                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_MEMBERS, "bravo");
 
-        private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_FIXTURE_URL =
-                TestCaseResourceUtils.requireClasspathResourceUrl(
-                        "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceMinusZeroDefaultValueFixture.java");
-        private static final CtType<?> FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_FIXTURE_URL);
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceMinusZeroDefaultValueFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup>
                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_MEMBERS =
                         buildTypeMember2NaturalGroup(
@@ -430,8 +439,7 @@ class MemberDependencyGraphBuilderTest {
                                 MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_MEMBERS,
-                        "bravo");
+                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MINUS_ZERO_DEFAULT_VALUE_MEMBERS, "bravo");
 
         private static final URL INITIALIZER_BLOCK_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/test-cases/core/sorter/spoon/dependency-graph/valid/InitializerBlockBuilderFixture.java");

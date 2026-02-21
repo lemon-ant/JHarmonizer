@@ -9,7 +9,7 @@ public class FieldInitializerInstanceRefChainSample {
     int d = this.g + 11;
     int g = 15;
     int i = this.a + 17;
-    int a  = 0; // TODO Exception
+    int a  = 0;
 
     public static void main(String[] args) {
         FieldInitializerInstanceRefChainSample sample = new FieldInitializerInstanceRefChainSample();
