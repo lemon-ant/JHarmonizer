@@ -130,8 +130,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void
-            buildDependencyGraph_explicitThisForwardReferenceToFieldWithBooleanFalseDefaultValue_noDeclarationDependency() {
+    void buildDependencyGraph_explicitThisForwardRefToFieldWithBooleanFalseDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_BOOLEAN_FALSE_DEFAULT_VALUE_MEMBERS);
