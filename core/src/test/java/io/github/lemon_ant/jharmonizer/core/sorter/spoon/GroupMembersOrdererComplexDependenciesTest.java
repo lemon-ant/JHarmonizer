@@ -227,28 +227,23 @@ class GroupMembersOrdererComplexDependenciesTest {
                         (leftMember, ignored) -> leftMember,
                         LinkedHashMap::new));
 
-        StringBuilder diagnostic = new StringBuilder("Diagnostic report for flaky ordering test:\n");
-        diagnostic.append("- sourceAlphaKeys=").append(sourceAlphaKeys).append('\n');
-        diagnostic.append("- orderedAlphaKeys=").append(orderedAlphaKeys).append('\n');
-        diagnostic
-                .append("- trackedIndexes=")
-                .append(renderTrackedIndexes(orderedAlphaKeys))
-                .append('\n');
-        diagnostic
-                .append("- declarationDirectDependencies=")
-                .append(renderDirectDependenciesByMember(
-                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .append('\n');
-        diagnostic
-                .append("- declarationTransitiveDependencies=")
-                .append(renderTransitiveDependenciesByMember(
-                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .append('\n');
-        diagnostic
-                .append("- accessorBundleDirectDependencies=")
-                .append(renderDirectDependenciesByMember(
-                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.ACCESSOR_BUNDLE));
-        return diagnostic.toString();
+        String diagnostic = "Diagnostic report for flaky ordering test:\n" + "- sourceAlphaKeys=" + sourceAlphaKeys
+                + '\n' + "- orderedAlphaKeys="
+                + orderedAlphaKeys + '\n' + "- trackedIndexes="
+                + renderTrackedIndexes(orderedAlphaKeys)
+                + '\n'
+                + "- declarationDirectDependencies="
+                + renderDirectDependenciesByMember(
+                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY)
+                + '\n'
+                + "- declarationTransitiveDependencies="
+                + renderTransitiveDependenciesByMember(
+                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY)
+                + '\n'
+                + "- accessorBundleDirectDependencies="
+                + renderDirectDependenciesByMember(
+                        sourceMembersByAlphaKey, dependencyGraph, MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+        return diagnostic;
     }
 
     private static String buildStateSnapshot(
@@ -258,18 +253,17 @@ class GroupMembersOrdererComplexDependenciesTest {
             @NonNull Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup,
             @NonNull List<MemberGroupBlock> sourceGroupBlocks,
             @NonNull List<MemberGroupBlock> orderedGroupBlocks) {
-        StringBuilder snapshot = new StringBuilder("State snapshot for complex ordering test:\n");
-        snapshot.append("- memberToNaturalGroup=")
-                .append(renderMemberToGroup(memberToNaturalGroup))
-                .append('\n');
-        snapshot.append("- sourceGroupBlocks=")
-                .append(renderGroupBlocks(sourceGroupBlocks))
-                .append('\n');
-        snapshot.append("- orderedGroupBlocks=")
-                .append(renderGroupBlocks(orderedGroupBlocks))
-                .append('\n');
-        snapshot.append(buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph));
-        return snapshot.toString();
+        String snapshot = "State snapshot for complex ordering test:\n" + "- memberToNaturalGroup="
+                + renderMemberToGroup(memberToNaturalGroup)
+                + '\n'
+                + "- sourceGroupBlocks="
+                + renderGroupBlocks(sourceGroupBlocks)
+                + '\n'
+                + "- orderedGroupBlocks="
+                + renderGroupBlocks(orderedGroupBlocks)
+                + '\n'
+                + buildDiagnosticReport(sourceTypeMembers, orderedTypeMembers, dependencyGraph);
+        return snapshot;
     }
 
     private static Map<String, String> renderMemberToGroup(

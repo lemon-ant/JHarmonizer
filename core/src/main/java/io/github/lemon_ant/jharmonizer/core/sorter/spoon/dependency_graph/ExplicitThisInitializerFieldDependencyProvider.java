@@ -19,24 +19,6 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 final class ExplicitThisInitializerFieldDependencyProvider implements MemberDependencyProvider {
 
-    @NonNull
-    @Override
-    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
-        if (!(dependentMember instanceof CtField<?> referencedField)) {
-            return Set.of();
-        }
-
-        if (isDefaultValueInitializer(referencedField)) {
-            return Set.of();
-        }
-
-        return findEarlierFieldsWithExplicitThisReferenceTo(referencedField).stream()
-                .map(providerMember ->
-                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
     private static Set<CtTypeMember> findEarlierFieldsWithExplicitThisReferenceTo(@NonNull CtField<?> referencedField) {
         int referencedFieldSourceStart = requireSourceStart(referencedField);
 
@@ -97,5 +79,23 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
                 && unaryOperator.getKind() == UnaryOperatorKind.NEG
                 && unaryOperator.getOperand() instanceof CtLiteral<?> operandLiteral
                 && isNumericZeroLiteral(operandLiteral.getValue());
+    }
+
+    @NonNull
+    @Override
+    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+        if (!(dependentMember instanceof CtField<?> referencedField)) {
+            return Set.of();
+        }
+
+        if (isDefaultValueInitializer(referencedField)) {
+            return Set.of();
+        }
+
+        return findEarlierFieldsWithExplicitThisReferenceTo(referencedField).stream()
+                .map(providerMember ->
+                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .collect(Collectors.toUnmodifiableSet());
     }
 }
