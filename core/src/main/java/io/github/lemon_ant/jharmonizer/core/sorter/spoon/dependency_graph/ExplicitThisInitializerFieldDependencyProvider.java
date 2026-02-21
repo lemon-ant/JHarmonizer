@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireSourceStart;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -56,26 +57,35 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
         }
 
         CtExpression<?> foldedExpression = defaultExpression.partiallyEvaluate();
-        if (isUnaryMinusZeroLiteral(foldedExpression)) {
-            return true;
+        return isUnaryMinusZeroLiteral(foldedExpression)
+                || castLiteralExpression(foldedExpression)
+                        .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
+                        .orElse(false);
+    }
+
+    private static <T> Optional<CtLiteral<T>> castLiteralExpression(@NonNull CtExpression<T> expression) {
+        if (expression instanceof CtLiteral<T> literalExpression) {
+            return Optional.of(literalExpression);
         }
 
-        if (!(foldedExpression instanceof CtLiteral<?> literalExpression)) {
-            return false;
+        return Optional.empty();
+    }
+
+    private static boolean isDefaultLiteralValue(@NonNull CtField<?> referencedField, Object literalValue) {
+        if (!referencedField.getType().isPrimitive()) {
+            return literalValue == null;
         }
 
-        Object literalValue = literalExpression.getValue();
-        if (referencedField.getType().isPrimitive()) {
-            String primitiveTypeName = referencedField.getType().getQualifiedName();
-            return switch (primitiveTypeName) {
-                case "boolean" -> Objects.equals(Boolean.FALSE, literalValue);
-                case "char" -> literalValue instanceof Character characterValue && characterValue == 0;
-                case "byte", "short", "int", "long", "float", "double" -> isNumericZeroLiteral(literalValue);
-                default -> false;
-            };
-        }
+        return isDefaultPrimitiveLiteralValue(referencedField.getType().getQualifiedName(), literalValue);
+    }
 
-        return literalValue == null;
+    private static boolean isDefaultPrimitiveLiteralValue(@NonNull String primitiveTypeName, Object literalValue) {
+        return switch (primitiveTypeName) {
+            case "boolean" -> Objects.equals(Boolean.FALSE, literalValue);
+            case "char" -> literalValue instanceof Character characterValue && characterValue == 0;
+            case "byte", "short", "int", "long", "float", "double" -> isNumericZeroLiteral(literalValue);
+            default -> false;
+        };
     }
 
     private static boolean isNumericZeroLiteral(Object literalValue) {
