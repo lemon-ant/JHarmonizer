@@ -21,13 +21,15 @@
         <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
         <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+        <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <maven-project-info-reports-plugin.version>3.9.0</maven-project-info-reports-plugin.version>
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
         <palantir-java-format.version>2.88.0</palantir-java-format.version>
+        <pmd.version>7.21.0</pmd.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <spotbugs-maven-plugin.version>4.9.8.0</spotbugs-maven-plugin.version>
+        <spotbugs-maven-plugin.version>4.9.8.2</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
         <spotless-maven-plugin.version>2.44.5</spotless-maven-plugin.version>
     </properties>
@@ -349,7 +351,7 @@
 
                     <plugin>
                         <artifactId>maven-pmd-plugin</artifactId>
-                        <version>3.27.0</version>
+                        <version>${maven-pmd-plugin.version}</version>
                         <configuration>
                             <linkXRef>false</linkXRef>
                             <printFailingErrors>true</printFailingErrors>
@@ -357,6 +359,13 @@
                                 <ruleset>${maven.multiModuleProjectDirectory}/quality-gates/pmd-custom-ruleset.xml</ruleset>
                             </rulesets>
                         </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>net.sourceforge.pmd</groupId>
+                                <artifactId>pmd-java</artifactId>
+                                <version>${pmd.version}</version>
+                            </dependency>
+                        </dependencies>
 
                         <executions>
                             <execution>
