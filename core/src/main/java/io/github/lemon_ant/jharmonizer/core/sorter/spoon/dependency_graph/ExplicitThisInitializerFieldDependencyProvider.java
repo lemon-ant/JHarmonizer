@@ -60,22 +60,37 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
             return true;
         }
 
-        if (!(foldedExpression instanceof CtLiteral<?> literalExpression)) {
+        Object literalValue = extractLiteralValue(foldedExpression);
+        if (literalValue == null && !(foldedExpression instanceof CtLiteral<?>)) {
             return false;
         }
 
-        Object literalValue = literalExpression.getValue();
-        if (referencedField.getType().isPrimitive()) {
-            String primitiveTypeName = referencedField.getType().getQualifiedName();
-            return switch (primitiveTypeName) {
-                case "boolean" -> Objects.equals(Boolean.FALSE, literalValue);
-                case "char" -> literalValue instanceof Character characterValue && characterValue == 0;
-                case "byte", "short", "int", "long", "float", "double" -> isNumericZeroLiteral(literalValue);
-                default -> false;
-            };
+        return isDefaultLiteralValue(referencedField, literalValue);
+    }
+
+    private static Object extractLiteralValue(@NonNull CtExpression<?> expression) {
+        if (expression instanceof CtLiteral<?> literalExpression) {
+            return literalExpression.getValue();
         }
 
-        return literalValue == null;
+        return null;
+    }
+
+    private static boolean isDefaultLiteralValue(@NonNull CtField<?> referencedField, Object literalValue) {
+        if (!referencedField.getType().isPrimitive()) {
+            return literalValue == null;
+        }
+
+        return isDefaultPrimitiveLiteralValue(referencedField.getType().getQualifiedName(), literalValue);
+    }
+
+    private static boolean isDefaultPrimitiveLiteralValue(@NonNull String primitiveTypeName, Object literalValue) {
+        return switch (primitiveTypeName) {
+            case "boolean" -> Objects.equals(Boolean.FALSE, literalValue);
+            case "char" -> literalValue instanceof Character characterValue && characterValue == 0;
+            case "byte", "short", "int", "long", "float", "double" -> isNumericZeroLiteral(literalValue);
+            default -> false;
+        };
     }
 
     private static boolean isNumericZeroLiteral(Object literalValue) {
