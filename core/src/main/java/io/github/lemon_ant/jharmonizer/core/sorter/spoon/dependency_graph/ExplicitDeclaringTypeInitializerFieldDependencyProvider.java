@@ -27,6 +27,6 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
 
     @Override
     protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
-        return OrderDependentFieldReferenceUtils.hasExplicitDeclaringTypeReferenceTo(referrerField, referencedField);
+        return hasExplicitDeclaringTypeReferenceTo(referrerField, referencedField);
     }
 }

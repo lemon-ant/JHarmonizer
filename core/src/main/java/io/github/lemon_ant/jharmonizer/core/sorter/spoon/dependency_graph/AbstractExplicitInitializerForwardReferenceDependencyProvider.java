@@ -1,18 +1,28 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireDeclaringType;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireSourceStart;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.UnaryOperatorKind;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider implements MemberDependencyProvider {
 
@@ -40,6 +50,65 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
     protected abstract boolean hasExplicitReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    protected final boolean hasExplicitThisReferenceTo(
+            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        return hasExplicitQualifiedReferenceTo(referrerField, referencedField, this::isExplicitThisQualifiedAccess);
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    protected final boolean hasExplicitDeclaringTypeReferenceTo(
+            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
+
+        return hasExplicitQualifiedReferenceTo(
+                referrerField,
+                referencedField,
+                (fieldAccess, ignoredDeclaringType) ->
+                        isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private boolean hasExplicitQualifiedReferenceTo(
+            @NonNull CtField<?> referrerField,
+            @NonNull CtField<?> referencedField,
+            @NonNull BiPredicate<CtFieldAccess<?>, CtType<?>> qualifierMatcher) {
+        CtElement referrerAstRoot = referrerField.getDefaultExpression();
+        if (referrerAstRoot == null) {
+            return false;
+        }
+
+        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
+        if (referencedField.getDeclaringType() != referrerDeclaringType) {
+            return false;
+        }
+
+        List<CtFieldAccess<?>> fieldAccesses = referrerAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class));
+
+        return fieldAccesses.stream()
+                .filter(fieldAccess -> qualifierMatcher.test(fieldAccess, referrerDeclaringType))
+                .map(CtFieldAccess::getVariable)
+                .map(CtFieldReference::getDeclaration)
+                .filter(Objects::nonNull)
+                .map(declaredField -> (CtField<?>) declaredField)
+                .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
+    }
+
+    private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess, CtType<?> ignoredDeclaringType) {
+        return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isExplicitDeclaringTypeQualifiedAccess(
+            CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
+        if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess) || typeAccess.isImplicit()) {
+            return false;
+        }
+
+        return typeAccess.getAccessedType() != null
+                && typeAccess.getAccessedType().getTypeDeclaration() == declaringType;
+    }
 
     private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(@NonNull CtField<?> referencedField) {
         int referencedFieldSourceStart = requireSourceStart(referencedField);
