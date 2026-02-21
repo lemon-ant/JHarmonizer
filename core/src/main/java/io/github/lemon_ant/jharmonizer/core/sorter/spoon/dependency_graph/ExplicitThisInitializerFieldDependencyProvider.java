@@ -1,35 +1,26 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Provides declaration dependencies created by explicit {@code this.<field>} references in field initializers.
  */
-final class ExplicitThisInitializerFieldDependencyProvider implements MemberDependencyProvider {
+final class ExplicitThisInitializerFieldDependencyProvider
+        extends AbstractExplicitInitializerForwardReferenceDependencyProvider {
 
-    @NonNull
     @Override
-    public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
-        if (!(dependentMember instanceof CtField<?> referencedField)) {
-            return Set.of();
-        }
+    protected boolean isSupportedReferencedField(@NonNull CtField<?> referencedField) {
+        return true;
+    }
 
-        if (ExplicitInitializerForwardReferenceDependencyUtils.isDefaultValueInitializer(referencedField)) {
-            return Set.of();
-        }
+    @Override
+    protected boolean isSupportedReferrerField(@NonNull CtField<?> referrerField) {
+        return true;
+    }
 
-        return ExplicitInitializerForwardReferenceDependencyUtils.findEarlierFieldsWithReferenceTo(
-                        referencedField,
-                        ignoredField -> true,
-                        OrderDependentFieldReferenceUtils::hasExplicitThisReferenceTo)
-                .stream()
-                .map(providerMember ->
-                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                .collect(Collectors.toUnmodifiableSet());
+    @Override
+    protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        return OrderDependentFieldReferenceUtils.hasExplicitThisReferenceTo(referrerField, referencedField);
     }
 }

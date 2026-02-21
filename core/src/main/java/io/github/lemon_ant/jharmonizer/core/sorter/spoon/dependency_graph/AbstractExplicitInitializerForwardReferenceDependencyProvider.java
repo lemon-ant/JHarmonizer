@@ -5,11 +5,8 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtUnaryOperator;
@@ -17,27 +14,48 @@ import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
-@UtilityClass
-final class ExplicitInitializerForwardReferenceDependencyUtils {
+abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider implements MemberDependencyProvider {
 
-    static Set<CtTypeMember> findEarlierFieldsWithReferenceTo(
-            @NonNull CtField<?> referencedField,
-            @NonNull Predicate<CtField<?>> additionalReferrerFilter,
-            @NonNull BiPredicate<CtField<?>, CtField<?>> hasExplicitReferencePredicate) {
+    @NonNull
+    @Override
+    public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+        if (!(dependentMember instanceof CtField<?> referencedField) || !isSupportedReferencedField(referencedField)) {
+            return Set.of();
+        }
+
+        if (isDefaultValueInitializer(referencedField)) {
+            return Set.of();
+        }
+
+        return findEarlierReferrerFieldsWithExplicitReferenceTo(referencedField).stream()
+                .map(providerMember ->
+                        new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    protected abstract boolean isSupportedReferencedField(@NonNull CtField<?> referencedField);
+
+    protected abstract boolean isSupportedReferrerField(@NonNull CtField<?> referrerField);
+
+    protected abstract boolean hasExplicitReferenceTo(
+            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
+
+    private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(@NonNull CtField<?> referencedField) {
         int referencedFieldSourceStart = requireSourceStart(referencedField);
 
         return referencedField.getDeclaringType().getTypeMembers().stream()
                 .filter(typeMember -> typeMember instanceof CtField<?>)
                 .filter(typeMember -> requireSourceStart(typeMember) < referencedFieldSourceStart)
                 .map(typeMember -> (CtField<?>) typeMember)
-                .filter(additionalReferrerFilter)
+                .filter(this::isSupportedReferrerField)
                 .filter(field -> field.getDefaultExpression() != null)
-                .filter(referrerField -> hasExplicitReferencePredicate.test(referrerField, referencedField))
+                .filter(referrerField -> hasExplicitReferenceTo(referrerField, referencedField))
                 .map(field -> (CtTypeMember) field)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    static boolean isDefaultValueInitializer(@NonNull CtField<?> referencedField) {
+    private static boolean isDefaultValueInitializer(@NonNull CtField<?> referencedField) {
         CtExpression<?> defaultExpression = referencedField.getDefaultExpression();
         if (defaultExpression == null) {
             return true;
