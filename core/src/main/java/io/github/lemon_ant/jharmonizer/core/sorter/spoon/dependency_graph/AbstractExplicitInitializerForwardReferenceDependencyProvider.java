@@ -51,13 +51,11 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     protected abstract boolean hasExplicitReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     protected final boolean hasExplicitThisReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
         return hasExplicitQualifiedReferenceTo(referrerField, referencedField, this::isExplicitThisQualifiedAccess);
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     protected final boolean hasExplicitDeclaringTypeReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
         CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
@@ -69,7 +67,6 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                         isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private boolean hasExplicitQualifiedReferenceTo(
             @NonNull CtField<?> referrerField,
             @NonNull CtField<?> referencedField,
@@ -99,7 +96,6 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
         return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static boolean isExplicitDeclaringTypeQualifiedAccess(
             CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
         if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess) || typeAccess.isImplicit()) {
