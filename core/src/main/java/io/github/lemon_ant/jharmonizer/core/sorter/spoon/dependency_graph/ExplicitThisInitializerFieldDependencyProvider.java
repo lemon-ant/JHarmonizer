@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireSourceStart;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -60,20 +61,17 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
             return true;
         }
 
-        Object literalValue = extractLiteralValue(foldedExpression);
-        if (literalValue == null && !(foldedExpression instanceof CtLiteral<?>)) {
-            return false;
-        }
-
-        return isDefaultLiteralValue(referencedField, literalValue);
+        return extractLiteralValue(foldedExpression)
+                .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
+                .orElse(false);
     }
 
-    private static Object extractLiteralValue(@NonNull CtExpression<?> expression) {
+    private static Optional<CtLiteral<?>> extractLiteralValue(@NonNull CtExpression<?> expression) {
         if (expression instanceof CtLiteral<?> literalExpression) {
-            return literalExpression.getValue();
+            return Optional.of(literalExpression);
         }
 
-        return null;
+        return Optional.empty();
     }
 
     private static boolean isDefaultLiteralValue(@NonNull CtField<?> referencedField, Object literalValue) {
