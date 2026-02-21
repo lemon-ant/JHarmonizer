@@ -11,6 +11,7 @@ import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -117,6 +118,30 @@ final class OrderDependentFieldReferenceUtils {
                 .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    static boolean hasExplicitDeclaringTypeReferenceTo(
+            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        CtElement referrerAstRoot = referrerField.getDefaultExpression();
+        if (referrerAstRoot == null) {
+            return false;
+        }
+
+        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
+        if (referencedField.getDeclaringType() != referrerDeclaringType) {
+            return false;
+        }
+
+        List<CtFieldAccess<?>> fieldAccesses = referrerAstRoot.getElements(new TypeFilter<>(CtFieldAccess.class));
+
+        return fieldAccesses.stream()
+                .filter(fieldAccess -> isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType))
+                .map(CtFieldAccess::getVariable)
+                .map(CtFieldReference::getDeclaration)
+                .filter(Objects::nonNull)
+                .map(declaredField -> (CtField<?>) declaredField)
+                .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
+    }
+
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         return collectReferencedDeclaringTypeFields(
@@ -162,5 +187,15 @@ final class OrderDependentFieldReferenceUtils {
 
     private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess) {
         return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isExplicitDeclaringTypeQualifiedAccess(CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
+        if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess) || typeAccess.isImplicit()) {
+            return false;
+        }
+
+        return typeAccess.getAccessedType() != null
+                && typeAccess.getAccessedType().getTypeDeclaration() == declaringType;
     }
 }

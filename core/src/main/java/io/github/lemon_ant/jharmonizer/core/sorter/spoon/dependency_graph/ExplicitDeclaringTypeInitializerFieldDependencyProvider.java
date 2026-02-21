@@ -5,17 +5,23 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 
 /**
- * Provides declaration dependencies created by explicit {@code this.<field>} references in field initializers.
+ * Provides declaration dependencies created by explicit {@code <DeclaringType>.<field>} references in static field
+ * initializers.
  */
-final class ExplicitThisInitializerFieldDependencyProvider implements MemberDependencyProvider {
+final class ExplicitDeclaringTypeInitializerFieldDependencyProvider implements MemberDependencyProvider {
+
+    private static boolean isStaticField(@NonNull CtField<?> field) {
+        return field.getModifiers().contains(ModifierKind.STATIC);
+    }
 
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
-        if (!(dependentMember instanceof CtField<?> referencedField)) {
+        if (!(dependentMember instanceof CtField<?> referencedField) || !isStaticField(referencedField)) {
             return Set.of();
         }
 
@@ -25,8 +31,8 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
 
         return ExplicitInitializerForwardReferenceDependencyUtils.findEarlierFieldsWithReferenceTo(
                         referencedField,
-                        ignoredField -> true,
-                        OrderDependentFieldReferenceUtils::hasExplicitThisReferenceTo)
+                        ExplicitDeclaringTypeInitializerFieldDependencyProvider::isStaticField,
+                        OrderDependentFieldReferenceUtils::hasExplicitDeclaringTypeReferenceTo)
                 .stream()
                 .map(providerMember ->
                         new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
