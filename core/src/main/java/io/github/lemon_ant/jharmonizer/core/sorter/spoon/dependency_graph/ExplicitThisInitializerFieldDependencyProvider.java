@@ -26,7 +26,7 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
             return Set.of();
         }
 
-        if (!hasOrderSensitiveInitialization(referencedField)) {
+        if (isDefaultValueInitializer(referencedField)) {
             return Set.of();
         }
 
@@ -49,20 +49,18 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean hasOrderSensitiveInitialization(@NonNull CtField<?> referencedField) {
+    private static boolean isDefaultValueInitializer(@NonNull CtField<?> referencedField) {
         CtExpression<?> defaultExpression = referencedField.getDefaultExpression();
         if (defaultExpression == null) {
-            return false;
+            return true;
         }
 
-        return !isExplicitDefaultValueInitializer(referencedField, defaultExpression);
-    }
-
-    private static boolean isExplicitDefaultValueInitializer(
-            @NonNull CtField<?> referencedField, @NonNull CtExpression<?> defaultExpression) {
         CtExpression<?> foldedExpression = defaultExpression.partiallyEvaluate();
-        CtExpression<?> unwrappedExpression = unwrapTypeCasts(foldedExpression);
-        if (!(unwrappedExpression instanceof CtLiteral<?> literalExpression)) {
+        if (isUnaryMinusZeroLiteral(foldedExpression)) {
+            return true;
+        }
+
+        if (!(foldedExpression instanceof CtLiteral<?> literalExpression)) {
             return false;
         }
 
@@ -81,23 +79,13 @@ final class ExplicitThisInitializerFieldDependencyProvider implements MemberDepe
     }
 
     private static boolean isNumericZeroLiteral(Object literalValue) {
-        if (!(literalValue instanceof Number numericLiteral)) {
-            return false;
-        }
-
-        return numericLiteral.doubleValue() == 0D;
+        return literalValue instanceof Number numericLiteral && numericLiteral.doubleValue() == 0D;
     }
 
-    private static CtExpression<?> unwrapTypeCasts(@NonNull CtExpression<?> expression) {
-        // The default path keeps literal expressions unchanged (boolean/char/null/0 etc.) and only normalizes
-        // one non-literal shape that still semantically means numeric zero: unary minus applied to literal zero.
-        if (expression instanceof CtUnaryOperator<?> unaryOperator
+    private static boolean isUnaryMinusZeroLiteral(@NonNull CtExpression<?> expression) {
+        return expression instanceof CtUnaryOperator<?> unaryOperator
                 && unaryOperator.getKind() == UnaryOperatorKind.NEG
                 && unaryOperator.getOperand() instanceof CtLiteral<?> operandLiteral
-                && isNumericZeroLiteral(operandLiteral.getValue())) {
-            return operandLiteral;
-        }
-
-        return expression;
+                && isNumericZeroLiteral(operandLiteral.getValue());
     }
 }
