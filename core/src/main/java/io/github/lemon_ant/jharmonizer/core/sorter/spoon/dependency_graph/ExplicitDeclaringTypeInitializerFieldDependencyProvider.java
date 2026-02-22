@@ -20,7 +20,7 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
 
     @Override
     protected boolean isSupportedReferencedField(@NonNull CtField<?> referencedField) {
-        return isStaticField(referencedField);
+        return isStaticField(referencedField) && !isCompileTimeConstantVariable(referencedField);
     }
 
     @Override
@@ -37,11 +37,6 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
                 referencedField,
                 (fieldAccess, ignoredDeclaringType) ->
                         isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
-    }
-
-    @Override
-    protected boolean shouldSkipForwardReferenceDependency(@NonNull CtField<?> referencedField) {
-        return isCompileTimeConstantVariable(referencedField);
     }
 
     private static boolean isCompileTimeConstantVariable(CtField<?> field) {
