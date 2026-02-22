@@ -22,6 +22,7 @@ public class MemberDependencyGraphBuilder {
             new BlankFinalDefiniteAssignmentDependencyProvider(),
             new FieldInitializerBackwardReferenceDependencyProvider(),
             new ExplicitThisInitializerFieldDependencyProvider(),
+            new ExplicitDeclaringTypeInitializerFieldDependencyProvider(),
             new InitializerBlockDependencyProvider());
 
     @NonNull
