@@ -13,8 +13,6 @@ import lombok.NonNull;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtLiteral;
-import spoon.reflect.code.CtThisAccess;
-import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtElement;
@@ -51,27 +49,8 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     protected abstract boolean hasExplicitReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
 
-    protected final boolean hasExplicitThisReferenceTo(
-            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
-        return hasExplicitQualifiedReferenceTo(
-                referrerField,
-                referencedField,
-                AbstractExplicitInitializerForwardReferenceDependencyProvider::isExplicitThisQualifiedAccess);
-    }
-
-    protected final boolean hasExplicitDeclaringTypeReferenceTo(
-            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
-        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
-
-        return hasExplicitQualifiedReferenceTo(
-                referrerField,
-                referencedField,
-                (fieldAccess, ignoredDeclaringType) ->
-                        isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
-    }
-
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private boolean hasExplicitQualifiedReferenceTo(
+    protected boolean hasExplicitQualifiedReferenceTo(
             CtField<?> referrerField,
             CtField<?> referencedField,
             BiPredicate<CtFieldAccess<?>, CtType<?>> qualifierMatcher) {
@@ -94,21 +73,6 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .filter(Objects::nonNull)
                 .map(declaredField -> (CtField<?>) declaredField)
                 .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
-    }
-
-    private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess, CtType<?> ignoredDeclaringType) {
-        return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
-    }
-
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isExplicitDeclaringTypeQualifiedAccess(
-            CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
-        if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess) || typeAccess.isImplicit()) {
-            return false;
-        }
-
-        return typeAccess.getAccessedType() != null
-                && typeAccess.getAccessedType().getTypeDeclaration() == declaringType;
     }
 
     private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(CtField<?> referencedField) {
