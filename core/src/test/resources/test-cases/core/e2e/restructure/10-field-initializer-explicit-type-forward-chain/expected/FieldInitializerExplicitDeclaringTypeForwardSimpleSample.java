@@ -2,8 +2,8 @@ package e2e;
 
 public class FieldInitializerExplicitDeclaringTypeForwardSimpleSample {
     private static final int zeta = FieldInitializerExplicitDeclaringTypeForwardSimpleSample.alpha + 1;
-    private static final int alpha = 10;
-    private static final int beta = 2;
+    private static int alpha = 10;
+    private static int beta = 2;
     private static final int gamma = 3;
 
     public static void main(String[] args) {
