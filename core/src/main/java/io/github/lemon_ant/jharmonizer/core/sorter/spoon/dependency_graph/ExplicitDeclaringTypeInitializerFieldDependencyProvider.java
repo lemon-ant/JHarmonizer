@@ -7,7 +7,6 @@ import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.declaration.ModifierKind;
 
 /**
  * Provides declaration dependencies created by explicit {@code <DeclaringType>.<field>} references in static field
@@ -15,10 +14,6 @@ import spoon.reflect.declaration.ModifierKind;
  */
 final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
         extends AbstractExplicitInitializerForwardReferenceDependencyProvider {
-
-    private static boolean isStaticField(@NonNull CtField<?> field) {
-        return field.getModifiers().contains(ModifierKind.STATIC);
-    }
 
     @Override
     protected boolean isSupportedReferencedField(@NonNull CtField<?> referencedField) {

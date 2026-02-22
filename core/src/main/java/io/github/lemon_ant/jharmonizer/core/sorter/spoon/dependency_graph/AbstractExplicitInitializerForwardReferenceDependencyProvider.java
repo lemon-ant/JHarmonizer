@@ -19,6 +19,7 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
@@ -70,8 +71,6 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .filter(fieldAccess -> qualifierMatcher.test(fieldAccess, referrerDeclaringType))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .map(declaredField -> (CtField<?>) declaredField)
                 .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
     }
 
@@ -83,7 +82,6 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .filter(typeMember -> requireSourceStart(typeMember) < referencedFieldSourceStart)
                 .map(typeMember -> (CtField<?>) typeMember)
                 .filter(this::isSupportedReferrerField)
-                .filter(field -> field.getDefaultExpression() != null)
                 .filter(referrerField -> hasExplicitReferenceTo(referrerField, referencedField))
                 .map(field -> (CtTypeMember) field)
                 .collect(Collectors.toUnmodifiableSet());
@@ -136,5 +134,9 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 && unaryOperator.getKind() == UnaryOperatorKind.NEG
                 && unaryOperator.getOperand() instanceof CtLiteral<?> operandLiteral
                 && isNumericZeroLiteral(operandLiteral.getValue());
+    }
+
+    protected static boolean isStaticField(@NonNull CtField<?> field) {
+        return field.getModifiers().contains(ModifierKind.STATIC);
     }
 }

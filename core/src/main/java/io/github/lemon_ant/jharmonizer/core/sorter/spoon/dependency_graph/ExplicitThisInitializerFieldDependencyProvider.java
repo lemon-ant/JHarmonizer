@@ -14,7 +14,7 @@ final class ExplicitThisInitializerFieldDependencyProvider
 
     @Override
     protected boolean isSupportedReferencedField(@NonNull CtField<?> referencedField) {
-        return true;
+        return !isStaticField(referencedField);
     }
 
     @Override
