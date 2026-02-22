@@ -10,7 +10,7 @@ public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
     private static final double omega = FieldInitializerExplicitDeclaringTypeForwardChainSample.psi + 1.0;
 
     private static int alpha = 10;
-    private static int beta = 0;
+    private static int beta = 3;
     private static boolean pi = false;
     private static String tau = null;
     private static char phi = '\0';
@@ -19,7 +19,7 @@ public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
     public static void main(String[] args) {
         if (alpha != 10
                 || zeta != 2
-                || beta != 0
+                || beta != 3
                 || theta != 1
                 || !"null-default".equals(sigma)
                 || upsilon != 1
