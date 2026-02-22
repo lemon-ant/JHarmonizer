@@ -33,7 +33,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
             return Set.of();
         }
 
-        if (isDefaultValueInitializer(referencedField)) {
+        if (isDefaultValueInitializer(referencedField) || shouldSkipForwardReferenceDependency(referencedField)) {
             return Set.of();
         }
 
@@ -46,6 +46,10 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     protected abstract boolean isSupportedReferencedField(@NonNull CtField<?> referencedField);
 
     protected abstract boolean isSupportedReferrerField(@NonNull CtField<?> referrerField);
+
+    protected boolean shouldSkipForwardReferenceDependency(@NonNull CtField<?> referencedField) {
+        return false;
+    }
 
     protected abstract boolean hasExplicitReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);

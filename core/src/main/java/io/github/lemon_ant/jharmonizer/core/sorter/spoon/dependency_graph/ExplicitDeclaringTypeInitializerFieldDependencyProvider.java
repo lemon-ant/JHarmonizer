@@ -3,10 +3,13 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireDeclaringType;
 
 import lombok.NonNull;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.ModifierKind;
 
 /**
  * Provides declaration dependencies created by explicit {@code <DeclaringType>.<field>} references in static field
@@ -34,6 +37,30 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
                 referencedField,
                 (fieldAccess, ignoredDeclaringType) ->
                         isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
+    }
+
+    @Override
+    protected boolean shouldSkipForwardReferenceDependency(@NonNull CtField<?> referencedField) {
+        return isCompileTimeConstantVariable(referencedField);
+    }
+
+    private static boolean isCompileTimeConstantVariable(CtField<?> field) {
+        if (!field.getModifiers().contains(ModifierKind.FINAL)) {
+            return false;
+        }
+
+        CtExpression<?> defaultExpression = field.getDefaultExpression();
+        if (defaultExpression == null) {
+            return false;
+        }
+
+        String typeQualifiedName = field.getType().getQualifiedName();
+        boolean isPrimitiveOrString = field.getType().isPrimitive() || "java.lang.String".equals(typeQualifiedName);
+        if (!isPrimitiveOrString) {
+            return false;
+        }
+
+        return defaultExpression.partiallyEvaluate() instanceof CtLiteral<?>;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
