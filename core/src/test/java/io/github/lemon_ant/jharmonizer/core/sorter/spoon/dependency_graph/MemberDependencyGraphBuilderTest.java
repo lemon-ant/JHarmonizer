@@ -85,7 +85,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_explicitThisForwardReference_withEarlierStaticField_onlyInstanceReferrerCreatesDependency() {
+    void buildDependencyGraph_explicitThisForwardRef_withStaticField_usesOnlyInstanceProvider() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_MEMBERS);
@@ -238,7 +238,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFinalNonConstantField_declarationDependencyCreated() {
+    void buildDependencyGraph_explicitTypeForwardRef_finalNonConstant_keepsDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS);
@@ -255,7 +255,7 @@ class MemberDependencyGraphBuilderTest {
 
     @Test
     void
-            buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFieldWithExplicitDefaultValue_noDeclarationDependency() {
+            buildDependencyGraph_explicitTypeForwardRef_explicitDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_DEFAULT_VALUE_MEMBERS);
@@ -271,7 +271,7 @@ class MemberDependencyGraphBuilderTest {
 
     @Test
     void
-            buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFieldWithImplicitDefaultValue_noDeclarationDependency() {
+            buildDependencyGraph_explicitTypeForwardRef_implicitDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_MEMBERS);
@@ -287,7 +287,7 @@ class MemberDependencyGraphBuilderTest {
 
     @Test
     void
-            buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFieldWithNullDefaultValue_noDeclarationDependency() {
+            buildDependencyGraph_explicitTypeForwardRef_nullDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_MEMBERS);
