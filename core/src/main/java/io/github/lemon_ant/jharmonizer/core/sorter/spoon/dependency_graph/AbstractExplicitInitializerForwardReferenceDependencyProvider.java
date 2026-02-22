@@ -47,7 +47,6 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
     protected abstract boolean isSupportedReferrerField(@NonNull CtField<?> referrerField);
 
-
     protected abstract boolean hasExplicitReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
 
