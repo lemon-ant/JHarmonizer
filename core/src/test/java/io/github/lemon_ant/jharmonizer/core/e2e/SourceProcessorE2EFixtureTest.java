@@ -83,7 +83,7 @@ class SourceProcessorE2EFixtureTest {
         assertThat(compileAfterResult.exitCode())
                 .as("Expected javac --release 21 to compile file %s. Diagnostics:%n%s", workingInputFile, compileAfterResult.output())
                 .isZero();
-        assertOutputMatchesExpected(expectedSourceFile, workingInputFile);
+        assertThat(workingInputFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
         JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
         assertThat(runAfterResult.exitCode())
                 .as(
@@ -133,9 +133,6 @@ class SourceProcessorE2EFixtureTest {
         sourceProcessor.processSources(scenarioSourcesRoot, List.of(), List.of(), flowType);
     }
 
-    private static void assertOutputMatchesExpected(Path expectedSourceFile, Path actualSourceFile) {
-        assertThat(actualSourceFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
-    }
 
     private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
         Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
