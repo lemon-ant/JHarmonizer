@@ -1,28 +1,28 @@
 package e2e;
 
 public class FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample {
-    private static final int fromConst =
-            FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample.constValue + 1;
-    private static final int fromNonConst =
-            FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample.nonConstValue + 1;
+    private static final int mFromConst =
+            FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample.bConstValue + 1;
+    private static final int zFromNonConst =
+            FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample.aNonConstValue + 1;
     private static final int anchor = 100;
-    private static final int nonConstValue = Integer.parseInt("41");
-    private static final int constValue = 41;
+    private static final int aNonConstValue = Integer.parseInt("41");
+    private static final int bConstValue = 41;
 
     public static void main(String[] args) {
-        if (anchor != 100 || constValue != 41 || nonConstValue != 41 || fromConst != 42 || fromNonConst != 1) {
+        if (anchor != 100 || bConstValue != 41 || aNonConstValue != 41 || mFromConst != 42 || zFromNonConst != 1) {
             throw new IllegalStateException(
                     "Unexpected initialization values:"
                             + " anchor="
                             + anchor
-                            + ", constValue="
-                            + constValue
-                            + ", nonConstValue="
-                            + nonConstValue
-                            + ", fromConst="
-                            + fromConst
-                            + ", fromNonConst="
-                            + fromNonConst);
+                            + ", bConstValue="
+                            + bConstValue
+                            + ", aNonConstValue="
+                            + aNonConstValue
+                            + ", mFromConst="
+                            + mFromConst
+                            + ", zFromNonConst="
+                            + zFromNonConst);
         }
     }
 }

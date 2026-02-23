@@ -221,6 +221,38 @@ class MemberDependencyGraphBuilderTest {
                 .containsExactly(Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_ALPHA_FIELD_MEMBER);
     }
 
+
+    @Test
+    void buildDependencyGraph_explicitDeclaringTypeForwardReferenceToConstantVariable_noDeclarationDependency() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_BRAVO_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders).isEmpty();
+    }
+
+    @Test
+    void buildDependencyGraph_explicitTypeForwardRef_finalNonConstant_keepsDeclarationDependency() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_BRAVO_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders)
+                .containsExactly(Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_ALPHA_FIELD_MEMBER);
+    }
+
     @Test
     void buildDependencyGraph_explicitDeclaringTypeForwardReferenceToConstantVariable_noDeclarationDependency() {
         // Given
