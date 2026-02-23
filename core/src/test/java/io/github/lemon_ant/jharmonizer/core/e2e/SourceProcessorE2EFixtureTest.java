@@ -134,8 +134,6 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void assertOutputMatchesExpected(Path expectedSourceFile, Path actualSourceFile) {
-        assertThat(expectedSourceFile).as("Expected source must exist: %s", expectedSourceFile).exists();
-        assertThat(actualSourceFile).as("Processed source must exist: %s", actualSourceFile).exists();
         assertThat(actualSourceFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
     }
 
