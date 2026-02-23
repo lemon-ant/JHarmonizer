@@ -78,22 +78,30 @@ class SpoonMemberDescriptorFactory {
     }
 
     private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
-        return switch (typeMember) {
-            case CtEnumValue<?> ctEnumValue -> MemberKind.ENUM_CONSTANT;
-            case CtRecordComponent ctRecordComponent -> MemberKind.RECORD_COMPONENT;
+        if (typeMember instanceof CtEnumValue<?>) {
+            return MemberKind.ENUM_CONSTANT;
+        }
+        if (typeMember instanceof CtRecordComponent) {
+            return MemberKind.RECORD_COMPONENT;
+        }
+        if (typeMember instanceof CtField<?>) {
+            return MemberKind.FIELD;
+        }
+        if (typeMember instanceof CtMethod<?>) {
+            return MemberKind.METHOD;
+        }
+        if (typeMember instanceof CtConstructor<?>) {
+            return MemberKind.CONSTRUCTOR;
+        }
+        if (typeMember instanceof CtAnonymousExecutable) {
+            return MemberKind.INIT_BLOCK;
+        }
+        if (typeMember instanceof CtType<?> nestedType) {
+            return resolveNestedTypeKind(nestedType);
+        }
 
-            case CtField<?> ctField -> MemberKind.FIELD;
-            case CtMethod<?> ctMethod -> MemberKind.METHOD;
-            case CtConstructor<?> ctConstructor -> MemberKind.CONSTRUCTOR;
-
-            case CtAnonymousExecutable ctAnonymousExecutable -> MemberKind.INIT_BLOCK;
-
-            case CtType<?> ctType -> resolveNestedTypeKind(ctType);
-
-            default ->
-                throw new IllegalArgumentException(
-                        "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
-        };
+        throw new IllegalArgumentException(
+                "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
     }
 
     private static String composeDebugExceptionMessage(CtTypeMember typeMember) {
@@ -131,16 +139,21 @@ class SpoonMemberDescriptorFactory {
         if (nestedType.isAnnotationType()) {
             return MemberKind.TYPE_ANNOTATION;
         }
+        if (nestedType instanceof CtEnum<?>) {
+            return MemberKind.TYPE_ENUM;
+        }
+        if (nestedType instanceof CtRecord) {
+            return MemberKind.TYPE_RECORD;
+        }
+        if (nestedType instanceof CtClass<?>) {
+            return MemberKind.TYPE_CLASS;
+        }
+        if (nestedType instanceof CtInterface<?>) {
+            return MemberKind.TYPE_INTERFACE;
+        }
 
-        return switch (nestedType) {
-            case CtEnum<?> unusedEnum -> MemberKind.TYPE_ENUM;
-            case CtRecord unusedRecord -> MemberKind.TYPE_RECORD;
-            case CtClass<?> unusedClass -> MemberKind.TYPE_CLASS;
-            case CtInterface<?> unusedInterface -> MemberKind.TYPE_INTERFACE;
-            default ->
-                throw new IllegalArgumentException("Unsupported nested CtType: "
-                        + nestedType.getClass().getName() + ", qualifiedName=" + nestedType.getQualifiedName());
-        };
+        throw new IllegalArgumentException("Unsupported nested CtType: "
+                + nestedType.getClass().getName() + ", qualifiedName=" + nestedType.getQualifiedName());
     }
 
     @Nullable

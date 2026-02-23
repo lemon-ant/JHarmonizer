@@ -19,7 +19,7 @@ final class ExplicitThisInitializerFieldDependencyProvider
 
     @Override
     protected boolean isSupportedReferrerField(@NonNull CtField<?> referrerField) {
-        return true;
+        return !isStaticField(referrerField);
     }
 
     @Override

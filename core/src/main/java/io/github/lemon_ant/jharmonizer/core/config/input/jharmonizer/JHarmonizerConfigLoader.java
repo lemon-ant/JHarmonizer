@@ -39,7 +39,7 @@ class JHarmonizerConfigLoader {
     }
 
     @NonNull
-    public static JHarmonizerConfig loadFromClasspathResource(@NonNull URL classpathResource) {
+    static JHarmonizerConfig loadFromClasspathResource(@NonNull URL classpathResource) {
         try (InputStream inputStream = classpathResource.openStream()) {
             return JHarmonizerConfigLoader.loadFrom(inputStream);
         } catch (IOException ioException) {
@@ -49,7 +49,7 @@ class JHarmonizerConfigLoader {
     }
 
     @NonNull
-    public static JHarmonizerConfig loadFrom(@NonNull File yamlFile) {
+    static JHarmonizerConfig loadFrom(@NonNull File yamlFile) {
         try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
             return loadFrom(configYaml);
         } catch (IOException e) {

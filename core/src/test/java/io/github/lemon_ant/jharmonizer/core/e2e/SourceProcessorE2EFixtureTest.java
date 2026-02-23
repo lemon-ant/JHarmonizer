@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+// TODO Create a method for expected fixtures regeneration
 class SourceProcessorE2EFixtureTest {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
@@ -39,23 +40,26 @@ class SourceProcessorE2EFixtureTest {
     Path temporaryDirectory;
 
     @Test
+    // TODO Make it parameterized
     void processFixtureScenarios_allScenarios_matchExpectedAndCompileAfter() throws Exception {
+        // Given
         Path fixturesRoot = resolveFixturesRoot();
         Path workingRoot = temporaryDirectory.resolve("SourceProcessorE2E-working-dir");
         copyInputJavaFiles(fixturesRoot, workingRoot);
         Path compileBeforeOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-before");
         Path compileAfterOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-after");
-
         assertJavaSourcesCompileWithRelease21(workingRoot, compileBeforeOutput);
         assertJavaMainMethodsRunSuccessfully(workingRoot, compileBeforeOutput);
         assertScenariosAreNotStable(fixturesRoot, workingRoot);
 
+        // When
         runFlowForScenarios(fixturesRoot, workingRoot, FlowType.RESTRUCTURE);
 
+        // Then
         assertScenariosAreStable(fixturesRoot, workingRoot);
         assertJavaSourcesCompileWithRelease21(workingRoot, compileAfterOutput);
-        assertJavaMainMethodsRunSuccessfully(workingRoot, compileAfterOutput);
         assertOutputsMatchExpected(fixturesRoot, workingRoot);
+        assertJavaMainMethodsRunSuccessfully(workingRoot, compileAfterOutput);
     }
 
     private static Path resolveFixturesRoot() {
