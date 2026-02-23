@@ -5,14 +5,14 @@ public class FieldInitializerExplicitThisDefaultCombinatoricsSample {
     int alpha = 10;
     int beta = 0;
     double omega = this.psi + 1.0; // psi explicit minus-zero default
-    boolean pi = false;
     char phi = '\0';
+    boolean pi = false;
+    double psi = -0.0d;
     boolean rho = this.pi; // pi explicit false default
     String sigma = this.tau == null ? "null-default" : "set"; // tau explicit null default
     String tau = null;
     int theta = this.beta + 1; // beta has explicit default value: dependency should be skipped
     char upsilon = (char) (this.phi + 1); // phi explicit char default
-    double psi = -0.0d;
 
     public static void main(String[] args) {
         FieldInitializerExplicitThisDefaultCombinatoricsSample sample =

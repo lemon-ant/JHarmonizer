@@ -52,9 +52,9 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     protected boolean hasExplicitQualifiedReferenceTo(
-            CtField<?> referrerField,
-            CtField<?> referencedField,
-            BiPredicate<CtFieldAccess<?>, CtType<?>> qualifierMatcher) {
+            @NonNull CtField<?> referrerField,
+            @NonNull CtField<?> referencedField,
+            @NonNull BiPredicate<CtFieldAccess<?>, CtType<?>> qualifierMatcher) {
         CtElement referrerAstRoot = referrerField.getDefaultExpression();
         if (referrerAstRoot == null) {
             return false;

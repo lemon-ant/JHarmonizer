@@ -6,14 +6,14 @@ public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
     private static final int theta = FieldInitializerExplicitDeclaringTypeForwardChainSample.beta + 1;
     private static int beta = 3;
     private static final double omega = FieldInitializerExplicitDeclaringTypeForwardChainSample.psi + 1.0;
-    private static boolean pi = false;
     private static char phi = '\0';
+    private static boolean pi = false;
+    private static double psi = -0.0d;
     private static final boolean rho = FieldInitializerExplicitDeclaringTypeForwardChainSample.pi;
     private static final String sigma =
             FieldInitializerExplicitDeclaringTypeForwardChainSample.tau == null ? "null-default" : "set";
     private static String tau = null;
     private static final char upsilon = (char) (FieldInitializerExplicitDeclaringTypeForwardChainSample.phi + 1);
-    private static double psi = -0.0d;
 
     public static void main(String[] args) {
         if (alpha != 10

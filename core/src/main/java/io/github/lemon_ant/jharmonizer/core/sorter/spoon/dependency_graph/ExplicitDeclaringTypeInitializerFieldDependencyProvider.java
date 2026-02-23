@@ -51,11 +51,7 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
 
         String typeQualifiedName = field.getType().getQualifiedName();
         boolean isPrimitiveOrString = field.getType().isPrimitive() || "java.lang.String".equals(typeQualifiedName);
-        if (!isPrimitiveOrString) {
-            return false;
-        }
-
-        return defaultExpression.partiallyEvaluate() instanceof CtLiteral<?>;
+        return isPrimitiveOrString && defaultExpression.partiallyEvaluate() instanceof CtLiteral<?>;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")

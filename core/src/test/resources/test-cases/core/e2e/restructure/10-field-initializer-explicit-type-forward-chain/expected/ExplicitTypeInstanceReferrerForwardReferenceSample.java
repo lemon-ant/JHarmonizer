@@ -8,7 +8,8 @@ public class ExplicitTypeInstanceReferrerForwardReferenceSample {
         ExplicitTypeInstanceReferrerForwardReferenceSample sample =
                 new ExplicitTypeInstanceReferrerForwardReferenceSample();
         if (sample.zInstance != 11 || aStatic != 10) {
-            throw new IllegalStateException("Unexpected values: zInstance=" + sample.zInstance + ", aStatic=" + aStatic);
+            throw new IllegalStateException(
+                    "Unexpected values: zInstance=" + sample.zInstance + ", aStatic=" + aStatic);
         }
     }
 }

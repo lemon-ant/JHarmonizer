@@ -221,7 +221,6 @@ class MemberDependencyGraphBuilderTest {
                 .containsExactly(Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_ALPHA_FIELD_MEMBER);
     }
 
-
     @Test
     void buildDependencyGraph_explicitDeclaringTypeForwardReferenceToConstantVariable_noDeclarationDependency() {
         // Given
@@ -250,12 +249,12 @@ class MemberDependencyGraphBuilderTest {
 
         // Then
         assertThat(directProviders)
-                .containsExactly(Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_ALPHA_FIELD_MEMBER);
+                .containsExactly(
+                        Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_ALPHA_FIELD_MEMBER);
     }
 
     @Test
-    void
-            buildDependencyGraph_explicitTypeForwardRef_explicitDefault_noDeclarationDependency() {
+    void buildDependencyGraph_explicitTypeForwardRef_explicitDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_DEFAULT_VALUE_MEMBERS);
@@ -270,8 +269,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void
-            buildDependencyGraph_explicitTypeForwardRef_implicitDefault_noDeclarationDependency() {
+    void buildDependencyGraph_explicitTypeForwardRef_implicitDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_MEMBERS);
@@ -286,8 +284,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void
-            buildDependencyGraph_explicitTypeForwardRef_nullDefault_noDeclarationDependency() {
+    void buildDependencyGraph_explicitTypeForwardRef_nullDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_MEMBERS);
@@ -437,10 +434,9 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MEMBERS, "bravo");
 
-        private static final URL
-                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_URL =
-                        TestCaseResourceUtils.requireClasspathResourceUrl(
-                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceWithStaticReferrerFixture.java");
+        private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceWithStaticReferrerFixture.java");
         private static final CtType<?>
                 FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_MAIN_TYPE =
                         SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(

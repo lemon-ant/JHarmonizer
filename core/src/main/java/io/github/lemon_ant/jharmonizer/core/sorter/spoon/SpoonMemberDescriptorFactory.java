@@ -100,7 +100,8 @@ class SpoonMemberDescriptorFactory {
             return resolveNestedTypeKind(nestedType);
         }
 
-        throw new IllegalArgumentException("Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
+        throw new IllegalArgumentException(
+                "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
     }
 
     private static String composeDebugExceptionMessage(CtTypeMember typeMember) {

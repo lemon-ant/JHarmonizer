@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
@@ -81,11 +80,11 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static void assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
-            @NonNull List<String> sourceAlphaKeys,
-            @NonNull List<String> orderedAlphaKeys,
-            @NonNull List<CtTypeMember> sourceTypeMembers,
-            @NonNull List<CtTypeMember> orderedTypeMembers,
-            @NonNull MemberDependencyGraph dependencyGraph) {
+            List<String> sourceAlphaKeys,
+            List<String> orderedAlphaKeys,
+            List<CtTypeMember> sourceTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
         List<String> providerKeysInSourceOrder = sourceAlphaKeys.stream()
                 .filter(Constants.PROVIDER_ALPHA_KEYS::contains)
                 .toList();
@@ -122,10 +121,10 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static void assertTransitiveDependencyChainIsRespected(
-            @NonNull List<String> orderedAlphaKeys,
-            @NonNull List<CtTypeMember> sourceTypeMembers,
-            @NonNull List<CtTypeMember> orderedTypeMembers,
-            @NonNull MemberDependencyGraph dependencyGraph) {
+            List<String> orderedAlphaKeys,
+            List<CtTypeMember> sourceTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
         int aDependentIndex = requireIndex(orderedAlphaKeys, Constants.A_DEPENDENT_ALPHA_KEY);
         int cDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int bDependentIndex = requireIndex(orderedAlphaKeys, Constants.B_DEPENDENT_ALPHA_KEY);
@@ -154,10 +153,10 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static void assertInitializerBlockIsAfterTheDeepestDependent(
-            @NonNull List<String> orderedAlphaKeys,
-            @NonNull List<CtTypeMember> sourceTypeMembers,
-            @NonNull List<CtTypeMember> orderedTypeMembers,
-            @NonNull MemberDependencyGraph dependencyGraph) {
+            List<String> orderedAlphaKeys,
+            List<CtTypeMember> sourceTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
         int deepestDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
         int initializerBlockIndex = requireIndex(orderedAlphaKeys, Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY);
         assertThat(initializerBlockIndex)
@@ -169,11 +168,11 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static void assertAccessorBundlingPreventsInterleaving(
-            @NonNull List<String> sourceAlphaKeys,
-            @NonNull List<String> orderedAlphaKeys,
-            @NonNull List<CtTypeMember> sourceTypeMembers,
-            @NonNull List<CtTypeMember> orderedTypeMembers,
-            @NonNull MemberDependencyGraph dependencyGraph) {
+            List<String> sourceAlphaKeys,
+            List<String> orderedAlphaKeys,
+            List<CtTypeMember> sourceTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
         List<String> methodKeysInSourceOrder = sourceAlphaKeys.stream()
                 .filter(Constants.METHOD_ALPHA_KEYS::contains)
                 .toList();
@@ -215,9 +214,9 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static String buildDiagnosticReport(
-            @NonNull List<CtTypeMember> sourceTypeMembers,
-            @NonNull List<CtTypeMember> orderedTypeMembers,
-            @NonNull MemberDependencyGraph dependencyGraph) {
+            List<CtTypeMember> sourceTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
         List<String> sourceAlphaKeys = deriveAlphaKeys(sourceTypeMembers);
         List<String> orderedAlphaKeys = deriveAlphaKeys(orderedTypeMembers);
         Map<String, CtTypeMember> sourceMembersByAlphaKey = sourceTypeMembers.stream()
@@ -247,12 +246,12 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static String buildStateSnapshot(
-            @NonNull List<CtTypeMember> sourceTypeMembers,
-            @NonNull List<CtTypeMember> orderedTypeMembers,
-            @NonNull MemberDependencyGraph dependencyGraph,
-            @NonNull Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup,
-            @NonNull List<MemberGroupBlock> sourceGroupBlocks,
-            @NonNull List<MemberGroupBlock> orderedGroupBlocks) {
+            List<CtTypeMember> sourceTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph,
+            Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup,
+            List<MemberGroupBlock> sourceGroupBlocks,
+            List<MemberGroupBlock> orderedGroupBlocks) {
         String snapshot = "State snapshot for complex ordering test:\n" + "- memberToNaturalGroup="
                 + renderMemberToGroup(memberToNaturalGroup)
                 + '\n'
@@ -267,7 +266,7 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static Map<String, String> renderMemberToGroup(
-            @NonNull Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup) {
+            Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup) {
         return memberToNaturalGroup.entrySet().stream()
                 .collect(Collectors.toMap(
                         entry -> SpoonTypeMemberUtils.deriveAlphaKey(entry.getKey()),
@@ -276,19 +275,19 @@ class GroupMembersOrdererComplexDependenciesTest {
                         LinkedHashMap::new));
     }
 
-    private static List<List<String>> renderGroupBlocks(@NonNull List<MemberGroupBlock> groupBlocks) {
+    private static List<List<String>> renderGroupBlocks(List<MemberGroupBlock> groupBlocks) {
         return groupBlocks.stream()
                 .map(groupBlock -> deriveAlphaKeys(groupBlock.getTypeMembers()))
                 .toList();
     }
 
-    private static void emitSuccessfulRunSnapshot(@NonNull String stateSnapshot) {
+    private static void emitSuccessfulRunSnapshot(String stateSnapshot) {
         System.out.println("PASS_SNAPSHOT_START");
         System.out.println(stateSnapshot);
         System.out.println("PASS_SNAPSHOT_END");
     }
 
-    private static Map<String, Integer> renderTrackedIndexes(@NonNull List<String> orderedAlphaKeys) {
+    private static Map<String, Integer> renderTrackedIndexes(List<String> orderedAlphaKeys) {
         LinkedHashMap<String, Integer> trackedIndexes = new LinkedHashMap<>();
         trackedIndexes.put(Constants.W_PROVIDER_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.W_PROVIDER_ALPHA_KEY));
         trackedIndexes.put(Constants.X_PROVIDER_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.X_PROVIDER_ALPHA_KEY));
@@ -316,9 +315,9 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static Map<String, List<String>> renderDirectDependenciesByMember(
-            @NonNull Map<String, CtTypeMember> sourceMembersByAlphaKey,
-            @NonNull MemberDependencyGraph dependencyGraph,
-            @NonNull MemberDependencyEdgeKind edgeKind) {
+            Map<String, CtTypeMember> sourceMembersByAlphaKey,
+            MemberDependencyGraph dependencyGraph,
+            MemberDependencyEdgeKind edgeKind) {
         return sourceMembersByAlphaKey.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -334,9 +333,9 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static Map<String, List<String>> renderTransitiveDependenciesByMember(
-            @NonNull Map<String, CtTypeMember> sourceMembersByAlphaKey,
-            @NonNull MemberDependencyGraph dependencyGraph,
-            @NonNull MemberDependencyEdgeKind edgeKind) {
+            Map<String, CtTypeMember> sourceMembersByAlphaKey,
+            MemberDependencyGraph dependencyGraph,
+            MemberDependencyEdgeKind edgeKind) {
         return sourceMembersByAlphaKey.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -351,7 +350,7 @@ class GroupMembersOrdererComplexDependenciesTest {
                         LinkedHashMap::new));
     }
 
-    private static int requireIndex(@NonNull List<String> alphaKeys, @NonNull String alphaKey) {
+    private static int requireIndex(List<String> alphaKeys, String alphaKey) {
         int index = alphaKeys.indexOf(alphaKey);
         if (index < 0) {
             throw new IllegalArgumentException("Alpha key: " + alphaKey + " not found in the list: " + alphaKeys);
@@ -359,7 +358,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         return index;
     }
 
-    private static List<String> deriveAlphaKeys(@NonNull List<CtTypeMember> typeMembers) {
+    private static List<String> deriveAlphaKeys(List<CtTypeMember> typeMembers) {
         return typeMembers.stream().map(SpoonTypeMemberUtils::deriveAlphaKey).toList();
     }
 
