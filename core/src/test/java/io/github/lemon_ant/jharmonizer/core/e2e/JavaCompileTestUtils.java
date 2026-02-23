@@ -20,7 +20,7 @@ class JavaCompileTestUtils {
     static CompileResult compileJavaSourceWithRelease21(@NonNull Path sourceFilePath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
         ensureOutputDirectoryExists(outputDirectoryPath);
-        JavaFilePreconditions.requireRegularFile(sourceFilePath, "Expected Java source file to compile, but got: ");
+        requireRegularFile(sourceFilePath);
 
         Path diagnosticsPath = outputDirectoryPath.resolve(TEST_COMPILE_PREFIX + "logs.txt");
 
@@ -54,6 +54,12 @@ class JavaCompileTestUtils {
 
     private static void ensureOutputDirectoryExists(Path outputDirectoryPath) throws IOException {
         FileUtils.forceMkdir(outputDirectoryPath.toFile());
+    }
+
+    private static void requireRegularFile(Path sourceFilePath) {
+        if (!Files.isRegularFile(sourceFilePath)) {
+            throw new IllegalArgumentException("Expected Java source file to compile, but got: " + sourceFilePath);
+        }
     }
 
     @Value
