@@ -34,6 +34,7 @@ class SourceProcessorE2EFixtureTest {
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
+    private static final Path FIXTURES_ROOT = resolveFixturesRoot();
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
     private static final String CONFIG_FILE = "config.yml";
@@ -48,8 +49,7 @@ class SourceProcessorE2EFixtureTest {
     @MethodSource("fixtureInputFiles")
     void processFixtureInputFile_matchesExpectedAndCompileAfter(String scenarioName, String inputFileName)
             throws Exception {
-        Path fixturesRoot = resolveFixturesRoot();
-        Path fixtureScenario = fixturesRoot.resolve(scenarioName);
+        Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioName);
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(inputFileName);
         Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(inputFileName);
 
@@ -94,8 +94,7 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
-        Path fixturesRoot = resolveFixturesRoot();
-        return SourceFilesHandler.findJavaFiles(fixturesRoot, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
+        return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
                 .map(inputFilePath -> Arguments.of(
                         inputFilePath.getName(inputFilePath.getNameCount() - 3).toString(),

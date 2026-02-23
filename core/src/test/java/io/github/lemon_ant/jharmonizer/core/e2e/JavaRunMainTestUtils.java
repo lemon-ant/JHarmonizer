@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -17,7 +18,7 @@ class JavaRunMainTestUtils {
 
     static RunResult runJavaMainMethod(@NonNull Path sourceFilePath, @NonNull Path classesOutputDirectoryPath)
             throws IOException, InterruptedException {
-        requireRegularFile(sourceFilePath);
+        JavaFilePreconditions.requireRegularFile(sourceFilePath, "Expected Java source file to run main method from, but got: ");
 
         String className = resolveClassName(sourceFilePath);
         List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
@@ -40,11 +41,6 @@ class JavaRunMainTestUtils {
         return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
     }
 
-    private static void requireRegularFile(Path sourceFilePath) {
-        if (!Files.isRegularFile(sourceFilePath)) {
-            throw new IllegalArgumentException("Expected Java source file to run main method from, but got: " + sourceFilePath);
-        }
-    }
 
     private static String resolveClassName(Path javaFile) {
         String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
@@ -64,5 +60,11 @@ class JavaRunMainTestUtils {
         }
     }
 
-    record RunResult(int exitCode, String output, Path diagnosticsPath, String className) {}
+    @Value
+    static class RunResult {
+        int exitCode;
+        String output;
+        Path diagnosticsPath;
+        String className;
+    }
 }

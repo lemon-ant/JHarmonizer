@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
 
@@ -19,7 +20,7 @@ class JavaCompileTestUtils {
     static CompileResult compileJavaSourceWithRelease21(@NonNull Path sourceFilePath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
         ensureOutputDirectoryExists(outputDirectoryPath);
-        requireRegularFile(sourceFilePath);
+        JavaFilePreconditions.requireRegularFile(sourceFilePath, "Expected Java source file to compile, but got: ");
 
         Path diagnosticsPath = outputDirectoryPath.resolve(TEST_COMPILE_PREFIX + "logs.txt");
 
@@ -55,11 +56,10 @@ class JavaCompileTestUtils {
         FileUtils.forceMkdir(outputDirectoryPath.toFile());
     }
 
-    private static void requireRegularFile(Path sourceFilePath) {
-        if (!Files.isRegularFile(sourceFilePath)) {
-            throw new IllegalArgumentException("Expected Java source file to compile, but got: " + sourceFilePath);
-        }
+    @Value
+    static class CompileResult {
+        int exitCode;
+        String output;
+        Path diagnosticsPath;
     }
-
-    record CompileResult(int exitCode, String output, Path diagnosticsPath) {}
 }
