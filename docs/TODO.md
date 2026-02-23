@@ -313,3 +313,46 @@ Add a new declaration dependency provider for initializer call chains:
   - [ ] recursive method self-call / mutual recursion stability
   - [ ] unresolved invocation fallback behavior
   - [ ] interaction with existing direct initializer dependencies
+
+
+## 5. Explicit-declaring-type instance forward-reference corner-case (parked failing E2E)
+
+### Status
+- [ ] Not implemented (known failing scenario discovered in E2E)
+- [ ] Temporarily parked from active `*.java` fixtures until dependency analysis is fixed
+
+### Case summary (what exactly happens)
+Scenario class (`ExplicitTypeInstanceReferrerForwardReference...`) uses this pattern:
+- static field `zzz` is initialized via `new Sample().aaa`;
+- instance field `aaa` reads `Sample.bravo + 1`;
+- static field `bravo` is declared later.
+
+The value observed at runtime depends on declaration order and class-init timing:
+- in the input variant, `zzz` is evaluated before `bravo` initializer runs, so `aaa` observes default static value and `zzz == 1`;
+- in the reordered variant, `aaa` is moved above `zzz`, which changes initialization sequence assumptions and breaks expected semantics.
+
+### Why current implementation fails
+Current dependency handling covers direct declaration dependencies and several local initializer cases, but does not yet fully protect this mixed pattern:
+- explicit declaring-type field access from instance initializer;
+- cross interaction between instance construction and static initialization ordering;
+- required constraints to keep runtime-observable values stable after reordering.
+
+As a result, sorter can produce an order that is syntactically valid but semantically different at runtime.
+
+### What to implement (plan)
+1. Re-enable this scenario as an active `.java` E2E fixture and confirm it fails reproducibly in `RESTRUCTURE + CHECK` flow.
+2. Extend dependency extraction for field initializers to model explicit declaring-type static reads inside instance initializers used by static field initialization chains.
+3. Add conservative ordering constraints so members participating in such chains are not moved across unsafe boundaries.
+4. Re-run full E2E + compile + runtime assertions; then keep scenario active as regression guard.
+
+### Corner-case family to cover next
+- Same pattern with primitive default values (`0`, `false`, `\u0000`) and `null`.
+- Longer chains (`static -> new instance -> instance field -> static field -> helper method`).
+- Mixed `this.` and `TypeName.` references in one initializer graph.
+- Cycles with SCC bundling to ensure no unstable reorder loops.
+
+### Very short note on temporary parking mechanism
+Current fixture is parked via escaped extension only as a temporary unblock step.
+Long-term target: remove parking, keep the case active, and make the pipeline pass.
+
+---
