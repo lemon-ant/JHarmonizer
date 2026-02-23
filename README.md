@@ -15,6 +15,7 @@ It parses Java source, resolves grouping/sorting rules, applies dependency-safe 
 - Compile sorting behavior once per group and precompute reusable sort keys in member descriptors.
 - Add selector matching by type (field type / method return type).
 - Add explicit enum constant ordering strategies.
+- Add support for corner-cases with explicit declaring-type instance forward references during class initialization (currently parked as known failing E2E scenario).
 - Add inter-procedural initializer dependency analysis:
   - if a field default expression calls a method, inspect method body reads/writes;
   - recursively follow nested method calls inside the same declaring type;
