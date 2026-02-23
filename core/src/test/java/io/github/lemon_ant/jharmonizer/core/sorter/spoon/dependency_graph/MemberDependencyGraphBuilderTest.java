@@ -85,6 +85,22 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
+    void buildDependencyGraph_explicitThisForwardRef_withStaticField_usesOnlyInstanceProvider() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_BRAVO_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders)
+                .containsExactly(Constants.EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_ALPHA_FIELD_MEMBER);
+    }
+
+    @Test
     void buildDependencyGraph_explicitThisForwardReferenceToFieldWithExplicitDefaultValue_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
@@ -205,9 +221,41 @@ class MemberDependencyGraphBuilderTest {
                 .containsExactly(Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_ALPHA_FIELD_MEMBER);
     }
 
+
+    @Test
+    void buildDependencyGraph_explicitDeclaringTypeForwardReferenceToConstantVariable_noDeclarationDependency() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_BRAVO_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders).isEmpty();
+    }
+
+    @Test
+    void buildDependencyGraph_explicitTypeForwardRef_finalNonConstant_keepsDeclarationDependency() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_BRAVO_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders)
+                .containsExactly(Constants.EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_ALPHA_FIELD_MEMBER);
+    }
+
     @Test
     void
-            buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFieldWithExplicitDefaultValue_noDeclarationDependency() {
+            buildDependencyGraph_explicitTypeForwardRef_explicitDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_DEFAULT_VALUE_MEMBERS);
@@ -223,7 +271,7 @@ class MemberDependencyGraphBuilderTest {
 
     @Test
     void
-            buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFieldWithImplicitDefaultValue_noDeclarationDependency() {
+            buildDependencyGraph_explicitTypeForwardRef_implicitDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_IMPLICIT_DEFAULT_VALUE_MEMBERS);
@@ -239,7 +287,7 @@ class MemberDependencyGraphBuilderTest {
 
     @Test
     void
-            buildDependencyGraph_explicitDeclaringTypeForwardReferenceToFieldWithNullDefaultValue_noDeclarationDependency() {
+            buildDependencyGraph_explicitTypeForwardRef_nullDefault_noDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_NULL_DEFAULT_VALUE_MEMBERS);
@@ -389,6 +437,26 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MEMBERS, "bravo");
 
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceWithStaticReferrerFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_ALPHA_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_MEMBERS, "alpha");
+        private static final CtTypeMember EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_BRAVO_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_WITH_STATIC_REFERRER_MEMBERS, "bravo");
+
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-this-forward-reference/FieldInitializerExplicitThisForwardReferenceDefaultValueFixture.java");
@@ -520,6 +588,68 @@ class MemberDependencyGraphBuilderTest {
         private static final CtTypeMember EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_MEMBERS, "bravo");
+
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-declaring-type-forward-reference/FieldInitializerExplicitDeclaringTypeForwardReferenceConstantVariableFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember
+                EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_BRAVO_FIELD_MEMBER =
+                        SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_CONSTANT_VARIABLE_MEMBERS,
+                                "bravo");
+
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-declaring-type-forward-reference/FieldInitializerExplicitDeclaringTypeForwardReferenceFinalNonConstantFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember
+                EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_ALPHA_FIELD_MEMBER =
+                        SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS,
+                                "alpha");
+        private static final CtTypeMember
+                EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_BRAVO_FIELD_MEMBER =
+                        SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS,
+                                "bravo");
+
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-declaring-type-forward-reference/FieldInitializerExplicitDeclaringTypeForwardReferenceInstanceReferrerFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember
+                EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_BRAVO_FIELD_MEMBER =
+                        SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_MEMBERS,
+                                "bravo");
 
         private static final URL FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
