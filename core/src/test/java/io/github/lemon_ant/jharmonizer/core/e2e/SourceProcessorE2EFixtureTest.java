@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -57,6 +58,8 @@ class SourceProcessorE2EFixtureTest {
 
         Path compileBeforeOutput = temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
         Path compileAfterOutput = temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
+        prepareOutputDirectoryForCurrentRun(compileBeforeOutput);
+        prepareOutputDirectoryForCurrentRun(compileAfterOutput);
 
         JavaCompileTestUtils.CompileResult compileBeforeResult =
                 compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
@@ -158,6 +161,11 @@ class SourceProcessorE2EFixtureTest {
 
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
+    }
+
+    private static void prepareOutputDirectoryForCurrentRun(Path outputDirectoryPath) throws IOException {
+        FileUtils.forceMkdir(outputDirectoryPath.toFile());
+        FileUtils.cleanDirectory(outputDirectoryPath.toFile());
     }
 
     private static URL toUrl(Path path) {
