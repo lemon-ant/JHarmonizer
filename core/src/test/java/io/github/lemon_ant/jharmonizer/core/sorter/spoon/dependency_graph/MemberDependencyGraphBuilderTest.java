@@ -632,6 +632,25 @@ class MemberDependencyGraphBuilderTest {
                                 FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_FINAL_NON_CONSTANT_MEMBERS,
                                 "bravo");
 
+        private static final URL
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_URL =
+                        TestCaseResourceUtils.requireClasspathResourceUrl(
+                                "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-declaring-type-forward-reference/FieldInitializerExplicitDeclaringTypeForwardReferenceInstanceReferrerFixture.java");
+        private static final CtType<?>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_MAIN_TYPE =
+                        SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_MEMBERS =
+                        buildTypeMember2NaturalGroup(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_FIXTURE_MAIN_TYPE,
+                                MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember
+                EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_BRAVO_FIELD_MEMBER =
+                        SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                                FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_INSTANCE_REFERRER_MEMBERS,
+                                "bravo");
+
         private static final URL FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_DEFAULT_VALUE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
                         "/test-cases/core/sorter/spoon/dependency-graph/valid/explicit-declaring-type-forward-reference/FieldInitializerExplicitDeclaringTypeForwardReferenceDefaultValueFixture.java");
