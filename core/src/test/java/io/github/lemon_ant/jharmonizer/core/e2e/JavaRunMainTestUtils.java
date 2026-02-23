@@ -1,11 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -16,38 +15,34 @@ class JavaRunMainTestUtils {
 
     private static final String TEST_RUN_PREFIX = "test-run-";
 
-    static void assertJavaMainMethodRunsSuccessfully(@NonNull Path sourceFilePath, @NonNull Path classesOutputDirectoryPath)
-            throws IOException {
-        assertThat(sourceFilePath)
-                .as("Expected Java source file to run main method from: %s", sourceFilePath)
-                .exists()
-                .isRegularFile();
+    static RunResult runJavaMainMethod(@NonNull Path sourceFilePath, @NonNull Path classesOutputDirectoryPath)
+            throws IOException, InterruptedException {
+        requireRegularFile(sourceFilePath);
 
         String className = resolveClassName(sourceFilePath);
+        List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
+        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        String javaOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        int processExitCode = process.waitFor();
+
         Path diagnosticsPath = classesOutputDirectoryPath.resolve(TEST_RUN_PREFIX + "logs.txt");
-        String diagnostics = runMainMethodAndGetDiagnostics(className, classesOutputDirectoryPath);
-        Files.writeString(diagnosticsPath, diagnostics, StandardCharsets.UTF_8);
+        String diagnostics = "Command: " + String.join(" ", command)
+                + System.lineSeparator()
+                + javaOutput
+                + System.lineSeparator();
+        Files.writeString(
+                diagnosticsPath,
+                diagnostics,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
+
+        return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
     }
 
-    private static String runMainMethodAndGetDiagnostics(String className, Path classesOutputDirectoryPath) {
-        List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
-
-        try {
-            Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
-            String javaOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            int processExitCode = process.waitFor();
-
-            assertThat(processExitCode)
-                    .as("Expected main method execution to succeed for %s. Output:%n%s", className, javaOutput)
-                    .isZero();
-
-            return "Command: " + String.join(" ", command) + System.lineSeparator() + javaOutput;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to execute command: " + String.join(" ", command), exception);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(
-                    "Interrupted while executing command: " + String.join(" ", command), exception);
+    private static void requireRegularFile(Path sourceFilePath) {
+        if (!Files.isRegularFile(sourceFilePath)) {
+            throw new IllegalArgumentException("Expected Java source file to run main method from, but got: " + sourceFilePath);
         }
     }
 
@@ -68,4 +63,6 @@ class JavaRunMainTestUtils {
             throw new IllegalStateException("Failed to resolve package for source file: " + javaFile, exception);
         }
     }
+
+    record RunResult(int exitCode, String output, Path diagnosticsPath, String className) {}
 }

@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.assertJavaSourceCompilesWithRelease21;
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.assertJavaMainMethodRunsSuccessfully;
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSourceWithRelease21;
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -58,16 +58,36 @@ class SourceProcessorE2EFixtureTest {
         Path compileBeforeOutput = temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
         Path compileAfterOutput = temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
 
-        assertJavaSourceCompilesWithRelease21(workingInputFile, compileBeforeOutput);
-        assertJavaMainMethodRunsSuccessfully(workingInputFile, compileBeforeOutput);
+        JavaCompileTestUtils.CompileResult compileBeforeResult =
+                compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
+        assertThat(compileBeforeResult.exitCode())
+                .as("Expected javac --release 21 to compile file %s. Diagnostics:%n%s", workingInputFile, compileBeforeResult.output())
+                .isZero();
+        JavaRunMainTestUtils.RunResult runBeforeResult = runJavaMainMethod(workingInputFile, compileBeforeOutput);
+        assertThat(runBeforeResult.exitCode())
+                .as(
+                        "Expected main method execution to succeed for %s. Output:%n%s",
+                        runBeforeResult.className(),
+                        runBeforeResult.output())
+                .isZero();
         assertFixtureIsNotStable(fixtureScenario, workingScenarioRoot);
 
         runProcessor(workingScenarioRoot, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
 
         assertFixtureIsStable(fixtureScenario, workingScenarioRoot);
-        assertJavaSourceCompilesWithRelease21(workingInputFile, compileAfterOutput);
+        JavaCompileTestUtils.CompileResult compileAfterResult =
+                compileJavaSourceWithRelease21(workingInputFile, compileAfterOutput);
+        assertThat(compileAfterResult.exitCode())
+                .as("Expected javac --release 21 to compile file %s. Diagnostics:%n%s", workingInputFile, compileAfterResult.output())
+                .isZero();
         assertOutputMatchesExpected(expectedSourceFile, workingInputFile);
-        assertJavaMainMethodRunsSuccessfully(workingInputFile, compileAfterOutput);
+        JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
+        assertThat(runAfterResult.exitCode())
+                .as(
+                        "Expected main method execution to succeed for %s. Output:%n%s",
+                        runAfterResult.className(),
+                        runAfterResult.output())
+                .isZero();
     }
 
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
