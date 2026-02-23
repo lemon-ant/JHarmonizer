@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.assertJavaSourcesCompileWithRelease21;
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.assertJavaMainMethodsRunSuccessfully;
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.assertJavaSourceCompilesWithRelease21;
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.assertJavaMainMethodRunsSuccessfully;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
@@ -20,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,6 +36,9 @@ class SourceProcessorE2EFixtureTest {
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
     private static final String CONFIG_FILE = "config.yml";
+    private static final String WORKING_DIRECTORY_NAME = "SourceProcessorE2E-working-dir";
+    private static final String COMPILE_BEFORE_DIRECTORY_NAME = "SourceProcessorE2E-compile-before";
+    private static final String COMPILE_AFTER_DIRECTORY_NAME = "SourceProcessorE2E-compile-after";
 
     @TempDir
     Path temporaryDirectory;
@@ -44,50 +47,36 @@ class SourceProcessorE2EFixtureTest {
     @MethodSource("fixtureInputFiles")
     void processFixtureInputFile_matchesExpectedAndCompileAfter(String scenarioName, String inputFileName)
             throws Exception {
-        // Given
         Path fixturesRoot = resolveFixturesRoot();
         Path fixtureScenario = fixturesRoot.resolve(scenarioName);
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(inputFileName);
-        Path workingRoot = temporaryDirectory.resolve("SourceProcessorE2E-working-dir").resolve(scenarioName);
-        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingRoot);
-        Path compileBeforeOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-before").resolve(scenarioName);
-        Path compileAfterOutput = temporaryDirectory.resolve("SourceProcessorE2E-compile-after").resolve(scenarioName);
-        assertJavaSourcesCompileWithRelease21(workingRoot, compileBeforeOutput);
-        assertJavaMainMethodsRunSuccessfully(workingRoot, compileBeforeOutput);
-        assertFixtureIsNotStable(fixtureScenario, workingRoot);
+        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(inputFileName);
 
-        // When
-        runProcessor(workingRoot, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
+        Path workingScenarioRoot = temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
+        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
 
-        // Then
-        assertFixtureIsStable(fixtureScenario, workingRoot);
-        assertJavaSourcesCompileWithRelease21(workingRoot, compileAfterOutput);
-        assertOutputMatchesExpected(fixtureScenario, inputFileName, workingInputFile);
-        assertJavaMainMethodsRunSuccessfully(workingRoot, compileAfterOutput);
+        Path compileBeforeOutput = temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
+        Path compileAfterOutput = temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
+
+        assertJavaSourceCompilesWithRelease21(workingInputFile, compileBeforeOutput);
+        assertJavaMainMethodRunsSuccessfully(workingInputFile, compileBeforeOutput);
+        assertFixtureIsNotStable(fixtureScenario, workingScenarioRoot);
+
+        runProcessor(workingScenarioRoot, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
+
+        assertFixtureIsStable(fixtureScenario, workingScenarioRoot);
+        assertJavaSourceCompilesWithRelease21(workingInputFile, compileAfterOutput);
+        assertOutputMatchesExpected(expectedSourceFile, workingInputFile);
+        assertJavaMainMethodRunsSuccessfully(workingInputFile, compileAfterOutput);
     }
 
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
         Path fixturesRoot = resolveFixturesRoot();
-        try (Stream<Path> scenarios = Files.list(fixturesRoot)) {
-            List<Path> orderedScenarios =
-                    scenarios.filter(Files::isDirectory).sorted().collect(Collectors.toList());
-            return orderedScenarios.stream().flatMap(SourceProcessorE2EFixtureTest::scenarioInputFiles);
-        }
-    }
-
-    private static Stream<Arguments> scenarioInputFiles(Path fixtureScenario) {
-        Path inputRoot = resolveInput(fixtureScenario);
-        try (Stream<Path> inputSources = Files.list(inputRoot)) {
-            List<Path> orderedSources = inputSources
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .sorted()
-                    .collect(Collectors.toList());
-            return orderedSources.stream().map(inputSource -> Arguments.of(
-                    fixtureScenario.getFileName().toString(),
-                    inputSource.getFileName().toString()));
-        } catch (IOException ioException) {
-            throw new IllegalStateException("Failed to collect fixture input files for " + fixtureScenario, ioException);
-        }
+        return SourceFilesHandler.findJavaFiles(fixturesRoot, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
+                .sorted()
+                .map(inputFilePath -> Arguments.of(
+                        inputFilePath.getName(inputFilePath.getNameCount() - 3).toString(),
+                        inputFilePath.getFileName().toString()));
     }
 
     private static Path resolveFixturesRoot() {
@@ -99,17 +88,17 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
-    private static void assertFixtureIsNotStable(Path fixtureScenario, Path workingRoot) {
-        assertThatThrownBy(() -> runProcessor(workingRoot, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
+    private static void assertFixtureIsNotStable(Path fixtureScenario, Path workingScenarioRoot) {
+        assertThatThrownBy(() -> runProcessor(workingScenarioRoot, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
     }
 
-    private static void assertFixtureIsStable(Path fixtureScenario, Path workingRoot) {
-        assertThatCode(() -> runProcessor(workingRoot, resolveConfig(fixtureScenario), FlowType.CHECK_ALL))
+    private static void assertFixtureIsStable(Path fixtureScenario, Path workingScenarioRoot) {
+        assertThatCode(() -> runProcessor(workingScenarioRoot, resolveConfig(fixtureScenario), FlowType.CHECK_ALL))
                 .doesNotThrowAnyException();
     }
 
-    private static void runProcessor(Path sourcesRoot, Path config, FlowType flowType) {
+    private static void runProcessor(Path scenarioSourcesRoot, Path config, FlowType flowType) {
         UnifiedConfig unifiedConfig =
                 JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(toUrl(config));
         FlexibleUnifiedConfig flexibleConfig = new FlexibleUnifiedConfig(
@@ -119,37 +108,23 @@ class SourceProcessorE2EFixtureTest {
                 unifiedConfig.getHeaderLine(),
                 unifiedConfig.getRootMemberGroups());
         SourceProcessor sourceProcessor = new SourceProcessor(flexibleConfig);
-        sourceProcessor.processSources(sourcesRoot, List.of(), List.of(), flowType);
+        sourceProcessor.processSources(scenarioSourcesRoot, List.of(), List.of(), flowType);
     }
 
-    private static void assertOutputMatchesExpected(Path fixtureScenario, String inputFileName, Path workingInputFile) {
-        Path expectedRoot = resolveExpected(fixtureScenario);
-        Path expectedSource = expectedRoot.resolve(inputFileName);
-
-        assertThat(expectedSource)
-                .as("Expected source must exist: %s", inputFileName)
-                .exists();
-        assertThat(workingInputFile)
-                .as("Processed source must exist: %s", inputFileName)
-                .exists();
-        try {
-            String expectedCode = Files.readString(expectedSource, StandardCharsets.UTF_8);
-            String actualCode = Files.readString(workingInputFile, StandardCharsets.UTF_8);
-            assertThat(actualCode).isEqualToNormalizingNewlines(expectedCode);
-        } catch (IOException ioException) {
-            throw new IllegalStateException("Failed to compare sources for " + inputFileName, ioException);
-        }
+    private static void assertOutputMatchesExpected(Path expectedSourceFile, Path actualSourceFile) {
+        assertThat(expectedSourceFile).as("Expected source must exist: %s", expectedSourceFile).exists();
+        assertThat(actualSourceFile).as("Processed source must exist: %s", actualSourceFile).exists();
+        assertThat(actualSourceFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
     }
 
-    private static Path copyInputJavaFile(Path inputSource, Path workingRoot) {
-        Path target = workingRoot.resolve(inputSource.getFileName());
-
+    private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
+        Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
         try {
-            Files.createDirectories(target.getParent());
-            Files.copy(inputSource, target);
-            return target;
-        } catch (IOException ioException) {
-            throw new IllegalStateException("Failed to copy scenario input file: " + inputSource, ioException);
+            Files.createDirectories(targetFile.getParent());
+            Files.copy(fixtureInputFile, targetFile);
+            return targetFile;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to copy fixture input file: " + fixtureInputFile, exception);
         }
     }
 
