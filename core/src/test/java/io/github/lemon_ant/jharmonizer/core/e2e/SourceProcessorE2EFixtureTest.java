@@ -33,7 +33,7 @@ class SourceProcessorE2EFixtureTest {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
     private static final String FIXTURES_RESOURCE_IN_PROJECT = "test-cases/core/e2e/restructure/";
-    private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("core/src/test/resources");
+    private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("src/test/resources");
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
@@ -49,10 +49,12 @@ class SourceProcessorE2EFixtureTest {
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("fixtureInputFiles")
-    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path fixtureInputFile, Path expectedSourceFile)
+    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile)
             throws Exception {
-        Path fixtureScenario = fixtureInputFile.getParent().getParent();
-        String scenarioName = fixtureScenario.getFileName().toString();
+        Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
+        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
+        String scenarioName = scenarioDir.toString();
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
@@ -109,11 +111,12 @@ class SourceProcessorE2EFixtureTest {
 
         fixtureInputFiles().forEach(fixture -> {
             Object[] argumentValues = fixture.get();
-            Path fixtureInputFile = (Path) argumentValues[0];
-            Path expectedSourceFile = (Path) argumentValues[1];
-            Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(expectedSourceFile);
-            Path fixtureScenario = fixtureInputFile.getParent().getParent();
-            String scenarioName = fixtureScenario.getFileName().toString();
+            Path scenarioDir = (Path) argumentValues[0];
+            Path sourceFile = (Path) argumentValues[1];
+            Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
+            Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+            Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(scenarioDir, sourceFile);
+            String scenarioName = scenarioDir.toString();
 
             Path workingScenarioRoot = regenerateWorkspace.resolve(scenarioName);
             Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
@@ -139,9 +142,9 @@ class SourceProcessorE2EFixtureTest {
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
                 .map(fixtureInputFile -> {
-                    Path fixtureScenario = fixtureInputFile.getParent().getParent();
-                    Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(fixtureInputFile.getFileName());
-                    return Arguments.of(fixtureInputFile, expectedSourceFile);
+                    Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
+                    Path sourceFile = fixtureInputFile.getFileName();
+                    return Arguments.of(scenarioDir, sourceFile);
                 });
     }
 
@@ -201,8 +204,15 @@ class SourceProcessorE2EFixtureTest {
         return scenario.resolve(EXPECTED_DIRECTORY);
     }
 
-    private static Path resolveProjectExpectedSourceFile(Path expectedSourceFileFromClasspath) {
-        Path expectedRelativePath = FIXTURES_ROOT.relativize(expectedSourceFileFromClasspath);
-        return PROJECT_TEST_RESOURCES_ROOT.resolve(FIXTURES_RESOURCE_IN_PROJECT).resolve(expectedRelativePath);
+    private static Path resolveProjectExpectedSourceFile(Path scenarioDir, Path sourceFile) {
+        return PROJECT_TEST_RESOURCES_ROOT
+                .resolve(FIXTURES_RESOURCE_IN_PROJECT)
+                .resolve(scenarioDir)
+                .resolve(EXPECTED_DIRECTORY)
+                .resolve(sourceFile);
+    }
+
+    private static Path resolveInput(Path scenario) {
+        return scenario.resolve(INPUT_DIRECTORY);
     }
 }
