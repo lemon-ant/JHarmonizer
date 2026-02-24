@@ -48,8 +48,7 @@ class SourceProcessorE2EFixtureTest {
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
-    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile)
-            throws Exception {
+    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
         Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
