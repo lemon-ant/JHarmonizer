@@ -19,17 +19,20 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-// TODO Create a method for expected fixtures regeneration
 class SourceProcessorE2EFixtureTest {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
+    private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("src/test/resources");
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
@@ -43,12 +46,14 @@ class SourceProcessorE2EFixtureTest {
     @TempDir
     Path temporaryDirectory;
 
-    @ParameterizedTest(name = "[{index}] {0}")
+    @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
-    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path fixtureInputFile, Path expectedSourceFile)
+    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile)
             throws Exception {
-        Path fixtureScenario = fixtureInputFile.getParent().getParent();
-        String scenarioName = fixtureScenario.getFileName().toString();
+        Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
+        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
+        String scenarioName = scenarioDir.toString();
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
@@ -98,13 +103,47 @@ class SourceProcessorE2EFixtureTest {
                 .isZero();
     }
 
+    @Test
+    @Disabled("Utility only. Run manually to regenerate all e2e expected fixtures")
+    void regenerateExpectedFixtures_whenRun_overwritesExpectedSources() throws Exception {
+        Path regenerateWorkspace = temporaryDirectory.resolve("SourceProcessorE2E-regenerate-expected");
+
+        fixtureInputFiles().forEach(fixture -> {
+            Object[] argumentValues = fixture.get();
+            Path scenarioDir = (Path) argumentValues[0];
+            Path sourceFile = (Path) argumentValues[1];
+            Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
+            Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+            Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(scenarioDir, sourceFile);
+            String scenarioName = scenarioDir.toString();
+
+            Path workingScenarioRoot = regenerateWorkspace.resolve(scenarioName);
+            Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+
+            runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
+
+            try {
+                Files.createDirectories(projectExpectedSourceFile.getParent());
+                Files.copy(workingInputFile, projectExpectedSourceFile, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException exception) {
+                throw new IllegalStateException(
+                        "Failed to regenerate expected fixture in project resources: " + projectExpectedSourceFile,
+                        exception);
+            }
+
+            assertThat(projectExpectedSourceFile)
+                    .as("Expected source file should exist after regeneration: %s", projectExpectedSourceFile)
+                    .exists();
+        });
+    }
+
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
                 .map(fixtureInputFile -> {
-                    Path fixtureScenario = fixtureInputFile.getParent().getParent();
-                    Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(fixtureInputFile.getFileName());
-                    return Arguments.of(fixtureInputFile, expectedSourceFile);
+                    Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
+                    Path sourceFile = fixtureInputFile.getFileName();
+                    return Arguments.of(scenarioDir, sourceFile);
                 });
     }
 
@@ -162,5 +201,18 @@ class SourceProcessorE2EFixtureTest {
 
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
+    }
+
+    private static Path resolveProjectExpectedSourceFile(Path scenarioDir, Path sourceFile) {
+        String fixturesResourceRelative = FIXTURES_RESOURCE.substring(1);
+        return PROJECT_TEST_RESOURCES_ROOT
+                .resolve(fixturesResourceRelative)
+                .resolve(scenarioDir)
+                .resolve(EXPECTED_DIRECTORY)
+                .resolve(sourceFile);
+    }
+
+    private static Path resolveInput(Path scenario) {
+        return scenario.resolve(INPUT_DIRECTORY);
     }
 }
