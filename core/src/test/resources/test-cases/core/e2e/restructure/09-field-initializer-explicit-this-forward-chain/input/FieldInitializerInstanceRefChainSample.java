@@ -1,4 +1,4 @@
-package e2e;
+package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerInstanceRefChainSample {
     int h = this.e + 1; // e is default 0 here, so h initializes to 1 (forward ref)

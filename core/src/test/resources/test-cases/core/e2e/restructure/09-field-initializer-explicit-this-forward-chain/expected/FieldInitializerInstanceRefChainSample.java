@@ -1,4 +1,4 @@
-package e2e;
+package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerInstanceRefChainSample {
     int a = 0; // explicit 0; same value as default, included for clarity

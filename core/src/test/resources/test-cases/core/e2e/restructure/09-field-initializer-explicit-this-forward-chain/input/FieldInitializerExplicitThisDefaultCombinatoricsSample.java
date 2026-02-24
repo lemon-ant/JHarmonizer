@@ -1,4 +1,4 @@
-package e2e;
+package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerExplicitThisDefaultCombinatoricsSample {
     int zeta = this.alpha + 5; // non-default forward reference: must stay before alpha

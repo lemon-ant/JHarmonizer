@@ -1,4 +1,4 @@
-package e2e;
+package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
     private static final int zeta = FieldInitializerExplicitDeclaringTypeForwardChainSample.alpha + 2;
