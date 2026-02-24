@@ -1,17 +1,14 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -19,48 +16,27 @@ class JavaRunMainTestUtils {
 
     private static final String TEST_RUN_PREFIX = "test-run-";
 
-    static void assertJavaMainMethodsRunSuccessfully(
-            @NonNull Path sourceDirectoryPath, @NonNull Path classesOutputDirectoryPath) throws IOException {
-        List<String> classNames = resolveTopLevelClassNames(sourceDirectoryPath);
-        assertThat(classNames)
-                .as("Expected Java source files in directory: %s", sourceDirectoryPath)
-                .isNotEmpty();
+    static RunResult runJavaMainMethod(@NonNull Path sourceFilePath, @NonNull Path classesOutputDirectoryPath)
+            throws IOException, InterruptedException {
+        E2EFileUtils.requireRegularFile(sourceFilePath, "Expected Java source file to run main method from, but got: ");
+
+        String className = resolveClassName(sourceFilePath);
+        List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
+        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        String javaOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        int processExitCode = process.waitFor();
 
         Path diagnosticsPath = classesOutputDirectoryPath.resolve(TEST_RUN_PREFIX + "logs.txt");
-        String diagnostics = classNames.stream()
-                .map(className -> runMainMethodAndGetDiagnostics(className, classesOutputDirectoryPath))
-                .collect(Collectors.joining(System.lineSeparator()));
+        String diagnostics =
+                "Command: " + String.join(" ", command) + System.lineSeparator() + javaOutput + System.lineSeparator();
+        Files.writeString(
+                diagnosticsPath,
+                diagnostics,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
 
-        Files.writeString(diagnosticsPath, diagnostics, StandardCharsets.UTF_8);
-    }
-
-    private static String runMainMethodAndGetDiagnostics(String className, Path classesOutputDirectoryPath) {
-        List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
-
-        try {
-            Process process =
-                    new ProcessBuilder(command).redirectErrorStream(true).start();
-            String javaOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            int processExitCode = process.waitFor();
-
-            assertThat(processExitCode)
-                    .as("Expected main method execution to succeed for %s. Output:%n%s", className, javaOutput)
-                    .isZero();
-
-            return "Command: " + String.join(" ", command) + System.lineSeparator() + javaOutput;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to execute command: " + String.join(" ", command), exception);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(
-                    "Interrupted while executing command: " + String.join(" ", command), exception);
-        }
-    }
-
-    private static List<String> resolveTopLevelClassNames(Path sourceDirectoryPath) throws IOException {
-        try (Stream<Path> javaPathStream = SourceFilesHandler.findJavaFiles(sourceDirectoryPath, Set.of(), List.of())) {
-            return javaPathStream.map(JavaRunMainTestUtils::resolveClassName).toList();
-        }
+        return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
     }
 
     private static String resolveClassName(Path javaFile) {
@@ -80,5 +56,13 @@ class JavaRunMainTestUtils {
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to resolve package for source file: " + javaFile, exception);
         }
+    }
+
+    @Value
+    static class RunResult {
+        int exitCode;
+        String output;
+        Path diagnosticsPath;
+        String className;
     }
 }
