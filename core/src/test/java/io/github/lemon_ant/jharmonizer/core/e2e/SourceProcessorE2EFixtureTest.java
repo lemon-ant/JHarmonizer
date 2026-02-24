@@ -19,14 +19,16 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-// TODO Create a method for expected fixtures regeneration
 class SourceProcessorE2EFixtureTest {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
@@ -96,6 +98,36 @@ class SourceProcessorE2EFixtureTest {
                         "Expected main method execution to succeed for %s. Output:%n%s",
                         runAfterResult.getClassName(), runAfterResult.getOutput())
                 .isZero();
+    }
+
+    @Test
+    @Disabled("Utility only. Run manually to regenerate all e2e expected fixtures")
+    void regenerateExpectedFixtures_whenRun_overwritesExpectedSources() throws Exception {
+        Path regenerateWorkspace = temporaryDirectory.resolve("SourceProcessorE2E-regenerate-expected");
+
+        fixtureInputFiles().forEach(fixture -> {
+            Object[] argumentValues = fixture.get();
+            Path fixtureInputFile = (Path) argumentValues[0];
+            Path expectedSourceFile = (Path) argumentValues[1];
+            Path fixtureScenario = fixtureInputFile.getParent().getParent();
+            String scenarioName = fixtureScenario.getFileName().toString();
+
+            Path workingScenarioRoot = regenerateWorkspace.resolve(scenarioName);
+            Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+
+            runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
+
+            try {
+                Files.createDirectories(expectedSourceFile.getParent());
+                Files.copy(workingInputFile, expectedSourceFile, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException exception) {
+                throw new IllegalStateException("Failed to regenerate expected fixture: " + expectedSourceFile, exception);
+            }
+
+            assertThat(expectedSourceFile)
+                    .as("Expected source file should exist after regeneration: %s", expectedSourceFile)
+                    .exists();
+        });
     }
 
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
