@@ -38,10 +38,8 @@ class JavaCompileTestUtils {
         String javacOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         int processExitCode = process.waitFor();
 
-        String diagnostics = "Command: " + String.join(" ", command)
-                + System.lineSeparator()
-                + javacOutput
-                + System.lineSeparator();
+        String diagnostics =
+                "Command: " + String.join(" ", command) + System.lineSeparator() + javacOutput + System.lineSeparator();
         Files.writeString(
                 diagnosticsPath,
                 diagnostics,

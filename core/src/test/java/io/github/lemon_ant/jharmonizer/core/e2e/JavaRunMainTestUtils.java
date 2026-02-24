@@ -27,10 +27,8 @@ class JavaRunMainTestUtils {
         int processExitCode = process.waitFor();
 
         Path diagnosticsPath = classesOutputDirectoryPath.resolve(TEST_RUN_PREFIX + "logs.txt");
-        String diagnostics = "Command: " + String.join(" ", command)
-                + System.lineSeparator()
-                + javaOutput
-                + System.lineSeparator();
+        String diagnostics =
+                "Command: " + String.join(" ", command) + System.lineSeparator() + javaOutput + System.lineSeparator();
         Files.writeString(
                 diagnosticsPath,
                 diagnostics,
@@ -52,7 +50,8 @@ class JavaRunMainTestUtils {
             return lines.map(String::trim)
                     .filter(line -> line.startsWith("package ") && line.endsWith(";"))
                     .findFirst()
-                    .map(line -> line.substring("package ".length(), line.length() - 1).trim())
+                    .map(line -> line.substring("package ".length(), line.length() - 1)
+                            .trim())
                     .orElse("");
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to resolve package for source file: " + javaFile, exception);

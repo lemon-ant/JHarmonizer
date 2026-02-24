@@ -50,27 +50,28 @@ class SourceProcessorE2EFixtureTest {
         Path fixtureScenario = fixtureInputFile.getParent().getParent();
         String scenarioName = fixtureScenario.getFileName().toString();
 
-        Path workingScenarioRoot = temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
+        Path workingScenarioRoot =
+                temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
 
-        Path compileBeforeOutput = temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
-        Path compileAfterOutput = temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
+        Path compileBeforeOutput =
+                temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
+        Path compileAfterOutput =
+                temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
 
         JavaCompileTestUtils.CompileResult compileBeforeResult =
                 compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
         assertThat(compileBeforeResult.getExitCode())
                 .as(
                         "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile,
-                        compileBeforeResult.getOutput())
+                        workingInputFile, compileBeforeResult.getOutput())
                 .isZero();
 
         JavaRunMainTestUtils.RunResult runBeforeResult = runJavaMainMethod(workingInputFile, compileBeforeOutput);
         assertThat(runBeforeResult.getExitCode())
                 .as(
                         "Expected main method execution to succeed for %s. Output:%n%s",
-                        runBeforeResult.getClassName(),
-                        runBeforeResult.getOutput())
+                        runBeforeResult.getClassName(), runBeforeResult.getOutput())
                 .isZero();
 
         assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
@@ -84,8 +85,7 @@ class SourceProcessorE2EFixtureTest {
         assertThat(compileAfterResult.getExitCode())
                 .as(
                         "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile,
-                        compileAfterResult.getOutput())
+                        workingInputFile, compileAfterResult.getOutput())
                 .isZero();
 
         assertThat(workingInputFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
@@ -94,8 +94,7 @@ class SourceProcessorE2EFixtureTest {
         assertThat(runAfterResult.getExitCode())
                 .as(
                         "Expected main method execution to succeed for %s. Output:%n%s",
-                        runAfterResult.getClassName(),
-                        runAfterResult.getOutput())
+                        runAfterResult.getClassName(), runAfterResult.getOutput())
                 .isZero();
     }
 
@@ -118,22 +117,17 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
-    private static void assertFileIsNotProcessedYet(Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
-        assertThatThrownBy(() ->
-                        runProcessorForSingleFile(
-                                workingInputFile,
-                                resolveConfig(fixtureScenario),
-                                FlowType.CHECK_FAIL_FAST))
+    private static void assertFileIsNotProcessedYet(
+            Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
+        assertThatThrownBy(() -> runProcessorForSingleFile(
+                        workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
     }
 
     private static void assertFileProcessingIsDeterministic(
             Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
         assertThatCode(() ->
-                        runProcessorForSingleFile(
-                                workingInputFile,
-                                resolveConfig(fixtureScenario),
-                                FlowType.CHECK_ALL))
+                        runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_ALL))
                 .doesNotThrowAnyException();
     }
 
@@ -148,10 +142,7 @@ class SourceProcessorE2EFixtureTest {
                 unifiedConfig.getRootMemberGroups());
         SourceProcessor sourceProcessor = new SourceProcessor(flexibleConfig);
         sourceProcessor.processSources(
-                sourceFilePath.getParent(),
-                List.of(sourceFilePath.getFileName().toString()),
-                List.of(),
-                flowType);
+                sourceFilePath.getParent(), List.of(sourceFilePath.getFileName().toString()), List.of(), flowType);
     }
 
     private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
