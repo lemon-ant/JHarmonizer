@@ -32,6 +32,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SourceProcessorE2EFixtureTest {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
+    private static final String FIXTURES_RESOURCE_IN_PROJECT = "test-cases/core/e2e/restructure/";
+    private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("core/src/test/resources");
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
@@ -109,6 +111,7 @@ class SourceProcessorE2EFixtureTest {
             Object[] argumentValues = fixture.get();
             Path fixtureInputFile = (Path) argumentValues[0];
             Path expectedSourceFile = (Path) argumentValues[1];
+            Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(expectedSourceFile);
             Path fixtureScenario = fixtureInputFile.getParent().getParent();
             String scenarioName = fixtureScenario.getFileName().toString();
 
@@ -118,14 +121,16 @@ class SourceProcessorE2EFixtureTest {
             runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
 
             try {
-                Files.createDirectories(expectedSourceFile.getParent());
-                Files.copy(workingInputFile, expectedSourceFile, StandardCopyOption.REPLACE_EXISTING);
+                Files.createDirectories(projectExpectedSourceFile.getParent());
+                Files.copy(workingInputFile, projectExpectedSourceFile, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException exception) {
-                throw new IllegalStateException("Failed to regenerate expected fixture: " + expectedSourceFile, exception);
+                throw new IllegalStateException(
+                        "Failed to regenerate expected fixture in project resources: " + projectExpectedSourceFile,
+                        exception);
             }
 
-            assertThat(expectedSourceFile)
-                    .as("Expected source file should exist after regeneration: %s", expectedSourceFile)
+            assertThat(projectExpectedSourceFile)
+                    .as("Expected source file should exist after regeneration: %s", projectExpectedSourceFile)
                     .exists();
         });
     }
@@ -194,5 +199,10 @@ class SourceProcessorE2EFixtureTest {
 
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
+    }
+
+    private static Path resolveProjectExpectedSourceFile(Path expectedSourceFileFromClasspath) {
+        Path expectedRelativePath = FIXTURES_ROOT.relativize(expectedSourceFileFromClasspath);
+        return PROJECT_TEST_RESOURCES_ROOT.resolve(FIXTURES_RESOURCE_IN_PROJECT).resolve(expectedRelativePath);
     }
 }
