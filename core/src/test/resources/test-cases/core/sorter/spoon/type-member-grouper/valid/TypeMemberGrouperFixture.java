@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.sorter.spoon.type_member_grouper;
+package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 public class TypeMemberGrouperFixture {
 

@@ -1,4 +1,4 @@
-package e2e;
+package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public record RecordScenario(int value) {
     String alpha() {

@@ -1,4 +1,4 @@
-package e2e;
+package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerVarRefChainSample {
     int a = 12; // literal 12; independent constant field
