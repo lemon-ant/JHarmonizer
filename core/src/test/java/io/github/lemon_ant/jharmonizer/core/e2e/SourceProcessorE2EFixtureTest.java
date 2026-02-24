@@ -14,7 +14,6 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -76,7 +75,7 @@ class SourceProcessorE2EFixtureTest {
 
         assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
 
-        runProcessorForSingleFile(workingScenarioRoot, workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
+        runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
 
         assertFileProcessingIsDeterministic(fixtureScenario, workingScenarioRoot, workingInputFile);
 
@@ -122,7 +121,6 @@ class SourceProcessorE2EFixtureTest {
     private static void assertFileIsNotProcessedYet(Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
         assertThatThrownBy(() ->
                         runProcessorForSingleFile(
-                                workingScenarioRoot,
                                 workingInputFile,
                                 resolveConfig(fixtureScenario),
                                 FlowType.CHECK_FAIL_FAST))
@@ -133,17 +131,15 @@ class SourceProcessorE2EFixtureTest {
             Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
         assertThatCode(() ->
                         runProcessorForSingleFile(
-                                workingScenarioRoot,
                                 workingInputFile,
                                 resolveConfig(fixtureScenario),
                                 FlowType.CHECK_ALL))
                 .doesNotThrowAnyException();
     }
 
-    private static void runProcessorForSingleFile(
-            Path scenarioSourcesRoot, Path sourceFilePath, Path config, FlowType flowType) {
+    private static void runProcessorForSingleFile(Path sourceFilePath, Path config, FlowType flowType) {
         UnifiedConfig unifiedConfig =
-                JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(toUrl(config));
+                JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(E2EFileUtils.toUrl(config));
         FlexibleUnifiedConfig flexibleConfig = new FlexibleUnifiedConfig(
                 unifiedConfig.getTopLevelTypesOrdering(),
                 unifiedConfig.getFormatting(),
@@ -152,7 +148,7 @@ class SourceProcessorE2EFixtureTest {
                 unifiedConfig.getRootMemberGroups());
         SourceProcessor sourceProcessor = new SourceProcessor(flexibleConfig);
         sourceProcessor.processSources(
-                scenarioSourcesRoot,
+                sourceFilePath.getParent(),
                 List.of(sourceFilePath.getFileName().toString()),
                 List.of(),
                 flowType);
@@ -175,13 +171,5 @@ class SourceProcessorE2EFixtureTest {
 
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
-    }
-
-    private static URL toUrl(Path path) {
-        try {
-            return path.toUri().toURL();
-        } catch (MalformedURLException exception) {
-            throw new IllegalArgumentException("Cannot convert path to URL: " + path, exception);
-        }
     }
 }

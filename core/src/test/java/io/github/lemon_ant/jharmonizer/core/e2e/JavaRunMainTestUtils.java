@@ -18,7 +18,7 @@ class JavaRunMainTestUtils {
 
     static RunResult runJavaMainMethod(@NonNull Path sourceFilePath, @NonNull Path classesOutputDirectoryPath)
             throws IOException, InterruptedException {
-        requireRegularFile(sourceFilePath);
+        E2EFileUtils.requireRegularFile(sourceFilePath, "Expected Java source file to run main method from, but got: ");
 
         String className = resolveClassName(sourceFilePath);
         List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
@@ -41,7 +41,6 @@ class JavaRunMainTestUtils {
         return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
     }
 
-
     private static String resolveClassName(Path javaFile) {
         String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
         String packageName = extractPackageName(javaFile);
@@ -57,12 +56,6 @@ class JavaRunMainTestUtils {
                     .orElse("");
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to resolve package for source file: " + javaFile, exception);
-        }
-    }
-
-    private static void requireRegularFile(Path sourceFilePath) {
-        if (!Files.isRegularFile(sourceFilePath)) {
-            throw new IllegalArgumentException("Expected Java source file to run main method from, but got: " + sourceFilePath);
         }
     }
 
