@@ -32,7 +32,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SourceProcessorE2EFixtureTest {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
-    private static final String FIXTURES_RESOURCE_IN_PROJECT = "test-cases/core/e2e/restructure/";
     private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("src/test/resources");
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
@@ -205,8 +204,12 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static Path resolveProjectExpectedSourceFile(Path scenarioDir, Path sourceFile) {
+        String fixturesResourceRelative = FIXTURES_RESOURCE.startsWith("/")
+                ? FIXTURES_RESOURCE.substring(1)
+                : FIXTURES_RESOURCE;
+
         return PROJECT_TEST_RESOURCES_ROOT
-                .resolve(FIXTURES_RESOURCE_IN_PROJECT)
+                .resolve(fixturesResourceRelative)
                 .resolve(scenarioDir)
                 .resolve(EXPECTED_DIRECTORY)
                 .resolve(sourceFile);
