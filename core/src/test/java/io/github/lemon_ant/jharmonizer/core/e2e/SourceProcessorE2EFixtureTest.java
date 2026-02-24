@@ -46,7 +46,7 @@ class SourceProcessorE2EFixtureTest {
     @TempDir
     Path temporaryDirectory;
 
-    @ParameterizedTest(name = "[{index}] {0}")
+    @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
     void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile)
             throws Exception {
@@ -204,10 +204,7 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static Path resolveProjectExpectedSourceFile(Path scenarioDir, Path sourceFile) {
-        String fixturesResourceRelative = FIXTURES_RESOURCE.startsWith("/")
-                ? FIXTURES_RESOURCE.substring(1)
-                : FIXTURES_RESOURCE;
-
+        String fixturesResourceRelative = FIXTURES_RESOURCE.substring(1);
         return PROJECT_TEST_RESOURCES_ROOT
                 .resolve(fixturesResourceRelative)
                 .resolve(scenarioDir)
