@@ -6,7 +6,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -140,7 +139,7 @@ final class OrderDependentFieldReferenceUtils {
         CtElement currentParent = element.getParent();
 
         while (currentParent != null) {
-            if (currentParent instanceof CtLambda<?> || currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
+            if (currentParent instanceof CtLambda<?>) {
                 return true;
             }
 
