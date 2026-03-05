@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -127,11 +126,8 @@ final class OrderDependentFieldReferenceUtils {
             Class<T> fieldAccessClass,
             Predicate<CtField<?>> additionalFieldFilter) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        List<T> fieldAccesses = dependentAstRoot.getElements(fieldAccessTypeFilter).stream()
+        return dependentAstRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !isInsideLazyContext(dependentAstRoot, fieldAccess))
-                .toList();
-
-        return fieldAccesses.stream()
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
