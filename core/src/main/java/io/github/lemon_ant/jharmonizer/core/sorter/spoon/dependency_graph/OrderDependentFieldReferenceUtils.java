@@ -11,6 +11,8 @@ import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtLambda;
+import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -128,6 +130,7 @@ final class OrderDependentFieldReferenceUtils {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
         return dependentAstRootElements.stream()
+                .filter(fieldAccess -> !isPureAssignmentLeftHandSide(fieldAccess))
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, dependentAstRoot, fieldAccess))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
@@ -146,6 +149,10 @@ final class OrderDependentFieldReferenceUtils {
                 return true;
             }
 
+            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
+                return true;
+            }
+
             if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
                 return true;
             }
@@ -158,5 +165,18 @@ final class OrderDependentFieldReferenceUtils {
         }
 
         return false;
+    }
+
+    private static boolean isPureAssignmentLeftHandSide(CtFieldAccess<?> fieldAccess) {
+        if (!(fieldAccess instanceof CtFieldWrite<?>)) {
+            return false;
+        }
+
+        CtElement parentElement = fieldAccess.getParent();
+        if (!(parentElement instanceof CtAssignment<?, ?> assignment)) {
+            return false;
+        }
+
+        return assignment.getAssigned() == fieldAccess;
     }
 }
