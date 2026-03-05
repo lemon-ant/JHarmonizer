@@ -136,10 +136,11 @@ final class OrderDependentFieldReferenceUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static boolean isInsideLazyContext(CtElement astRoot, CtElement element) {
         CtElement currentParent = element.getParent();
 
-        while (currentParent != null && currentParent != astRoot) {
+        while (currentParent != null) {
             if (currentParent instanceof CtLambda<?>) {
                 return true;
             }
@@ -152,6 +153,9 @@ final class OrderDependentFieldReferenceUtils {
                 return true;
             }
 
+            if (currentParent == astRoot) {
+                break;
+            }
             currentParent = currentParent.getParent();
         }
 
