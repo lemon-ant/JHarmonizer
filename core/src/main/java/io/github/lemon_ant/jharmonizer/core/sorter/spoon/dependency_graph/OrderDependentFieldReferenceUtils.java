@@ -153,6 +153,7 @@ final class OrderDependentFieldReferenceUtils {
             if (currentParent == astRoot) {
                 return false;
             }
+
             currentParent = currentParent.getParent();
         }
 
