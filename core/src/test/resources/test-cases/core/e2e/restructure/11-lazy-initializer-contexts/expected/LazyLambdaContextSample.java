@@ -1,13 +1,13 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-public class LazyLambdaExplicitTypeForwardReferenceSample {
+public class LazyLambdaContextSample {
 
     // Alphabetically first field. Expected to stay first after restructuring,
     // because explicit type-qualified access inside lambda should not force provider-before-dependent ordering.
     static Runnable aDependent = () -> {
-        if (LazyLambdaExplicitTypeForwardReferenceSample.zProvider != 7) {
+        if (LazyLambdaContextSample.zProvider != 7) {
             throw new IllegalStateException(
-                    "Unexpected zProvider value in lambda: " + LazyLambdaExplicitTypeForwardReferenceSample.zProvider);
+                    "Unexpected zProvider value in lambda: " + LazyLambdaContextSample.zProvider);
         }
     };
     static int bIndependent = 3;

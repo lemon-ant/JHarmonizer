@@ -1,12 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -126,8 +126,9 @@ final class OrderDependentFieldReferenceUtils {
             Class<T> fieldAccessClass,
             Predicate<CtField<?>> additionalFieldFilter) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        return dependentAstRoot.getElements(fieldAccessTypeFilter).stream()
-                .filter(fieldAccess -> !isInsideLazyContext(dependentAstRoot, fieldAccess))
+        List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
+        return dependentAstRootElements.stream()
+                .filter(fieldAccess -> !isInsideLazyContext(declaringType, dependentAstRoot, fieldAccess))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
@@ -137,7 +138,7 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isInsideLazyContext(CtElement astRoot, CtElement element) {
+    private static boolean isInsideLazyContext(CtType<?> declaringType, CtElement astRoot, CtElement element) {
         CtElement currentParent = element.getParent();
 
         while (currentParent != null) {
@@ -145,16 +146,12 @@ final class OrderDependentFieldReferenceUtils {
                 return true;
             }
 
-            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
-                return true;
-            }
-
-            if (currentParent instanceof CtType<?>) {
+            if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
                 return true;
             }
 
             if (currentParent == astRoot) {
-                break;
+                return false;
             }
             currentParent = currentParent.getParent();
         }
