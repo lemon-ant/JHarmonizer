@@ -13,9 +13,7 @@
 
 **Что добавить / изменить**
 - Исключать lazy-contexts из обхода:
-  - `CtLambda`
   - method references
-  - тела локальных/анонимных/вложенных типов внутри инициализаторов
 - Разделять read/write:
   - `LHS assignment` не должен создавать read-like dependency.
 - Рассмотреть учёт compile-time constants в general provider
