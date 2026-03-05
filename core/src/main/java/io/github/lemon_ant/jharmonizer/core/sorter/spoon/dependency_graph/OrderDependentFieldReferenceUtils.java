@@ -10,6 +10,7 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtLambda;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -126,13 +127,36 @@ final class OrderDependentFieldReferenceUtils {
             Predicate<CtField<?>> additionalFieldFilter) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
-
         return dependentAstRootElements.stream()
+                .filter(fieldAccess -> !isInsideLazyContext(declaringType, dependentAstRoot, fieldAccess))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
                 .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isInsideLazyContext(CtType<?> declaringType, CtElement astRoot, CtElement element) {
+        CtElement currentParent = element.getParent();
+
+        while (currentParent != null) {
+            if (currentParent instanceof CtLambda<?>) {
+                return true;
+            }
+
+            if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
+                return true;
+            }
+
+            if (currentParent == astRoot) {
+                return false;
+            }
+
+            currentParent = currentParent.getParent();
+        }
+
+        return false;
     }
 }
