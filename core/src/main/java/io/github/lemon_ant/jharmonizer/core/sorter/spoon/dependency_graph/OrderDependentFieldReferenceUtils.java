@@ -127,7 +127,7 @@ final class OrderDependentFieldReferenceUtils {
             Predicate<CtField<?>> additionalFieldFilter) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return dependentAstRoot.getElements(fieldAccessTypeFilter).stream()
-                .filter(fieldAccess -> !isInsideLazyContext(dependentAstRoot, fieldAccess))
+                .filter(fieldAccess -> !isInsideLazyContext(declaringType, dependentAstRoot, fieldAccess))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
@@ -136,20 +136,20 @@ final class OrderDependentFieldReferenceUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean isInsideLazyContext(CtElement astRoot, CtElement element) {
+    private static boolean isInsideLazyContext(CtType<?> declaringType, CtElement astRoot, CtElement element) {
         CtElement currentParent = element.getParent();
 
-        while (currentParent != null && currentParent != astRoot) {
-            if (currentParent instanceof CtLambda<?>) {
+        while (currentParent != null) {
+            if (currentParent instanceof CtLambda<?> || currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
                 return true;
             }
 
-            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
+            if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
                 return true;
             }
 
-            if (currentParent instanceof CtType<?>) {
-                return true;
+            if (currentParent == astRoot) {
+                return false;
             }
 
             currentParent = currentParent.getParent();
