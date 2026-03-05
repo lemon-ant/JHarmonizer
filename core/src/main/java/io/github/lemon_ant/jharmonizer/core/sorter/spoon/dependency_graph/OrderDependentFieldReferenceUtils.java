@@ -1,13 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
@@ -19,7 +18,7 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.reference.CtFieldReference;
-import spoon.reflect.visitor.CtScanner;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
 final class OrderDependentFieldReferenceUtils {
@@ -127,7 +126,10 @@ final class OrderDependentFieldReferenceUtils {
             CtType<?> declaringType,
             Class<T> fieldAccessClass,
             Predicate<CtField<?>> additionalFieldFilter) {
-        Set<T> fieldAccesses = collectFieldAccessesExcludingLazyContexts(dependentAstRoot, fieldAccessClass);
+        TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
+        List<T> fieldAccesses = dependentAstRoot.getElements(fieldAccessTypeFilter).stream()
+                .filter(fieldAccess -> !isInsideLazyContext(dependentAstRoot, fieldAccess))
+                .toList();
 
         return fieldAccesses.stream()
                 .map(CtFieldAccess::getVariable)
@@ -138,37 +140,25 @@ final class OrderDependentFieldReferenceUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static <T extends CtFieldAccess<?>> Set<T> collectFieldAccessesExcludingLazyContexts(
-            CtElement astRoot, Class<T> fieldAccessClass) {
-        Set<T> collectedFieldAccesses = new LinkedHashSet<>();
+    private static boolean isInsideLazyContext(CtElement astRoot, CtElement element) {
+        CtElement currentParent = element.getParent();
 
-        CtScanner scanner = new CtScanner() {
-            @Override
-            public <R> void visitCtLambda(CtLambda<R> lambda) {
-                // Lambdas are lazily executed and should not constrain member declaration order.
+        while (currentParent != null && currentParent != astRoot) {
+            if (currentParent instanceof CtLambda<?>) {
+                return true;
             }
 
-            @Override
-            public <T, E extends CtExpression<?>> void visitCtExecutableReferenceExpression(
-                    CtExecutableReferenceExpression<T, E> expression) {
-                // Method references are lazily executed and should not constrain member declaration order.
+            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
+                return true;
             }
 
-            @Override
-            public <T> void visitCtType(CtType<T> type) {
-                // Skip nested/local/anonymous type bodies declared inside initializer roots.
+            if (currentParent instanceof CtType<?>) {
+                return true;
             }
 
-            @Override
-            public void scan(CtElement element) {
-                if (element != null && fieldAccessClass.isInstance(element)) {
-                    collectedFieldAccesses.add(fieldAccessClass.cast(element));
-                }
-                super.scan(element);
-            }
-        };
+            currentParent = currentParent.getParent();
+        }
 
-        scanner.scan(astRoot);
-        return Set.copyOf(collectedFieldAccesses);
+        return false;
     }
 }
