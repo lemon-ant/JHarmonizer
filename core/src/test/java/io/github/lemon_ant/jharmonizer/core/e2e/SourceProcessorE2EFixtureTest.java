@@ -49,6 +49,7 @@ class SourceProcessorE2EFixtureTest {
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
     void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
+        // Given
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
         Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
@@ -80,8 +81,10 @@ class SourceProcessorE2EFixtureTest {
 
         assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
 
+        // When
         runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
 
+        // Then
         assertFileProcessingIsDeterministic(fixtureScenario, workingScenarioRoot, workingInputFile);
 
         JavaCompileTestUtils.CompileResult compileAfterResult =
