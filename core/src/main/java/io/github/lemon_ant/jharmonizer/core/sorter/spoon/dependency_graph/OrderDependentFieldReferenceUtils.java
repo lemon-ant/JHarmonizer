@@ -1,15 +1,16 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtLambda;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -125,14 +126,35 @@ final class OrderDependentFieldReferenceUtils {
             Class<T> fieldAccessClass,
             Predicate<CtField<?>> additionalFieldFilter) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
-
-        return dependentAstRootElements.stream()
+        return dependentAstRoot.getElements(fieldAccessTypeFilter).stream()
+                .filter(fieldAccess -> !isInsideLazyContext(dependentAstRoot, fieldAccess))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
                 .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static boolean isInsideLazyContext(CtElement astRoot, CtElement element) {
+        CtElement currentParent = element.getParent();
+
+        while (currentParent != null && currentParent != astRoot) {
+            if (currentParent instanceof CtLambda<?>) {
+                return true;
+            }
+
+            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
+                return true;
+            }
+
+            if (currentParent instanceof CtType<?>) {
+                return true;
+            }
+
+            currentParent = currentParent.getParent();
+        }
+
+        return false;
     }
 }
