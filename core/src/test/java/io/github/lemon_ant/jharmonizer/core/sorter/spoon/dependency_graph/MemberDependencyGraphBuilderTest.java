@@ -329,6 +329,22 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
+    void buildDependencyGraph_initializerBlockReferencesCompileTimeConstant_constantExcludedFromDependencies() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_STATIC_INITIALIZER_BLOCK_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders)
+                .containsExactly(Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_B_PROVIDER_FIELD_MEMBER);
+    }
+
+    @Test
     void buildDependencyGraph_initializerBlockReferencesEarlierField_declarationDependencyEdgeCreated() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
@@ -776,6 +792,24 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(INITIALIZER_BLOCK_MEMBERS, "ALPHA");
         private static final CtTypeMember STATIC_INITIALIZER_BLOCK_MEMBER =
                 requireUniqueInitializerBlockMember(INITIALIZER_BLOCK_FIXTURE_MAIN_TYPE, true);
+
+        private static final URL INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/test-cases/core/sorter/spoon/dependency-graph/valid/InitializerBlockCompileTimeConstantExclusionFixture.java");
+        private static final CtType<?> INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS = buildTypeMember2NaturalGroup(
+                        INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE,
+                        MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_B_PROVIDER_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "B_PROVIDER");
+        private static final CtTypeMember
+                INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_STATIC_INITIALIZER_BLOCK_MEMBER =
+                        requireUniqueInitializerBlockMember(
+                                INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE, true);
 
         private static final URL ENUM_CONSTANT_INITIALIZER_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
