@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -20,6 +21,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
+// TODO Rename it
 final class OrderDependentFieldReferenceUtils {
 
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
@@ -100,6 +102,7 @@ final class OrderDependentFieldReferenceUtils {
                 astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
+    // TODO Rename it
     private static boolean shouldCreateDeclarationDependencyEdge(
             CtTypeMember providerMember, int dependentSourceStart) {
         int providerSourceStart = requireSourceStart(providerMember);
@@ -143,6 +146,10 @@ final class OrderDependentFieldReferenceUtils {
 
         while (currentParent != null) {
             if (currentParent instanceof CtLambda<?>) {
+                return true;
+            }
+
+            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
                 return true;
             }
 
