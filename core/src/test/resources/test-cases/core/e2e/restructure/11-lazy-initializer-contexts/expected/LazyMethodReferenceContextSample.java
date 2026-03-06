@@ -1,25 +1,21 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class LazyMethodReferenceContextSample {
 
-    // Alphabetically first field. Expected to stay first after restructuring,
-    // because method reference should be treated as lazy and not force provider-before-dependent ordering.
-    static IntSupplier aDependent = LazyMethodReferenceContextSample::provideZ;
+    // Alphabetically first field. Method-reference target expression contains a field access (zProvider::toString).
+    // This field access must be treated as lazy and should not force provider-before-dependent ordering.
+    static Supplier<String> aDependent = zProvider::toString;
     static int bIndependent = 3;
 
     // Intentionally placed before aDependent in input to provoke a potential false declaration dependency.
-    static int zProvider = 7;
-
-    static int provideZ() {
-        return zProvider;
-    }
+    static Integer zProvider = 7;
 
     public static void main(String[] args) {
-        if (aDependent.getAsInt() != 7 || bIndependent != 3 || zProvider != 7) {
+        if (!"7".equals(aDependent.get()) || bIndependent != 3 || zProvider != 7) {
             throw new IllegalStateException(
-                    "Unexpected field values: aDependent=" + aDependent.getAsInt() + ", bIndependent=" + bIndependent
+                    "Unexpected field values: aDependent=" + aDependent.get() + ", bIndependent=" + bIndependent
                             + ", zProvider=" + zProvider);
         }
     }
