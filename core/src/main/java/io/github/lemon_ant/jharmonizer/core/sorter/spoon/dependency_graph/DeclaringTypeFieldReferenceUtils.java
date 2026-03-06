@@ -21,7 +21,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
-final class DeclaringTypeFieldReferenceUtils {
+class DeclaringTypeFieldReferenceUtils {
 
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
         CtType<?> declaringType = typeMember.getDeclaringType();
@@ -101,8 +101,7 @@ final class DeclaringTypeFieldReferenceUtils {
                 astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
-    private static boolean isProviderDeclaredBeforeDependent(
-            CtTypeMember providerMember, int dependentSourceStart) {
+    private static boolean isProviderDeclaredBeforeDependent(CtTypeMember providerMember, int dependentSourceStart) {
         int providerSourceStart = requireSourceStart(providerMember);
         return providerSourceStart < dependentSourceStart;
     }
