@@ -77,7 +77,7 @@ final class InitializationOrderDependencyUtils {
             @NonNull CtTypeMember candidateProviderMember, @NonNull CtField<?> blankFinalField) {
         return resolveInitializationAstRoot(candidateProviderMember)
                 .map(astRoot ->
-                    DeclaringTypeFieldReferenceUtils.findFieldsWrittenByMember(candidateProviderMember, astRoot))
+                        DeclaringTypeFieldReferenceUtils.findFieldsWrittenByMember(candidateProviderMember, astRoot))
                 .map(writtenFields -> writtenFields.contains(blankFinalField))
                 .orElse(false);
     }
