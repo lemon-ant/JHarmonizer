@@ -21,7 +21,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
         Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentMember);
         return dependentAstRoot
                 .map(ctElement ->
-                        OrderDependentFieldReferenceUtils.findReferencedFields(dependentMember, ctElement).stream()
+                        DeclaringTypeFieldReferenceUtils.findReferencedFields(dependentMember, ctElement).stream()
                                 .map(providerMember -> new MemberDependencyArc(
                                         providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                                 .collect(Collectors.toUnmodifiableSet()))

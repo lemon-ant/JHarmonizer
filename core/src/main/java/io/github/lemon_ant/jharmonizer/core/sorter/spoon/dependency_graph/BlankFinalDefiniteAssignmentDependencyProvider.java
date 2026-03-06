@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireSourceStart;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSourceStart;
 
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +30,7 @@ final class BlankFinalDefiniteAssignmentDependencyProvider implements MemberDepe
         }
 
         Set<CtField<?>> blankFinalFieldsReadByDependentMember =
-                OrderDependentFieldReferenceUtils.findReadFields(dependentMember, dependentInitializationAstRoot.get())
+                DeclaringTypeFieldReferenceUtils.findReadFields(dependentMember, dependentInitializationAstRoot.get())
                         .stream()
                         .filter(InitializationOrderDependencyUtils::isBlankFinalField)
                         .collect(Collectors.toUnmodifiableSet());
