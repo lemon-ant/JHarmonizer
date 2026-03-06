@@ -22,6 +22,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
+// TODO Rename it
 final class OrderDependentFieldReferenceUtils {
 
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
@@ -102,6 +103,7 @@ final class OrderDependentFieldReferenceUtils {
                 astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
+    // TODO Rename it
     private static boolean shouldCreateDeclarationDependencyEdge(
             CtTypeMember providerMember, int dependentSourceStart) {
         int providerSourceStart = requireSourceStart(providerMember);
