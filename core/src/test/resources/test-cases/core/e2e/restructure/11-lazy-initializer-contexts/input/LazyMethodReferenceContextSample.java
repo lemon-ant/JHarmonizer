@@ -7,9 +7,10 @@ public class LazyMethodReferenceContextSample {
     static Integer zProvider = 7;
     static int bIndependent = 3;
 
-    // Alphabetically first field. Method-reference target expression contains a field access (zProvider::toString).
+    // Alphabetically first field. Method-reference target expression contains a field access
+    // (LazyMethodReferenceContextSample.zProvider::toString).
     // This field access must be treated as lazy and should not force provider-before-dependent ordering.
-    static Supplier<String> aDependent = zProvider::toString;
+    static Supplier<String> aDependent = LazyMethodReferenceContextSample.zProvider::toString;
 
     public static void main(String[] args) {
         if (!"7".equals(aDependent.get()) || bIndependent != 3 || zProvider != 7) {
