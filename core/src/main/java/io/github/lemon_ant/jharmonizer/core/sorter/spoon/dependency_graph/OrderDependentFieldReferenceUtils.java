@@ -53,33 +53,33 @@ final class OrderDependentFieldReferenceUtils {
 
     static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
-        return streamFieldsReadByMember(memberAstRoot, declaringType).collect(Collectors.toUnmodifiableSet());
+        return streamFieldDeclarationsReadByMember(memberAstRoot, declaringType).collect(Collectors.toUnmodifiableSet());
     }
 
     static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
-        return streamFieldsWrittenByMember(memberAstRoot, declaringType).collect(Collectors.toUnmodifiableSet());
+        return streamFieldDeclarationsWrittenByMember(memberAstRoot, declaringType).collect(Collectors.toUnmodifiableSet());
     }
 
     private static Stream<CtField<?>> streamProviderFieldCandidatesForDependentMember(
             CtElement dependentMemberAstRoot, CtType<?> declaringType) {
-        return streamFieldDeclarationsInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
+        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration);
     }
 
-    private static Stream<CtField<?>> streamFieldsReadByMember(CtElement memberAstRoot, CtType<?> declaringType) {
-        return streamFieldDeclarationsInSameType(memberAstRoot, declaringType, CtFieldRead.class)
+    private static Stream<CtField<?>> streamFieldDeclarationsReadByMember(CtElement memberAstRoot, CtType<?> declaringType) {
+        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class)
                 .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration);
     }
 
-    private static Stream<CtField<?>> streamFieldsWrittenByMember(CtElement memberAstRoot, CtType<?> declaringType) {
-        return streamFieldDeclarationsInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
+    private static Stream<CtField<?>> streamFieldDeclarationsWrittenByMember(CtElement memberAstRoot, CtType<?> declaringType) {
+        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
                 .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldDeclarationsInSameType(
+    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldAccessesInSameType(
             CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
