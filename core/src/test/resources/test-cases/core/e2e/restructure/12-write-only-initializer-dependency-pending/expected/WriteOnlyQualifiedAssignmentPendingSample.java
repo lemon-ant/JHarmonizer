@@ -1,8 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
-// Expected after implementing write-vs-read handling in initializer-root dependency providers:
-// pure LHS assignment should not generate read-like provider-before-dependent edge.
 public class WriteOnlyQualifiedAssignmentPendingSample {
     static int aWriter = (WriteOnlyQualifiedAssignmentPendingSample.zTarget = 5);
     static int bIndependent = 1;
