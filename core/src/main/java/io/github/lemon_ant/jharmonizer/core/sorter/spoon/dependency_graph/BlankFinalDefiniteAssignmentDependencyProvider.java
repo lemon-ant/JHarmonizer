@@ -30,7 +30,8 @@ final class BlankFinalDefiniteAssignmentDependencyProvider implements MemberDepe
         }
 
         Set<CtField<?>> blankFinalFieldsReadByDependentMember =
-                OrderDependentFieldReferenceUtils.findFieldsReadByMember(dependentMember, dependentInitializationAstRoot.get())
+                OrderDependentFieldReferenceUtils.findFieldsReadByMember(
+                                dependentMember, dependentInitializationAstRoot.get())
                         .stream()
                         .filter(InitializationOrderDependencyUtils::isBlankFinalField)
                         .collect(Collectors.toUnmodifiableSet());
