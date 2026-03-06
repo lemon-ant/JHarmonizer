@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,41 +63,45 @@ final class OrderDependentFieldReferenceUtils {
 
     private static Stream<CtField<?>> streamDeclarationDependencyFieldCandidates(
             CtElement dependentAstRoot, CtType<?> declaringType) {
-        return streamFieldDeclarationsByAccessClass(dependentAstRoot, declaringType, CtFieldAccess.class)
+        return streamDeclaringTypeFieldDeclarations(dependentAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .map(CtFieldAccess::getVariable)
-                .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull);
+                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration)
+                .flatMap(OrderDependentFieldReferenceUtils::streamNonNullField);
     }
 
     private static Stream<CtField<?>> streamReadFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
-        return streamFieldDeclarationsByAccessClass(astRoot, declaringType, CtFieldRead.class)
-                .map(CtFieldAccess::getVariable)
-                .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull);
+        return streamDeclaringTypeFieldDeclarations(astRoot, declaringType, CtFieldRead.class)
+                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration)
+                .flatMap(OrderDependentFieldReferenceUtils::streamNonNullField);
     }
 
     private static Stream<CtField<?>> streamWrittenFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
-        return streamFieldDeclarationsByAccessClass(astRoot, declaringType, CtFieldWrite.class)
-                .map(CtFieldAccess::getVariable)
-                .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull);
+        return streamDeclaringTypeFieldDeclarations(astRoot, declaringType, CtFieldWrite.class)
+                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration)
+                .flatMap(OrderDependentFieldReferenceUtils::streamNonNullField);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldDeclarationsByAccessClass(
+    private static <T extends CtFieldAccess<?>> Stream<T> streamDeclaringTypeFieldDeclarations(
             CtElement astRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return astRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, astRoot, fieldAccess))
-                .filter(fieldAccess -> isDeclaredInType(fieldAccess, declaringType));
+                .filter(fieldAccess -> isDeclaredInType(resolveFieldDeclaration(fieldAccess), declaringType));
+    }
+
+    private static CtField<?> resolveFieldDeclaration(CtFieldAccess<?> fieldAccess) {
+        CtFieldReference<?> fieldReference = fieldAccess.getVariable();
+        return fieldReference.getDeclaration();
+    }
+
+    private static Stream<CtField<?>> streamNonNullField(CtField<?> declaration) {
+        return declaration == null ? Stream.empty() : Stream.of(declaration);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isDeclaredInType(CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
-        CtFieldReference<?> fieldReference = fieldAccess.getVariable();
-        CtField<?> declaration = fieldReference.getDeclaration();
-        return declaration != null && declaration.getDeclaringType() == declaringType;
+    private static boolean isDeclaredInType(CtField<?> fieldDeclaration, CtType<?> declaringType) {
+        return fieldDeclaration != null && fieldDeclaration.getDeclaringType() == declaringType;
     }
 
     private static boolean isPureWriteOnlyAssignment(CtFieldAccess<?> fieldAccess) {
