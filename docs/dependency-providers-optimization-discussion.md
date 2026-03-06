@@ -98,7 +98,7 @@
 2. Method reference in initializer с доступом к полю.
 3. Anonymous class in initializer с чтением поля outer-type.
 4. Field write only (`LHS`) внутри init block — не должен считаться read dependency.
-   - Added escaped pending e2e fixture: `12-write-only-initializer-dependency-pending/*/WriteOnlyQualifiedAssignmentPendingSample.~java`.
+   - Covered by e2e fixture: `12-write-only-initializer-dependency-pending/*/WriteOnlyQualifiedAssignmentPendingSample.java`.
 5. Enum + static field mixed initialization.
 6. Blank final multiple assignments candidates (проверить точность/избыточность).
 7. `Outer.this.field` / nested `this`-qualification.
