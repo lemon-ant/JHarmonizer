@@ -69,6 +69,36 @@ class MemberDependencyGraphBuilderTest {
         assertThat(directProviders).containsExactly(Constants.BRAVO_FIELD_MEMBER);
     }
 
+
+    @Test
+    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantExcludedFromDependencies() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.COMPILE_TIME_CONSTANT_EXCLUSION_ALPHA_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders).containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER);
+    }
+    @Test
+    void buildDependencyGraph_instanceFinalLiteralField_keepsDeclarationDependencyEdge() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.INSTANCE_FINAL_LITERAL_ALPHA_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders).containsExactly(Constants.INSTANCE_FINAL_LITERAL_BRAVO_FIELD_MEMBER);
+    }
+
     @Test
     void buildDependencyGraph_explicitThisForwardReference_preservesSourceDeclarationOrder() {
         // Given
@@ -299,6 +329,22 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
+    void buildDependencyGraph_initializerBlockReferencesCompileTimeConstant_constantExcludedFromDependencies() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_STATIC_INITIALIZER_BLOCK_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders)
+                .containsExactly(Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_B_PROVIDER_FIELD_MEMBER);
+    }
+
+    @Test
     void buildDependencyGraph_initializerBlockReferencesEarlierField_declarationDependencyEdgeCreated() {
         // Given
         MemberDependencyGraph memberDependencyGraph =
@@ -416,6 +462,40 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIELD_INITIALIZER_MEMBERS, "BRAVO");
         private static final CtTypeMember ALPHA_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIELD_INITIALIZER_MEMBERS, "ALPHA");
+
+        private static final URL FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/test-cases/core/sorter/spoon/dependency-graph/valid/FieldInitializerCompileTimeConstantExclusionFixture.java");
+        private static final CtType<?> FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS = buildTypeMember2NaturalGroup(
+                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE,
+                        MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "BRAVO");
+        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_ALPHA_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "ALPHA");
+
+        private static final URL FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/test-cases/core/sorter/spoon/dependency-graph/valid/FieldInitializerInstanceFinalLiteralFixture.java");
+        private static final CtType<?> FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup> FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_MEMBERS =
+                buildTypeMember2NaturalGroup(
+                        FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_FIXTURE_MAIN_TYPE,
+                        MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember INSTANCE_FINAL_LITERAL_BRAVO_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_MEMBERS, "BRAVO");
+        private static final CtTypeMember INSTANCE_FINAL_LITERAL_ALPHA_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_MEMBERS, "ALPHA");
 
         private static final URL FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
@@ -712,6 +792,24 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(INITIALIZER_BLOCK_MEMBERS, "ALPHA");
         private static final CtTypeMember STATIC_INITIALIZER_BLOCK_MEMBER =
                 requireUniqueInitializerBlockMember(INITIALIZER_BLOCK_FIXTURE_MAIN_TYPE, true);
+
+        private static final URL INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/test-cases/core/sorter/spoon/dependency-graph/valid/InitializerBlockCompileTimeConstantExclusionFixture.java");
+        private static final CtType<?> INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup>
+                INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS = buildTypeMember2NaturalGroup(
+                        INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE,
+                        MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_B_PROVIDER_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "B_PROVIDER");
+        private static final CtTypeMember
+                INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_STATIC_INITIALIZER_BLOCK_MEMBER =
+                        requireUniqueInitializerBlockMember(
+                                INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE, true);
 
         private static final URL ENUM_CONSTANT_INITIALIZER_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
