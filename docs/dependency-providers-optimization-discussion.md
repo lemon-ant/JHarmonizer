@@ -7,7 +7,7 @@
 ## 1) Слишком широкий сбор ссылок в initializer roots (главный кандидат на next optimization)
 
 **Текущее поведение**
-- `findReferencedFields()` идёт через `CtFieldAccess` по всему `AST-root`.
+- `findProviderFieldsRequiredByDependentMember()` идёт через `CtFieldAccess` по всему `AST-root`.
 - Добавляется dependency, если provider выше по source order.
 - Подход безопасный, но пере-консервативный (даёт лишние жёсткие рёбра).
 
