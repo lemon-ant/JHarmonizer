@@ -39,64 +39,57 @@ final class OrderDependentFieldReferenceUtils {
     }
 
     /**
-     * TODO: Reduce over-conservative ordering constraints for initializer dependencies.
+     * Finds fields declared in the same type that act as provider-members for a dependent initialization member.
      */
-    static Set<CtField<?>> findReferencedFields(
-            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentAstRoot) {
+    static Set<CtField<?>> findProviderFieldsRequiredByDependentMember(
+            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         int dependentSourceStart = requireSourceStart(dependentMember);
 
-        return streamDeclarationDependencyFieldCandidates(dependentAstRoot, declaringType)
-                .filter(referencedField -> isDeclaredBeforeDependent(referencedField, dependentSourceStart))
+        return streamProviderFieldCandidatesForDependentMember(dependentMemberAstRoot, declaringType)
+                .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentSourceStart))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return streamReadFieldDeclarations(astRoot, declaringType).collect(Collectors.toUnmodifiableSet());
+    static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(member);
+        return streamFieldsReadByMember(memberAstRoot, declaringType).collect(Collectors.toUnmodifiableSet());
     }
 
-    static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return streamWrittenFieldDeclarations(astRoot, declaringType).collect(Collectors.toUnmodifiableSet());
+    static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(member);
+        return streamFieldsWrittenByMember(memberAstRoot, declaringType).collect(Collectors.toUnmodifiableSet());
     }
 
-    private static Stream<CtField<?>> streamDeclarationDependencyFieldCandidates(
-            CtElement dependentAstRoot, CtType<?> declaringType) {
-        return streamDeclaringTypeFieldDeclarations(dependentAstRoot, declaringType, CtFieldAccess.class)
+    private static Stream<CtField<?>> streamProviderFieldCandidatesForDependentMember(
+            CtElement dependentMemberAstRoot, CtType<?> declaringType) {
+        return streamFieldDeclarationsInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration)
-                .flatMap(OrderDependentFieldReferenceUtils::streamNonNullField);
+                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration);
     }
 
-    private static Stream<CtField<?>> streamReadFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
-        return streamDeclaringTypeFieldDeclarations(astRoot, declaringType, CtFieldRead.class)
-                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration)
-                .flatMap(OrderDependentFieldReferenceUtils::streamNonNullField);
+    private static Stream<CtField<?>> streamFieldsReadByMember(CtElement memberAstRoot, CtType<?> declaringType) {
+        return streamFieldDeclarationsInSameType(memberAstRoot, declaringType, CtFieldRead.class)
+                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration);
     }
 
-    private static Stream<CtField<?>> streamWrittenFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
-        return streamDeclaringTypeFieldDeclarations(astRoot, declaringType, CtFieldWrite.class)
-                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration)
-                .flatMap(OrderDependentFieldReferenceUtils::streamNonNullField);
+    private static Stream<CtField<?>> streamFieldsWrittenByMember(CtElement memberAstRoot, CtType<?> declaringType) {
+        return streamFieldDeclarationsInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
+                .map(OrderDependentFieldReferenceUtils::resolveFieldDeclaration);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static <T extends CtFieldAccess<?>> Stream<T> streamDeclaringTypeFieldDeclarations(
-            CtElement astRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
+    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldDeclarationsInSameType(
+            CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        return astRoot.getElements(fieldAccessTypeFilter).stream()
-                .filter(fieldAccess -> !isInsideLazyContext(declaringType, astRoot, fieldAccess))
+        return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
+                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> isDeclaredInType(resolveFieldDeclaration(fieldAccess), declaringType));
     }
 
     private static CtField<?> resolveFieldDeclaration(CtFieldAccess<?> fieldAccess) {
         CtFieldReference<?> fieldReference = fieldAccess.getVariable();
         return fieldReference.getDeclaration();
-    }
-
-    private static Stream<CtField<?>> streamNonNullField(CtField<?> declaration) {
-        return declaration == null ? Stream.empty() : Stream.of(declaration);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
@@ -117,9 +110,13 @@ final class OrderDependentFieldReferenceUtils {
         return assignment.getAssigned() == fieldAccess;
     }
 
-    private static boolean isDeclaredBeforeDependent(CtTypeMember providerMember, int dependentSourceStart) {
-        int providerSourceStart = requireSourceStart(providerMember);
+    private static boolean isProviderDeclaredBeforeDependentMember(int providerSourceStart, int dependentSourceStart) {
         return providerSourceStart < dependentSourceStart;
+    }
+
+    private static boolean isProviderDeclaredBeforeDependentMember(CtTypeMember providerMember, int dependentSourceStart) {
+        int providerSourceStart = requireSourceStart(providerMember);
+        return isProviderDeclaredBeforeDependentMember(providerSourceStart, dependentSourceStart);
     }
 
     static int requireSourceStart(CtTypeMember typeMember) {
