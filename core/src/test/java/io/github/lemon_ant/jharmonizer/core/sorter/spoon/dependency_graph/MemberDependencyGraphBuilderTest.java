@@ -69,7 +69,6 @@ class MemberDependencyGraphBuilderTest {
         assertThat(directProviders).containsExactly(Constants.BRAVO_FIELD_MEMBER);
     }
 
-
     @Test
     void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantExcludedFromDependencies() {
         // Given
@@ -84,11 +83,12 @@ class MemberDependencyGraphBuilderTest {
         // Then
         assertThat(directProviders).containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER);
     }
+
     @Test
     void buildDependencyGraph_instanceFinalLiteralField_keepsDeclarationDependencyEdge() {
         // Given
-        MemberDependencyGraph memberDependencyGraph =
-                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_MEMBERS);
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_MEMBERS);
 
         // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
@@ -331,8 +331,8 @@ class MemberDependencyGraphBuilderTest {
     @Test
     void buildDependencyGraph_initializerBlockReferencesCompileTimeConstant_constantExcludedFromDependencies() {
         // Given
-        MemberDependencyGraph memberDependencyGraph =
-                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
 
         // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
