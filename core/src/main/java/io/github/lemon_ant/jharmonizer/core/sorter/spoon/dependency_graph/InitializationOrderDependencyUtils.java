@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireDeclaringType;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.OrderDependentFieldReferenceUtils.requireSourceStart;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireDeclaringType;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSourceStart;
 
 import java.util.Optional;
 import java.util.Set;
@@ -77,7 +77,7 @@ final class InitializationOrderDependencyUtils {
             @NonNull CtTypeMember candidateProviderMember, @NonNull CtField<?> blankFinalField) {
         return resolveInitializationAstRoot(candidateProviderMember)
                 .map(astRoot ->
-                        OrderDependentFieldReferenceUtils.findFieldsWrittenByMember(candidateProviderMember, astRoot))
+                    DeclaringTypeFieldReferenceUtils.findFieldsWrittenByMember(candidateProviderMember, astRoot))
                 .map(writtenFields -> writtenFields.contains(blankFinalField))
                 .orElse(false);
     }

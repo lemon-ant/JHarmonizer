@@ -22,7 +22,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
-final class OrderDependentFieldReferenceUtils {
+class DeclaringTypeFieldReferenceUtils {
 
     @NonNull
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
