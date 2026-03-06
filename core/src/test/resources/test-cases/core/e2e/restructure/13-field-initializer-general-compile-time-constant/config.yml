@@ -11,10 +11,14 @@ top-level-types-ordering:
     - [ class ]
   sort-keys: [ preserve ]
 type-members-ordering:
-  - name: Fields only
+  - name: Initializers then fields
     includes: ~.*
     sort-keys: preserve
     groups:
+      - name: Initializers
+        separator: none
+        sort-keys: preserve
+        includes: initializer
       - name: Fields
         separator: none
         sort-keys: alpha
