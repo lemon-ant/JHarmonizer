@@ -15,9 +15,8 @@ public class LazyMethodReferenceContextSample {
 
     public static void main(String[] args) {
         if (!"7".equals(aDependent.get()) || bIndependent != 3 || !"7".equals(zProvider)) {
-            throw new IllegalStateException(
-                    "Unexpected field values: aDependent=" + aDependent.get() + ", bIndependent=" + bIndependent
-                            + ", zProvider=" + zProvider);
+            throw new IllegalStateException("Unexpected field values: aDependent=" + aDependent.get()
+                    + ", bIndependent=" + bIndependent + ", zProvider=" + zProvider);
         }
     }
 }
