@@ -50,7 +50,6 @@ class DeclaringTypeFieldReferenceUtils {
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
-                .filter(providerField -> !InitializationOrderDependencyUtils.isCompileTimeConstantVariable(providerField))
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
