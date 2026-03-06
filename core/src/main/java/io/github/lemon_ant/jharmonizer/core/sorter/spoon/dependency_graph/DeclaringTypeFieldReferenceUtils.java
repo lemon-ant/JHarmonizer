@@ -21,8 +21,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
-// TODO Rename it
-final class OrderDependentFieldReferenceUtils {
+class DeclaringTypeFieldReferenceUtils {
 
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
         CtType<?> declaringType = typeMember.getDeclaringType();
@@ -87,8 +86,8 @@ final class OrderDependentFieldReferenceUtils {
                 dependentAstRoot,
                 declaringType,
                 CtFieldAccess.class,
-                // TODO Reconsider to use shouldCreateDeclarationDependencyEdge for each case
-                referencedField -> shouldCreateDeclarationDependencyEdge(referencedField, dependentSourceStart));
+                // TODO Reconsider to use isProviderDeclaredBeforeDependent for each case
+                referencedField -> isProviderDeclaredBeforeDependent(referencedField, dependentSourceStart));
     }
 
     static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
@@ -102,9 +101,7 @@ final class OrderDependentFieldReferenceUtils {
                 astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
     }
 
-    // TODO Rename it
-    private static boolean shouldCreateDeclarationDependencyEdge(
-            CtTypeMember providerMember, int dependentSourceStart) {
+    private static boolean isProviderDeclaredBeforeDependent(CtTypeMember providerMember, int dependentSourceStart) {
         int providerSourceStart = requireSourceStart(providerMember);
         return providerSourceStart < dependentSourceStart;
     }
