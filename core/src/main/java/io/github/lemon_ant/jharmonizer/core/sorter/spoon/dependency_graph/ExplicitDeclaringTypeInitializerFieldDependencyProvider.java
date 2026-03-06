@@ -17,8 +17,7 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
 
     @Override
     protected boolean isSupportedReferencedField(@NonNull CtField<?> referencedField) {
-        return isStaticField(referencedField)
-                && !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(referencedField);
+        return !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(referencedField);
     }
 
     @Override
