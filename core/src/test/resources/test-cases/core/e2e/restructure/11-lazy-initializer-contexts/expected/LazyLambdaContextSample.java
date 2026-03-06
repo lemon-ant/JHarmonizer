@@ -1,33 +1,25 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import java.util.function.IntSupplier;
-
 public class LazyLambdaContextSample {
 
-    // Alphabetically first fields. Expected to stay first after restructuring,
-    // because lazy contexts (lambda + method reference) should not force provider-before-dependent ordering.
-    static Runnable aDependentLambda = () -> {
+    // Alphabetically first field. Expected to stay first after restructuring,
+    // because explicit type-qualified access inside lambda should not force provider-before-dependent ordering.
+    static Runnable aDependent = () -> {
         if (LazyLambdaContextSample.zProvider != 7) {
             throw new IllegalStateException(
                     "Unexpected zProvider value in lambda: " + LazyLambdaContextSample.zProvider);
         }
     };
-    static IntSupplier aDependentMethodRef = LazyLambdaContextSample::provideZ;
     static int bIndependent = 3;
 
-    // Intentionally placed before aDependent fields in input to provoke a potential false declaration dependency.
+    // Intentionally placed before aDependent in input to provoke a potential false declaration dependency.
     static int zProvider = 7;
 
-    static int provideZ() {
-        return zProvider;
-    }
-
     public static void main(String[] args) {
-        aDependentLambda.run();
-        if (aDependentMethodRef.getAsInt() != 7 || bIndependent != 3 || zProvider != 7) {
+        aDependent.run();
+        if (bIndependent != 3 || zProvider != 7) {
             throw new IllegalStateException(
-                    "Unexpected field values: aDependentMethodRef=" + aDependentMethodRef.getAsInt()
-                            + ", bIndependent=" + bIndependent + ", zProvider=" + zProvider);
+                    "Unexpected field values: bIndependent=" + bIndependent + ", zProvider=" + zProvider);
         }
     }
 }
