@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtAssignment;
@@ -47,56 +47,51 @@ final class OrderDependentFieldReferenceUtils {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         int dependentSourceStart = requireSourceStart(dependentMember);
 
-        return collectDeclarationDependencyFieldCandidates(dependentAstRoot, declaringType).stream()
+        return streamDeclarationDependencyFieldCandidates(dependentAstRoot, declaringType)
                 .filter(referencedField -> isDeclaredBeforeDependent(referencedField, dependentSourceStart))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectReadFieldDeclarations(astRoot, declaringType);
+        return streamReadFieldDeclarations(astRoot, declaringType).collect(Collectors.toUnmodifiableSet());
     }
 
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectWrittenFieldDeclarations(astRoot, declaringType);
+        return streamWrittenFieldDeclarations(astRoot, declaringType).collect(Collectors.toUnmodifiableSet());
     }
 
-    private static Set<CtField<?>> collectDeclarationDependencyFieldCandidates(
+    private static Stream<CtField<?>> streamDeclarationDependencyFieldCandidates(
             CtElement dependentAstRoot, CtType<?> declaringType) {
-        return collectDeclaringTypeFieldDeclarations(dependentAstRoot, declaringType, CtFieldAccess.class).stream()
+        return streamFieldDeclarationsByAccessClass(dependentAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableSet());
+                .filter(Objects::nonNull);
     }
 
-    private static Set<CtField<?>> collectReadFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
-        return collectDeclaringTypeFieldDeclarations(astRoot, declaringType, CtFieldRead.class).stream()
+    private static Stream<CtField<?>> streamReadFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
+        return streamFieldDeclarationsByAccessClass(astRoot, declaringType, CtFieldRead.class)
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableSet());
+                .filter(Objects::nonNull);
     }
 
-    private static Set<CtField<?>> collectWrittenFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
-        return collectDeclaringTypeFieldDeclarations(astRoot, declaringType, CtFieldWrite.class).stream()
+    private static Stream<CtField<?>> streamWrittenFieldDeclarations(CtElement astRoot, CtType<?> declaringType) {
+        return streamFieldDeclarationsByAccessClass(astRoot, declaringType, CtFieldWrite.class)
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableSet());
+                .filter(Objects::nonNull);
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static <T extends CtFieldAccess<?>> List<T> collectDeclaringTypeFieldDeclarations(
+    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldDeclarationsByAccessClass(
             CtElement astRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        List<T> fieldAccesses = astRoot.getElements(fieldAccessTypeFilter);
-        return fieldAccesses.stream()
+        return astRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, astRoot, fieldAccess))
-                .filter(fieldAccess -> isDeclaredInType(fieldAccess, declaringType))
-                .collect(Collectors.toUnmodifiableList());
+                .filter(fieldAccess -> isDeclaredInType(fieldAccess, declaringType));
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
