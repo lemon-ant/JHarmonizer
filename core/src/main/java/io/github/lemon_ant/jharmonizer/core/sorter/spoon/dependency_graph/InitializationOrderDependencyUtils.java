@@ -11,6 +11,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -46,6 +48,21 @@ final class InitializationOrderDependencyUtils {
 
     static boolean isBlankFinalField(@NonNull CtField<?> field) {
         return field.getModifiers().contains(ModifierKind.FINAL) && field.getDefaultExpression() == null;
+    }
+
+    static boolean isCompileTimeConstantVariable(@NonNull CtField<?> field) {
+        if (!field.getModifiers().contains(ModifierKind.FINAL)) {
+            return false;
+        }
+
+        CtExpression<?> defaultExpression = field.getDefaultExpression();
+        if (defaultExpression == null) {
+            return false;
+        }
+
+        String typeQualifiedName = field.getType().getQualifiedName();
+        boolean isPrimitiveOrString = field.getType().isPrimitive() || "java.lang.String".equals(typeQualifiedName);
+        return isPrimitiveOrString && defaultExpression.partiallyEvaluate() instanceof CtLiteral<?>;
     }
 
     /**
