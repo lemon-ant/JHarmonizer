@@ -11,7 +11,11 @@ import spoon.reflect.declaration.ModifierKind;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class CompileTimeConstantFieldUtils {
 
-    static boolean isCompileTimeConstantVariable(@NonNull CtField<?> field) {
+    static boolean isStaticCompileTimeConstantVariable(@NonNull CtField<?> field) {
+        if (!field.getModifiers().contains(ModifierKind.STATIC)) {
+            return false;
+        }
+
         if (!field.getModifiers().contains(ModifierKind.FINAL)) {
             return false;
         }

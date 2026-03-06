@@ -25,7 +25,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
                                         dependentMember, ctElement)
                                 .stream()
                                 .filter(providerMember ->
-                                        !CompileTimeConstantFieldUtils.isCompileTimeConstantVariable(
+                                        !CompileTimeConstantFieldUtils.isStaticCompileTimeConstantVariable(
                                                 providerMember))
                                 .map(providerMember -> new MemberDependencyArc(
                                         providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
