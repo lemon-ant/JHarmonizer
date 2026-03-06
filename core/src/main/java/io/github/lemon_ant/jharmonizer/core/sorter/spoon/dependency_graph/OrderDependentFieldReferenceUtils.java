@@ -7,7 +7,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExecutableReferenceExpression;
+import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -86,20 +88,22 @@ final class OrderDependentFieldReferenceUtils {
         return collectReferencedDeclaringTypeFields(
                 dependentAstRoot,
                 declaringType,
-                CtFieldRead.class,
+                CtFieldAccess.class,
+                fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess),
                 // TODO Reconsider to use shouldCreateDeclarationDependencyEdge for each case
                 referencedField -> shouldCreateDeclarationDependencyEdge(referencedField, dependentSourceStart));
     }
 
     static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectReferencedDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
+        return collectReferencedDeclaringTypeFields(
+                astRoot, declaringType, CtFieldRead.class, fieldAccess -> true, referencedField -> true);
     }
 
     static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         return collectReferencedDeclaringTypeFields(
-                astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
+                astRoot, declaringType, CtFieldWrite.class, fieldAccess -> true, referencedField -> true);
     }
 
     // TODO Rename it
@@ -127,17 +131,33 @@ final class OrderDependentFieldReferenceUtils {
             CtElement dependentAstRoot,
             CtType<?> declaringType,
             Class<T> fieldAccessClass,
+            Predicate<T> fieldAccessFilter,
             Predicate<CtField<?>> additionalFieldFilter) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
         return dependentAstRootElements.stream()
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, dependentAstRoot, fieldAccess))
+                .filter(fieldAccessFilter)
                 .map(CtFieldAccess::getVariable)
                 .map(CtFieldReference::getDeclaration)
                 .filter(Objects::nonNull)
                 .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
                 .filter(additionalFieldFilter)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+
+    private static boolean isPureWriteOnlyAssignment(CtFieldAccess<?> fieldAccess) {
+        if (!(fieldAccess instanceof CtFieldWrite<?>)) {
+            return false;
+        }
+
+        CtElement parent = fieldAccess.getParent();
+        if (!(parent instanceof CtAssignment<?, ?> assignment) || parent instanceof CtOperatorAssignment<?, ?>) {
+            return false;
+        }
+
+        return assignment.getAssigned() == fieldAccess;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
