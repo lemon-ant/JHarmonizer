@@ -86,7 +86,7 @@ final class OrderDependentFieldReferenceUtils {
         return collectReferencedDeclaringTypeFields(
                 dependentAstRoot,
                 declaringType,
-                CtFieldAccess.class,
+                CtFieldRead.class,
                 // TODO Reconsider to use shouldCreateDeclarationDependencyEdge for each case
                 referencedField -> shouldCreateDeclarationDependencyEdge(referencedField, dependentSourceStart));
     }

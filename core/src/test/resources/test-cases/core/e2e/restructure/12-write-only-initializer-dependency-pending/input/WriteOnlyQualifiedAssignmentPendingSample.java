@@ -1,8 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
-// Reason: write-only field accesses inside initializer roots are currently collected via CtFieldAccess
-// and treated like read dependencies, which introduces an over-conservative edge (zTarget -> aWriter).
+// Verifies that write-only (LHS) field access in initializer does not create read-like declaration dependency.
 public class WriteOnlyQualifiedAssignmentPendingSample {
     static int zTarget;
     static int bIndependent = 1;
