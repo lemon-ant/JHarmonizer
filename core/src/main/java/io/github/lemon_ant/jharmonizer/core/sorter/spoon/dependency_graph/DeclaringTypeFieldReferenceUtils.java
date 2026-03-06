@@ -18,6 +18,7 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
@@ -50,6 +51,7 @@ class DeclaringTypeFieldReferenceUtils {
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .filter(providerField -> !isCompileTimeConstantVariable(providerField))
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -111,6 +113,20 @@ class DeclaringTypeFieldReferenceUtils {
         int dependentSourceStart = requireSourceStart(dependentMember);
         int providerSourceStart = requireSourceStart(providerMember);
         return providerSourceStart < dependentSourceStart;
+    }
+
+    private static boolean isCompileTimeConstantVariable(CtField<?> field) {
+        if (!field.getModifiers().contains(ModifierKind.FINAL)) {
+            return false;
+        }
+
+        if (field.getDefaultExpression() == null) {
+            return false;
+        }
+
+        String typeQualifiedName = field.getType().getQualifiedName();
+        boolean isPrimitiveOrString = field.getType().isPrimitive() || "java.lang.String".equals(typeQualifiedName);
+        return isPrimitiveOrString && field.getDefaultExpression().partiallyEvaluate() instanceof CtLiteral<?>;
     }
 
     static int requireSourceStart(@NonNull CtTypeMember typeMember) {
