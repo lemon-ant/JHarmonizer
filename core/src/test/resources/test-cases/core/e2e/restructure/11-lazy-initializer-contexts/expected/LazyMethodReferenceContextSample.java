@@ -4,9 +4,10 @@ import java.util.function.Supplier;
 
 public class LazyMethodReferenceContextSample {
 
-    // Alphabetically first field. Method-reference target expression contains a field access (zProvider::toString).
+    // Alphabetically first field. Method-reference target expression contains a field access
+    // (LazyMethodReferenceContextSample.zProvider::toString).
     // This field access must be treated as lazy and should not force provider-before-dependent ordering.
-    static Supplier<String> aDependent = zProvider::toString;
+    static Supplier<String> aDependent = LazyMethodReferenceContextSample.zProvider::toString;
     static int bIndependent = 3;
 
     // Intentionally placed before aDependent in input to provoke a potential false declaration dependency.
