@@ -7,7 +7,7 @@
 ## 1) Слишком широкий сбор ссылок в initializer roots (главный кандидат на next optimization)
 
 **Текущее поведение**
-- `findReferencedFields()` идёт через `CtFieldAccess` по всему `AST-root`.
+- `findProviderFieldsRequiredByDependentMember()` идёт через `CtFieldAccess` по всему `AST-root`.
 - Добавляется dependency, если provider выше по source order.
 - Подход безопасный, но пере-консервативный (даёт лишние жёсткие рёбра).
 
@@ -97,11 +97,10 @@
    - Проверить, что dependency не пере-консервативный.
 2. Method reference in initializer с доступом к полю.
 3. Anonymous class in initializer с чтением поля outer-type.
-4. Field write only (`LHS`) внутри init block — не должен считаться read dependency.
-5. Enum + static field mixed initialization.
-6. Blank final multiple assignments candidates (проверить точность/избыточность).
-7. `Outer.this.field` / nested `this`-qualification.
-8. Compile-time constant edge cases:
+4. Enum + static field mixed initialization.
+5. Blank final multiple assignments candidates (проверить точность/избыточность).
+6. `Outer.this.field` / nested `this`-qualification.
+7. Compile-time constant edge cases:
    - boxed literals,
    - constant expression через cast/concat,
    - `static final` primitive/String с `partiallyEvaluate` quirks.

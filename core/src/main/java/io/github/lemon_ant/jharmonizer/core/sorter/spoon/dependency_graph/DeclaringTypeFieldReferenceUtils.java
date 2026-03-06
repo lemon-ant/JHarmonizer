@@ -1,17 +1,18 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtLambda;
+import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -23,6 +24,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 @UtilityClass
 class DeclaringTypeFieldReferenceUtils {
 
+    @NonNull
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
         CtType<?> declaringType = typeMember.getDeclaringType();
         if (declaringType != null) {
@@ -38,75 +40,80 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     /**
-     * TODO: Reduce over-conservative ordering constraints for initializer dependencies.
-     * <p>
-     * Current approach treats field accesses found within initializer-like AST roots as potentially order-sensitive and
-     * creates {@code DECLARATION_DEPENDENCY} edges. We already apply a source-order filter and only keep edges where the
-     * provider member is declared above the dependent member in the original source (strict: missing/invalid positions
-     * are treated as an error).
-     * <p>
-     * This is safe but may still create unnecessary edges and reduce sorting freedom (including occasional artificial
-     * cycles) because some field accesses are "lazy" and do not execute during initialization.
-     * <p>
-     * Follow-up ideas (JLS-driven):
-     * <ul>
-     *   <li>Model "illegal forward reference" more precisely:
-     *     <ul>
-     *       <li>Focus on simple-name accesses (unqualified), not qualified ones ({@code this.field} / {@code TypeName.field}).</li>
-     *       <li>Apply only in initializer contexts (field initializers, init blocks, enum constant initializers,
-     *           annotation default values).</li>
-     *     </ul>
-     *   </li>
-     *   <li>Ignore lazy/external execution contexts when collecting field accesses (to avoid false edges):
-     *     <ul>
-     *       <li>Do not traverse into lambdas and method references.</li>
-     *       <li>Do not traverse into anonymous/local/nested type bodies declared inside initializers.</li>
-     *     </ul>
-     *   </li>
-     *   <li>Consider exceptions for compile-time constants:
-     *     <ul>
-     *       <li>References to constant variables may not need ordering constraints.</li>
-     *     </ul>
-     *   </li>
-     *   <li>Consider write-vs-read semantics:
-     *     <ul>
-     *       <li>Writes/assignments (LHS) should not be treated as reads that require provider-before-dependent edges.</li>
-     *     </ul>
-     *   </li>
-     * </ul>
-     * <p>
-     * Goal: fewer artificial edges (still correct), better flexibility for grouping/sorting.
+     * Finds fields declared in the same type that act as provider-members for a dependent initialization member.
      */
-    static Set<CtField<?>> findReferencedFields(
-            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentAstRoot) {
+    @NonNull
+    static Set<CtField<?>> findProviderFieldsRequiredByDependentMember(
+            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
+
+        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
+                .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
+                .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(member);
+        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class)
+                .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(member);
+        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
+                .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldAccessesInSameType(
+            CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
+        TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
+        return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
+                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
+                .filter(fieldAccess -> resolveFieldDeclaration(fieldAccess)
+                        .map(field -> isDeclaredInType(field, declaringType))
+                        .orElse(false));
+    }
+
+    @NonNull
+    private static Optional<CtField<?>> resolveFieldDeclaration(CtFieldAccess<?> fieldAccess) {
+        CtFieldReference<?> fieldReference = fieldAccess.getVariable();
+        return Optional.ofNullable(fieldReference.getDeclaration());
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isDeclaredInType(CtField<?> fieldDeclaration, CtType<?> declaringType) {
+        return fieldDeclaration.getDeclaringType() == declaringType;
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isPureWriteOnlyAssignment(CtFieldAccess<?> fieldAccess) {
+        if (!(fieldAccess instanceof CtFieldWrite<?>)) {
+            return false;
+        }
+
+        CtElement parent = fieldAccess.getParent();
+        if (!(parent instanceof CtAssignment<?, ?> assignment) || parent instanceof CtOperatorAssignment<?, ?>) {
+            return false;
+        }
+
+        return assignment.getAssigned() == fieldAccess;
+    }
+
+    private static boolean isProviderDeclaredBeforeDependentMember(
+            CtTypeMember providerMember, CtTypeMember dependentMember) {
         int dependentSourceStart = requireSourceStart(dependentMember);
-
-        return collectReferencedDeclaringTypeFields(
-                dependentAstRoot,
-                declaringType,
-                CtFieldAccess.class,
-                // TODO Reconsider to use isProviderDeclaredBeforeDependent for each case
-                referencedField -> isProviderDeclaredBeforeDependent(referencedField, dependentSourceStart));
-    }
-
-    static Set<CtField<?>> findReadFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectReferencedDeclaringTypeFields(astRoot, declaringType, CtFieldRead.class, referencedField -> true);
-    }
-
-    static Set<CtField<?>> findWrittenFields(@NonNull CtTypeMember dependentMember, @NonNull CtElement astRoot) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
-        return collectReferencedDeclaringTypeFields(
-                astRoot, declaringType, CtFieldWrite.class, referencedField -> true);
-    }
-
-    private static boolean isProviderDeclaredBeforeDependent(CtTypeMember providerMember, int dependentSourceStart) {
         int providerSourceStart = requireSourceStart(providerMember);
         return providerSourceStart < dependentSourceStart;
     }
 
-    static int requireSourceStart(CtTypeMember typeMember) {
+    static int requireSourceStart(@NonNull CtTypeMember typeMember) {
         SourcePosition memberPosition = typeMember.getPosition();
         if (memberPosition != null && memberPosition.isValidPosition()) {
             return memberPosition.getSourceStart();
@@ -117,24 +124,6 @@ class DeclaringTypeFieldReferenceUtils {
                         + "CtType.getTypeMembers()). "
                         + "typeMember=" + typeMember.getShortRepresentation()
                         + ", position=" + memberPosition);
-    }
-
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static <T extends CtFieldAccess<?>> Set<CtField<?>> collectReferencedDeclaringTypeFields(
-            CtElement dependentAstRoot,
-            CtType<?> declaringType,
-            Class<T> fieldAccessClass,
-            Predicate<CtField<?>> additionalFieldFilter) {
-        TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        List<T> dependentAstRootElements = dependentAstRoot.getElements(fieldAccessTypeFilter);
-        return dependentAstRootElements.stream()
-                .filter(fieldAccess -> !isInsideLazyContext(declaringType, dependentAstRoot, fieldAccess))
-                .map(CtFieldAccess::getVariable)
-                .map(CtFieldReference::getDeclaration)
-                .filter(Objects::nonNull)
-                .filter(referencedField -> referencedField.getDeclaringType() == declaringType)
-                .filter(additionalFieldFilter)
-                .collect(Collectors.toUnmodifiableSet());
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
