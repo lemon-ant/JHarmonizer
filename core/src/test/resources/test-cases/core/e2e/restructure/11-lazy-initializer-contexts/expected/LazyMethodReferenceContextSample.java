@@ -11,10 +11,10 @@ public class LazyMethodReferenceContextSample {
     static int bIndependent = 3;
 
     // Intentionally placed before aDependent in input to provoke a potential false declaration dependency.
-    static Integer zProvider = 7;
+    static final String zProvider = "7";
 
     public static void main(String[] args) {
-        if (!"7".equals(aDependent.get()) || bIndependent != 3 || zProvider != 7) {
+        if (!"7".equals(aDependent.get()) || bIndependent != 3 || !"7".equals(zProvider)) {
             throw new IllegalStateException(
                     "Unexpected field values: aDependent=" + aDependent.get() + ", bIndependent=" + bIndependent
                             + ", zProvider=" + zProvider);
