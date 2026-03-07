@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-public class BlankFinalOptimizedProviderPendingComplexSample {
+public class BlankFinalOptimizedProviderComplexSample {
     private static final int STATIC_BLANK_FINAL;
     private static int staticNoise = 0;
 
@@ -28,7 +28,7 @@ public class BlankFinalOptimizedProviderPendingComplexSample {
     private final int A_INSTANCE_READ = INSTANCE_BLANK_FINAL + 1;
 
     public static void main(String[] args) {
-        BlankFinalOptimizedProviderPendingComplexSample sample = new BlankFinalOptimizedProviderPendingComplexSample();
+        BlankFinalOptimizedProviderComplexSample sample = new BlankFinalOptimizedProviderComplexSample();
         if (B_STATIC_READ != 11 || sample.A_INSTANCE_READ != 21) {
             throw new IllegalStateException("Unexpected values: B_STATIC_READ=" + B_STATIC_READ
                     + ", A_INSTANCE_READ=" + sample.A_INSTANCE_READ);

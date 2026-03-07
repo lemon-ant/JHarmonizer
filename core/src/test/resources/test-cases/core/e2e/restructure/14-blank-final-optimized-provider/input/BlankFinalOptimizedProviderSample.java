@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-public class BlankFinalOptimizedProviderPendingSample {
+public class BlankFinalOptimizedProviderSample {
 
     static {
         STATIC_BLANK_FINAL = 10;

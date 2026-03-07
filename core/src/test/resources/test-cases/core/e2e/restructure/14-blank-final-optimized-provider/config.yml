@@ -11,7 +11,7 @@ top-level-types-ordering:
     - [ class ]
   sort-keys: [ preserve ]
 type-members-ordering:
-  - name: Blank-final optimized provider pending
+  - name: Blank-final optimized provider
     includes: ~.*
     sort-keys: preserve
     groups:
@@ -23,3 +23,13 @@ type-members-ordering:
         separator: none
         sort-keys: preserve
         includes: [ static, initializer ]
+      - name: Instance fields
+        separator: none
+        sort-keys: alpha
+        includes: field
+        excludes: [ static ]
+      - name: Instance initializers
+        separator: none
+        sort-keys: preserve
+        includes: initializer
+        excludes: [ static ]
