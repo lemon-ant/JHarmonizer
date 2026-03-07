@@ -392,6 +392,33 @@ class MemberDependencyGraphBuilderTest {
                         Constants.BLANK_FINAL_FIELD_MEMBER, Constants.INSTANCE_INITIALIZER_BLOCK_MEMBER);
     }
 
+
+    @Test
+    void buildDependencyGraph_blankFinalStaticRead_hasDependenciesFromFieldAndStaticInitializerOnly() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.BLANK_FINAL_STATIC_READ_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.BLANK_FINAL_STATIC_READ_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders)
+                .containsExactlyInAnyOrder(
+                        Constants.BLANK_FINAL_STATIC_FIELD_MEMBER,
+                        Constants.BLANK_FINAL_STATIC_INITIALIZER_BLOCK_MEMBER);
+        assertThat(memberDependencyGraph.findDirectProviders(
+                        Constants.BLANK_FINAL_STATIC_INITIALIZER_BLOCK_MEMBER,
+                        EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY)))
+                .doesNotContain(Constants.BLANK_FINAL_STATIC_FIELD_MEMBER);
+        assertThat(memberDependencyGraph.findDirectProviders(
+                        Constants.BLANK_FINAL_STATIC_FIELD_MEMBER,
+                        EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY)))
+                .doesNotContain(Constants.BLANK_FINAL_STATIC_INITIALIZER_BLOCK_MEMBER);
+    }
+
     @Test
     void buildDependencyGraph_naturalGroupNull_illegalStateExceptionThrown() {
         // Given
@@ -825,6 +852,21 @@ class MemberDependencyGraphBuilderTest {
         private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
         */
+
+
+        private static final URL BLANK_FINAL_STATIC_READ_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
+                "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalStaticReadWithStaticInitializerFixture.java");
+        private static final CtType<?> BLANK_FINAL_STATIC_READ_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(BLANK_FINAL_STATIC_READ_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup> BLANK_FINAL_STATIC_READ_MEMBERS =
+                buildTypeMember2NaturalGroup(
+                        BLANK_FINAL_STATIC_READ_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember BLANK_FINAL_STATIC_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_STATIC_READ_MEMBERS, "STATIC_BLANK_FINAL");
+        private static final CtTypeMember BLANK_FINAL_STATIC_READ_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_STATIC_READ_MEMBERS, "B_STATIC_READ");
+        private static final CtTypeMember BLANK_FINAL_STATIC_INITIALIZER_BLOCK_MEMBER =
+                requireUniqueInitializerBlockMember(BLANK_FINAL_STATIC_READ_FIXTURE_MAIN_TYPE, true);
 
         private static final URL BLANK_FINAL_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalDefiniteAssignmentBuilderFixture.java");
