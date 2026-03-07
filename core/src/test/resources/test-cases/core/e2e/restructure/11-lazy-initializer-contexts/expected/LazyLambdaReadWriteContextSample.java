@@ -6,7 +6,7 @@ public class LazyLambdaReadWriteContextSample {
     // Lambda body reads and writes class fields, but this is lazy/deferred execution context
     // and must not force eager provider-before-dependent declaration ordering.
     static Runnable aDependent = () -> {
-        zProvider += bIndependent;
+        LazyLambdaReadWriteContextSample.zProvider += LazyLambdaReadWriteContextSample.bIndependent;
     };
     static int bIndependent = 3;
 
