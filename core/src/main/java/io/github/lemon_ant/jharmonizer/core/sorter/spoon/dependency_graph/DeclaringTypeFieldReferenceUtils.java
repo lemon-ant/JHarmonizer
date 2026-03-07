@@ -75,7 +75,6 @@ class DeclaringTypeFieldReferenceUtils {
             CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
-                // TODO Check that we need it for all providers
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> resolveFieldDeclaration(fieldAccess)
                         .map(field -> isDeclaredInType(field, declaringType))
