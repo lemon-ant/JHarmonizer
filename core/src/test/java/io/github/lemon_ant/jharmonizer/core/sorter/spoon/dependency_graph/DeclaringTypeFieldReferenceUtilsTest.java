@@ -3,9 +3,10 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.requireTypeMemberBySimpleName;
-import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.getTestResource;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.URL;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtField;
@@ -14,22 +15,20 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class DeclaringTypeFieldReferenceUtilsTest {
 
-    private static final java.net.URL LAZY_CONTEXT_FIXTURE_RESOURCE = getTestResource(
+    private static final URL LAZY_CONTEXT_FIXTURE_RESOURCE = requireClasspathResourceUrl(
             "/test-cases/core/sorter/spoon/dependency-graph/valid/DeclaringTypeFieldReferenceUtilsLazyContextFixture.java");
 
     @Test
-    void findFieldsWrittenByMember_lambdaBodyWrite_isDetected() {
+    void findFieldsWrittenByMember_lambdaBodyWrite_regressionForConfigurableLazyFilter() {
         // Given
-        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(LAZY_CONTEXT_FIXTURE_RESOURCE);
-        Set<CtTypeMember> typeMembers = streamExplicitSourceTypeMembers(fixtureType)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-        CtField<?> lambdaWriterField = (CtField<?>) requireTypeMemberBySimpleName(typeMembers, "lambdaWriter");
+        CtField<?> lambdaWriterField = requireLambdaWriterField();
 
         // When
         Set<CtField<?>> writtenFields = DeclaringTypeFieldReferenceUtils.findFieldsWrittenByMember(
                 lambdaWriterField, lambdaWriterField.getDefaultExpression());
 
         // Then
+        // This is a regression check: with old always-on lazy filtering this assertion failed.
         assertThat(writtenFields)
                 .extracting(CtField::getSimpleName)
                 .containsExactly("value");
@@ -38,10 +37,7 @@ class DeclaringTypeFieldReferenceUtilsTest {
     @Test
     void findFieldsReadByMember_lambdaBodyRead_isIgnored() {
         // Given
-        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(LAZY_CONTEXT_FIXTURE_RESOURCE);
-        Set<CtTypeMember> typeMembers = streamExplicitSourceTypeMembers(fixtureType)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-        CtField<?> lambdaWriterField = (CtField<?>) requireTypeMemberBySimpleName(typeMembers, "lambdaWriter");
+        CtField<?> lambdaWriterField = requireLambdaWriterField();
 
         // When
         Set<CtField<?>> readFields =
@@ -49,5 +45,13 @@ class DeclaringTypeFieldReferenceUtilsTest {
 
         // Then
         assertThat(readFields).isEmpty();
+    }
+
+    private static CtField<?> requireLambdaWriterField() {
+        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(LAZY_CONTEXT_FIXTURE_RESOURCE);
+        Set<CtTypeMember> typeMembers = streamExplicitSourceTypeMembers(fixtureType)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+
+        return (CtField<?>) requireTypeMemberBySimpleName(typeMembers, "lambdaWriter");
     }
 }
