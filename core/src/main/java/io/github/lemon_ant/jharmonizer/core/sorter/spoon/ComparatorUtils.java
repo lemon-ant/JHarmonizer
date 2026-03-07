@@ -18,8 +18,8 @@ class ComparatorUtils {
     static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
             @NonNull Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider,
             @NonNull Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator) {
-        return Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator)
-                .thenComparing(ComparatorUtils::compareByFieldBeforeInitializerForBaseOrder);
+        return Comparator.comparingInt(ComparatorUtils::deriveFieldBeforeInitializerRank)
+                .thenComparing(typeMember -> sortKeyValuesProvider.apply(typeMember), sortKeyValuesComparator);
     }
 
     @NonNull
@@ -97,21 +97,16 @@ class ComparatorUtils {
     }
 
 
-    private static int compareByFieldBeforeInitializerForBaseOrder(
-            CtTypeMember leftMember, CtTypeMember rightMember) {
-        boolean leftIsField = leftMember instanceof CtField<?>;
-        boolean rightIsField = rightMember instanceof CtField<?>;
-        boolean leftIsInitializer = leftMember instanceof CtAnonymousExecutable;
-        boolean rightIsInitializer = rightMember instanceof CtAnonymousExecutable;
-
-        if (leftIsField && rightIsInitializer) {
-            return -1;
+    private static int deriveFieldBeforeInitializerRank(CtTypeMember member) {
+        if (member instanceof CtField<?>) {
+            return 0;
         }
-        if (leftIsInitializer && rightIsField) {
+
+        if (member instanceof CtAnonymousExecutable) {
             return 1;
         }
 
-        return 0;
+        return 2;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
