@@ -393,6 +393,25 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
+    void buildDependencyGraph_blankFinalReadProviderWriteInsideLambda_providerDetectedByWriteScan() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.BLANK_FINAL_LAZY_WRITE_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.BLANK_FINAL_LAZY_WRITE_READ_AFTER_ASSIGNMENT_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        // Regression intent: this must fail if findFieldsWrittenByMember starts excluding lazy contexts.
+        assertThat(directProviders)
+                .containsExactlyInAnyOrder(
+                        Constants.BLANK_FINAL_LAZY_WRITE_BLANK_FINAL_FIELD_MEMBER,
+                        Constants.BLANK_FINAL_LAZY_WRITE_PROVIDER_FIELD_MEMBER);
+    }
+
+    @Test
     void buildDependencyGraph_naturalGroupNull_illegalStateExceptionThrown() {
         // Given
         Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalGroup =
@@ -838,6 +857,20 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_MEMBERS, "READ_AFTER_ASSIGNMENT");
         private static final CtTypeMember INSTANCE_INITIALIZER_BLOCK_MEMBER =
                 requireUniqueInitializerBlockMember(BLANK_FINAL_FIXTURE_MAIN_TYPE, false);
+
+        private static final URL BLANK_FINAL_LAZY_WRITE_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
+                "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalLazyWriteInLambdaBuilderFixture.java");
+        private static final CtType<?> BLANK_FINAL_LAZY_WRITE_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(BLANK_FINAL_LAZY_WRITE_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup> BLANK_FINAL_LAZY_WRITE_MEMBERS =
+                buildTypeMember2NaturalGroup(
+                        BLANK_FINAL_LAZY_WRITE_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember BLANK_FINAL_LAZY_WRITE_BLANK_FINAL_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_LAZY_WRITE_MEMBERS, "BLANK_FINAL");
+        private static final CtTypeMember BLANK_FINAL_LAZY_WRITE_PROVIDER_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_LAZY_WRITE_MEMBERS, "PROVIDER");
+        private static final CtTypeMember BLANK_FINAL_LAZY_WRITE_READ_AFTER_ASSIGNMENT_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_LAZY_WRITE_MEMBERS, "READ_AFTER_ASSIGNMENT");
 
         private Constants() {}
     }
