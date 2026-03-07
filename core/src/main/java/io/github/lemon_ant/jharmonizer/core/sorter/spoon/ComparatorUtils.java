@@ -15,10 +15,11 @@ import spoon.reflect.declaration.CtTypeMember;
 @SuppressWarnings("PMD.TooManyMethods")
 class ComparatorUtils {
 
-    static @NonNull Comparator<CtTypeMember> buildTypeMemberComparator(
+    static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
             @NonNull Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider,
             @NonNull Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator) {
-        return Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator);
+        return Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator)
+                .thenComparing(ComparatorUtils::compareByFieldBeforeInitializerForBaseOrder);
     }
 
     @NonNull
@@ -45,13 +46,6 @@ class ComparatorUtils {
             if (representativeComparison != 0) {
                 return representativeComparison;
             }
-
-            int fieldBeforeInitializerComparison = compareByFieldBeforeInitializerWhenSameRepresentative(
-                    leftSortable.getTypeMember(), rightSortable.getTypeMember());
-            if (fieldBeforeInitializerComparison != 0) {
-                return fieldBeforeInitializerComparison;
-            }
-
             return compareByBaseComparatorOrThrow(leftSortable, rightSortable, sortableBaseComparator);
         };
     }
@@ -103,7 +97,7 @@ class ComparatorUtils {
     }
 
 
-    private static int compareByFieldBeforeInitializerWhenSameRepresentative(
+    private static int compareByFieldBeforeInitializerForBaseOrder(
             CtTypeMember leftMember, CtTypeMember rightMember) {
         boolean leftIsField = leftMember instanceof CtField<?>;
         boolean rightIsField = rightMember instanceof CtField<?>;
