@@ -1,12 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class BlankFinalOptimizedProviderPendingSample {
+    private static int staticNoise = 0;
     private static final int STATIC_BLANK_FINAL;
 
     static {
-        if (false) {
-            STATIC_BLANK_FINAL = -1;
-        }
+        staticNoise++;
     }
 
     static {
@@ -15,12 +14,11 @@ public class BlankFinalOptimizedProviderPendingSample {
 
     private static final int B_STATIC_READ = STATIC_BLANK_FINAL + 1;
 
+    private int instanceNoise = 0;
     private final int INSTANCE_BLANK_FINAL;
 
     {
-        if (false) {
-            INSTANCE_BLANK_FINAL = -1;
-        }
+        instanceNoise++;
     }
 
     {
@@ -34,6 +32,11 @@ public class BlankFinalOptimizedProviderPendingSample {
         if (B_STATIC_READ != 11 || sample.A_INSTANCE_READ != 21) {
             throw new IllegalStateException("Unexpected values: B_STATIC_READ=" + B_STATIC_READ
                     + ", A_INSTANCE_READ=" + sample.A_INSTANCE_READ);
+        }
+
+        if (staticNoise != 1 || sample.instanceNoise != 1) {
+            throw new IllegalStateException("Unexpected noise values: staticNoise=" + staticNoise
+                    + ", instanceNoise=" + sample.instanceNoise);
         }
     }
 }
