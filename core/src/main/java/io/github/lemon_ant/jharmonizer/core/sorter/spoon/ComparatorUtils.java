@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.function.Function;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtAnonymousExecutable;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
@@ -42,6 +44,12 @@ class ComparatorUtils {
                     compareByRepresentatives(leftSortable, rightSortable, typeMemberBaseComparator);
             if (representativeComparison != 0) {
                 return representativeComparison;
+            }
+
+            int fieldBeforeInitializerComparison = compareByFieldBeforeInitializerWhenSameRepresentative(
+                    leftSortable.getTypeMember(), rightSortable.getTypeMember());
+            if (fieldBeforeInitializerComparison != 0) {
+                return fieldBeforeInitializerComparison;
             }
 
             return compareByBaseComparatorOrThrow(leftSortable, rightSortable, sortableBaseComparator);
@@ -89,6 +97,24 @@ class ComparatorUtils {
 
         if (leftMustBeBeforeRight) {
             throw new IllegalStateException(composeCyclicDeclarationDependencyMessage(leftSortable, rightSortable));
+        }
+
+        return 0;
+    }
+
+
+    private static int compareByFieldBeforeInitializerWhenSameRepresentative(
+            CtTypeMember leftMember, CtTypeMember rightMember) {
+        boolean leftIsField = leftMember instanceof CtField<?>;
+        boolean rightIsField = rightMember instanceof CtField<?>;
+        boolean leftIsInitializer = leftMember instanceof CtAnonymousExecutable;
+        boolean rightIsInitializer = rightMember instanceof CtAnonymousExecutable;
+
+        if (leftIsField && rightIsInitializer) {
+            return -1;
+        }
+        if (leftIsInitializer && rightIsField) {
+            return 1;
         }
 
         return 0;

@@ -13,9 +13,11 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 
 class GroupMembersOrdererSortKeysTest {
 
@@ -240,6 +242,40 @@ class GroupMembersOrdererSortKeysTest {
                 .containsExactly(getValueMethodMember, middleMethodMember, setValueMethodMember);
     }
 
+
+    @Test
+    void orderMembersInsideGroups_sameRepresentativeFieldAndInitializer_fieldComesFirst() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup =
+                CompiledMemberGroupTestCreator.createCompiledMemberGroup("alpha-static-tie", false, List.of(SortKey.ALPHA));
+
+        CtTypeMember readFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS, "READ");
+        CtTypeMember valueFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS, "VALUE");
+        CtTypeMember staticInitializerMember = Constants.FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS.stream()
+                .filter(CtAnonymousExecutable.class::isInstance)
+                .filter(typeMember -> typeMember.getModifiers().contains(ModifierKind.STATIC))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Static initializer was not found in tie fixture"));
+
+        MemberGroupBlock inputBlock =
+                new MemberGroupBlock(compiledMemberGroup, List.of(staticInitializerMember, readFieldMember, valueFieldMember));
+
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                readFieldMember, compiledMemberGroup,
+                valueFieldMember, compiledMemberGroup,
+                staticInitializerMember, compiledMemberGroup));
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(valueFieldMember, staticInitializerMember, readFieldMember);
+    }
+
     private static CtTypeMember requireFixtureMemberBySimpleName(String expectedSimpleName) {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.FIXTURE_MEMBERS, expectedSimpleName);
     }
@@ -275,6 +311,16 @@ class GroupMembersOrdererSortKeysTest {
     }
 
     private static final class Constants {
+
+        private static final String FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE =
+                "/test-cases/core/sorter/spoon/group-member-ordering/valid/GroupMemberOrderingFieldInitializerTieFixture.java";
+        private static final URL FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL =
+                GroupMembersOrdererSortKeysTest.class.getResource(FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
+        private static final CtType<?> FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL);
+        private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS =
+                streamExplicitSourceTypeMembers(FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE).toList();
+
         private static final String FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-member-ordering/valid/GroupMemberOrderingFixture.java";
         private static final URL FIXTURE_RESOURCE_URL =
