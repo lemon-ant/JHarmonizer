@@ -47,7 +47,11 @@ class DeclaringTypeFieldReferenceUtils {
             @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
 
-        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
+        return streamFieldAccessesInSameType(
+                        dependentMemberAstRoot,
+                        declaringType,
+                        CtFieldAccess.class,
+                        true)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
@@ -57,7 +61,7 @@ class DeclaringTypeFieldReferenceUtils {
     @NonNull
     static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
-        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class)
+        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class, true)
                 .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -65,18 +69,26 @@ class DeclaringTypeFieldReferenceUtils {
     @NonNull
     static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
-        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
+        return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class, false)
                 .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @NonNull
     private static <T extends CtFieldAccess<?>> Stream<T> streamFieldAccessesInSameType(
-            CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
+            CtElement memberAstRoot,
+            CtType<?> declaringType,
+            Class<T> fieldAccessClass,
+            boolean excludeLazyContexts) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
-                // TODO Check that we need it for all providers
-                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
+        Stream<T> fieldAccesses = memberAstRoot.getElements(fieldAccessTypeFilter).stream();
+
+        if (excludeLazyContexts) {
+            fieldAccesses =
+                    fieldAccesses.filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess));
+        }
+
+        return fieldAccesses
                 .filter(fieldAccess -> resolveFieldDeclaration(fieldAccess)
                         .map(field -> isDeclaredInType(field, declaringType))
                         .orElse(false));
