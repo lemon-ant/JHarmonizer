@@ -14,17 +14,22 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class DeclaringTypeFieldReferenceUtilsTest {
 
+    private static final java.net.URL LAZY_CONTEXT_FIXTURE_RESOURCE = getTestResource(
+            "/test-cases/core/sorter/spoon/dependency-graph/valid/DeclaringTypeFieldReferenceUtilsLazyContextFixture.java");
+
     @Test
     void findFieldsWrittenByMember_lambdaBodyWrite_isDetected() {
-        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(Constants.LAZY_CONTEXT_FIXTURE_RESOURCE);
+        // Given
+        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(LAZY_CONTEXT_FIXTURE_RESOURCE);
         Set<CtTypeMember> typeMembers = streamExplicitSourceTypeMembers(fixtureType)
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());
-
         CtField<?> lambdaWriterField = (CtField<?>) requireTypeMemberBySimpleName(typeMembers, "lambdaWriter");
 
+        // When
         Set<CtField<?>> writtenFields = DeclaringTypeFieldReferenceUtils.findFieldsWrittenByMember(
                 lambdaWriterField, lambdaWriterField.getDefaultExpression());
 
+        // Then
         assertThat(writtenFields)
                 .extracting(CtField::getSimpleName)
                 .containsExactly("value");
@@ -32,22 +37,17 @@ class DeclaringTypeFieldReferenceUtilsTest {
 
     @Test
     void findFieldsReadByMember_lambdaBodyRead_isIgnored() {
-        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(Constants.LAZY_CONTEXT_FIXTURE_RESOURCE);
+        // Given
+        CtType<?> fixtureType = parseMainTypeFromJavaFixtureResource(LAZY_CONTEXT_FIXTURE_RESOURCE);
         Set<CtTypeMember> typeMembers = streamExplicitSourceTypeMembers(fixtureType)
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());
-
         CtField<?> lambdaWriterField = (CtField<?>) requireTypeMemberBySimpleName(typeMembers, "lambdaWriter");
 
+        // When
         Set<CtField<?>> readFields =
                 DeclaringTypeFieldReferenceUtils.findFieldsReadByMember(lambdaWriterField, lambdaWriterField.getDefaultExpression());
 
+        // Then
         assertThat(readFields).isEmpty();
-    }
-
-    private static final class Constants {
-        private static final java.net.URL LAZY_CONTEXT_FIXTURE_RESOURCE = getTestResource(
-                "/test-cases/core/sorter/spoon/dependency-graph/valid/DeclaringTypeFieldReferenceUtilsLazyContextFixture.java");
-
-        private Constants() {}
     }
 }
