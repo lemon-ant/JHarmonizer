@@ -23,3 +23,28 @@ It parses Java source, resolves grouping/sorting rules, applies dependency-safe 
   - handle recursion/cycles safely and conservatively.
 
 Details and implementation notes are tracked in [docs/TODO.md](docs/TODO.md).
+
+## Build
+
+Default (local / IDE / CI that relies on project config):
+
+```bash
+mvn -B -ntp verify
+```
+
+This uses `.mvn/maven.config`, which points to `.mvn/settings.xml`.
+
+Codex/runtime mode (proxy-enabled settings override via environment variable):
+
+```bash
+export MAVEN_ARGS="--settings .mvn/settings-codex.xml"
+mvn -B -ntp verify
+```
+
+Recommended Codex env var value:
+
+```bash
+MAVEN_ARGS=--settings\ .mvn/settings-codex.xml
+```
+
+So local environments keep using `.mvn/settings.xml`, while Codex overrides settings through `MAVEN_ARGS` only.
