@@ -334,8 +334,8 @@ Implication:
 - Keep qualifier-shape backlog (former discussion item #4) and explicit-type instance-referrer backlog (item #5) as separate tracks until both are implemented and validated.
 
 ### Parked fixture candidate for item #4 qualifier-shape coverage
-- `core/src/test/resources/test-cases/core/e2e/restructure/12-explicit-forward-qualified-forms/input/FQ01OuterThisAnonInitEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/12-explicit-forward-qualified-forms/expected/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/14-explicit-forward-qualified-forms/input/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/14-explicit-forward-qualified-forms/expected/FQ01OuterThisAnonInitEscapedSample.~java`
 
 ---
 
