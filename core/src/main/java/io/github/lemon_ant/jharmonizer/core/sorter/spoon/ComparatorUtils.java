@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingRuleValues;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -16,10 +16,10 @@ import spoon.reflect.declaration.CtTypeMember;
 class ComparatorUtils {
 
     static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
-            @NonNull Function<CtTypeMember, OrderingRuleValues> orderingRuleValuesProvider,
-            @NonNull Comparator<SortableTypeMember.OrderingRuleValues> orderingRuleValuesComparator) {
+            @NonNull Function<CtTypeMember, OrderingKey> orderingKeyProvider,
+            @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return Comparator.comparingInt(ComparatorUtils::deriveFieldBeforeInitializerRank)
-                .thenComparing(orderingRuleValuesProvider, orderingRuleValuesComparator);
+                .thenComparing(orderingKeyProvider, orderingKeyComparator);
     }
 
     @NonNull
@@ -50,21 +50,21 @@ class ComparatorUtils {
     }
 
     @NonNull
-    static Comparator<SortableTypeMember.OrderingRuleValues> buildOrderingRuleValuesComparator(@NonNull List<OrderingRule> orderingRules) {
-        Comparator<SortableTypeMember.OrderingRuleValues> configuredComparator = orderingRules.stream()
-                .map(ComparatorUtils::buildOrderingRuleValuesComparatorForOrderingRule)
+    static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(@NonNull List<OrderingRule> orderingRules) {
+        Comparator<SortableTypeMember.OrderingKey> configuredComparator = orderingRules.stream()
+                .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.OrderingRuleValues::getSourceStart)
-                        .thenComparing(SortableTypeMember.OrderingRuleValues::getAlphaKey));
+                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSourceStart)
+                        .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey));
 
         // Deterministic tie-breakers regardless of configured keys.
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
             configuredComparator =
-                    configuredComparator.thenComparing(buildOrderingRuleValuesComparatorForOrderingRule(OrderingRule.PRESERVE));
+                    configuredComparator.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE));
         }
         if (!orderingRules.contains(OrderingRule.ALPHA)) {
             configuredComparator =
-                    configuredComparator.thenComparing(buildOrderingRuleValuesComparatorForOrderingRule(OrderingRule.ALPHA));
+                    configuredComparator.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA));
         }
 
         return configuredComparator;
@@ -141,14 +141,14 @@ class ComparatorUtils {
     }
 
     @NonNull
-    private static Comparator<SortableTypeMember.OrderingRuleValues> buildOrderingRuleValuesComparatorForOrderingRule(
+    private static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparatorForOrderingRule(
             OrderingRule orderingRule) {
         return switch (orderingRule) {
-            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingRuleValues::getSourceStart);
-            case ALPHA -> Comparator.comparing(SortableTypeMember.OrderingRuleValues::getAlphaKey);
-            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingRuleValues::getVisibilityRank);
+            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSourceStart);
+            case ALPHA -> Comparator.comparing(SortableTypeMember.OrderingKey::getAlphaKey);
+            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
             case VISIBILITY_DESC ->
-                buildOrderingRuleValuesComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC).reversed();
+                buildOrderingComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC).reversed();
         };
     }
 
@@ -179,13 +179,13 @@ class ComparatorUtils {
                 + "\n"
                 + "Right representative: " + describeTypeMemberForDebug(rightSortable.getRepresentativeTypeMember())
                 + "\n"
-                + "Hint: ensure the OrderingRuleValues comparator has a deterministic tie-breaker for representatives.";
+                + "Hint: ensure the OrderingKey comparator has a deterministic tie-breaker for representatives.";
     }
 
     @NonNull
     private static String describeSortableTypeMember(SortableTypeMember sortableTypeMember) {
         return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
-                + ", orderingRuleValues=" + sortableTypeMember.getOrderingRuleValues()
+                + ", orderingKey=" + sortableTypeMember.getOrderingKey()
                 + ", representative=" + describeTypeMemberForDebug(sortableTypeMember.getRepresentativeTypeMember())
                 + ", orderingDependentsInGroupCount="
                 + sortableTypeMember.getOrderingDependentsInGroup().size();
@@ -197,7 +197,7 @@ class ComparatorUtils {
         return "Two distinct members compare as equal by the configured base comparator, which violates deterministic ordering.\n"
                 + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
                 + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Hint: ensure the OrderingRuleValues comparator produces a strict order for distinct members "
+                + "Hint: ensure the OrderingKey comparator produces a strict order for distinct members "
                 + "(e.g., add a stable tie-breaker when all configured keys match).";
     }
 }

@@ -66,14 +66,14 @@ class GroupMembersOrderer {
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        Comparator<SortableTypeMember.OrderingRuleValues> orderingRuleValuesComparator =
-                ComparatorUtils.buildOrderingRuleValuesComparator(orderingRules);
+        Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
+                ComparatorUtils.buildOrderingComparator(orderingRules);
 
-        Function<CtTypeMember, SortableTypeMember.OrderingRuleValues> orderingRuleValuesProvider =
-                SortableTypeMember.getOrderingRuleValuesProvider();
+        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
+                SortableTypeMember.getOrderingKeyProvider();
 
         Comparator<CtTypeMember> typeMemberBaseComparator =
-                buildTypeMemberBaseComparator(orderingRuleValuesProvider, orderingRuleValuesComparator);
+                buildTypeMemberBaseComparator(orderingKeyProvider, orderingKeyComparator);
 
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
@@ -86,7 +86,7 @@ class GroupMembersOrderer {
                         memberDependencyGraph,
                         keepAccessorsTogether,
                         accessorBundleMembersByMember,
-                        orderingRuleValuesProvider,
+                        orderingKeyProvider,
                         typeMemberBaseComparator))
                 .toList();
 
@@ -105,7 +105,7 @@ class GroupMembersOrderer {
             MemberDependencyGraph memberDependencyGraph,
             boolean keepAccessorsTogether,
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
-            Function<CtTypeMember, SortableTypeMember.OrderingRuleValues> orderingRuleValuesProvider,
+            Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
 
         Set<CtTypeMember> declarationDependentsInGroup =
@@ -130,7 +130,7 @@ class GroupMembersOrderer {
         }
 
         return new SortableTypeMember(
-                typeMember, representativeTypeMember, declarationDependentsInGroup, orderingRuleValuesProvider);
+                typeMember, representativeTypeMember, declarationDependentsInGroup, orderingKeyProvider);
     }
 
     @NonNull
