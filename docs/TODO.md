@@ -334,8 +334,8 @@ Implication:
 - Keep qualifier-shape backlog (former discussion item #4) and explicit-type instance-referrer backlog (item #5) as separate tracks until both are implemented and validated.
 
 ### Parked fixture candidate for item #4 qualifier-shape coverage
-- `core/src/test/resources/test-cases/core/e2e/restructure/12-explicit-forward-qualified-forms/input/FQ01OuterThisInAnonymousInitializerEscapedPendingValidationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/12-explicit-forward-qualified-forms/expected/FQ01OuterThisInAnonymousInitializerEscapedPendingValidationSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/12-explicit-forward-qualified-forms/input/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/12-explicit-forward-qualified-forms/expected/FQ01OuterThisAnonInitEscapedSample.~java`
 
 ---
 
@@ -380,14 +380,14 @@ Current fixture is parked via escaped extension only as a temporary unblock step
 Parked fixture files (excluded from automatic E2E sweep):
 - `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
 - `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F04ExplicitTypeInstanceReferrerForwardReferenceLongChainEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F04ExplicitTypeInstanceReferrerForwardReferenceLongChainEscapedPendingImplementationSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
 Long-term target: remove parking, keep the case active, and make the pipeline pass.
 
 ---

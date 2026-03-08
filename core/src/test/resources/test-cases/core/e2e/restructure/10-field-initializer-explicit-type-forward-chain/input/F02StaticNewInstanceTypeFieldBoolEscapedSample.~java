@@ -2,9 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 // Escaped fixture (.~java): intentionally excluded from automated e2e execution.
 // Missing behavior variant: same chain but boolean default false branch.
-public class F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample {
-    private static int zzz = new F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample().aaa;
-    private int aaa = F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample.bravo ? 2 : 1;
+public class F02StaticNewInstanceTypeFieldBoolEscapedSample {
+    private static int zzz = new F02StaticNewInstanceTypeFieldBoolEscapedSample().aaa;
+    private int aaa = F02StaticNewInstanceTypeFieldBoolEscapedSample.bravo ? 2 : 1;
     private static boolean bravo = true;
 
     public static void main(String[] args) {

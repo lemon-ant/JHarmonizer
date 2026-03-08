@@ -2,9 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 // Escaped fixture (.~java): intentionally excluded from automated e2e execution.
 // Potential unsafe reordered shape without missing dependency modeling.
-public class F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample {
-    private int aaa = F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample.bravo == null ? 1 : 2;
-    private static int zzz = new F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample().aaa;
+public class F03StaticNewInstanceTypeFieldNullEscapedSample {
+    private int aaa = F03StaticNewInstanceTypeFieldNullEscapedSample.bravo == null ? 1 : 2;
+    private static int zzz = new F03StaticNewInstanceTypeFieldNullEscapedSample().aaa;
     private static String bravo = "ready";
 
     public static void main(String[] args) {

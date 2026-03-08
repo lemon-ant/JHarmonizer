@@ -2,14 +2,14 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 // Escaped fixture (.~java): intentionally excluded from automated e2e execution.
 // Missing behavior variant: longer chain static -> new instance -> instance field -> helper -> Type.field.
-public class F04ExplicitTypeInstanceReferrerForwardReferenceLongChainEscapedPendingImplementationSample {
-    private static int zzz = new F04ExplicitTypeInstanceReferrerForwardReferenceLongChainEscapedPendingImplementationSample().aaa;
+public class F04StaticNewInstanceTypeFieldLongChainEscapedSample {
+    private static int zzz = new F04StaticNewInstanceTypeFieldLongChainEscapedSample().aaa;
     private int aaa = loadBravoWithMixedQualification();
     private static int bravo = 10;
 
     private int loadBravoWithMixedQualification() {
         // Mixed TypeName. and this. usage in one initializer graph.
-        return F04ExplicitTypeInstanceReferrerForwardReferenceLongChainEscapedPendingImplementationSample.bravo
+        return F04StaticNewInstanceTypeFieldLongChainEscapedSample.bravo
                 + this.localAdjustment();
     }
 

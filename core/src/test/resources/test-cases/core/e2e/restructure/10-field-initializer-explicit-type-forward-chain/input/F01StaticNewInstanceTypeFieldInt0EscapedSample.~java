@@ -2,9 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 // Escaped fixture (.~java): intentionally excluded from automated e2e execution.
 // Missing behavior: static -> new instance -> instance field -> Type.field (primitive default 0).
-public class F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample {
-    private static int zzz = new F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample().aaa;
-    private int aaa = F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample.bravo + 1;
+public class F01StaticNewInstanceTypeFieldInt0EscapedSample {
+    private static int zzz = new F01StaticNewInstanceTypeFieldInt0EscapedSample().aaa;
+    private int aaa = F01StaticNewInstanceTypeFieldInt0EscapedSample.bravo + 1;
     private static int bravo = 10;
 
     public static void main(String[] args) {
