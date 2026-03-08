@@ -54,7 +54,6 @@ class SortableTypeMember {
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    // TODO Remove plural form
     static class OrderingKey {
         int sourceStart;
 

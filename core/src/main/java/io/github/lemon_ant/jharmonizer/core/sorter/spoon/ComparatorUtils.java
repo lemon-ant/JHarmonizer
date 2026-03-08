@@ -50,7 +50,8 @@ class ComparatorUtils {
     }
 
     @NonNull
-    static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(@NonNull List<OrderingRule> orderingRules) {
+    static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(
+            @NonNull List<OrderingRule> orderingRules) {
         Comparator<SortableTypeMember.OrderingKey> configuredComparator = orderingRules.stream()
                 .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
@@ -148,7 +149,8 @@ class ComparatorUtils {
             case ALPHA -> Comparator.comparing(SortableTypeMember.OrderingKey::getAlphaKey);
             case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
             case VISIBILITY_DESC ->
-                buildOrderingComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC).reversed();
+                buildOrderingComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC)
+                        .reversed();
         };
     }
 

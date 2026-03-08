@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -68,8 +68,8 @@ class MemberGroupCompilerTest {
                 false,
                 List.of(overriddenChild, inheritedUnderOverride),
                 List.of(UnifiedOrderingRule.ALPHA));
-        UnifiedMemberGroup root =
-                createGroup("Root", true, List.of(inheritedChild, overrideContainer), List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup root = createGroup(
+                "Root", true, List.of(inheritedChild, overrideContainer), List.of(UnifiedOrderingRule.ALPHA));
 
         // When
         List<CompiledMemberGroup> compiledRoots = MemberGroupCompiler.compileTopLevelGroups(List.of(root));

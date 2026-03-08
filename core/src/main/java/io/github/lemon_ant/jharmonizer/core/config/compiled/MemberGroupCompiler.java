@@ -92,7 +92,9 @@ class MemberGroupCompiler {
     @NonNull
     private static List<OrderingRule> mapOrderingRules(@NonNull List<UnifiedOrderingRule> unifiedOrderingRules) {
         // Unified model guarantees non-empty list; preserve order and map 1:1.
-        return unifiedOrderingRules.stream().map(MemberGroupCompiler::mapOrderingRule).toList();
+        return unifiedOrderingRules.stream()
+                .map(MemberGroupCompiler::mapOrderingRule)
+                .toList();
     }
 
     private static OrderingRule mapOrderingRule(@NonNull UnifiedOrderingRule unifiedOrderingRule) {

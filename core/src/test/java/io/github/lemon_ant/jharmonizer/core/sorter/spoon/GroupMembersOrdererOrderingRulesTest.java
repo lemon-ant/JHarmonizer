@@ -24,8 +24,8 @@ class GroupMembersOrdererOrderingRulesTest {
     @Test
     void orderMembersInsideGroups_orderingRulePreserve_keepOriginalSourceOrder() {
         // Given
-        CompiledMemberGroup compiledMemberGroup =
-                CompiledMemberGroupTestCreator.createCompiledMemberGroup("preserve", false, List.of(OrderingRule.PRESERVE));
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "preserve", false, List.of(OrderingRule.PRESERVE));
         CtTypeMember publicFieldFirstMember = requireFixtureMemberBySimpleName("publicFieldFirst");
         CtTypeMember protectedFieldMember = requireFixtureMemberBySimpleName("protectedField");
         CtTypeMember privateFieldMember = requireFixtureMemberBySimpleName("privateField");
@@ -64,8 +64,8 @@ class GroupMembersOrdererOrderingRulesTest {
     @Test
     void orderMembersInsideGroups_orderingRuleAlphaWithFields_orderAlphabetically() {
         // Given
-        CompiledMemberGroup compiledMemberGroup =
-                CompiledMemberGroupTestCreator.createCompiledMemberGroup("alpha-fields", false, List.of(OrderingRule.ALPHA));
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "alpha-fields", false, List.of(OrderingRule.ALPHA));
         CtTypeMember zuluFieldMember = requireFixtureMemberBySimpleName("zuluField");
         CtTypeMember alphaFieldMember = requireFixtureMemberBySimpleName("alphaField");
         CtTypeMember bravoFieldMember = requireFixtureMemberBySimpleName("bravoField");
@@ -314,7 +314,8 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final String FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFieldInitializerTieFixture.java";
         private static final URL FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL =
-                GroupMembersOrdererOrderingRulesTest.class.getResource(FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
+                GroupMembersOrdererOrderingRulesTest.class.getResource(
+                        FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
