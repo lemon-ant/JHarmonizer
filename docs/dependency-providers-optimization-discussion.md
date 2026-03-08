@@ -42,17 +42,6 @@
 
 ---
 
-## 4) Explicit forward providers (migrated to TODO backlog)
-
-Этот пункт полностью перенесён из discussion в `docs/TODO.md` как рабочий backlog:
-- scope clarification между discussion-item #4 и TODO item #5;
-- parked fixtures для explicit-type instance-referrer family (`F01`-`F04`);
-- parked qualifier-shape candidate (`FQ01`) для `OuterClass.this.field` формы.
-
-Содержание этого раздела удалено отсюда, чтобы не дублировать источник истины и не расходиться с TODO.
-
----
-
 ## A) LazyInitializerContextPruningProvider (только как fallback-опция)
 
 **Идея**
