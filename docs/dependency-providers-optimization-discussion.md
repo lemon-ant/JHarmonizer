@@ -20,20 +20,6 @@
 
 ---
 
-## 4) Explicit forward providers покрывают `this.field` и `Type.field`, но не все квалифицированные формы
-
-**Текущее поведение**
-- Explicit-логика опирается на qualifier matchers:
-  - `this` (не implicit)
-  - явный `TypeAccess` (не implicit)
-
-**Corner-cases для проверки/добавления**
-- `OuterClass.this.field` внутри inner class initializer.
-- Generic-qualified type access и nested type access.
-- Сценарии, где Spoon даёт implicit target иначе, чем ожидается.
-
----
-
 ## A) LazyInitializerContextPruningProvider (только как fallback-опция)
 
 **Идея**

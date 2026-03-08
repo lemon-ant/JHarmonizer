@@ -315,6 +315,30 @@ Add a new declaration dependency provider for initializer call chains:
   - [ ] interaction with existing direct initializer dependencies
 
 
+## 4.1 Scope clarification: item #4 in discussion vs parked E2E F-series
+
+_Note: discussion section #4 was migrated here; TODO is the source of truth for this backlog track._
+
+### Status
+- [x] Clarified in docs
+
+### Clarification
+The parked escaped fixtures in `restructure/10-field-initializer-explicit-type-forward-chain` (including `F01`-`F04`) cover the **item #5** family in this TODO:
+- `static zzz = new Sample().aaa;`
+- instance `aaa` reads `Sample.bravo` declared later.
+
+These fixtures **do not** fully cover the original discussion item #4 (`Explicit forward providers ... not all qualified forms`).
+That backlog area remains focused on qualifier-shape handling (`Outer.this`, nested/generic type accesses, implicit-target quirks).
+
+Implication:
+- Keep qualifier-shape backlog (former discussion item #4) and explicit-type instance-referrer backlog (item #5) as separate tracks until both are implemented and validated.
+
+### Parked fixture candidate for item #4 qualifier-shape coverage
+- `core/src/test/resources/test-cases/core/e2e/restructure/14-explicit-forward-qualified-forms/input/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/14-explicit-forward-qualified-forms/expected/FQ01OuterThisAnonInitEscapedSample.~java`
+
+---
+
 ## 5. Explicit-declaring-type instance forward-reference corner-case (parked failing E2E)
 
 ### Status
@@ -353,6 +377,17 @@ As a result, sorter can produce an order that is syntactically valid but semanti
 
 ### Very short note on temporary parking mechanism
 Current fixture is parked via escaped extension only as a temporary unblock step.
+Parked fixture files (excluded from automatic E2E sweep):
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
 Long-term target: remove parking, keep the case active, and make the pipeline pass.
 
 ---
