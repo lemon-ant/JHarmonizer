@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 @SuppressWarnings("unused")
-public class GroupMemberOrderingFieldInitializerTieFixture {
+public class GroupOrderingRuleFieldInitializerTieFixture {
 
     static {
         VALUE = 10;
@@ -9,5 +9,5 @@ public class GroupMemberOrderingFieldInitializerTieFixture {
 
     static final int VALUE;
 
-    static final int READ = GroupMemberOrderingFieldInitializerTieFixture.VALUE + 1;
+    static final int READ = GroupOrderingRuleFieldInitializerTieFixture.VALUE + 1;
 }

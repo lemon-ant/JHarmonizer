@@ -2,7 +2,7 @@ top-level-types-ordering:
   main-type-first: true
   type-groups:
     - class
-  sort-keys: preserve
+  ordering-rules: preserve
 
 formatting:
   fix-imports: true
@@ -16,7 +16,7 @@ header-line:
 
 type-members-ordering:
   - name: Synthetic root
-    sort-keys: preserve
+    ordering-rules: preserve
     includes:
       - field
       - method
@@ -29,28 +29,28 @@ type-members-ordering:
       - annotation
     groups:
       - name: Fields
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: field
         groups:
           - name: Any fields
-            sort-keys: preserve
+            ordering-rules: preserve
             includes: field
             groups:
               - name: Alpha fields
-                sort-keys: preserve
+                ordering-rules: preserve
                 includes:
                   - [field, =alpha]
 
           - name: Other fields
-            sort-keys: preserve
+            ordering-rules: preserve
             includes: field
 
       - name: Methods
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: method
 
       - name: Default Rule
-        sort-keys: preserve
+        ordering-rules: preserve
         includes:
           - field
           - method

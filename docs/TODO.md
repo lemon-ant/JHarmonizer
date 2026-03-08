@@ -25,7 +25,7 @@ Acceptance idea:
 
 ---
 
-## 1. Compile group sorting once and precompute sort keys in `MemberDescriptor`
+## 1. Compile group sorting once and precompute ordering rule values in `MemberDescriptor`
 
 ### Status
 - [ ] Not implemented (captured as a future improvement)
@@ -36,14 +36,14 @@ JHarmonizer already has a compiled layer for grouping/classification:
 selectors and rule blocks are compiled once into “ready-to-run” predicates, so we can classify `CtTypeMember`s efficiently.
 
 Sorting is still “runtime-heavy”:
-- For each group, we rebuild comparator chains based on `SortKey`s.
-- We compute sort keys (alpha key, visibility rank, signature key, etc.) repeatedly.
+- For each group, we rebuild comparator chains based on `OrderingRule`s.
+- We compute ordering rule values (alpha key, visibility rank, signature key, etc.) repeatedly.
 - We introduced extra wrapper DTOs to hold those values, but they are not integrated into the compiled pipeline.
 
 ### Problem statement
 We want sorting to be as “compiled” and deterministic as grouping:
 - No repeated comparator construction per group.
-- No repeated computation of sort keys per member.
+- No repeated computation of ordering rule values per member.
 - Cleaner separation of concerns: *classification prepares data*; *sorting consumes prepared data*.
 
 ### Proposed solution
@@ -58,7 +58,7 @@ We want sorting to be as “compiled” and deterministic as grouping:
 - any deterministic tie-breaker values currently derived on-the-fly
 
 2) **Compile a `Comparator<MemberDescriptor>` once per compiled member group**, based on:
-- group `SortKey`s (PRESERVE / ALPHA / SOURCE_ORDER / VISIBILITY_ASC / VISIBILITY_DESC / SIGNATURE)
+- group `OrderingRule`s (PRESERVE / ALPHA / SOURCE_ORDER / VISIBILITY_ASC / VISIBILITY_DESC / SIGNATURE)
 - stable tie-breakers (e.g., sourceStart, signature, deterministic id) to guarantee deterministic output
 
 3) **Reuse `MemberDescriptor` objects throughout the pipeline**:
@@ -80,7 +80,7 @@ Instead of passing raw `CtTypeMember` around, we create descriptors once:
 #### B. Where the comparator lives
 Store the comparator on the compiled group (or next to it), for example:
 - `CompiledMemberGroupSortingBehavior` (or similar) holds:
-  - `List<SortKey> sortKeys`
+  - `List<OrderingRule> orderingRules`
   - `boolean keepAccessorsTogether`
   - `Comparator<MemberDescriptor> compiledComparator`
 
@@ -112,14 +112,14 @@ This is **explicitly deferred** until the non-generic version proves beneficial.
 - Do not change output semantics (only reduce repeated work and improve structure).
 
 ### Implementation outline (when we revisit this)
-- [ ] Identify current “sort key wrapper” DTO(s) and list the computed values required.
+- [ ] Identify current “ordering rule values wrapper” DTO(s) and list the computed values required.
 - [ ] Extend `MemberDescriptor` to include those values + a reference to the original member.
 - [ ] Update the descriptor factory to compute keys once (single pass).
 - [ ] Add `Comparator<MemberDescriptor>` compilation to the compiled group stage.
 - [ ] Refactor group sorting to sort descriptors using the compiled comparator.
 - [ ] Ensure deterministic tie-breakers remain identical to the current behavior.
 - [ ] Add unit tests:
-  - [ ] comparator correctness for each `SortKey`
+  - [ ] comparator correctness for each `OrderingRule`
   - [ ] stable tie-breaking
   - [ ] `keepAccessorsTogether` scenarios
 

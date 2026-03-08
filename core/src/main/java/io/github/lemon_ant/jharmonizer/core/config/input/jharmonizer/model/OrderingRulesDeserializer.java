@@ -11,34 +11,34 @@ import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
-class SortKeysDeserializer extends JsonDeserializer<List<JHarmonizerSortKey>> {
+class OrderingRulesDeserializer extends JsonDeserializer<List<JHarmonizerOrderingRule>> {
 
     @Override
     @SuppressWarnings("PMD.CyclomaticComplexity")
-    public List<JHarmonizerSortKey> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public List<JHarmonizerOrderingRule> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         ObjectCodec codec = p.getCodec();
         JsonNode node = codec.readTree(p);
 
-        List<JHarmonizerSortKey> result = new ArrayList<>();
+        List<JHarmonizerOrderingRule> result = new ArrayList<>();
 
         if (node.isTextual()) {
             String[] parts = StringUtils.split(node.asText().trim(), ',');
             for (String part : parts) {
-                result.add(EnumDeserializerUtil.deserialize(JHarmonizerSortKey.class, part));
+                result.add(EnumDeserializerUtil.deserialize(JHarmonizerOrderingRule.class, part));
             }
         } else if (node.isArray()) {
             for (JsonNode child : node) {
                 if (!child.isTextual()) {
                     throw new IOException("Expected string in sorting array: " + child);
                 }
-                result.add(EnumDeserializerUtil.deserialize(JHarmonizerSortKey.class, child.asText()));
+                result.add(EnumDeserializerUtil.deserialize(JHarmonizerOrderingRule.class, child.asText()));
             }
         } else {
             throw new IOException("Unsupported sorting entry: " + node);
         }
 
         if (result.isEmpty()) {
-            throw new IOException("UnifiedSortKey list cannot be empty");
+            throw new IOException("UnifiedOrderingRule list cannot be empty");
         }
 
         return Collections.unmodifiableList(result);

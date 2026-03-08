@@ -9,17 +9,17 @@ top-level-types-ordering:
   main-type-first: true
   type-groups:
     - [ record ]
-  sort-keys: [ preserve ]
+  ordering-rules: [ preserve ]
 type-members-ordering:
   - name: Record ordering
     includes: ~.*
-    sort-keys: preserve
+    ordering-rules: preserve
     groups:
       - name: Record components
         separator: none
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: record-component
       - name: Methods
         separator: none
-        sort-keys: alpha
+        ordering-rules: alpha
         includes: method

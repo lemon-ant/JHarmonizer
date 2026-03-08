@@ -21,7 +21,7 @@ class SortableTypeMember {
     CtTypeMember typeMember;
 
     @NonNull
-    SortKeyValues sortKeyValues;
+    OrderingKey orderingKey;
 
     @NonNull
     CtTypeMember representativeTypeMember;
@@ -33,29 +33,28 @@ class SortableTypeMember {
             @NonNull CtTypeMember typeMember,
             @NonNull CtTypeMember representativeTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
-            Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider) {
+            Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
         this.typeMember = typeMember;
         this.representativeTypeMember = representativeTypeMember;
         this.orderingDependentsInGroup = orderingDependentsInGroup;
-        this.sortKeyValues = sortKeyValuesProvider.apply(typeMember);
+        this.orderingKey = orderingKeyProvider.apply(typeMember);
     }
 
-    static Function<CtTypeMember, SortKeyValues> getSortKeyValuesProvider() {
+    static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, SortKeyValues> sortKeyValuesByMember = new HashMap<>();
-        return typeMember -> sortKeyValuesByMember.computeIfAbsent(typeMember, SortableTypeMember::deriveSortKeyValues);
+        Map<CtTypeMember, OrderingKey> orderingKeyByMember = new HashMap<>();
+        return typeMember -> orderingKeyByMember.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
     }
 
     @NonNull
-    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(CtTypeMember typeMember) {
-        return new SortableTypeMember.SortKeyValues(
+    private static SortableTypeMember.OrderingKey deriveOrderingKey(CtTypeMember typeMember) {
+        return new SortableTypeMember.OrderingKey(
                 extractSourceStart(typeMember), deriveAlphaKey(typeMember), deriveVisibilityRank(typeMember));
     }
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    // TODO Remove plural form
-    static class SortKeyValues {
+    static class OrderingKey {
         int sourceStart;
 
         @NonNull

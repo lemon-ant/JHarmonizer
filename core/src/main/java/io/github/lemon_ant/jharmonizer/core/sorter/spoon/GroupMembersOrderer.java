@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.ComparatorUtils.buildTypeMemberBaseComparator;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import java.util.Collections;
@@ -63,17 +63,17 @@ class GroupMembersOrderer {
         }
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        List<SortKey> sortKeys = compiledMemberGroup.getSortKeys();
+        List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator =
-                ComparatorUtils.buildSortKeyValuesComparator(sortKeys);
+        Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
+                ComparatorUtils.buildOrderingComparator(orderingRules);
 
-        Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider =
-                SortableTypeMember.getSortKeyValuesProvider();
+        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
+                SortableTypeMember.getOrderingKeyProvider();
 
         Comparator<CtTypeMember> typeMemberBaseComparator =
-                buildTypeMemberBaseComparator(sortKeyValuesProvider, sortKeyValuesComparator);
+                buildTypeMemberBaseComparator(orderingKeyProvider, orderingKeyComparator);
 
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
@@ -86,7 +86,7 @@ class GroupMembersOrderer {
                         memberDependencyGraph,
                         keepAccessorsTogether,
                         accessorBundleMembersByMember,
-                        sortKeyValuesProvider,
+                        orderingKeyProvider,
                         typeMemberBaseComparator))
                 .toList();
 
@@ -105,7 +105,7 @@ class GroupMembersOrderer {
             MemberDependencyGraph memberDependencyGraph,
             boolean keepAccessorsTogether,
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
-            Function<CtTypeMember, SortableTypeMember.SortKeyValues> sortKeyValuesProvider,
+            Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
 
         Set<CtTypeMember> declarationDependentsInGroup =
@@ -130,7 +130,7 @@ class GroupMembersOrderer {
         }
 
         return new SortableTypeMember(
-                typeMember, representativeTypeMember, declarationDependentsInGroup, sortKeyValuesProvider);
+                typeMember, representativeTypeMember, declarationDependentsInGroup, orderingKeyProvider);
     }
 
     @NonNull

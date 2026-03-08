@@ -47,7 +47,7 @@ class TopLevelTypesOrderingCompiler {
 
         return new CompiledTopLevelTypesOrdering(
                 unifiedTopLevelTypesOrdering.isMainTypeFirst(),
-                unifiedTopLevelTypesOrdering.getSortKeys(),
+                unifiedTopLevelTypesOrdering.getOrderingRules(),
                 compiledTopLevelTypesSelectors);
     }
 }

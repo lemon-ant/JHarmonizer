@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +55,7 @@ class MemberGroupCompiler {
         // 2) Compile selector/sorting for the current node (whatever your project uses)
         CompiledMemberGroupSelectorBlock compiledMemberGroupSelectorBlock =
                 compileSelectorBlock(unifiedGroup.getSelectorBlock());
-        List<SortKey> compiledSortKeys = mapSortKeys(unifiedGroup.getSortKeys());
+        List<OrderingRule> compiledOrderingRules = mapOrderingRules(unifiedGroup.getOrderingRules());
 
         // 3) Assign post-order index to THIS node and advance index
         int assignedPostOrderIndex = runningIndex;
@@ -65,7 +65,7 @@ class MemberGroupCompiler {
         CompiledMemberGroup compiledCurrentGroup = CompiledMemberGroup.builder()
                 .name(unifiedGroup.getGroupName())
                 .selectorBlock(compiledMemberGroupSelectorBlock)
-                .sortKeys(compiledSortKeys)
+                .orderingRules(compiledOrderingRules)
                 .keepAccessorsTogether(keepAccessorsTogether)
                 .compiledSubGroups(compiledChildren)
                 .orderIndex(assignedPostOrderIndex)
@@ -90,17 +90,19 @@ class MemberGroupCompiler {
 
     // TODO Complete model and mapper
     @NonNull
-    private static List<SortKey> mapSortKeys(@NonNull List<UnifiedSortKey> unifiedSortKeys) {
+    private static List<OrderingRule> mapOrderingRules(@NonNull List<UnifiedOrderingRule> unifiedOrderingRules) {
         // Unified model guarantees non-empty list; preserve order and map 1:1.
-        return unifiedSortKeys.stream().map(MemberGroupCompiler::mapSortKey).toList();
+        return unifiedOrderingRules.stream()
+                .map(MemberGroupCompiler::mapOrderingRule)
+                .toList();
     }
 
-    private static SortKey mapSortKey(@NonNull UnifiedSortKey unifiedSortKey) {
-        return switch (unifiedSortKey) {
-            case ALPHA -> SortKey.ALPHA;
-            case PRESERVE -> SortKey.PRESERVE;
-            case VISIBILITY_ASC -> SortKey.VISIBILITY_ASC;
-            case VISIBILITY_DESC -> SortKey.VISIBILITY_DESC;
+    private static OrderingRule mapOrderingRule(@NonNull UnifiedOrderingRule unifiedOrderingRule) {
+        return switch (unifiedOrderingRule) {
+            case ALPHA -> OrderingRule.ALPHA;
+            case PRESERVE -> OrderingRule.PRESERVE;
+            case VISIBILITY_ASC -> OrderingRule.VISIBILITY_ASC;
+            case VISIBILITY_DESC -> OrderingRule.VISIBILITY_DESC;
         };
     }
 }

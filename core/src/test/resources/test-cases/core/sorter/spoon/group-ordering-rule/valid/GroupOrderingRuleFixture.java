@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class GroupMemberOrderingFixture {
+public class GroupOrderingRuleFixture {
 
     public int publicFieldFirst = 1;
     public int publicFieldSecond = 2;
@@ -38,5 +38,5 @@ public class GroupMemberOrderingFixture {
         this.privateField = value;
     }
 
-    private GroupMemberOrderingFixture() {}
+    private GroupOrderingRuleFixture() {}
 }

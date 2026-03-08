@@ -15,8 +15,8 @@ public class JHarmonizerConfigCreator {
     public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
             boolean mainTypeFirst,
             @NonNull List<@NonNull JHarmonizerTopLevelTypeSelector> typeGroups,
-            @NonNull List<@NonNull JHarmonizerSortKey> sortKeys) {
-        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, sortKeys);
+            @NonNull List<@NonNull JHarmonizerOrderingRule> orderingRules) {
+        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, orderingRules);
     }
 
     public static JHarmonizerTopLevelTypeSelector createTypeGroup(

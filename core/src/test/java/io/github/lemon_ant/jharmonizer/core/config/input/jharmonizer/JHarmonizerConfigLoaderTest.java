@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.File;
@@ -90,8 +90,8 @@ class JHarmonizerConfigLoaderTest {
         assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).isNotEmpty();
         topLevelTypesOrdering.getTopLevelTypeSelectors().forEach(entry -> assertThat(entry.getTypeKinds())
                 .isNotEmpty());
-        assertThat(topLevelTypesOrdering.getSortKeys())
-                .containsExactly(JHarmonizerSortKey.VISIBILITY_ASC, JHarmonizerSortKey.ALPHA);
+        assertThat(topLevelTypesOrdering.getOrderingRules())
+                .containsExactly(JHarmonizerOrderingRule.VISIBILITY_ASC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
         assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
     }

@@ -9,27 +9,27 @@ top-level-types-ordering:
   main-type-first: true
   type-groups:
     - [ class ]
-  sort-keys: [ preserve ]
+  ordering-rules: [ preserve ]
 type-members-ordering:
   - name: Blank-final optimized provider
     includes: ~.*
-    sort-keys: preserve
+    ordering-rules: preserve
     groups:
       - name: Static fields
         separator: none
-        sort-keys: alpha
+        ordering-rules: alpha
         includes: [ static, field ]
       - name: Static initializers
         separator: none
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: [ static, initializer ]
       - name: Instance fields
         separator: none
-        sort-keys: alpha
+        ordering-rules: alpha
         includes: field
         excludes: [ static ]
       - name: Instance initializers
         separator: none
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: initializer
         excludes: [ static ]

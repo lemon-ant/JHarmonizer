@@ -39,7 +39,7 @@ public class CompiledMemberGroup {
     @NonNull
     @Singular
     // TODO How to compile it???
-    List<@NonNull SortKey> sortKeys;
+    List<@NonNull OrderingRule> orderingRules;
 
     @Builder
     private CompiledMemberGroup(
@@ -49,7 +49,7 @@ public class CompiledMemberGroup {
             @Nullable String name,
             @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
             @NonNull UnifiedSeparator separator,
-            @NonNull @Singular List<@NonNull SortKey> sortKeys) {
+            @NonNull @Singular List<@NonNull OrderingRule> orderingRules) {
         this.compiledSubGroups = Collections.unmodifiableList(compiledSubGroups);
         this.keepAccessorsTogether = keepAccessorsTogether;
 
@@ -58,8 +58,8 @@ public class CompiledMemberGroup {
         this.selectorBlock = selectorBlock;
 
         this.separator = separator;
-        Validate.notEmpty(sortKeys, "Sort keys collection cannot be empty");
-        this.sortKeys = Collections.unmodifiableList(sortKeys);
+        Validate.notEmpty(orderingRules, "Ordering rules collection cannot be empty");
+        this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
     public Optional<CompiledMemberGroup> classifyRecursively(@NonNull MemberDescriptor descriptor) {
@@ -86,7 +86,7 @@ public class CompiledMemberGroup {
                 && Objects.equals(name, that.name)
                 && selectorBlock.equals(that.selectorBlock)
                 && separator == that.separator
-                && sortKeys.equals(that.sortKeys);
+                && orderingRules.equals(that.orderingRules);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class CompiledMemberGroup {
         result = 31 * result + orderIndex;
         result = 31 * result + selectorBlock.hashCode();
         result = 31 * result + separator.hashCode();
-        result = 31 * result + sortKeys.hashCode();
+        result = 31 * result + orderingRules.hashCode();
         return result;
     }
 }

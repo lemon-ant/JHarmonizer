@@ -16,7 +16,7 @@ public class UnifiedTopLevelTypesOrdering {
     boolean mainTypeFirst;
 
     @NonNull
-    List<UnifiedSortKey> sortKeys;
+    List<UnifiedOrderingRule> orderingRules;
 
     @NonNull
     List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors;
@@ -26,13 +26,13 @@ public class UnifiedTopLevelTypesOrdering {
     public UnifiedTopLevelTypesOrdering(
             boolean mainTypeFirst,
             @NonNull List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors,
-            @NonNull List<UnifiedSortKey> sortKeys) {
+            @NonNull List<UnifiedOrderingRule> orderingRules) {
         this.mainTypeFirst = mainTypeFirst;
 
         Validate.notEmpty(topLevelTypeSelectors, "typeGroups cannot be empty");
         this.topLevelTypeSelectors = Collections.unmodifiableList(topLevelTypeSelectors);
 
-        Validate.notEmpty(sortKeys, "sortKeys cannot be empty");
-        this.sortKeys = Collections.unmodifiableList(sortKeys);
+        Validate.notEmpty(orderingRules, "orderingRules cannot be empty");
+        this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 }

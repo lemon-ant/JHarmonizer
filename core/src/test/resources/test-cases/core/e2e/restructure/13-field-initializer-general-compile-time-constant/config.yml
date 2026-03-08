@@ -9,17 +9,17 @@ top-level-types-ordering:
   main-type-first: true
   type-groups:
     - [ class ]
-  sort-keys: [ preserve ]
+  ordering-rules: [ preserve ]
 type-members-ordering:
   - name: Initializers then fields
     includes: ~.*
-    sort-keys: preserve
+    ordering-rules: preserve
     groups:
       - name: Initializers
         separator: none
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: initializer
       - name: Fields
         separator: none
-        sort-keys: alpha
+        ordering-rules: alpha
         includes: field

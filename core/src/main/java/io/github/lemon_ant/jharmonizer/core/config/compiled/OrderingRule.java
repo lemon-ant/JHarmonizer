@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// TODO Rename to Rule????
-public enum SortKey {
+public enum OrderingRule {
     PRESERVE,
     ALPHA,
     VISIBILITY_ASC,
