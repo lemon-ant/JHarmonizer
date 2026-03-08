@@ -1,0 +1,16 @@
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Missing behavior: static -> new instance -> instance field -> Type.field (primitive default 0).
+public class F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample {
+    private static int zzz = new F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample().aaa;
+    private int aaa = F01ExplicitTypeInstanceReferrerForwardReferencePrimitiveZeroEscapedPendingImplementationSample.bravo + 1;
+    private static int bravo = 10;
+
+    public static void main(String[] args) {
+        // Correct behavior for original declaration order: zzz observes default bravo=0, so zzz == 1.
+        if (zzz != 1 || bravo != 10) {
+            throw new IllegalStateException("Unexpected values: zzz=" + zzz + ", bravo=" + bravo);
+        }
+    }
+}

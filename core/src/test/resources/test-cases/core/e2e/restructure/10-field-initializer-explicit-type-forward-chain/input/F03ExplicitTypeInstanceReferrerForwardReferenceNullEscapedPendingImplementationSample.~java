@@ -1,0 +1,16 @@
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Missing behavior variant: same chain but null default branch.
+public class F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample {
+    private static int zzz = new F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample().aaa;
+    private int aaa = F03ExplicitTypeInstanceReferrerForwardReferenceNullEscapedPendingImplementationSample.bravo == null ? 1 : 2;
+    private static String bravo = "ready";
+
+    public static void main(String[] args) {
+        // Correct behavior in original order: bravo defaults to null at aaa-read point, so zzz == 1.
+        if (zzz != 1 || !"ready".equals(bravo)) {
+            throw new IllegalStateException("Unexpected values: zzz=" + zzz + ", bravo=" + bravo);
+        }
+    }
+}

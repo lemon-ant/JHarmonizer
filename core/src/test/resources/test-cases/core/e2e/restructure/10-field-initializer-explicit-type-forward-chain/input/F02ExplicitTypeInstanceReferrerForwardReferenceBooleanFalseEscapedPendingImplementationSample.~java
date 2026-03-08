@@ -1,0 +1,16 @@
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Missing behavior variant: same chain but boolean default false branch.
+public class F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample {
+    private static int zzz = new F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample().aaa;
+    private int aaa = F02ExplicitTypeInstanceReferrerForwardReferenceBooleanFalseEscapedPendingImplementationSample.bravo ? 2 : 1;
+    private static boolean bravo = true;
+
+    public static void main(String[] args) {
+        // Correct behavior in original order: bravo defaults to false at aaa-read point, so zzz == 1.
+        if (zzz != 1 || !bravo) {
+            throw new IllegalStateException("Unexpected values: zzz=" + zzz + ", bravo=" + bravo);
+        }
+    }
+}

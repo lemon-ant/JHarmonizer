@@ -1,0 +1,20 @@
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Potential unsafe reordered shape if qualifier-form dependency is missed.
+public class FQ01OuterThisInAnonymousInitializerEscapedPendingValidationSample {
+    private int aProvider = 10;
+    private final int zDependent = new Object() {
+        private final int captured =
+                FQ01OuterThisInAnonymousInitializerEscapedPendingValidationSample.this.aProvider + 1;
+    }.captured;
+
+    public static void main(String[] args) {
+        FQ01OuterThisInAnonymousInitializerEscapedPendingValidationSample sample =
+                new FQ01OuterThisInAnonymousInitializerEscapedPendingValidationSample();
+        if (sample.zDependent != 1 || sample.aProvider != 10) {
+            throw new IllegalStateException(
+                    "Unexpected values: zDependent=" + sample.zDependent + ", aProvider=" + sample.aProvider);
+        }
+    }
+}

@@ -42,17 +42,14 @@
 
 ---
 
-## 4) Explicit forward providers покрывают `this.field` и `Type.field`, но не все квалифицированные формы
+## 4) Explicit forward providers (migrated to TODO backlog)
 
-**Текущее поведение**
-- Explicit-логика опирается на qualifier matchers:
-  - `this` (не implicit)
-  - явный `TypeAccess` (не implicit)
+Этот пункт полностью перенесён из discussion в `docs/TODO.md` как рабочий backlog:
+- scope clarification между discussion-item #4 и TODO item #5;
+- parked fixtures для explicit-type instance-referrer family (`F01`-`F04`);
+- parked qualifier-shape candidate (`FQ01`) для `OuterClass.this.field` формы.
 
-**Corner-cases для проверки/добавления**
-- `OuterClass.this.field` внутри inner class initializer.
-- Generic-qualified type access и nested type access.
-- Сценарии, где Spoon даёт implicit target иначе, чем ожидается.
+Содержание этого раздела удалено отсюда, чтобы не дублировать источник истины и не расходиться с TODO.
 
 ---
 
