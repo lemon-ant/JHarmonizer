@@ -13,13 +13,13 @@ top-level-types-ordering:
     - enum
     - annotation
     - record
-  sort-keys: [ alpha ]
+  ordering-rules: [ alpha ]
 
 type-members-ordering:
   - name: BadGroup
     includes:
       - [ method ]
       - [ method ]  # дубликат
-    sort-keys: [ alpha ]
+    ordering-rules: [ alpha ]
     separator: none
     groups: [ ]

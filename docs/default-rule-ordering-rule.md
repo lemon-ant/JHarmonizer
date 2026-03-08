@@ -86,7 +86,7 @@ Visibility levels are:
 > Note: for Methods and Nested Types, visibility is modeled as **explicit structural groups** (not a sort-key).
 > The exact visibility group order is determined by configuration structure.
 
-### Alpha sort key
+### Alpha ordering rule
 
 **ALPHA** is a deterministic key that includes *all relevant signature parts* in one string:
 - for a **field**: `fieldName + ":" + fieldType`

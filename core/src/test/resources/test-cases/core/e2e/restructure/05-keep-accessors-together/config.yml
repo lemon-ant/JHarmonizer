@@ -9,18 +9,18 @@ top-level-types-ordering:
   main-type-first: true
   type-groups:
     - [ class ]
-  sort-keys: [ preserve ]
+  ordering-rules: [ preserve ]
 type-members-ordering:
   - name: Methods
     includes: ~.*
-    sort-keys: preserve
+    ordering-rules: preserve
     groups:
       - name: Fields
         separator: none
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: field
       - name: Methods
         separator: none
         keepAccessorsTogether: true
-        sort-keys: alpha
+        ordering-rules: alpha
         includes: method

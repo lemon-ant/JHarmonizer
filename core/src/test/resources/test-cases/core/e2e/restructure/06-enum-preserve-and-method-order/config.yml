@@ -9,17 +9,17 @@ top-level-types-ordering:
   main-type-first: true
   type-groups:
     - [ enum ]
-  sort-keys: [ preserve ]
+  ordering-rules: [ preserve ]
 type-members-ordering:
   - name: Enum ordering
     includes: ~.*
-    sort-keys: preserve
+    ordering-rules: preserve
     groups:
       - name: Enum constants
         separator: none
-        sort-keys: preserve
+        ordering-rules: preserve
         includes: enum-constant
       - name: Methods
         separator: new-line
-        sort-keys: alpha
+        ordering-rules: alpha
         includes: method

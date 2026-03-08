@@ -21,7 +21,7 @@ class SortableTypeMember {
     CtTypeMember typeMember;
 
     @NonNull
-    SortKeyValues sortKeyValues;
+    OrderingRuleValues orderingRuleValues;
 
     @NonNull
     CtTypeMember representativeTypeMember;
@@ -33,29 +33,29 @@ class SortableTypeMember {
             @NonNull CtTypeMember typeMember,
             @NonNull CtTypeMember representativeTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
-            Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider) {
+            Function<CtTypeMember, OrderingRuleValues> orderingRuleValuesProvider) {
         this.typeMember = typeMember;
         this.representativeTypeMember = representativeTypeMember;
         this.orderingDependentsInGroup = orderingDependentsInGroup;
-        this.sortKeyValues = sortKeyValuesProvider.apply(typeMember);
+        this.orderingRuleValues = orderingRuleValuesProvider.apply(typeMember);
     }
 
-    static Function<CtTypeMember, SortKeyValues> getSortKeyValuesProvider() {
+    static Function<CtTypeMember, OrderingRuleValues> getOrderingRuleValuesProvider() {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, SortKeyValues> sortKeyValuesByMember = new HashMap<>();
-        return typeMember -> sortKeyValuesByMember.computeIfAbsent(typeMember, SortableTypeMember::deriveSortKeyValues);
+        Map<CtTypeMember, OrderingRuleValues> orderingRuleValuesByMember = new HashMap<>();
+        return typeMember -> orderingRuleValuesByMember.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingRuleValues);
     }
 
     @NonNull
-    private static SortableTypeMember.SortKeyValues deriveSortKeyValues(CtTypeMember typeMember) {
-        return new SortableTypeMember.SortKeyValues(
+    private static SortableTypeMember.OrderingRuleValues deriveOrderingRuleValues(CtTypeMember typeMember) {
+        return new SortableTypeMember.OrderingRuleValues(
                 extractSourceStart(typeMember), deriveAlphaKey(typeMember), deriveVisibilityRank(typeMember));
     }
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     // TODO Remove plural form
-    static class SortKeyValues {
+    static class OrderingRuleValues {
         int sourceStart;
 
         @NonNull

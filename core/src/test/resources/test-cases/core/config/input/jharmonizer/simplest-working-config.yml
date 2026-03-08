@@ -15,12 +15,12 @@ top-level-types-ordering:
     - [ interface ]
     - [ enum ]
     - [ annotation ]
-  sort-keys: [ alpha ]
+  ordering-rules: [ alpha ]
 
 type-members-ordering:
   - name: Basic
     includes:
       - [ method ]
-    sort-keys: [ alpha ]
+    ordering-rules: [ alpha ]
     separator: none
     groups: [ ]

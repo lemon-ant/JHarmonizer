@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-public class GroupMemberOrderingComplexFixture {
+public class GroupOrderingRuleComplexFixture {
 
     private static final int y_provider = 2;
     private static final int w_provider = 1;

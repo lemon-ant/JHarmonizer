@@ -50,7 +50,7 @@ public class UnifiedMemberGroup {
      * Explicit internal members ordering for this group.
      */
     @NonNull
-    List<UnifiedSortKey> sortKeys;
+    List<UnifiedOrderingRule> orderingRules;
 
     @Builder
     private UnifiedMemberGroup(
@@ -59,14 +59,14 @@ public class UnifiedMemberGroup {
             @NonNull @Singular List<@NonNull UnifiedMemberGroup> memberSubGroups,
             @NonNull UnifiedMemberGroupSelectorBlock selectorBlock,
             @NonNull UnifiedSeparator separator,
-            @NonNull @Singular List<@NonNull UnifiedSortKey> sortKeys) {
+            @NonNull @Singular List<@NonNull UnifiedOrderingRule> orderingRules) {
         this.groupName = groupName;
         this.keepAccessorsTogether = keepAccessorsTogether;
         this.memberSubGroups = memberSubGroups;
         this.selectorBlock = selectorBlock;
         this.separator = separator;
-        Validate.notEmpty(sortKeys, "Sort keys collection cannot be empty");
-        this.sortKeys = Collections.unmodifiableList(sortKeys);
+        Validate.notEmpty(orderingRules, "Ordering rules collection cannot be empty");
+        this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class UnifiedMemberGroup {
                 && memberSubGroups.equals(that.memberSubGroups)
                 && selectorBlock.equals(that.selectorBlock)
                 && separator == that.separator
-                && sortKeys.equals(that.sortKeys);
+                && orderingRules.equals(that.orderingRules);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class UnifiedMemberGroup {
         result = 31 * result + memberSubGroups.hashCode();
         result = 31 * result + selectorBlock.hashCode();
         result = 31 * result + separator.hashCode();
-        result = 31 * result + sortKeys.hashCode();
+        result = 31 * result + orderingRules.hashCode();
         return result;
     }
 }

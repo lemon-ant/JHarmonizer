@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
@@ -19,13 +19,13 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
 
-class GroupMembersOrdererSortKeysTest {
+class GroupMembersOrdererOrderingRulesTest {
 
     @Test
-    void orderMembersInsideGroups_sortKeyPreserve_keepOriginalSourceOrder() {
+    void orderMembersInsideGroups_orderingRulePreserve_keepOriginalSourceOrder() {
         // Given
         CompiledMemberGroup compiledMemberGroup =
-                CompiledMemberGroupTestCreator.createCompiledMemberGroup("preserve", false, List.of(SortKey.PRESERVE));
+                CompiledMemberGroupTestCreator.createCompiledMemberGroup("preserve", false, List.of(OrderingRule.PRESERVE));
         CtTypeMember publicFieldFirstMember = requireFixtureMemberBySimpleName("publicFieldFirst");
         CtTypeMember protectedFieldMember = requireFixtureMemberBySimpleName("protectedField");
         CtTypeMember privateFieldMember = requireFixtureMemberBySimpleName("privateField");
@@ -62,10 +62,10 @@ class GroupMembersOrdererSortKeysTest {
     }
 
     @Test
-    void orderMembersInsideGroups_sortKeyAlphaWithFields_orderAlphabetically() {
+    void orderMembersInsideGroups_orderingRuleAlphaWithFields_orderAlphabetically() {
         // Given
         CompiledMemberGroup compiledMemberGroup =
-                CompiledMemberGroupTestCreator.createCompiledMemberGroup("alpha-fields", false, List.of(SortKey.ALPHA));
+                CompiledMemberGroupTestCreator.createCompiledMemberGroup("alpha-fields", false, List.of(OrderingRule.ALPHA));
         CtTypeMember zuluFieldMember = requireFixtureMemberBySimpleName("zuluField");
         CtTypeMember alphaFieldMember = requireFixtureMemberBySimpleName("alphaField");
         CtTypeMember bravoFieldMember = requireFixtureMemberBySimpleName("bravoField");
@@ -86,10 +86,10 @@ class GroupMembersOrdererSortKeysTest {
     }
 
     @Test
-    void orderMembersInsideGroups_sortKeyAlphaWithOverloads_orderDeterministically() {
+    void orderMembersInsideGroups_orderingRuleAlphaWithOverloads_orderDeterministically() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "alpha-overloads", false, List.of(SortKey.ALPHA));
+                "alpha-overloads", false, List.of(OrderingRule.ALPHA));
         CtMethod<?> calculateStringMethodMember =
                 requireFixtureMethodByNameAndParameterQualifiedNames("calculate", List.of("java.lang.String"));
         CtMethod<?> calculateNoArgsMethodMember =
@@ -111,16 +111,16 @@ class GroupMembersOrdererSortKeysTest {
         // Then
         assertThat(orderedBlocks.getFirst().getTypeMembers().stream()
                         .map(member -> (CtMethod<?>) member)
-                        .map(GroupMembersOrdererSortKeysTest::extractParameterTypeQualifiedNames)
+                        .map(GroupMembersOrdererOrderingRulesTest::extractParameterTypeQualifiedNames)
                         .toList())
                 .containsExactly(List.of(), List.of("int"), List.of("java.lang.String"));
     }
 
     @Test
-    void orderMembersInsideGroups_sortKeyVisibilityAsc_orderByVisibilityRank() {
+    void orderMembersInsideGroups_orderingRuleVisibilityAsc_orderByVisibilityRank() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "visibility-asc", false, List.of(SortKey.VISIBILITY_ASC));
+                "visibility-asc", false, List.of(OrderingRule.VISIBILITY_ASC));
         CtTypeMember publicFieldFirstMember = requireFixtureMemberBySimpleName("publicFieldFirst");
         CtTypeMember publicFieldSecondMember = requireFixtureMemberBySimpleName("publicFieldSecond");
         CtTypeMember protectedFieldMember = requireFixtureMemberBySimpleName("protectedField");
@@ -156,10 +156,10 @@ class GroupMembersOrdererSortKeysTest {
     }
 
     @Test
-    void orderMembersInsideGroups_sortKeyVisibilityDesc_orderByVisibilityRankDescending() {
+    void orderMembersInsideGroups_orderingRuleVisibilityDesc_orderByVisibilityRankDescending() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "visibility-desc", false, List.of(SortKey.VISIBILITY_DESC));
+                "visibility-desc", false, List.of(OrderingRule.VISIBILITY_DESC));
         CtTypeMember publicFieldFirstMember = requireFixtureMemberBySimpleName("publicFieldFirst");
         CtTypeMember publicFieldSecondMember = requireFixtureMemberBySimpleName("publicFieldSecond");
         CtTypeMember protectedFieldMember = requireFixtureMemberBySimpleName("protectedField");
@@ -198,7 +198,7 @@ class GroupMembersOrdererSortKeysTest {
     void orderMembersInsideGroups_keepAccessorsTogetherEnabled_keepAccessorPairContiguous() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "accessors-enabled", true, List.of(SortKey.ALPHA));
+                "accessors-enabled", true, List.of(OrderingRule.ALPHA));
         CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
         CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");
         CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
@@ -222,7 +222,7 @@ class GroupMembersOrdererSortKeysTest {
     void orderMembersInsideGroups_keepAccessorsTogetherDisabled_allowAlphaInterleaving() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "accessors-disabled", false, List.of(SortKey.ALPHA));
+                "accessors-disabled", false, List.of(OrderingRule.ALPHA));
         CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
         CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");
         CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
@@ -246,7 +246,7 @@ class GroupMembersOrdererSortKeysTest {
     void orderMembersInsideGroups_sameRepresentativeFieldAndInitializer_fieldComesFirst() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "alpha-static-tie", false, List.of(SortKey.ALPHA));
+                "alpha-static-tie", false, List.of(OrderingRule.ALPHA));
 
         CtTypeMember readFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                 Constants.FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS, "READ");
@@ -312,9 +312,9 @@ class GroupMembersOrdererSortKeysTest {
     private static final class Constants {
 
         private static final String FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-member-ordering/valid/GroupMemberOrderingFieldInitializerTieFixture.java";
+                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFieldInitializerTieFixture.java";
         private static final URL FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL =
-                GroupMembersOrdererSortKeysTest.class.getResource(FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
+                GroupMembersOrdererOrderingRulesTest.class.getResource(FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
@@ -322,9 +322,9 @@ class GroupMembersOrdererSortKeysTest {
                 .toList();
 
         private static final String FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-member-ordering/valid/GroupMemberOrderingFixture.java";
+                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
         private static final URL FIXTURE_RESOURCE_URL =
-                GroupMembersOrdererSortKeysTest.class.getResource(FIXTURE_CLASSPATH_RESOURCE);
+                GroupMembersOrdererOrderingRulesTest.class.getResource(FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIXTURE_MEMBERS =

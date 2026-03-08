@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -20,11 +20,11 @@ class MemberGroupCompilerTest {
     @Test
     void compileTopLevelGroups_treeAndForest_postOrderIndexesAreStableAndContiguous() {
         // Given
-        UnifiedMemberGroup leafB = createGroup("B", null, List.of(), List.of(UnifiedSortKey.PRESERVE));
-        UnifiedMemberGroup leafD = createGroup("D", null, List.of(), List.of(UnifiedSortKey.PRESERVE));
-        UnifiedMemberGroup nodeC = createGroup("C", null, List.of(leafD), List.of(UnifiedSortKey.PRESERVE));
-        UnifiedMemberGroup rootA = createGroup("A", null, List.of(leafB, nodeC), List.of(UnifiedSortKey.PRESERVE));
-        UnifiedMemberGroup rootE = createGroup("E", null, List.of(), List.of(UnifiedSortKey.PRESERVE));
+        UnifiedMemberGroup leafB = createGroup("B", null, List.of(), List.of(UnifiedOrderingRule.PRESERVE));
+        UnifiedMemberGroup leafD = createGroup("D", null, List.of(), List.of(UnifiedOrderingRule.PRESERVE));
+        UnifiedMemberGroup nodeC = createGroup("C", null, List.of(leafD), List.of(UnifiedOrderingRule.PRESERVE));
+        UnifiedMemberGroup rootA = createGroup("A", null, List.of(leafB, nodeC), List.of(UnifiedOrderingRule.PRESERVE));
+        UnifiedMemberGroup rootE = createGroup("E", null, List.of(), List.of(UnifiedOrderingRule.PRESERVE));
 
         // When
         List<CompiledMemberGroup> compiledRoots = MemberGroupCompiler.compileTopLevelGroups(List.of(rootA, rootE));
@@ -58,18 +58,18 @@ class MemberGroupCompilerTest {
     void compileTopLevelGroups_keepAccessorsTogether_isInheritedAndCanBeOverridden() {
         // Given
         UnifiedMemberGroup inheritedChild =
-                createGroup("InheritedChild", null, List.of(), List.of(UnifiedSortKey.ALPHA));
+                createGroup("InheritedChild", null, List.of(), List.of(UnifiedOrderingRule.ALPHA));
         UnifiedMemberGroup overriddenChild =
-                createGroup("OverriddenChild", false, List.of(), List.of(UnifiedSortKey.ALPHA));
+                createGroup("OverriddenChild", false, List.of(), List.of(UnifiedOrderingRule.ALPHA));
         UnifiedMemberGroup inheritedUnderOverride =
-                createGroup("InheritedUnderOverride", null, List.of(), List.of(UnifiedSortKey.ALPHA));
+                createGroup("InheritedUnderOverride", null, List.of(), List.of(UnifiedOrderingRule.ALPHA));
         UnifiedMemberGroup overrideContainer = createGroup(
                 "OverrideContainer",
                 false,
                 List.of(overriddenChild, inheritedUnderOverride),
-                List.of(UnifiedSortKey.ALPHA));
+                List.of(UnifiedOrderingRule.ALPHA));
         UnifiedMemberGroup root =
-                createGroup("Root", true, List.of(inheritedChild, overrideContainer), List.of(UnifiedSortKey.ALPHA));
+                createGroup("Root", true, List.of(inheritedChild, overrideContainer), List.of(UnifiedOrderingRule.ALPHA));
 
         // When
         List<CompiledMemberGroup> compiledRoots = MemberGroupCompiler.compileTopLevelGroups(List.of(root));
@@ -92,28 +92,28 @@ class MemberGroupCompilerTest {
     }
 
     @Test
-    void compileTopLevelGroups_sortKeys_areMappedOneToOneAndOrderIsPreserved() {
+    void compileTopLevelGroups_orderingRules_areMappedOneToOneAndOrderIsPreserved() {
         // Given
         UnifiedMemberGroup root = createGroup(
                 "Root",
                 null,
                 List.of(),
-                List.of(UnifiedSortKey.VISIBILITY_DESC, UnifiedSortKey.ALPHA, UnifiedSortKey.PRESERVE));
+                List.of(UnifiedOrderingRule.VISIBILITY_DESC, UnifiedOrderingRule.ALPHA, UnifiedOrderingRule.PRESERVE));
 
         // When
         CompiledMemberGroup compiledRoot =
                 MemberGroupCompiler.compileTopLevelGroups(List.of(root)).getFirst();
 
         // Then
-        assertThat(compiledRoot.getSortKeys())
-                .containsExactly(SortKey.VISIBILITY_DESC, SortKey.ALPHA, SortKey.PRESERVE);
+        assertThat(compiledRoot.getOrderingRules())
+                .containsExactly(OrderingRule.VISIBILITY_DESC, OrderingRule.ALPHA, OrderingRule.PRESERVE);
     }
 
     private static UnifiedMemberGroup createGroup(
             String groupName,
             Boolean keepAccessorsTogether,
             List<UnifiedMemberGroup> memberSubGroups,
-            List<UnifiedSortKey> sortKeys) {
+            List<UnifiedOrderingRule> orderingRules) {
         UnifiedMemberGroupSelectorBlock selectorBlock =
                 UnifiedMemberGroupSelectorBlock.builder().build();
         return UnifiedMemberGroup.builder()
@@ -122,7 +122,7 @@ class MemberGroupCompilerTest {
                 .memberSubGroups(memberSubGroups)
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
-                .sortKeys(sortKeys)
+                .orderingRules(orderingRules)
                 .build();
     }
 

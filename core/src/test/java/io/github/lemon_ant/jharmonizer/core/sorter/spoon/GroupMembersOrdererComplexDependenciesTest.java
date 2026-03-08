@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
@@ -37,7 +37,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         List<CtTypeMember> explicitSourceTypeMembers =
                 SpoonTypeMemberUtils.streamExplicitSourceTypeMembers(mainType).toList();
         CompiledMemberGroup compiledMemberGroup =
-                CompiledMemberGroupTestCreator.createCompiledMemberGroup("complex", true, List.of(SortKey.ALPHA));
+                CompiledMemberGroupTestCreator.createCompiledMemberGroup("complex", true, List.of(OrderingRule.ALPHA));
         Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup = explicitSourceTypeMembers.stream()
                 .collect(Collectors.toUnmodifiableMap(Function.identity(), typeMember -> compiledMemberGroup));
         MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(memberToNaturalGroup);
@@ -364,7 +364,7 @@ class GroupMembersOrdererComplexDependenciesTest {
 
     private static class Constants {
         private static final String GROUP_MEMBER_ORDERING_COMPLEX_FIXTURE_CLASSPATH_PATH =
-                "/test-cases/core/sorter/spoon/group-member-ordering/valid/GroupMemberOrderingComplexFixture.java";
+                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleComplexFixture.java";
         private static final String W_PROVIDER_ALPHA_KEY = "w_provider:int";
         private static final String X_PROVIDER_ALPHA_KEY = "x_provider:int";
         private static final String Y_PROVIDER_ALPHA_KEY = "y_provider:int";

@@ -16,7 +16,7 @@ public class JHarmonizerTopLevelTypesOrdering {
     boolean mainTypeFirst;
 
     @NonNull
-    List<JHarmonizerSortKey> sortKeys;
+    List<JHarmonizerOrderingRule> orderingRules;
 
     @NonNull
     List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors;
@@ -26,17 +26,17 @@ public class JHarmonizerTopLevelTypesOrdering {
             @NonNull @JsonProperty(value = "type-groups", required = true)
                     List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors,
             @NonNull
-                    @JsonDeserialize(using = SortKeysDeserializer.class)
-                    @JsonProperty(value = "sort-keys", required = true)
-                    List<JHarmonizerSortKey> sortKeys) {
+                    @JsonDeserialize(using = OrderingRulesDeserializer.class)
+                    @JsonProperty(value = "ordering-rules", required = true)
+                    List<JHarmonizerOrderingRule> orderingRules) {
         this.mainTypeFirst = mainTypeFirst;
 
         Validate.notEmpty(topLevelTypeSelectors, "type-groups cannot be empty");
         validateUniqueTypeKinds(topLevelTypeSelectors);
         this.topLevelTypeSelectors = Collections.unmodifiableList(topLevelTypeSelectors);
 
-        Validate.notEmpty(sortKeys, "sort-keys cannot be empty");
-        this.sortKeys = Collections.unmodifiableList(sortKeys);
+        Validate.notEmpty(orderingRules, "ordering-rules cannot be empty");
+        this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
     private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
@@ -58,14 +58,14 @@ public class JHarmonizerTopLevelTypesOrdering {
 
         return mainTypeFirst == that.mainTypeFirst
                 && topLevelTypeSelectors.equals(that.topLevelTypeSelectors)
-                && sortKeys.equals(that.sortKeys);
+                && orderingRules.equals(that.orderingRules);
     }
 
     @Override
     public int hashCode() {
         int result = Boolean.hashCode(mainTypeFirst);
         result = 31 * result + topLevelTypeSelectors.hashCode();
-        result = 31 * result + sortKeys.hashCode();
+        result = 31 * result + orderingRules.hashCode();
         return result;
     }
 }

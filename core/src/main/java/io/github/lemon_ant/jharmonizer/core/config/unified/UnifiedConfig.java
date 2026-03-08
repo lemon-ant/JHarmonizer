@@ -40,7 +40,7 @@ public class UnifiedConfig {
     List<UnifiedMemberGroup> rootMemberGroups;
 
     /**
-     * Top-level types ordering (mainTypeFirst, typeGroups, sortKeys).
+     * Top-level types ordering (mainTypeFirst, typeGroups, orderingRules).
      */
     @NonNull
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;

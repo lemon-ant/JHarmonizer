@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
@@ -30,7 +30,7 @@ class JHarmonizer2UnifiedConverterTest {
         JHarmonizerMemberGroup root = JHarmonizerMemberGroup.builder()
                 .name("Root")
                 .includes(Set.of(Set.of("method", "=toString"), Set.of("method", "@~Size|Length")))
-                .sortKeys(List.of(JHarmonizerSortKey.VISIBILITY_ASC, JHarmonizerSortKey.ALPHA))
+                .orderingRules(List.of(JHarmonizerOrderingRule.VISIBILITY_ASC, JHarmonizerOrderingRule.ALPHA))
                 .keepAccessorsTogether(false)
                 .build();
 
@@ -38,7 +38,7 @@ class JHarmonizer2UnifiedConverterTest {
                 false,
                 List.of(createTypeGroup(
                         Set.of(JHarmonizerTypeKind.CLASS))), // type-groups (can be empty for this smoke test)
-                List.of(JHarmonizerSortKey.ALPHA) // sort-keys (can be empty for this smoke test)
+                List.of(JHarmonizerOrderingRule.ALPHA) // ordering-rules (can be empty for this smoke test)
                 );
 
         JHarmonizerConfig jHarmonizerConfig = new JHarmonizerConfig(

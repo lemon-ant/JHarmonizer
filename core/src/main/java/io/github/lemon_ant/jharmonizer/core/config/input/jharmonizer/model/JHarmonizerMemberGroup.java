@@ -45,7 +45,7 @@ public class JHarmonizerMemberGroup implements Serializable {
     JHarmonizerSeparator separator;
 
     @NonNull
-    List<JHarmonizerSortKey> sortKeys;
+    List<JHarmonizerOrderingRule> orderingRules;
 
     @Builder
     private JHarmonizerMemberGroup(
@@ -57,9 +57,9 @@ public class JHarmonizerMemberGroup implements Serializable {
             @Nullable @JsonDeserialize(using = SelectorsDeserializer.class) @JsonProperty(value = "excludes")
                     Set<Set<String>> excludes,
             @NonNull
-                    @JsonDeserialize(using = SortKeysDeserializer.class)
-                    @JsonProperty(value = "sort-keys", required = true)
-                    List<JHarmonizerSortKey> sortKeys,
+                    @JsonDeserialize(using = OrderingRulesDeserializer.class)
+                    @JsonProperty(value = "ordering-rules", required = true)
+                    List<JHarmonizerOrderingRule> orderingRules,
             @Nullable @JsonProperty(value = "separator") JHarmonizerSeparator separator,
             @Nullable @JsonProperty(value = "keepAccessorsTogether") Boolean keepAccessorsTogether,
             @Nullable @JsonProperty(value = "groups") List<@NonNull JHarmonizerMemberGroup> memberSubGroups) {
@@ -70,8 +70,8 @@ public class JHarmonizerMemberGroup implements Serializable {
 
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
 
-        Validate.notEmpty(sortKeys, "sort-keys cannot be empty");
-        this.sortKeys = Collections.unmodifiableList(sortKeys);
+        Validate.notEmpty(orderingRules, "ordering-rules cannot be empty");
+        this.orderingRules = Collections.unmodifiableList(orderingRules);
 
         this.separator = ofNullable(separator).orElse(JHarmonizerSeparator.NONE);
 
@@ -91,7 +91,7 @@ public class JHarmonizerMemberGroup implements Serializable {
                 && name.equals(that.name)
                 && includes.equals(that.includes)
                 && excludes.equals(that.excludes)
-                && sortKeys.equals(that.sortKeys)
+                && orderingRules.equals(that.orderingRules)
                 && separator == that.separator
                 && memberSubGroups.equals(that.memberSubGroups);
     }
@@ -101,7 +101,7 @@ public class JHarmonizerMemberGroup implements Serializable {
         int result = name.hashCode();
         result = 31 * result + includes.hashCode();
         result = 31 * result + excludes.hashCode();
-        result = 31 * result + sortKeys.hashCode();
+        result = 31 * result + orderingRules.hashCode();
         result = 31 * result + separator.hashCode();
         result = 31 * result + Objects.hashCode(keepAccessorsTogether);
         result = 31 * result + memberSubGroups.hashCode();

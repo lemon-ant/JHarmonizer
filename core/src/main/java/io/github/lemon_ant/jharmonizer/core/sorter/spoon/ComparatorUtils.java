@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.SortKeyValues;
+import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingRuleValues;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -16,10 +16,10 @@ import spoon.reflect.declaration.CtTypeMember;
 class ComparatorUtils {
 
     static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
-            @NonNull Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider,
-            @NonNull Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator) {
+            @NonNull Function<CtTypeMember, OrderingRuleValues> orderingRuleValuesProvider,
+            @NonNull Comparator<SortableTypeMember.OrderingRuleValues> orderingRuleValuesComparator) {
         return Comparator.comparingInt(ComparatorUtils::deriveFieldBeforeInitializerRank)
-                .thenComparing(sortKeyValuesProvider, sortKeyValuesComparator);
+                .thenComparing(orderingRuleValuesProvider, orderingRuleValuesComparator);
     }
 
     @NonNull
@@ -50,21 +50,21 @@ class ComparatorUtils {
     }
 
     @NonNull
-    static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparator(@NonNull List<SortKey> sortKeys) {
-        Comparator<SortableTypeMember.SortKeyValues> configuredComparator = sortKeys.stream()
-                .map(ComparatorUtils::buildSortKeyValuesComparatorForSortKey)
+    static Comparator<SortableTypeMember.OrderingRuleValues> buildOrderingRuleValuesComparator(@NonNull List<OrderingRule> orderingRules) {
+        Comparator<SortableTypeMember.OrderingRuleValues> configuredComparator = orderingRules.stream()
+                .map(ComparatorUtils::buildOrderingRuleValuesComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart)
-                        .thenComparing(SortableTypeMember.SortKeyValues::getAlphaKey));
+                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.OrderingRuleValues::getSourceStart)
+                        .thenComparing(SortableTypeMember.OrderingRuleValues::getAlphaKey));
 
         // Deterministic tie-breakers regardless of configured keys.
-        if (!sortKeys.contains(SortKey.PRESERVE)) {
+        if (!orderingRules.contains(OrderingRule.PRESERVE)) {
             configuredComparator =
-                    configuredComparator.thenComparing(buildSortKeyValuesComparatorForSortKey(SortKey.PRESERVE));
+                    configuredComparator.thenComparing(buildOrderingRuleValuesComparatorForOrderingRule(OrderingRule.PRESERVE));
         }
-        if (!sortKeys.contains(SortKey.ALPHA)) {
+        if (!orderingRules.contains(OrderingRule.ALPHA)) {
             configuredComparator =
-                    configuredComparator.thenComparing(buildSortKeyValuesComparatorForSortKey(SortKey.ALPHA));
+                    configuredComparator.thenComparing(buildOrderingRuleValuesComparatorForOrderingRule(OrderingRule.ALPHA));
         }
 
         return configuredComparator;
@@ -141,14 +141,14 @@ class ComparatorUtils {
     }
 
     @NonNull
-    private static Comparator<SortableTypeMember.SortKeyValues> buildSortKeyValuesComparatorForSortKey(
-            SortKey sortKey) {
-        return switch (sortKey) {
-            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getSourceStart);
-            case ALPHA -> Comparator.comparing(SortableTypeMember.SortKeyValues::getAlphaKey);
-            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.SortKeyValues::getVisibilityRank);
+    private static Comparator<SortableTypeMember.OrderingRuleValues> buildOrderingRuleValuesComparatorForOrderingRule(
+            OrderingRule orderingRule) {
+        return switch (orderingRule) {
+            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingRuleValues::getSourceStart);
+            case ALPHA -> Comparator.comparing(SortableTypeMember.OrderingRuleValues::getAlphaKey);
+            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingRuleValues::getVisibilityRank);
             case VISIBILITY_DESC ->
-                buildSortKeyValuesComparatorForSortKey(SortKey.VISIBILITY_ASC).reversed();
+                buildOrderingRuleValuesComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC).reversed();
         };
     }
 
@@ -179,13 +179,13 @@ class ComparatorUtils {
                 + "\n"
                 + "Right representative: " + describeTypeMemberForDebug(rightSortable.getRepresentativeTypeMember())
                 + "\n"
-                + "Hint: ensure the SortKeyValues comparator has a deterministic tie-breaker for representatives.";
+                + "Hint: ensure the OrderingRuleValues comparator has a deterministic tie-breaker for representatives.";
     }
 
     @NonNull
     private static String describeSortableTypeMember(SortableTypeMember sortableTypeMember) {
         return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
-                + ", sortKeyValues=" + sortableTypeMember.getSortKeyValues()
+                + ", orderingRuleValues=" + sortableTypeMember.getOrderingRuleValues()
                 + ", representative=" + describeTypeMemberForDebug(sortableTypeMember.getRepresentativeTypeMember())
                 + ", orderingDependentsInGroupCount="
                 + sortableTypeMember.getOrderingDependentsInGroup().size();
@@ -197,7 +197,7 @@ class ComparatorUtils {
         return "Two distinct members compare as equal by the configured base comparator, which violates deterministic ordering.\n"
                 + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
                 + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Hint: ensure the SortKeyValues comparator produces a strict order for distinct members "
+                + "Hint: ensure the OrderingRuleValues comparator produces a strict order for distinct members "
                 + "(e.g., add a stable tie-breaker when all configured keys match).";
     }
 }

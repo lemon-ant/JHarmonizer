@@ -16,7 +16,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupRuleLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
@@ -37,7 +37,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
                 .groupName("StaticInitializers")
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
-                .sortKey(UnifiedSortKey.PRESERVE)
+                .orderingRule(UnifiedOrderingRule.PRESERVE)
                 .build();
         CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
         MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
@@ -68,7 +68,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
                 .groupName("InstanceInitializers")
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
-                .sortKey(UnifiedSortKey.PRESERVE)
+                .orderingRule(UnifiedOrderingRule.PRESERVE)
                 .build();
         CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
         MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
@@ -105,7 +105,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
         return UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(false)
                 .topLevelTypeSelectors(List.of(new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.CLASS))))
-                .sortKeys(List.of(UnifiedSortKey.ALPHA))
+                .orderingRules(List.of(UnifiedOrderingRule.ALPHA))
                 .build();
     }
 }

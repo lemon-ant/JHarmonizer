@@ -2,10 +2,10 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import java.util.List;
@@ -26,14 +26,14 @@ class TopLevelTypesOrderingMapper {
                                 .collect(toUnmodifiableSet())))
                         .toList();
 
-        List<UnifiedSortKey> sortKeys = srcTopLevelTypesOrdering.getSortKeys().stream()
-                .map(JHarmonizerSortKey::getUnifiedSortKey)
+        List<UnifiedOrderingRule> orderingRules = srcTopLevelTypesOrdering.getOrderingRules().stream()
+                .map(JHarmonizerOrderingRule::getUnifiedOrderingRule)
                 .toList();
 
         return UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(srcTopLevelTypesOrdering.isMainTypeFirst())
                 .topLevelTypeSelectors(topLevelTypeSelectors)
-                .sortKeys(sortKeys)
+                .orderingRules(orderingRules)
                 .build();
     }
 }

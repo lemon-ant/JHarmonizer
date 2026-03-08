@@ -27,17 +27,17 @@ public final class CompiledMemberGroupTestCreator {
                 .name(groupName)
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
-                .sortKey(SortKey.PRESERVE)
+                .orderingRule(OrderingRule.PRESERVE)
                 .build();
     }
 
     public static CompiledMemberGroup createCompiledMemberGroup(
-            String groupName, boolean keepAccessorsTogether, List<SortKey> sortKeys) {
+            String groupName, boolean keepAccessorsTogether, List<OrderingRule> orderingRules) {
         return CompiledMemberGroup.builder()
                 .name(groupName)
                 .orderIndex(1)
                 .keepAccessorsTogether(keepAccessorsTogether)
-                .sortKeys(sortKeys)
+                .orderingRules(orderingRules)
                 .compiledSubGroups(List.of())
                 .selectorBlock(new CompiledMemberGroupSelectorBlock(List.of(), List.of()))
                 .separator(UnifiedSeparator.NONE)

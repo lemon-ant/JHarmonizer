@@ -1,11 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.UnifiedMemberGroupBuilder;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSortKey;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
@@ -26,14 +26,14 @@ final class MemberGroupMapper {
                 .forEach(selectorBlockBuilder::exclude);
         UnifiedMemberGroupSelectorBlock selectorBlock = selectorBlockBuilder.build();
 
-        List<UnifiedSortKey> sortKeys = srcMemberGroup.getSortKeys().stream()
-                .map(JHarmonizerSortKey::getUnifiedSortKey)
+        List<UnifiedOrderingRule> orderingRules = srcMemberGroup.getOrderingRules().stream()
+                .map(JHarmonizerOrderingRule::getUnifiedOrderingRule)
                 .toList();
 
         UnifiedMemberGroupBuilder unifiedMemberGroupBuilder = UnifiedMemberGroup.builder()
                 .groupName(srcMemberGroup.getName())
                 .selectorBlock(selectorBlock)
-                .sortKeys(sortKeys)
+                .orderingRules(orderingRules)
                 .keepAccessorsTogether(srcMemberGroup.getKeepAccessorsTogether())
                 .separator(srcMemberGroup.getSeparator().getUnifiedSeparator());
 

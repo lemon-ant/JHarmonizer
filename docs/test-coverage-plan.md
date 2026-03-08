@@ -5,21 +5,21 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 > Scope: `jharmonizer-core` (config pipeline, Spoon-based sorting, dependency graph, printing, formatting, flows).
 
-## 6) Ordering inside a group (sort keys + tie-breakers)
+## 6) Ordering inside a group (ordering rules + tie-breakers)
 
-- [ ] **SortKey.PRESERVE**
+- [ ] **OrderingRule.PRESERVE**
   - **Type:** component
   - **Targets:** `GroupMembersOrderer`, `ComparatorUtils`
   - **Goal:** exact original source order is kept.
   - **Must assert:** stable ordering even with equal keys.
 
-- [ ] **SortKey.ALPHA**
+- [ ] **OrderingRule.ALPHA**
   - **Type:** component
   - **Targets:** `ComparatorUtils`, `SpoonTypeMemberUtils`
   - **Goal:** alphabetical ordering is deterministic (and locale-independent).
   - **Must assert:** tie-breakers (sourceStart/signature) are applied consistently.
 
-- [ ] **SortKey.VISIBILITY_ASC / VISIBILITY_DESC**
+- [ ] **OrderingRule.VISIBILITY_ASC / VISIBILITY_DESC**
   - **Type:** component
   - **Targets:** `ComparatorUtils`
   - **Goal:** visibility rank mapping is correct and both directions are correct.
