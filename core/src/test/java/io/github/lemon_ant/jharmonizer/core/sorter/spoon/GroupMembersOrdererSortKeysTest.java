@@ -242,12 +242,11 @@ class GroupMembersOrdererSortKeysTest {
                 .containsExactly(getValueMethodMember, middleMethodMember, setValueMethodMember);
     }
 
-
     @Test
     void orderMembersInsideGroups_sameRepresentativeFieldAndInitializer_fieldComesFirst() {
         // Given
-        CompiledMemberGroup compiledMemberGroup =
-                CompiledMemberGroupTestCreator.createCompiledMemberGroup("alpha-static-tie", false, List.of(SortKey.ALPHA));
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "alpha-static-tie", false, List.of(SortKey.ALPHA));
 
         CtTypeMember readFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                 Constants.FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS, "READ");
@@ -259,8 +258,8 @@ class GroupMembersOrdererSortKeysTest {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Static initializer was not found in tie fixture"));
 
-        MemberGroupBlock inputBlock =
-                new MemberGroupBlock(compiledMemberGroup, List.of(staticInitializerMember, readFieldMember, valueFieldMember));
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup, List.of(staticInitializerMember, readFieldMember, valueFieldMember));
 
         MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
                 readFieldMember, compiledMemberGroup,
@@ -318,8 +317,9 @@ class GroupMembersOrdererSortKeysTest {
                 GroupMembersOrdererSortKeysTest.class.getResource(FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL);
-        private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS =
-                streamExplicitSourceTypeMembers(FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE).toList();
+        private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
+                        FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE)
+                .toList();
 
         private static final String FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-member-ordering/valid/GroupMemberOrderingFixture.java";

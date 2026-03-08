@@ -392,7 +392,6 @@ class MemberDependencyGraphBuilderTest {
                         Constants.BLANK_FINAL_FIELD_MEMBER, Constants.INSTANCE_INITIALIZER_BLOCK_MEMBER);
     }
 
-
     @Test
     void buildDependencyGraph_blankFinalStaticRead_hasDependenciesFromFieldAndStaticInitializerOnly() {
         // Given
@@ -853,9 +852,9 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
         */
 
-
-        private static final URL BLANK_FINAL_STATIC_READ_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-                "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalStaticReadWithStaticInitializerFixture.java");
+        private static final URL BLANK_FINAL_STATIC_READ_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/test-cases/core/sorter/spoon/dependency-graph/valid/BlankFinalStaticReadWithStaticInitializerFixture.java");
         private static final CtType<?> BLANK_FINAL_STATIC_READ_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(BLANK_FINAL_STATIC_READ_FIXTURE_URL);
         private static final Map<CtTypeMember, CompiledMemberGroup> BLANK_FINAL_STATIC_READ_MEMBERS =

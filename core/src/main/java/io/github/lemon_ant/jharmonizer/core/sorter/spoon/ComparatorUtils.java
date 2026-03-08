@@ -19,13 +19,12 @@ class ComparatorUtils {
             @NonNull Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider,
             @NonNull Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator) {
         return Comparator.comparingInt(ComparatorUtils::deriveFieldBeforeInitializerRank)
-                .thenComparing(typeMember -> sortKeyValuesProvider.apply(typeMember), sortKeyValuesComparator);
+                .thenComparing(sortKeyValuesProvider, sortKeyValuesComparator);
     }
 
     @NonNull
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
-            @NonNull Comparator<SortableTypeMember> sortableBaseComparator,
             @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
         return (leftSortable, rightSortable) -> {
             CtTypeMember leftMember = leftSortable.getTypeMember();
@@ -46,7 +45,7 @@ class ComparatorUtils {
             if (representativeComparison != 0) {
                 return representativeComparison;
             }
-            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, sortableBaseComparator);
+            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, typeMemberBaseComparator);
         };
     }
 
@@ -96,7 +95,6 @@ class ComparatorUtils {
         return 0;
     }
 
-
     private static int deriveFieldBeforeInitializerRank(CtTypeMember member) {
         if (member instanceof CtField<?>) {
             return 0;
@@ -132,8 +130,9 @@ class ComparatorUtils {
     private static int compareByBaseComparatorOrThrow(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
-            Comparator<SortableTypeMember> sortableBaseComparator) {
-        int directComparison = sortableBaseComparator.compare(leftSortable, rightSortable);
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
+        int directComparison =
+                typeMemberBaseComparator.compare(leftSortable.getTypeMember(), rightSortable.getTypeMember());
         if (directComparison != 0) {
             return directComparison;
         }

@@ -90,11 +90,7 @@ class GroupMembersOrderer {
                         typeMemberBaseComparator))
                 .toList();
 
-        Comparator<SortableTypeMember> sortableBaseComparator =
-                Comparator.comparing(SortableTypeMember::getSortKeyValues, sortKeyValuesComparator);
-
-        Comparator<SortableTypeMember> groupComparator =
-                ComparatorUtils.buildGroupComparator(sortableBaseComparator, typeMemberBaseComparator);
+        Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(typeMemberBaseComparator);
 
         return sortableTypeMembers.stream()
                 .sorted(groupComparator)
