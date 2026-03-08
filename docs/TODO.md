@@ -390,4 +390,20 @@ Parked fixture files (excluded from automatic E2E sweep):
 - `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
 Long-term target: remove parking, keep the case active, and make the pipeline pass.
 
+Related parked lazy-context fixture (separate backlog track):
+- `core/src/test/resources/test-cases/core/e2e/restructure/11-lazy-initializer-contexts/input/LazyMethodReferenceContextEscapedPendingImplementationSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/11-lazy-initializer-contexts/expected/LazyMethodReferenceContextEscapedPendingImplementationSample.~java`
+
 ---
+
+---
+
+## Note on blank-final provider optimization coverage
+
+Current active E2E scenario `restructure/14-blank-final-optimized-provider` already covers both `static` and `instance` blank-final read flows.
+
+Additional active E2E scenario `restructure/15-blank-final-nearest-provider-regression` verifies branch-shaped blank-final assignments in both `static` and `instance` contexts, but it is still a valid-Java single-writer model.
+
+Known remaining gap (not covered by active E2E fixtures):
+- true multi-candidate-writer nearest-guaranteed-provider selection across multiple initialization members (requires non-compilable shapes; covered only at dependency-graph fixture/test level).
+- See ongoing provider optimization discussion in `docs/dependency-providers-optimization-discussion.md` (items A/C and generic corner-cases).

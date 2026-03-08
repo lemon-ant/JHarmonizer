@@ -2,23 +2,9 @@
 
 Ниже — список пунктов для поэтапного обсуждения и принятия решений.
 
+> Статус пункта #3 (blank final provider): обсуждение закрыто.
+> Реализованная часть и оставшийся backlog зафиксированы в `docs/TODO.md` и тест-фикстурах.
 
-## 3) Blank final provider сейчас intentionally conservative — можно сделать точнее
-
-**Текущее поведение**
-- При чтении `blank final` добавляются зависимости от **всех** верхних initialization members,
-  которые пишут в поле.
-- Это безопасно, но может лишне «склеивать» порядок.
-
-**Вариант улучшения**
-- `optimized` режим:
-  - учитывать только ближайший гарантированный provider по линейному init-order.
-
-**Обязательно покрыть тестами**
-- Множественные записи в `blank final`.
-- Разделение `static/instance` сценариев.
-
----
 
 ## A) LazyInitializerContextPruningProvider (только как fallback-опция)
 
@@ -62,9 +48,8 @@
 2. Method reference in initializer с доступом к полю.
 3. Anonymous class in initializer с чтением поля outer-type.
 4. Enum + static field mixed initialization.
-5. Blank final multiple assignments candidates (проверить точность/избыточность).
-6. `Outer.this.field` / nested `this`-qualification.
-7. Compile-time constant edge cases:
+5. `Outer.this.field` / nested `this`-qualification.
+6. Compile-time constant edge cases:
    - boxed literals,
    - constant expression через cast/concat,
    - `static final` primitive/String с `partiallyEvaluate` quirks.
