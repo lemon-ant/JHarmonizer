@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.ComparatorUtils.buildTypeMemberComparator;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.ComparatorUtils.buildTypeMemberBaseComparator;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.SortKey;
@@ -73,7 +73,7 @@ class GroupMembersOrderer {
                 SortableTypeMember.getSortKeyValuesProvider();
 
         Comparator<CtTypeMember> typeMemberBaseComparator =
-                buildTypeMemberComparator(sortKeyValuesProvider, sortKeyValuesComparator);
+                buildTypeMemberBaseComparator(sortKeyValuesProvider, sortKeyValuesComparator);
 
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
@@ -90,11 +90,7 @@ class GroupMembersOrderer {
                         typeMemberBaseComparator))
                 .toList();
 
-        Comparator<SortableTypeMember> sortableBaseComparator =
-                Comparator.comparing(SortableTypeMember::getSortKeyValues, sortKeyValuesComparator);
-
-        Comparator<SortableTypeMember> groupComparator =
-                ComparatorUtils.buildGroupComparator(sortableBaseComparator, typeMemberBaseComparator);
+        Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(typeMemberBaseComparator);
 
         return sortableTypeMembers.stream()
                 .sorted(groupComparator)

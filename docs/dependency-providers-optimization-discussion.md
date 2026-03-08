@@ -2,28 +2,6 @@
 
 Ниже — список пунктов для поэтапного обсуждения и принятия решений.
 
----
-
-## 1) Слишком широкий сбор ссылок в initializer roots (главный кандидат на next optimization)
-
-**Текущее поведение**
-- `findProviderFieldsRequiredByDependentMember()` идёт через `CtFieldAccess` по всему `AST-root`.
-- Добавляется dependency, если provider выше по source order.
-- Подход безопасный, но пере-консервативный (даёт лишние жёсткие рёбра).
-
-**Что добавить / изменить**
-- Исключать lazy-contexts из обхода:
-  - method references
-- Разделять read/write:
-  - `LHS assignment` не должен создавать read-like dependency.
-- Рассмотреть учёт compile-time constants в general provider
-  - не только в explicit-declaring-type provider.
-
-**Ожидаемый эффект**
-- Снижение количества жёстких рёбер.
-- Меньше искусственных циклов.
-
----
 
 ## 3) Blank final provider сейчас intentionally conservative — можно сделать точнее
 
@@ -106,11 +84,3 @@
    - `static final` primitive/String с `partiallyEvaluate` quirks.
 
 ---
-
-## Формат обсуждения
-
-Предлагаю проходить последовательно:
-1. Уточняем ожидаемую семантику.
-2. Фиксируем правило для провайдера.
-3. Фиксируем тест-кейсы.
-4. Только после этого идём в имплементацию.

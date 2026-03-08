@@ -7,22 +7,24 @@ import java.util.List;
 import java.util.function.Function;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtAnonymousExecutable;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
 @SuppressWarnings("PMD.TooManyMethods")
 class ComparatorUtils {
 
-    static @NonNull Comparator<CtTypeMember> buildTypeMemberComparator(
+    static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
             @NonNull Function<CtTypeMember, SortKeyValues> sortKeyValuesProvider,
             @NonNull Comparator<SortableTypeMember.SortKeyValues> sortKeyValuesComparator) {
-        return Comparator.comparing(sortKeyValuesProvider, sortKeyValuesComparator);
+        return Comparator.comparingInt(ComparatorUtils::deriveFieldBeforeInitializerRank)
+                .thenComparing(sortKeyValuesProvider, sortKeyValuesComparator);
     }
 
     @NonNull
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
-            @NonNull Comparator<SortableTypeMember> sortableBaseComparator,
             @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
         return (leftSortable, rightSortable) -> {
             CtTypeMember leftMember = leftSortable.getTypeMember();
@@ -43,8 +45,7 @@ class ComparatorUtils {
             if (representativeComparison != 0) {
                 return representativeComparison;
             }
-
-            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, sortableBaseComparator);
+            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, typeMemberBaseComparator);
         };
     }
 
@@ -94,6 +95,18 @@ class ComparatorUtils {
         return 0;
     }
 
+    private static int deriveFieldBeforeInitializerRank(CtTypeMember member) {
+        if (member instanceof CtField<?>) {
+            return 0;
+        }
+
+        if (member instanceof CtAnonymousExecutable) {
+            return 1;
+        }
+
+        return 2;
+    }
+
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
@@ -117,8 +130,9 @@ class ComparatorUtils {
     private static int compareByBaseComparatorOrThrow(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
-            Comparator<SortableTypeMember> sortableBaseComparator) {
-        int directComparison = sortableBaseComparator.compare(leftSortable, rightSortable);
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
+        int directComparison =
+                typeMemberBaseComparator.compare(leftSortable.getTypeMember(), rightSortable.getTypeMember());
         if (directComparison != 0) {
             return directComparison;
         }
