@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaKey;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaSortingRank;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSourceStart;
 
@@ -49,7 +50,10 @@ class SortableTypeMember {
     @NonNull
     private static SortableTypeMember.OrderingKey deriveOrderingKey(CtTypeMember typeMember) {
         return new SortableTypeMember.OrderingKey(
-                extractSourceStart(typeMember), deriveAlphaKey(typeMember), deriveVisibilityRank(typeMember));
+                extractSourceStart(typeMember),
+                deriveAlphaKey(typeMember),
+                deriveAlphaSortingRank(typeMember),
+                deriveVisibilityRank(typeMember));
     }
 
     @Value
@@ -59,6 +63,8 @@ class SortableTypeMember {
 
         @NonNull
         String alphaKey;
+
+        int alphaSortingRank;
 
         int visibilityRank;
     }

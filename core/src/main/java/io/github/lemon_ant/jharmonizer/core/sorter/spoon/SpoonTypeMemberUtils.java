@@ -27,7 +27,23 @@ public class SpoonTypeMemberUtils {
         return erasedTypeReference.isPrimitive() ? erasedTypeReference.box() : erasedTypeReference;
     }
 
+    static int deriveAlphaSortingRank(@NonNull CtTypeMember typeMember) {
+        if (typeMember instanceof CtField<?>) {
+            return 0;
+        }
+        if (typeMember instanceof CtAnonymousExecutable) {
+            return 1;
+        }
+        return 2;
+    }
+
     static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
+        if (typeMember instanceof CtAnonymousExecutable) {
+            // Initializer blocks do not declare an explicit visibility modifier;
+            // treat them as private for visibility ordering purposes.
+            return 3;
+        }
+
         // Ascending: public (0) -> protected (1) -> package-private (2) -> private (3)
         Set<ModifierKind> modifiers = typeMember.getModifiers();
         if (modifiers.contains(ModifierKind.PUBLIC)) {
