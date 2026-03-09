@@ -315,30 +315,6 @@ Add a new declaration dependency provider for initializer call chains:
   - [ ] interaction with existing direct initializer dependencies
 
 
-## 4.1 Scope clarification: item #4 in discussion vs parked E2E F-series
-
-_Note: discussion section #4 was migrated here; TODO is the source of truth for this backlog track._
-
-### Status
-- [x] Clarified in docs
-
-### Clarification
-The parked escaped fixtures in `restructure/10-field-initializer-explicit-type-forward-chain` (including `F01`-`F04`) cover the **item #5** family in this TODO:
-- `static zzz = new Sample().aaa;`
-- instance `aaa` reads `Sample.bravo` declared later.
-
-These fixtures **do not** fully cover the original discussion item #4 (`Explicit forward providers ... not all qualified forms`).
-That backlog area remains focused on qualifier-shape handling (`Outer.this`, nested/generic type accesses, implicit-target quirks).
-
-Implication:
-- Keep qualifier-shape backlog (former discussion item #4) and explicit-type instance-referrer backlog (item #5) as separate tracks until both are implemented and validated.
-
-### Parked fixture candidate for item #4 qualifier-shape coverage
-- `core/src/test/resources/test-cases/core/e2e/restructure/14-explicit-forward-qualified-forms/input/FQ01OuterThisAnonInitEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/14-explicit-forward-qualified-forms/expected/FQ01OuterThisAnonInitEscapedSample.~java`
-
----
-
 ## 5. Explicit-declaring-type instance forward-reference corner-case (parked failing E2E)
 
 ### Status
@@ -396,14 +372,15 @@ Related parked lazy-context fixture (separate backlog track):
 
 ---
 
----
+## 6. Blank-final nearest-provider edge cases still not covered by active E2E
 
-## Note on blank-final provider optimization coverage
+### Status
+- [ ] Not fully implemented in active E2E coverage
 
-Current active E2E scenario `restructure/14-blank-final-optimized-provider` already covers both `static` and `instance` blank-final read flows.
+### Remaining gap
+- true multi-candidate-writer nearest-guaranteed-provider selection across multiple initialization members;
+- valid Java cannot express this shape without violating final-assignment rules, so active compile/run E2E fixtures cannot model it directly.
 
-Additional active E2E scenario `restructure/15-blank-final-nearest-provider-regression` verifies branch-shaped blank-final assignments in both `static` and `instance` contexts, but it is still a valid-Java single-writer model.
-
-Known remaining gap (not covered by active E2E fixtures):
-- true multi-candidate-writer nearest-guaranteed-provider selection across multiple initialization members (not represented by active E2E because valid Java cannot model this shape without violating final-assignment rules).
-- See ongoing provider optimization discussion in `docs/dependency-providers-optimization-discussion.md` (items A/C and generic corner-cases).
+### Backlog direction
+- keep this as a dedicated dependency-analysis improvement track;
+- design a safe representation strategy for this family (without weakening valid-Java guarantees).
