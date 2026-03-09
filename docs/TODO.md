@@ -364,6 +364,8 @@ Parked fixture files (excluded from automatic E2E sweep):
 - `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
 - `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
 - `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/FQ01OuterThisAnonInitEscapedSample.~java`
 Long-term target: remove parking, keep the case active, and make the pipeline pass.
 
 Related parked lazy-context fixture (separate backlog track):
