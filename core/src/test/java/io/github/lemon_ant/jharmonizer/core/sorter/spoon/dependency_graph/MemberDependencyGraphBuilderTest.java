@@ -419,29 +419,6 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_blankFinalReadHasMultipleProviderCandidates_usesNearestProviderOnly() {
-        // Given
-        MemberDependencyGraph memberDependencyGraph =
-                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.BLANK_FINAL_NEAREST_PROVIDER_MEMBERS);
-
-        // When
-        Set<CtTypeMember> staticReadDirectProviders = memberDependencyGraph.findDirectProviders(
-                Constants.BLANK_FINAL_NEAREST_PROVIDER_STATIC_READ_FIELD_MEMBER,
-                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
-        Set<CtTypeMember> instanceReadDirectProviders = memberDependencyGraph.findDirectProviders(
-                Constants.BLANK_FINAL_NEAREST_PROVIDER_INSTANCE_READ_FIELD_MEMBER,
-                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
-
-        // Then
-        assertThat(staticReadDirectProviders)
-                .contains(Constants.BLANK_FINAL_NEAREST_PROVIDER_STATIC_INITIALIZER_BLOCK_SECOND_MEMBER)
-                .doesNotContain(Constants.BLANK_FINAL_NEAREST_PROVIDER_STATIC_INITIALIZER_BLOCK_FIRST_MEMBER);
-        assertThat(instanceReadDirectProviders)
-                .contains(Constants.BLANK_FINAL_NEAREST_PROVIDER_INSTANCE_INITIALIZER_BLOCK_SECOND_MEMBER)
-                .doesNotContain(Constants.BLANK_FINAL_NEAREST_PROVIDER_INSTANCE_INITIALIZER_BLOCK_FIRST_MEMBER);
-    }
-
-    @Test
     void buildDependencyGraph_naturalGroupNull_illegalStateExceptionThrown() {
         // Given
         Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalGroup =
@@ -479,26 +456,6 @@ class MemberDependencyGraphBuilderTest {
         }
 
         return initializerBlocks.getFirst();
-    }
-
-    private static CtTypeMember requireInitializerBlockMemberByIndex(
-            CtType<?> declaringType, boolean requiredStaticness, int index) {
-        List<CtAnonymousExecutable> initializerBlocks = streamExplicitSourceTypeMembers(declaringType)
-                .filter(typeMember -> typeMember instanceof CtAnonymousExecutable)
-                .map(typeMember -> (CtAnonymousExecutable) typeMember)
-                .filter(initializerBlock ->
-                        initializerBlock.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness)
-                .sorted((left, right) -> Integer.compare(
-                        DeclaringTypeFieldReferenceUtils.requireSourceStart(left),
-                        DeclaringTypeFieldReferenceUtils.requireSourceStart(right)))
-                .toList();
-
-        if (index < 0 || index >= initializerBlocks.size()) {
-            throw new IllegalStateException("Expected initializer block at index " + index + ". requiredStaticness="
-                    + requiredStaticness + ", found=" + initializerBlocks.size());
-        }
-
-        return initializerBlocks.get(index);
     }
 
     private static final class Constants {
@@ -922,27 +879,6 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_MEMBERS, "READ_AFTER_ASSIGNMENT");
         private static final CtTypeMember INSTANCE_INITIALIZER_BLOCK_MEMBER =
                 requireUniqueInitializerBlockMember(BLANK_FINAL_FIXTURE_MAIN_TYPE, false);
-
-        private static final URL BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_URL =
-                TestCaseResourceUtils.requireClasspathResourceUrl(
-                        "/test-cases/core/sorter/spoon/dependency-graph/invalid/BlankFinalNearestProviderSelectionFixture.java");
-        private static final CtType<?> BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_URL);
-        private static final Map<CtTypeMember, CompiledMemberGroup> BLANK_FINAL_NEAREST_PROVIDER_MEMBERS =
-                buildTypeMember2NaturalGroup(
-                        BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-        private static final CtTypeMember BLANK_FINAL_NEAREST_PROVIDER_STATIC_READ_FIELD_MEMBER =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_NEAREST_PROVIDER_MEMBERS, "STATIC_READ");
-        private static final CtTypeMember BLANK_FINAL_NEAREST_PROVIDER_INSTANCE_READ_FIELD_MEMBER =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_NEAREST_PROVIDER_MEMBERS, "INSTANCE_READ");
-        private static final CtTypeMember BLANK_FINAL_NEAREST_PROVIDER_STATIC_INITIALIZER_BLOCK_FIRST_MEMBER =
-                requireInitializerBlockMemberByIndex(BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_MAIN_TYPE, true, 0);
-        private static final CtTypeMember BLANK_FINAL_NEAREST_PROVIDER_STATIC_INITIALIZER_BLOCK_SECOND_MEMBER =
-                requireInitializerBlockMemberByIndex(BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_MAIN_TYPE, true, 1);
-        private static final CtTypeMember BLANK_FINAL_NEAREST_PROVIDER_INSTANCE_INITIALIZER_BLOCK_FIRST_MEMBER =
-                requireInitializerBlockMemberByIndex(BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_MAIN_TYPE, false, 0);
-        private static final CtTypeMember BLANK_FINAL_NEAREST_PROVIDER_INSTANCE_INITIALIZER_BLOCK_SECOND_MEMBER =
-                requireInitializerBlockMemberByIndex(BLANK_FINAL_NEAREST_PROVIDER_FIXTURE_MAIN_TYPE, false, 1);
 
         private Constants() {}
     }

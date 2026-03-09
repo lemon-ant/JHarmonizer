@@ -405,5 +405,5 @@ Current active E2E scenario `restructure/14-blank-final-optimized-provider` alre
 Additional active E2E scenario `restructure/15-blank-final-nearest-provider-regression` verifies branch-shaped blank-final assignments in both `static` and `instance` contexts, but it is still a valid-Java single-writer model.
 
 Known remaining gap (not covered by active E2E fixtures):
-- true multi-candidate-writer nearest-guaranteed-provider selection across multiple initialization members (requires non-compilable shapes; covered only at dependency-graph fixture/test level).
+- true multi-candidate-writer nearest-guaranteed-provider selection across multiple initialization members (not represented by active E2E because valid Java cannot model this shape without violating final-assignment rules).
 - See ongoing provider optimization discussion in `docs/dependency-providers-optimization-discussion.md` (items A/C and generic corner-cases).
