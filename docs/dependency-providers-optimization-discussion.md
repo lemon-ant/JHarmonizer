@@ -49,5 +49,3 @@
    - boxed literals,
    - constant expression через cast/concat,
    - `static final` primitive/String с `partiallyEvaluate` quirks.
-
----
