@@ -20,7 +20,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -42,6 +48,7 @@ class SourceProcessorE2EFixtureTest {
     private static final String WORKING_DIRECTORY_NAME = "SourceProcessorE2E-working-dir";
     private static final String COMPILE_BEFORE_DIRECTORY_NAME = "SourceProcessorE2E-compile-before";
     private static final String COMPILE_AFTER_DIRECTORY_NAME = "SourceProcessorE2E-compile-after";
+    private static final Pattern SCENARIO_PREFIX_PATTERN = Pattern.compile("^(\\d+)-.+$");
 
     @TempDir
     Path temporaryDirectory;
@@ -137,6 +144,41 @@ class SourceProcessorE2EFixtureTest {
                     .as("Expected source file should exist after regeneration: %s", projectExpectedSourceFile)
                     .exists();
         });
+    }
+
+    @Test
+    void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
+        try (Stream<Path> children = Files.list(FIXTURES_ROOT)) {
+            List<String> scenarioNames = children
+                    .filter(Files::isDirectory)
+                    .map(path -> path.getFileName().toString())
+                    .sorted(Comparator.naturalOrder())
+                    .toList();
+
+            assertThat(scenarioNames).as("Expected at least one fixture scenario directory").isNotEmpty();
+
+            Map<Integer, String> numbersToScenarioNames = new TreeMap<>();
+            for (String scenarioName : scenarioNames) {
+                Matcher matcher = SCENARIO_PREFIX_PATTERN.matcher(scenarioName);
+                assertThat(matcher.matches())
+                        .as(
+                                "Scenario directory should start with a numeric prefix followed by '-': %s",
+                                scenarioName)
+                        .isTrue();
+
+                int scenarioNumber = Integer.parseInt(matcher.group(1));
+                assertThat(numbersToScenarioNames)
+                        .as("Scenario number %s must be unique", scenarioNumber)
+                        .doesNotContainKey(scenarioNumber);
+                numbersToScenarioNames.put(scenarioNumber, scenarioName);
+            }
+
+            assertThat(numbersToScenarioNames.keySet())
+                    .as("Scenario numbering must be consecutive starting from 1")
+                    .containsExactly(IntStream.rangeClosed(1, numbersToScenarioNames.size())
+                            .boxed()
+                            .toArray(Integer[]::new));
+        }
     }
 
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
