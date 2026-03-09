@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.function.Function;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.declaration.CtAnonymousExecutable;
-import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
@@ -18,8 +16,7 @@ class ComparatorUtils {
     static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
             @NonNull Function<CtTypeMember, OrderingKey> orderingKeyProvider,
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        return Comparator.comparingInt(ComparatorUtils::deriveFieldBeforeInitializerRank)
-                .thenComparing(orderingKeyProvider, orderingKeyComparator);
+        return Comparator.comparing(orderingKeyProvider, orderingKeyComparator);
     }
 
     @NonNull
@@ -96,18 +93,6 @@ class ComparatorUtils {
         return 0;
     }
 
-    private static int deriveFieldBeforeInitializerRank(CtTypeMember member) {
-        if (member instanceof CtField<?>) {
-            return 0;
-        }
-
-        if (member instanceof CtAnonymousExecutable) {
-            return 1;
-        }
-
-        return 2;
-    }
-
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
@@ -146,7 +131,9 @@ class ComparatorUtils {
             OrderingRule orderingRule) {
         return switch (orderingRule) {
             case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSourceStart);
-            case ALPHA -> Comparator.comparing(SortableTypeMember.OrderingKey::getAlphaKey);
+            case ALPHA ->
+                Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
+                        .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);
             case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
             case VISIBILITY_DESC ->
                 buildOrderingComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC)
