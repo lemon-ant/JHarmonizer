@@ -19,6 +19,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 @UtilityClass
 public class SpoonTypeMemberUtils {
+
     @NonNull
     public static CtTypeReference<?> normalizeTypeReferenceByErasureAndBoxing(
             @NonNull CtTypeReference<?> typeReference) {
