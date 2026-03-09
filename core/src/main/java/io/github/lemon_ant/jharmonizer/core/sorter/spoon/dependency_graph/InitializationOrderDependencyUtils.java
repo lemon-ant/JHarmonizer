@@ -90,11 +90,12 @@ final class InitializationOrderDependencyUtils {
                         new ProviderCandidate(candidateProviderMember, requireSourceStart(candidateProviderMember)))
                 .filter(candidate -> candidate.getSourceStart() < dependentSourceStart)
                 .map(ProviderCandidate::getProviderMember)
-                .filter(providerMember -> writesFieldInInitializationRoot(providerMember, blankFinalField))
+                .filter(providerMember ->
+                        isFieldWrittenInInitializationRootByMember(providerMember, blankFinalField))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean writesFieldInInitializationRoot(
+    private static boolean isFieldWrittenInInitializationRootByMember(
             @NonNull CtTypeMember candidateProviderMember, @NonNull CtField<?> blankFinalField) {
         return resolveInitializationAstRoot(candidateProviderMember)
                 .map(astRoot ->
