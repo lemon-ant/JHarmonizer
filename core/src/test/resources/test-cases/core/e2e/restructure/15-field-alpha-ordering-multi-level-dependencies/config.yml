@@ -1,0 +1,21 @@
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Field alpha ordering with dependency graph
+    includes: ~.*
+    ordering-rules: preserve
+    groups:
+      - name: Fields
+        separator: new-line
+        ordering-rules: alpha
+        includes: field
