@@ -2,24 +2,6 @@
 
 Ниже — список пунктов для поэтапного обсуждения и принятия решений.
 
-
-## 3) Blank final provider сейчас intentionally conservative — можно сделать точнее
-
-**Текущее поведение**
-- При чтении `blank final` добавляются зависимости от **всех** верхних initialization members,
-  которые пишут в поле.
-- Это безопасно, но может лишне «склеивать» порядок.
-
-**Вариант улучшения**
-- `optimized` режим:
-  - учитывать только ближайший гарантированный provider по линейному init-order.
-
-**Обязательно покрыть тестами**
-- Множественные записи в `blank final`.
-- Разделение `static/instance` сценариев.
-
----
-
 ## A) LazyInitializerContextPruningProvider (только как fallback-опция)
 
 **Идея**
@@ -54,6 +36,29 @@
 
 ---
 
+## D) Fixture consolidation and de-duplication plan
+
+**Проблема**
+- В e2e fixture-наборе есть риск семантических пересечений и почти дублирующих сценариев.
+- Из-за этого растут количество папок, стоимость поддержки и время ревью.
+
+**Что пересмотреть**
+- Провести ревизию всех fixture-папок (включая parked `.~java`) и выявить:
+  - полные дубли,
+  - сильные пересечения по смыслу,
+  - сценарии, которые можно объединить без потери coverage.
+- По возможности:
+  - слить похожие кейсы в один,
+  - перенести похожие фикстуры в уже существующие папки,
+  - снизить количество нумерованных папок с сохранением читаемости и coverage.
+
+**Ожидаемый результат**
+- Меньше повторений и перекрытий.
+- Более компактная и понятная структура тест-кейсов.
+- Более дешёвая поддержка fixture-набора при том же уровне регрессионной защиты.
+
+---
+
 ## Предложенный список новых corner-case тестов (перед финальным прогоном)
 
 1. Lazy lambda in field initializer:
@@ -62,9 +67,8 @@
 2. Method reference in initializer с доступом к полю.
 3. Anonymous class in initializer с чтением поля outer-type.
 4. Enum + static field mixed initialization.
-5. Blank final multiple assignments candidates (проверить точность/избыточность).
-6. `Outer.this.field` / nested `this`-qualification.
-7. Compile-time constant edge cases:
+5. `Outer.this.field` / nested `this`-qualification.
+6. Compile-time constant edge cases:
    - boxed literals,
    - constant expression через cast/concat,
    - `static final` primitive/String с `partiallyEvaluate` quirks.
