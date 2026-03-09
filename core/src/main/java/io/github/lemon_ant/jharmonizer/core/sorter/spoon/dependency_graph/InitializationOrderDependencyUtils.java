@@ -70,10 +70,11 @@ final class InitializationOrderDependencyUtils {
     }
 
     /**
-     * Returns the nearest candidate provider member that assigns the given blank final field before it is read.
+     * Returns all candidate provider members that potentially assign the given blank final field before it is read.
      *
-     * <p>The nearest provider is selected by source order among initialization members (fields / init blocks) in the
-     * same staticness context, preserving declaration safety while avoiding extra order constraints.
+     * <p>Conservative approach: return all initialization members (fields / init blocks) declared above the dependent
+     * member in the original source order, that write to the blank final field. This reduces the risk of reordering
+     * causing "variable might not have been initialized" compilation errors.
      */
     @NonNull
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
@@ -88,14 +89,12 @@ final class InitializationOrderDependencyUtils {
                 .map(candidateProviderMember ->
                         new ProviderCandidate(candidateProviderMember, requireSourceStart(candidateProviderMember)))
                 .filter(candidate -> candidate.getSourceStart() < dependentSourceStart)
-                .filter(candidate -> assignsField(candidate.getProviderMember(), blankFinalField))
-                .max((left, right) -> Integer.compare(left.getSourceStart(), right.getSourceStart()))
                 .map(ProviderCandidate::getProviderMember)
-                .stream()
+                .filter(providerMember -> writesFieldInInitializationRoot(providerMember, blankFinalField))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean assignsField(
+    private static boolean writesFieldInInitializationRoot(
             @NonNull CtTypeMember candidateProviderMember, @NonNull CtField<?> blankFinalField) {
         return resolveInitializationAstRoot(candidateProviderMember)
                 .map(astRoot ->
