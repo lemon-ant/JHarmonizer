@@ -149,21 +149,20 @@ class SourceProcessorE2EFixtureTest {
     @Test
     void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
         try (Stream<Path> children = Files.list(FIXTURES_ROOT)) {
-            List<String> scenarioNames = children
-                    .filter(Files::isDirectory)
+            List<String> scenarioNames = children.filter(Files::isDirectory)
                     .map(path -> path.getFileName().toString())
                     .sorted(Comparator.naturalOrder())
                     .toList();
 
-            assertThat(scenarioNames).as("Expected at least one fixture scenario directory").isNotEmpty();
+            assertThat(scenarioNames)
+                    .as("Expected at least one fixture scenario directory")
+                    .isNotEmpty();
 
             Map<Integer, String> numbersToScenarioNames = new TreeMap<>();
             for (String scenarioName : scenarioNames) {
                 Matcher matcher = SCENARIO_PREFIX_PATTERN.matcher(scenarioName);
                 assertThat(matcher.matches())
-                        .as(
-                                "Scenario directory should start with a numeric prefix followed by '-': %s",
-                                scenarioName)
+                        .as("Scenario directory should start with a numeric prefix followed by '-': %s", scenarioName)
                         .isTrue();
 
                 int scenarioNumber = Integer.parseInt(matcher.group(1));

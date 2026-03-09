@@ -131,8 +131,9 @@ class ComparatorUtils {
             OrderingRule orderingRule) {
         return switch (orderingRule) {
             case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSourceStart);
-            case ALPHA -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
-                    .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);
+            case ALPHA ->
+                Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
+                        .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);
             case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
             case VISIBILITY_DESC ->
                 buildOrderingComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC)
