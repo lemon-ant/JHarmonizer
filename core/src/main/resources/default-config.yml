@@ -15,7 +15,7 @@ top-level-types-ordering:
     - interface
     - enum
     - annotation
-  ordering-rules: [ visibility-asc, alpha ]
+  ordering-rules: [ visibility-desc, alpha ]
 
 type-members-ordering:
   - name: Test Classes
@@ -28,16 +28,16 @@ type-members-ordering:
     groups:
       - name: JUnit Fields
         separator: new-line
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
           - name: JUnit Constants
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: [ static, final ]
           - name: JUnit Static fields
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: static
 
       - name: JUnit Methods
@@ -87,7 +87,7 @@ type-members-ordering:
       - '@Embeddable'
       - '@ConfigurationProperties'
       - '@Document'
-    ordering-rules: [ visibility-asc, alpha ]
+    ordering-rules: [ visibility-desc, alpha ]
     groups:
       - name: Serializable UID
         separator: new-line
@@ -96,12 +96,12 @@ type-members-ordering:
 
       - name: Fields
         separator: new-line
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
           - name: Constants
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: [ static, final ]
             groups:
               - name: Public Constants
@@ -123,12 +123,12 @@ type-members-ordering:
 
           - name: Static Fields
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: static
 
           - name: Final Instance Fields
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: final
 
       - name: Static Initializer Blocks
@@ -138,7 +138,7 @@ type-members-ordering:
 
       - name: Static Methods
         separator: none
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
@@ -149,18 +149,18 @@ type-members-ordering:
 
       - name: Constructors
         separator: none
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: constructor
 
       - name: Accessor Methods
         separator: none
         keepAccessorsTogether: true
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: [ method, ~^(get|set|is|has).+$ ]
 
       - name: Instance Methods
         separator: none
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: [ method ]
         excludes:
           - [ method, =toString ]
@@ -194,17 +194,17 @@ type-members-ordering:
 
       - name: Fields
         separator: new-line
-        ordering-rules: [ visibility-asc, alpha ]
+        ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
           - name: Static fields
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: static
             groups:
               - name: Static final fields
                 separator: new-line
-                ordering-rules: [ visibility-asc, alpha ]
+                ordering-rules: [ visibility-desc, alpha ]
                 includes: final
                 groups:
                   - name: serialVersionUID
@@ -219,7 +219,7 @@ type-members-ordering:
 
           - name: Instance final fields
             separator: new-line
-            ordering-rules: [ visibility-asc, alpha ]
+            ordering-rules: [ visibility-desc, alpha ]
             includes: final
 
       - name: Initializers

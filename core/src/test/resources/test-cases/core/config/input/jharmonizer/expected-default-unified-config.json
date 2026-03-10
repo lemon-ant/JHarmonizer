@@ -29,7 +29,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "JUnit Static fields",
         "keepAccessorsTogether" : null,
@@ -45,7 +45,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -58,7 +58,7 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "JUnit Methods",
       "keepAccessorsTogether" : null,
@@ -332,7 +332,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Static Fields",
         "keepAccessorsTogether" : null,
@@ -348,7 +348,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Final Instance Fields",
         "keepAccessorsTogether" : null,
@@ -364,7 +364,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -377,7 +377,7 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Static Initializer Blocks",
       "keepAccessorsTogether" : null,
@@ -409,7 +409,7 @@
         } ]
       },
       "separator" : "NONE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Instance Initializer Blocks",
       "keepAccessorsTogether" : null,
@@ -447,7 +447,7 @@
         } ]
       },
       "separator" : "NONE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Accessor Methods",
       "keepAccessorsTogether" : true,
@@ -466,7 +466,7 @@
         } ]
       },
       "separator" : "NONE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Instance Methods",
       "keepAccessorsTogether" : null,
@@ -518,7 +518,7 @@
         } ]
       },
       "separator" : "NONE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Basic Object Methods",
       "keepAccessorsTogether" : null,
@@ -652,7 +652,7 @@
       } ]
     },
     "separator" : "NONE",
-    "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
   }, {
     "groupName" : "Default Rule",
     "keepAccessorsTogether" : null,
@@ -747,7 +747,7 @@
             } ]
           },
           "separator" : "NEW_LINE",
-          "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+          "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -760,7 +760,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "groupName" : "Instance final fields",
         "keepAccessorsTogether" : null,
@@ -776,7 +776,7 @@
           } ]
         },
         "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -789,7 +789,7 @@
         } ]
       },
       "separator" : "NEW_LINE",
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "Initializers",
       "keepAccessorsTogether" : null,
@@ -1535,7 +1535,7 @@
   } ],
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
-    "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ],
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],
     "topLevelTypeSelectors" : [ {
       "typeKinds" : [ "CLASS", "RECORD" ]
     }, {
