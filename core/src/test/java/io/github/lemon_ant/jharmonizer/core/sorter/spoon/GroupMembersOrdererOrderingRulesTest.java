@@ -148,11 +148,11 @@ class GroupMembersOrdererOrderingRulesTest {
         // Then
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(
-                        publicFieldFirstMember,
-                        publicFieldSecondMember,
-                        protectedFieldMember,
+                        privateFieldMember,
                         packagePrivateFieldMember,
-                        privateFieldMember);
+                        protectedFieldMember,
+                        publicFieldFirstMember,
+                        publicFieldSecondMember);
     }
 
     @Test
@@ -187,11 +187,11 @@ class GroupMembersOrdererOrderingRulesTest {
         // Then
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(
-                        privateFieldMember,
-                        packagePrivateFieldMember,
-                        protectedFieldMember,
                         publicFieldFirstMember,
-                        publicFieldSecondMember);
+                        publicFieldSecondMember,
+                        protectedFieldMember,
+                        packagePrivateFieldMember,
+                        privateFieldMember);
     }
 
     @Test

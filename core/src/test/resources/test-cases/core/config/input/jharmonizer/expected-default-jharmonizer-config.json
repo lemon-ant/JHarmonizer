@@ -27,7 +27,7 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "JUnit Static fields",
         "includes" : [ [ "static" ] ],
@@ -35,9 +35,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "JUnit Methods",
       "includes" : [ [ "method" ] ],
@@ -147,7 +147,7 @@
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         } ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "Static Fields",
         "includes" : [ [ "static" ] ],
@@ -155,7 +155,7 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "Final Instance Fields",
         "includes" : [ [ "final" ] ],
@@ -163,9 +163,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Static Initializer Blocks",
       "includes" : [ [ "static", "initializer" ] ],
@@ -181,7 +181,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Initializer Blocks",
       "includes" : [ [ "initializer" ] ],
@@ -197,7 +197,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Accessor Methods",
       "includes" : [ [ "method", "~^(get|set|is|has).+$" ] ],
@@ -205,7 +205,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
       "memberSubGroups" : [ ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Methods",
       "includes" : [ [ "method" ] ],
@@ -213,7 +213,7 @@
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Basic Object Methods",
       "includes" : [ [ "method", "=toString" ], [ "method", "=clone" ], [ "method", "=equals" ], [ "method", "=hashCode" ] ],
@@ -223,7 +223,7 @@
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     } ],
-    "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
   }, {
     "name" : "Default Rule",
     "includes" : [ [ "~.*" ] ],
@@ -281,9 +281,9 @@
             "memberSubGroups" : [ ],
             "orderingRules" : [ "PRESERVE" ]
           } ],
-          "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+          "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
         } ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "Instance final fields",
         "includes" : [ [ "final" ] ],
@@ -291,9 +291,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
-        "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
-      "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ]
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Initializers",
       "includes" : [ [ "initializer" ] ],
@@ -659,7 +659,7 @@
   } ],
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
-    "orderingRules" : [ "VISIBILITY_ASC", "ALPHA" ],
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],
     "topLevelTypeSelectors" : [ {
       "typeKinds" : [ "CLASS", "RECORD" ]
     }, {

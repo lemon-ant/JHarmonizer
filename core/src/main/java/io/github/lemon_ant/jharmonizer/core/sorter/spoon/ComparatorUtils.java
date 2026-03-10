@@ -134,10 +134,10 @@ class ComparatorUtils {
             case ALPHA ->
                 Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
                         .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);
-            case VISIBILITY_ASC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
-            case VISIBILITY_DESC ->
-                buildOrderingComparatorForOrderingRule(OrderingRule.VISIBILITY_ASC)
+            case VISIBILITY_ASC ->
+                Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank)
                         .reversed();
+            case VISIBILITY_DESC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
         };
     }
 
