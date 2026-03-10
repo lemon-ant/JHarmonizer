@@ -11,7 +11,7 @@
     </rule>
     <rule ref="category/java/design.xml/LoosePackageCoupling">
         <properties>
-            <property name="packages" value="io.github.lemon_ant.jharmonizer.core"/>
+            <property name="packages" value="io.github.lemon_ant.jharmonizer"/>
         </properties>
     </rule>
     <!-- TODO Activate it
