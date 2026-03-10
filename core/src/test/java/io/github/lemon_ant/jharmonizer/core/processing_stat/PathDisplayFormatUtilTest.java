@@ -36,7 +36,7 @@ class PathDisplayFormatUtilTest {
     }
 
     @Test
-    void abbreviatePathForDisplay_pathExceedsLimit_onlyFileNameFits_returnEllipsisWithFileName() {
+    void abbreviatePathForDisplay_onlyFileNameFitsInLimit_returnEllipsisWithFileName() {
         // Given
         // Full path "a/b/c/d/segment/MyClass.java" is 28 chars; maxTotalLength is 16.
         // availableTailLength = 16 - 4 (".../" prefix) = 12.
@@ -54,7 +54,7 @@ class PathDisplayFormatUtilTest {
     }
 
     @Test
-    void abbreviatePathForDisplay_pathExceedsLimit_fileNameAndOneParentFit_returnEllipsisWithParentAndFileName() {
+    void abbreviatePathForDisplay_fileNameAndOneParentFitInLimit_returnEllipsisWithParentAndFileName() {
         // Given
         // Full path "some/very/long/path/parent/MyClass.java" is 39 chars; maxTotalLength is 23.
         // availableTailLength = 23 - 4 (".../" prefix) = 19.
@@ -72,7 +72,7 @@ class PathDisplayFormatUtilTest {
     }
 
     @Test
-    void abbreviatePathForDisplay_pathExceedsLimit_multipleParentsFit_allIncluded() {
+    void abbreviatePathForDisplay_multipleParentsFitInLimit_returnAllFittingParents() {
         // Given
         // Full path "a/b/c/d/e/f/MyClass.java" is 24 chars; maxTotalLength is 22.
         // availableTailLength = 22 - 4 (".../" prefix) = 18.
