@@ -7,18 +7,17 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
 @Value
-@EqualsAndHashCode(of = {"typeMember", "orderingKey", "orderingDependentsInGroup"})
 class SortableTypeMember {
 
     @NonNull
@@ -51,6 +50,28 @@ class SortableTypeMember {
                 + ", orderingKey=" + orderingKey
                 + ", representative=" + describeTypeMember(representativeTypeMember.getTypeMember())
                 + ", orderingDependentsInGroupCount=" + orderingDependentsInGroup.size();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof SortableTypeMember otherSortableTypeMember)) {
+            return false;
+        }
+        return Objects.equals(typeMember, otherSortableTypeMember.typeMember)
+                && Objects.equals(orderingKey, otherSortableTypeMember.orderingKey)
+                && Objects.equals(
+                        representativeTypeMember.getTypeMember(),
+                        otherSortableTypeMember.representativeTypeMember.getTypeMember())
+                && Objects.equals(orderingDependentsInGroup, otherSortableTypeMember.orderingDependentsInGroup);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                typeMember, orderingKey, representativeTypeMember.getTypeMember(), orderingDependentsInGroup);
     }
 
     static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
