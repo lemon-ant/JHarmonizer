@@ -19,6 +19,10 @@ import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
 @Getter
+// Exclude representative from equals/hashCode/toString to avoid infinite recursion
+// when representative == this (self-representative case).
+// SortableTypeMember instances are only compared via Comparator during sorting,
+// never placed in identity-sensitive collections.
 @EqualsAndHashCode(exclude = "representative")
 @ToString(exclude = "representative")
 final class SortableTypeMember {
