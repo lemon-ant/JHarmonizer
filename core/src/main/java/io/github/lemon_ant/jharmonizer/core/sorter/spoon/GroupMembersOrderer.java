@@ -62,35 +62,13 @@ class GroupMembersOrderer {
             return List.copyOf(groupMembers);
         }
 
-        boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
-
-        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.getOrderingKeyProvider();
-
-        Comparator<CtTypeMember> typeMemberBaseComparator =
-                buildTypeMemberBaseComparator(orderingKeyProvider, orderingKeyComparator);
-
-        Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
-                ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
-                : Map.of();
-
-        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(typeMember -> convertTypeMember2SortableTypeMember(
-                        typeMember,
-                        groupMemberSet,
-                        memberDependencyGraph,
-                        keepAccessorsTogether,
-                        accessorBundleMembersByMember,
-                        orderingKeyProvider,
-                        typeMemberBaseComparator))
-                .toList();
-
-        Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(typeMemberBaseComparator);
+        List<SortableTypeMember> sortableTypeMembers =
+                buildSortableTypeMembers(compiledMemberGroup, groupMembers, memberDependencyGraph);
+        Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(orderingKeyComparator);
 
         return sortableTypeMembers.stream()
                 .sorted(groupComparator)
@@ -99,15 +77,83 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static SortableTypeMember convertTypeMember2SortableTypeMember(
+    static List<@NonNull SortableTypeMember> buildSortableTypeMembers(
+            CompiledMemberGroup compiledMemberGroup,
+            List<@NonNull CtTypeMember> groupMembers,
+            MemberDependencyGraph memberDependencyGraph) {
+        boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
+        List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
+
+        Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
+                ComparatorUtils.buildOrderingComparator(orderingRules);
+        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
+                SortableTypeMember.getOrderingKeyProvider();
+        Comparator<CtTypeMember> typeMemberBaseComparator =
+                buildTypeMemberBaseComparator(orderingKeyProvider, orderingKeyComparator);
+        Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
+                ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
+                : Map.of();
+
+        class SortableTypeMemberResolver {
+
+            private final Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = new HashMap<>();
+            private final Set<CtTypeMember> resolvingMembers = new HashSet<>();
+
+            private SortableTypeMember resolve(CtTypeMember typeMember) {
+                SortableTypeMember cachedSortableTypeMember = sortableTypeMemberByMember.get(typeMember);
+                if (cachedSortableTypeMember != null) {
+                    return cachedSortableTypeMember;
+                }
+                if (!resolvingMembers.add(typeMember)) {
+                    throw new IllegalStateException(
+                            "Detected a cycle while resolving representative sortable members for "
+                                    + SpoonTypeMemberUtils.deriveAlphaKey(typeMember));
+                }
+
+                try {
+                    Set<CtTypeMember> declarationDependentsInGroup = resolveDeclarationDependentsInGroup(
+                            typeMember,
+                            groupMemberSet,
+                            memberDependencyGraph,
+                            keepAccessorsTogether,
+                            accessorBundleMembersByMember);
+
+                    CtTypeMember representativeTypeMember = resolveRepresentativeTypeMember(
+                            typeMember,
+                            declarationDependentsInGroup,
+                            keepAccessorsTogether,
+                            accessorBundleMembersByMember,
+                            typeMemberBaseComparator);
+
+                    SortableTypeMember representativeSortableTypeMember = representativeTypeMember == typeMember
+                            ? null
+                            : resolve(representativeTypeMember).getRepresentativeTypeMember();
+
+                    SortableTypeMember sortableTypeMember = new SortableTypeMember(
+                            typeMember,
+                            representativeSortableTypeMember,
+                            declarationDependentsInGroup,
+                            orderingKeyProvider);
+                    sortableTypeMemberByMember.put(typeMember, sortableTypeMember);
+                    return sortableTypeMember;
+                } finally {
+                    resolvingMembers.remove(typeMember);
+                }
+            }
+        }
+
+        SortableTypeMemberResolver sortableTypeMemberResolver = new SortableTypeMemberResolver();
+        return groupMembers.stream().map(sortableTypeMemberResolver::resolve).toList();
+    }
+
+    @NonNull
+    private static Set<@NonNull CtTypeMember> resolveDeclarationDependentsInGroup(
             CtTypeMember typeMember,
             Set<CtTypeMember> groupMembers,
             MemberDependencyGraph memberDependencyGraph,
             boolean keepAccessorsTogether,
-            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
-            Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
-
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
         Set<CtTypeMember> declarationDependentsInGroup =
                 memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
                         .filter(groupMembers::contains)
@@ -117,20 +163,25 @@ class GroupMembersOrderer {
             declarationDependentsInGroup =
                     expandDependentsWithAccessorBundles(declarationDependentsInGroup, accessorBundleMembersByMember);
         }
+        return declarationDependentsInGroup;
+    }
 
-        CtTypeMember representativeTypeMember;
+    @NonNull
+    private static CtTypeMember resolveRepresentativeTypeMember(
+            CtTypeMember typeMember,
+            Set<CtTypeMember> declarationDependentsInGroup,
+            boolean keepAccessorsTogether,
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
         if (!declarationDependentsInGroup.isEmpty()) {
-            representativeTypeMember = Stream.concat(Stream.of(typeMember), declarationDependentsInGroup.stream())
+            return Stream.concat(Stream.of(typeMember), declarationDependentsInGroup.stream())
                     .min(typeMemberBaseComparator)
                     .orElseThrow();
-        } else if (keepAccessorsTogether) {
-            representativeTypeMember = resolveAccessorBundleRepresentative(typeMember, accessorBundleMembersByMember);
-        } else {
-            representativeTypeMember = typeMember;
         }
-
-        return new SortableTypeMember(
-                typeMember, representativeTypeMember, declarationDependentsInGroup, orderingKeyProvider);
+        if (keepAccessorsTogether) {
+            return resolveAccessorBundleRepresentative(typeMember, accessorBundleMembersByMember);
+        }
+        return typeMember;
     }
 
     @NonNull
