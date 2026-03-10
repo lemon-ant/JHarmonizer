@@ -79,16 +79,16 @@ class GroupMembersOrderer {
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
                 : Map.of();
 
-        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(typeMember -> convertTypeMember2SortableTypeMember(
-                        typeMember,
-                        groupMemberSet,
-                        memberDependencyGraph,
-                        keepAccessorsTogether,
-                        accessorBundleMembersByMember,
-                        orderingKeyProvider,
-                        typeMemberBaseComparator))
-                .toList();
+        Function<CtTypeMember, SortableTypeMember> sortableTypeMemberResolver = buildSortableTypeMemberResolver(
+                groupMemberSet,
+                memberDependencyGraph,
+                keepAccessorsTogether,
+                accessorBundleMembersByMember,
+                orderingKeyProvider,
+                typeMemberBaseComparator);
+
+        List<SortableTypeMember> sortableTypeMembers =
+                groupMembers.stream().map(sortableTypeMemberResolver).toList();
 
         Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(typeMemberBaseComparator);
 
@@ -99,6 +99,55 @@ class GroupMembersOrderer {
     }
 
     @NonNull
+    private static Function<CtTypeMember, SortableTypeMember> buildSortableTypeMemberResolver(
+            Set<CtTypeMember> groupMembers,
+            MemberDependencyGraph memberDependencyGraph,
+            boolean keepAccessorsTogether,
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
+            Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<CtTypeMember, SortableTypeMember> sortableTypeMembersByMember = new HashMap<>();
+        return typeMember -> resolveSortableTypeMember(
+                typeMember,
+                groupMembers,
+                memberDependencyGraph,
+                keepAccessorsTogether,
+                accessorBundleMembersByMember,
+                orderingKeyProvider,
+                typeMemberBaseComparator,
+                sortableTypeMembersByMember);
+    }
+
+    @NonNull
+    private static SortableTypeMember resolveSortableTypeMember(
+            CtTypeMember typeMember,
+            Set<CtTypeMember> groupMembers,
+            MemberDependencyGraph memberDependencyGraph,
+            boolean keepAccessorsTogether,
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
+            Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
+            Comparator<CtTypeMember> typeMemberBaseComparator,
+            Map<CtTypeMember, SortableTypeMember> sortableTypeMembersByMember) {
+        SortableTypeMember cachedSortableTypeMember = sortableTypeMembersByMember.get(typeMember);
+        if (cachedSortableTypeMember != null) {
+            return cachedSortableTypeMember;
+        }
+
+        SortableTypeMember resolvedSortableTypeMember = convertTypeMember2SortableTypeMember(
+                typeMember,
+                groupMembers,
+                memberDependencyGraph,
+                keepAccessorsTogether,
+                accessorBundleMembersByMember,
+                orderingKeyProvider,
+                typeMemberBaseComparator,
+                sortableTypeMembersByMember);
+        sortableTypeMembersByMember.put(typeMember, resolvedSortableTypeMember);
+        return resolvedSortableTypeMember;
+    }
+
+    @NonNull
     private static SortableTypeMember convertTypeMember2SortableTypeMember(
             CtTypeMember typeMember,
             Set<CtTypeMember> groupMembers,
@@ -106,7 +155,8 @@ class GroupMembersOrderer {
             boolean keepAccessorsTogether,
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
             Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
+            Comparator<CtTypeMember> typeMemberBaseComparator,
+            Map<CtTypeMember, SortableTypeMember> sortableTypeMembersByMember) {
 
         Set<CtTypeMember> declarationDependentsInGroup =
                 memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
@@ -118,19 +168,49 @@ class GroupMembersOrderer {
                     expandDependentsWithAccessorBundles(declarationDependentsInGroup, accessorBundleMembersByMember);
         }
 
-        CtTypeMember representativeTypeMember;
-        if (!declarationDependentsInGroup.isEmpty()) {
-            representativeTypeMember = Stream.concat(Stream.of(typeMember), declarationDependentsInGroup.stream())
-                    .min(typeMemberBaseComparator)
-                    .orElseThrow();
-        } else if (keepAccessorsTogether) {
-            representativeTypeMember = resolveAccessorBundleRepresentative(typeMember, accessorBundleMembersByMember);
-        } else {
-            representativeTypeMember = typeMember;
+        CtTypeMember representativeTypeMember = resolveRepresentativeTypeMember(
+                typeMember,
+                declarationDependentsInGroup,
+                keepAccessorsTogether,
+                accessorBundleMembersByMember,
+                typeMemberBaseComparator);
+
+        @SuppressWarnings("PMD.CompareObjectsWithEquals")
+        boolean isSelfRepresentative = representativeTypeMember == typeMember;
+        if (isSelfRepresentative) {
+            return new SortableTypeMember(typeMember, declarationDependentsInGroup, orderingKeyProvider);
         }
 
+        SortableTypeMember representativeSortableTypeMember = resolveSortableTypeMember(
+                representativeTypeMember,
+                groupMembers,
+                memberDependencyGraph,
+                keepAccessorsTogether,
+                accessorBundleMembersByMember,
+                orderingKeyProvider,
+                typeMemberBaseComparator,
+                sortableTypeMembersByMember);
+
         return new SortableTypeMember(
-                typeMember, representativeTypeMember, declarationDependentsInGroup, orderingKeyProvider);
+                typeMember, representativeSortableTypeMember, declarationDependentsInGroup, orderingKeyProvider);
+    }
+
+    @NonNull
+    private static CtTypeMember resolveRepresentativeTypeMember(
+            CtTypeMember typeMember,
+            Set<CtTypeMember> declarationDependentsInGroup,
+            boolean keepAccessorsTogether,
+            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
+            Comparator<CtTypeMember> typeMemberBaseComparator) {
+        if (!declarationDependentsInGroup.isEmpty()) {
+            return Stream.concat(Stream.of(typeMember), declarationDependentsInGroup.stream())
+                    .min(typeMemberBaseComparator)
+                    .orElseThrow();
+        }
+        if (keepAccessorsTogether) {
+            return resolveAccessorBundleRepresentative(typeMember, accessorBundleMembersByMember);
+        }
+        return typeMember;
     }
 
     @NonNull

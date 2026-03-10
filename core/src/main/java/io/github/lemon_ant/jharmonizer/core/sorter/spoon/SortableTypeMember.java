@@ -7,6 +7,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import lombok.AccessLevel;
@@ -25,18 +26,28 @@ class SortableTypeMember {
     OrderingKey orderingKey;
 
     @NonNull
-    CtTypeMember representativeTypeMember;
+    SortableTypeMember representativeSortableTypeMember;
 
     @NonNull
     Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
-            @NonNull CtTypeMember representativeTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
             Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
         this.typeMember = typeMember;
-        this.representativeTypeMember = representativeTypeMember;
+        this.representativeSortableTypeMember = this;
+        this.orderingDependentsInGroup = orderingDependentsInGroup;
+        this.orderingKey = orderingKeyProvider.apply(typeMember);
+    }
+
+    SortableTypeMember(
+            @NonNull CtTypeMember typeMember,
+            @NonNull SortableTypeMember representativeSortableTypeMember,
+            @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
+            Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
+        this.typeMember = typeMember;
+        this.representativeSortableTypeMember = Objects.requireNonNull(representativeSortableTypeMember);
         this.orderingDependentsInGroup = orderingDependentsInGroup;
         this.orderingKey = orderingKeyProvider.apply(typeMember);
     }

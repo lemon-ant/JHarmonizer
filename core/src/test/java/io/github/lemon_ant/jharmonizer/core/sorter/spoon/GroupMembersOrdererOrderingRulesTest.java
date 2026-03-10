@@ -275,6 +275,32 @@ class GroupMembersOrdererOrderingRulesTest {
                 .containsExactly(valueFieldMember, staticInitializerMember, readFieldMember);
     }
 
+    @Test
+    void orderMembersInsideGroups_sameInputAcrossRuns_keepsDeterministicOrder() {
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "deterministic-alpha", true, List.of(OrderingRule.ALPHA));
+        CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
+        CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");
+        CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup, List.of(middleMethodMember, setValueMethodMember, getValueMethodMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                getValueMethodMember, compiledMemberGroup,
+                setValueMethodMember, compiledMemberGroup,
+                middleMethodMember, compiledMemberGroup));
+
+        List<CtTypeMember> firstRunOrderedMembers = GroupMembersOrderer.orderMembersInsideGroups(
+                        List.of(inputBlock), dependencyGraph)
+                .getFirst()
+                .getTypeMembers();
+        List<CtTypeMember> secondRunOrderedMembers = GroupMembersOrderer.orderMembersInsideGroups(
+                        List.of(inputBlock), dependencyGraph)
+                .getFirst()
+                .getTypeMembers();
+
+        assertThat(secondRunOrderedMembers).containsExactlyElementsOf(firstRunOrderedMembers);
+    }
+
     private static CtTypeMember requireFixtureMemberBySimpleName(String expectedSimpleName) {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.FIXTURE_MEMBERS, expectedSimpleName);
     }
