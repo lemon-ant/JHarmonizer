@@ -106,6 +106,7 @@ class GroupMembersOrderer {
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
             Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
+        // Resolver cache is confined to one orderMembersInsideGroup invocation and accessed sequentially.
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, SortableTypeMember> sortableTypeMembersByMember = new HashMap<>();
         return typeMember -> resolveSortableTypeMember(
