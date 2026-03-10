@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class PathDisplayFormatUtil {
 
-    private static final String ELLIPSIS = "…";
+    private static final String ELLIPSIS = "...";
     private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
     @NonNull
