@@ -147,14 +147,9 @@ class ComparatorUtils {
         return "Detected a cyclic DECLARATION_DEPENDENCY ordering inside a member group. "
                 + "Both members are mutually reachable via declaration dependency edges, so a strict provider-before-dependent "
                 + "order cannot be derived for this pair.\n"
-                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
-                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
+                + "Left:  " + leftSortable + "\n"
+                + "Right: " + rightSortable + "\n"
                 + "Hint: validate and report cycles in MemberDependencyGraph (or in a dedicated validator) before ordering.";
-    }
-
-    @NonNull
-    private static String describeTypeMemberForDebug(CtTypeMember typeMember) {
-        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
     }
 
     @NonNull
@@ -162,34 +157,23 @@ class ComparatorUtils {
             SortableTypeMember leftSortable, SortableTypeMember rightSortable) {
         return "Two different representative members compare as equal by the base comparator. "
                 + "This breaks deterministic representative ordering.\n"
-                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
-                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
+                + "Left:  " + leftSortable + "\n"
+                + "Right: " + rightSortable + "\n"
                 + "Left representative:  "
-                + describeSortableTypeMember(leftSortable.getRepresentativeTypeMember())
+                + leftSortable.getRepresentativeTypeMember()
                 + "\n"
                 + "Right representative: "
-                + describeSortableTypeMember(rightSortable.getRepresentativeTypeMember())
+                + rightSortable.getRepresentativeTypeMember()
                 + "\n"
                 + "Hint: ensure the OrderingKey comparator has a deterministic tie-breaker for representatives.";
-    }
-
-    @NonNull
-    private static String describeSortableTypeMember(SortableTypeMember sortableTypeMember) {
-        return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
-                + ", orderingKey=" + sortableTypeMember.getOrderingKey()
-                + ", representative="
-                + describeTypeMemberForDebug(
-                        sortableTypeMember.getRepresentativeTypeMember().getTypeMember())
-                + ", orderingDependentsInGroupCount="
-                + sortableTypeMember.getOrderingDependentsInGroup().size();
     }
 
     @NonNull
     private static String composeEqualMembersMessage(
             SortableTypeMember leftSortable, SortableTypeMember rightSortable) {
         return "Two distinct members compare as equal by the configured base comparator, which violates deterministic ordering.\n"
-                + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
-                + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
+                + "Left:  " + leftSortable + "\n"
+                + "Right: " + rightSortable + "\n"
                 + "Hint: ensure the OrderingKey comparator produces a strict order for distinct members "
                 + "(e.g., add a stable tie-breaker when all configured keys match).";
     }

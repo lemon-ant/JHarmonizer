@@ -14,11 +14,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
-import lombok.ToString;
 import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
 @Value
+@EqualsAndHashCode(of = {"typeMember", "orderingKey", "orderingDependentsInGroup"})
 class SortableTypeMember {
 
     @NonNull
@@ -28,8 +28,6 @@ class SortableTypeMember {
     OrderingKey orderingKey;
 
     @NonNull
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     SortableTypeMember representativeTypeMember;
 
     @NonNull
@@ -46,6 +44,15 @@ class SortableTypeMember {
         this.orderingKey = orderingKeyProvider.apply(typeMember);
     }
 
+    @Override
+    @NonNull
+    public String toString() {
+        return "member=" + describeTypeMember(typeMember)
+                + ", orderingKey=" + orderingKey
+                + ", representative=" + describeTypeMember(representativeTypeMember.getTypeMember())
+                + ", orderingDependentsInGroupCount=" + orderingDependentsInGroup.size();
+    }
+
     static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, OrderingKey> orderingKeyByMember = new HashMap<>();
@@ -59,6 +66,11 @@ class SortableTypeMember {
                 deriveAlphaKey(typeMember),
                 deriveAlphaSortingRank(typeMember),
                 deriveVisibilityRank(typeMember));
+    }
+
+    @NonNull
+    private static String describeTypeMember(CtTypeMember typeMember) {
+        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
     }
 
     @Value
