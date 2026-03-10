@@ -45,7 +45,9 @@ class GroupMembersOrdererSortableModelTest {
 
         assertThat(alphaSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
         assertThat(bravoSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
-        assertThat(zuluSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
+        assertThat(zuluSortableTypeMember.getRepresentativeTypeMember()).isSameAs(bravoSortableTypeMember);
+        assertThat(zuluSortableTypeMember.getRepresentativeTypeMember().getRepresentativeTypeMember())
+                .isSameAs(alphaSortableTypeMember);
     }
 
     @Test

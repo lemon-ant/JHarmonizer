@@ -9,10 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -25,7 +27,9 @@ class SortableTypeMember {
     @NonNull
     OrderingKey orderingKey;
 
-    @Getter(AccessLevel.NONE)
+    @NonNull
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     SortableTypeMember representativeTypeMember;
 
     @NonNull
@@ -33,18 +37,13 @@ class SortableTypeMember {
 
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
-            SortableTypeMember representativeTypeMember,
+            @Nullable SortableTypeMember representativeTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
             Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
         this.typeMember = typeMember;
-        this.representativeTypeMember = representativeTypeMember;
+        this.representativeTypeMember = representativeTypeMember == null ? this : representativeTypeMember;
         this.orderingDependentsInGroup = orderingDependentsInGroup;
         this.orderingKey = orderingKeyProvider.apply(typeMember);
-    }
-
-    @NonNull
-    SortableTypeMember getRepresentativeTypeMember() {
-        return representativeTypeMember == null ? this : representativeTypeMember;
     }
 
     static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {

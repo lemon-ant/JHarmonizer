@@ -126,9 +126,8 @@ class GroupMembersOrderer {
                             accessorBundleMembersByMember,
                             typeMemberBaseComparator);
 
-                    SortableTypeMember representativeSortableTypeMember = representativeTypeMember == typeMember
-                            ? null
-                            : resolve(representativeTypeMember).getRepresentativeTypeMember();
+                    SortableTypeMember representativeSortableTypeMember =
+                            representativeTypeMember == typeMember ? null : resolve(representativeTypeMember);
 
                     SortableTypeMember sortableTypeMember = new SortableTypeMember(
                             typeMember,
