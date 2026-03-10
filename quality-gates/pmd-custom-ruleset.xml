@@ -10,6 +10,11 @@
         <exclude name="LawOfDemeter"/>
         <exclude name="LoosePackageCoupling"/>
     </rule>
+    <rule ref="category/java/design.xml/LoosePackageCoupling">
+        <properties>
+            <property name="packages" value="io.github.antonlem.jharmonizer"/>
+        </properties>
+    </rule>
     <!-- TODO Activate it
     ruleset>category/java/documentation.xml</ruleset>
     -->
