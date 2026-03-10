@@ -114,7 +114,7 @@ class PathDisplayFormatUtilTest {
         String result = PathDisplayFormatUtil.abbreviatePathForDisplay(path, maxTotalLength);
 
         // Then
-        assertThat(result).startsWith("...");
+        assertThat(result).startsWith("...").doesNotContain("…");
         assertThat(result.length()).isLessThanOrEqualTo(maxTotalLength);
     }
 }
