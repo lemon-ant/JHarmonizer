@@ -79,18 +79,22 @@ class GroupMembersOrderer {
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
                 : Map.of();
 
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<CtTypeMember, SortableTypeMember> sortableCache = new HashMap<>();
+
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(typeMember -> convertTypeMember2SortableTypeMember(
+                .map(typeMember -> resolveSortableTypeMember(
                         typeMember,
                         groupMemberSet,
                         memberDependencyGraph,
                         keepAccessorsTogether,
                         accessorBundleMembersByMember,
                         orderingKeyProvider,
-                        typeMemberBaseComparator))
+                        typeMemberBaseComparator,
+                        sortableCache))
                 .toList();
 
-        Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(typeMemberBaseComparator);
+        Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(orderingKeyComparator);
 
         return sortableTypeMembers.stream()
                 .sorted(groupComparator)
@@ -99,14 +103,21 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static SortableTypeMember convertTypeMember2SortableTypeMember(
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static SortableTypeMember resolveSortableTypeMember(
             CtTypeMember typeMember,
             Set<CtTypeMember> groupMembers,
             MemberDependencyGraph memberDependencyGraph,
             boolean keepAccessorsTogether,
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
             Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
+            Comparator<CtTypeMember> typeMemberBaseComparator,
+            Map<CtTypeMember, SortableTypeMember> sortableCache) {
+
+        SortableTypeMember cached = sortableCache.get(typeMember);
+        if (cached != null) {
+            return cached;
+        }
 
         Set<CtTypeMember> declarationDependentsInGroup =
                 memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
@@ -129,8 +140,26 @@ class GroupMembersOrderer {
             representativeTypeMember = typeMember;
         }
 
-        return new SortableTypeMember(
-                typeMember, representativeTypeMember, declarationDependentsInGroup, orderingKeyProvider);
+        SortableTypeMember sortable;
+        if (representativeTypeMember == typeMember) {
+            sortable = SortableTypeMember.createSelfRepresentative(
+                    typeMember, declarationDependentsInGroup, orderingKeyProvider);
+        } else {
+            SortableTypeMember representative = resolveSortableTypeMember(
+                    representativeTypeMember,
+                    groupMembers,
+                    memberDependencyGraph,
+                    keepAccessorsTogether,
+                    accessorBundleMembersByMember,
+                    orderingKeyProvider,
+                    typeMemberBaseComparator,
+                    sortableCache);
+            sortable = new SortableTypeMember(
+                    typeMember, representative, declarationDependentsInGroup, orderingKeyProvider);
+        }
+
+        sortableCache.put(typeMember, sortable);
+        return sortable;
     }
 
     @NonNull

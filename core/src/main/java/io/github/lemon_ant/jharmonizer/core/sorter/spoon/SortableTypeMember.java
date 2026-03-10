@@ -11,34 +11,61 @@ import java.util.Set;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
-@Value
-class SortableTypeMember {
+@Getter
+@EqualsAndHashCode(exclude = "representative")
+@ToString(exclude = "representative")
+final class SortableTypeMember {
 
     @NonNull
-    CtTypeMember typeMember;
+    private final CtTypeMember typeMember;
 
     @NonNull
-    OrderingKey orderingKey;
+    private final OrderingKey orderingKey;
 
     @NonNull
-    CtTypeMember representativeTypeMember;
+    private final SortableTypeMember representative;
 
     @NonNull
-    Set<@NonNull CtTypeMember> orderingDependentsInGroup;
+    private final Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
-            @NonNull CtTypeMember representativeTypeMember,
+            @NonNull SortableTypeMember representative,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
-            Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
+            @NonNull Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
         this.typeMember = typeMember;
-        this.representativeTypeMember = representativeTypeMember;
+        this.representative = representative;
         this.orderingDependentsInGroup = orderingDependentsInGroup;
         this.orderingKey = orderingKeyProvider.apply(typeMember);
+    }
+
+    private SortableTypeMember(
+            @NonNull CtTypeMember typeMember,
+            @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
+            @NonNull Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
+        this.typeMember = typeMember;
+        this.representative = this;
+        this.orderingDependentsInGroup = orderingDependentsInGroup;
+        this.orderingKey = orderingKeyProvider.apply(typeMember);
+    }
+
+    static SortableTypeMember createSelfRepresentative(
+            @NonNull CtTypeMember typeMember,
+            @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
+            @NonNull Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
+        return new SortableTypeMember(typeMember, orderingDependentsInGroup, orderingKeyProvider);
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    boolean isSelfRepresentative() {
+        return representative == this;
     }
 
     static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {

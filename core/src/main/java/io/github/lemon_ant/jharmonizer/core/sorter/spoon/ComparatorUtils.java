@@ -22,7 +22,7 @@ class ComparatorUtils {
     @NonNull
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
-            @NonNull Comparator<CtTypeMember> typeMemberBaseComparator) {
+            @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
             CtTypeMember leftMember = leftSortable.getTypeMember();
             CtTypeMember rightMember = rightSortable.getTypeMember();
@@ -37,12 +37,11 @@ class ComparatorUtils {
                 return declarationDependencyComparison;
             }
 
-            int representativeComparison =
-                    compareByRepresentatives(leftSortable, rightSortable, typeMemberBaseComparator);
+            int representativeComparison = compareByRepresentatives(leftSortable, rightSortable, orderingKeyComparator);
             if (representativeComparison != 0) {
                 return representativeComparison;
             }
-            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, typeMemberBaseComparator);
+            return compareByBaseComparatorOrThrow(leftSortable, rightSortable, orderingKeyComparator);
         };
     }
 
@@ -97,15 +96,16 @@ class ComparatorUtils {
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
-        CtTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
-        CtTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
+            Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
+        SortableTypeMember leftRepresentative = leftSortable.getRepresentative();
+        SortableTypeMember rightRepresentative = rightSortable.getRepresentative();
 
         if (leftRepresentative == rightRepresentative) {
             return 0;
         }
 
-        int representativeComparison = typeMemberBaseComparator.compare(leftRepresentative, rightRepresentative);
+        int representativeComparison = orderingKeyComparator.compare(
+                leftRepresentative.getOrderingKey(), rightRepresentative.getOrderingKey());
         if (representativeComparison != 0) {
             return representativeComparison;
         }
@@ -116,9 +116,9 @@ class ComparatorUtils {
     private static int compareByBaseComparatorOrThrow(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
+            Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         int directComparison =
-                typeMemberBaseComparator.compare(leftSortable.getTypeMember(), rightSortable.getTypeMember());
+                orderingKeyComparator.compare(leftSortable.getOrderingKey(), rightSortable.getOrderingKey());
         if (directComparison != 0) {
             return directComparison;
         }
@@ -164,20 +164,27 @@ class ComparatorUtils {
                 + "This breaks deterministic representative ordering.\n"
                 + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
                 + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Left representative:  " + describeTypeMemberForDebug(leftSortable.getRepresentativeTypeMember())
-                + "\n"
-                + "Right representative: " + describeTypeMemberForDebug(rightSortable.getRepresentativeTypeMember())
-                + "\n"
+                + "Left representative:  " + describeSortableTypeMemberBrief(leftSortable.getRepresentative()) + "\n"
+                + "Right representative: " + describeSortableTypeMemberBrief(rightSortable.getRepresentative()) + "\n"
                 + "Hint: ensure the OrderingKey comparator has a deterministic tie-breaker for representatives.";
     }
 
     @NonNull
     private static String describeSortableTypeMember(SortableTypeMember sortableTypeMember) {
+        String representativeInfo = sortableTypeMember.isSelfRepresentative()
+                ? "self"
+                : describeSortableTypeMemberBrief(sortableTypeMember.getRepresentative());
         return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
                 + ", orderingKey=" + sortableTypeMember.getOrderingKey()
-                + ", representative=" + describeTypeMemberForDebug(sortableTypeMember.getRepresentativeTypeMember())
+                + ", representative=" + representativeInfo
                 + ", orderingDependentsInGroupCount="
                 + sortableTypeMember.getOrderingDependentsInGroup().size();
+    }
+
+    @NonNull
+    private static String describeSortableTypeMemberBrief(SortableTypeMember sortableTypeMember) {
+        return describeTypeMemberForDebug(sortableTypeMember.getTypeMember()) + ", orderingKey="
+                + sortableTypeMember.getOrderingKey();
     }
 
     @NonNull
