@@ -174,9 +174,9 @@ class ComparatorUtils {
     }
 
     @NonNull
-    private static String describeRepresentativeForDebug(SortableTypeMember representativeSortableTypeMember) {
-        return "member=" + describeTypeMemberForDebug(representativeSortableTypeMember.getTypeMember())
-                + ", orderingKey=" + representativeSortableTypeMember.getOrderingKey();
+    private static String describeRepresentativeForDebug(SortableTypeMember representative) {
+        return "member=" + describeTypeMemberForDebug(representative.getTypeMember()) + ", orderingKey="
+                + representative.getOrderingKey();
     }
 
     @NonNull
