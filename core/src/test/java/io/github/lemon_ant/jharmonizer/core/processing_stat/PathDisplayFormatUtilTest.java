@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -40,5 +41,17 @@ class PathDisplayFormatUtilTest {
 
         // Then
         assertThat(abbreviatedPath).isEqualTo(shortPath.toString());
+    }
+
+    @Test
+    void abbreviatePathForDisplay_maxTotalLengthTooSmall_throwsIllegalArgumentException() {
+        // Given
+        Path path = Path.of("some/long/path/to/MyClass.java");
+        int maxTotalLength = 10;
+
+        // When / Then
+        assertThatThrownBy(() -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, maxTotalLength))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxTotalLength is too small");
     }
 }
