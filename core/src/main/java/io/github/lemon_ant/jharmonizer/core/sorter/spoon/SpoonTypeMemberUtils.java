@@ -29,13 +29,10 @@ public class SpoonTypeMemberUtils {
     }
 
     static int deriveAlphaSortingRank(@NonNull CtTypeMember typeMember) {
-        if (typeMember instanceof CtField<?>) {
-            return 0;
-        }
         if (typeMember instanceof CtAnonymousExecutable) {
             return 1;
         }
-        return 2;
+        return 0;
     }
 
     static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
