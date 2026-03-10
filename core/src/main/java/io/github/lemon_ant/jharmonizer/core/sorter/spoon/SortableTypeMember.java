@@ -11,7 +11,9 @@ import java.util.Set;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -25,18 +27,26 @@ class SortableTypeMember {
     OrderingKey orderingKey;
 
     @NonNull
-    CtTypeMember representativeTypeMember;
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    SortableTypeMember representativeSortableTypeMember;
 
     @NonNull
     Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
+    /**
+     * @param representativeSortableTypeMember the representative wrapper, or {@code null} when the
+     *                                         representative is the member itself (self-reference –
+     *                                         the constructor stores {@code this}).
+     */
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
-            @NonNull CtTypeMember representativeTypeMember,
+            SortableTypeMember representativeSortableTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
             Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
         this.typeMember = typeMember;
-        this.representativeTypeMember = representativeTypeMember;
+        this.representativeSortableTypeMember =
+                representativeSortableTypeMember != null ? representativeSortableTypeMember : this;
         this.orderingDependentsInGroup = orderingDependentsInGroup;
         this.orderingKey = orderingKeyProvider.apply(typeMember);
     }

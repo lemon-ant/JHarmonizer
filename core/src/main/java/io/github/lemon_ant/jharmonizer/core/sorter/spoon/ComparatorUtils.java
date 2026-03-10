@@ -98,14 +98,15 @@ class ComparatorUtils {
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
-        CtTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
-        CtTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
+        SortableTypeMember leftRepresentative = leftSortable.getRepresentativeSortableTypeMember();
+        SortableTypeMember rightRepresentative = rightSortable.getRepresentativeSortableTypeMember();
 
         if (leftRepresentative == rightRepresentative) {
             return 0;
         }
 
-        int representativeComparison = typeMemberBaseComparator.compare(leftRepresentative, rightRepresentative);
+        int representativeComparison = typeMemberBaseComparator.compare(
+                leftRepresentative.getTypeMember(), rightRepresentative.getTypeMember());
         if (representativeComparison != 0) {
             return representativeComparison;
         }
@@ -164,9 +165,13 @@ class ComparatorUtils {
                 + "This breaks deterministic representative ordering.\n"
                 + "Left:  " + describeSortableTypeMember(leftSortable) + "\n"
                 + "Right: " + describeSortableTypeMember(rightSortable) + "\n"
-                + "Left representative:  " + describeTypeMemberForDebug(leftSortable.getRepresentativeTypeMember())
+                + "Left representative:  "
+                + describeTypeMemberForDebug(
+                        leftSortable.getRepresentativeSortableTypeMember().getTypeMember())
                 + "\n"
-                + "Right representative: " + describeTypeMemberForDebug(rightSortable.getRepresentativeTypeMember())
+                + "Right representative: "
+                + describeTypeMemberForDebug(
+                        rightSortable.getRepresentativeSortableTypeMember().getTypeMember())
                 + "\n"
                 + "Hint: ensure the OrderingKey comparator has a deterministic tie-breaker for representatives.";
     }
@@ -175,7 +180,9 @@ class ComparatorUtils {
     private static String describeSortableTypeMember(SortableTypeMember sortableTypeMember) {
         return "member=" + describeTypeMemberForDebug(sortableTypeMember.getTypeMember())
                 + ", orderingKey=" + sortableTypeMember.getOrderingKey()
-                + ", representative=" + describeTypeMemberForDebug(sortableTypeMember.getRepresentativeTypeMember())
+                + ", representative="
+                + describeTypeMemberForDebug(
+                        sortableTypeMember.getRepresentativeSortableTypeMember().getTypeMember())
                 + ", orderingDependentsInGroupCount="
                 + sortableTypeMember.getOrderingDependentsInGroup().size();
     }
