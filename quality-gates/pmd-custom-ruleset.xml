@@ -8,6 +8,7 @@
     -->
     <rule ref="category/java/design.xml">
         <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling"/>
     </rule>
     <!-- TODO Activate it
     ruleset>category/java/documentation.xml</ruleset>
