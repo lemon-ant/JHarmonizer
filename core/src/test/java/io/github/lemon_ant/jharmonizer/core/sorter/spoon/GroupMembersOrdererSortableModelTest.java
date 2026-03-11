@@ -21,7 +21,7 @@ import spoon.reflect.declaration.CtTypeMember;
 class GroupMembersOrdererSortableModelTest {
 
     @Test
-    void buildSortableTypeMembers_selfRepresentativeAndRepresentativeChainReuseCachedSortableMembers() {
+    void buildSortableTypeMembers_representativeChainPresent_cachedSortableMembersReused() {
         CtTypeMember alphaFieldMember = requireFixtureMemberBySimpleName("alphaField");
         CtTypeMember bravoFieldMember = requireFixtureMemberBySimpleName("bravoField");
         CtTypeMember zuluFieldMember = requireFixtureMemberBySimpleName("zuluField");
@@ -51,7 +51,7 @@ class GroupMembersOrdererSortableModelTest {
     }
 
     @Test
-    void buildSortableTypeMembers_accessorRepresentativeReusesSameCachedSortableInstance() {
+    void buildSortableTypeMembers_accessorBundlePresent_cachedSortableInstanceReused() {
         CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
         CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
         CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");

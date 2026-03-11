@@ -95,12 +95,13 @@ class GroupMembersOrderer {
                 ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
                 : Map.of();
 
-        class SortableTypeMemberResolver {
+        class SortableTypeMemberFactory {
 
             private final Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = new HashMap<>();
             private final Set<CtTypeMember> resolvingMembers = new HashSet<>();
 
-            private SortableTypeMember resolve(CtTypeMember typeMember) {
+            @NonNull
+            private SortableTypeMember getOrCreate(CtTypeMember typeMember) {
                 SortableTypeMember cachedSortableTypeMember = sortableTypeMemberByMember.get(typeMember);
                 if (cachedSortableTypeMember != null) {
                     return cachedSortableTypeMember;
@@ -112,14 +113,14 @@ class GroupMembersOrderer {
                 }
 
                 try {
-                    Set<CtTypeMember> declarationDependentsInGroup = resolveDeclarationDependentsInGroup(
+                    Set<CtTypeMember> declarationDependentsInGroup = findDeclarationDependentsInGroup(
                             typeMember,
                             groupMemberSet,
                             memberDependencyGraph,
                             keepAccessorsTogether,
                             accessorBundleMembersByMember);
 
-                    CtTypeMember representativeTypeMember = resolveRepresentativeTypeMember(
+                    CtTypeMember representativeTypeMember = findRepresentativeTypeMember(
                             typeMember,
                             declarationDependentsInGroup,
                             keepAccessorsTogether,
@@ -127,7 +128,7 @@ class GroupMembersOrderer {
                             typeMemberBaseComparator);
 
                     SortableTypeMember representativeSortableTypeMember =
-                            representativeTypeMember == typeMember ? null : resolve(representativeTypeMember);
+                            representativeTypeMember == typeMember ? null : getOrCreate(representativeTypeMember);
 
                     SortableTypeMember sortableTypeMember = new SortableTypeMember(
                             typeMember,
@@ -142,12 +143,12 @@ class GroupMembersOrderer {
             }
         }
 
-        SortableTypeMemberResolver sortableTypeMemberResolver = new SortableTypeMemberResolver();
-        return groupMembers.stream().map(sortableTypeMemberResolver::resolve).toList();
+        SortableTypeMemberFactory sortableTypeMemberFactory = new SortableTypeMemberFactory();
+        return groupMembers.stream().map(sortableTypeMemberFactory::getOrCreate).toList();
     }
 
     @NonNull
-    private static Set<@NonNull CtTypeMember> resolveDeclarationDependentsInGroup(
+    private static Set<@NonNull CtTypeMember> findDeclarationDependentsInGroup(
             CtTypeMember typeMember,
             Set<CtTypeMember> groupMembers,
             MemberDependencyGraph memberDependencyGraph,
@@ -166,7 +167,7 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static CtTypeMember resolveRepresentativeTypeMember(
+    private static CtTypeMember findRepresentativeTypeMember(
             CtTypeMember typeMember,
             Set<CtTypeMember> declarationDependentsInGroup,
             boolean keepAccessorsTogether,
@@ -178,7 +179,7 @@ class GroupMembersOrderer {
                     .orElseThrow();
         }
         if (keepAccessorsTogether) {
-            return resolveAccessorBundleRepresentative(typeMember, accessorBundleMembersByMember);
+            return findAccessorBundleRepresentativeTypeMember(typeMember, accessorBundleMembersByMember);
         }
         return typeMember;
     }
@@ -230,7 +231,7 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    private static CtTypeMember resolveAccessorBundleRepresentative(
+    private static CtTypeMember findAccessorBundleRepresentativeTypeMember(
             CtTypeMember typeMember, Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
         List<CtTypeMember> sortedBundleMembersInGroup = accessorBundleMembersByMember.get(typeMember);
         return sortedBundleMembersInGroup == null ? typeMember : sortedBundleMembersInGroup.getFirst();
