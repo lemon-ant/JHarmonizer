@@ -10,7 +10,6 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
-@SuppressWarnings("PMD.TooManyMethods")
 class ComparatorUtils {
 
     static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
@@ -20,15 +19,13 @@ class ComparatorUtils {
     }
 
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
             CtTypeMember leftMember = leftSortable.getTypeMember();
             CtTypeMember rightMember = rightSortable.getTypeMember();
 
-            // Comparator contract: same reference must be equal.
-            if (leftMember == rightMember) {
+            if (leftMember.equals(rightMember)) {
                 return 0;
             }
 
@@ -92,7 +89,6 @@ class ComparatorUtils {
         return 0;
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,

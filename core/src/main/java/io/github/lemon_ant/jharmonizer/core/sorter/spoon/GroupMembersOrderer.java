@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -97,7 +98,7 @@ class GroupMembersOrderer {
 
         class SortableTypeMemberFactory {
 
-            private final Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = new HashMap<>();
+            private final Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = new ConcurrentHashMap<>();
             private final Set<CtTypeMember> resolvingMembers = new HashSet<>();
 
             @NonNull
@@ -128,7 +129,7 @@ class GroupMembersOrderer {
                             typeMemberBaseComparator);
 
                     SortableTypeMember representativeSortableTypeMember =
-                            representativeTypeMember == typeMember ? null : getOrCreate(representativeTypeMember);
+                            representativeTypeMember.equals(typeMember) ? null : getOrCreate(representativeTypeMember);
 
                     SortableTypeMember sortableTypeMember = new SortableTypeMember(
                             typeMember,
