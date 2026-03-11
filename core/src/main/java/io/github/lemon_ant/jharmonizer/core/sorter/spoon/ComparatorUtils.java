@@ -96,7 +96,7 @@ class ComparatorUtils {
         SortableTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
         SortableTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
 
-        if (leftRepresentative == rightRepresentative) {
+        if (leftRepresentative.equals(rightRepresentative)) {
             return 0;
         }
 
