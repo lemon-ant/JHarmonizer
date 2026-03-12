@@ -48,7 +48,10 @@ class GroupMembersOrdererSortableModelTest {
 
         // When
         List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.convertTypeMembers2SortableTypeMembers(
-                compiledMemberGroup, List.of(zuluFieldMember, bravoFieldMember, alphaFieldMember), dependencyGraph);
+                compiledMemberGroup,
+                List.of(zuluFieldMember, bravoFieldMember, alphaFieldMember),
+                dependencyGraph,
+                ComparatorUtils.buildOrderingComparator(compiledMemberGroup.getOrderingRules()));
 
         SortableTypeMember alphaSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, alphaFieldMember);
         SortableTypeMember bravoSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, bravoFieldMember);
@@ -83,7 +86,8 @@ class GroupMembersOrdererSortableModelTest {
         List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.convertTypeMembers2SortableTypeMembers(
                 compiledMemberGroup,
                 List.of(middleMethodMember, setValueMethodMember, getValueMethodMember),
-                dependencyGraph);
+                dependencyGraph,
+                ComparatorUtils.buildOrderingComparator(compiledMemberGroup.getOrderingRules()));
 
         SortableTypeMember getValueSortableTypeMember =
                 requireSortableTypeMember(sortableTypeMembers, getValueMethodMember);
