@@ -91,8 +91,6 @@ class ComparatorUtils {
         return 0;
     }
 
-    // Intentional identity check: representatives are reused from the same cached SortableTypeMember graph.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
