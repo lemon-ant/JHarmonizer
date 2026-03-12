@@ -20,9 +20,18 @@ import spoon.reflect.declaration.CtTypeMember;
 
 class GroupMembersOrdererSortableModelTest {
 
+    private static final String FIXTURE_CLASSPATH_RESOURCE =
+            "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
+    private static final URL FIXTURE_RESOURCE_URL =
+            GroupMembersOrdererSortableModelTest.class.getResource(FIXTURE_CLASSPATH_RESOURCE);
+    private static final CtType<?> FIXTURE_MAIN_TYPE =
+            SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
+    private static final List<CtTypeMember> FIXTURE_MEMBERS =
+            streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
+
     @Test
     void buildSortableTypeMembers_representativeChainPresent_cachedSortableMembersReused() {
-        // given
+        // Given
         CtTypeMember alphaFieldMember = requireFixtureMemberBySimpleName("alphaField");
         CtTypeMember bravoFieldMember = requireFixtureMemberBySimpleName("bravoField");
         CtTypeMember zuluFieldMember = requireFixtureMemberBySimpleName("zuluField");
@@ -37,7 +46,7 @@ class GroupMembersOrdererSortableModelTest {
         stubAccessorBundleDependents(dependencyGraph, bravoFieldMember, Set.of());
         stubAccessorBundleDependents(dependencyGraph, zuluFieldMember, Set.of());
 
-        // when
+        // When
         List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.buildSortableTypeMembers(
                 compiledMemberGroup, List.of(zuluFieldMember, bravoFieldMember, alphaFieldMember), dependencyGraph);
 
@@ -45,7 +54,7 @@ class GroupMembersOrdererSortableModelTest {
         SortableTypeMember bravoSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, bravoFieldMember);
         SortableTypeMember zuluSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, zuluFieldMember);
 
-        // then
+        // Then
         assertThat(alphaSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
         assertThat(bravoSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
         assertThat(zuluSortableTypeMember.getRepresentativeTypeMember()).isSameAs(bravoSortableTypeMember);
@@ -55,7 +64,7 @@ class GroupMembersOrdererSortableModelTest {
 
     @Test
     void buildSortableTypeMembers_accessorBundlePresent_cachedSortableInstanceReused() {
-        // given
+        // Given
         CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
         CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
         CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");
@@ -70,7 +79,7 @@ class GroupMembersOrdererSortableModelTest {
         stubAccessorBundleDependents(dependencyGraph, setValueMethodMember, Set.of());
         stubAccessorBundleDependents(dependencyGraph, middleMethodMember, Set.of());
 
-        // when
+        // When
         List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.buildSortableTypeMembers(
                 compiledMemberGroup,
                 List.of(middleMethodMember, setValueMethodMember, getValueMethodMember),
@@ -83,7 +92,7 @@ class GroupMembersOrdererSortableModelTest {
         SortableTypeMember middleSortableTypeMember =
                 requireSortableTypeMember(sortableTypeMembers, middleMethodMember);
 
-        // then
+        // Then
         assertThat(getValueSortableTypeMember.getRepresentativeTypeMember()).isSameAs(getValueSortableTypeMember);
         assertThat(setValueSortableTypeMember.getRepresentativeTypeMember()).isSameAs(getValueSortableTypeMember);
         assertThat(middleSortableTypeMember.getRepresentativeTypeMember()).isSameAs(middleSortableTypeMember);
@@ -113,20 +122,6 @@ class GroupMembersOrdererSortableModelTest {
     }
 
     private static CtTypeMember requireFixtureMemberBySimpleName(String expectedSimpleName) {
-        return SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.FIXTURE_MEMBERS, expectedSimpleName);
-    }
-
-    private static final class Constants {
-
-        private static final String FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
-        private static final URL FIXTURE_RESOURCE_URL =
-                GroupMembersOrdererSortableModelTest.class.getResource(FIXTURE_CLASSPATH_RESOURCE);
-        private static final CtType<?> FIXTURE_MAIN_TYPE =
-                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
-        private static final List<CtTypeMember> FIXTURE_MEMBERS =
-                streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
-
-        private Constants() {}
+        return SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIXTURE_MEMBERS, expectedSimpleName);
     }
 }
