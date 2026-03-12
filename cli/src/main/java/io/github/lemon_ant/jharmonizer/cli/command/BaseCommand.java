@@ -97,7 +97,7 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @Value
-    static class CommandOptions {
+    private static class CommandOptions {
         @NonNull
         Path baseDir;
 

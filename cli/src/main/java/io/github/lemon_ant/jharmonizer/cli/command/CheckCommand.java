@@ -10,8 +10,6 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckCommand extends BaseCommand {
 
-    CheckCommand() {}
-
     CheckCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }

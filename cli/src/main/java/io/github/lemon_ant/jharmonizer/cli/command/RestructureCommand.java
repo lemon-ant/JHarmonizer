@@ -10,8 +10,6 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class RestructureCommand extends BaseCommand {
 
-    RestructureCommand() {}
-
     RestructureCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
