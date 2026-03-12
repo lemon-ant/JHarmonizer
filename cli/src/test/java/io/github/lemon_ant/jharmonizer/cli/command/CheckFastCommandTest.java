@@ -21,7 +21,7 @@ import picocli.CommandLine;
 class CheckFastCommandTest {
 
     @Test
-    void checkFastCommand_withBaseDirOption_invokesProcessorWithCheckFailFastFlow() {
+    void checkFastCommand_baseDirOption_invokesProcessorWithCheckFailFastFlow() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
@@ -37,7 +37,7 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_withIncludeOption_parsesIncludePatternCorrectly() {
+    void checkFastCommand_includeOption_parsesIncludePatternCorrectly() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
@@ -53,7 +53,7 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_whenFormattingChangesDetected_returnsExitCode3() {
+    void checkFastCommand_formattingChangesDetected_returnsExitCode3() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
@@ -68,7 +68,7 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_whenOrderingChangesDetected_returnsExitCode3() {
+    void checkFastCommand_orderingChangesDetected_returnsExitCode3() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
@@ -83,7 +83,7 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_whenNoChangesDetected_returnsExitCode0() {
+    void checkFastCommand_noChangesDetected_returnsExitCode0() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(5, 1024, 1000000, null, null);
@@ -98,7 +98,7 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_whenProcessorThrowsRuntimeException_returnsExitCode1() {
+    void checkFastCommand_processorThrowsRuntimeException_returnsExitCode1() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))

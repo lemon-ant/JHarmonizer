@@ -1,15 +1,10 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.cli.config.CheckCommandConfiguration;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import java.io.File;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
 @Slf4j
 @Command(
@@ -17,43 +12,24 @@ import picocli.CommandLine.Option;
         description = "Checks all Java source files and reports which ones require restructuring.",
         mixinStandardHelpOptions = true)
 @SuppressWarnings("PMD.GuardLogStatement")
-public class CheckCommand implements Callable<Integer> {
-
-    private final SourceProcessor sourceProcessor;
-
-    @Option(
-            names = "--base-dir",
-            description = "Base directory containing Java source files to check.",
-            required = true)
-    private File baseDir;
-
-    @SuppressWarnings("PMD.ImmutableField")
-    @Option(names = "--include", description = "Glob patterns for files to include (can be repeated).")
-    private Set<String> includeGlobs = new HashSet<>();
-
-    @SuppressWarnings("PMD.ImmutableField")
-    @Option(names = "--exclude", description = "Glob patterns for files to exclude (can be repeated).")
-    private Set<String> excludeGlobs = new HashSet<>();
+public class CheckCommand extends BaseCommand {
 
     public CheckCommand() {
         this(new SourceProcessor());
     }
 
     CheckCommand(SourceProcessor sourceProcessor) {
-        this.sourceProcessor = sourceProcessor;
+        super(sourceProcessor);
     }
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    public Integer call() {
-        CheckCommandConfiguration config =
-                new CheckCommandConfiguration(baseDir.toPath(), Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs));
-
-        log.info("Checking sources in: {}", config.getBaseDir());
+    protected Integer execute() {
+        log.info("Checking sources in: {}", baseDir);
 
         try {
             sourceProcessor.processSources(
-                    config.getBaseDir(), config.getIncludeGlobs(), config.getExcludeGlobs(), FlowType.CHECK_ALL);
+                    baseDir.toPath(), Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), FlowType.CHECK_ALL);
             log.info("Check completed.");
             return 0;
         } catch (RuntimeException e) {

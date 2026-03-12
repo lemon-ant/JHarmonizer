@@ -18,7 +18,7 @@ import picocli.CommandLine;
 class CheckCommandTest {
 
     @Test
-    void checkCommand_withBaseDirOption_invokesProcessorWithCheckAllFlow() {
+    void checkCommand_baseDirOption_invokesProcessorWithCheckAllFlow() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
@@ -34,7 +34,7 @@ class CheckCommandTest {
     }
 
     @Test
-    void checkCommand_withIncludeOption_parsesIncludePatternCorrectly() {
+    void checkCommand_includeOption_parsesIncludePatternCorrectly() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
@@ -50,7 +50,7 @@ class CheckCommandTest {
     }
 
     @Test
-    void checkCommand_whenAllFilesChecked_returnsExitCode0() {
+    void checkCommand_allFilesChecked_returnsExitCode0() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(5, 1024, 1000000, null, null);
@@ -65,7 +65,7 @@ class CheckCommandTest {
     }
 
     @Test
-    void checkCommand_whenProcessorThrowsRuntimeException_returnsExitCode1() {
+    void checkCommand_processorThrowsRuntimeException_returnsExitCode1() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))

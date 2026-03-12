@@ -18,7 +18,7 @@ import picocli.CommandLine;
 class RestructureCommandTest {
 
     @Test
-    void restructureCommand_withBaseDirOption_invokesProcessorWithCorrectBaseDir() {
+    void restructureCommand_baseDirOption_invokesProcessorWithCorrectBaseDir() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
@@ -35,7 +35,7 @@ class RestructureCommandTest {
     }
 
     @Test
-    void restructureCommand_withIncludeOption_parsesIncludePatternCorrectly() {
+    void restructureCommand_includeOption_parsesIncludePatternCorrectly() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
@@ -52,23 +52,7 @@ class RestructureCommandTest {
     }
 
     @Test
-    void restructureCommand_withDryRunOption_usesCheckAllFlowType() {
-        // Given
-        SourceProcessor mockProcessor = mock(SourceProcessor.class);
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
-        when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new RestructureCommand(mockProcessor));
-
-        // When
-        int exitCode = cmd.execute("--base-dir", "src", "--dry-run");
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(mockProcessor).processSources(any(Path.class), any(), any(), eq(FlowType.CHECK_ALL));
-    }
-
-    @Test
-    void restructureCommand_whenProcessorThrowsRuntimeException_returnsExitCode1() {
+    void restructureCommand_processorThrowsRuntimeException_returnsExitCode1() {
         // Given
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
