@@ -19,6 +19,7 @@ class ComparatorUtils {
     }
 
     @NonNull
+    // Intentional identity check: the compared CtTypeMember objects come from the same Spoon model instance.
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
@@ -90,6 +91,7 @@ class ComparatorUtils {
         return 0;
     }
 
+    // Intentional identity check: representatives are reused from the same cached SortableTypeMember graph.
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
