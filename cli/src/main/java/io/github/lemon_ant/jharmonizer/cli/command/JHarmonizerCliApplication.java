@@ -8,15 +8,12 @@ import picocli.CommandLine.Command;
         description = "JHarmonizer: harmonize Java source file structure.",
         mixinStandardHelpOptions = true,
         subcommands = {RestructureCommand.class, CheckCommand.class, CheckFastCommand.class})
-public final class JHarmonizerCliApplication implements Runnable {
+public final class JHarmonizerCliApplication {
 
-    @Override
-    public void run() {
-        // No-op: subcommands handle execution. Help is shown via mixinStandardHelpOptions.
-    }
+    private JHarmonizerCliApplication() {}
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new JHarmonizerCliApplication()).execute(args);
+        int exitCode = new CommandLine(JHarmonizerCliApplication.class).execute(args);
         System.exit(exitCode);
     }
 }

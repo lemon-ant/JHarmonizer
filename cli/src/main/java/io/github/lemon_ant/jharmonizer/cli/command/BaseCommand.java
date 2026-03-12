@@ -79,17 +79,18 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
-        log.info("Processing sources with flow {} in: {}", getFlowType(), commandOptions.getBaseDir());
+        FlowType flowType = getFlowType();
+        log.info("Processing sources with flow {} in: {}", flowType, commandOptions.getBaseDir());
         try {
             getSourceProcessor()
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
                             commandOptions.getExcludeGlobs(),
-                            getFlowType());
+                            flowType);
             return 0;
         } catch (NotFormattedException | NotOrderedException e) {
-            log.warn("Flow {} stopped early: {}", getFlowType(), e.getMessage());
+            log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
             return checkFailedExitCode();
         }
     }
