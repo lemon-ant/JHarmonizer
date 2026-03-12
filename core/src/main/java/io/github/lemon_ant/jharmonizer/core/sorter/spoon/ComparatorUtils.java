@@ -19,13 +19,14 @@ class ComparatorUtils {
     }
 
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
             CtTypeMember leftMember = leftSortable.getTypeMember();
             CtTypeMember rightMember = rightSortable.getTypeMember();
 
-            if (leftMember.equals(rightMember)) {
+            if (leftMember == rightMember) {
                 return 0;
             }
 
@@ -89,6 +90,7 @@ class ComparatorUtils {
         return 0;
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,
@@ -96,7 +98,7 @@ class ComparatorUtils {
         SortableTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
         SortableTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
 
-        if (leftRepresentative.equals(rightRepresentative)) {
+        if (leftRepresentative == rightRepresentative) {
             return 0;
         }
 
