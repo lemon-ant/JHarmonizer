@@ -11,10 +11,10 @@ public class CommandOptions {
     Path baseDir;
 
     @NonNull
-    Set<String> includeGlobs;
+    Set<@NonNull String> includeGlobs;
 
     @NonNull
-    Set<String> excludeGlobs;
+    Set<@NonNull String> excludeGlobs;
 
     boolean verbose;
 }

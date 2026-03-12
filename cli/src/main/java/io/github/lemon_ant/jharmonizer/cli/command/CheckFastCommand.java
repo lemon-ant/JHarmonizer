@@ -30,8 +30,12 @@ public class CheckFastCommand extends BaseCommand {
         log.info("Checking sources (fail-fast) in: {}", opts.getBaseDir());
 
         try {
-            sourceProcessor.processSources(
-                    opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.CHECK_FAIL_FAST);
+            getSourceProcessor()
+                    .processSources(
+                            opts.getBaseDir(),
+                            opts.getIncludeGlobs(),
+                            opts.getExcludeGlobs(),
+                            FlowType.CHECK_FAIL_FAST);
             log.info("Check passed: no files require restructuring.");
             return 0;
         } catch (NotFormattedException | NotOrderedException e) {

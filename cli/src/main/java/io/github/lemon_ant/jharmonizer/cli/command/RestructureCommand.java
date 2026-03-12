@@ -25,8 +25,9 @@ public class RestructureCommand extends BaseCommand {
         log.info("Processing sources in: {}", opts.getBaseDir());
 
         try {
-            sourceProcessor.processSources(
-                    opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.RESTRUCTURE);
+            getSourceProcessor()
+                    .processSources(
+                            opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.RESTRUCTURE);
             return 0;
         } catch (RuntimeException e) {
             log.error("Processing failed: {}", e.getMessage());

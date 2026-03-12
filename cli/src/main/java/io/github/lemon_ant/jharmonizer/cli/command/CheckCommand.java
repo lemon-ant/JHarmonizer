@@ -25,8 +25,9 @@ public class CheckCommand extends BaseCommand {
         log.info("Checking sources in: {}", opts.getBaseDir());
 
         try {
-            sourceProcessor.processSources(
-                    opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.CHECK_ALL);
+            getSourceProcessor()
+                    .processSources(
+                            opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.CHECK_ALL);
             log.info("Check completed.");
             return 0;
         } catch (RuntimeException e) {

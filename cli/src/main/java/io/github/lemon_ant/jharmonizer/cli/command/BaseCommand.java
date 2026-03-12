@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Option;
@@ -15,23 +16,25 @@ import picocli.CommandLine.Option;
 public abstract class BaseCommand implements Callable<Integer> {
 
     @NonNull
-    protected final SourceProcessor sourceProcessor;
+    @Getter(AccessLevel.PROTECTED)
+    private final SourceProcessor sourceProcessor;
 
     @Option(
             names = {"-b", "--base-dir"},
-            description = "Base directory containing Java source files.",
-            required = true)
+            description = "Base directory containing Java source files (default: current directory).")
     private Path baseDir;
 
     @Option(
             names = {"-i", "--include"},
             description = "Glob patterns for files to include (can be repeated).")
-    private final Set<String> includeGlobs = new HashSet<>();
+    @SuppressWarnings("PMD.ImmutableField")
+    private Set<String> includeGlobs = new HashSet<>();
 
     @Option(
             names = {"-e", "--exclude"},
             description = "Glob patterns for files to exclude (can be repeated).")
-    private final Set<String> excludeGlobs = new HashSet<>();
+    @SuppressWarnings("PMD.ImmutableField")
+    private Set<String> excludeGlobs = new HashSet<>();
 
     @Option(
             names = {"-v", "--verbose"},
@@ -44,7 +47,9 @@ public abstract class BaseCommand implements Callable<Integer> {
 
     @Override
     public final Integer call() {
-        CommandOptions opts = new CommandOptions(baseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
+        Path effectiveBaseDir = baseDir != null ? baseDir : Path.of("").toAbsolutePath();
+        CommandOptions opts =
+                new CommandOptions(effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
         if (opts.isVerbose()) {
             LoggingConfigurator.setDebugLevel();
         }
