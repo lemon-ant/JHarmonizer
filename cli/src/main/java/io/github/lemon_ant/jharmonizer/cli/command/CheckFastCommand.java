@@ -13,6 +13,8 @@ final class CheckFastCommand extends BaseCommand {
 
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
+    CheckFastCommand() {}
+
     CheckFastCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
