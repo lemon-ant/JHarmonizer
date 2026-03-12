@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 
@@ -14,9 +13,7 @@ import picocli.CommandLine.Command;
 @SuppressWarnings("PMD.GuardLogStatement")
 public class RestructureCommand extends BaseCommand {
 
-    public RestructureCommand() {
-        this(new SourceProcessor());
-    }
+    public RestructureCommand() {}
 
     RestructureCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
@@ -24,15 +21,12 @@ public class RestructureCommand extends BaseCommand {
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected int execute() {
-        log.info("Processing sources in: {}", getBaseDir());
+    protected int execute(CommandOptions opts) {
+        log.info("Processing sources in: {}", opts.getBaseDir());
 
         try {
             sourceProcessor.processSources(
-                    getBaseDir().toPath(),
-                    Set.copyOf(getIncludeGlobs()),
-                    Set.copyOf(getExcludeGlobs()),
-                    FlowType.RESTRUCTURE);
+                    opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.RESTRUCTURE);
             return 0;
         } catch (RuntimeException e) {
             log.error("Processing failed: {}", e.getMessage());

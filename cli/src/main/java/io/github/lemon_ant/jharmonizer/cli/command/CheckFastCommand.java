@@ -4,7 +4,6 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 
@@ -19,9 +18,7 @@ public class CheckFastCommand extends BaseCommand {
 
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
-    public CheckFastCommand() {
-        this(new SourceProcessor());
-    }
+    public CheckFastCommand() {}
 
     CheckFastCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
@@ -29,15 +26,12 @@ public class CheckFastCommand extends BaseCommand {
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected int execute() {
-        log.info("Checking sources (fail-fast) in: {}", getBaseDir());
+    protected int execute(CommandOptions opts) {
+        log.info("Checking sources (fail-fast) in: {}", opts.getBaseDir());
 
         try {
             sourceProcessor.processSources(
-                    getBaseDir().toPath(),
-                    Set.copyOf(getIncludeGlobs()),
-                    Set.copyOf(getExcludeGlobs()),
-                    FlowType.CHECK_FAIL_FAST);
+                    opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.CHECK_FAIL_FAST);
             log.info("Check passed: no files require restructuring.");
             return 0;
         } catch (NotFormattedException | NotOrderedException e) {
