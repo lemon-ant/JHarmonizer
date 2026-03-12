@@ -22,6 +22,7 @@ class GroupMembersOrdererSortableModelTest {
 
     @Test
     void buildSortableTypeMembers_representativeChainPresent_cachedSortableMembersReused() {
+        // given
         CtTypeMember alphaFieldMember = requireFixtureMemberBySimpleName("alphaField");
         CtTypeMember bravoFieldMember = requireFixtureMemberBySimpleName("bravoField");
         CtTypeMember zuluFieldMember = requireFixtureMemberBySimpleName("zuluField");
@@ -36,6 +37,7 @@ class GroupMembersOrdererSortableModelTest {
         stubAccessorBundleDependents(dependencyGraph, bravoFieldMember, Set.of());
         stubAccessorBundleDependents(dependencyGraph, zuluFieldMember, Set.of());
 
+        // when
         List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.buildSortableTypeMembers(
                 compiledMemberGroup, List.of(zuluFieldMember, bravoFieldMember, alphaFieldMember), dependencyGraph);
 
@@ -43,6 +45,7 @@ class GroupMembersOrdererSortableModelTest {
         SortableTypeMember bravoSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, bravoFieldMember);
         SortableTypeMember zuluSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, zuluFieldMember);
 
+        // then
         assertThat(alphaSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
         assertThat(bravoSortableTypeMember.getRepresentativeTypeMember()).isSameAs(alphaSortableTypeMember);
         assertThat(zuluSortableTypeMember.getRepresentativeTypeMember()).isSameAs(bravoSortableTypeMember);
@@ -52,6 +55,7 @@ class GroupMembersOrdererSortableModelTest {
 
     @Test
     void buildSortableTypeMembers_accessorBundlePresent_cachedSortableInstanceReused() {
+        // given
         CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
         CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
         CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");
@@ -66,6 +70,7 @@ class GroupMembersOrdererSortableModelTest {
         stubAccessorBundleDependents(dependencyGraph, setValueMethodMember, Set.of());
         stubAccessorBundleDependents(dependencyGraph, middleMethodMember, Set.of());
 
+        // when
         List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.buildSortableTypeMembers(
                 compiledMemberGroup,
                 List.of(middleMethodMember, setValueMethodMember, getValueMethodMember),
@@ -78,6 +83,7 @@ class GroupMembersOrdererSortableModelTest {
         SortableTypeMember middleSortableTypeMember =
                 requireSortableTypeMember(sortableTypeMembers, middleMethodMember);
 
+        // then
         assertThat(getValueSortableTypeMember.getRepresentativeTypeMember()).isSameAs(getValueSortableTypeMember);
         assertThat(setValueSortableTypeMember.getRepresentativeTypeMember()).isSameAs(getValueSortableTypeMember);
         assertThat(middleSortableTypeMember.getRepresentativeTypeMember()).isSameAs(middleSortableTypeMember);

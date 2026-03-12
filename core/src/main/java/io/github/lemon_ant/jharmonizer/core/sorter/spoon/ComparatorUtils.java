@@ -4,7 +4,6 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -26,7 +25,7 @@ class ComparatorUtils {
             CtTypeMember leftMember = leftSortable.getTypeMember();
             CtTypeMember rightMember = rightSortable.getTypeMember();
 
-            if (Objects.equals(leftMember, rightMember)) {
+            if (leftMember.equals(rightMember)) {
                 return 0;
             }
 
@@ -97,7 +96,7 @@ class ComparatorUtils {
         SortableTypeMember leftRepresentative = leftSortable.getRepresentativeTypeMember();
         SortableTypeMember rightRepresentative = rightSortable.getRepresentativeTypeMember();
 
-        if (Objects.equals(leftRepresentative, rightRepresentative)) {
+        if (leftRepresentative.equals(rightRepresentative)) {
             return 0;
         }
 
