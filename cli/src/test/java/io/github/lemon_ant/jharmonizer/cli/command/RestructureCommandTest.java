@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
-import java.io.File;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
@@ -30,8 +29,7 @@ class RestructureCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
-        verify(mockProcessor)
-                .processSources(eq(new File("src/main/java").toPath()), any(), any(), eq(FlowType.RESTRUCTURE));
+        verify(mockProcessor).processSources(eq(Path.of("src/main/java")), any(), any(), eq(FlowType.RESTRUCTURE));
     }
 
     @Test

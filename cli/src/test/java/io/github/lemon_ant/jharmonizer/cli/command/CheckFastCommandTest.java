@@ -12,7 +12,6 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,7 @@ class CheckFastCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
-        verify(mockProcessor).processSources(eq(new File("src").toPath()), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
+        verify(mockProcessor).processSources(eq(Path.of("src")), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
     }
 
     @Test
