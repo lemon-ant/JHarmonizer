@@ -48,16 +48,11 @@ public class CheckAllFlow implements IFlow {
         debugStageRecorder.recordSrcStage(
                 srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
 
-        boolean hasChanges = !srcFile.getSrcCode().equals(serializationResult.getSerializedSrcCode());
-        List<Pair<CtElement, Integer>> elementRelocations;
-        String srcDiff;
-        if (hasChanges) {
-            elementRelocations = findRelocations(
-                    sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
-        } else {
+        List<Pair<CtElement, Integer>> elementRelocations = findRelocations(
+                sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
+        String srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
+        if (elementRelocations.isEmpty() && srcDiff.isEmpty()) {
             elementRelocations = List.of();
-            srcDiff = "";
         }
 
         return FlowProcessingResult.builder()

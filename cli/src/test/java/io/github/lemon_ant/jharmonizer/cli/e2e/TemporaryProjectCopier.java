@@ -17,7 +17,9 @@ class TemporaryProjectCopier {
     static Path copyProject(@NonNull String resourceRoot, @NonNull Path targetDirectory)
             throws IOException, URISyntaxException {
         URL resource = TemporaryProjectCopier.class.getClassLoader().getResource(resourceRoot);
-        assertThat(resource).as("Test resource directory not found: %s", resourceRoot).isNotNull();
+        assertThat(resource)
+                .as("Test resource directory not found: %s", resourceRoot)
+                .isNotNull();
 
         Path sourceDirectory = Path.of(resource.toURI());
         Files.createDirectories(targetDirectory);

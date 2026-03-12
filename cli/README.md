@@ -17,6 +17,27 @@ The fat JAR is produced at:
 cli/target/jharmonizer-cli.jar
 ```
 
+## Packaged-JAR end-to-end tests
+
+The CLI module includes a black-box end-to-end suite that runs in Maven's
+`verify` phase **after** the shaded executable JAR has been packaged. The tests
+copy a small Java source project from
+`cli/src/test/resources/e2e/projects/basic-project/` into a temporary working
+directory and invoke the packaged artifact exactly as a user would:
+
+```bash
+mvn -B -ntp verify -pl cli -am -Dci-pipeline
+```
+
+The suite validates:
+
+- `java -jar cli/target/jharmonizer-cli.jar`
+- root help and subcommand help output
+- all real commands: `restructure`, `check`, and `check-fast`
+- repeated `--include` / `--exclude` combinations
+- exit codes, stdout/stderr, and filesystem side effects
+- negative scenarios such as missing `--base-dir` and invalid base directories
+
 ## Running
 
 ```bash

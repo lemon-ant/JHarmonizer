@@ -13,13 +13,13 @@ class ExecutableJarLocator {
 
     static Path locateExecutableJar() {
         String configuredJarPath = System.getProperty(EXECUTABLE_JAR_PROPERTY);
-        Path executableJar = configuredJarPath == null
-                ? Path.of("target", "jharmonizer-cli.jar")
-                : Path.of(configuredJarPath);
+        Path executableJar =
+                configuredJarPath == null ? Path.of("target", "jharmonizer-cli.jar") : Path.of(configuredJarPath);
 
         assertThat(executableJar)
                 .as("Packaged CLI JAR path")
-                .matches(path -> path.getFileName() != null && path.getFileName().toString().endsWith(".jar"));
+                .matches(path -> path.getFileName() != null
+                        && path.getFileName().toString().endsWith(".jar"));
         assertThat(Files.isRegularFile(executableJar))
                 .as("Expected packaged executable JAR at %s", executableJar)
                 .isTrue();

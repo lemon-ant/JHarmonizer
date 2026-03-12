@@ -22,14 +22,15 @@ class JHarmonizerCliPackagedJarIT {
     private static final String APP_TEST_JAVA = "src/test/java/com/example/AppTest.java";
     private static final String EXPECTED_HARMONIZED_CLASS = """
             package %s;
-            
+
             public class %s {
+
                 int a = 1;
-            
+
                 int b = 2;
-            
+
                 void aMethod() {}
-            
+
                 void zMethod() {}
             }
             """;
@@ -95,8 +96,8 @@ class JHarmonizerCliPackagedJarIT {
         DirectorySnapshot beforeSnapshot = DirectorySnapshot.capture(projectDirectory);
 
         // When
-        ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+        ExternalCliProcessResult result = ExternalCliProcessRunner.run(
+                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
         DirectorySnapshot afterSnapshot = DirectorySnapshot.capture(projectDirectory);
 
         // Then
@@ -162,15 +163,15 @@ class JHarmonizerCliPackagedJarIT {
             throws IOException, InterruptedException, URISyntaxException {
         // Given
         Path projectDirectory = copyBasicProject();
-        ExternalCliProcessResult initialResult =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+        ExternalCliProcessResult initialResult = ExternalCliProcessRunner.run(
+                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
         assertCompleted(initialResult);
         assertThat(initialResult.exitCode()).as(initialResult.diagnostics()).isZero();
         DirectorySnapshot beforeSnapshot = DirectorySnapshot.capture(projectDirectory);
 
         // When
-        ExternalCliProcessResult secondResult =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+        ExternalCliProcessResult secondResult = ExternalCliProcessRunner.run(
+                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
         DirectorySnapshot afterSnapshot = DirectorySnapshot.capture(projectDirectory);
 
         // Then
@@ -201,9 +202,7 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("Harmonization result:")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED");
-        assertThat(afterSnapshot.fileContents())
-                .as(result.diagnostics())
-                .isEqualTo(beforeSnapshot.fileContents());
+        assertThat(afterSnapshot.fileContents()).as(result.diagnostics()).isEqualTo(beforeSnapshot.fileContents());
     }
 
     @Test
@@ -243,9 +242,7 @@ class JHarmonizerCliPackagedJarIT {
                 .doesNotContain("InternalTool.java")
                 .doesNotContain("ExcludedSample.java")
                 .doesNotContain("AppTest.java");
-        assertThat(afterSnapshot.fileContents())
-                .as(result.diagnostics())
-                .isEqualTo(beforeSnapshot.fileContents());
+        assertThat(afterSnapshot.fileContents()).as(result.diagnostics()).isEqualTo(beforeSnapshot.fileContents());
     }
 
     @Test
@@ -253,10 +250,12 @@ class JHarmonizerCliPackagedJarIT {
             throws IOException, InterruptedException, URISyntaxException {
         // Given
         Path projectDirectory = copyBasicProject();
-        ExternalCliProcessResult restructureResult =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+        ExternalCliProcessResult restructureResult = ExternalCliProcessRunner.run(
+                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
         assertCompleted(restructureResult);
-        assertThat(restructureResult.exitCode()).as(restructureResult.diagnostics()).isZero();
+        assertThat(restructureResult.exitCode())
+                .as(restructureResult.diagnostics())
+                .isZero();
         DirectorySnapshot beforeSnapshot = DirectorySnapshot.capture(projectDirectory);
 
         // When
@@ -272,9 +271,7 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("CHECKED")
                 .doesNotContain("REORDERED")
                 .doesNotContain("FORMATTED");
-        assertThat(afterSnapshot.fileContents())
-                .as(result.diagnostics())
-                .isEqualTo(beforeSnapshot.fileContents());
+        assertThat(afterSnapshot.fileContents()).as(result.diagnostics()).isEqualTo(beforeSnapshot.fileContents());
     }
 
     @Test
@@ -295,10 +292,9 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.diagnostics())
                 .contains("Flow CHECK_FAIL_FAST stopped early")
-                .containsAnyOf("App.java", "FeatureService.java", "InternalTool.java", "ExcludedSample.java", "AppTest.java");
-        assertThat(afterSnapshot.fileContents())
-                .as(result.diagnostics())
-                .isEqualTo(beforeSnapshot.fileContents());
+                .containsAnyOf(
+                        "App.java", "FeatureService.java", "InternalTool.java", "ExcludedSample.java", "AppTest.java");
+        assertThat(afterSnapshot.fileContents()).as(result.diagnostics()).isEqualTo(beforeSnapshot.fileContents());
     }
 
     @Test
@@ -321,13 +317,14 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_nonexistentBaseDirProvided_shouldReturnProcessingError() throws IOException, InterruptedException {
+    void checkCommand_nonexistentBaseDirProvided_shouldReturnProcessingError()
+            throws IOException, InterruptedException {
         // Given
         Path workingDirectory = temporaryDirectory;
 
         // When
-        ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, workingDirectory, "check", "-b", "missing-directory", "-i", "**/*.java");
+        ExternalCliProcessResult result = ExternalCliProcessRunner.run(
+                executableJar, workingDirectory, "check", "-b", "missing-directory", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);

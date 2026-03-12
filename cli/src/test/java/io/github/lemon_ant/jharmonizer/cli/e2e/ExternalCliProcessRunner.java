@@ -18,7 +18,8 @@ class ExternalCliProcessRunner {
 
     private static final long PROCESS_TIMEOUT_SECONDS = 30;
 
-    static ExternalCliProcessResult run(@NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
+    static ExternalCliProcessResult run(
+            @NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
             throws IOException, InterruptedException {
         List<String> command = new ArrayList<>();
         command.add(resolveJavaExecutable().toString());
@@ -26,9 +27,8 @@ class ExternalCliProcessRunner {
         command.add(executableJar.toString());
         command.addAll(Arrays.asList(arguments));
 
-        Process process = new ProcessBuilder(command)
-                .directory(workingDirectory.toFile())
-                .start();
+        Process process =
+                new ProcessBuilder(command).directory(workingDirectory.toFile()).start();
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             var stdoutFuture = executor.submit(() -> read(process.getInputStream()));
