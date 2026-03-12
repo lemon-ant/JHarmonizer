@@ -30,7 +30,7 @@ class GroupMembersOrdererSortableModelTest {
             streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
 
     @Test
-    void buildSortableTypeMembers_representativeChainPresent_cachedSortableMembersReused() {
+    void convertTypeMembers2SortableTypeMembers_representativeChainPresent_cachedSortableMembersReused() {
         // Given
         CtTypeMember alphaFieldMember = requireFixtureMemberBySimpleName("alphaField");
         CtTypeMember bravoFieldMember = requireFixtureMemberBySimpleName("bravoField");
@@ -47,7 +47,7 @@ class GroupMembersOrdererSortableModelTest {
         stubAccessorBundleDependents(dependencyGraph, zuluFieldMember, Set.of());
 
         // When
-        List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.buildSortableTypeMembers(
+        List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.convertTypeMembers2SortableTypeMembers(
                 compiledMemberGroup, List.of(zuluFieldMember, bravoFieldMember, alphaFieldMember), dependencyGraph);
 
         SortableTypeMember alphaSortableTypeMember = requireSortableTypeMember(sortableTypeMembers, alphaFieldMember);
@@ -63,7 +63,7 @@ class GroupMembersOrdererSortableModelTest {
     }
 
     @Test
-    void buildSortableTypeMembers_accessorBundlePresent_cachedSortableInstanceReused() {
+    void convertTypeMembers2SortableTypeMembers_accessorBundlePresent_cachedSortableInstanceReused() {
         // Given
         CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
         CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
@@ -80,7 +80,7 @@ class GroupMembersOrdererSortableModelTest {
         stubAccessorBundleDependents(dependencyGraph, middleMethodMember, Set.of());
 
         // When
-        List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.buildSortableTypeMembers(
+        List<SortableTypeMember> sortableTypeMembers = GroupMembersOrderer.convertTypeMembers2SortableTypeMembers(
                 compiledMemberGroup,
                 List.of(middleMethodMember, setValueMethodMember, getValueMethodMember),
                 dependencyGraph);

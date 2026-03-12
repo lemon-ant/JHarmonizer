@@ -67,8 +67,8 @@ class GroupMembersOrderer {
 
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
-        List<SortableTypeMember> sortableTypeMembers =
-                buildSortableTypeMembers(compiledMemberGroup, groupMembers, memberDependencyGraph);
+        List<SortableTypeMember> sortableTypeMembers = convertTypeMembers2SortableTypeMembers(
+                compiledMemberGroup, groupMembers, memberDependencyGraph, orderingKeyComparator);
         Comparator<SortableTypeMember> groupComparator = ComparatorUtils.buildGroupComparator(orderingKeyComparator);
 
         return sortableTypeMembers.stream()
@@ -78,18 +78,16 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    static List<@NonNull SortableTypeMember> buildSortableTypeMembers(
+    static List<@NonNull SortableTypeMember> convertTypeMembers2SortableTypeMembers(
             CompiledMemberGroup compiledMemberGroup,
             List<@NonNull CtTypeMember> groupMembers,
-            MemberDependencyGraph memberDependencyGraph) {
+            MemberDependencyGraph memberDependencyGraph,
+            Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
-                ComparatorUtils.buildOrderingComparator(orderingRules);
         Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.getOrderingKeyProvider();
+                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
         Comparator<CtTypeMember> typeMemberBaseComparator =
                 buildTypeMemberBaseComparator(orderingKeyProvider, orderingKeyComparator);
         Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether

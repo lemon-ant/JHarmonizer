@@ -20,14 +20,10 @@ class ComparatorUtils {
 
     @NonNull
     // Intentional identity check: the compared CtTypeMember objects come from the same Spoon model instance.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
-            CtTypeMember leftMember = leftSortable.getTypeMember();
-            CtTypeMember rightMember = rightSortable.getTypeMember();
-
-            if (leftMember == rightMember) {
+            if (leftSortable == rightSortable) {
                 return 0;
             }
 
