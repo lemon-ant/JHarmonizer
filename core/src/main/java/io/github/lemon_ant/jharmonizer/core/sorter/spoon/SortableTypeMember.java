@@ -7,8 +7,10 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -25,26 +27,51 @@ class SortableTypeMember {
     OrderingKey orderingKey;
 
     @NonNull
-    CtTypeMember representativeTypeMember;
+    SortableTypeMember representativeTypeMember;
 
     @NonNull
     Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
-            @NonNull CtTypeMember representativeTypeMember,
+            @Nullable SortableTypeMember representativeTypeMember,
             @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
             Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
         this.typeMember = typeMember;
-        this.representativeTypeMember = representativeTypeMember;
+        this.representativeTypeMember = representativeTypeMember == null ? this : representativeTypeMember;
         this.orderingDependentsInGroup = orderingDependentsInGroup;
         this.orderingKey = orderingKeyProvider.apply(typeMember);
     }
 
-    static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, OrderingKey> orderingKeyByMember = new HashMap<>();
-        return typeMember -> orderingKeyByMember.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
+    @Override
+    @NonNull
+    public String toString() {
+        return "member=" + describeTypeMember(typeMember)
+                + ", orderingKey=" + orderingKey
+                + ", representative=" + describeTypeMember(representativeTypeMember.getTypeMember())
+                + ", orderingDependentsInGroupCount=" + orderingDependentsInGroup.size();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof SortableTypeMember otherSortableTypeMember)) {
+            return false;
+        }
+        return Objects.equals(typeMember, otherSortableTypeMember.typeMember)
+                && Objects.equals(orderingKey, otherSortableTypeMember.orderingKey)
+                && Objects.equals(
+                        representativeTypeMember.getTypeMember(),
+                        otherSortableTypeMember.representativeTypeMember.getTypeMember())
+                && Objects.equals(orderingDependentsInGroup, otherSortableTypeMember.orderingDependentsInGroup);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                typeMember, orderingKey, representativeTypeMember.getTypeMember(), orderingDependentsInGroup);
     }
 
     @NonNull
@@ -56,9 +83,23 @@ class SortableTypeMember {
                 deriveVisibilityRank(typeMember));
     }
 
+    @NonNull
+    private static String describeTypeMember(CtTypeMember typeMember) {
+        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
+    }
+
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class OrderingKey {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        private static final Map<CtTypeMember, OrderingKey> TYPE_MEMBER_2_ORDERING_KEY = new HashMap<>();
+
+        static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
+
+            return typeMember ->
+                    TYPE_MEMBER_2_ORDERING_KEY.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
+        }
+
         int sourceStart;
 
         @NonNull
