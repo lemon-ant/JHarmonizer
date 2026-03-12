@@ -16,34 +16,50 @@ public abstract class BaseCommand implements Callable<Integer> {
             names = {"-b", "--base-dir"},
             description = "Base directory containing Java source files.",
             required = true)
-    protected File baseDir;
+    private File baseDir;
 
     @Option(
             names = {"-i", "--include"},
             description = "Glob patterns for files to include (can be repeated).")
-    protected Set<String> includeGlobs = new HashSet<>();
+    private final Set<String> includeGlobs = new HashSet<>();
 
     @Option(
             names = {"-e", "--exclude"},
             description = "Glob patterns for files to exclude (can be repeated).")
-    protected Set<String> excludeGlobs = new HashSet<>();
+    private final Set<String> excludeGlobs = new HashSet<>();
 
     @Option(
             names = {"-v", "--verbose"},
             description = "Enable verbose (DEBUG level) logging.")
-    protected boolean verbose;
+    private boolean verbose;
 
     protected BaseCommand(SourceProcessor sourceProcessor) {
         this.sourceProcessor = sourceProcessor;
     }
 
+    protected File getBaseDir() {
+        return baseDir;
+    }
+
+    protected Set<String> getIncludeGlobs() {
+        return includeGlobs;
+    }
+
+    protected Set<String> getExcludeGlobs() {
+        return excludeGlobs;
+    }
+
+    protected boolean isVerbose() {
+        return verbose;
+    }
+
     @Override
     public final Integer call() {
-        if (verbose) {
+        if (isVerbose()) {
             LoggingConfigurator.setDebugLevel();
         }
         return execute();
     }
 
-    protected abstract Integer execute();
+    protected abstract int execute();
 }

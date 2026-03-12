@@ -24,12 +24,15 @@ public class CheckCommand extends BaseCommand {
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected Integer execute() {
-        log.info("Checking sources in: {}", baseDir);
+    protected int execute() {
+        log.info("Checking sources in: {}", getBaseDir());
 
         try {
             sourceProcessor.processSources(
-                    baseDir.toPath(), Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), FlowType.CHECK_ALL);
+                    getBaseDir().toPath(),
+                    Set.copyOf(getIncludeGlobs()),
+                    Set.copyOf(getExcludeGlobs()),
+                    FlowType.CHECK_ALL);
             log.info("Check completed.");
             return 0;
         } catch (RuntimeException e) {

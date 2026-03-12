@@ -29,12 +29,15 @@ public class CheckFastCommand extends BaseCommand {
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected Integer execute() {
-        log.info("Checking sources (fail-fast) in: {}", baseDir);
+    protected int execute() {
+        log.info("Checking sources (fail-fast) in: {}", getBaseDir());
 
         try {
             sourceProcessor.processSources(
-                    baseDir.toPath(), Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), FlowType.CHECK_FAIL_FAST);
+                    getBaseDir().toPath(),
+                    Set.copyOf(getIncludeGlobs()),
+                    Set.copyOf(getExcludeGlobs()),
+                    FlowType.CHECK_FAIL_FAST);
             log.info("Check passed: no files require restructuring.");
             return 0;
         } catch (NotFormattedException | NotOrderedException e) {

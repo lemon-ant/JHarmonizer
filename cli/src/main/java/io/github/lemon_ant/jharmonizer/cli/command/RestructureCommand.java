@@ -24,12 +24,15 @@ public class RestructureCommand extends BaseCommand {
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected Integer execute() {
-        log.info("Processing sources in: {}", baseDir);
+    protected int execute() {
+        log.info("Processing sources in: {}", getBaseDir());
 
         try {
             sourceProcessor.processSources(
-                    baseDir.toPath(), Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), FlowType.RESTRUCTURE);
+                    getBaseDir().toPath(),
+                    Set.copyOf(getIncludeGlobs()),
+                    Set.copyOf(getExcludeGlobs()),
+                    FlowType.RESTRUCTURE);
             return 0;
         } catch (RuntimeException e) {
             log.error("Processing failed: {}", e.getMessage());
