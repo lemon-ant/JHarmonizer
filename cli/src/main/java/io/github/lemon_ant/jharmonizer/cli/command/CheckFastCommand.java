@@ -3,6 +3,8 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import io.github.lemon_ant.jharmonizer.cli.config.CheckCommandConfiguration;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
+import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,11 +15,14 @@ import picocli.CommandLine.Option;
 
 @Slf4j
 @Command(
-        name = "check",
-        description = "Checks all Java source files and reports which ones require restructuring.",
+        name = "check-fast",
+        description =
+                "Checks Java source files and stops at the first one that requires restructuring (fail-fast mode).",
         mixinStandardHelpOptions = true)
 @SuppressWarnings("PMD.GuardLogStatement")
-public class CheckCommand implements Callable<Integer> {
+public class CheckFastCommand implements Callable<Integer> {
+
+    private static final int EXIT_CODE_CHECK_FAILED = 3;
 
     private final SourceProcessor sourceProcessor;
 
@@ -35,11 +40,11 @@ public class CheckCommand implements Callable<Integer> {
     @Option(names = "--exclude", description = "Glob patterns for files to exclude (can be repeated).")
     private Set<String> excludeGlobs = new HashSet<>();
 
-    public CheckCommand() {
+    public CheckFastCommand() {
         this(new SourceProcessor());
     }
 
-    CheckCommand(SourceProcessor sourceProcessor) {
+    CheckFastCommand(SourceProcessor sourceProcessor) {
         this.sourceProcessor = sourceProcessor;
     }
 
@@ -49,13 +54,16 @@ public class CheckCommand implements Callable<Integer> {
         CheckCommandConfiguration config =
                 new CheckCommandConfiguration(baseDir.toPath(), Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs));
 
-        log.info("Checking sources in: {}", config.getBaseDir());
+        log.info("Checking sources (fail-fast) in: {}", config.getBaseDir());
 
         try {
             sourceProcessor.processSources(
-                    config.getBaseDir(), config.getIncludeGlobs(), config.getExcludeGlobs(), FlowType.CHECK_ALL);
-            log.info("Check completed.");
+                    config.getBaseDir(), config.getIncludeGlobs(), config.getExcludeGlobs(), FlowType.CHECK_FAIL_FAST);
+            log.info("Check passed: no files require restructuring.");
             return 0;
+        } catch (NotFormattedException | NotOrderedException e) {
+            log.warn("Check failed: file requires restructuring. {}", e.getMessage());
+            return EXIT_CODE_CHECK_FAILED;
         } catch (RuntimeException e) {
             log.error("Processing failed: {}", e.getMessage());
             return 1;
