@@ -42,7 +42,7 @@ public class SpoonTypeUtils {
         return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
-    static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
+    public static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {
             return declaredTypes.getFirst();

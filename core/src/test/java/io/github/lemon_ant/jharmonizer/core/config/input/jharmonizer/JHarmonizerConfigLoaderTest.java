@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.Forma
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.File;
 import java.io.FileWriter;
@@ -74,6 +75,61 @@ class JHarmonizerConfigLoaderTest {
 
             // When / Then
             assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(configYaml)).doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    void loadFrom_topLevelTypesOrderingMixedGroupSyntax_returnsParsedOrdering(@TempDir Path tempDir)
+            throws IOException {
+        // Given
+        String yaml = """
+                formatting:
+                  fix-imports: true
+                  formatter-style: PALANTIR
+
+                backups-enabled: true
+
+                header-line:
+                  character: "-"
+                  left-padding: 2
+
+                top-level-types-ordering:
+                  main-type-first: true
+                  type-groups:
+                    - [ class, record ]
+                    - interface
+                    - enum
+                    - annotation
+                  ordering-rules: [ visibility-desc, alpha ]
+
+                type-members-ordering:
+                  - name: Default Rule
+                    includes: ~.*
+                    ordering-rules: preserve
+                """;
+        Path configFile = tempDir.resolve("config.yml");
+        Files.createDirectories(configFile.getParent());
+        Files.writeString(configFile, yaml);
+
+        try (InputStream configYaml = Files.newInputStream(configFile)) {
+
+            // When
+            JHarmonizerConfig jharmonizerConfig = JHarmonizerConfigLoader.loadFrom(configYaml);
+
+            // Then
+            JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = jharmonizerConfig.getTopLevelTypesOrdering();
+            assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
+            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).hasSize(4);
+            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(0).getTypeKinds())
+                    .containsExactlyInAnyOrder(JHarmonizerTypeKind.CLASS, JHarmonizerTypeKind.RECORD);
+            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(1).getTypeKinds())
+                    .containsExactly(JHarmonizerTypeKind.INTERFACE);
+            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(2).getTypeKinds())
+                    .containsExactly(JHarmonizerTypeKind.ENUM);
+            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(3).getTypeKinds())
+                    .containsExactly(JHarmonizerTypeKind.ANNOTATION);
+            assertThat(topLevelTypesOrdering.getOrderingRules())
+                    .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         }
     }
 

@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.List;
 import java.util.function.Predicate;
 import lombok.AccessLevel;
@@ -28,8 +27,7 @@ public class CompiledTopLevelTypesOrdering {
     boolean mainTypeFirst;
 
     @NonNull
-    // TODO It should be compiled
-    List<UnifiedOrderingRule> orderingRules;
+    List<OrderingRule> orderingRules;
 
     /**
      * Ordered predicates applied to top-level candidates (MemberDescriptor).
