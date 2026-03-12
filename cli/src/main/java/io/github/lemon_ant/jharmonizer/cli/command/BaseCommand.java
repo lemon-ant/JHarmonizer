@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,7 +32,8 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @Option(
             names = {"-b", "--base-dir"},
-            description = "Base directory containing Java source files (default: current directory).")
+            required = true,
+            description = "Base directory containing Java source files.")
     private Path baseDir;
 
     @Option(
@@ -64,7 +66,11 @@ abstract class BaseCommand implements Callable<Integer> {
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
-        Path effectiveBaseDir = baseDir != null ? baseDir : Path.of("").toAbsolutePath();
+        Path effectiveBaseDir = baseDir.toAbsolutePath().normalize();
+        if (!Files.isDirectory(effectiveBaseDir)) {
+            log.error("Base directory does not exist or is not a directory: {}", effectiveBaseDir);
+            return 1;
+        }
         CommandOptions commandOptions =
                 new CommandOptions(effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
         if (commandOptions.isVerbose()) {
