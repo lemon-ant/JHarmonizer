@@ -51,9 +51,6 @@ public class CheckAllFlow implements IFlow {
         List<Pair<CtElement, Integer>> elementRelocations = findRelocations(
                 sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
         String srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
-        if (elementRelocations.isEmpty() && srcDiff.isEmpty()) {
-            elementRelocations = List.of();
-        }
 
         return FlowProcessingResult.builder()
                 .path(srcFile.getPath())
@@ -63,7 +60,8 @@ public class CheckAllFlow implements IFlow {
                 .sortingStatistic(sortingResult.getSortingStatistic())
                 .serializationStatistic(serializationResult.getSerializationStatistic())
                 .formatingStatistic(formatingResult.getFormatingStatistic())
-                .flowProcessingStatus(defineFlowProcessingStatus(elementRelocations.isEmpty(), srcDiff.isEmpty(), true))
+                .flowProcessingStatus(
+                        defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();
     }
 }

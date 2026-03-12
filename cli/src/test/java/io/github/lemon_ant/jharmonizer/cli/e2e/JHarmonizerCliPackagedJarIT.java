@@ -26,7 +26,6 @@ class JHarmonizerCliPackagedJarIT {
             public class %s {
 
                 int a = 1;
-
                 int b = 2;
 
                 void aMethod() {}
