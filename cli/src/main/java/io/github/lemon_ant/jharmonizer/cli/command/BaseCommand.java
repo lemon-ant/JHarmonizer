@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.cli.logging.LoggingConfigurator;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import java.nio.file.Path;
@@ -10,10 +11,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Option;
 
+@Slf4j
+@SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Lombok @NonNull guard; class is not finalizable")
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class BaseCommand implements Callable<Integer> {
+abstract class BaseCommand implements Callable<Integer> {
 
     @NonNull
     @Getter(AccessLevel.PROTECTED)
@@ -46,15 +50,21 @@ public abstract class BaseCommand implements Callable<Integer> {
     }
 
     @Override
+    @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
         Path effectiveBaseDir = baseDir != null ? baseDir : Path.of("").toAbsolutePath();
-        CommandOptions opts =
+        CommandOptions commandOptions =
                 new CommandOptions(effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
-        if (opts.isVerbose()) {
+        if (commandOptions.isVerbose()) {
             LoggingConfigurator.setDebugLevel();
         }
-        return execute(opts);
+        try {
+            return processWithFlow(commandOptions);
+        } catch (RuntimeException e) {
+            log.error("Processing failed: {}", e.getMessage());
+            return 1;
+        }
     }
 
-    protected abstract int execute(CommandOptions opts);
+    protected abstract int processWithFlow(CommandOptions commandOptions);
 }

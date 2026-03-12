@@ -11,28 +11,24 @@ import picocli.CommandLine.Command;
         description = "Checks all Java source files and reports which ones require restructuring.",
         mixinStandardHelpOptions = true)
 @SuppressWarnings("PMD.GuardLogStatement")
-public class CheckCommand extends BaseCommand {
+final class CheckCommand extends BaseCommand {
 
-    public CheckCommand() {}
+    CheckCommand() {}
 
     CheckCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
 
     @Override
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected int execute(CommandOptions opts) {
-        log.info("Checking sources in: {}", opts.getBaseDir());
-
-        try {
-            getSourceProcessor()
-                    .processSources(
-                            opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.CHECK_ALL);
-            log.info("Check completed.");
-            return 0;
-        } catch (RuntimeException e) {
-            log.error("Processing failed: {}", e.getMessage());
-            return 1;
-        }
+    protected int processWithFlow(CommandOptions commandOptions) {
+        log.info("Checking sources in: {}", commandOptions.getBaseDir());
+        getSourceProcessor()
+                .processSources(
+                        commandOptions.getBaseDir(),
+                        commandOptions.getIncludeGlobs(),
+                        commandOptions.getExcludeGlobs(),
+                        FlowType.CHECK_ALL);
+        log.info("Check completed.");
+        return 0;
     }
 }

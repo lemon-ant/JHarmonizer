@@ -11,27 +11,23 @@ import picocli.CommandLine.Command;
         description = "Restructures Java source files according to the configured ordering rules.",
         mixinStandardHelpOptions = true)
 @SuppressWarnings("PMD.GuardLogStatement")
-public class RestructureCommand extends BaseCommand {
+final class RestructureCommand extends BaseCommand {
 
-    public RestructureCommand() {}
+    RestructureCommand() {}
 
     RestructureCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
 
     @Override
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    protected int execute(CommandOptions opts) {
-        log.info("Processing sources in: {}", opts.getBaseDir());
-
-        try {
-            getSourceProcessor()
-                    .processSources(
-                            opts.getBaseDir(), opts.getIncludeGlobs(), opts.getExcludeGlobs(), FlowType.RESTRUCTURE);
-            return 0;
-        } catch (RuntimeException e) {
-            log.error("Processing failed: {}", e.getMessage());
-            return 1;
-        }
+    protected int processWithFlow(CommandOptions commandOptions) {
+        log.info("Processing sources in: {}", commandOptions.getBaseDir());
+        getSourceProcessor()
+                .processSources(
+                        commandOptions.getBaseDir(),
+                        commandOptions.getIncludeGlobs(),
+                        commandOptions.getExcludeGlobs(),
+                        FlowType.RESTRUCTURE);
+        return 0;
     }
 }

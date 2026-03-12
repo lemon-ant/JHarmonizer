@@ -1,8 +1,5 @@
-package io.github.lemon_ant.jharmonizer.cli;
+package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.cli.command.CheckCommand;
-import io.github.lemon_ant.jharmonizer.cli.command.CheckFastCommand;
-import io.github.lemon_ant.jharmonizer.cli.command.RestructureCommand;
 import picocli.CommandLine.Command;
 
 @Command(
