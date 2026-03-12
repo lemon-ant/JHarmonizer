@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Option;
@@ -93,5 +94,19 @@ abstract class BaseCommand implements Callable<Integer> {
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
             return checkFailedExitCode();
         }
+    }
+
+    @Value
+    static class CommandOptions {
+        @NonNull
+        Path baseDir;
+
+        @NonNull
+        Set<@NonNull String> includeGlobs;
+
+        @NonNull
+        Set<@NonNull String> excludeGlobs;
+
+        boolean verbose;
     }
 }
