@@ -1,8 +1,12 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.lemon_ant.jharmonizer.cli.logging.LoggingConfigurator;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
+import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +16,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Option;
 
 @Slf4j
@@ -49,6 +54,12 @@ abstract class BaseCommand implements Callable<Integer> {
         this(new SourceProcessor());
     }
 
+    protected abstract FlowType getFlowType();
+
+    protected int checkFailedExitCode() {
+        return 1;
+    }
+
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
@@ -56,7 +67,7 @@ abstract class BaseCommand implements Callable<Integer> {
         CommandOptions commandOptions =
                 new CommandOptions(effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
         if (commandOptions.isVerbose()) {
-            LoggingConfigurator.setDebugLevel();
+            ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }
         try {
             return processWithFlow(commandOptions);
@@ -66,5 +77,20 @@ abstract class BaseCommand implements Callable<Integer> {
         }
     }
 
-    protected abstract int processWithFlow(CommandOptions commandOptions);
+    @SuppressWarnings("PMD.GuardLogStatement")
+    private int processWithFlow(CommandOptions commandOptions) {
+        log.info("Processing sources with flow {} in: {}", getFlowType(), commandOptions.getBaseDir());
+        try {
+            getSourceProcessor()
+                    .processSources(
+                            commandOptions.getBaseDir(),
+                            commandOptions.getIncludeGlobs(),
+                            commandOptions.getExcludeGlobs(),
+                            getFlowType());
+            return 0;
+        } catch (NotFormattedException | NotOrderedException e) {
+            log.warn("Flow {} stopped early: {}", getFlowType(), e.getMessage());
+            return checkFailedExitCode();
+        }
+    }
 }
