@@ -13,6 +13,8 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 class RuleAtomPredicates {
+    private static final String ZERO_REQUIRED_DECLARATION_FLAGS_MASK_MESSAGE =
+            "Required declaration flags mask must not be zero";
 
     @NonNull
     static Predicate<MemberDescriptor> createAnnotationExactFqnOrSimple(@NonNull String expectedName) {
@@ -34,7 +36,7 @@ class RuleAtomPredicates {
     @NonNull
     static Predicate<MemberDescriptor> createMaskContainsAll(int requiredDeclarationFlagsMask) {
         if (requiredDeclarationFlagsMask == 0) {
-            throw new IllegalArgumentException(/*TODO*/ );
+            throw new IllegalArgumentException(ZERO_REQUIRED_DECLARATION_FLAGS_MASK_MESSAGE);
         }
         return memberDescriptor -> MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
                 memberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
@@ -43,7 +45,7 @@ class RuleAtomPredicates {
     @NonNull
     static Predicate<MemberDescriptor> createMaskContainsAny(int requiredDeclarationFlagsMask) {
         if (requiredDeclarationFlagsMask == 0) {
-            throw new IllegalArgumentException(/*TODO*/ );
+            throw new IllegalArgumentException(ZERO_REQUIRED_DECLARATION_FLAGS_MASK_MESSAGE);
         }
         return memberDescriptor -> MemberDeclarationFlagsUtil.containsAnyRequiredDeclarationFlags(
                 memberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
