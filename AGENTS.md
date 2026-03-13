@@ -13,7 +13,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
-- Do not introduce Java records anywhere in the repository. Use classes, and prefer Lombok to remove boilerplate where appropriate.
+- Repository-wide convention: do not introduce Java records. Use classes with Lombok instead, including for test-only helpers and internal data holders.
 
 ## Test conventions
 
