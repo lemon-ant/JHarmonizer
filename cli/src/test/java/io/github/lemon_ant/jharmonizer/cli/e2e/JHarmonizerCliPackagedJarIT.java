@@ -27,7 +27,7 @@ class JHarmonizerCliPackagedJarIT {
     Path temporaryDirectory;
 
     @Test
-    void helpCommand_rootHelpRequested_shouldPrintUsageInformation() throws IOException, InterruptedException {
+    void helpCommand_rootHelpRequested_printUsageInformation() throws IOException, InterruptedException {
         // Given
         Path workingDirectory = temporaryDirectory;
 
@@ -48,7 +48,7 @@ class JHarmonizerCliPackagedJarIT {
 
     @ParameterizedTest
     @ValueSource(strings = {"restructure", "check", "check-fast"})
-    void helpCommand_subcommandHelpRequested_shouldPrintUsageInformation(String command)
+    void helpCommand_subcommandHelpRequested_printUsageInformation(String command)
             throws IOException, InterruptedException {
         // Given
         Path workingDirectory = temporaryDirectory;
@@ -70,7 +70,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_baseDirOmitted_shouldUseCurrentWorkingDirectory() throws IOException, InterruptedException {
+    void restructureCommand_baseDirOmitted_useCurrentWorkingDirectory() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-default-base-dir");
 
@@ -96,7 +96,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_multipleIncludesAndExcludesProvided_shouldModifyOnlySelectedFiles()
+    void restructureCommand_multipleIncludesAndExcludesProvided_modifyOnlySelectedFiles()
             throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-filtered-restructure");
@@ -131,7 +131,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_alreadyHarmonizedInputProvided_shouldLeaveFilesUnchanged()
+    void restructureCommand_alreadyHarmonizedInputProvided_leaveFilesUnchanged()
             throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-already-harmonized");
@@ -157,7 +157,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_nonHarmonizedFilesPresent_shouldReturnSuccessWithoutModifyingFiles()
+    void checkCommand_nonHarmonizedFilesPresent_returnSuccessWithoutModifyingFiles()
             throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-dirty");
@@ -183,7 +183,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_includeAndExcludeProvided_shouldRestrictCheckedScope() throws IOException, InterruptedException {
+    void checkCommand_includeAndExcludeProvided_restrictCheckedScope() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-filtered");
 
@@ -225,7 +225,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_afterRestructureExecuted_shouldReportCleanState() throws IOException, InterruptedException {
+    void checkCommand_afterRestructureExecuted_reportCleanState() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-clean");
         ExternalCliProcessResult restructureResult = ExternalCliProcessRunner.run(
@@ -257,8 +257,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkFastCommand_nonHarmonizedFilesPresent_shouldReturnFailureExitCode()
-            throws IOException, InterruptedException {
+    void checkFastCommand_nonHarmonizedFilesPresent_returnFailureExitCode() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-fast-dirty");
 
@@ -288,7 +287,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_invalidOptionProvided_shouldReturnInvalidUsageExitCode()
+    void restructureCommand_invalidOptionProvided_returnInvalidUsageExitCode()
             throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-invalid-option");
@@ -307,8 +306,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_nonexistentBaseDirProvided_shouldReturnProcessingError()
-            throws IOException, InterruptedException {
+    void checkCommand_nonexistentBaseDirProvided_returnProcessingError() throws IOException, InterruptedException {
         // Given
         Path workingDirectory = temporaryDirectory;
 

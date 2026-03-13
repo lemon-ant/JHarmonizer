@@ -32,18 +32,20 @@ Rules:
 
 - JUnit test method names must follow **exactly 3 segments**:
 
-  `methodName_condition_expectedResult`
+  `subject_condition_expectedResult`
 
 Examples:
 
 - `compileConfig_validYaml_produceSingleRootGroup`
 - `resolveGroups_nestedMatch_winOverParentGroup`
-- `describeMembers_recordType_returnImplicitMembers`
+- `helpCommand_rootHelpRequested_printUsageInformation`
 
 Guidelines:
 
-- `methodName` must start with a verb
-- Do not use `should` or `must` in test method names (these words add noise and violate the 3-segment naming intent). (e.g., `compile`, `resolve`, `describe`, `render`, `convert`).
+- `subject` names what is being tested. It usually mirrors the production method, command, or feature name.
+- `condition` states only the relevant precondition/input shape.
+- `expectedResult` states the observable outcome.
+- Do not use filler words such as `should`, `when`, `then`, `must`, or similar “BDD glue” inside the method name.
 - Avoid vague words (`works`, `ok`, `smoke1`). Prefer intent-revealing words.
 - Keep the condition minimal but specific.
 
@@ -82,7 +84,7 @@ Recommended skeleton:
 
 ```java
 @Test
-void resolveGroups_nestedMatch_shouldWinOverParentGroup() {
+void resolveGroups_nestedMatch_winOverParentGroup() {
     // Given
     ...
 
@@ -175,6 +177,7 @@ Place the `Constants` nested class at the end of the test class to keep the begi
 
 - Use assertions only for validating the **test contract** and expected results.
 - Prefer AssertJ (`assertThat(...)`).
+- Prefer static imports for frequently used assertion and helper methods instead of qualifying them through the utility class name in every call.
 
 ### Test utilities must throw exceptions (not assert)
 
@@ -244,8 +247,15 @@ The test decides which one to use:
 ## Code style in tests
 
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
+- Prefer explicit types over `var`.
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.
+- Prefer existing library utilities (AssertJ, Apache Commons IO, etc.) over ad-hoc test helper implementations when they already cover the use case.
+
+## Keeping conventions up to date
+
+- If a coding session reveals a new stable convention from review feedback or user guidance, update this document (and any broader agent-facing convention file) in the same change set.
+- If an existing rule is ambiguous, clarify it here instead of relying on tribal knowledge in review comments.
 
 
 ---
