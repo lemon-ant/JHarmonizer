@@ -43,18 +43,18 @@ public class CheckAllFlow implements IFlow {
         debugStageRecorder.recordSrcStage(
                 srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
-        FormatingResult formatingResult =
+        FormatingResult formattingResult =
                 formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
         debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormatedSrcCode());
 
-        boolean hasChanges = !srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode());
+        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
         String srcDiff;
         if (hasChanges) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
         } else {
             elementRelocations = List.of();
             srcDiff = "";
@@ -67,7 +67,7 @@ public class CheckAllFlow implements IFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(sortingResult.getSortingStatistic())
                 .serializationStatistic(serializationResult.getSerializationStatistic())
-                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .formatingStatistic(formattingResult.getFormatingStatistic())
                 .flowProcessingStatus(
                         defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();
