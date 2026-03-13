@@ -1,0 +1,23 @@
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR
+
+backups-enabled: true
+
+header-line:
+  character: "-"
+  left-padding: 2
+
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class, record ]
+    - interface
+    - enum
+    - annotation
+  ordering-rules: [ visibility-desc, alpha ]
+
+type-members-ordering:
+  - name: Default Rule
+    includes: ~.*
+    ordering-rules: preserve

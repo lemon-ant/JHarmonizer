@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -79,58 +80,28 @@ class JHarmonizerConfigLoaderTest {
     }
 
     @Test
-    void loadFrom_topLevelTypesOrderingMixedGroupSyntax_returnsParsedOrdering(@TempDir Path tempDir)
-            throws IOException {
+    void loadFrom_topLevelTypesOrderingMixedGroupSyntax_returnsParsedOrdering() {
         // Given
-        String yaml = """
-                formatting:
-                  fix-imports: true
-                  formatter-style: PALANTIR
+        URL configYamlResource = TestCaseResourceUtils.requireClasspathResourceUrl(
+                "/test-cases/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
 
-                backups-enabled: true
+        // When
+        JHarmonizerConfig jharmonizerConfig = JHarmonizerConfigLoader.loadFromClasspathResource(configYamlResource);
 
-                header-line:
-                  character: "-"
-                  left-padding: 2
-
-                top-level-types-ordering:
-                  main-type-first: true
-                  type-groups:
-                    - [ class, record ]
-                    - interface
-                    - enum
-                    - annotation
-                  ordering-rules: [ visibility-desc, alpha ]
-
-                type-members-ordering:
-                  - name: Default Rule
-                    includes: ~.*
-                    ordering-rules: preserve
-                """;
-        Path configFile = tempDir.resolve("config.yml");
-        Files.createDirectories(configFile.getParent());
-        Files.writeString(configFile, yaml);
-
-        try (InputStream configYaml = Files.newInputStream(configFile)) {
-
-            // When
-            JHarmonizerConfig jharmonizerConfig = JHarmonizerConfigLoader.loadFrom(configYaml);
-
-            // Then
-            JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = jharmonizerConfig.getTopLevelTypesOrdering();
-            assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
-            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).hasSize(4);
-            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(0).getTypeKinds())
-                    .containsExactlyInAnyOrder(JHarmonizerTypeKind.CLASS, JHarmonizerTypeKind.RECORD);
-            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(1).getTypeKinds())
-                    .containsExactly(JHarmonizerTypeKind.INTERFACE);
-            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(2).getTypeKinds())
-                    .containsExactly(JHarmonizerTypeKind.ENUM);
-            assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(3).getTypeKinds())
-                    .containsExactly(JHarmonizerTypeKind.ANNOTATION);
-            assertThat(topLevelTypesOrdering.getOrderingRules())
-                    .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
-        }
+        // Then
+        JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering = jharmonizerConfig.getTopLevelTypesOrdering();
+        assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
+        assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).hasSize(4);
+        assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(0).getTypeKinds())
+                .containsExactlyInAnyOrder(JHarmonizerTypeKind.CLASS, JHarmonizerTypeKind.RECORD);
+        assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(1).getTypeKinds())
+                .containsExactly(JHarmonizerTypeKind.INTERFACE);
+        assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(2).getTypeKinds())
+                .containsExactly(JHarmonizerTypeKind.ENUM);
+        assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors().get(3).getTypeKinds())
+                .containsExactly(JHarmonizerTypeKind.ANNOTATION);
+        assertThat(topLevelTypesOrdering.getOrderingRules())
+                .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
     }
 
     @Test

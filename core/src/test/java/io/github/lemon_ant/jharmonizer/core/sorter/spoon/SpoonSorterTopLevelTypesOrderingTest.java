@@ -15,6 +15,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
+import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.nio.file.Path;
@@ -23,37 +24,12 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SpoonSorterTopLevelTypesOrderingTest {
+    private static final String FIXTURES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/top-level-types-ordering/";
 
     @Test
     void sortCompilationUnitRecursively_mainTypeFirstAndGroupedAlpha_reorderTopLevelTypes() {
         // Given
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("MainTypeFirstFixture.java"), """
-                enum ZebraKind {
-                    ONE
-                }
-
-                @interface Marker {}
-
-                interface AlphaContract {}
-
-                record BravoRecord(int value) {}
-
-                class AlphaHelper {
-                    static String message() {
-                        return "ok";
-                    }
-                }
-
-                public class MainTypeFirstFixture {
-                    public static void main(String[] args) {
-                        System.out.println(new BravoRecord(1).value()
-                                + AlphaHelper.message()
-                                + AlphaContract.class.getSimpleName()
-                                + ZebraKind.ONE.name()
-                                + Marker.class.getSimpleName());
-                    }
-                }
-                """);
+        SpoonAstModel spoonAstModel = parseFixture("MainTypeFirstFixture.java");
         SpoonSorter spoonSorter = new SpoonSorter(createCompiledConfig(UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(true)
                 .topLevelTypeSelectors(List.of(
@@ -78,25 +54,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
     @Test
     void sortCompilationUnitRecursively_groupedPreserveWithoutMainTypeFirst_keepOriginalOrderInsideGroups() {
         // Given
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("PreserveGroupedFixture.java"), """
-                class DeltaClass {}
-
-                interface FirstInterface {}
-
-                @interface FirstAnnotation {}
-
-                enum BetaEnum {
-                    ONE
-                }
-
-                record GammaRecord(int value) {}
-
-                class AlphaClass {}
-
-                interface SecondInterface {}
-
-                @interface SecondAnnotation {}
-                """);
+        SpoonAstModel spoonAstModel = parseFixture("PreserveGroupedFixture.java");
         SpoonSorter spoonSorter = new SpoonSorter(createCompiledConfig(UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(false)
                 .topLevelTypeSelectors(List.of(
@@ -122,6 +80,12 @@ class SpoonSorterTopLevelTypesOrderingTest {
                         "BetaEnum",
                         "GammaRecord",
                         "AlphaClass");
+    }
+
+    private static SpoonAstModel parseFixture(String fixtureFileName) {
+        String sourceCode =
+                TestCaseResourceUtils.readClasspathResourceAsString(FIXTURES_RESOURCE_ROOT + fixtureFileName);
+        return SpoonParser.parseJavaSourceResource(Path.of(fixtureFileName), sourceCode);
     }
 
     private static CompiledConfig createCompiledConfig(UnifiedTopLevelTypesOrdering topLevelTypesOrdering) {

@@ -40,6 +40,15 @@ class RuleAtomPredicates {
                 memberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
     }
 
+    @NonNull
+    static Predicate<MemberDescriptor> createMaskContainsAny(int requiredDeclarationFlagsMask) {
+        if (requiredDeclarationFlagsMask == 0) {
+            throw new IllegalArgumentException(/*TODO*/ );
+        }
+        return memberDescriptor -> MemberDeclarationFlagsUtil.containsAnyRequiredDeclarationFlags(
+                memberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
+    }
+
     /**
      * Name: "=exact" compiled once.
      */

@@ -10,10 +10,11 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.apache.commons.lang3.BooleanUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -65,27 +66,34 @@ public class SpoonSorter {
         Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
                 SortableTypeMember.OrderingKey.getOrderingKeyProvider();
         Comparator<CtType<?>> declaredTypeComparator = Comparator.<CtType<?>>comparingInt(type ->
-                        compiledTopLevelTypesOrdering.isMainTypeFirst() && Objects.equals(type, mainType) ? 0 : 1)
+                        compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
                 .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))
                 .thenComparing(orderingKeyProvider, orderingComparator);
 
-        compilationUnit.setDeclaredTypes(
-                declaredTypes.stream().sorted(declaredTypeComparator).toList());
+        List<CtType<?>> sortedDeclaredTypes =
+                declaredTypes.stream().sorted(declaredTypeComparator).toList();
+        compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
     }
 
     private static int findTopLevelTypeGroupIndex(
             @NonNull CtType<?> topLevelType, @NonNull CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
         MemberDescriptor topLevelTypeDescriptor = SpoonMemberDescriptorFactory.describeMember(topLevelType);
-        List<java.util.function.Predicate<MemberDescriptor>> topLevelTypesSelectors =
+        List<Predicate<MemberDescriptor>> topLevelTypesSelectors =
                 compiledTopLevelTypesOrdering.getTopLevelTypesSelectors();
 
         for (int selectorIndex = 0; selectorIndex < topLevelTypesSelectors.size(); selectorIndex++) {
-            if (topLevelTypesSelectors.get(selectorIndex).test(topLevelTypeDescriptor)) {
+            Predicate<MemberDescriptor> topLevelTypeSelector = topLevelTypesSelectors.get(selectorIndex);
+            if (topLevelTypeSelector.test(topLevelTypeDescriptor)) {
                 return selectorIndex;
             }
         }
 
         return topLevelTypesSelectors.size();
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static int compareMainTypePriority(CtType<?> topLevelType, CtType<?> mainType, boolean mainTypeFirst) {
+        return mainTypeFirst ? BooleanUtils.toInteger(topLevelType != mainType) : 0;
     }
 
     /**

@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
@@ -36,13 +37,15 @@ class TopLevelTypesOrderingCompiler {
                                     .map(UnifiedTypeKind::getMemberKind)
                                     .collect(toUnmodifiableSet());
 
-                            return memberDescriptor -> memberKinds.contains(memberDescriptor.getMemberKind());
+                            int requiredDeclarationFlagsMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                                    memberKinds, Set.of(), Set.of());
+                            return RuleAtomPredicates.createMaskContainsAny(requiredDeclarationFlagsMask);
                         })
                         .toList();
 
         return new CompiledTopLevelTypesOrdering(
                 unifiedTopLevelTypesOrdering.isMainTypeFirst(),
-                MemberGroupCompiler.mapOrderingRules(unifiedTopLevelTypesOrdering.getOrderingRules()),
+                OrderingRuleCompiler.compileOrderingRules(unifiedTopLevelTypesOrdering.getOrderingRules()),
                 compiledTopLevelTypesSelectors);
     }
 }

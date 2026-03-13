@@ -69,6 +69,19 @@ public class MemberDeclarationFlagsUtil {
     }
 
     /**
+     * Returns {@code true} if the given member declaration flags mask shares
+     * at least one bit with the required declaration flags mask.
+     *
+     * @param memberDeclarationFlags   the full mask computed for a member (KIND, ACCESS and MODIFIERS segments)
+     * @param requiredDeclarationFlags the mask that encodes acceptable flags; use zero to indicate “no match”
+     * @return {@code true} if at least one required bit is present; {@code false} otherwise
+     */
+    public static boolean containsAnyRequiredDeclarationFlags(
+            int memberDeclarationFlags, int requiredDeclarationFlags) {
+        return (memberDeclarationFlags & requiredDeclarationFlags) != 0;
+    }
+
+    /**
      * Encodes multiple declaration attributes into a single bit mask.
      * Combines flags for kinds, access levels, and modifiers using bitwise OR.
      * Empty sets contribute 0 (i.e., no requirement for that category).
