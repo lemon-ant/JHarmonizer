@@ -87,7 +87,14 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>io.github.lemon_ant.jharmonizer.cli.command.JHarmonizerCliApplication</mainClass>
                                     <manifestEntries>
-                                        <!-- Required so the shaded CLI still works with plain `java -jar` when the formatter accesses javac internals. -->
+                                        <!--
+                                            These manifest entries preserve the JVM module flags inside the packaged shaded CLI JAR.
+                                            The formatter and parser stack used by the CLI reaches into non-exported `jdk.compiler`
+                                            javac internals at runtime, so plain `java -jar cli/target/jharmonizer-cli.jar ...`
+                                            would fail without the equivalent JVM add-exports and add-opens options.
+                                            Keeping them in the manifest ensures the delivered executable artifact behaves the same
+                                            in the packaged-JAR E2E tests and for end users launching the CLI directly.
+                                        -->
                                         <Add-Exports>jdk.compiler/com.sun.tools.javac.api jdk.compiler/com.sun.tools.javac.file jdk.compiler/com.sun.tools.javac.parser jdk.compiler/com.sun.tools.javac.tree jdk.compiler/com.sun.tools.javac.util</Add-Exports>
                                         <Add-Opens>jdk.compiler/com.sun.tools.javac.api jdk.compiler/com.sun.tools.javac.file jdk.compiler/com.sun.tools.javac.parser jdk.compiler/com.sun.tools.javac.tree jdk.compiler/com.sun.tools.javac.util</Add-Opens>
                                     </manifestEntries>

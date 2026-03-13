@@ -1,5 +1,9 @@
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
+import static io.github.lemon_ant.jharmonizer.cli.e2e.FileContentAssertions.assertFileChanged;
+import static io.github.lemon_ant.jharmonizer.cli.e2e.FileContentAssertions.assertFileMatches;
+import static io.github.lemon_ant.jharmonizer.cli.e2e.FileContentAssertions.assertFileUnchanged;
+import static io.github.lemon_ant.jharmonizer.cli.e2e.TemporaryProjectCopier.locateOriginalTestResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -14,12 +18,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 class JHarmonizerCliPackagedJarIT {
 
     private static final Path EXECUTABLE_JAR = ExecutableJarLocator.locateExecutableJar();
-    private static final Path ORIGINAL_PROJECT_DIRECTORY =
-            TemporaryProjectCopier.locateOriginalTestResource(Constants.BASIC_PROJECT_RESOURCE);
-    private static final Path EXPECTED_APP_FILE =
-            TemporaryProjectCopier.locateOriginalTestResource(Constants.EXPECTED_APP_RESOURCE);
+    private static final Path ORIGINAL_PROJECT_DIRECTORY = locateOriginalTestResource(Constants.BASIC_PROJECT_RESOURCE);
+    private static final Path EXPECTED_APP_FILE = locateOriginalTestResource(Constants.EXPECTED_APP_RESOURCE);
     private static final Path EXPECTED_FEATURE_SERVICE_FILE =
-            TemporaryProjectCopier.locateOriginalTestResource(Constants.EXPECTED_FEATURE_SERVICE_RESOURCE);
+            locateOriginalTestResource(Constants.EXPECTED_FEATURE_SERVICE_RESOURCE);
 
     @TempDir
     Path temporaryDirectory;
@@ -83,19 +85,14 @@ class JHarmonizerCliPackagedJarIT {
                 .as(result.toString())
                 .contains("Harmonization result:")
                 .doesNotContain("SLF4J(W)");
-        FileContentAssertions.assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileChanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileChanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileChanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileMatches(EXPECTED_APP_FILE, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileMatches(
-                EXPECTED_FEATURE_SERVICE_FILE, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileMatches(EXPECTED_APP_FILE, projectDirectory, Constants.APP_JAVA);
+        assertFileMatches(EXPECTED_FEATURE_SERVICE_FILE, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
     }
 
     @Test
@@ -125,17 +122,12 @@ class JHarmonizerCliPackagedJarIT {
         // Then
         assertCompleted(result);
         assertThat(result.getExitCode()).as(result.toString()).isZero();
-        FileContentAssertions.assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileChanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
@@ -156,16 +148,12 @@ class JHarmonizerCliPackagedJarIT {
         // Then
         assertCompleted(secondResult);
         assertThat(secondResult.getExitCode()).as(secondResult.toString()).isZero();
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
@@ -186,17 +174,12 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("Harmonization result:")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED");
-        FileContentAssertions.assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
@@ -233,17 +216,12 @@ class JHarmonizerCliPackagedJarIT {
                 .doesNotContain("InternalTool.java")
                 .doesNotContain("ExcludedSample.java")
                 .doesNotContain("AppTest.java");
-        FileContentAssertions.assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
@@ -270,16 +248,12 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("CHECKED")
                 .doesNotContain("REORDERED")
                 .doesNotContain("FORMATTED");
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                expectedProjectDirectory, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
@@ -305,17 +279,12 @@ class JHarmonizerCliPackagedJarIT {
                         "InternalTool.java",
                         "ExcludedSample.java",
                         "AppTest.java");
-        FileContentAssertions.assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(
-                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
