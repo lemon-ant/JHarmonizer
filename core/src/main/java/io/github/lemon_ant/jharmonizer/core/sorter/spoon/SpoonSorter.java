@@ -6,7 +6,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledTopLevelType
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeUtils;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

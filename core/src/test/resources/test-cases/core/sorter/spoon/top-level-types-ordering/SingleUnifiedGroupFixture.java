@@ -1,4 +1,10 @@
-public class TopLevelTypesOrderingFixture {
+enum ZetaKind {
+    ONE
+}
+
+interface GammaContract {}
+
+public class SingleUnifiedGroupFixture {
     public static void main(String[] args) {
         System.out.println(new BetaRecord(1).value()
                 + AlphaUtility.message()
@@ -10,24 +16,10 @@ public class TopLevelTypesOrderingFixture {
 
 @interface AlphaAnnotation {}
 
+record BetaRecord(int value) {}
+
 class AlphaUtility {
     static String message() {
         return "ok";
-    }
-}
-
-record BetaRecord(int value) {}
-
-interface GammaContract {
-    String value();
-}
-
-enum ZetaKind {
-    ONE
-}
-
-class ZetaUtility {
-    static String message() {
-        return "zeta";
     }
 }

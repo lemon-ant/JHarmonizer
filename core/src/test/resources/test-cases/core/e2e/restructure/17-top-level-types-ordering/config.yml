@@ -9,12 +9,9 @@ header-line:
   left-padding: 2
 
 top-level-types-ordering:
-  main-type-first: true
+  main-type-first: false
   type-groups:
-    - [ class, record ]
-    - interface
-    - enum
-    - annotation
+    - [ class, record, interface, enum, annotation ]
   ordering-rules: [ visibility-desc, alpha ]
 
 type-members-ordering:
