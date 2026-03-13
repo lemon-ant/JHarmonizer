@@ -110,6 +110,7 @@ void resolveGroups_nestedMatch_winOverParentGroup() {
   `src/test/resources/test-cases/**`
 
 - Use explicit scenario folder names (avoid generic `example/`).
+- Prefer resource fixtures under `src/test/resources/test-cases/**` over large inline YAML/Java strings embedded directly in test classes.
 
 ### valid/ vs invalid/
 

@@ -13,8 +13,3 @@ This file contains repository-wide conventions for coding agents. Test-specific 
 - Do not introduce Java records in production code or shared test infrastructure; prefer regular classes with Lombok where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
-
-## Testing conventions
-
-- Follow `docs/test-conventions.md` for test naming, structure, fixtures, and helper usage.
-- Prefer resource fixtures under `src/test/resources/test-cases/**` over large inline YAML/Java strings in tests.
