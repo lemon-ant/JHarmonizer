@@ -177,7 +177,6 @@ Place the `Constants` nested class at the end of the test class to keep the begi
 
 - Use assertions only for validating the **test contract** and expected results.
 - Prefer AssertJ (`assertThat(...)`).
-- Prefer static imports for frequently used assertion and helper methods instead of qualifying them through the utility class name in every call.
 
 ### Test utilities must throw exceptions (not assert)
 
@@ -247,15 +246,8 @@ The test decides which one to use:
 ## Code style in tests
 
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
-- Prefer explicit types over `var`.
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.
-- Prefer existing library utilities (AssertJ, Apache Commons IO, etc.) over ad-hoc test helper implementations when they already cover the use case.
-
-## Keeping conventions up to date
-
-- If a coding session reveals a new stable convention from review feedback or user guidance, update this document (and any broader agent-facing convention file) in the same change set.
-- If an existing rule is ambiguous, clarify it here instead of relying on tribal knowledge in review comments.
 
 
 ---

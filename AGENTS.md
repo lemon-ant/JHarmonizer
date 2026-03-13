@@ -13,19 +13,12 @@ This file defines repository-wide conventions for coding agents working in this 
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
-- For test-only internal data holders and utilities, prefer classes with Lombok annotations over Java records when a simple value/helper type is needed.
-- If a helper failure means broken test setup or broken fixture, throw a descriptive exception instead of using assertions.
+- Prefer existing library features and project utilities over ad-hoc custom helpers when they already cover the use case.
+- Do not introduce Java records. Use classes, and prefer Lombok to remove boilerplate where appropriate.
 
 ## Test conventions
 
-- Test method names must contain exactly three underscore-separated camelCase segments:
-
-  `subject_condition_expectedResult`
-
-- Do not use filler words in test method names, including `should`, `when`, `then`, `must`, and similar words that do not add meaning.
-- Store fixtures and expected outputs under `src/test/resources/test-cases/**` instead of embedding large inline strings in tests.
-- If several tests in one class share expensive or repetitive setup, initialize it once at field level or in one-time setup instead of rebuilding it before every test.
-- Prefer existing assertion/library features for file and filesystem checks before adding custom comparison logic.
+- See `docs/test-conventions.md`.
 
 ## Convention maintenance
 
