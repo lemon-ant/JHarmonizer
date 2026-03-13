@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -19,6 +20,7 @@ import lombok.experimental.UtilityClass;
 class ExternalCliProcessRunner {
 
     private static final long PROCESS_TIMEOUT_SECONDS = 30;
+    private static final String JAVA_TOOL_OPTIONS_MESSAGE_PREFIX = "Picked up JAVA_TOOL_OPTIONS: ";
 
     static ExternalCliProcessResult run(
             @NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
@@ -43,7 +45,7 @@ class ExternalCliProcessRunner {
                     workingDirectory.toAbsolutePath().normalize(),
                     exitCode,
                     getOutput(stdoutFuture),
-                    getOutput(stderrFuture),
+                    normalizeErrorOutput(getOutput(stderrFuture)),
                     !completed);
         }
     }
@@ -58,5 +60,11 @@ class ExternalCliProcessRunner {
         } catch (ExecutionException exception) {
             throw new IllegalStateException("Failed to capture CLI process output", exception.getCause());
         }
+    }
+
+    static String normalizeErrorOutput(@NonNull String stderr) {
+        return stderr.lines()
+                .filter(line -> !line.startsWith(JAVA_TOOL_OPTIONS_MESSAGE_PREFIX))
+                .collect(Collectors.joining(System.lineSeparator()));
     }
 }
