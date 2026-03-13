@@ -167,6 +167,12 @@ Place the `Constants` nested class at the end of the test class to keep the begi
 
 ## Assertions and test utilities
 
+### Do not test test utilities
+
+- Do not add dedicated unit tests whose only purpose is to test test-only utility classes or helper methods.
+- Validate test utilities indirectly through the real unit/integration tests that use them.
+- If a test utility becomes complex enough to deserve direct behavioral tests, that is a signal to move the logic into production code or to simplify the helper.
+
 ### Placement of test utilities
 
 - Place **private static** helper methods and **test-only utility** code at the **end of the test class**, after all test methods (and after nested `Constants`, if present).
