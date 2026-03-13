@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.experimental.UtilityClass;
@@ -16,13 +14,13 @@ class ExecutableJarLocator {
         Path executableJar =
                 configuredJarPath == null ? Path.of("target", "jharmonizer-cli.jar") : Path.of(configuredJarPath);
 
-        assertThat(executableJar)
-                .as("Packaged CLI JAR path")
-                .matches(path -> path.getFileName() != null
-                        && path.getFileName().toString().endsWith(".jar"));
-        assertThat(Files.isRegularFile(executableJar))
-                .as("Expected packaged executable JAR at %s", executableJar)
-                .isTrue();
+        if (executableJar.getFileName() == null
+                || !executableJar.getFileName().toString().endsWith(".jar")) {
+            throw new IllegalStateException("Packaged CLI JAR path is invalid: " + executableJar);
+        }
+        if (!Files.isRegularFile(executableJar)) {
+            throw new IllegalStateException("Expected packaged executable JAR at: " + executableJar);
+        }
         return executableJar.toAbsolutePath().normalize();
     }
 }

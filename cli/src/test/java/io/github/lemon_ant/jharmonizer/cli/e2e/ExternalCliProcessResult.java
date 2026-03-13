@@ -2,11 +2,33 @@ package io.github.lemon_ant.jharmonizer.cli.e2e;
 
 import java.nio.file.Path;
 import java.util.List;
+import lombok.NonNull;
+import lombok.Value;
 
-record ExternalCliProcessResult(
-        List<String> command, Path workingDirectory, int exitCode, String stdout, String stderr, boolean timedOut) {
+@Value
+class ExternalCliProcessResult {
+    @NonNull
+    List<String> command;
 
-    String diagnostics() {
+    @NonNull
+    Path workingDirectory;
+
+    int exitCode;
+
+    @NonNull
+    String stdout;
+
+    @NonNull
+    String stderr;
+
+    boolean timedOut;
+
+    String combinedOutput() {
+        return stdout + System.lineSeparator() + stderr;
+    }
+
+    @Override
+    public String toString() {
         return "Command: "
                 + String.join(" ", command)
                 + System.lineSeparator()
@@ -26,9 +48,5 @@ record ExternalCliProcessResult(
                 + "--- stderr ---"
                 + System.lineSeparator()
                 + stderr;
-    }
-
-    String combinedOutput() {
-        return stdout + System.lineSeparator() + stderr;
     }
 }

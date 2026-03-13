@@ -1,6 +1,6 @@
-package com.example.service.nested;
+package io.github.lemon_ant.jharmonizer.cli.e2e.sample;
 
-public class FeatureService {
+public class AppTest {
     void zMethod() {}
 
     int b = 2;

@@ -1,4 +1,4 @@
-package com.example.internal;
+package io.github.lemon_ant.jharmonizer.cli.e2e.sample.internal;
 
 public class InternalTool {
     void zMethod() {}

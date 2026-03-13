@@ -1,6 +1,6 @@
-package com.example.excluded;
+package io.github.lemon_ant.jharmonizer.cli.e2e.sample;
 
-public class ExcludedSample {
+public class App {
     void zMethod() {}
 
     int b = 2;

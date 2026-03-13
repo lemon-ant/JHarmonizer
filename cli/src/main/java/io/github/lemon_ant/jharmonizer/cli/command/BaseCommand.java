@@ -32,8 +32,7 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @Option(
             names = {"-b", "--base-dir"},
-            required = true,
-            description = "Base directory containing Java source files.")
+            description = "Base directory containing Java source files (default: current directory).")
     private Path baseDir;
 
     @Option(
@@ -66,8 +65,9 @@ abstract class BaseCommand implements Callable<Integer> {
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
-        Path effectiveBaseDir = baseDir.normalize();
-        Path absoluteBaseDir = effectiveBaseDir.toAbsolutePath();
+        Path effectiveBaseDir =
+                baseDir != null ? baseDir.normalize() : Path.of("").toAbsolutePath();
+        Path absoluteBaseDir = effectiveBaseDir.toAbsolutePath().normalize();
         if (!Files.isDirectory(absoluteBaseDir)) {
             log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
             return 1;

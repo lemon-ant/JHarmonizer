@@ -1,4 +1,4 @@
-package com.example.service;
+package io.github.lemon_ant.jharmonizer.cli.e2e.sample.service;
 
 public class StableService {
 

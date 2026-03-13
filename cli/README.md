@@ -22,7 +22,7 @@ cli/target/jharmonizer-cli.jar
 The CLI module includes a black-box end-to-end suite that runs in Maven's
 `verify` phase **after** the shaded executable JAR has been packaged. The tests
 copy a small Java source project from
-`cli/src/test/resources/e2e/projects/basic-project/` into a temporary working
+`cli/src/test/resources/test-cases/cli/e2e/projects/basic-project/` into a temporary working
 directory and invoke the packaged artifact exactly as a user would:
 
 ```bash
@@ -36,7 +36,7 @@ The suite validates:
 - all real commands: `restructure`, `check`, and `check-fast`
 - repeated `--include` / `--exclude` combinations
 - exit codes, stdout/stderr, and filesystem side effects
-- negative scenarios such as missing `--base-dir` and invalid base directories
+- negative scenarios such as invalid options and invalid base directories
 
 ## Running
 
