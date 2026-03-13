@@ -65,8 +65,7 @@ abstract class BaseCommand implements Callable<Integer> {
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
-        Path effectiveBaseDir =
-                baseDir != null ? baseDir.normalize() : Path.of("").toAbsolutePath();
+        Path effectiveBaseDir = baseDir != null ? baseDir.normalize() : Path.of(".");
         Path absoluteBaseDir = effectiveBaseDir.toAbsolutePath().normalize();
         if (!Files.isDirectory(absoluteBaseDir)) {
             log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);

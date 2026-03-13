@@ -3,11 +3,9 @@ package io.github.lemon_ant.jharmonizer.cli.e2e;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,43 +13,16 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class JHarmonizerCliPackagedJarIT {
 
-    private static final String BASIC_PROJECT_RESOURCE = "test-cases/cli/e2e/projects/basic-project";
-    private static final String APP_JAVA = "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/App.java";
-    private static final String STABLE_SERVICE_JAVA =
-            "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/service/StableService.java";
-    private static final String FEATURE_SERVICE_JAVA =
-            "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/service/nested/FeatureService.java";
-    private static final String INTERNAL_TOOL_JAVA =
-            "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/internal/InternalTool.java";
-    private static final String EXCLUDED_SAMPLE_JAVA =
-            "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/excluded/ExcludedSample.java";
-    private static final String APP_TEST_JAVA =
-            "src/test/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/AppTest.java";
-    private static final String EXPECTED_HARMONIZED_CLASS = """
-            package %s;
-
-            public class %s {
-
-                int a = 1;
-                int b = 2;
-
-                void aMethod() {}
-
-                void zMethod() {}
-            }
-            """;
+    private static final Path EXECUTABLE_JAR = ExecutableJarLocator.locateExecutableJar();
+    private static final Path ORIGINAL_PROJECT_DIRECTORY =
+            TemporaryProjectCopier.locateOriginalTestResource(Constants.BASIC_PROJECT_RESOURCE);
+    private static final Path EXPECTED_APP_FILE =
+            TemporaryProjectCopier.locateOriginalTestResource(Constants.EXPECTED_APP_RESOURCE);
+    private static final Path EXPECTED_FEATURE_SERVICE_FILE =
+            TemporaryProjectCopier.locateOriginalTestResource(Constants.EXPECTED_FEATURE_SERVICE_RESOURCE);
 
     @TempDir
     Path temporaryDirectory;
-
-    private Path executableJar;
-    private Path originalProjectDirectory;
-
-    @BeforeEach
-    void setUp() throws URISyntaxException {
-        executableJar = ExecutableJarLocator.locateExecutableJar();
-        originalProjectDirectory = TemporaryProjectCopier.locateProject(BASIC_PROJECT_RESOURCE);
-    }
 
     @Test
     void helpCommand_rootHelpRequested_shouldPrintUsageInformation() throws IOException, InterruptedException {
@@ -59,7 +30,7 @@ class JHarmonizerCliPackagedJarIT {
         Path workingDirectory = temporaryDirectory;
 
         // When
-        ExternalCliProcessResult result = ExternalCliProcessRunner.run(executableJar, workingDirectory, "--help");
+        ExternalCliProcessResult result = ExternalCliProcessRunner.run(EXECUTABLE_JAR, workingDirectory, "--help");
 
         // Then
         assertCompleted(result);
@@ -82,7 +53,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, workingDirectory, command, "--help");
+                ExternalCliProcessRunner.run(EXECUTABLE_JAR, workingDirectory, command, "--help");
 
         // Then
         assertCompleted(result);
@@ -97,14 +68,13 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_baseDirOmitted_shouldUseCurrentWorkingDirectory()
-            throws IOException, InterruptedException, URISyntaxException {
+    void restructureCommand_baseDirOmitted_shouldUseCurrentWorkingDirectory() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-default-base-dir");
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "restructure", "-i", "**/*.java");
+                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "restructure", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -113,30 +83,30 @@ class JHarmonizerCliPackagedJarIT {
                 .as(result.toString())
                 .contains("Harmonization result:")
                 .doesNotContain("SLF4J(W)");
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, APP_TEST_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        assertThat(FileContentAssertions.readFile(projectDirectory.resolve(APP_JAVA)))
-                .as(result.toString())
-                .isEqualTo(expectedHarmonizedContent("io.github.lemon_ant.jharmonizer.cli.e2e.sample", "App"));
-        assertThat(FileContentAssertions.readFile(projectDirectory.resolve(FEATURE_SERVICE_JAVA)))
-                .as(result.toString())
-                .isEqualTo(expectedHarmonizedContent(
-                        "io.github.lemon_ant.jharmonizer.cli.e2e.sample.service.nested", "FeatureService"));
+        FileContentAssertions.assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileChanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileChanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileChanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileMatches(EXPECTED_APP_FILE, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileMatches(
+                EXPECTED_FEATURE_SERVICE_FILE, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
     }
 
     @Test
     void restructureCommand_multipleIncludesAndExcludesProvided_shouldModifyOnlySelectedFiles()
-            throws IOException, InterruptedException, URISyntaxException {
+            throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-filtered-restructure");
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                executableJar,
+                EXECUTABLE_JAR,
                 projectDirectory,
                 "restructure",
                 "-b",
@@ -155,49 +125,58 @@ class JHarmonizerCliPackagedJarIT {
         // Then
         assertCompleted(result);
         assertThat(result.getExitCode()).as(result.toString()).isZero();
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileChanged(originalProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_TEST_JAVA);
+        FileContentAssertions.assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileChanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
     void restructureCommand_alreadyHarmonizedInputProvided_shouldLeaveFilesUnchanged()
-            throws IOException, InterruptedException, URISyntaxException {
+            throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-already-harmonized");
         ExternalCliProcessResult initialResult = ExternalCliProcessRunner.run(
-                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
         assertCompleted(initialResult);
         assertThat(initialResult.getExitCode()).as(initialResult.toString()).isZero();
         Path expectedProjectDirectory = copyDirectory(projectDirectory, "project-already-harmonized-expected");
 
         // When
         ExternalCliProcessResult secondResult = ExternalCliProcessRunner.run(
-                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
 
         // Then
         assertCompleted(secondResult);
         assertThat(secondResult.getExitCode()).as(secondResult.toString()).isZero();
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, APP_TEST_JAVA);
+        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
     void checkCommand_nonHarmonizedFilesPresent_shouldReturnSuccessWithoutModifyingFiles()
-            throws IOException, InterruptedException, URISyntaxException {
+            throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-dirty");
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "check", "-b", ".", "-i", "**/*.java");
+                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "check", "-b", ".", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -207,23 +186,27 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("Harmonization result:")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED");
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_TEST_JAVA);
+        FileContentAssertions.assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
-    void checkCommand_includeAndExcludeProvided_shouldRestrictCheckedScope()
-            throws IOException, InterruptedException, URISyntaxException {
+    void checkCommand_includeAndExcludeProvided_shouldRestrictCheckedScope() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-filtered");
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                executableJar,
+                EXECUTABLE_JAR,
                 projectDirectory,
                 "check",
                 "-b",
@@ -250,21 +233,25 @@ class JHarmonizerCliPackagedJarIT {
                 .doesNotContain("InternalTool.java")
                 .doesNotContain("ExcludedSample.java")
                 .doesNotContain("AppTest.java");
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_TEST_JAVA);
+        FileContentAssertions.assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
-    void checkCommand_afterRestructureExecuted_shouldReportCleanState()
-            throws IOException, InterruptedException, URISyntaxException {
+    void checkCommand_afterRestructureExecuted_shouldReportCleanState() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-clean");
         ExternalCliProcessResult restructureResult = ExternalCliProcessRunner.run(
-                executableJar, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
         assertCompleted(restructureResult);
         assertThat(restructureResult.getExitCode())
                 .as(restructureResult.toString())
@@ -273,7 +260,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "check", "-b", ".", "-i", "**/*.java");
+                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "check", "-b", ".", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -283,23 +270,27 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("CHECKED")
                 .doesNotContain("REORDERED")
                 .doesNotContain("FORMATTED");
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, APP_TEST_JAVA);
+        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                expectedProjectDirectory, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
     void checkFastCommand_nonHarmonizedFilesPresent_shouldReturnFailureExitCode()
-            throws IOException, InterruptedException, URISyntaxException {
+            throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-fast-dirty");
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                executableJar, projectDirectory, "check-fast", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "check-fast", "-b", ".", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -314,23 +305,28 @@ class JHarmonizerCliPackagedJarIT {
                         "InternalTool.java",
                         "ExcludedSample.java",
                         "AppTest.java");
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, STABLE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, FEATURE_SERVICE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, INTERNAL_TOOL_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, EXCLUDED_SAMPLE_JAVA);
-        FileContentAssertions.assertFileUnchanged(originalProjectDirectory, projectDirectory, APP_TEST_JAVA);
+        FileContentAssertions.assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
+        FileContentAssertions.assertFileUnchanged(
+                ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
     }
 
     @Test
     void restructureCommand_invalidOptionProvided_shouldReturnInvalidUsageExitCode()
-            throws IOException, InterruptedException, URISyntaxException {
+            throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-invalid-option");
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(executableJar, projectDirectory, "restructure", "--unknown-option");
+                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "restructure", "--unknown-option");
 
         // Then
         assertCompleted(result);
@@ -349,7 +345,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                executableJar, workingDirectory, "check", "-b", "missing-directory", "-i", "**/*.java");
+                EXECUTABLE_JAR, workingDirectory, "check", "-b", "missing-directory", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -359,9 +355,9 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("Base directory does not exist or is not a directory");
     }
 
-    private Path copyBasicProject(String targetDirectoryName) throws IOException, URISyntaxException {
+    private Path copyBasicProject(String targetDirectoryName) throws IOException {
         return TemporaryProjectCopier.copyProject(
-                BASIC_PROJECT_RESOURCE, temporaryDirectory.resolve(targetDirectoryName));
+                Constants.BASIC_PROJECT_RESOURCE, temporaryDirectory.resolve(targetDirectoryName));
     }
 
     private Path copyDirectory(Path sourceDirectory, String targetDirectoryName) throws IOException {
@@ -375,7 +371,23 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.isTimedOut()).as(result.toString()).isFalse();
     }
 
-    private static String expectedHarmonizedContent(String packageName, String className) {
-        return EXPECTED_HARMONIZED_CLASS.formatted(packageName, className);
+    private static final class Constants {
+        private static final String BASIC_PROJECT_RESOURCE = "test-cases/cli/e2e/projects/basic-project";
+        private static final String EXPECTED_APP_RESOURCE = "test-cases/cli/e2e/expected/App.java";
+        private static final String EXPECTED_FEATURE_SERVICE_RESOURCE =
+                "test-cases/cli/e2e/expected/FeatureService.java";
+        private static final String APP_JAVA = "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/App.java";
+        private static final String STABLE_SERVICE_JAVA =
+                "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/service/StableService.java";
+        private static final String FEATURE_SERVICE_JAVA =
+                "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/service/nested/FeatureService.java";
+        private static final String INTERNAL_TOOL_JAVA =
+                "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/internal/InternalTool.java";
+        private static final String EXCLUDED_SAMPLE_JAVA =
+                "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/excluded/ExcludedSample.java";
+        private static final String APP_TEST_JAVA =
+                "src/test/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/AppTest.java";
+
+        private Constants() {}
     }
 }

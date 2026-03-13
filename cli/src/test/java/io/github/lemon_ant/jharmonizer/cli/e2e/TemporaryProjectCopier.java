@@ -12,19 +12,22 @@ import org.apache.commons.io.FileUtils;
 @UtilityClass
 class TemporaryProjectCopier {
 
-    static Path copyProject(@NonNull String resourceRoot, @NonNull Path targetDirectory)
-            throws IOException, URISyntaxException {
-        Path sourceDirectory = locateProject(resourceRoot);
+    static Path copyProject(@NonNull String resourceRoot, @NonNull Path targetDirectory) throws IOException {
+        Path sourceDirectory = locateOriginalTestResource(resourceRoot);
         Files.createDirectories(targetDirectory);
         FileUtils.copyDirectory(sourceDirectory.toFile(), targetDirectory.toFile());
         return targetDirectory;
     }
 
-    static Path locateProject(@NonNull String resourceRoot) throws URISyntaxException {
+    static Path locateOriginalTestResource(@NonNull String resourceRoot) {
         URL resource = TemporaryProjectCopier.class.getClassLoader().getResource(resourceRoot);
         if (resource == null) {
             throw new IllegalStateException("Test resource directory not found: " + resourceRoot);
         }
-        return Path.of(resource.toURI());
+        try {
+            return Path.of(resource.toURI());
+        } catch (URISyntaxException exception) {
+            throw new IllegalStateException("Failed to locate original test resource: " + resourceRoot, exception);
+        }
     }
 }

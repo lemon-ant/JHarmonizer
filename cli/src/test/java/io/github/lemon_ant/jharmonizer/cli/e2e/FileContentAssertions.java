@@ -1,10 +1,8 @@
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.experimental.UtilityClass;
 
@@ -12,22 +10,22 @@ import lombok.experimental.UtilityClass;
 class FileContentAssertions {
 
     static void assertFileChanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
-        assertThat(readFile(actualProjectDirectory.resolve(relativePath)))
+        Path actualFile = actualProjectDirectory.resolve(relativePath);
+        Path expectedFile = expectedProjectDirectory.resolve(relativePath);
+        assertThatThrownBy(() -> assertThat(actualFile).hasSameTextualContentAs(expectedFile))
                 .as("Expected file to be modified: %s", relativePath)
-                .isNotEqualTo(readFile(expectedProjectDirectory.resolve(relativePath)));
+                .isInstanceOf(AssertionError.class);
     }
 
     static void assertFileUnchanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
-        assertThat(readFile(actualProjectDirectory.resolve(relativePath)))
+        assertThat(actualProjectDirectory.resolve(relativePath))
                 .as("Expected file to remain unchanged: %s", relativePath)
-                .isEqualTo(readFile(expectedProjectDirectory.resolve(relativePath)));
+                .hasSameTextualContentAs(expectedProjectDirectory.resolve(relativePath));
     }
 
-    static String readFile(Path filePath) {
-        try {
-            return Files.readString(filePath, StandardCharsets.UTF_8);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to read test file: " + filePath, exception);
-        }
+    static void assertFileMatches(Path expectedFile, Path actualProjectDirectory, String relativePath) {
+        assertThat(actualProjectDirectory.resolve(relativePath))
+                .as("Expected file to match: %s", relativePath)
+                .hasSameTextualContentAs(expectedFile);
     }
 }

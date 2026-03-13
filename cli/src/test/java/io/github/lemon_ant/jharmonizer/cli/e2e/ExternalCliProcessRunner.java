@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -22,8 +23,9 @@ class ExternalCliProcessRunner {
     static ExternalCliProcessResult run(
             @NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
             throws IOException, InterruptedException {
-        List<String> command = new ArrayList<>(List.of("java", "-jar", executableJar.toString()));
-        command.addAll(List.of(arguments));
+        List<String> command = Stream.concat(
+                        Stream.of("java", "-jar", executableJar.toString()), Arrays.stream(arguments))
+                .toList();
 
         Process process =
                 new ProcessBuilder(command).directory(workingDirectory.toFile()).start();
