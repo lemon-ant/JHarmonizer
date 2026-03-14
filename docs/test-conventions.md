@@ -129,6 +129,7 @@ void resolveGroups_nestedMatch_winOverParentGroup() {
 
 - Prefer classpath-based access (`ClassLoader.getResourceAsStream`) over filesystem paths.
 - Use shared helpers (e.g., `TestCaseResourceUtils`) to read resources.
+- If a regression test verifies the built-in default configuration, load the real embedded `default-config.yml` through the production default-loading path instead of duplicating it in test fixtures or inline YAML.
 
 Recommended API shape:
 

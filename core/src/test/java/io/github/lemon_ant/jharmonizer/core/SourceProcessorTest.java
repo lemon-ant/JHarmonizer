@@ -26,6 +26,14 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final String PUBLIC_STATIC_MAIN_METHOD_DECLARATION = "public static void main(String[] args)";
+    private static final String PUBLIC_CONSTRUCTOR_DECLARATION = "public SampleAllJava21FeaturesList()";
+    private static final String PUBLIC_ASSERTION_TEST_METHOD_DECLARATION = "public void assertionTest()";
+    private static final String PUBLIC_ENHANCED_FOR_LOOP_METHOD_DECLARATION = "public void enhancedForLoop()";
+    private static final String PUBLIC_RECORD_PERSON_DECLARATION = "public record Person(String name, int age)";
+    private static final String PUBLIC_INTERFACE_DEFAULT_METHOD_DECLARATION = "public interface DefaultMethod";
+    private static final String PACKAGE_PRIVATE_INNER_CLASS_DECLARATION = "class InnerClass";
+    private static final String PACKAGE_PRIVATE_STATIC_NESTED_CLASS_DECLARATION = "static class StaticNestedClass";
 
     @TempDir
     Path temporaryDirectory;
@@ -89,8 +97,58 @@ class SourceProcessorTest {
         assertThat(finalSourceCode).isNotBlank();
     }
 
+    @Test
+    void processSources_defaultConfigSampleAllJava21FeaturesList_matchesExpectedOrdering() throws Exception {
+        // Given
+        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
+        SourceProcessor sourceProcessor = new SourceProcessor();
+
+        // When
+        sourceProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        int publicStaticMainMethodIndex =
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_STATIC_MAIN_METHOD_DECLARATION);
+        int publicConstructorIndex = requireSourceFragmentIndex(processedSourceCode, PUBLIC_CONSTRUCTOR_DECLARATION);
+        int publicAssertionTestMethodIndex =
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_ASSERTION_TEST_METHOD_DECLARATION);
+        int publicEnhancedForLoopMethodIndex =
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_ENHANCED_FOR_LOOP_METHOD_DECLARATION);
+        int publicRecordPersonIndex = requireSourceFragmentIndex(processedSourceCode, PUBLIC_RECORD_PERSON_DECLARATION);
+        int publicInterfaceDefaultMethodIndex =
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_INTERFACE_DEFAULT_METHOD_DECLARATION);
+        int packagePrivateInnerClassIndex =
+                requireSourceFragmentIndex(processedSourceCode, PACKAGE_PRIVATE_INNER_CLASS_DECLARATION);
+        int packagePrivateStaticNestedClassIndex =
+                requireSourceFragmentIndex(processedSourceCode, PACKAGE_PRIVATE_STATIC_NESTED_CLASS_DECLARATION);
+
+        assertThat(publicStaticMainMethodIndex)
+                .as("Default config should place public static methods before public constructors")
+                .isLessThan(publicConstructorIndex);
+        assertThat(publicAssertionTestMethodIndex)
+                .as("Default config should sort public instance methods alphabetically")
+                .isLessThan(publicEnhancedForLoopMethodIndex);
+        assertThat(publicRecordPersonIndex)
+                .as("Default config should place public records before public interfaces in nested types")
+                .isLessThan(publicInterfaceDefaultMethodIndex);
+        assertThat(packagePrivateInnerClassIndex)
+                .as("Default config should sort package-private nested classes alphabetically")
+                .isLessThan(packagePrivateStaticNestedClassIndex);
+    }
+
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    }
+
+    private static int requireSourceFragmentIndex(String sourceCode, String sourceFragment) {
+        int sourceFragmentIndex = sourceCode.indexOf(sourceFragment);
+        if (sourceFragmentIndex < 0) {
+            throw new IllegalStateException("Source fragment not found: " + sourceFragment);
+        }
+        return sourceFragmentIndex;
     }
 }
