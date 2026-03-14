@@ -26,14 +26,14 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
-    private static final String PUBLIC_STATIC_MAIN_METHOD_DECLARATION = "public static void main(String[] args)";
-    private static final String PUBLIC_CONSTRUCTOR_DECLARATION = "public SampleAllJava21FeaturesList()";
-    private static final String PUBLIC_ASSERTION_TEST_METHOD_DECLARATION = "public void assertionTest()";
-    private static final String PUBLIC_ENHANCED_FOR_LOOP_METHOD_DECLARATION = "public void enhancedForLoop()";
-    private static final String PUBLIC_RECORD_PERSON_DECLARATION = "public record Person(String name, int age)";
-    private static final String PUBLIC_INTERFACE_DEFAULT_METHOD_DECLARATION = "public interface DefaultMethod";
-    private static final String PACKAGE_PRIVATE_INNER_CLASS_DECLARATION = "class InnerClass";
-    private static final String PACKAGE_PRIVATE_STATIC_NESTED_CLASS_DECLARATION = "static class StaticNestedClass";
+    private static final String PUBLIC_STATIC_MAIN_METHOD_FRAGMENT = "public static void main(String[] args)";
+    private static final String PUBLIC_CONSTRUCTOR_FRAGMENT = "public SampleAllJava21FeaturesList()";
+    private static final String PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT = "public void assertionTest()";
+    private static final String PUBLIC_ENHANCED_FOR_LOOP_METHOD_FRAGMENT = "public void enhancedForLoop()";
+    private static final String PUBLIC_RECORD_PERSON_FRAGMENT = "public record Person(String name, int age)";
+    private static final String PUBLIC_INTERFACE_DEFAULT_METHOD_FRAGMENT = "public interface DefaultMethod";
+    private static final String PACKAGE_PRIVATE_INNER_CLASS_FRAGMENT = "class InnerClass";
+    private static final String PACKAGE_PRIVATE_STATIC_NESTED_CLASS_FRAGMENT = "static class StaticNestedClass";
 
     @TempDir
     Path temporaryDirectory;
@@ -111,19 +111,19 @@ class SourceProcessorTest {
 
         // Then
         int publicStaticMainMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, PUBLIC_STATIC_MAIN_METHOD_DECLARATION);
-        int publicConstructorIndex = requireSourceFragmentIndex(processedSourceCode, PUBLIC_CONSTRUCTOR_DECLARATION);
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_STATIC_MAIN_METHOD_FRAGMENT);
+        int publicConstructorIndex = requireSourceFragmentIndex(processedSourceCode, PUBLIC_CONSTRUCTOR_FRAGMENT);
         int publicAssertionTestMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, PUBLIC_ASSERTION_TEST_METHOD_DECLARATION);
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT);
         int publicEnhancedForLoopMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, PUBLIC_ENHANCED_FOR_LOOP_METHOD_DECLARATION);
-        int publicRecordPersonIndex = requireSourceFragmentIndex(processedSourceCode, PUBLIC_RECORD_PERSON_DECLARATION);
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_ENHANCED_FOR_LOOP_METHOD_FRAGMENT);
+        int publicRecordPersonIndex = requireSourceFragmentIndex(processedSourceCode, PUBLIC_RECORD_PERSON_FRAGMENT);
         int publicInterfaceDefaultMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, PUBLIC_INTERFACE_DEFAULT_METHOD_DECLARATION);
+                requireSourceFragmentIndex(processedSourceCode, PUBLIC_INTERFACE_DEFAULT_METHOD_FRAGMENT);
         int packagePrivateInnerClassIndex =
-                requireSourceFragmentIndex(processedSourceCode, PACKAGE_PRIVATE_INNER_CLASS_DECLARATION);
+                requireSourceFragmentIndex(processedSourceCode, PACKAGE_PRIVATE_INNER_CLASS_FRAGMENT);
         int packagePrivateStaticNestedClassIndex =
-                requireSourceFragmentIndex(processedSourceCode, PACKAGE_PRIVATE_STATIC_NESTED_CLASS_DECLARATION);
+                requireSourceFragmentIndex(processedSourceCode, PACKAGE_PRIVATE_STATIC_NESTED_CLASS_FRAGMENT);
 
         assertThat(publicStaticMainMethodIndex)
                 .as("Default config should place public static methods before public constructors")
