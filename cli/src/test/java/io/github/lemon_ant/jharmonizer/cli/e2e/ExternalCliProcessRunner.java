@@ -54,11 +54,11 @@ class ExternalCliProcessRunner {
 
     private static String readAndMirror(InputStream inputStream, PrintStream mirrorStream) throws IOException {
         ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
-        byte[] chunk = new byte[8192];
+        byte[] buffer = new byte[8192];
         int bytesRead;
-        while ((bytesRead = inputStream.read(chunk)) != -1) {
-            outputBuffer.write(chunk, 0, bytesRead);
-            mirrorStream.write(chunk, 0, bytesRead);
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputBuffer.write(buffer, 0, bytesRead);
+            mirrorStream.write(buffer, 0, bytesRead);
             mirrorStream.flush();
         }
         return outputBuffer.toString(StandardCharsets.UTF_8);
