@@ -21,16 +21,19 @@ import spoon.reflect.declaration.CtTypeMember;
 public class SpoonTestCaseUtils {
 
     public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource) {
-        requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
-
-        String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
-        SpoonAstModel spoonAstModel = null;
-        spoonAstModel = SpoonParser.parseJavaSourceResource(
-                Path.of(extractFileNameWithExtension(javaFixtureResource)), sourceCode);
+        SpoonAstModel spoonAstModel = parseAstModelFromJavaFixtureResource(javaFixtureResource);
         return spoonAstModel
                 .getMainType()
                 .orElseThrow(() -> new IllegalStateException(
                         "Expected a main type to be detected for fixture URL: " + javaFixtureResource));
+    }
+
+    public static SpoonAstModel parseAstModelFromJavaFixtureResource(URL javaFixtureResource) {
+        requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
+
+        String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
+        return SpoonParser.parseJavaSourceResource(
+                Path.of(extractFileNameWithExtension(javaFixtureResource)), sourceCode);
     }
 
     /**

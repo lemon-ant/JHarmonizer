@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +54,8 @@ class MemberGroupCompiler {
         // 2) Compile selector/sorting for the current node (whatever your project uses)
         CompiledMemberGroupSelectorBlock compiledMemberGroupSelectorBlock =
                 compileSelectorBlock(unifiedGroup.getSelectorBlock());
-        List<OrderingRule> compiledOrderingRules = mapOrderingRules(unifiedGroup.getOrderingRules());
+        List<OrderingRule> compiledOrderingRules =
+                OrderingRuleCompiler.compileOrderingRules(unifiedGroup.getOrderingRules());
 
         // 3) Assign post-order index to THIS node and advance index
         int assignedPostOrderIndex = runningIndex;
@@ -86,23 +86,5 @@ class MemberGroupCompiler {
                 .map(MemberGroupRuleLineCompiler::compileRuleLine)
                 .toList();
         return new CompiledMemberGroupSelectorBlock(includes, excludes);
-    }
-
-    // TODO Complete model and mapper
-    @NonNull
-    private static List<OrderingRule> mapOrderingRules(@NonNull List<UnifiedOrderingRule> unifiedOrderingRules) {
-        // Unified model guarantees non-empty list; preserve order and map 1:1.
-        return unifiedOrderingRules.stream()
-                .map(MemberGroupCompiler::mapOrderingRule)
-                .toList();
-    }
-
-    private static OrderingRule mapOrderingRule(@NonNull UnifiedOrderingRule unifiedOrderingRule) {
-        return switch (unifiedOrderingRule) {
-            case ALPHA -> OrderingRule.ALPHA;
-            case PRESERVE -> OrderingRule.PRESERVE;
-            case VISIBILITY_ASC -> OrderingRule.VISIBILITY_ASC;
-            case VISIBILITY_DESC -> OrderingRule.VISIBILITY_DESC;
-        };
     }
 }
