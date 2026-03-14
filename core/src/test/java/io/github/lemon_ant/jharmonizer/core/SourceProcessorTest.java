@@ -97,11 +97,11 @@ class SourceProcessorTest {
     void processSources_deepJavaFile_logsAbbreviatedJharmonizedMessage() throws Exception {
         // Given
         Path nestedDirectoryPath = Files.createDirectories(
-                temporaryDirectory.resolve(Path.of("feature", "veryLongPackageName", "nested", "internal", "tooling")));
+                temporaryDirectory.resolve(Path.of("feature", "deeplyNestedPackage", "nested", "internal", "tooling")));
         Path javaFilePath = writeJavaFile(
                 nestedDirectoryPath,
                 "InternalToolForLoggingVerification.java",
-                "package demo; public class LoggingSample {}");
+                "package demo; public class InternalToolForLoggingVerification {}");
         SourceProcessor sourceProcessor = new SourceProcessor();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
@@ -125,7 +125,8 @@ class SourceProcessorTest {
                 .contains("InternalToolForLoggingVerification.java")
                 .doesNotContain("Harmonization finished for")
                 .hasSizeLessThanOrEqualTo(65);
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).contains("public class LoggingSample");
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8))
+                .contains("public class InternalToolForLoggingVerification");
     }
 
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
