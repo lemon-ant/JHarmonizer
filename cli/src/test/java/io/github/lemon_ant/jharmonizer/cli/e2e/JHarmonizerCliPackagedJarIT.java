@@ -41,13 +41,13 @@ class JHarmonizerCliPackagedJarIT {
                 .as(result.toString())
                 .contains("Usage: jharmonizer")
                 .contains("restructure")
-                .contains("check")
+                .contains("check-all")
                 .contains("check-fast");
         assertThat(result.getStderr()).as(result.toString()).isBlank();
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"restructure", "check", "check-fast"})
+    @ValueSource(strings = {"restructure", "check-all", "check-fast"})
     void helpCommand_subcommandHelpRequested_printUsageInformation(String command)
             throws IOException, InterruptedException {
         // Given
@@ -165,8 +165,8 @@ class JHarmonizerCliPackagedJarIT {
         Path projectDirectory = copyBasicProject("project-check-dirty");
 
         // When
-        ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "check", "-b", ".", "-i", "**/*.java");
+        ExternalCliProcessResult result = ExternalCliProcessRunner.run(
+                EXECUTABLE_JAR, projectDirectory, "check-all", "-b", ".", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -193,7 +193,7 @@ class JHarmonizerCliPackagedJarIT {
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
                 EXECUTABLE_JAR,
                 projectDirectory,
-                "check",
+                "check-all",
                 "--base-dir",
                 ".",
                 "--include",
@@ -235,8 +235,8 @@ class JHarmonizerCliPackagedJarIT {
         Path expectedProjectDirectory = copyDirectory(projectDirectory, "project-check-clean-expected");
 
         // When
-        ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "check", "-b", ".", "-i", "**/*.java");
+        ExternalCliProcessResult result = ExternalCliProcessRunner.run(
+                EXECUTABLE_JAR, projectDirectory, "check-all", "-b", ".", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -310,7 +310,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, workingDirectory, "check", "-b", "missing-directory", "-i", "**/*.java");
+                EXECUTABLE_JAR, workingDirectory, "check-all", "-b", "missing-directory", "-i", "**/*.java");
 
         // Then
         assertCompleted(result);

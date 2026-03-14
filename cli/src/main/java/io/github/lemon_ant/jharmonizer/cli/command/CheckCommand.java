@@ -5,7 +5,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import picocli.CommandLine.Command;
 
 @Command(
-        name = "check",
+        name = "check-all",
         description = "Checks all Java source files and reports which ones require restructuring.",
         mixinStandardHelpOptions = true)
 final class CheckCommand extends BaseCommand {
