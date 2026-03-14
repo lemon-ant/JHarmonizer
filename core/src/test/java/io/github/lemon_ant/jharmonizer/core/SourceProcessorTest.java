@@ -94,7 +94,7 @@ class SourceProcessorTest {
     }
 
     @Test
-    void processSources_deepJavaFile_logsAbbreviatedJharmonizedMessage() throws Exception {
+    void processSources_deepJavaFile_logsAbbreviatedJHarmonizerMessage() throws Exception {
         // Given
         Path nestedDirectoryPath = Files.createDirectories(
                 temporaryDirectory.resolve(Path.of("feature", "deeplyNestedPackage", "nested", "internal", "tooling")));
@@ -116,15 +116,15 @@ class SourceProcessorTest {
         // Then
         String harmonizationLogMessage = listAppender.list.stream()
                 .map(ILoggingEvent::getFormattedMessage)
-                .filter(message -> message.startsWith("JHarmonized "))
+                .filter(message -> message.startsWith("JHarmonizer "))
                 .findFirst()
                 .orElseThrow();
         assertThat(harmonizationLogMessage)
-                .startsWith("JHarmonized FORMATTED ")
+                .startsWith("JHarmonizer FORMATTED ")
                 .contains("...")
                 .contains("InternalToolForLoggingVerification.java")
                 .doesNotContain("Harmonization finished for")
-                .hasSizeLessThanOrEqualTo(65);
+                .hasSizeLessThanOrEqualTo(120);
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8))
                 .contains("public class InternalToolForLoggingVerification");
     }

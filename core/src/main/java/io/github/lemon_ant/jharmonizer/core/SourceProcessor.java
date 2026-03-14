@@ -31,9 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("PMD.GuardLogStatement")
 public final class SourceProcessor {
 
-    private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonized";
-    private static final int MAX_SINGLE_FILE_LOG_MESSAGE_LENGTH = 65;
-    private static final int SINGLE_FILE_LOG_DELIMITERS_LENGTH = 2;
+    private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
+    private static final int MAX_TOTAL_PATH_LENGTH = 100;
 
     private final CompiledConfig config;
     private final Formatter formatter;
@@ -100,11 +99,7 @@ public final class SourceProcessor {
     }
 
     private static String formatSingleFileLogMessage(Path path, String status) {
-        int maxDisplayedPathLength = MAX_SINGLE_FILE_LOG_MESSAGE_LENGTH
-                - SINGLE_FILE_LOG_PREFIX.length()
-                - status.length()
-                - SINGLE_FILE_LOG_DELIMITERS_LENGTH;
-        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, maxDisplayedPathLength);
+        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH);
         return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;
     }
 }
