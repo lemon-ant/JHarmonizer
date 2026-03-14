@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,13 +37,21 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @Option(
             names = {"-i", "--include"},
-            description = "Glob patterns for files to include (can be repeated).")
+            split = ",",
+            description = {
+                "Glob patterns for files to include.",
+                "Repeat this option or pass multiple patterns as a comma-separated list."
+            })
     @SuppressWarnings("PMD.ImmutableField")
     private Set<String> includeGlobs = new HashSet<>();
 
     @Option(
             names = {"-e", "--exclude"},
-            description = "Glob patterns for files to exclude (can be repeated).")
+            split = ",",
+            description = {
+                "Glob patterns for files to exclude.",
+                "Repeat this option or pass multiple patterns as a comma-separated list."
+            })
     @SuppressWarnings("PMD.ImmutableField")
     private Set<String> excludeGlobs = new HashSet<>();
 
@@ -64,7 +73,12 @@ abstract class BaseCommand implements Callable<Integer> {
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
-        Path effectiveBaseDir = baseDir != null ? baseDir : Path.of("").toAbsolutePath();
+        Path effectiveBaseDir = baseDir != null ? baseDir.normalize() : Path.of(".");
+        Path absoluteBaseDir = effectiveBaseDir.toAbsolutePath().normalize();
+        if (!Files.isDirectory(absoluteBaseDir)) {
+            log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
+            return 1;
+        }
         CommandOptions commandOptions =
                 new CommandOptions(effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
         if (commandOptions.isVerbose()) {

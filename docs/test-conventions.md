@@ -34,18 +34,20 @@ Rules:
 
 - JUnit test method names must follow **exactly 3 segments**:
 
-  `methodName_condition_expectedResult`
+  `subject_condition_expectedResult`
 
 Examples:
 
 - `compileConfig_validYaml_produceSingleRootGroup`
 - `resolveGroups_nestedMatch_winOverParentGroup`
-- `describeMembers_recordType_returnImplicitMembers`
+- `helpCommand_rootHelpRequested_printUsageInformation`
 
 Guidelines:
 
-- `methodName` must start with a verb
-- Do not use `should` or `must` in test method names (these words add noise and violate the 3-segment naming intent). (e.g., `compile`, `resolve`, `describe`, `render`, `convert`).
+- `subject` names what is being tested. It usually mirrors the production method, command, or feature name.
+- `condition` states only the relevant precondition/input shape.
+- `expectedResult` states the observable outcome.
+- Do not use filler words such as `should`, `when`, `then`, `must`, or similar “BDD glue” inside the method name.
 - Avoid vague words (`works`, `ok`, `smoke1`). Prefer intent-revealing words.
 - Keep the condition minimal but specific.
 
@@ -168,6 +170,12 @@ private static final class Constants {
 Place the `Constants` nested class at the end of the test class to keep the beginning focused on test methods.
 
 ## Assertions and test utilities
+
+### Do not test test utilities
+
+- Do not add dedicated unit tests whose only purpose is to test test-only utility classes or helper methods.
+- Validate test utilities indirectly through the real unit/integration tests that use them.
+- If a test utility becomes complex enough to deserve direct behavioral tests, that is a signal to move the logic into production code or to simplify the helper.
 
 ### Placement of test utilities
 
