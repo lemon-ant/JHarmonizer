@@ -1,81 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-interface BetaInterface {
-    private static String zPrivateStatic() {
-        return "zPrivateStatic";
-    }
-
-    static String bStatic() {
-        return "bStatic";
-    }
-
-    default String dDefault() {
-        return "dDefault";
-    }
-
-    private String aPrivate() {
-        return "aPrivate";
-    }
-
-    String cAbstract();
-}
-
-@interface SampleAnno {
-    int zeta() default 7;
-
-    String alpha() default "alpha";
-}
-
-record AlphaRecord(int z, int a) {
-    static String zUtility() {
-        return "zUtility";
-    }
-
-    private static String aPrivateUtility() {
-        return "aPrivateUtility";
-    }
-
-    AlphaRecord {
-        if (z < 0 || a < 0) {
-            throw new IllegalArgumentException("Record components must be non-negative");
-        }
-    }
-
-    public String zDescribe() {
-        return z + ":" + a;
-    }
-
-    private String aInternal() {
-        return "internal-" + zDescribe();
-    }
-}
-
-enum ZetaEnum {
-    GAMMA,
-    ALPHA,
-    BETA;
-
-    private static final String MARKER = "enum";
-
-    private final int code;
-
-    private ZetaEnum() {
-        this.code = ordinal();
-    }
-
-    public static String zUtility() {
-        return MARKER;
-    }
-
-    public int bCode() {
-        return code;
-    }
-
-    private String aLabel() {
-        return name().toLowerCase();
-    }
-}
-
 public class DefaultConfigComplexTypesScenario {
 
     private enum PrivateEnum {
@@ -124,4 +48,80 @@ public class DefaultConfigComplexTypesScenario {
             throw new IllegalStateException("Nested enum constants order changed");
         }
     }
+}
+
+record AlphaRecord(int z, int a) {
+    static String zUtility() {
+        return "zUtility";
+    }
+
+    private static String aPrivateUtility() {
+        return "aPrivateUtility";
+    }
+
+    AlphaRecord {
+        if (z < 0 || a < 0) {
+            throw new IllegalArgumentException("Record components must be non-negative");
+        }
+    }
+
+    public String zDescribe() {
+        return z + ":" + a;
+    }
+
+    private String aInternal() {
+        return "internal-" + zDescribe();
+    }
+}
+
+interface BetaInterface {
+    private static String zPrivateStatic() {
+        return "zPrivateStatic";
+    }
+
+    static String bStatic() {
+        return "bStatic";
+    }
+
+    default String dDefault() {
+        return "dDefault";
+    }
+
+    private String aPrivate() {
+        return "aPrivate";
+    }
+
+    String cAbstract();
+}
+
+enum ZetaEnum {
+    GAMMA,
+    ALPHA,
+    BETA;
+
+    private static final String MARKER = "enum";
+
+    private final int code;
+
+    private ZetaEnum() {
+        this.code = ordinal();
+    }
+
+    public static String zUtility() {
+        return MARKER;
+    }
+
+    public int bCode() {
+        return code;
+    }
+
+    private String aLabel() {
+        return name().toLowerCase();
+    }
+}
+
+@interface SampleAnno {
+    int zeta() default 7;
+
+    String alpha() default "alpha";
 }
