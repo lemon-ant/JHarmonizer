@@ -5,7 +5,7 @@ public class App {
     int a = 1;
     int b = 2;
 
-    void aMethod() {}
-
     void zMethod() {}
+
+    void aMethod() {}
 }
