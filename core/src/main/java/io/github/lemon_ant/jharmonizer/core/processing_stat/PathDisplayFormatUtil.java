@@ -7,13 +7,13 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-class PathDisplayFormatUtil {
+public class PathDisplayFormatUtil {
 
     private static final String ELLIPSIS = "...";
     private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
     @NonNull
-    static String abbreviatePathForDisplay(@NonNull Path path, int maxTotalLength) {
+    public static String abbreviatePathForDisplay(@NonNull Path path, int maxTotalLength) {
         String fullPathString = path.toString();
         if (fullPathString.length() <= maxTotalLength) {
             return fullPathString;
