@@ -90,7 +90,7 @@ class JHarmonizerCliPackagedJarIT {
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
-        assertThat(result.combinedOutput()).as(result.toString()).contains("StableService.java with status UNCHANGED");
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
         assertFileMatches(EXPECTED_APP_FILE, projectDirectory, Constants.APP_JAVA);
         assertFileMatches(EXPECTED_FEATURE_SERVICE_FILE, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
     }
@@ -122,9 +122,9 @@ class JHarmonizerCliPackagedJarIT {
         // Then
         assertCompleted(result);
         assertThat(result.getExitCode()).as(result.toString()).isZero();
-        assertThat(result.combinedOutput()).as(result.toString()).contains("StableService.java with status UNCHANGED");
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
+        assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.INTERNAL_TOOL_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.EXCLUDED_SAMPLE_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_TEST_JAVA);
