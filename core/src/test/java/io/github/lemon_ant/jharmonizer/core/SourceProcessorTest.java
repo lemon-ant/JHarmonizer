@@ -3,6 +3,9 @@ package io.github.lemon_ant.jharmonizer.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
@@ -14,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 
 /**
  * Integration-like tests for SourceProcessor.processSources.
@@ -89,8 +93,57 @@ class SourceProcessorTest {
         assertThat(finalSourceCode).isNotBlank();
     }
 
+    @Test
+    void processSources_deepJavaFile_logsAbbreviatedJharmonizedMessage() throws Exception {
+        // Given
+        Path nestedDirectoryPath = Files.createDirectories(
+                temporaryDirectory.resolve(Path.of("feature", "veryLongPackageName", "nested", "internal", "tooling")));
+        Path javaFilePath = writeJavaFile(
+                nestedDirectoryPath,
+                "InternalToolForLoggingVerification.java",
+                "package demo; public class LoggingSample {}");
+        SourceProcessor sourceProcessor = new SourceProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            sourceProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        } finally {
+            detachListAppender(listAppender);
+        }
+
+        // Then
+        String harmonizationLogMessage = listAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .filter(message -> message.startsWith("JHarmonized "))
+                .findFirst()
+                .orElseThrow();
+        assertThat(harmonizationLogMessage)
+                .startsWith("JHarmonized FORMATTED ")
+                .contains("...")
+                .contains("InternalToolForLoggingVerification.java")
+                .doesNotContain("Harmonization finished for")
+                .hasSizeLessThanOrEqualTo(65);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).contains("public class LoggingSample");
+    }
+
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    }
+
+    private static ListAppender<ILoggingEvent> attachListAppender() {
+        Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
+        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
+        return listAppender;
+    }
+
+    private static void detachListAppender(ListAppender<ILoggingEvent> listAppender) {
+        Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
+        logger.detachAppender(listAppender);
+        listAppender.stop();
     }
 }

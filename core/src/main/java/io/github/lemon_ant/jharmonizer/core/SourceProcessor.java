@@ -11,6 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -29,6 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings("PMD.GuardLogStatement")
 public final class SourceProcessor {
+
+    private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonized";
+    private static final int MAX_SINGLE_FILE_LOG_MESSAGE_LENGTH = 65;
+    private static final int SINGLE_FILE_LOG_DELIMITERS_LENGTH = 2;
 
     private final CompiledConfig config;
     private final Formatter formatter;
@@ -84,14 +89,22 @@ public final class SourceProcessor {
                 // TODO Possibly include into the one method inside SourceFilesHandler
                 .map(SourceFilesHandler::readFile)
                 .map(flow::processSource)
-                .peek(flowProcessingResult -> log.info(
-                        "Harmonization finished for {} with status {}",
+                .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
                         flowProcessingResult.getPath(),
-                        flowProcessingResult.getFlowProcessingStatus()))
+                        flowProcessingResult.getFlowProcessingStatus().name())))
                 .map(FileProcessingStatistic::convert)
                 .collect(SourceProcessingStats.statsCollector());
 
         log.info(aggregatedProcessingStatistic.toString());
         return aggregatedProcessingStatistic;
+    }
+
+    private static String formatSingleFileLogMessage(Path path, String status) {
+        int maxDisplayedPathLength = MAX_SINGLE_FILE_LOG_MESSAGE_LENGTH
+                - SINGLE_FILE_LOG_PREFIX.length()
+                - status.length()
+                - SINGLE_FILE_LOG_DELIMITERS_LENGTH;
+        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, maxDisplayedPathLength);
+        return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;
     }
 }
