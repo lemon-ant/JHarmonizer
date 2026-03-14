@@ -63,9 +63,11 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getStdout())
                 .as(result.toString())
                 .contains("Usage: jharmonizer " + command)
-                .contains("--base-dir")
-                .contains("--include")
-                .contains("--exclude");
+                .contains("-b, --base-dir")
+                .contains("-i, --include")
+                .contains("-e, --exclude")
+                .contains("Repeat this option or pass multiple patterns as a")
+                .contains("comma-separated list.");
         assertThat(result.getStderr()).as(result.toString()).isBlank();
     }
 
@@ -183,7 +185,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_includeAndExcludeProvided_restrictCheckedScope() throws IOException, InterruptedException {
+    void checkCommand_collectionOptionFormatsProvided_restrictCheckedScope() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-filtered");
 
@@ -192,18 +194,14 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "check",
-                "-b",
+                "--base-dir",
                 ".",
-                "-i",
-                "src/main/java/**/*.java",
-                "-i",
-                "src/test/java/**/*.java",
-                "-e",
+                "--include",
+                "src/main/java/**/*.java,src/test/java/**/*.java",
+                "--exclude",
                 "**/internal/**",
-                "-e",
-                "**/excluded/**",
-                "-e",
-                "**/*Test.java");
+                "--exclude",
+                "**/excluded/**,**/*Test.java");
 
         // Then
         assertCompleted(result);

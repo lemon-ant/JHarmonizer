@@ -14,6 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
@@ -49,6 +50,33 @@ class CheckFastCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(mockProcessor).processSources(any(Path.class), eq(java.util.Set.of("**/*.java")), any(), any());
+    }
+
+    @Test
+    void checkFastCommand_longCollectionOptions_parseCommaSeparatedPatternsCorrectly() {
+        // Given
+        SourceProcessor mockProcessor = mock(SourceProcessor.class);
+        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
+        when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
+        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+
+        // When
+        int exitCode = cmd.execute(
+                "--base-dir",
+                "src",
+                "--include",
+                "src/main/java/**/*.java,src/test/java/**/*.java",
+                "--exclude",
+                "**/internal/**,**/*Test.java");
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(mockProcessor)
+                .processSources(
+                        eq(Path.of("src")),
+                        eq(Set.of("src/main/java/**/*.java", "src/test/java/**/*.java")),
+                        eq(Set.of("**/internal/**", "**/*Test.java")),
+                        eq(FlowType.CHECK_FAIL_FAST));
     }
 
     @Test

@@ -10,7 +10,10 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
@@ -47,6 +50,58 @@ class RestructureCommandTest {
         assertThat(exitCode).isZero();
         verify(mockProcessor)
                 .processSources(any(Path.class), eq(java.util.Set.of("**/*.java")), any(), eq(FlowType.RESTRUCTURE));
+    }
+
+    @Test
+    void restructureCommand_mixedCollectionOptions_combineAllValuesCorrectly() {
+        // Given
+        SourceProcessor mockProcessor = mock(SourceProcessor.class);
+        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
+        when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
+        CommandLine cmd = new CommandLine(new RestructureCommand(mockProcessor));
+
+        // When
+        int exitCode = cmd.execute(
+                "-b",
+                "src",
+                "-i",
+                "src/main/java/**/*.java,src/test/java/**/*.java",
+                "--include",
+                "src/integrationTest/java/**/*.java",
+                "-e",
+                "**/internal/**",
+                "--exclude",
+                "**/excluded/**,**/*Test.java");
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(mockProcessor)
+                .processSources(
+                        eq(Path.of("src")),
+                        eq(Set.of(
+                                "src/main/java/**/*.java",
+                                "src/test/java/**/*.java",
+                                "src/integrationTest/java/**/*.java")),
+                        eq(Set.of("**/internal/**", "**/excluded/**", "**/*Test.java")),
+                        eq(FlowType.RESTRUCTURE));
+    }
+
+    @Test
+    void restructureCommand_helpUsage_describeOptionAliasesAndCollectionFormats() {
+        // Given
+        CommandLine cmd = new CommandLine(new RestructureCommand(mock(SourceProcessor.class)));
+        StringWriter usage = new StringWriter();
+
+        // When
+        cmd.usage(new PrintWriter(usage), CommandLine.Help.Ansi.OFF);
+
+        // Then
+        assertThat(usage.toString())
+                .contains("-b, --base-dir")
+                .contains("-i, --include")
+                .contains("-e, --exclude")
+                .contains("Repeat this option or pass multiple patterns as a")
+                .contains("comma-separated list.");
     }
 
     @Test

@@ -37,13 +37,21 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @Option(
             names = {"-i", "--include"},
-            description = "Glob patterns for files to include (can be repeated).")
+            split = ",",
+            description = {
+                "Glob patterns for files to include.",
+                "Repeat this option or pass multiple patterns as a comma-separated list."
+            })
     @SuppressWarnings("PMD.ImmutableField")
     private Set<String> includeGlobs = new HashSet<>();
 
     @Option(
             names = {"-e", "--exclude"},
-            description = "Glob patterns for files to exclude (can be repeated).")
+            split = ",",
+            description = {
+                "Glob patterns for files to exclude.",
+                "Repeat this option or pass multiple patterns as a comma-separated list."
+            })
     @SuppressWarnings("PMD.ImmutableField")
     private Set<String> excludeGlobs = new HashSet<>();
 
