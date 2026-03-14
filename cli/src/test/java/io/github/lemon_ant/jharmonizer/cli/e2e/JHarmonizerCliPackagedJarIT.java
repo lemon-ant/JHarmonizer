@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class JHarmonizerCliPackagedJarIT {
     void packagedJar_manifestInspected_preserveExecutableMetadata() throws IOException {
         // Given
         String expectedMainClass = "io.github.lemon_ant.jharmonizer.cli.command.JHarmonizerCliApplication";
-        String expectedModulePackages = String.join(
+        String expectedModuleExports = String.join(
                 " ",
                 "jdk.compiler/com.sun.tools.javac.api",
                 "jdk.compiler/com.sun.tools.javac.file",
@@ -45,14 +46,14 @@ class JHarmonizerCliPackagedJarIT {
             // When
             Attributes manifestAttributes = jarFile.getManifest().getMainAttributes();
             List<String> moduleInfoEntries = jarFile.stream()
-                    .map(entry -> entry.getName())
-                    .filter(name -> name.equals("module-info.class") || name.endsWith("/module-info.class"))
+                    .filter(thisEntry -> thisEntry.getName().endsWith("module-info.class"))
+                    .map(JarEntry::getName)
                     .toList();
 
             // Then
             assertThat(manifestAttributes.getValue(Attributes.Name.MAIN_CLASS)).isEqualTo(expectedMainClass);
-            assertThat(manifestAttributes.getValue("Add-Exports")).isEqualTo(expectedModulePackages);
-            assertThat(manifestAttributes.getValue("Add-Opens")).isEqualTo(expectedModulePackages);
+            assertThat(manifestAttributes.getValue("Add-Exports")).isEqualTo(expectedModuleExports);
+            assertThat(manifestAttributes.getValue("Add-Opens")).isEqualTo(expectedModuleExports);
             assertThat(moduleInfoEntries).isEmpty();
         }
     }
