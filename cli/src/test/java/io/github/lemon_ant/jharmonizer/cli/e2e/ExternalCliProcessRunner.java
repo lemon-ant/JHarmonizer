@@ -1,7 +1,9 @@
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -33,8 +35,8 @@ class ExternalCliProcessRunner {
                 new ProcessBuilder(command).directory(workingDirectory.toFile()).start();
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            Future<String> stdoutFuture = executor.submit(() -> read(process.getInputStream()));
-            Future<String> stderrFuture = executor.submit(() -> read(process.getErrorStream()));
+            Future<String> stdoutFuture = executor.submit(() -> readAndMirror(process.getInputStream(), System.out));
+            Future<String> stderrFuture = executor.submit(() -> readAndMirror(process.getErrorStream(), System.err));
             boolean completed = process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!completed) {
                 process.destroyForcibly();
@@ -50,8 +52,16 @@ class ExternalCliProcessRunner {
         }
     }
 
-    private static String read(InputStream inputStream) throws IOException {
-        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+    private static String readAndMirror(InputStream inputStream, PrintStream mirrorStream) throws IOException {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
+        byte[] chunk = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(chunk)) != -1) {
+            outputBuffer.write(chunk, 0, bytesRead);
+            mirrorStream.write(chunk, 0, bytesRead);
+            mirrorStream.flush();
+        }
+        return outputBuffer.toString(StandardCharsets.UTF_8);
     }
 
     private static String getOutput(Future<String> outputFuture) throws InterruptedException {
