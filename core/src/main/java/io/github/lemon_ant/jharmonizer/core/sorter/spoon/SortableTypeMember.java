@@ -91,13 +91,12 @@ class SortableTypeMember {
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class OrderingKey {
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        private static final Map<CtTypeMember, OrderingKey> TYPE_MEMBER_2_ORDERING_KEY = new HashMap<>();
 
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
-
+            @SuppressWarnings("PMD.UseConcurrentHashMap")
+            Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();
             return typeMember ->
-                    TYPE_MEMBER_2_ORDERING_KEY.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
+                    typeMember2OrderingKey.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
         }
 
         int sourceStart;
