@@ -15,7 +15,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-class CheckCommandTest {
+class CheckAllCommandTest {
 
     @Test
     void checkCommand_baseDirOption_invokesProcessorWithCheckAllFlow() {
@@ -23,7 +23,7 @@ class CheckCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -39,7 +39,7 @@ class CheckCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
@@ -55,7 +55,7 @@ class CheckCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute(
@@ -86,7 +86,7 @@ class CheckCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(5, 1024, 1000000, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -101,7 +101,7 @@ class CheckCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
                 .thenThrow(new RuntimeException("Unexpected error"));
-        CommandLine cmd = new CommandLine(new CheckCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");

@@ -8,11 +8,11 @@ import picocli.CommandLine.Command;
         name = "check-all",
         description = "Checks all Java source files and reports which ones require restructuring.",
         mixinStandardHelpOptions = true)
-final class CheckCommand extends BaseCommand {
+final class CheckAllCommand extends BaseCommand {
 
-    CheckCommand() {}
+    CheckAllCommand() {}
 
-    CheckCommand(SourceProcessor sourceProcessor) {
+    CheckAllCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
 
