@@ -242,7 +242,9 @@ type-members-ordering:
         separator: none
         ordering-rules: alpha
         keepAccessorsTogether: true
-        includes: [ method, constructor ]
+        includes:
+          - method
+          - constructor
         groups:
           - name: Public
             separator: none
@@ -327,7 +329,12 @@ type-members-ordering:
       - name: Nested types
         separator: new-line
         ordering-rules: alpha
-        includes: [ annotation, enum, record, interface, class ]
+        includes:
+          - annotation
+          - enum
+          - record
+          - interface
+          - class
         groups:
           - name: Public
             separator: new-line

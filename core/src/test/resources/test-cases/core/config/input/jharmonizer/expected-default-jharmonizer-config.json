@@ -320,7 +320,7 @@
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Methods",
-      "includes" : [ [ "method", "constructor" ] ],
+      "includes" : [ [ "method" ], [ "constructor" ] ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
@@ -456,7 +456,7 @@
       "orderingRules" : [ "ALPHA" ]
     }, {
       "name" : "Nested types",
-      "includes" : [ [ "annotation", "record", "interface", "class", "enum" ] ],
+      "includes" : [ [ "annotation" ], [ "record" ], [ "interface" ], [ "class" ], [ "enum" ] ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,

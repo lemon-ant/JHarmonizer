@@ -1110,7 +1110,13 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD", "CONSTRUCTOR" ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "CONSTRUCTOR" ],
           "nameMatcher" : null
         } ]
       },
@@ -1510,7 +1516,31 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_CLASS", "TYPE_INTERFACE", "TYPE_ENUM", "TYPE_RECORD", "TYPE_ANNOTATION" ],
+          "memberKinds" : [ "TYPE_ANNOTATION" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_RECORD" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_INTERFACE" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_CLASS" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_ENUM" ],
           "nameMatcher" : null
         } ]
       },
