@@ -191,7 +191,7 @@ class OptOutSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_nestedTypeOptOutOff_checkFailFastIgnoreOptOutViolations() throws Exception {
+    void processSources_nestedTypeOptOutOff_checkFailFastDoesNotFailWithOptOuts() throws Exception {
         // Given
         String originalSourceCode = """
                 class Outer {

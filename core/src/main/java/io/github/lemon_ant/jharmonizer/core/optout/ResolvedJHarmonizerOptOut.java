@@ -28,7 +28,9 @@ public class ResolvedJHarmonizerOptOut {
     }
 
     public boolean skipsSorting() {
-        return true;
+        return switch (mode) {
+            case OFF, SORT_OFF -> true;
+        };
     }
 
     @NonNull

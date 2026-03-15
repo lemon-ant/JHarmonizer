@@ -28,7 +28,10 @@ public final class Formatter {
             entry(UnifiedFormatterStyle.GOOGLE, Style.GOOGLE));
 
     private final boolean fixImports;
-    private final com.palantir.javaformat.java.Formatter palantirFormatter;
+
+    @SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName")
+    private final com.palantir.javaformat.java.Formatter formatter;
+
     private final Style formatterStyle;
 
     public Formatter(@NonNull UnifiedFormatterStyle style, boolean fixImports) {
@@ -39,7 +42,7 @@ public final class Formatter {
             formatterBuilder.style(formatterStyle);
         }
         JavaFormatterOptions options = formatterBuilder.build();
-        palantirFormatter = com.palantir.javaformat.java.Formatter.createFormatter(options);
+        formatter = com.palantir.javaformat.java.Formatter.createFormatter(options);
     }
 
     /**
@@ -70,14 +73,14 @@ public final class Formatter {
     @NonNull
     private String applyFormatting(String sourceCode, List<SourceCharacterRange> formattingExclusionRanges) {
         if (formatterStyle == null) {
-            return fixImports ? invokePalantir(() -> palantirFormatter.fixImports(sourceCode), sourceCode) : sourceCode;
+            return fixImports ? invokePalantir(() -> formatter.fixImports(sourceCode), sourceCode) : sourceCode;
         }
 
         if (formattingExclusionRanges.isEmpty()) {
             return invokePalantir(
                     () -> fixImports
-                            ? palantirFormatter.formatSourceAndFixImports(sourceCode)
-                            : palantirFormatter.formatSource(sourceCode),
+                            ? formatter.formatSourceAndFixImports(sourceCode)
+                            : formatter.formatSource(sourceCode),
                     sourceCode);
         }
 
@@ -88,11 +91,11 @@ public final class Formatter {
                         .toList();
         if (!formattingRanges.isEmpty()) {
             partiallyFormattedSource =
-                    invokePalantir(() -> palantirFormatter.formatSource(sourceCode, formattingRanges), sourceCode);
+                    invokePalantir(() -> formatter.formatSource(sourceCode, formattingRanges), sourceCode);
         }
 
         String finalSource = partiallyFormattedSource;
-        return fixImports ? invokePalantir(() -> palantirFormatter.fixImports(finalSource), finalSource) : finalSource;
+        return fixImports ? invokePalantir(() -> formatter.fixImports(finalSource), finalSource) : finalSource;
     }
 
     @NonNull

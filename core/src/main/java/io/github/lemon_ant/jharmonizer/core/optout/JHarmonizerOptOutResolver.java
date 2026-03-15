@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
@@ -133,7 +134,7 @@ public class JHarmonizerOptOutResolver {
     }
 
     private static boolean isPotentialOptOutComment(CtComment comment) {
-        return normalize(comment.getContent()).contains(OPT_OUT_PREFIX);
+        return StringUtils.containsIgnoreCase(comment.getContent(), OPT_OUT_PREFIX);
     }
 
     @NonNull
@@ -143,7 +144,7 @@ public class JHarmonizerOptOutResolver {
             return Optional.empty();
         }
 
-        String normalizedContent = normalize(comment.getContent()).trim();
+        String normalizedContent = normalize(comment.getContent().trim());
         if (!normalizedContent.startsWith(OPT_OUT_PREFIX)) {
             logIgnoredOptOut(sourcePath, comment, "Malformed opt-out comment is ignored");
             return Optional.empty();

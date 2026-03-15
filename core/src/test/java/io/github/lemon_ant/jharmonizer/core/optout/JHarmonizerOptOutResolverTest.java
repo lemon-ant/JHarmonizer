@@ -12,7 +12,7 @@ import spoon.reflect.declaration.CtType;
 class JHarmonizerOptOutResolverTest {
 
     @Test
-    void parseJavaSourceResource_fileOptOutBeforePackage_resolveFileOffOptOut() {
+    void parseJavaSourceResource_fileOptOutBeforePackage_resolveFileOptOutOff() {
         // Given
         String sourceCode = """
                 // @jharmonizer:off
