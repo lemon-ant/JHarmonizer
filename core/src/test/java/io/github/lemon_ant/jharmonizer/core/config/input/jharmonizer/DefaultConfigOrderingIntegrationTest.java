@@ -58,8 +58,8 @@ class DefaultConfigOrderingIntegrationTest {
                 .as("Default config should sort public instance methods alphabetically")
                 .isLessThan(publicEnhancedForLoopMethodIndex);
         assertThat(publicRecordPersonIndex)
-                .as("Default config should place public records before public interfaces in nested types")
-                .isLessThan(publicInterfaceDefaultMethodIndex);
+                .as("Default config should place public interfaces before public records in nested types")
+                .isGreaterThan(publicInterfaceDefaultMethodIndex);
         assertThat(packagePrivateInnerClassIndex)
                 .as("Default config should sort package-private nested classes alphabetically")
                 .isLessThan(packagePrivateStaticNestedClassIndex);

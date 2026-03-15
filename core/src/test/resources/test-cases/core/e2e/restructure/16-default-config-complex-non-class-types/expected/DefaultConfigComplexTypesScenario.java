@@ -2,17 +2,17 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class DefaultConfigComplexTypesScenario {
 
-    private enum PrivateEnum {
-        SECOND,
-        FIRST
+    private @interface PrivateAnnotation {
+        String name();
     }
 
     private interface PrivateInterface {
         String value();
     }
 
-    private @interface PrivateAnnotation {
-        String name();
+    private enum PrivateEnum {
+        SECOND,
+        FIRST
     }
 
     private record PrivateRecord(String value) {}

@@ -613,38 +613,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
+          "name" : "Annotations and Interfaces",
           "includes" : [
-            [ "annotation" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Enums",
-          "includes" : [
-            [ "enum" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [
-            [ "record" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [
+            [ "annotation" ],
             [ "interface" ]
           ],
           "excludes" : [ ],
@@ -653,9 +624,11 @@
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Classes",
+          "name" : "Classes, Enums, and Records",
           "includes" : [
-            [ "class" ]
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
           ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
@@ -673,38 +646,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
+          "name" : "Annotations and Interfaces",
           "includes" : [
-            [ "annotation" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Enums",
-          "includes" : [
-            [ "enum" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [
-            [ "record" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [
+            [ "annotation" ],
             [ "interface" ]
           ],
           "excludes" : [ ],
@@ -713,9 +657,11 @@
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Classes",
+          "name" : "Classes, Enums, and Records",
           "includes" : [
-            [ "class" ]
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
           ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
@@ -733,38 +679,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
+          "name" : "Annotations and Interfaces",
           "includes" : [
-            [ "annotation" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Enums",
-          "includes" : [
-            [ "enum" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [
-            [ "record" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [
+            [ "annotation" ],
             [ "interface" ]
           ],
           "excludes" : [ ],
@@ -773,9 +690,11 @@
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Classes",
+          "name" : "Classes, Enums, and Records",
           "includes" : [
-            [ "class" ]
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
           ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
@@ -793,38 +712,9 @@
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
+          "name" : "Annotations and Interfaces",
           "includes" : [
-            [ "annotation" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Enums",
-          "includes" : [
-            [ "enum" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [
-            [ "record" ]
-          ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [
+            [ "annotation" ],
             [ "interface" ]
           ],
           "excludes" : [ ],
@@ -833,9 +723,11 @@
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Classes",
+          "name" : "Classes, Enums, and Records",
           "includes" : [
-            [ "class" ]
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
           ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",

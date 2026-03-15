@@ -327,105 +327,82 @@ type-members-ordering:
       - name: Nested types
         separator: new-line
         ordering-rules: alpha
-        includes: [ annotation, enum, record, interface, class ]
+        includes:
+          - annotation
+          - enum
+          - record
+          - interface
+          - class
         groups:
           - name: Public
             separator: new-line
             ordering-rules: alpha
             includes: public
             groups:
-              - name: Annotations
+              - name: Annotations and Interfaces
                 separator: new-line
                 ordering-rules: alpha
-                includes: annotation
-              - name: Enums
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
                 separator: new-line
                 ordering-rules: alpha
-                includes: enum
-              - name: Records
-                separator: new-line
-                ordering-rules: alpha
-                includes: record
-              - name: Interfaces
-                separator: new-line
-                ordering-rules: alpha
-                includes: interface
-              - name: Classes
-                separator: new-line
-                ordering-rules: alpha
-                includes: class
+                includes:
+                  - class
+                  - enum
+                  - record
           - name: Protected
             separator: new-line
             ordering-rules: alpha
             includes: protected
             groups:
-              - name: Annotations
+              - name: Annotations and Interfaces
                 separator: new-line
                 ordering-rules: alpha
-                includes: annotation
-              - name: Enums
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
                 separator: new-line
                 ordering-rules: alpha
-                includes: enum
-              - name: Records
-                separator: new-line
-                ordering-rules: alpha
-                includes: record
-              - name: Interfaces
-                separator: new-line
-                ordering-rules: alpha
-                includes: interface
-              - name: Classes
-                separator: new-line
-                ordering-rules: alpha
-                includes: class
+                includes:
+                  - class
+                  - enum
+                  - record
           - name: Package-private
             separator: new-line
             ordering-rules: alpha
             includes: package-private
             groups:
-              - name: Annotations
+              - name: Annotations and Interfaces
                 separator: new-line
                 ordering-rules: alpha
-                includes: annotation
-              - name: Enums
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
                 separator: new-line
                 ordering-rules: alpha
-                includes: enum
-              - name: Records
-                separator: new-line
-                ordering-rules: alpha
-                includes: record
-              - name: Interfaces
-                separator: new-line
-                ordering-rules: alpha
-                includes: interface
-              - name: Classes
-                separator: new-line
-                ordering-rules: alpha
-                includes: class
+                includes:
+                  - class
+                  - enum
+                  - record
           - name: Private
             separator: new-line
             ordering-rules: alpha
             includes: private
             groups:
-              - name: Annotations
+              - name: Annotations and Interfaces
                 separator: new-line
                 ordering-rules: alpha
-                includes: annotation
-              - name: Enums
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
                 separator: new-line
                 ordering-rules: alpha
-                includes: enum
-              - name: Records
-                separator: new-line
-                ordering-rules: alpha
-                includes: record
-              - name: Interfaces
-                separator: new-line
-                ordering-rules: alpha
-                includes: interface
-              - name: Classes
-                separator: new-line
-                ordering-rules: alpha
-                includes: class
+                includes:
+                  - class
+                  - enum
+                  - record
