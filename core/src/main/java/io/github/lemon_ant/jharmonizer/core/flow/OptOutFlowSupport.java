@@ -16,8 +16,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
 @UtilityClass
-class DirectiveFlowSupport {
-    static FlowProcessingResult buildFileDirectiveSkippedResult(
+class OptOutFlowSupport {
+    static FlowProcessingResult buildFileOptOutSkippedResult(
             Path path,
             String sourceCode,
             ParsingResult parsingResult,

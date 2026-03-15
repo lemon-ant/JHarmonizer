@@ -1,16 +1,16 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
-import static io.github.lemon_ant.jharmonizer.core.flow.DirectiveFlowSupport.buildFileDirectiveSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.DirectiveFlowSupport.createOriginalSourceSerializationResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.OptOutFlowSupport.buildFileOptOutSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.OptOutFlowSupport.createOriginalSourceSerializationResult;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
-import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectiveMode;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
@@ -27,6 +27,7 @@ import spoon.reflect.declaration.CtElement;
 
 @Slf4j
 @AllArgsConstructor
+@SuppressWarnings("PMD.GuardLogStatement")
 public class CheckFailFastFlow implements IFlow {
 
     private final Formatter formatter;
@@ -40,16 +41,15 @@ public class CheckFailFastFlow implements IFlow {
         // Parse
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
-        if (parsedSpoonAstModel.getDirectives().hasFileDirectiveMode(JHarmonizerDirectiveMode.OFF)) {
+        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.OFF)) {
             log.info("Skipping all harmonization checks for {} because of @jharmonizer:off", srcFile.getPath());
-            return buildFileDirectiveSkippedResult(
-                    srcFile.getPath(), srcFile.getSrcCode(), parsingResult, true, null, "");
+            return buildFileOptOutSkippedResult(srcFile.getPath(), srcFile.getSrcCode(), parsingResult, true, null, "");
         }
 
         // Sort (Fail Fast)
         SortingResult sortingResult;
         SerializationResult serializationResult;
-        if (parsedSpoonAstModel.getDirectives().hasFileDirectiveMode(JHarmonizerDirectiveMode.SORT_OFF)) {
+        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.SORT_OFF)) {
             log.info("Skipping sorting checks for {} because of @jharmonizer:sort-off", srcFile.getPath());
             sortingResult = new SortingResult(parsedSpoonAstModel, new SortingStatistic(0));
             serializationResult = createOriginalSourceSerializationResult(srcFile.getSrcCode());

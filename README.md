@@ -31,6 +31,8 @@ JHarmonizer supports two native comment directives:
 - `@jharmonizer:off`
 - `@jharmonizer:sort-off`
 
+Directive matching is case-insensitive, so variants such as `@JHarmonizer:OFF` are also recognized.
+
 Supported comment forms:
 
 - line comments: `// @jharmonizer:off`, `// @jharmonizer:sort-off`
@@ -66,7 +68,7 @@ Behavior:
 
 ### Unsupported placements and tokens
 
-The following are intentionally unsupported and rejected:
+The following are intentionally unsupported and ignored with a warning:
 
 - member-level directives for fields, methods, constructors, or initializer blocks
 - region-based `off/on` markers

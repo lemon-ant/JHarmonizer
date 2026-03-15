@@ -1,26 +1,27 @@
-package io.github.lemon_ant.jharmonizer.core.directive;
+package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.Value;
+import spoon.reflect.cu.SourcePosition;
 
 @Value
-public class ResolvedJHarmonizerDirective {
+public class ResolvedJHarmonizerOptOut {
     @NonNull
-    DirectiveSourcePosition directivePosition;
+    SourcePosition commentPosition;
 
     @NonNull
-    JHarmonizerDirectiveMode mode;
+    JHarmonizerOptOutMode mode;
 
     @Nullable
     SourceCharacterRange preservedSourceRange;
 
     @NonNull
-    JHarmonizerDirectiveScope scope;
+    JHarmonizerOptOutScope scope;
 
     @Nullable
-    ResolvedDirectiveTargetType targetType;
+    ResolvedOptOutTargetType targetType;
 
     public boolean skipsFormatting() {
         return mode.skipsFormatting();
@@ -36,7 +37,7 @@ public class ResolvedJHarmonizerDirective {
     }
 
     @NonNull
-    public Optional<ResolvedDirectiveTargetType> getTargetType() {
+    public Optional<ResolvedOptOutTargetType> getTargetType() {
         return Optional.ofNullable(targetType);
     }
 }

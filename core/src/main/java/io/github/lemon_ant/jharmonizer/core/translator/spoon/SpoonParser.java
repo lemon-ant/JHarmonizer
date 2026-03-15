@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectiveResolver;
-import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectives;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceSnapshot;
 import java.io.IOException;
@@ -41,11 +41,10 @@ public class SpoonParser {
             @NonNull Path path, @NonNull String originalSourceCode, @NonNull Launcher launcher) {
         CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
-        JHarmonizerDirectives directives =
-                JHarmonizerDirectiveResolver.resolve(path, originalSourceCode, compilationUnit);
+        JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(path, originalSourceCode, compilationUnit);
         Supplier<SerializedSourceSnapshot> serializedSourceCode = () -> {
             SpoonCustomSourcePrinter printer =
-                    new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode, directives);
+                    new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode, optOuts);
             printer.printCompilationUnit(compilationUnit);
             return new SerializedSourceSnapshot(printer.getResult(), printer.getFormattingExclusionRanges());
         };
@@ -54,7 +53,7 @@ public class SpoonParser {
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .serializedSourceCode(serializedSourceCode)
-                .directives(directives)
+                .optOuts(optOuts)
                 .path(path)
                 .build();
     }

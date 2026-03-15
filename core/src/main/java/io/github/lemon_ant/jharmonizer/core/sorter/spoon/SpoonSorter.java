@@ -4,7 +4,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
-import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectives;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
@@ -30,6 +30,7 @@ import spoon.reflect.declaration.CtTypeMember;
 @AllArgsConstructor
 public class SpoonSorter {
     private static final int SINGLE_TOP_LEVEL_TYPE_COUNT = 1;
+    private static final int SINGLE_TYPE_MEMBER_COUNT = 1;
 
     @NonNull
     CompiledConfig compiledConfig;
@@ -48,26 +49,20 @@ public class SpoonSorter {
      * Entry point used by Sorter: sorts all types (top-level + nested) in the compilation unit.
      */
     public void sortCompilationUnitRecursively(@NonNull CtCompilationUnit compilationUnit) {
-        sortCompilationUnitRecursively(compilationUnit, JHarmonizerDirectives.empty());
+        sortCompilationUnitRecursively(compilationUnit, JHarmonizerOptOuts.empty());
     }
 
     public void sortCompilationUnitRecursively(
-            @NonNull CtCompilationUnit compilationUnit, @NonNull JHarmonizerDirectives directives) {
-        reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering(), directives);
+            @NonNull CtCompilationUnit compilationUnit, @NonNull JHarmonizerOptOuts optOuts) {
+        reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering(), optOuts);
 
-        compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, directives));
-    }
-
-    private static void reorderTopLevelTypes(
-            @NonNull CtCompilationUnit compilationUnit,
-            @NonNull CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
-        reorderTopLevelTypes(compilationUnit, compiledTopLevelTypesOrdering, JHarmonizerDirectives.empty());
+        compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, optOuts));
     }
 
     private static void reorderTopLevelTypes(
             @NonNull CtCompilationUnit compilationUnit,
             @NonNull CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
-            @NonNull JHarmonizerDirectives directives) {
+            @NonNull JHarmonizerOptOuts optOuts) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() <= SINGLE_TOP_LEVEL_TYPE_COUNT) {
             return;
@@ -85,7 +80,7 @@ public class SpoonSorter {
                 .thenComparing(orderingKeyProvider, orderingComparator);
 
         List<CtType<?>> sortedDeclaredTypes =
-                sortAnchoredSegments(declaredTypes, directives::isSortingSkippedForType, segment -> segment.stream()
+                sortAnchoredSegments(declaredTypes, optOuts::isSortingSkippedForType, segment -> segment.stream()
                         .sorted(declaredTypeComparator)
                         .toList());
         compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
@@ -121,12 +116,8 @@ public class SpoonSorter {
      * This order keeps the logic deterministic and ensures nested types are already "clean"
      * when the outer type is printed.
      */
-    private void sortTypeRecursively(CtType<?> currentType) {
-        sortTypeRecursively(currentType, JHarmonizerDirectives.empty());
-    }
-
-    private void sortTypeRecursively(CtType<?> currentType, JHarmonizerDirectives directives) {
-        if (directives.isSortingSkippedForType(currentType)) {
+    private void sortTypeRecursively(CtType<?> currentType, JHarmonizerOptOuts optOuts) {
+        if (optOuts.isSortingSkippedForType(currentType)) {
             return;
         }
 
@@ -138,18 +129,17 @@ public class SpoonSorter {
                         new IllegalStateException("No matching root member group for top-level type: qualifiedName="
                                 + currentType.getQualifiedName()
                                 + ", descriptor=" + topLevelTypeDescriptor));
-        currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(nestedType, directives));
+        currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(nestedType, optOuts));
         currentType.setTypeMembers(sortAnchoredSegments(
                 currentType.getTypeMembers(),
-                typeMember ->
-                        typeMember instanceof CtType<?> nestedType && directives.isSortingSkippedForType(nestedType),
+                typeMember -> typeMember instanceof CtType<?> nestedType && optOuts.isSortingSkippedForType(nestedType),
                 segment -> sortMemberSegment(segment, rootMemberGroup)));
     }
 
     @NonNull
     private static List<CtTypeMember> sortMemberSegment(
             @NonNull List<CtTypeMember> typeMembers, @NonNull CompiledMemberGroup rootMemberGroup) {
-        if (typeMembers.size() <= 1) {
+        if (typeMembers.size() <= SINGLE_TYPE_MEMBER_COUNT) {
             return typeMembers;
         }
 

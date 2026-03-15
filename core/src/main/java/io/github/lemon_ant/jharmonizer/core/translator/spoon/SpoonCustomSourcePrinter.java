@@ -6,9 +6,9 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
-import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectives;
-import io.github.lemon_ant.jharmonizer.core.directive.ResolvedJHarmonizerDirective;
-import io.github.lemon_ant.jharmonizer.core.directive.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
+import io.github.lemon_ant.jharmonizer.core.optout.ResolvedJHarmonizerOptOut;
+import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,14 +30,14 @@ import spoon.reflect.visitor.TokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
-    private final JHarmonizerDirectives directives;
+    private final JHarmonizerOptOuts optOuts;
     private final List<SourceCharacterRange> formattingExclusionRanges = new ArrayList<>();
     private final String originalSourceCode;
 
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
-    SpoonCustomSourcePrinter(Environment env, String originalSourceCode, JHarmonizerDirectives directives) {
+    SpoonCustomSourcePrinter(Environment env, String originalSourceCode, JHarmonizerOptOuts optOuts) {
         super(env);
-        this.directives = directives;
+        this.optOuts = optOuts;
         this.originalSourceCode = originalSourceCode;
         String lineSeparator = detectDominantLineSeparator(originalSourceCode);
         setLineSeparator(lineSeparator);
@@ -94,9 +94,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     private void printTypeStructure(CtType<?> type) {
         getPrinterTokenWriter().writeln();
-        Optional<ResolvedJHarmonizerDirective> typeDirective = directives.findTypeDirective(type);
-        if (typeDirective.filter(ResolvedJHarmonizerDirective::skipsFormatting).isPresent()) {
-            printPreservedTypeFragment(typeDirective.orElseThrow());
+        Optional<ResolvedJHarmonizerOptOut> typeOptOut = optOuts.findTypeOptOut(type);
+        if (typeOptOut.filter(ResolvedJHarmonizerOptOut::skipsFormatting).isPresent()) {
+            printPreservedTypeFragment(typeOptOut.orElseThrow());
             return;
         }
         SourcePosition typePosition = type.getPosition();
@@ -218,14 +218,13 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     private int findRenderedTypeStart(CtType<?> type) {
-        return directives
-                .findTypeDirective(type)
-                .flatMap(ResolvedJHarmonizerDirective::getPreservedSourceRange)
+        return optOuts.findTypeOptOut(type)
+                .flatMap(ResolvedJHarmonizerOptOut::getPreservedSourceRange)
                 .map(SourceCharacterRange::getStartInclusive)
                 .orElse(type.getPosition().getSourceStart());
     }
 
-    private void printPreservedTypeFragment(ResolvedJHarmonizerDirective directive) {
+    private void printPreservedTypeFragment(ResolvedJHarmonizerOptOut directive) {
         SourceCharacterRange preservedSourceRange =
                 directive.getPreservedSourceRange().orElseThrow(IllegalStateException::new);
         int outputStart = getResult().length();

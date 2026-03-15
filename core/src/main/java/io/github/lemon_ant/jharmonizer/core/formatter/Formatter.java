@@ -8,7 +8,7 @@ import com.palantir.javaformat.java.JavaFormatterOptions;
 import com.palantir.javaformat.java.JavaFormatterOptions.Builder;
 import com.palantir.javaformat.java.JavaFormatterOptions.Style;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
-import io.github.lemon_ant.jharmonizer.core.directive.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.nio.file.Path;
@@ -28,7 +28,7 @@ public final class Formatter {
             entry(UnifiedFormatterStyle.GOOGLE, Style.GOOGLE));
 
     private final boolean fixImports;
-    private final com.palantir.javaformat.java.Formatter formatter;
+    private final com.palantir.javaformat.java.Formatter palantirFormatter;
     private final Style formatterStyle;
 
     public Formatter(@NonNull UnifiedFormatterStyle style, boolean fixImports) {
@@ -39,7 +39,7 @@ public final class Formatter {
             formatterBuilder.style(formatterStyle);
         }
         JavaFormatterOptions options = formatterBuilder.build();
-        formatter = com.palantir.javaformat.java.Formatter.createFormatter(options);
+        palantirFormatter = com.palantir.javaformat.java.Formatter.createFormatter(options);
     }
 
     /**
@@ -70,14 +70,14 @@ public final class Formatter {
     @NonNull
     private String applyFormatting(String sourceCode, List<SourceCharacterRange> formattingExclusionRanges) {
         if (formatterStyle == null) {
-            return fixImports ? invokePalantir(() -> formatter.fixImports(sourceCode), sourceCode) : sourceCode;
+            return fixImports ? invokePalantir(() -> palantirFormatter.fixImports(sourceCode), sourceCode) : sourceCode;
         }
 
         if (formattingExclusionRanges.isEmpty()) {
             return invokePalantir(
                     () -> fixImports
-                            ? formatter.formatSourceAndFixImports(sourceCode)
-                            : formatter.formatSource(sourceCode),
+                            ? palantirFormatter.formatSourceAndFixImports(sourceCode)
+                            : palantirFormatter.formatSource(sourceCode),
                     sourceCode);
         }
 
@@ -88,11 +88,11 @@ public final class Formatter {
                         .toList();
         if (!formattingRanges.isEmpty()) {
             partiallyFormattedSource =
-                    invokePalantir(() -> formatter.formatSource(sourceCode, formattingRanges), sourceCode);
+                    invokePalantir(() -> palantirFormatter.formatSource(sourceCode, formattingRanges), sourceCode);
         }
 
         String finalSource = partiallyFormattedSource;
-        return fixImports ? invokePalantir(() -> formatter.fixImports(finalSource), finalSource) : finalSource;
+        return fixImports ? invokePalantir(() -> palantirFormatter.fixImports(finalSource), finalSource) : finalSource;
     }
 
     @NonNull

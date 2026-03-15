@@ -23,14 +23,14 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class DirectiveSourceProcessorIntegrationTest {
-    private static final FlexibleUnifiedConfig DIRECTIVE_TEST_CONFIG = createDirectiveTestConfig();
+class OptOutSourceProcessorIntegrationTest {
+    private static final FlexibleUnifiedConfig OPT_OUT_TEST_CONFIG = createOptOutTestConfig();
 
     @TempDir
     Path temporaryDirectory;
 
     @Test
-    void processSources_fileDirectiveOff_keepOriginalSource() throws Exception {
+    void processSources_fileOptOutOff_keepOriginalSource() throws Exception {
         // Given
         String originalSourceCode = """
                 // @jharmonizer:off
@@ -39,7 +39,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 class A{}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -49,7 +49,7 @@ class DirectiveSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_fileDirectiveSortOff_formatWithoutSortingTopLevelTypes() throws Exception {
+    void processSources_fileOptOutSortOff_formatWithoutSortingTopLevelTypes() throws Exception {
         // Given
         String originalSourceCode = """
                 // @jharmonizer:sort-off
@@ -58,7 +58,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 class A{}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -71,7 +71,7 @@ class DirectiveSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_topLevelTypeDirectiveOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
+    void processSources_topLevelTypeOptOutOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
         // Given
         String ignoredFragment = """
                 /* @jharmonizer:off */
@@ -91,7 +91,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 class Alpha {}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -103,7 +103,7 @@ class DirectiveSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_topLevelTypeDirectiveSortOff_keepTypeBodyOrderButFormatType() throws Exception {
+    void processSources_topLevelTypeOptOutSortOff_keepTypeBodyOrderButFormatType() throws Exception {
         // Given
         String originalSourceCode = """
                 class Gamma {}
@@ -115,7 +115,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 class Alpha {}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -129,7 +129,7 @@ class DirectiveSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_nestedTypeDirectiveOff_preserveExactFragmentAndKeepImports() throws Exception {
+    void processSources_nestedTypeOptOutOff_preserveExactFragmentAndKeepImports() throws Exception {
         // Given
         String ignoredFragment = """
                     /* @jharmonizer:off */
@@ -151,7 +151,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 }
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -165,7 +165,7 @@ class DirectiveSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_nestedTypeDirectiveSortOff_keepNestedMemberOrderAndFormatType() throws Exception {
+    void processSources_nestedTypeOptOutSortOff_keepNestedMemberOrderAndFormatType() throws Exception {
         // Given
         String originalSourceCode = """
                 class Outer {
@@ -177,7 +177,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 }
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -191,7 +191,7 @@ class DirectiveSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_nestedTypeDirectiveOff_checkFailFastIgnoreDirectiveViolations() throws Exception {
+    void processSources_nestedTypeOptOutOff_checkFailFastIgnoreOptOutViolations() throws Exception {
         // Given
         String originalSourceCode = """
                 class Outer {
@@ -203,7 +203,7 @@ class DirectiveSourceProcessorIntegrationTest {
                 }
                 """;
         writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(DIRECTIVE_TEST_CONFIG);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When / Then
         assertThatCode(() -> sourceProcessor.processSources(
@@ -216,7 +216,7 @@ class DirectiveSourceProcessorIntegrationTest {
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 
-    private static FlexibleUnifiedConfig createDirectiveTestConfig() {
+    private static FlexibleUnifiedConfig createOptOutTestConfig() {
         UnifiedMemberGroup rootMemberGroup = UnifiedMemberGroup.builder()
                 .groupName("Root")
                 .selectorBlock(UnifiedMemberGroupSelectorBlock.builder().build())

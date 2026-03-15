@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import io.github.lemon_ant.jharmonizer.core.directive.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import java.util.List;
 import lombok.NonNull;
 import lombok.Value;

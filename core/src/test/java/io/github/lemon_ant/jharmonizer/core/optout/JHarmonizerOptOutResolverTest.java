@@ -1,7 +1,6 @@
-package io.github.lemon_ant.jharmonizer.core.directive;
+package io.github.lemon_ant.jharmonizer.core.optout;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
@@ -10,10 +9,10 @@ import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 
-class JHarmonizerDirectiveResolverTest {
+class JHarmonizerOptOutResolverTest {
 
     @Test
-    void parseJavaSourceResource_fileDirectiveBeforePackage_resolveFileOffDirective() {
+    void parseJavaSourceResource_fileOptOutBeforePackage_resolveFileOffOptOut() {
         // Given
         String sourceCode = """
                 // @jharmonizer:off
@@ -26,14 +25,14 @@ class JHarmonizerDirectiveResolverTest {
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
 
         // Then
-        assertThat(spoonAstModel.getDirectives().getFileDirective())
+        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
                 .get()
-                .extracting(ResolvedJHarmonizerDirective::getMode, ResolvedJHarmonizerDirective::getScope)
-                .containsExactly(JHarmonizerDirectiveMode.OFF, JHarmonizerDirectiveScope.FILE);
+                .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
+                .containsExactly(JHarmonizerOptOutMode.OFF, JHarmonizerOptOutScope.FILE);
     }
 
     @Test
-    void parseJavaSourceResource_fileDirectiveBetweenPackageAndImport_resolveFileSortOffDirective() {
+    void parseJavaSourceResource_fileOptOutBetweenPackageAndImport_resolveFileSortOffOptOut() {
         // Given
         String sourceCode = """
                 package demo;
@@ -48,14 +47,14 @@ class JHarmonizerDirectiveResolverTest {
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
 
         // Then
-        assertThat(spoonAstModel.getDirectives().getFileDirective())
+        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
                 .get()
-                .extracting(ResolvedJHarmonizerDirective::getMode, ResolvedJHarmonizerDirective::getScope)
-                .containsExactly(JHarmonizerDirectiveMode.SORT_OFF, JHarmonizerDirectiveScope.FILE);
+                .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
+                .containsExactly(JHarmonizerOptOutMode.SORT_OFF, JHarmonizerOptOutScope.FILE);
     }
 
     @Test
-    void parseJavaSourceResource_typeDirectiveBeforeAnnotatedTopLevelType_resolveTypeDirective() {
+    void parseJavaSourceResource_typeOptOutBeforeAnnotatedTopLevelType_resolveTypeOptOut() {
         // Given
         String sourceCode = """
                 package demo;
@@ -71,17 +70,16 @@ class JHarmonizerDirectiveResolverTest {
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst();
 
         // Then
-        assertThat(spoonAstModel.getDirectives().findTypeDirective(sampleType))
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOut(sampleType))
                 .get()
-                .extracting(ResolvedJHarmonizerDirective::getMode, directive -> directive
-                        .getTargetType()
-                        .map(ResolvedDirectiveTargetType::getSimpleName)
+                .extracting(ResolvedJHarmonizerOptOut::getMode, optOut -> optOut.getTargetType()
+                        .map(ResolvedOptOutTargetType::getSimpleName)
                         .orElseThrow())
-                .containsExactly(JHarmonizerDirectiveMode.OFF, "Sample");
+                .containsExactly(JHarmonizerOptOutMode.OFF, "Sample");
     }
 
     @Test
-    void parseJavaSourceResource_typeDirectiveBeforeNestedType_resolveNestedTypeDirective() {
+    void parseJavaSourceResource_typeOptOutBeforeNestedType_resolveNestedTypeOptOut() {
         // Given
         String sourceCode = """
                 package demo;
@@ -99,14 +97,14 @@ class JHarmonizerDirectiveResolverTest {
         CtType<?> nestedType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
 
         // Then
-        assertThat(spoonAstModel.getDirectives().findTypeDirective(nestedType))
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOut(nestedType))
                 .get()
-                .extracting(ResolvedJHarmonizerDirective::getMode, ResolvedJHarmonizerDirective::getScope)
-                .containsExactly(JHarmonizerDirectiveMode.SORT_OFF, JHarmonizerDirectiveScope.TYPE);
+                .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
+                .containsExactly(JHarmonizerOptOutMode.SORT_OFF, JHarmonizerOptOutScope.TYPE);
     }
 
     @Test
-    void parseJavaSourceResource_memberDirectiveBeforeField_throwException() {
+    void parseJavaSourceResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
         // Given
         String sourceCode = """
                 package demo;
@@ -117,15 +115,15 @@ class JHarmonizerDirectiveResolverTest {
                 }
                 """;
 
-        // When / Then
-        assertThatThrownBy(() -> SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Member-level JHarmonizer directives are not supported")
-                .hasMessageContaining("Sample.java");
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
     }
 
     @Test
-    void parseJavaSourceResource_unsupportedDirectiveToken_throwException() {
+    void parseJavaSourceResource_unsupportedOptOutToken_ignoreInvalidOptOut() {
         // Given
         String sourceCode = """
                 package demo;
@@ -134,10 +132,28 @@ class JHarmonizerDirectiveResolverTest {
                 class Sample {}
                 """;
 
-        // When / Then
-        assertThatThrownBy(() -> SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Unsupported JHarmonizer directive token")
-                .hasMessageContaining("Sample.java");
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
+    }
+
+    @Test
+    void parseJavaSourceResource_mixedCaseOptOutToken_resolveIgnoringCase() {
+        // Given
+        String sourceCode = """
+                // @JHarmonizer:SoRt-OfF
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
+                .get()
+                .extracting(ResolvedJHarmonizerOptOut::getMode)
+                .isEqualTo(JHarmonizerOptOutMode.SORT_OFF);
     }
 }

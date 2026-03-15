@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.directive;
+package io.github.lemon_ant.jharmonizer.core.optout;
 
 import static java.util.Comparator.comparingInt;
 
