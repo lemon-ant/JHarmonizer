@@ -28,7 +28,7 @@ class JHarmonizerOptOutResolverTest {
         assertThat(spoonAstModel.getOptOuts().getFileOptOut())
                 .get()
                 .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
-                .containsExactly(JHarmonizerOptOutMode.OFF, JHarmonizerOptOutScope.FILE);
+                .containsExactly(JHarmonizerOptOutMode.FULLY_OFF, JHarmonizerOptOutScope.FILE_SCOPE);
     }
 
     @Test
@@ -50,7 +50,7 @@ class JHarmonizerOptOutResolverTest {
         assertThat(spoonAstModel.getOptOuts().getFileOptOut())
                 .get()
                 .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
-                .containsExactly(JHarmonizerOptOutMode.SORT_OFF, JHarmonizerOptOutScope.FILE);
+                .containsExactly(JHarmonizerOptOutMode.SORTING_OFF, JHarmonizerOptOutScope.FILE_SCOPE);
     }
 
     @Test
@@ -75,7 +75,7 @@ class JHarmonizerOptOutResolverTest {
                 .extracting(ResolvedJHarmonizerOptOut::getMode, optOut -> optOut.getTargetType()
                         .map(ResolvedOptOutTargetType::getSimpleName)
                         .orElseThrow())
-                .containsExactly(JHarmonizerOptOutMode.OFF, "Sample");
+                .containsExactly(JHarmonizerOptOutMode.FULLY_OFF, "Sample");
     }
 
     @Test
@@ -100,7 +100,7 @@ class JHarmonizerOptOutResolverTest {
         assertThat(spoonAstModel.getOptOuts().findTypeOptOut(nestedType))
                 .get()
                 .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
-                .containsExactly(JHarmonizerOptOutMode.SORT_OFF, JHarmonizerOptOutScope.TYPE);
+                .containsExactly(JHarmonizerOptOutMode.SORTING_OFF, JHarmonizerOptOutScope.TYPE_SCOPE);
     }
 
     @Test
@@ -154,6 +154,6 @@ class JHarmonizerOptOutResolverTest {
         assertThat(spoonAstModel.getOptOuts().getFileOptOut())
                 .get()
                 .extracting(ResolvedJHarmonizerOptOut::getMode)
-                .isEqualTo(JHarmonizerOptOutMode.SORT_OFF);
+                .isEqualTo(JHarmonizerOptOutMode.SORTING_OFF);
     }
 }

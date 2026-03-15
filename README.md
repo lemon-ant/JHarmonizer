@@ -54,8 +54,8 @@ Place a directive in the compilation-unit preamble:
 
 Behavior:
 
-- `@jharmonizer:off` — skip the file completely (no sorting, no formatting, no import fixing)
-- `@jharmonizer:sort-off` — skip sorting, but still run formatting and import fixing
+- `@jharmonizer:off` — fully disable harmonization for the file (no sorting, no formatting, no import fixing)
+- `@jharmonizer:sort-off` — disable sorting only, but still run formatting and import fixing
 
 ### Type scope
 
@@ -63,8 +63,8 @@ Place a directive immediately before a top-level or nested type declaration.
 
 Behavior:
 
-- `@jharmonizer:off` — skip sorting and formatting for that type subtree and preserve its original source text
-- `@jharmonizer:sort-off` — skip sorting for that type subtree, but still format it together with the rest of the file
+- `@jharmonizer:off` — fully disable harmonization for that type subtree and preserve its original source text
+- `@jharmonizer:sort-off` — disable sorting only for that type subtree, but still format it together with the rest of the file
 
 ### Unsupported placements and tokens
 

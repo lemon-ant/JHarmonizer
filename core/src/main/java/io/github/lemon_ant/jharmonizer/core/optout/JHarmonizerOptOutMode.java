@@ -9,10 +9,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum JHarmonizerOptOutMode {
-    OFF("@jharmonizer:off"),
-    SORT_OFF("@jharmonizer:sort-off"),
+    FULLY_OFF("fullyOff", "@jharmonizer:off"),
+    SORTING_OFF("sortingOff", "@jharmonizer:sort-off"),
     ;
 
+    private final String displayName;
     private final String token;
 
     @NonNull
@@ -25,6 +26,6 @@ public enum JHarmonizerOptOutMode {
     }
 
     public boolean skipsFormatting() {
-        return this == OFF;
+        return this == FULLY_OFF;
     }
 }

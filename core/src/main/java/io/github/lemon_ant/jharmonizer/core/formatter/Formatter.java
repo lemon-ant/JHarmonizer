@@ -52,16 +52,16 @@ public final class Formatter {
      * @return a FormatingResult containing the formatted source code and statistics
      */
     @NonNull
-    public FormatingResult formatSource(String sourceCode, Path srcPath) {
-        return formatSource(sourceCode, srcPath, List.of());
+    public FormatingResult formatSource(String sourceCode, Path sourcePath) {
+        return formatSource(sourceCode, sourcePath, List.of());
     }
 
     @NonNull
     public FormatingResult formatSource(
             @NonNull String sourceCode,
-            @NonNull Path srcPath,
+            @NonNull Path sourcePath,
             @NonNull List<SourceCharacterRange> formattingExclusionRanges) {
-        log.debug("Formatting {}", srcPath);
+        log.debug("Formatting {}", sourcePath);
         TimedResult<String> formatingResult =
                 StopWatch.measure(() -> applyFormatting(sourceCode, formattingExclusionRanges));
 
@@ -73,15 +73,12 @@ public final class Formatter {
     @NonNull
     private String applyFormatting(String sourceCode, List<SourceCharacterRange> formattingExclusionRanges) {
         if (formatterStyle == null) {
-            return fixImports ? invokePalantir(() -> formatter.fixImports(sourceCode), sourceCode) : sourceCode;
+            return fixImports ? invokePalantir(() -> formatter.fixImports(sourceCode)) : sourceCode;
         }
 
         if (formattingExclusionRanges.isEmpty()) {
-            return invokePalantir(
-                    () -> fixImports
-                            ? formatter.formatSourceAndFixImports(sourceCode)
-                            : formatter.formatSource(sourceCode),
-                    sourceCode);
+            return invokePalantir(() ->
+                    fixImports ? formatter.formatSourceAndFixImports(sourceCode) : formatter.formatSource(sourceCode));
         }
 
         String partiallyFormattedSource = sourceCode;
@@ -90,21 +87,19 @@ public final class Formatter {
                         .map(range -> Range.closedOpen(range.getStartInclusive(), range.getEndExclusive()))
                         .toList();
         if (!formattingRanges.isEmpty()) {
-            partiallyFormattedSource =
-                    invokePalantir(() -> formatter.formatSource(sourceCode, formattingRanges), sourceCode);
+            partiallyFormattedSource = invokePalantir(() -> formatter.formatSource(sourceCode, formattingRanges));
         }
 
-        String finalSource = partiallyFormattedSource;
-        return fixImports ? invokePalantir(() -> formatter.fixImports(finalSource), finalSource) : finalSource;
+        String formattedSource = partiallyFormattedSource;
+        return fixImports ? invokePalantir(() -> formatter.fixImports(formattedSource)) : formattedSource;
     }
 
     @NonNull
-    private static String invokePalantir(FormattingOperation formattingOperation, String sourceCode) {
+    private static String invokePalantir(FormattingOperation formattingOperation) {
         try {
             return formattingOperation.execute();
         } catch (FormatterException exception) {
-            throw new IllegalArgumentException(
-                    "Palantir formatting failure for the source code: " + sourceCode, exception);
+            throw new IllegalArgumentException("Palantir formatting failure: " + exception.getMessage(), exception);
         }
     }
 

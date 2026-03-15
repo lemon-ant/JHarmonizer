@@ -4,6 +4,7 @@ import static java.util.Comparator.comparingInt;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;
 import lombok.Value;
@@ -58,6 +59,6 @@ public class SourceCharacterRange {
             includedRanges.add(new SourceCharacterRange(nextStart, sourceLength));
         }
 
-        return List.copyOf(includedRanges);
+        return Collections.unmodifiableList(includedRanges);
     }
 }

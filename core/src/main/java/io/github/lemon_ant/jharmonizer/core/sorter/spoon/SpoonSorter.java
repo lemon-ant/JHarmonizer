@@ -30,6 +30,7 @@ import spoon.reflect.declaration.CtTypeMember;
 @AllArgsConstructor
 public class SpoonSorter {
     private static final int SINGLE_TOP_LEVEL_TYPE_COUNT = 1;
+    private static final int MIN_MEMBERS_REQUIRING_SORT = 2;
 
     @NonNull
     CompiledConfig compiledConfig;
@@ -138,7 +139,7 @@ public class SpoonSorter {
     @NonNull
     private static List<CtTypeMember> sortMemberSegment(
             @NonNull List<CtTypeMember> typeMembers, @NonNull CompiledMemberGroup rootMemberGroup) {
-        if (typeMembers.size() <= 1) {
+        if (typeMembers.size() < MIN_MEMBERS_REQUIRING_SORT) {
             return typeMembers;
         }
 

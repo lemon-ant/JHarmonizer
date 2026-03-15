@@ -2,94 +2,70 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
-import static io.github.lemon_ant.jharmonizer.core.flow.OptOutFlowSupport.buildFileOptOutSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.OptOutFlowSupport.createOriginalSourceSerializationResult;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
-import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
-@Slf4j
-@AllArgsConstructor
-@SuppressWarnings("PMD.GuardLogStatement")
-public class CheckFailFastFlow implements IFlow {
+public class CheckFailFastFlow extends AbstractOptOutFlow {
 
-    private final Formatter formatter;
-    private final Sorter sorter;
-    private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(FlowType.CHECK_FAIL_FAST);
+    public CheckFailFastFlow(@NonNull Formatter formatter, @NonNull Sorter sorter) {
+        super(formatter, sorter, FlowType.CHECK_FAIL_FAST);
+    }
 
     @Override
-    public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
-        debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-
-        // Parse
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+    public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile sourceFile) {
+        ParsingResult parsingResult = parseSourceFile(sourceFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
-        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.OFF)) {
-            log.info("Skipping all harmonization checks for {} because of @jharmonizer:off", srcFile.getPath());
-            return buildFileOptOutSkippedResult(srcFile.getPath(), srcFile.getSrcCode(), parsingResult, true, null, "");
+        if (parsedSpoonAstModel
+                .getOptOuts()
+                .hasFileOptOutMode(io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode.FULLY_OFF)) {
+            return buildFileOptOutSkippedResult(sourceFile, parsingResult, true, null, "", "all harmonization checks");
         }
 
-        // Sort (Fail Fast)
-        SortingResult sortingResult;
-        SerializationResult serializationResult;
-        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.SORT_OFF)) {
-            log.info("Skipping sorting checks for {} because of @jharmonizer:sort-off", srcFile.getPath());
-            sortingResult = new SortingResult(parsedSpoonAstModel, new SortingStatistic(0));
-            serializationResult = createOriginalSourceSerializationResult(srcFile.getSrcCode());
-        } else {
-            sortingResult = sorter.sort(parsedSpoonAstModel);
-            serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
-        }
-        SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
-        List<Pair<CtElement, Integer>> elementRelocations = findRelocations(
-                sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
+        SortingPassResult sortingPassResult =
+                sortOrReuseOriginalSource(sourceFile, parsedSpoonAstModel, "sorting checks");
+        SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
+        List<Pair<CtElement, Integer>> elementRelocations = sortingPassResult.isSortingSkipped()
+                ? List.of()
+                : findRelocations(
+                        sortedSpoonAstModel.getOriginalElements2OrderIndices(),
+                        sortedSpoonAstModel.getCompilationUnit());
 
-        // Serialize
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
+        recordSortedStage(sourceFile, sortingPassResult.getSerializationResult());
 
         if (!elementRelocations.isEmpty()) {
-            throw new NotOrderedException(srcFile.getPath(), elementRelocations);
+            throw new NotOrderedException(sourceFile.getPath(), elementRelocations);
         }
 
-        // Format (Fail Fast)
-        FormatingResult formatingResult = formatter.formatSource(
-                serializationResult.getSerializedSrcCode(),
-                srcFile.getPath(),
-                serializationResult.getFormattingExclusionRanges());
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
+        FormatingResult formattingResult = formatter.formatSource(
+                sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                sourceFile.getPath(),
+                sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+        recordFormattedStage(sourceFile, formattingResult);
 
-        if (!srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode())) {
-            String srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
-            throw new NotFormattedException(srcFile.getPath(), srcDiff);
+        if (!sourceFile.getSrcCode().equals(formattingResult.getFormatedSrcCode())) {
+            String sourceDiff = computeDiff(sourceFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+            throw new NotFormattedException(sourceFile.getPath(), sourceDiff);
         }
 
         return FlowProcessingResult.builder()
-                .path(srcFile.getPath())
+                .path(sourceFile.getPath())
                 .relocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(sortingResult.getSortingStatistic())
-                .serializationStatistic(serializationResult.getSerializationStatistic())
-                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .sortingStatistic(sortingPassResult.getSortingResult().getSortingStatistic())
+                .serializationStatistic(
+                        sortingPassResult.getSerializationResult().getSerializationStatistic())
+                .formatingStatistic(formattingResult.getFormatingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
                 .build();
     }

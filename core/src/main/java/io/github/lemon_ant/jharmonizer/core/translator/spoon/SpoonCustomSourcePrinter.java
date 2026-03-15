@@ -96,6 +96,8 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         getPrinterTokenWriter().writeln();
         Optional<ResolvedJHarmonizerOptOut> typeOptOut = optOuts.findTypeOptOut(type);
         if (typeOptOut.filter(ResolvedJHarmonizerOptOut::skipsFormatting).isPresent()) {
+            // Once an outer type is preserved as-is, nested types are not traversed separately, so formatting
+            // exclusions are emitted only for the outer preserved fragment and cannot overlap.
             printPreservedTypeFragment(typeOptOut.orElseThrow());
             return;
         }
