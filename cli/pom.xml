@@ -68,6 +68,13 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>packaged-jar-it</id>
+                        <!--
+                            Failsafe participates in the lifecycle with two separate goals: `integration-test` executes the
+                            packaged-JAR integration tests, while `verify` only reads their reports and fails the build if any
+                            of those tests failed. Keeping both goals inside one named execution makes the binding explicit and
+                            avoids the misleading `(default)` execution label in Maven logs.
+                        -->
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>
