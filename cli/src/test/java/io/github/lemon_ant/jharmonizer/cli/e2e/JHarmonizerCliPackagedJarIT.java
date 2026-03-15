@@ -9,6 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -25,6 +29,34 @@ class JHarmonizerCliPackagedJarIT {
 
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void packagedJar_manifestInspected_preserveExecutableMetadata() throws IOException {
+        // Given
+        String expectedMainClass = "io.github.lemon_ant.jharmonizer.cli.command.JHarmonizerCliApplication";
+        String expectedModuleExports = String.join(
+                " ",
+                "jdk.compiler/com.sun.tools.javac.api",
+                "jdk.compiler/com.sun.tools.javac.file",
+                "jdk.compiler/com.sun.tools.javac.parser",
+                "jdk.compiler/com.sun.tools.javac.tree",
+                "jdk.compiler/com.sun.tools.javac.util");
+
+        try (JarFile jarFile = new JarFile(EXECUTABLE_JAR.toFile())) {
+            // When
+            Attributes manifestAttributes = jarFile.getManifest().getMainAttributes();
+            List<String> moduleInfoEntries = jarFile.stream()
+                    .filter(thisEntry -> thisEntry.getName().endsWith("module-info.class"))
+                    .map(JarEntry::getName)
+                    .toList();
+
+            // Then
+            assertThat(manifestAttributes.getValue(Attributes.Name.MAIN_CLASS)).isEqualTo(expectedMainClass);
+            assertThat(manifestAttributes.getValue("Add-Exports")).isEqualTo(expectedModuleExports);
+            assertThat(manifestAttributes.getValue("Add-Opens")).isEqualTo(expectedModuleExports);
+            assertThat(moduleInfoEntries).isEmpty();
+        }
+    }
 
     @Test
     void helpCommand_rootHelpRequested_printUsageInformation() throws IOException, InterruptedException {
