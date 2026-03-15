@@ -5,7 +5,7 @@ public class FeatureService {
     int a = 1;
     int b = 2;
 
-    void zMethod() {}
-
     void aMethod() {}
+
+    void zMethod() {}
 }
