@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -15,7 +16,6 @@ import java.util.concurrent.Callable;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
@@ -23,10 +23,9 @@ import picocli.CommandLine.Option;
 
 @Slf4j
 @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Lombok @NonNull guard; class is not finalizable")
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 abstract class BaseCommand implements Callable<Integer> {
 
-    @NonNull
+    @Nullable
     @Getter(AccessLevel.PROTECTED)
     private final SourceProcessor sourceProcessor;
 
@@ -60,8 +59,17 @@ abstract class BaseCommand implements Callable<Integer> {
             description = "Enable verbose (DEBUG level) logging.")
     private boolean verbose;
 
+    @Option(
+            names = {"-c", "--config"},
+            description = "Path to custom YAML configuration file merged over the built-in defaults.")
+    private Path configFilePath;
+
     protected BaseCommand() {
-        this(new SourceProcessor());
+        this(null);
+    }
+
+    protected BaseCommand(@Nullable SourceProcessor sourceProcessor) {
+        this.sourceProcessor = sourceProcessor;
     }
 
     protected abstract FlowType getFlowType();
@@ -79,8 +87,14 @@ abstract class BaseCommand implements Callable<Integer> {
             log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
             return 1;
         }
-        CommandOptions commandOptions =
-                new CommandOptions(effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose);
+        Path effectiveConfigFilePath = configFilePath != null ? configFilePath.normalize() : null;
+        if (effectiveConfigFilePath != null
+                && !Files.isRegularFile(effectiveConfigFilePath.toAbsolutePath().normalize())) {
+            log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
+            return 1;
+        }
+        CommandOptions commandOptions = new CommandOptions(
+                effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }
@@ -95,9 +109,13 @@ abstract class BaseCommand implements Callable<Integer> {
     @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
-        log.info("Processing sources with flow {} in: {}", flowType, commandOptions.getBaseDir());
+        log.info(
+                "Processing sources with flow {} in: {} using config: {}",
+                flowType,
+                commandOptions.getBaseDir(),
+                commandOptions.getConfigFilePath());
         try {
-            getSourceProcessor()
+            resolveSourceProcessor(commandOptions)
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
@@ -108,6 +126,17 @@ abstract class BaseCommand implements Callable<Integer> {
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
             return checkFailedExitCode();
         }
+    }
+
+    @NonNull
+    private SourceProcessor resolveSourceProcessor(CommandOptions commandOptions) {
+        if (getSourceProcessor() != null) {
+            return getSourceProcessor();
+        }
+        if (commandOptions.getConfigFilePath() != null) {
+            return new SourceProcessor(commandOptions.getConfigFilePath());
+        }
+        return new SourceProcessor();
     }
 
     @Value
@@ -122,5 +151,8 @@ abstract class BaseCommand implements Callable<Integer> {
         Set<@NonNull String> excludeGlobs;
 
         boolean verbose;
+
+        @Nullable
+        Path configFilePath;
     }
 }

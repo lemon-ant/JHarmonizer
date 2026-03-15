@@ -129,9 +129,32 @@ class SourceProcessorTest {
                 .contains("public class InternalToolForLoggingVerification");
     }
 
+    @Test
+    void processSources_customConfigFileDisablesBackups_skipBackupFileCreation() throws Exception {
+        // Given
+        String unformattedSourceCode = "package demo; public class Sample {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", unformattedSourceCode);
+        Path customConfigFilePath = writeCustomConfigFile(temporaryDirectory.resolve("custom-config.yml"));
+        SourceProcessor sourceProcessor = new SourceProcessor(customConfigFilePath);
+
+        // When
+        sourceProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(unformattedSourceCode);
+        assertThat(temporaryDirectory.resolve("Sample.java.bak")).doesNotExist();
+    }
+
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    }
+
+    private static Path writeCustomConfigFile(Path configFilePath) throws Exception {
+        String defaultConfig = TestCaseResourceUtils.readClasspathResourceAsString("/default-config.yml");
+        String customConfig = replaceBackupsEnabled(defaultConfig, false);
+        return Files.writeString(configFilePath, customConfig, StandardCharsets.UTF_8);
     }
 
     private static ListAppender<ILoggingEvent> attachListAppender() {
@@ -146,5 +169,14 @@ class SourceProcessorTest {
         Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
         logger.detachAppender(listAppender);
         listAppender.stop();
+    }
+
+    private static String replaceBackupsEnabled(String configContent, boolean backupsEnabled) {
+        String originalLine = "backups-enabled: true";
+        String updatedLine = "backups-enabled: " + backupsEnabled;
+        if (!configContent.contains(originalLine)) {
+            throw new IllegalStateException("Expected default config to contain line: " + originalLine);
+        }
+        return configContent.replace(originalLine, updatedLine);
     }
 }
