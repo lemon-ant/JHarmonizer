@@ -87,9 +87,9 @@ abstract class BaseCommand implements Callable<Integer> {
             log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
             return 1;
         }
-        Path effectiveConfigFilePath = configFilePath != null ? configFilePath.normalize() : null;
-        if (effectiveConfigFilePath != null
-                && !Files.isRegularFile(effectiveConfigFilePath.toAbsolutePath().normalize())) {
+        Path effectiveConfigFilePath =
+                configFilePath != null ? configFilePath.toAbsolutePath().normalize() : null;
+        if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
             log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
             return 1;
         }
@@ -113,7 +113,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 "Processing sources with flow {} in: {} using config: {}",
                 flowType,
                 commandOptions.getBaseDir(),
-                commandOptions.getConfigFilePath());
+                describeConfigSource(commandOptions.getConfigFilePath()));
         try {
             resolveSourceProcessor(commandOptions)
                     .processSources(
@@ -137,6 +137,11 @@ abstract class BaseCommand implements Callable<Integer> {
             return new SourceProcessor(commandOptions.getConfigFilePath());
         }
         return new SourceProcessor();
+    }
+
+    @NonNull
+    private static String describeConfigSource(@Nullable Path configFilePath) {
+        return configFilePath != null ? configFilePath.toString() : "default";
     }
 
     @Value
