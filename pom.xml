@@ -45,6 +45,21 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!--
+                Temporary transitive vulnerability workaround: palantir-java-format 2.89.0 currently resolves Jackson
+                modules to 2.21.0, which overrides this project's intended patched Jackson line.
+                Import the BOM here so all Jackson modules stay pinned to ${jackson.version} until that upstream
+                dependency tree is updated and no longer forces an older Jackson version. Remove this override once
+                palantir-java-format (or any other direct dependency that brings Jackson transitively) stops resolving
+                below ${jackson.version}.
+            -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-annotations</artifactId>

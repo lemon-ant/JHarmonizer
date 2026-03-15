@@ -23,6 +23,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
+- Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
 
 ## Test conventions
 
