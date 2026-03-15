@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
@@ -214,14 +213,9 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void runProcessorForSingleFile(Path sourceFilePath, Path config, FlowType flowType) {
-        UnifiedConfig unifiedConfig =
-                JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(E2EFileUtils.toUrl(config));
-        FlexibleUnifiedConfig flexibleConfig = new FlexibleUnifiedConfig(
-                unifiedConfig.getTopLevelTypesOrdering(),
-                unifiedConfig.getFormatting(),
-                unifiedConfig.isBackupsEnabled(),
-                unifiedConfig.getHeaderLine(),
-                unifiedConfig.getRootMemberGroups());
+        FlexibleUnifiedConfig flexibleConfig =
+                JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
+                        E2EFileUtils.toUrl(config));
         SourceProcessor sourceProcessor = new SourceProcessor(flexibleConfig);
         sourceProcessor.processSources(
                 sourceFilePath.getParent(), List.of(sourceFilePath.getFileName().toString()), List.of(), flowType);

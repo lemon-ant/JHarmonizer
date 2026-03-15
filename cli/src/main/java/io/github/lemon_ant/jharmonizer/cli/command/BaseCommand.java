@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -13,8 +12,6 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +21,6 @@ import picocli.CommandLine.Option;
 @Slf4j
 @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Lombok @NonNull guard; class is not finalizable")
 abstract class BaseCommand implements Callable<Integer> {
-
-    @Nullable
-    @Getter(AccessLevel.PROTECTED)
-    private final SourceProcessor sourceProcessor;
 
     @Option(
             names = {"-b", "--base-dir"},
@@ -64,15 +57,10 @@ abstract class BaseCommand implements Callable<Integer> {
             description = "Path to custom YAML configuration file merged over the built-in defaults.")
     private Path configFilePath;
 
-    protected BaseCommand() {
-        this(null);
-    }
-
-    protected BaseCommand(@Nullable SourceProcessor sourceProcessor) {
-        this.sourceProcessor = sourceProcessor;
-    }
-
     protected abstract FlowType getFlowType();
+
+    @NonNull
+    protected abstract SourceProcessor createSourceProcessor(Path configFilePath);
 
     protected int checkFailedExitCode() {
         return 1;
@@ -115,7 +103,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 commandOptions.getBaseDir(),
                 describeConfigSource(commandOptions.getConfigFilePath()));
         try {
-            resolveSourceProcessor(commandOptions)
+            createSourceProcessor(commandOptions.getConfigFilePath())
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
@@ -129,19 +117,15 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @NonNull
-    private SourceProcessor resolveSourceProcessor(CommandOptions commandOptions) {
-        if (getSourceProcessor() != null) {
-            return getSourceProcessor();
-        }
-        if (commandOptions.getConfigFilePath() != null) {
-            return new SourceProcessor(commandOptions.getConfigFilePath());
-        }
-        return new SourceProcessor();
+    protected static SourceProcessor createDefaultSourceProcessor(Path configFilePath) {
+        return configFilePath != null ? new SourceProcessor(configFilePath) : new SourceProcessor();
     }
 
     @NonNull
-    private static String describeConfigSource(@Nullable Path configFilePath) {
-        return configFilePath != null ? configFilePath.toString() : "default";
+    private static String describeConfigSource(Path configFilePath) {
+        return configFilePath != null
+                ? configFilePath.toString()
+                : "embedded default config from core classpath resource /default-config.yml";
     }
 
     @Value
@@ -157,7 +141,6 @@ abstract class BaseCommand implements Callable<Integer> {
 
         boolean verbose;
 
-        @Nullable
         Path configFilePath;
     }
 }

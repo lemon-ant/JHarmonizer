@@ -10,11 +10,8 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +21,20 @@ import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
 class RestructureCommandTest {
+
+    private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
+            package demo;
+            public class Sample {}
+            interface Alpha {}
+            """;
+    private static final String PARTIAL_TOP_LEVEL_TYPES_CONFIG = """
+            top-level-types-ordering:
+              main-type-first: false
+              type-groups:
+                - [ interface ]
+                - [ class ]
+              ordering-rules: [ alpha ]
+            """;
 
     @TempDir
     Path temporaryDirectory;
@@ -115,13 +126,13 @@ class RestructureCommandTest {
     }
 
     @Test
-    void restructureCommand_configOptionDisablesBackups_skipBackupFileCreation() throws Exception {
+    void restructureCommand_configOptionSupportsPartialConfig_reordersUsingMergedDefaults() throws Exception {
         // Given
         Path javaFilePath = Files.writeString(
                 temporaryDirectory.resolve("Sample.java"),
-                "package demo; public class Sample {private int x;}",
+                SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES,
                 StandardCharsets.UTF_8);
-        Path configFilePath = writeCustomConfigFile(temporaryDirectory.resolve("custom-config.yml"));
+        Path configFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
         CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
@@ -129,9 +140,9 @@ class RestructureCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8))
-                .isNotEqualTo("package demo; public class Sample {private int x;}");
-        assertThat(temporaryDirectory.resolve("Sample.java.bak")).doesNotExist();
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        assertThat(processedSourceCode.indexOf("interface Alpha"))
+                .isLessThan(processedSourceCode.indexOf("class Sample"));
     }
 
     @Test
@@ -149,29 +160,7 @@ class RestructureCommandTest {
         assertThat(exitCode).isEqualTo(1);
     }
 
-    private static Path writeCustomConfigFile(Path configFilePath) throws IOException {
-        String defaultConfig = readDefaultConfig();
-        String customConfig = replaceBackupsEnabled(defaultConfig, false);
-        return Files.writeString(configFilePath, customConfig, StandardCharsets.UTF_8);
-    }
-
-    private static String readDefaultConfig() {
-        try (InputStream inputStream = SourceProcessor.class.getResourceAsStream("/default-config.yml")) {
-            if (inputStream == null) {
-                throw new IllegalStateException("Classpath resource not found: /default-config.yml");
-            }
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to read classpath resource: /default-config.yml", exception);
-        }
-    }
-
-    private static String replaceBackupsEnabled(String configContent, boolean backupsEnabled) {
-        String originalLine = "backups-enabled: true";
-        String updatedLine = "backups-enabled: " + backupsEnabled;
-        if (!configContent.contains(originalLine)) {
-            throw new IllegalStateException("Expected default config to contain line: " + originalLine);
-        }
-        return configContent.replace(originalLine, updatedLine);
+    private static Path writeConfigFile(Path configFilePath) throws Exception {
+        return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
     }
 }

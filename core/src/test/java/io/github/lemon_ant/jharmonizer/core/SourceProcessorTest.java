@@ -30,6 +30,19 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
+            package demo;
+            public class Sample {}
+            interface Alpha {}
+            """;
+    private static final String PARTIAL_TOP_LEVEL_TYPES_CONFIG = """
+            top-level-types-ordering:
+              main-type-first: false
+              type-groups:
+                - [ interface ]
+                - [ class ]
+              ordering-rules: [ alpha ]
+            """;
 
     @TempDir
     Path temporaryDirectory;
@@ -130,11 +143,10 @@ class SourceProcessorTest {
     }
 
     @Test
-    void processSources_customConfigFileDisablesBackups_skipBackupFileCreation() throws Exception {
+    void processSources_partialConfigFile_reordersUsingMergedDefaults() throws Exception {
         // Given
-        String unformattedSourceCode = "package demo; public class Sample {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", unformattedSourceCode);
-        Path customConfigFilePath = writeCustomConfigFile(temporaryDirectory.resolve("custom-config.yml"));
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES);
+        Path customConfigFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
         SourceProcessor sourceProcessor = new SourceProcessor(customConfigFilePath);
 
         // When
@@ -142,8 +154,9 @@ class SourceProcessorTest {
                 temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
         // Then
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(unformattedSourceCode);
-        assertThat(temporaryDirectory.resolve("Sample.java.bak")).doesNotExist();
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        assertThat(processedSourceCode.indexOf("interface Alpha"))
+                .isLessThan(processedSourceCode.indexOf("class Sample"));
     }
 
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
@@ -151,10 +164,8 @@ class SourceProcessorTest {
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 
-    private static Path writeCustomConfigFile(Path configFilePath) throws Exception {
-        String defaultConfig = TestCaseResourceUtils.readClasspathResourceAsString("/default-config.yml");
-        String customConfig = replaceBackupsEnabled(defaultConfig, false);
-        return Files.writeString(configFilePath, customConfig, StandardCharsets.UTF_8);
+    private static Path writeConfigFile(Path configFilePath) throws Exception {
+        return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
     }
 
     private static ListAppender<ILoggingEvent> attachListAppender() {
@@ -169,14 +180,5 @@ class SourceProcessorTest {
         Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
         logger.detachAppender(listAppender);
         listAppender.stop();
-    }
-
-    private static String replaceBackupsEnabled(String configContent, boolean backupsEnabled) {
-        String originalLine = "backups-enabled: true";
-        String updatedLine = "backups-enabled: " + backupsEnabled;
-        if (!configContent.contains(originalLine)) {
-            throw new IllegalStateException("Expected default config to contain line: " + originalLine);
-        }
-        return configContent.replace(originalLine, updatedLine);
     }
 }

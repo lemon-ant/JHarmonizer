@@ -7,7 +7,6 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
-import java.nio.file.Path;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -44,22 +43,5 @@ public class ConfigurationManager {
         UnifiedConfig defaultUnifiedConfig = JHarmonizerConfigurationManager.parseUnifiedDefaultConfig();
         UnifiedConfig mergedUnifiedConfig = UnifiedConfigMerger.merge(defaultUnifiedConfig, externalConfig);
         return Unified2CompiledModelCompiler.compile(mergedUnifiedConfig);
-    }
-
-    @NonNull
-    public static CompiledConfig overrideDefaultConfig(@NonNull Path externalConfigPath) {
-        UnifiedConfig externalUnifiedConfig =
-                JHarmonizerConfigurationManager.parseUnifiedConfigFromFile(externalConfigPath);
-        return overrideDefaultConfig(toFlexibleUnifiedConfig(externalUnifiedConfig));
-    }
-
-    @NonNull
-    private static FlexibleUnifiedConfig toFlexibleUnifiedConfig(@NonNull UnifiedConfig unifiedConfig) {
-        return new FlexibleUnifiedConfig(
-                unifiedConfig.getTopLevelTypesOrdering(),
-                unifiedConfig.getFormatting(),
-                unifiedConfig.isBackupsEnabled(),
-                unifiedConfig.getHeaderLine(),
-                unifiedConfig.getRootMemberGroups());
     }
 }

@@ -2,6 +2,8 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import java.nio.file.Path;
+import lombok.NonNull;
 import picocli.CommandLine.Command;
 
 @Command(
@@ -10,14 +12,24 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckAllCommand extends BaseCommand {
 
-    CheckAllCommand() {}
+    private final SourceProcessor sourceProcessor;
+
+    CheckAllCommand() {
+        this(null);
+    }
 
     CheckAllCommand(SourceProcessor sourceProcessor) {
-        super(sourceProcessor);
+        this.sourceProcessor = sourceProcessor;
     }
 
     @Override
     protected FlowType getFlowType() {
         return FlowType.CHECK_ALL;
+    }
+
+    @Override
+    @NonNull
+    protected SourceProcessor createSourceProcessor(Path configFilePath) {
+        return sourceProcessor != null ? sourceProcessor : createDefaultSourceProcessor(configFilePath);
     }
 }

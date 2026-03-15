@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckAllFlow;
@@ -51,7 +52,7 @@ public final class SourceProcessor {
     }
 
     public SourceProcessor(@NonNull Path externalConfigPath) {
-        this(ConfigurationManager.overrideDefaultConfig(externalConfigPath));
+        this(JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(externalConfigPath));
     }
 
     private SourceProcessor(CompiledConfig compiledConfig) {
