@@ -36,13 +36,15 @@ public final class SourceAstTranslator {
     public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<String> serializationTimedResult = StopWatch.measure(
+        TimedResult<SerializedSourceSnapshot> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());
-        String serializedSourceCode = serializationTimedResult.getResult();
+        SerializedSourceSnapshot serializedSourceSnapshot = serializationTimedResult.getResult();
+        String serializedSourceCode = serializedSourceSnapshot.getSourceCode();
 
         return new SerializationResult(
                 new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
-                serializedSourceCode);
+                serializedSourceCode,
+                serializedSourceSnapshot.getFormattingExclusionRanges());
     }
 
     private static ParsingStatistic createParsingStatistic(

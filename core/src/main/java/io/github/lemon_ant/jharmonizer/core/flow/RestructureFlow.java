@@ -1,15 +1,19 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
+import static io.github.lemon_ant.jharmonizer.core.flow.DirectiveFlowSupport.buildFileDirectiveSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.DirectiveFlowSupport.createOriginalSourceSerializationResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.RESTRUCTURE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
+import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectiveMode;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
+import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
@@ -33,15 +37,31 @@ public class RestructureFlow implements IFlow {
         debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
 
         ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+        if (parsingResult.getSpoonAstModel().getDirectives().hasFileDirectiveMode(JHarmonizerDirectiveMode.OFF)) {
+            log.info("Skipping all harmonization for {} because of @jharmonizer:off", srcFile.getPath());
+            return buildFileDirectiveSkippedResult(
+                    srcFile.getPath(), srcFile.getSrcCode(), parsingResult, false, null, null);
+        }
 
-        SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
+        SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
+        SortingResult sortingResult;
+        SerializationResult serializationResult;
+        if (parsedSpoonAstModel.getDirectives().hasFileDirectiveMode(JHarmonizerDirectiveMode.SORT_OFF)) {
+            log.info("Skipping sorting for {} because of @jharmonizer:sort-off", srcFile.getPath());
+            sortingResult = new SortingResult(parsedSpoonAstModel, new SortingStatistic(0));
+            serializationResult = createOriginalSourceSerializationResult(srcFile.getSrcCode());
+        } else {
+            sortingResult = sorter.sort(parsedSpoonAstModel);
+            serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+            debugStageRecorder.recordSrcStage(
+                    srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
+        }
         SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
-        SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
-        FormatingResult formatingResult =
-                formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
+        FormatingResult formatingResult = formatter.formatSource(
+                serializationResult.getSerializedSrcCode(),
+                srcFile.getPath(),
+                serializationResult.getFormattingExclusionRanges());
         debugStageRecorder.recordSrcStage(
                 srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
 

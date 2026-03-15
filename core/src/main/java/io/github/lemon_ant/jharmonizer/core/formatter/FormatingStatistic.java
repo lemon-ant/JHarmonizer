@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Value;
 
 @Value
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class FormatingStatistic {
     long formattedCodeLength;
     long formattingTimeInNanos;

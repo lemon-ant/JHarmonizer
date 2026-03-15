@@ -117,6 +117,25 @@ All commands share the same set of options (inherited from `BaseCommand`):
 Glob patterns follow the `java.nio.file.PathMatcher` `glob:` syntax,
 e.g. `**/*.java`, `**/generated/**`.
 
+## Source opt-out directives
+
+The CLI honors JHarmonizer's native comment directives in source files:
+
+- `@jharmonizer:off`
+- `@jharmonizer:sort-off`
+
+They can be written as line comments or block comments and can target either:
+
+- the whole file (when placed in the file preamble), or
+- a top-level / nested type declaration (when placed immediately before that type)
+
+Summary:
+
+- file + `@jharmonizer:off` → skip the file completely
+- file + `@jharmonizer:sort-off` → skip sorting, still format/fix imports
+- type + `@jharmonizer:off` → preserve that type subtree exactly
+- type + `@jharmonizer:sort-off` → keep that type subtree unsorted, but still format it
+
 ## Exit codes
 
 | Code | Meaning |

@@ -1,6 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectiveResolver;
+import io.github.lemon_ant.jharmonizer.core.directive.JHarmonizerDirectives;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,23 +33,28 @@ public class SpoonParser {
 
         Launcher launcher = createPreconfiguredParserLauncher();
         launcher.addInputResource(virtualFile);
-        launcher.getEnvironment()
-                .setPrettyPrinterCreator(
-                        () -> new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode));
 
-        return buildSpoonAstModel(originalSourceFile, launcher);
+        return buildSpoonAstModel(originalSourceFile, originalSourceCode, launcher);
     }
 
-    private static SpoonAstModel buildSpoonAstModel(@NonNull Path path, @NonNull Launcher launcher) {
-        var compilationUnit = extractCompilationUnit(launcher);
-        var mainType = SpoonTypeUtils.findMainType(compilationUnit);
-        Supplier<String> serializedSourceCode =
-                () -> launcher.createPrettyPrinter().printCompilationUnit(compilationUnit);
+    private static SpoonAstModel buildSpoonAstModel(
+            @NonNull Path path, @NonNull String originalSourceCode, @NonNull Launcher launcher) {
+        CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
+        CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
+        JHarmonizerDirectives directives =
+                JHarmonizerDirectiveResolver.resolve(path, originalSourceCode, compilationUnit);
+        Supplier<SerializedSourceSnapshot> serializedSourceCode = () -> {
+            SpoonCustomSourcePrinter printer =
+                    new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode, directives);
+            printer.printCompilationUnit(compilationUnit);
+            return new SerializedSourceSnapshot(printer.getResult(), printer.getFormattingExclusionRanges());
+        };
         return SpoonAstModel.builder()
                 .originalElements2OrderIndices(RelocationDetector.indexElementsByOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .serializedSourceCode(serializedSourceCode)
+                .directives(directives)
                 .path(path)
                 .build();
     }
