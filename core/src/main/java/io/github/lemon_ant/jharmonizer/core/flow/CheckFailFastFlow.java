@@ -22,17 +22,19 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     }
 
     @Override
-    public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile sourceFile) {
-        ParsingResult parsingResult = parseSourceFile(sourceFile);
+    public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
+        getDebugStageRecorder()
+                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult =
+                io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator.parseSourceFile(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel
                 .getOptOuts()
                 .hasFileOptOutMode(io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode.FULLY_OFF)) {
-            return buildFileOptOutSkippedResult(sourceFile, parsingResult, true, null, "", "all harmonization checks");
+            return buildFileOptOutSkippedResult(srcFile, parsingResult, true, null, "", "all harmonization checks");
         }
 
-        SortingPassResult sortingPassResult =
-                sortOrReuseOriginalSource(sourceFile, parsedSpoonAstModel, "sorting checks");
+        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
         List<Pair<CtElement, Integer>> elementRelocations = sortingPassResult.isSortingSkipped()
                 ? List.of()
@@ -40,25 +42,34 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),
                         sortedSpoonAstModel.getCompilationUnit());
 
-        recordSortedStage(sourceFile, sortingPassResult.getSerializationResult());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
 
         if (!elementRelocations.isEmpty()) {
-            throw new NotOrderedException(sourceFile.getPath(), elementRelocations);
+            throw new NotOrderedException(srcFile.getPath(), elementRelocations);
         }
 
-        FormatingResult formattingResult = formatter.formatSource(
-                sortingPassResult.getSerializationResult().getSerializedSrcCode(),
-                sourceFile.getPath(),
-                sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
-        recordFormattedStage(sourceFile, formattingResult);
+        FormatingResult formattingResult = getFormatter()
+                .formatSource(
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                        srcFile.getPath(),
+                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormatedSrcCode());
 
-        if (!sourceFile.getSrcCode().equals(formattingResult.getFormatedSrcCode())) {
-            String sourceDiff = computeDiff(sourceFile.getSrcCode(), formattingResult.getFormatedSrcCode());
-            throw new NotFormattedException(sourceFile.getPath(), sourceDiff);
+        if (!srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode())) {
+            String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+            throw new NotFormattedException(srcFile.getPath(), srcDiff);
         }
 
         return FlowProcessingResult.builder()
-                .path(sourceFile.getPath())
+                .path(srcFile.getPath())
                 .relocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())

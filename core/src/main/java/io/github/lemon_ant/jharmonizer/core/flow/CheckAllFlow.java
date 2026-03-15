@@ -24,53 +24,64 @@ public class CheckAllFlow extends AbstractOptOutFlow {
 
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull SrcFile sourceFile) {
-        ParsingResult parsingResult = parseSourceFile(sourceFile);
+    public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+        getDebugStageRecorder()
+                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult =
+                io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator.parseSourceFile(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel
                 .getOptOuts()
                 .hasFileOptOutMode(io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFileOptOutSkippedResult(
-                    sourceFile, parsingResult, true, List.of(), "", "all harmonization checks");
+                    srcFile, parsingResult, true, List.of(), "", "all harmonization checks");
         }
 
-        SortingPassResult sortingPassResult =
-                sortOrReuseOriginalSource(sourceFile, parsedSpoonAstModel, "sorting checks");
+        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
-        recordSortedStage(sourceFile, sortingPassResult.getSerializationResult());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
 
-        FormatingResult formattingResult = formatter.formatSource(
-                sortingPassResult.getSerializationResult().getSerializedSrcCode(),
-                sourceFile.getPath(),
-                sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
-        recordFormattedStage(sourceFile, formattingResult);
+        FormatingResult formattingResult = getFormatter()
+                .formatSource(
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                        srcFile.getPath(),
+                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormatedSrcCode());
 
-        boolean hasSourceChanges = !sourceFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
+        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
-        String sourceDiff;
-        if (hasSourceChanges && !sortingPassResult.isSortingSkipped()) {
+        String srcDiff;
+        if (hasChanges && !sortingPassResult.isSortingSkipped()) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            sourceDiff = computeDiff(sourceFile.getSrcCode(), formattingResult.getFormatedSrcCode());
-        } else if (hasSourceChanges) {
+            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+        } else if (hasChanges) {
             elementRelocations = List.of();
-            sourceDiff = computeDiff(sourceFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
         } else {
             elementRelocations = List.of();
-            sourceDiff = "";
+            srcDiff = "";
         }
 
         return FlowProcessingResult.builder()
-                .path(sourceFile.getPath())
+                .path(srcFile.getPath())
                 .relocations(elementRelocations)
-                .diff(sourceDiff)
+                .diff(srcDiff)
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(sortingPassResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(
                         sortingPassResult.getSerializationResult().getSerializationStatistic())
                 .formatingStatistic(formattingResult.getFormatingStatistic())
                 .flowProcessingStatus(
-                        defineFlowProcessingStatus(!elementRelocations.isEmpty(), !sourceDiff.isEmpty(), true))
+                        defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();
     }
 }

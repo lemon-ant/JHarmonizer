@@ -15,7 +15,7 @@ class JHarmonizerOptOutResolverTest {
     void parseJavaSourceResource_fileOptOutBeforePackage_resolveFileOptOutOff() {
         // Given
         String sourceCode = """
-                // @jharmonizer:off
+                // @jharmonizer:fully-off
                 package demo;
 
                 class Sample {}
@@ -59,7 +59,7 @@ class JHarmonizerOptOutResolverTest {
         String sourceCode = """
                 package demo;
 
-                // @jharmonizer:off
+                // @jharmonizer:fully-off
                 @Deprecated
                 class Sample {}
                 """;
@@ -110,7 +110,7 @@ class JHarmonizerOptOutResolverTest {
                 package demo;
 
                 class Sample {
-                    // @jharmonizer:off
+                    // @jharmonizer:fully-off
                     int value;
                 }
                 """;
@@ -155,5 +155,23 @@ class JHarmonizerOptOutResolverTest {
                 .get()
                 .extracting(ResolvedJHarmonizerOptOut::getMode)
                 .isEqualTo(JHarmonizerOptOutMode.SORTING_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_legacyOffAlias_resolveFullyOffOptOut() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:off
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), srcCode);
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
+                .get()
+                .extracting(ResolvedJHarmonizerOptOut::getMode)
+                .isEqualTo(JHarmonizerOptOutMode.FULLY_OFF);
     }
 }

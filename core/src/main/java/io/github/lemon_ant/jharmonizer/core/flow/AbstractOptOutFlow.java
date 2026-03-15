@@ -4,15 +4,12 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingStatistic;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
-import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
@@ -29,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import spoon.reflect.declaration.CtElement;
 
 abstract class AbstractOptOutFlow implements IFlow {
-    protected final Formatter formatter;
-    protected final Sorter sorter;
+    private final Formatter formatter;
+    private final Sorter sorter;
     private final FlowDebugStageRecorder debugStageRecorder;
 
     protected AbstractOptOutFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull FlowType flowType) {
@@ -39,71 +36,66 @@ abstract class AbstractOptOutFlow implements IFlow {
         this.debugStageRecorder = new FlowDebugStageRecorder(flowType);
     }
 
-    protected final ParsingResult parseSourceFile(@NonNull SrcFile sourceFile) {
-        debugStageRecorder.recordSrcStage(sourceFile.getPath(), SrcFlowStage.ORIGINAL, sourceFile.getSrcCode());
-        return SourceAstTranslator.parseSourceFile(sourceFile);
+    protected final Formatter getFormatter() {
+        return formatter;
     }
 
-    protected final void recordSortedStage(
-            @NonNull SrcFile sourceFile, @NonNull SerializationResult serializationResult) {
-        debugStageRecorder.recordSrcStage(
-                sourceFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
+    protected final Sorter getSorter() {
+        return sorter;
     }
 
-    protected final void recordFormattedStage(@NonNull SrcFile sourceFile, @NonNull FormatingResult formattingResult) {
-        debugStageRecorder.recordSrcStage(
-                sourceFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormatedSrcCode());
+    protected final FlowDebugStageRecorder getDebugStageRecorder() {
+        return debugStageRecorder;
     }
 
     @NonNull
     protected final SortingPassResult sortOrReuseOriginalSource(
-            @NonNull SrcFile sourceFile,
+            @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull String skippedOperationDescription) {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.SORTING_OFF)) {
-            logFileOptOutSkip(sourceFile, skippedOperationDescription, JHarmonizerOptOutMode.SORTING_OFF);
+            logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.SORTING_OFF);
             return new SortingPassResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
-                    createOriginalSourceSerializationResult(sourceFile),
+                    createOriginalSourceSerializationResult(srcFile),
                     true);
         }
 
-        SortingResult sortingResult = sorter.sort(parsedSpoonAstModel);
+        SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
         return new SortingPassResult(
                 sortingResult, SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel()), false);
     }
 
     @NonNull
     protected final FlowProcessingResult buildFileOptOutSkippedResult(
-            @NonNull SrcFile sourceFile,
-            @NonNull ParsingResult parsingResult,
+            @NonNull SrcFile srcFile,
+            @NonNull io.github.lemon_ant.jharmonizer.core.translator.ParsingResult parsingResult,
             boolean checkingOnly,
             @Nullable Collection<Pair<CtElement, Integer>> relocations,
-            @Nullable String sourceDiff,
+            @Nullable String srcDiff,
             @NonNull String skippedOperationDescription) {
-        logFileOptOutSkip(sourceFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
+        logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
         return FlowProcessingResult.builder()
-                .path(sourceFile.getPath())
+                .path(srcFile.getPath())
                 .relocations(relocations)
-                .diff(sourceDiff)
+                .diff(srcDiff)
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(new SortingStatistic(0))
                 .serializationStatistic(
-                        new SerializationStatistic(sourceFile.getSrcCode().length(), 0))
-                .formatingStatistic(
-                        new FormatingStatistic(sourceFile.getSrcCode().length(), 0))
+                        new SerializationStatistic(srcFile.getSrcCode().length(), 0))
+                .formatingStatistic(new FormatingStatistic(srcFile.getSrcCode().length(), 0))
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, checkingOnly))
                 .build();
     }
 
     @NonNull
-    private static SerializationResult createOriginalSourceSerializationResult(@NonNull SrcFile sourceFile) {
+    private static SerializationResult createOriginalSourceSerializationResult(@NonNull SrcFile srcFile) {
         return new SerializationResult(
-                new SerializationStatistic(sourceFile.getSrcCode().length(), 0), sourceFile.getSrcCode(), List.of());
+                new SerializationStatistic(srcFile.getSrcCode().length(), 0), srcFile.getSrcCode(), List.of());
     }
 
     private void logFileOptOutSkip(
-            @NonNull SrcFile sourceFile,
+            @NonNull SrcFile srcFile,
             @NonNull String skippedOperationDescription,
             @NonNull JHarmonizerOptOutMode optOutMode) {
         Logger logger = LoggerFactory.getLogger(getClass());
@@ -111,7 +103,7 @@ abstract class AbstractOptOutFlow implements IFlow {
             logger.info(
                     "Skipping {} for {} because of {} ({})",
                     skippedOperationDescription,
-                    sourceFile.getPath(),
+                    srcFile.getPath(),
                     optOutMode.getDisplayName(),
                     optOutMode.getToken());
         }

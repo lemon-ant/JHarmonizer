@@ -48,22 +48,22 @@ public final class Formatter {
     /**
      * Formats the given source code.
      *
-     * @param sourceCode the source code to format
+     * @param srcCode the source code to format
      * @return a FormatingResult containing the formatted source code and statistics
      */
     @NonNull
-    public FormatingResult formatSource(String sourceCode, Path sourcePath) {
-        return formatSource(sourceCode, sourcePath, List.of());
+    public FormatingResult formatSource(String srcCode, Path srcPath) {
+        return formatSource(srcCode, srcPath, List.of());
     }
 
     @NonNull
     public FormatingResult formatSource(
-            @NonNull String sourceCode,
-            @NonNull Path sourcePath,
+            @NonNull String srcCode,
+            @NonNull Path srcPath,
             @NonNull List<SourceCharacterRange> formattingExclusionRanges) {
-        log.debug("Formatting {}", sourcePath);
+        log.debug("Formatting {}", srcPath);
         TimedResult<String> formatingResult =
-                StopWatch.measure(() -> applyFormatting(sourceCode, formattingExclusionRanges));
+                StopWatch.measure(() -> applyFormatting(srcCode, formattingExclusionRanges));
 
         String formattedSource = formatingResult.getResult();
         return new FormatingResult(
@@ -71,27 +71,27 @@ public final class Formatter {
     }
 
     @NonNull
-    private String applyFormatting(String sourceCode, List<SourceCharacterRange> formattingExclusionRanges) {
+    private String applyFormatting(String srcCode, List<SourceCharacterRange> formattingExclusionRanges) {
         if (formatterStyle == null) {
-            return fixImports ? invokePalantir(() -> formatter.fixImports(sourceCode)) : sourceCode;
+            return fixImports ? invokePalantir(() -> formatter.fixImports(srcCode)) : srcCode;
         }
 
         if (formattingExclusionRanges.isEmpty()) {
-            return invokePalantir(() ->
-                    fixImports ? formatter.formatSourceAndFixImports(sourceCode) : formatter.formatSource(sourceCode));
+            return invokePalantir(
+                    () -> fixImports ? formatter.formatSourceAndFixImports(srcCode) : formatter.formatSource(srcCode));
         }
 
-        String partiallyFormattedSource = sourceCode;
+        String partlyFormattedSrc = srcCode;
         Collection<Range<Integer>> formattingRanges =
-                SourceCharacterRange.invert(sourceCode.length(), formattingExclusionRanges).stream()
+                SourceCharacterRange.invert(srcCode.length(), formattingExclusionRanges).stream()
                         .map(range -> Range.closedOpen(range.getStartInclusive(), range.getEndExclusive()))
                         .toList();
         if (!formattingRanges.isEmpty()) {
-            partiallyFormattedSource = invokePalantir(() -> formatter.formatSource(sourceCode, formattingRanges));
+            partlyFormattedSrc = invokePalantir(() -> formatter.formatSource(srcCode, formattingRanges));
         }
 
-        String formattedSource = partiallyFormattedSource;
-        return fixImports ? invokePalantir(() -> formatter.fixImports(formattedSource)) : formattedSource;
+        String formattedSrc = partlyFormattedSrc;
+        return fixImports ? invokePalantir(() -> formatter.fixImports(formattedSrc)) : formattedSrc;
     }
 
     @NonNull

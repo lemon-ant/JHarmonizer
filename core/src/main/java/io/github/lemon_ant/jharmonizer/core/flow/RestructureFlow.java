@@ -23,36 +23,48 @@ public class RestructureFlow extends AbstractOptOutFlow {
 
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile sourceFile) {
-        ParsingResult parsingResult = parseSourceFile(sourceFile);
+    public FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
+        getDebugStageRecorder()
+                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult =
+                io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator.parseSourceFile(srcFile);
         if (parsingResult
                 .getSpoonAstModel()
                 .getOptOuts()
                 .hasFileOptOutMode(io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode.FULLY_OFF)) {
-            return buildFileOptOutSkippedResult(sourceFile, parsingResult, false, null, null, "all harmonization");
+            return buildFileOptOutSkippedResult(srcFile, parsingResult, false, null, null, "all harmonization");
         }
 
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
-        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(sourceFile, parsedSpoonAstModel, "sorting");
+        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting");
         SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
-        recordSortedStage(sourceFile, sortingPassResult.getSerializationResult());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
 
-        FormatingResult formattingResult = formatter.formatSource(
-                sortingPassResult.getSerializationResult().getSerializedSrcCode(),
-                sourceFile.getPath(),
-                sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
-        recordFormattedStage(sourceFile, formattingResult);
+        FormatingResult formattingResult = getFormatter()
+                .formatSource(
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                        srcFile.getPath(),
+                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormatedSrcCode());
 
-        boolean hasSourceChanges = !sourceFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
-        if (hasSourceChanges) {
+        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
+        if (hasChanges) {
             if (backupsEnabled) {
-                SourceFilesHandler.renameToBackup(sourceFile.getPath());
+                SourceFilesHandler.renameToBackup(srcFile.getPath());
             }
-            SourceFilesHandler.overwrite(sourceFile.getPath(), formattingResult.getFormatedSrcCode());
+            SourceFilesHandler.overwrite(srcFile.getPath(), formattingResult.getFormatedSrcCode());
         }
 
         return FlowProcessingResult.builder()
-                .path(sourceFile.getPath())
+                .path(srcFile.getPath())
                 .relocations(null)
                 .diff(null)
                 .parsingStatistic(parsingResult.getParsingStatistic())
@@ -65,7 +77,7 @@ public class RestructureFlow extends AbstractOptOutFlow {
                                 && isRelocated(
                                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),
                                         sortedSpoonAstModel.getCompilationUnit()),
-                        hasSourceChanges,
+                        hasChanges,
                         false))
                 .build();
     }

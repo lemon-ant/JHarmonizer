@@ -28,15 +28,15 @@ Details and implementation notes are tracked in [docs/TODO.md](docs/TODO.md).
 
 JHarmonizer supports two native comment directives:
 
-- `@jharmonizer:off`
+- `@jharmonizer:fully-off`
 - `@jharmonizer:sort-off`
 
-Directive matching is case-insensitive, so variants such as `@JHarmonizer:OFF` are also recognized.
+Directive matching is case-insensitive, so variants such as `@JHarmonizer:Fully-Off` are also recognized.
 
 Supported comment forms:
 
-- line comments: `// @jharmonizer:off`, `// @jharmonizer:sort-off`
-- block comments: `/* @jharmonizer:off */`, `/* @jharmonizer:sort-off */`
+- line comments: `// @jharmonizer:fully-off`, `// @jharmonizer:sort-off`
+- block comments: `/* @jharmonizer:fully-off */`, `/* @jharmonizer:sort-off */`
 
 Supported scopes:
 
@@ -54,7 +54,7 @@ Place a directive in the compilation-unit preamble:
 
 Behavior:
 
-- `@jharmonizer:off` — fully disable harmonization for the file (no sorting, no formatting, no import fixing)
+- `@jharmonizer:fully-off` — fully disable harmonization for the file (no sorting, no formatting, no import fixing)
 - `@jharmonizer:sort-off` — disable sorting only, but still run formatting and import fixing
 
 ### Type scope
@@ -63,7 +63,7 @@ Place a directive immediately before a top-level or nested type declaration.
 
 Behavior:
 
-- `@jharmonizer:off` — fully disable harmonization for that type subtree and preserve its original source text
+- `@jharmonizer:fully-off` — fully disable harmonization for that type subtree and preserve its original source text
 - `@jharmonizer:sort-off` — disable sorting only for that type subtree, but still format it together with the rest of the file
 
 ### Unsupported placements and tokens

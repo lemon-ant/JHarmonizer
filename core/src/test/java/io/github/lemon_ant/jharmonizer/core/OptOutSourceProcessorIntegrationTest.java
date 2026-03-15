@@ -33,7 +33,7 @@ class OptOutSourceProcessorIntegrationTest {
     void processSources_fileOptOutOff_keepOriginalSource() throws Exception {
         // Given
         String originalSourceCode = """
-                // @jharmonizer:off
+                // @jharmonizer:fully-off
                 import java.util.List;
                 class Z{int b;int a;}
                 class A{}
@@ -74,7 +74,7 @@ class OptOutSourceProcessorIntegrationTest {
     void processSources_topLevelTypeOptOutOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
         // Given
         String ignoredFragment = """
-                /* @jharmonizer:off */
+                /* @jharmonizer:fully-off */
                 class Beta {
                     int z;   int a;
                 }
@@ -82,7 +82,7 @@ class OptOutSourceProcessorIntegrationTest {
         String originalSourceCode = """
                 class Gamma {}
 
-                /* @jharmonizer:off */
+                /* @jharmonizer:fully-off */
                 class Beta {
                     int z;   int a;
                 }
@@ -132,7 +132,7 @@ class OptOutSourceProcessorIntegrationTest {
     void processSources_nestedTypeOptOutOff_preserveExactFragmentAndKeepImports() throws Exception {
         // Given
         String ignoredFragment = """
-                    /* @jharmonizer:off */
+                    /* @jharmonizer:fully-off */
                     static class Inner {
                         java.util.List<String> values;
                         int z;   int a;
@@ -143,7 +143,7 @@ class OptOutSourceProcessorIntegrationTest {
                     int b;
                     int a;
 
-                    /* @jharmonizer:off */
+                    /* @jharmonizer:fully-off */
                     static class Inner {
                         java.util.List<String> values;
                         int z;   int a;
@@ -198,7 +198,7 @@ class OptOutSourceProcessorIntegrationTest {
                     int a;
                     int b;
 
-                    // @jharmonizer:off
+                    // @jharmonizer:fully-off
                     static class Inner{int z;int a;}
                 }
                 """;
