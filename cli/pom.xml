@@ -36,6 +36,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
+                    <!--
+                        The shade goal consumes this module's main jar and then replaces that original artifact with the
+                        shaded one. On a follow-up local `mvn package`, the target jar may therefore already be the shaded
+                        output from the previous build. Forcing jar recreation makes Maven rebuild a fresh plain CLI jar
+                        before shading, so the shade step always starts from clean classes/resources instead of re-shading
+                        yesterday's uber-jar and reporting self-overlap warnings.
+                    -->
                     <forceCreation>true</forceCreation>
                 </configuration>
             </plugin>
