@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
@@ -26,7 +27,7 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -42,7 +43,7 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
@@ -58,7 +59,7 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute(
@@ -85,7 +86,7 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
                 .thenThrow(new NotFormattedException(Path.of("SomeFile.java"), "--- diff ---"));
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -100,7 +101,7 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
                 .thenThrow(new NotOrderedException(Path.of("SomeFile.java"), List.of()));
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -115,7 +116,7 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(5, 1024, 1000000, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -130,12 +131,35 @@ class CheckFastCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
                 .thenThrow(new RuntimeException("Unexpected error"));
-        CommandLine cmd = new CommandLine(new CheckFastCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckFastBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
 
         // Then
         assertThat(exitCode).isEqualTo(1);
+    }
+
+    private static final class TestCheckFastBaseCommand extends BaseCommand {
+        private final SourceProcessor sourceProcessor;
+
+        private TestCheckFastBaseCommand(SourceProcessor sourceProcessor) {
+            this.sourceProcessor = sourceProcessor;
+        }
+
+        @Override
+        protected FlowType getFlowType() {
+            return FlowType.CHECK_FAIL_FAST;
+        }
+
+        @Override
+        protected int checkFailedExitCode() {
+            return 3;
+        }
+
+        @Override
+        protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+            return sourceProcessor;
+        }
     }
 }

@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -60,7 +61,9 @@ abstract class BaseCommand implements Callable<Integer> {
     protected abstract FlowType getFlowType();
 
     @NonNull
-    protected abstract SourceProcessor createSourceProcessor(Path configFilePath);
+    protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+        return configFilePath != null ? new SourceProcessor(configFilePath) : new SourceProcessor();
+    }
 
     protected int checkFailedExitCode() {
         return 1;
@@ -69,14 +72,13 @@ abstract class BaseCommand implements Callable<Integer> {
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
-        Path effectiveBaseDir = baseDir != null ? baseDir.normalize() : Path.of(".");
-        Path absoluteBaseDir = effectiveBaseDir.toAbsolutePath().normalize();
+        Path effectiveBaseDir = baseDir != null ? baseDir : Path.of(".");
+        Path absoluteBaseDir = toAbsoluteNormalizedPath(effectiveBaseDir);
         if (!Files.isDirectory(absoluteBaseDir)) {
             log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
             return 1;
         }
-        Path effectiveConfigFilePath =
-                configFilePath != null ? configFilePath.toAbsolutePath().normalize() : null;
+        Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
         if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
             log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
             return 1;
@@ -116,16 +118,15 @@ abstract class BaseCommand implements Callable<Integer> {
         }
     }
 
-    @NonNull
-    protected static SourceProcessor createDefaultSourceProcessor(Path configFilePath) {
-        return configFilePath != null ? new SourceProcessor(configFilePath) : new SourceProcessor();
+    private static Path toAbsoluteNormalizedPath(@Nullable Path path) {
+        return path == null ? null : path.toAbsolutePath().normalize();
     }
 
     @NonNull
-    private static String describeConfigSource(Path configFilePath) {
+    private static String describeConfigSource(@Nullable Path configFilePath) {
         return configFilePath != null
                 ? configFilePath.toString()
-                : "embedded default config from core classpath resource /default-config.yml";
+                : "embedded core default config (/default-config.yml)";
     }
 
     @Value
@@ -141,6 +142,7 @@ abstract class BaseCommand implements Callable<Integer> {
 
         boolean verbose;
 
+        @Nullable
         Path configFilePath;
     }
 }

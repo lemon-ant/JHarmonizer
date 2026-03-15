@@ -1,9 +1,6 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import java.nio.file.Path;
-import lombok.NonNull;
 import picocli.CommandLine.Command;
 
 @Command(
@@ -14,15 +11,9 @@ import picocli.CommandLine.Command;
 final class CheckFastCommand extends BaseCommand {
 
     private static final int EXIT_CODE_CHECK_FAILED = 3;
-    private final SourceProcessor sourceProcessor;
 
-    CheckFastCommand() {
-        this(null);
-    }
-
-    CheckFastCommand(SourceProcessor sourceProcessor) {
-        this.sourceProcessor = sourceProcessor;
-    }
+    // Explicit no-arg constructor is required for Picocli command instantiation.
+    CheckFastCommand() {}
 
     @Override
     protected FlowType getFlowType() {
@@ -32,11 +23,5 @@ final class CheckFastCommand extends BaseCommand {
     @Override
     protected int checkFailedExitCode() {
         return EXIT_CODE_CHECK_FAILED;
-    }
-
-    @Override
-    @NonNull
-    protected SourceProcessor createSourceProcessor(Path configFilePath) {
-        return sourceProcessor != null ? sourceProcessor : createDefaultSourceProcessor(configFilePath);
     }
 }

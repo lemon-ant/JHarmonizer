@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
@@ -23,7 +24,7 @@ class CheckAllCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckAllBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -39,7 +40,7 @@ class CheckAllCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckAllBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
@@ -55,7 +56,7 @@ class CheckAllCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckAllBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute(
@@ -86,7 +87,7 @@ class CheckAllCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(5, 1024, 1000000, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckAllBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -101,12 +102,30 @@ class CheckAllCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
                 .thenThrow(new RuntimeException("Unexpected error"));
-        CommandLine cmd = new CommandLine(new CheckAllCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestCheckAllBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
 
         // Then
         assertThat(exitCode).isEqualTo(1);
+    }
+
+    private static final class TestCheckAllBaseCommand extends BaseCommand {
+        private final SourceProcessor sourceProcessor;
+
+        private TestCheckAllBaseCommand(SourceProcessor sourceProcessor) {
+            this.sourceProcessor = sourceProcessor;
+        }
+
+        @Override
+        protected FlowType getFlowType() {
+            return FlowType.CHECK_ALL;
+        }
+
+        @Override
+        protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+            return sourceProcessor;
+        }
     }
 }

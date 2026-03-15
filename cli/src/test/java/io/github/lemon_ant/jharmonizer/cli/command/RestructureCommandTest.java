@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
@@ -45,7 +46,7 @@ class RestructureCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new RestructureCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src/main/java");
@@ -61,7 +62,7 @@ class RestructureCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new RestructureCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
@@ -78,7 +79,7 @@ class RestructureCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new RestructureCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute(
@@ -109,7 +110,7 @@ class RestructureCommandTest {
     @Test
     void restructureCommand_helpUsage_describeOptionAliasesAndCollectionFormats() {
         // Given
-        CommandLine cmd = new CommandLine(new RestructureCommand(mock(SourceProcessor.class)));
+        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mock(SourceProcessor.class)));
         StringWriter usage = new StringWriter();
 
         // When
@@ -151,7 +152,7 @@ class RestructureCommandTest {
         SourceProcessor mockProcessor = mock(SourceProcessor.class);
         when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
                 .thenThrow(new RuntimeException("Unexpected error"));
-        CommandLine cmd = new CommandLine(new RestructureCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
 
         // When
         int exitCode = cmd.execute("--base-dir", "src");
@@ -162,5 +163,23 @@ class RestructureCommandTest {
 
     private static Path writeConfigFile(Path configFilePath) throws Exception {
         return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
+    }
+
+    private static final class TestRestructureBaseCommand extends BaseCommand {
+        private final SourceProcessor sourceProcessor;
+
+        private TestRestructureBaseCommand(SourceProcessor sourceProcessor) {
+            this.sourceProcessor = sourceProcessor;
+        }
+
+        @Override
+        protected FlowType getFlowType() {
+            return FlowType.RESTRUCTURE;
+        }
+
+        @Override
+        protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+            return sourceProcessor;
+        }
     }
 }
