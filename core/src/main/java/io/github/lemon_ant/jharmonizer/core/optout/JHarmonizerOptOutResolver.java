@@ -18,8 +18,6 @@ import spoon.reflect.declaration.CtType;
 @Slf4j
 @RequiredArgsConstructor
 public final class JHarmonizerOptOutResolver {
-    private static final String OPT_OUT_PREFIX = "@jharmonizer:";
-
     @NonNull
     private final Path sourcePath;
 
@@ -90,7 +88,7 @@ public final class JHarmonizerOptOutResolver {
         }
 
         String normalizedContent = comment.getContent().trim().toLowerCase(java.util.Locale.ROOT);
-        if (!normalizedContent.startsWith(OPT_OUT_PREFIX)) {
+        if (!normalizedContent.startsWith(JHarmonizerOptOutMode.TOKEN_PREFIX)) {
             logIgnoredOptOut(comment, "Malformed opt-out comment is ignored");
             return Optional.empty();
         }

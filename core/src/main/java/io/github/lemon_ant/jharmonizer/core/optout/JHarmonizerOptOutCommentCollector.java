@@ -16,8 +16,6 @@ import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
 class JHarmonizerOptOutCommentCollector {
-    private static final String OPT_OUT_PREFIX = "@jharmonizer:";
-
     @NonNull
     static List<CtComment> findPotentialOptOutComments(@NonNull CtCompilationUnit compilationUnit) {
         List<CtComment> potentialOptOutComments = new ArrayList<>();
@@ -55,7 +53,7 @@ class JHarmonizerOptOutCommentCollector {
     }
 
     private static boolean isPotentialOptOutComment(@NonNull CtComment comment) {
-        return StringUtils.containsIgnoreCase(comment.getContent(), OPT_OUT_PREFIX);
+        return StringUtils.containsIgnoreCase(comment.getContent(), JHarmonizerOptOutMode.TOKEN_PREFIX);
     }
 
     private static boolean hasStructuredOwner(@NonNull CtComment comment) {
