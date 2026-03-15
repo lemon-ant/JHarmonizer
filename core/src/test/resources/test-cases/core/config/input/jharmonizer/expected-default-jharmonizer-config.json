@@ -10,19 +10,28 @@
   },
   "memberGroups" : [ {
     "name" : "Test Classes",
-    "includes" : [ [ "~.*Test$", "class" ], [ "@ExtendWith", "class" ], [ "@RunWith", "class" ], [ "@~.*Test$", "class" ] ],
+    "includes" : [
+      [ "~.*Test$", "class" ],
+      [ "@ExtendWith", "class" ],
+      [ "@RunWith", "class" ],
+      [ "@~.*Test$", "class" ]
+    ],
     "excludes" : [ ],
     "separator" : "NONE",
     "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "JUnit Fields",
-      "includes" : [ [ "field" ] ],
+      "includes" : [
+        [ "field" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Constants",
-        "includes" : [ [ "static", "final" ] ],
+        "includes" : [
+          [ "static", "final" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -30,7 +39,9 @@
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "JUnit Static fields",
-        "includes" : [ [ "static" ] ],
+        "includes" : [
+          [ "static" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -40,13 +51,18 @@
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "JUnit Methods",
-      "includes" : [ [ "method" ] ],
+      "includes" : [
+        [ "method" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Setup Methods",
-        "includes" : [ [ "@BeforeAll" ], [ "@BeforeEach" ] ],
+        "includes" : [
+          [ "@BeforeAll" ],
+          [ "@BeforeEach" ]
+        ],
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
@@ -54,7 +70,9 @@
         "orderingRules" : [ "PRESERVE" ]
       }, {
         "name" : "JUnit Test Methods",
-        "includes" : [ [ "@Test" ] ],
+        "includes" : [
+          [ "@Test" ]
+        ],
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
@@ -62,7 +80,10 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "JUnit Teardown Methods",
-        "includes" : [ [ "@AfterEach" ], [ "@AfterAll" ] ],
+        "includes" : [
+          [ "@AfterEach" ],
+          [ "@AfterAll" ]
+        ],
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
@@ -70,7 +91,9 @@
         "orderingRules" : [ "PRESERVE" ]
       }, {
         "name" : "Utility Methods",
-        "includes" : [ [ "static" ] ],
+        "includes" : [
+          [ "static" ]
+        ],
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
@@ -80,7 +103,9 @@
       "orderingRules" : [ "ALPHA" ]
     }, {
       "name" : "JUnit Test Configuration",
-      "includes" : [ [ "@TestConfiguration", "static", "class" ] ],
+      "includes" : [
+        [ "@TestConfiguration", "static", "class" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
@@ -90,13 +115,25 @@
     "orderingRules" : [ "ALPHA" ]
   }, {
     "name" : "DTO and Entities",
-    "includes" : [ [ "~.*(Dto|DTO)$" ], [ "@Entity" ], [ "@Embeddable" ], [ "@Document" ], [ "@Data" ], [ "~.*Entity$" ], [ "@Value" ], [ "@MappedSuperclass" ], [ "@ConfigurationProperties" ] ],
+    "includes" : [
+      [ "~.*(Dto|DTO)$" ],
+      [ "@Entity" ],
+      [ "@Embeddable" ],
+      [ "@Document" ],
+      [ "@Data" ],
+      [ "~.*Entity$" ],
+      [ "@Value" ],
+      [ "@MappedSuperclass" ],
+      [ "@ConfigurationProperties" ]
+    ],
     "excludes" : [ ],
     "separator" : "NONE",
     "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "Serializable UID",
-      "includes" : [ [ "=serialVersionUID", "static", "field", "final" ] ],
+      "includes" : [
+        [ "=serialVersionUID", "static", "field", "final" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
@@ -104,19 +141,25 @@
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Fields",
-      "includes" : [ [ "field" ] ],
+      "includes" : [
+        [ "field" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Constants",
-        "includes" : [ [ "static", "final" ] ],
+        "includes" : [
+          [ "static", "final" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Public Constants",
-          "includes" : [ [ "public" ] ],
+          "includes" : [
+            [ "public" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -124,7 +167,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Protected Constants",
-          "includes" : [ [ "protected" ] ],
+          "includes" : [
+            [ "protected" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -132,7 +177,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Package-Private Constants",
-          "includes" : [ [ "package-private" ] ],
+          "includes" : [
+            [ "package-private" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -140,7 +187,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Private Constants",
-          "includes" : [ [ "private" ] ],
+          "includes" : [
+            [ "private" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -150,7 +199,9 @@
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "Static Fields",
-        "includes" : [ [ "static" ] ],
+        "includes" : [
+          [ "static" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -158,7 +209,9 @@
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "Final Instance Fields",
-        "includes" : [ [ "final" ] ],
+        "includes" : [
+          [ "final" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -168,7 +221,9 @@
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Static Initializer Blocks",
-      "includes" : [ [ "static", "initializer" ] ],
+      "includes" : [
+        [ "static", "initializer" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -176,7 +231,9 @@
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Static Methods",
-      "includes" : [ [ "static", "method" ] ],
+      "includes" : [
+        [ "static", "method" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -184,15 +241,21 @@
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Initializer Blocks",
-      "includes" : [ [ "initializer" ] ],
-      "excludes" : [ [ "static" ] ],
+      "includes" : [
+        [ "initializer" ]
+      ],
+      "excludes" : [
+        [ "static" ]
+      ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Constructors",
-      "includes" : [ [ "constructor" ] ],
+      "includes" : [
+        [ "constructor" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -200,7 +263,9 @@
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Accessor Methods",
-      "includes" : [ [ "method", "~^(get|set|is|has).+$" ] ],
+      "includes" : [
+        [ "method", "~^(get|set|is|has).+$" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
@@ -208,15 +273,27 @@
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Instance Methods",
-      "includes" : [ [ "method" ] ],
-      "excludes" : [ [ "method", "=toString" ], [ "method", "=clone" ], [ "method", "=equals" ], [ "method", "=hashCode" ] ],
+      "includes" : [
+        [ "method" ]
+      ],
+      "excludes" : [
+        [ "method", "=toString" ],
+        [ "method", "=clone" ],
+        [ "method", "=equals" ],
+        [ "method", "=hashCode" ]
+      ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Basic Object Methods",
-      "includes" : [ [ "method", "=toString" ], [ "method", "=clone" ], [ "method", "=equals" ], [ "method", "=hashCode" ] ],
+      "includes" : [
+        [ "method", "=toString" ],
+        [ "method", "=clone" ],
+        [ "method", "=equals" ],
+        [ "method", "=hashCode" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -226,13 +303,17 @@
     "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
   }, {
     "name" : "Default Rule",
-    "includes" : [ [ "~.*" ] ],
+    "includes" : [
+      [ "~.*" ]
+    ],
     "excludes" : [ ],
     "separator" : "NONE",
     "keepAccessorsTogether" : null,
     "memberSubGroups" : [ {
       "name" : "Record components",
-      "includes" : [ [ "record-component" ] ],
+      "includes" : [
+        [ "record-component" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -240,7 +321,9 @@
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Enum constants",
-      "includes" : [ [ "enum-constant" ] ],
+      "includes" : [
+        [ "enum-constant" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
@@ -248,25 +331,33 @@
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Fields",
-      "includes" : [ [ "field" ] ],
+      "includes" : [
+        [ "field" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Static fields",
-        "includes" : [ [ "static" ] ],
+        "includes" : [
+          [ "static" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static final fields",
-          "includes" : [ [ "final" ] ],
+          "includes" : [
+            [ "final" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ {
             "name" : "serialVersionUID",
-            "includes" : [ [ "=serialVersionUID" ] ],
+            "includes" : [
+              [ "=serialVersionUID" ]
+            ],
             "excludes" : [ ],
             "separator" : "NEW_LINE",
             "keepAccessorsTogether" : null,
@@ -274,7 +365,9 @@
             "orderingRules" : [ "PRESERVE" ]
           }, {
             "name" : "Logger fields",
-            "includes" : [ [ "~(?i)(log|.*logger)$" ] ],
+            "includes" : [
+              [ "~(?i)(log|.*logger)$" ]
+            ],
             "excludes" : [ ],
             "separator" : "NEW_LINE",
             "keepAccessorsTogether" : null,
@@ -286,7 +379,9 @@
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
         "name" : "Instance final fields",
-        "includes" : [ [ "final" ] ],
+        "includes" : [
+          [ "final" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
@@ -296,13 +391,17 @@
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "name" : "Initializers",
-      "includes" : [ [ "initializer" ] ],
+      "includes" : [
+        [ "initializer" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Static initializers",
-        "includes" : [ [ "static", "initializer" ] ],
+        "includes" : [
+          [ "static", "initializer" ]
+        ],
         "excludes" : [ ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
@@ -310,8 +409,12 @@
         "orderingRules" : [ "PRESERVE" ]
       }, {
         "name" : "Instance initializers",
-        "includes" : [ [ "initializer" ] ],
-        "excludes" : [ [ "static" ] ],
+        "includes" : [
+          [ "initializer" ]
+        ],
+        "excludes" : [
+          [ "static" ]
+        ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
@@ -320,19 +423,26 @@
       "orderingRules" : [ "PRESERVE" ]
     }, {
       "name" : "Methods",
-      "includes" : [ [ "method", "constructor" ] ],
+      "includes" : [
+        [ "method" ],
+        [ "constructor" ]
+      ],
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
       "memberSubGroups" : [ {
         "name" : "Public",
-        "includes" : [ [ "public" ] ],
+        "includes" : [
+          [ "public" ]
+        ],
         "excludes" : [ ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static", "method" ] ],
+          "includes" : [
+            [ "static", "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -340,7 +450,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Constructors",
-          "includes" : [ [ "constructor" ] ],
+          "includes" : [
+            [ "constructor" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -348,7 +460,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Instance methods",
-          "includes" : [ [ "method" ] ],
+          "includes" : [
+            [ "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -358,13 +472,17 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "Protected",
-        "includes" : [ [ "protected" ] ],
+        "includes" : [
+          [ "protected" ]
+        ],
         "excludes" : [ ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static", "method" ] ],
+          "includes" : [
+            [ "static", "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -372,7 +490,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Constructors",
-          "includes" : [ [ "constructor" ] ],
+          "includes" : [
+            [ "constructor" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -380,7 +500,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Instance methods",
-          "includes" : [ [ "method" ] ],
+          "includes" : [
+            [ "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -390,13 +512,17 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "Package-private",
-        "includes" : [ [ "package-private" ] ],
+        "includes" : [
+          [ "package-private" ]
+        ],
         "excludes" : [ ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static", "method" ] ],
+          "includes" : [
+            [ "static", "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -404,7 +530,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Constructors",
-          "includes" : [ [ "constructor" ] ],
+          "includes" : [
+            [ "constructor" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -412,7 +540,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Instance methods",
-          "includes" : [ [ "method" ] ],
+          "includes" : [
+            [ "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -422,13 +552,17 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "Private",
-        "includes" : [ [ "private" ] ],
+        "includes" : [
+          [ "private" ]
+        ],
         "excludes" : [ ],
         "separator" : "NONE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
-          "includes" : [ [ "static", "method" ] ],
+          "includes" : [
+            [ "static", "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -436,7 +570,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Constructors",
-          "includes" : [ [ "constructor" ] ],
+          "includes" : [
+            [ "constructor" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -444,7 +580,9 @@
           "orderingRules" : [ "ALPHA" ]
         }, {
           "name" : "Instance methods",
-          "includes" : [ [ "method" ] ],
+          "includes" : [
+            [ "method" ]
+          ],
           "excludes" : [ ],
           "separator" : "NONE",
           "keepAccessorsTogether" : null,
@@ -456,51 +594,42 @@
       "orderingRules" : [ "ALPHA" ]
     }, {
       "name" : "Nested types",
-      "includes" : [ [ "annotation", "record", "interface", "class", "enum" ] ],
+      "includes" : [
+        [ "annotation" ],
+        [ "record" ],
+        [ "interface" ],
+        [ "class" ],
+        [ "enum" ]
+      ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ {
         "name" : "Public",
-        "includes" : [ [ "public" ] ],
+        "includes" : [
+          [ "public" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
-          "includes" : [ [ "annotation" ] ],
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Enums",
-          "includes" : [ [ "enum" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [ [ "record" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [ [ "interface" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Classes",
-          "includes" : [ [ "class" ] ],
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -510,45 +639,30 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "Protected",
-        "includes" : [ [ "protected" ] ],
+        "includes" : [
+          [ "protected" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
-          "includes" : [ [ "annotation" ] ],
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Enums",
-          "includes" : [ [ "enum" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [ [ "record" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [ [ "interface" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Classes",
-          "includes" : [ [ "class" ] ],
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -558,45 +672,30 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "Package-private",
-        "includes" : [ [ "package-private" ] ],
+        "includes" : [
+          [ "package-private" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
-          "includes" : [ [ "annotation" ] ],
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Enums",
-          "includes" : [ [ "enum" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [ [ "record" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [ [ "interface" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Classes",
-          "includes" : [ [ "class" ] ],
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
@@ -606,45 +705,30 @@
         "orderingRules" : [ "ALPHA" ]
       }, {
         "name" : "Private",
-        "includes" : [ [ "private" ] ],
+        "includes" : [
+          [ "private" ]
+        ],
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "name" : "Annotations",
-          "includes" : [ [ "annotation" ] ],
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "name" : "Enums",
-          "includes" : [ [ "enum" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Records",
-          "includes" : [ [ "record" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Interfaces",
-          "includes" : [ [ "interface" ] ],
-          "excludes" : [ ],
-          "separator" : "NEW_LINE",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "name" : "Classes",
-          "includes" : [ [ "class" ] ],
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,

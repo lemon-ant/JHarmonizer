@@ -1110,7 +1110,13 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ "METHOD", "CONSTRUCTOR" ],
+          "memberKinds" : [ "METHOD" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "CONSTRUCTOR" ],
           "nameMatcher" : null
         } ]
       },
@@ -1123,7 +1129,7 @@
         "groupName" : "Public",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "groupName" : "Annotations",
+          "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1134,49 +1140,7 @@
               "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_ANNOTATION" ],
               "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Enums",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_ENUM" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Records",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_RECORD" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Interfaces",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
+            }, {
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
@@ -1187,7 +1151,7 @@
           "separator" : "NEW_LINE",
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "groupName" : "Classes",
+          "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1196,7 +1160,19 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_RECORD" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_CLASS" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_ENUM" ],
               "nameMatcher" : null
             } ]
           },
@@ -1219,7 +1195,7 @@
         "groupName" : "Protected",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "groupName" : "Annotations",
+          "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1230,49 +1206,7 @@
               "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_ANNOTATION" ],
               "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Enums",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_ENUM" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Records",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_RECORD" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Interfaces",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
+            }, {
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
@@ -1283,7 +1217,7 @@
           "separator" : "NEW_LINE",
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "groupName" : "Classes",
+          "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1292,7 +1226,19 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_RECORD" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_CLASS" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_ENUM" ],
               "nameMatcher" : null
             } ]
           },
@@ -1315,7 +1261,7 @@
         "groupName" : "Package-private",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "groupName" : "Annotations",
+          "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1326,49 +1272,7 @@
               "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_ANNOTATION" ],
               "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Enums",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_ENUM" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Records",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_RECORD" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Interfaces",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
+            }, {
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
@@ -1379,7 +1283,7 @@
           "separator" : "NEW_LINE",
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "groupName" : "Classes",
+          "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1388,7 +1292,19 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_RECORD" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_CLASS" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_ENUM" ],
               "nameMatcher" : null
             } ]
           },
@@ -1411,7 +1327,7 @@
         "groupName" : "Private",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ {
-          "groupName" : "Annotations",
+          "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1422,49 +1338,7 @@
               "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_ANNOTATION" ],
               "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Enums",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_ENUM" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Records",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "TYPE_RECORD" ],
-              "nameMatcher" : null
-            } ]
-          },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
-        }, {
-          "groupName" : "Interfaces",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
+            }, {
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
@@ -1475,7 +1349,7 @@
           "separator" : "NEW_LINE",
           "orderingRules" : [ "ALPHA" ]
         }, {
-          "groupName" : "Classes",
+          "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
           "selectorBlock" : {
@@ -1484,7 +1358,19 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_RECORD" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
               "memberKinds" : [ "TYPE_CLASS" ],
+              "nameMatcher" : null
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ "TYPE_ENUM" ],
               "nameMatcher" : null
             } ]
           },
@@ -1510,7 +1396,31 @@
           "annotationMatchers" : [ ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_CLASS", "TYPE_INTERFACE", "TYPE_ENUM", "TYPE_RECORD", "TYPE_ANNOTATION" ],
+          "memberKinds" : [ "TYPE_ANNOTATION" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_RECORD" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_INTERFACE" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_CLASS" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_ENUM" ],
           "nameMatcher" : null
         } ]
       },

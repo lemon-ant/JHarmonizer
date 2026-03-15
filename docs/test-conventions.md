@@ -131,6 +131,7 @@ void resolveGroups_nestedMatch_winOverParentGroup() {
 
 - Prefer classpath-based access (`ClassLoader.getResourceAsStream`) over filesystem paths.
 - Use shared helpers (e.g., `TestCaseResourceUtils`) to read resources.
+- If a regression test verifies the built-in default configuration, load the real embedded `default-config.yml` through the production default-loading path instead of duplicating it in test fixtures or inline YAML.
 
 Recommended API shape:
 
@@ -159,7 +160,13 @@ Important rules:
 
 ### Constants grouping (readability)
 
-If a test class contains many shared constants (URLs, resource paths, pre-parsed models, etc.) and they start cluttering the top of the file, group them into a nested class:
+Keep a small amount of shared test state as regular fields at the top of the class when that remains easy to scan.
+
+- Good candidates to keep at the top:
+  - `@TempDir` fields
+  - one or two obvious shared constants that help the first test read naturally
+
+If a test class contains many shared constants (URLs, resource paths, source fragments, pre-parsed models, etc.) and they start cluttering the top of the file, group them into a nested class instead of stacking a long constant block before the tests:
 
 ```java
 private static final class Constants {
@@ -167,7 +174,11 @@ private static final class Constants {
 }
 ```
 
-Place the `Constants` nested class at the end of the test class to keep the beginning focused on test methods.
+Rules:
+
+- Prefer a nested `Constants` class once the constant list is long enough that it pushes test methods noticeably down the file or makes the start of the class hard to scan.
+- Keep the `Constants` nested class at the end of the test class to keep the beginning focused on test methods.
+- Do not move everything into `Constants` mechanically; keep only the cluttering shared constants there, while ordinary test fields such as `@TempDir` stay near the top.
 
 ## Assertions and test utilities
 
