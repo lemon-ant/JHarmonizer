@@ -28,10 +28,6 @@ public class ResolvedJHarmonizerOptOut {
         return mode.skipsFormatting();
     }
 
-    public boolean skipsSorting() {
-        return true;
-    }
-
     @NonNull
     public Optional<SourceCharacterRange> getPreservedSourceRange() {
         return Optional.ofNullable(preservedSourceRange);
