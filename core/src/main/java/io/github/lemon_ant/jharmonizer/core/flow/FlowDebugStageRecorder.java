@@ -15,6 +15,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Optional debug helper that writes intermediate source-code snapshots to disk for each
+ * processing stage when DEBUG logging is enabled.
+ * Files are written to a {@code debug/} subdirectory with a timestamp-based name.
+ */
 @Slf4j
 final class FlowDebugStageRecorder {
 

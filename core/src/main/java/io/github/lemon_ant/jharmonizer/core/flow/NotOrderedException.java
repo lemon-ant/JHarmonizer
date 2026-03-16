@@ -12,6 +12,10 @@ import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
+/**
+ * Thrown by {@link CheckFailFastFlow} when member ordering violations are detected in a source file.
+ * Carries the offending file path and the list of element relocations that would be needed.
+ */
 @Getter
 @SuppressFBWarnings("EI_EXPOSE_REP")
 public class NotOrderedException extends RuntimeException {

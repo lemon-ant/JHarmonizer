@@ -21,6 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Option;
 
+/**
+ * Abstract base for all JHarmonizer CLI commands.
+ * Handles common option parsing (base directory, include/exclude globs, verbose flag)
+ * and delegates concrete flow execution to sub-classes.
+ */
 @Slf4j
 @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Lombok @NonNull guard; class is not finalizable")
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)

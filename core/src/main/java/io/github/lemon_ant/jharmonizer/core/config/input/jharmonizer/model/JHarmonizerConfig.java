@@ -7,6 +7,11 @@ import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Root deserialization model for a JHarmonizer YAML configuration file.
+ * Holds formatting settings, backup flag, header-line descriptor,
+ * member-group ordering definitions, and top-level type ordering.
+ */
 @Value
 public class JHarmonizerConfig {
 

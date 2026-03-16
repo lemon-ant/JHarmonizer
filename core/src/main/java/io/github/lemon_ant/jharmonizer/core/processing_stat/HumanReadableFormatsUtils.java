@@ -8,6 +8,9 @@ import java.time.Duration;
 import java.util.Locale;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Internal utility methods for formatting byte sizes and durations into human-readable strings.
+ */
 @UtilityClass
 final class HumanReadableFormatsUtils {
 

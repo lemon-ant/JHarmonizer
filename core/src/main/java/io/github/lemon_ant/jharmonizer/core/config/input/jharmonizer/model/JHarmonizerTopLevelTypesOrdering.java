@@ -10,6 +10,11 @@ import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Top-level type ordering section of a JHarmonizer YAML config.
+ * Specifies whether the main type appears first, the ordered list of type-kind selectors,
+ * and the ordering rules applied across top-level types.
+ */
 @Value
 public class JHarmonizerTopLevelTypesOrdering {
 

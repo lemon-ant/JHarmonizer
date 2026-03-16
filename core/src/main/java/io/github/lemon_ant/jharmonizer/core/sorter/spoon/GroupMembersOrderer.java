@@ -23,6 +23,10 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Orders type members inside each {@link MemberGroupBlock} according to the group's configured ordering rules,
+ * respecting declaration dependencies and optional accessor-pair bundling.
+ */
 @UtilityClass
 class GroupMembersOrderer {
 

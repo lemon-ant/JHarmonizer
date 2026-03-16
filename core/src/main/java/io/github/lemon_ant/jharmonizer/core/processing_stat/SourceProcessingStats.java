@@ -14,6 +14,10 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Collector-based aggregation of per-file processing statistics into a single summary.
+ * Thread-safe and suitable for use with parallel streams.
+ */
 @UtilityClass
 // TODO Review this
 public class SourceProcessingStats {

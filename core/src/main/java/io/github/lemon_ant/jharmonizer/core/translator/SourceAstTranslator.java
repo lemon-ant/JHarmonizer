@@ -16,6 +16,10 @@ import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Facade for parsing Java source files into Spoon AST models and serializing them back to source code.
+ * Wraps {@link SpoonParser} and the Spoon source-printer, adding per-phase timing statistics.
+ */
 @Slf4j
 @UtilityClass
 public final class SourceAstTranslator {

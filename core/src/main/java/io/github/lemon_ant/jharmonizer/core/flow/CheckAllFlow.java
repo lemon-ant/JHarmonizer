@@ -22,6 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
+/**
+ * Flow that processes every source file, collects relocations and diffs,
+ * and returns a result for all files regardless of whether changes are required.
+ */
 @Slf4j
 @AllArgsConstructor
 public class CheckAllFlow implements IFlow {

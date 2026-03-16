@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Formatting section of a JHarmonizer YAML config, controlling import fixing and the formatter style.
+ */
 @Value
 public class JHarmonizerFormatting {
 

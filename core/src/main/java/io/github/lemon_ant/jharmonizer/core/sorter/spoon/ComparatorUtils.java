@@ -9,6 +9,9 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Internal factory methods for comparators used to order type members within and across member groups.
+ */
 @UtilityClass
 class ComparatorUtils {
 

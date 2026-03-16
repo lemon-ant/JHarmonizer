@@ -6,6 +6,10 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Internal helper for deserializing enum values from YAML strings in a case-insensitive,
+ * hyphen-tolerant manner.
+ */
 @UtilityClass
 class EnumDeserializerUtil {
     @NonNull

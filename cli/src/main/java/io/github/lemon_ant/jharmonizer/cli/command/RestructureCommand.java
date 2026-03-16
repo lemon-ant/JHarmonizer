@@ -4,6 +4,10 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import picocli.CommandLine.Command;
 
+/**
+ * CLI command that restructures Java source files in-place
+ * according to the configured member-ordering and formatting rules.
+ */
 @Command(
         name = "restructure",
         description = "Restructures Java source files according to the configured ordering rules.",

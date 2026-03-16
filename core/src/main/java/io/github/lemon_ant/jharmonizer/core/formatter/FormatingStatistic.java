@@ -4,6 +4,9 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+/**
+ * Timing and size statistics collected during a single source-file formatting pass.
+ */
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class FormatingStatistic {

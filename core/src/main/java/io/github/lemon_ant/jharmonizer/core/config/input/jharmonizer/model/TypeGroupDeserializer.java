@@ -10,6 +10,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Jackson deserializer that converts a YAML scalar or sequence into a
+ * {@link JHarmonizerTopLevelTypeSelector} containing one or more {@link JHarmonizerTypeKind} values.
+ */
 class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTopLevelTypeSelector> {
 
     @Override

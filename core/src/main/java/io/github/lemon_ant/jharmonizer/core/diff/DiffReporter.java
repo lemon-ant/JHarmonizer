@@ -9,6 +9,10 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Utility for computing and formatting a human-readable unified diff between two Java source strings.
+ * Whitespace characters in changed lines are visualised with special markers to aid diagnosis.
+ */
 @Slf4j
 @UtilityClass
 // TODO Review the entire class

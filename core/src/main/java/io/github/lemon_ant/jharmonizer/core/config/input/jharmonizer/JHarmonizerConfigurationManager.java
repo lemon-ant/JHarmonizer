@@ -7,6 +7,10 @@ import java.net.URL;
 import lombok.experimental.UtilityClass;
 
 // TODO Merge with JHarmonizerConfigLoader
+/**
+ * Facade for loading and converting JHarmonizer YAML configs into the
+ * {@link io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig} model.
+ */
 @UtilityClass
 public class JHarmonizerConfigurationManager {
     public static UnifiedConfig parseUnifiedDefaultConfig() {
