@@ -24,7 +24,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
-- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull` or the repository's nullable annotation.
+- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.

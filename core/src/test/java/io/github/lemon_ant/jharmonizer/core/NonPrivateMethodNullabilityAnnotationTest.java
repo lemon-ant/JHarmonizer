@@ -38,44 +38,51 @@ class NonPrivateMethodNullabilityAnnotationTest {
     }
 
     private static List<String> collectViolations(List<Path> sourceDirectories, Path repositoryRoot) {
-        Launcher launcher = new Launcher();
-        launcher.getEnvironment().setNoClasspath(true);
-        launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
-        sourceDirectories.stream().map(Path::toString).forEach(launcher::addInputResource);
-        launcher.buildModel();
-
-        CtModel model = launcher.getModel();
+        CtModel model = buildModel(sourceDirectories);
         List<String> violations = new ArrayList<>();
 
         for (CtMethod<?> method : model.getElements(new TypeFilter<>(CtMethod.class))) {
-            if (method.isImplicit()
-                    || method.getParent(CtLambdaImpl.class) != null
-                    || method.hasModifier(ModifierKind.PRIVATE)) {
-                continue;
-            }
-
-            String relativeLocation =
-                    repositoryRoot.relativize(method.getPosition().getFile().toPath()) + ":"
-                            + method.getPosition().getLine();
-            String methodSignature = method.getDeclaringType().getQualifiedName() + "#" + method.getSignature();
-
-            if (!isVoidOrPrimitive(method.getType())
-                    && !hasAllowedNullability(method.getType().getAnnotations())) {
-                violations.add(relativeLocation + " RETURN " + methodSignature);
-            }
-
-            for (CtParameter<?> parameter : method.getParameters()) {
-                if (isPrimitive(parameter.getType())
-                        || hasAllowedNullability(parameter.getAnnotations())
-                        || hasAllowedNullability(parameter.getType().getAnnotations())) {
-                    continue;
-                }
-
-                violations.add(relativeLocation + " PARAM " + methodSignature + " :: " + parameter.getSimpleName());
-            }
+            collectMethodViolations(violations, repositoryRoot, method);
         }
 
         return violations.stream().sorted().toList();
+    }
+
+    private static CtModel buildModel(List<Path> sourceDirectories) {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
+        sourceDirectories.forEach(sourceDirectory -> launcher.addInputResource(sourceDirectory.toString()));
+        launcher.buildModel();
+        return launcher.getModel();
+    }
+
+    private static void collectMethodViolations(List<String> violations, Path repositoryRoot, CtMethod<?> method) {
+        if (method.isImplicit()
+                || method.getParent(CtLambdaImpl.class) != null
+                || method.hasModifier(ModifierKind.PRIVATE)) {
+            return;
+        }
+
+        String relativeLocation =
+                repositoryRoot.relativize(method.getPosition().getFile().toPath()) + ":"
+                        + method.getPosition().getLine();
+        String methodSignature = method.getDeclaringType().getQualifiedName() + "#" + method.getSignature();
+
+        if (!isVoidOrPrimitive(method.getType())
+                && !hasAllowedNullability(method.getType().getAnnotations())) {
+            violations.add(relativeLocation + " RETURN " + methodSignature);
+        }
+
+        for (CtParameter<?> parameter : method.getParameters()) {
+            if (isPrimitive(parameter.getType())
+                    || hasAllowedNullability(parameter.getAnnotations())
+                    || hasAllowedNullability(parameter.getType().getAnnotations())) {
+                continue;
+            }
+
+            violations.add(relativeLocation + " PARAM " + methodSignature + " :: " + parameter.getSimpleName());
+        }
     }
 
     private static boolean isVoidOrPrimitive(CtTypeReference<?> typeReference) {
