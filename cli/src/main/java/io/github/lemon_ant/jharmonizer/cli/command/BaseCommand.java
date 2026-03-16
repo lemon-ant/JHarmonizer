@@ -5,6 +5,8 @@ import ch.qos.logback.classic.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
@@ -60,11 +62,6 @@ abstract class BaseCommand implements Callable<Integer> {
 
     protected abstract FlowType getFlowType();
 
-    @NonNull
-    protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
-        return configFilePath != null ? new SourceProcessor(configFilePath) : new SourceProcessor();
-    }
-
     protected int checkFailedExitCode() {
         return 1;
     }
@@ -116,6 +113,14 @@ abstract class BaseCommand implements Callable<Integer> {
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
             return checkFailedExitCode();
         }
+    }
+
+    @NonNull
+    private static SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+        FlexibleUnifiedConfig externalConfig = configFilePath != null
+                ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
+                : null;
+        return new SourceProcessor(externalConfig);
     }
 
     private static Path toAbsoluteNormalizedPath(@Nullable Path path) {

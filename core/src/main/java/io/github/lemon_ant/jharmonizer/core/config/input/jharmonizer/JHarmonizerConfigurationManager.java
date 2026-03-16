@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizer2FlexibleUnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizer2UnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import java.net.URL;
@@ -26,12 +26,13 @@ public class JHarmonizerConfigurationManager {
 
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromClasspathResource(
             @NonNull URL classpathResource) {
-        JsonNode configTree = JHarmonizerConfigLoader.loadTreeFromClasspathResource(classpathResource);
-        return JHarmonizer2FlexibleUnifiedConverter.convert2Flexible(configTree);
+        JHarmonizerFlexibleConfig flexibleConfig =
+                JHarmonizerConfigLoader.loadFlexibleFromClasspathResource(classpathResource);
+        return JHarmonizer2FlexibleUnifiedConverter.convert2Flexible(flexibleConfig);
     }
 
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromFile(@NonNull Path configFilePath) {
-        JsonNode configTree = JHarmonizerConfigLoader.loadTreeFrom(configFilePath.toFile());
-        return JHarmonizer2FlexibleUnifiedConverter.convert2Flexible(configTree);
+        JHarmonizerFlexibleConfig flexibleConfig = JHarmonizerConfigLoader.loadFlexibleFrom(configFilePath.toFile());
+        return JHarmonizer2FlexibleUnifiedConverter.convert2Flexible(flexibleConfig);
     }
 }

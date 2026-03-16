@@ -9,8 +9,9 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckAllCommand extends BaseCommand {
 
-    // Explicit no-arg constructor is required for Picocli command instantiation.
-    CheckAllCommand() {}
+    CheckAllCommand() {
+        // Required for Picocli command instantiation.
+    }
 
     @Override
     protected FlowType getFlowType() {

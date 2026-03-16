@@ -12,8 +12,9 @@ final class CheckFastCommand extends BaseCommand {
 
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
-    // Explicit no-arg constructor is required for Picocli command instantiation.
-    CheckFastCommand() {}
+    CheckFastCommand() {
+        // Required for Picocli command instantiation.
+    }
 
     @Override
     protected FlowType getFlowType() {

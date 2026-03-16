@@ -2,12 +2,11 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
 import static java.util.Objects.requireNonNull;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,31 +59,26 @@ public class JHarmonizerConfigLoader {
     }
 
     @NonNull
-    static JsonNode loadTreeFrom(@NonNull File yamlFile) {
-        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
-            return YAML_MAPPER.readTree(configYaml);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to load JHarmonizer config tree from file: " + yamlFile, e);
-        }
-    }
-
-    @NonNull
-    static JsonNode loadTreeFromClasspathResource(@NonNull URL classpathResource) {
+    static JHarmonizerFlexibleConfig loadFlexibleFromClasspathResource(@NonNull URL classpathResource) {
         try (InputStream inputStream = classpathResource.openStream()) {
-            return YAML_MAPPER.readTree(inputStream);
+            return JHarmonizerConfigLoader.loadFlexibleFrom(inputStream);
         } catch (IOException ioException) {
             throw new UncheckedIOException(
-                    "Failed to load JHarmonizer config tree from classpath URL: " + classpathResource, ioException);
+                    "Failed to load flexible JHarmonizer config from classpath URL: " + classpathResource, ioException);
         }
     }
 
     @NonNull
-    public static <T> T treeToValue(@NonNull JsonNode treeNode, @NonNull Class<T> targetType) {
-        return YAML_MAPPER.convertValue(treeNode, targetType);
+    static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull File yamlFile) {
+        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
+            return loadFlexibleFrom(configYaml);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load flexible JHarmonizer config from file: " + yamlFile, e);
+        }
     }
 
     @NonNull
-    public static <T> T treeToValue(@NonNull JsonNode treeNode, @NonNull TypeReference<T> targetType) {
-        return YAML_MAPPER.convertValue(treeNode, targetType);
+    static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull InputStream configInput) throws IOException {
+        return YAML_MAPPER.readValue(configInput, JHarmonizerFlexibleConfig.class);
     }
 }

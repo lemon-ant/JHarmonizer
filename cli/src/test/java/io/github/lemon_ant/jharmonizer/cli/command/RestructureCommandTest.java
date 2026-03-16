@@ -3,11 +3,10 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
@@ -19,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class RestructureCommandTest {
@@ -43,60 +43,67 @@ class RestructureCommandTest {
     @Test
     void restructureCommand_baseDirOption_invokesProcessorWithCorrectBaseDir() {
         // Given
-        SourceProcessor mockProcessor = mock(SourceProcessor.class);
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
-        when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
-        int exitCode = cmd.execute("--base-dir", "src/main/java");
+        int exitCode;
+        SourceProcessor constructedProcessor;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute("--base-dir", "src/main/java");
+            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+        }
 
         // Then
         assertThat(exitCode).isZero();
-        verify(mockProcessor).processSources(eq(Path.of("src/main/java")), any(), any(), eq(FlowType.RESTRUCTURE));
+        verify(constructedProcessor)
+                .processSources(eq(Path.of("src/main/java")), any(), any(), eq(FlowType.RESTRUCTURE));
     }
 
     @Test
     void restructureCommand_includeOption_parsesIncludePatternCorrectly() {
         // Given
-        SourceProcessor mockProcessor = mock(SourceProcessor.class);
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
-        when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
-        int exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
+        int exitCode;
+        SourceProcessor constructedProcessor;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
+            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+        }
 
         // Then
         assertThat(exitCode).isZero();
-        verify(mockProcessor)
+        verify(constructedProcessor)
                 .processSources(any(Path.class), eq(java.util.Set.of("**/*.java")), any(), eq(FlowType.RESTRUCTURE));
     }
 
     @Test
     void restructureCommand_mixedCollectionOptions_combineAllValuesCorrectly() {
         // Given
-        SourceProcessor mockProcessor = mock(SourceProcessor.class);
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
-        when(mockProcessor.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
-        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
-        int exitCode = cmd.execute(
-                "-b",
-                "src",
-                "-i",
-                "src/main/java/**/*.java,src/test/java/**/*.java",
-                "--include",
-                "src/integrationTest/java/**/*.java",
-                "-e",
-                "**/internal/**",
-                "--exclude",
-                "**/excluded/**,**/*Test.java");
+        int exitCode;
+        SourceProcessor constructedProcessor;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute(
+                    "-b",
+                    "src",
+                    "-i",
+                    "src/main/java/**/*.java,src/test/java/**/*.java",
+                    "--include",
+                    "src/integrationTest/java/**/*.java",
+                    "-e",
+                    "**/internal/**",
+                    "--exclude",
+                    "**/excluded/**,**/*Test.java");
+            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+        }
 
         // Then
         assertThat(exitCode).isZero();
-        verify(mockProcessor)
+        verify(constructedProcessor)
                 .processSources(
                         eq(Path.of("src")),
                         eq(Set.of(
@@ -110,7 +117,7 @@ class RestructureCommandTest {
     @Test
     void restructureCommand_helpUsage_describeOptionAliasesAndCollectionFormats() {
         // Given
-        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mock(SourceProcessor.class)));
+        CommandLine cmd = new CommandLine(new RestructureCommand());
         StringWriter usage = new StringWriter();
 
         // When
@@ -149,13 +156,16 @@ class RestructureCommandTest {
     @Test
     void restructureCommand_processorThrowsRuntimeException_returnsExitCode1() {
         // Given
-        SourceProcessor mockProcessor = mock(SourceProcessor.class);
-        when(mockProcessor.processSources(any(Path.class), any(), any(), any()))
-                .thenThrow(new RuntimeException("Unexpected error"));
-        CommandLine cmd = new CommandLine(new TestRestructureBaseCommand(mockProcessor));
+        CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
-        int exitCode = cmd.execute("--base-dir", "src");
+        int exitCode;
+        try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenThrow(new RuntimeException("Unexpected error"));
+        })) {
+            exitCode = cmd.execute("--base-dir", "src");
+        }
 
         // Then
         assertThat(exitCode).isEqualTo(1);
@@ -165,21 +175,10 @@ class RestructureCommandTest {
         return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
     }
 
-    private static final class TestRestructureBaseCommand extends BaseCommand {
-        private final SourceProcessor sourceProcessor;
-
-        private TestRestructureBaseCommand(SourceProcessor sourceProcessor) {
-            this.sourceProcessor = sourceProcessor;
-        }
-
-        @Override
-        protected FlowType getFlowType() {
-            return FlowType.RESTRUCTURE;
-        }
-
-        @Override
-        protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
-            return sourceProcessor;
-        }
+    private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
+        return mockConstruction(SourceProcessor.class, (mock, context) -> {
+            AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
+            when(mock.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
+        });
     }
 }

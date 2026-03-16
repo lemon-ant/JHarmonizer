@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
@@ -147,7 +149,9 @@ class SourceProcessorTest {
         // Given
         Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES);
         Path customConfigFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
-        SourceProcessor sourceProcessor = new SourceProcessor(customConfigFilePath);
+        FlexibleUnifiedConfig externalConfig =
+                JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(customConfigFilePath);
+        SourceProcessor sourceProcessor = new SourceProcessor(externalConfig);
 
         // When
         sourceProcessor.processSources(
