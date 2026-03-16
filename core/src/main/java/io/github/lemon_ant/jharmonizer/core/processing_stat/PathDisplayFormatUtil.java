@@ -72,11 +72,13 @@ public class PathDisplayFormatUtil {
         }
     }
 
+    @NonNull
     private static String renderAbbreviatedPath(String fileSystemSeparator, Deque<String> selectedTailElements) {
         String abbreviatedTail = String.join(fileSystemSeparator, selectedTailElements);
         return ELLIPSIS + fileSystemSeparator + abbreviatedTail;
     }
 
+    @NonNull
     private static String extractFileName(Path pathToFile) {
         Path fileNamePath = pathToFile.getFileName();
         return fileNamePath == null ? "" : fileNamePath.toString();

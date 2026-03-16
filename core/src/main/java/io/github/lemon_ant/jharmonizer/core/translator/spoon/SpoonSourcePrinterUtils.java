@@ -60,6 +60,7 @@ public class SpoonSourcePrinterUtils {
         return selectDominantLineSeparator(crlfCount, lfCount, crCount);
     }
 
+    @NonNull
     private static String selectDominantLineSeparator(int crlfCount, int lfCount, int crCount) {
         if (crlfCount == 0 && lfCount == 0 && crCount == 0) {
             return System.lineSeparator();

@@ -20,6 +20,7 @@ class OrderingRuleCompiler {
                 .toList();
     }
 
+    @NonNull
     private static OrderingRule compileOrderingRule(@NonNull UnifiedOrderingRule unifiedOrderingRule) {
         return switch (unifiedOrderingRule) {
             case ALPHA -> OrderingRule.ALPHA;

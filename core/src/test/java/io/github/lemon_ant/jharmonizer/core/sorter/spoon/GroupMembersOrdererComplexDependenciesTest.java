@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
@@ -213,6 +214,7 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .isGreaterThan(lastAccessorIndex);
     }
 
+    @NonNull
     private static String buildDiagnosticReport(
             List<CtTypeMember> sourceTypeMembers,
             List<CtTypeMember> orderedTypeMembers,
@@ -245,6 +247,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         return diagnostic;
     }
 
+    @NonNull
     private static String buildStateSnapshot(
             List<CtTypeMember> sourceTypeMembers,
             List<CtTypeMember> orderedTypeMembers,
@@ -265,6 +268,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         return snapshot;
     }
 
+    @NonNull
     private static Map<String, String> renderMemberToGroup(
             Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup) {
         return memberToNaturalGroup.entrySet().stream()
@@ -275,6 +279,7 @@ class GroupMembersOrdererComplexDependenciesTest {
                         LinkedHashMap::new));
     }
 
+    @NonNull
     private static List<List<String>> renderGroupBlocks(List<MemberGroupBlock> groupBlocks) {
         return groupBlocks.stream()
                 .map(groupBlock -> deriveAlphaKeys(groupBlock.getTypeMembers()))
@@ -287,6 +292,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         System.out.println("PASS_SNAPSHOT_END");
     }
 
+    @NonNull
     private static Map<String, Integer> renderTrackedIndexes(List<String> orderedAlphaKeys) {
         LinkedHashMap<String, Integer> trackedIndexes = new LinkedHashMap<>();
         trackedIndexes.put(Constants.W_PROVIDER_ALPHA_KEY, orderedAlphaKeys.indexOf(Constants.W_PROVIDER_ALPHA_KEY));
@@ -314,6 +320,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         return trackedIndexes;
     }
 
+    @NonNull
     private static Map<String, List<String>> renderDirectDependenciesByMember(
             Map<String, CtTypeMember> sourceMembersByAlphaKey,
             MemberDependencyGraph dependencyGraph,
@@ -332,6 +339,7 @@ class GroupMembersOrdererComplexDependenciesTest {
                         LinkedHashMap::new));
     }
 
+    @NonNull
     private static Map<String, List<String>> renderTransitiveDependenciesByMember(
             Map<String, CtTypeMember> sourceMembersByAlphaKey,
             MemberDependencyGraph dependencyGraph,
@@ -358,6 +366,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         return index;
     }
 
+    @NonNull
     private static List<String> deriveAlphaKeys(List<CtTypeMember> typeMembers) {
         return typeMembers.stream().map(SpoonTypeMemberUtils::deriveAlphaKey).toList();
     }

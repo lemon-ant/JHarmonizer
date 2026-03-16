@@ -79,6 +79,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
     }
 
+    @NonNull
     private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(CtField<?> referencedField) {
         int referencedFieldSourceStart = requireSourceStart(referencedField);
 
@@ -105,6 +106,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                         .orElse(false);
     }
 
+    @NonNull
     private static <T> Optional<CtLiteral<T>> castLiteralExpression(CtExpression<T> expression) {
         if (expression instanceof CtLiteral<T> literalExpression) {
             return Optional.of(literalExpression);

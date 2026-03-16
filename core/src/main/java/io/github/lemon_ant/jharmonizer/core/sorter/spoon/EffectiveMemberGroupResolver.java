@@ -39,6 +39,7 @@ class EffectiveMemberGroupResolver {
                         }));
     }
 
+    @NonNull
     private static CompiledMemberGroup resolveEffectiveGroupForProvider(
             CtTypeMember providerMember,
             Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
@@ -54,6 +55,7 @@ class EffectiveMemberGroupResolver {
                                 + "providerMember=" + describeTypeMember(providerMember)));
     }
 
+    @NonNull
     private static CompiledMemberGroup requireNaturalMemberGroup(
             Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
             CtTypeMember providerMember,
@@ -70,10 +72,12 @@ class EffectiveMemberGroupResolver {
         return naturalMemberGroup;
     }
 
+    @NonNull
     private static String describeTypeMember(CtTypeMember typeMember) {
         return typeMember.getClass().getSimpleName() + "(" + typeMember.getShortRepresentation() + ")";
     }
 
+    @NonNull
     private static CompiledMemberGroup selectEarlierGroup(
             CompiledMemberGroup leftGroup, CompiledMemberGroup rightGroup) {
         return leftGroup.getOrderIndex() <= rightGroup.getOrderIndex() ? leftGroup : rightGroup;

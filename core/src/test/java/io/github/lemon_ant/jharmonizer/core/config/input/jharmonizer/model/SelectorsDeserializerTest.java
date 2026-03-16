@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class SelectorsDeserializerTest {
@@ -77,6 +78,7 @@ class SelectorsDeserializerTest {
                 .hasMessageContaining("Unsupported nested selector item type");
     }
 
+    @NonNull
     private Set<Set<String>> parseIncludes(String yaml) throws IOException {
         return mapper.readValue(yaml, IncludesHolder.class).include();
     }

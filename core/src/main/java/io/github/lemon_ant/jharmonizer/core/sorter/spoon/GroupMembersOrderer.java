@@ -46,6 +46,7 @@ class GroupMembersOrderer {
                 .toList();
     }
 
+    @NonNull
     private static MemberGroupBlock orderMembersInsideGroup(
             MemberGroupBlock memberGroupBlock, MemberDependencyGraph memberDependencyGraph) {
 

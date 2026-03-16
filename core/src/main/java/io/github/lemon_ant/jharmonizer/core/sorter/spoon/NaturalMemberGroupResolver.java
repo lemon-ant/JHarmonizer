@@ -28,6 +28,7 @@ class NaturalMemberGroupResolver {
                         Map.Entry::getKey, entry -> resolveSingleMemberGroup(rootMemberGroup, entry.getValue())));
     }
 
+    @NonNull
     private static CompiledMemberGroup resolveSingleMemberGroup(
             CompiledMemberGroup rootMemberGroup, MemberDescriptor memberDescriptor) {
         return rootMemberGroup.getCompiledSubGroups().stream()

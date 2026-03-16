@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -65,6 +66,7 @@ class DefaultConfigOrderingIntegrationTest {
                 .isLessThan(packagePrivateStaticNestedClassIndex);
     }
 
+    @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);

@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtCompilationUnit;
@@ -49,6 +50,7 @@ public final class SourceAstTranslator {
                 serializedSourceCode);
     }
 
+    @NonNull
     private static ParsingStatistic createParsingStatistic(
             String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
