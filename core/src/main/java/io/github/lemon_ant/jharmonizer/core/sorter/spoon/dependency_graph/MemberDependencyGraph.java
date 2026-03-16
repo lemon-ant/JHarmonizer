@@ -13,45 +13,6 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtTypeMember;
 
-/*
-TODO(performance): Reduce allocations in transitive reachability computation (BFS).
-
-Current situation:
-- computeTransitiveNeighbors(...) performs BFS and repeatedly calls findDirectNeighbors(...).
-- findDirectNeighbors(...) builds a new Set via stream().filter().map().collect(...) on every BFS step.
-- On large types this causes a high volume of short-lived Set allocations and extra stream overhead.
-
-Why "pure stream recursion" is risky:
-- A recursive Stream.concat/flatMap graph traversal still needs a visited-set to avoid cycles.
-- Without an explicit visited-set it can loop indefinitely on cycles and/or explode in work.
-- With visited-set it becomes stateful anyway, so the "pure" stream approach is mostly cosmetic and can be slower.
-
-Proposed improvements (keep semantics, minimal invasiveness):
-1) Remove per-step Set allocation:
-   - Replace findDirectNeighbors(...) with an iterator/stream over existing adjacency arcs.
-   - Filter by allowed edge kinds using an int bitmask (already computed for cache key).
-   - BFS iterates outgoing arcs directly and enqueues neighbors without creating intermediate collections.
-
-2) Provide a stream façade without changing core logic:
-   - Expose streamDirectNeighbors(...) returning outgoingArcs.stream().filter(...).map(...).
-   - Optionally expose streamTransitiveNeighbors(...) backed by a lazy BFS Iterator
-     (still uses a single visited-set for correctness, but avoids per-step collections).
-
-Optional (more invasive) improvement:
-3) Store adjacency indexed by edge kind to avoid per-arc filtering:
-   - Maintain EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>> per member (outgoing + incoming).
-   - This allows fetching neighbors for a single kind in O(1) without scanning all arcs.
-   - Trade-off: more objects / memory; must be evaluated with benchmarks.
-
-Correctness constraints:
-- Transitive computation must remain cycle-safe (visited-set is required).
-- Semantics of edge kind filtering must match current implementation.
-- Start member should not be emitted as its own neighbor (current behavior).
-
-Suggested micro-benchmark:
-- Add JMH benchmark or at least a stress test over a large synthetic CtType
-  to compare allocations/time before/after (focus on transitiveOutgoing/incoming queries).
-*/
 /**
  * Directed graph between members of a single type.
  *
@@ -266,4 +227,44 @@ public final class MemberDependencyGraph {
         transitiveDependentsCacheByProvider.clear();
         transitiveProvidersCacheByDependent.clear();
     }
+
+    /*
+    TODO(performance): Reduce allocations in transitive reachability computation (BFS).
+
+    Current situation:
+    - computeTransitiveNeighbors(...) performs BFS and repeatedly calls findDirectNeighbors(...).
+    - findDirectNeighbors(...) builds a new Set via stream().filter().map().collect(...) on every BFS step.
+    - On large types this causes a high volume of short-lived Set allocations and extra stream overhead.
+
+    Why "pure stream recursion" is risky:
+    - A recursive Stream.concat/flatMap graph traversal still needs a visited-set to avoid cycles.
+    - Without an explicit visited-set it can loop indefinitely on cycles and/or explode in work.
+    - With visited-set it becomes stateful anyway, so the "pure" stream approach is mostly cosmetic and can be slower.
+
+    Proposed improvements (keep semantics, minimal invasiveness):
+    1) Remove per-step Set allocation:
+       - Replace findDirectNeighbors(...) with an iterator/stream over existing adjacency arcs.
+       - Filter by allowed edge kinds using an int bitmask (already computed for cache key).
+       - BFS iterates outgoing arcs directly and enqueues neighbors without creating intermediate collections.
+
+    2) Provide a stream façade without changing core logic:
+       - Expose streamDirectNeighbors(...) returning outgoingArcs.stream().filter(...).map(...).
+       - Optionally expose streamTransitiveNeighbors(...) backed by a lazy BFS Iterator
+         (still uses a single visited-set for correctness, but avoids per-step collections).
+
+    Optional (more invasive) improvement:
+    3) Store adjacency indexed by edge kind to avoid per-arc filtering:
+       - Maintain EnumMap<MemberDependencyEdgeKind, Set<CtTypeMember>> per member (outgoing + incoming).
+       - This allows fetching neighbors for a single kind in O(1) without scanning all arcs.
+       - Trade-off: more objects / memory; must be evaluated with benchmarks.
+
+    Correctness constraints:
+    - Transitive computation must remain cycle-safe (visited-set is required).
+    - Semantics of edge kind filtering must match current implementation.
+    - Start member should not be emitted as its own neighbor (current behavior).
+
+    Suggested micro-benchmark:
+    - Add JMH benchmark or at least a stress test over a large synthetic CtType
+      to compare allocations/time before/after (focus on transitiveOutgoing/incoming queries).
+    */
 }

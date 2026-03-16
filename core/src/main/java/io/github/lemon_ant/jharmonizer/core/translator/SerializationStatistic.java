@@ -45,8 +45,9 @@ public class SerializationStatistic {
     }
 
     /**
-     * Performs the to string.
-     * @return the result
+     * Returns the string representation of this serialization statistic.
+     *
+     * @return the string representation of this statistic
      */
     @Override
     public String toString() {

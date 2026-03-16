@@ -42,9 +42,10 @@ public final class SourceAstTranslator {
     }
 
     /**
-     * Performs the serialize.
-     * @param sortedSpoonAstModel the sorted spoon ast model
-     * @return the result
+     * Serializes the sorted AST model back to source code.
+     *
+     * @param sortedSpoonAstModel the sorted Spoon AST model to serialize
+     * @return the serialization result containing the source code and statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {

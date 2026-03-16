@@ -16,10 +16,11 @@ public class SpoonSourcePrinterUtils {
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
 
     /**
-     * Finds the indentation start.
-     * @param start the start
-     * @param sourceCode the source code to process
-     * @return the matching indentation start
+     * Finds the first indentation character position for the source fragment.
+     *
+     * @param start the source index to scan backward from
+     * @param sourceCode the source code text to inspect
+     * @return the indentation start offset for the fragment
      */
     static int findIndentationStart(int start, String sourceCode) {
         int pos = start - 1;
@@ -35,7 +36,8 @@ public class SpoonSourcePrinterUtils {
 
     /**
      * Detects the dominant line separator.
-     * @param source the source
+     *
+     * @param source the source code text to inspect
      * @return the dominant line separator
      */
     @NonNull
@@ -87,9 +89,10 @@ public class SpoonSourcePrinterUtils {
     }
 
     /**
-     * Returns whether needs separator after.
-     * @param member the member
-     * @return {@code true} if needs separator after; otherwise {@code false}
+     * Returns whether a separator is needed after the member.
+     *
+     * @param member the member to inspect
+     * @return {@code true} if a separator is needed after the member; otherwise {@code false}
      */
     static boolean needsSeparatorAfter(CtTypeMember member) {
         // Add the separator in any way if it's not field
@@ -99,10 +102,11 @@ public class SpoonSourcePrinterUtils {
     }
 
     /**
-     * Returns whether needs separator before.
-     * @param member the member
-     * @param first the first
-     * @return {@code true} if needs separator before; otherwise {@code false}
+     * Returns whether a separator is needed before the member.
+     *
+     * @param member the member to inspect
+     * @param first whether the member is the first one in the printed sequence
+     * @return {@code true} if a separator is needed before the member; otherwise {@code false}
      */
     static boolean needsSeparatorBefore(CtTypeMember member, boolean first) {
         // Has annotations on the member
