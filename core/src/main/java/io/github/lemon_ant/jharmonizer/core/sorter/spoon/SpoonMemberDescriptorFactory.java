@@ -61,7 +61,8 @@ class SpoonMemberDescriptorFactory {
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
 
-    static MemberDescriptor describeMember(CtTypeMember typeMember) {
+    @NonNull
+    static MemberDescriptor describeMember(@NonNull CtTypeMember typeMember) {
         MemberKind memberKind = resolveMemberKind(typeMember);
         MemberAccess memberAccess = resolveMemberAccessIfApplicable(typeMember);
         Set<DeclarationModifier> declarationModifiers = resolveDeclarationModifiers(typeMember);

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -34,8 +35,9 @@ import org.apache.commons.lang3.StringUtils;
 class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
 
     @Override
-    public Set<Set<String>> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-            throws IOException {
+    @NonNull
+    public Set<Set<String>> deserialize(
+            @NonNull JsonParser jsonParser, @NonNull DeserializationContext deserializationContext) throws IOException {
         JsonToken currentToken = jsonParser.currentToken();
         if (currentToken == null) {
             currentToken = jsonParser.nextToken();

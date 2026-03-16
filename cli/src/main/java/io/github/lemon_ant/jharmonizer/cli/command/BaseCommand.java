@@ -69,6 +69,7 @@ abstract class BaseCommand implements Callable<Integer> {
         this(new SourceProcessor());
     }
 
+    @NonNull
     protected abstract FlowType getFlowType();
 
     protected int checkFailedExitCode() {
@@ -76,6 +77,7 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @Override
+    @NonNull
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
         Path effectiveBaseDir = baseDir != null ? baseDir.normalize() : Path.of(".");

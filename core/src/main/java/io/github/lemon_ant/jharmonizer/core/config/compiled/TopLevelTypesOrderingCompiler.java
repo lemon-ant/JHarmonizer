@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -28,8 +29,9 @@ class TopLevelTypesOrderingCompiler {
      * @param unifiedTopLevelTypesOrdering unified definition with type groups and mainTypeFirst flag
      * @return compiled order with ordered predicates (types-only)
      */
+    @NonNull
     CompiledTopLevelTypesOrdering compileTopLevelTypesOrdering(
-            UnifiedTopLevelTypesOrdering unifiedTopLevelTypesOrdering) {
+            @NonNull UnifiedTopLevelTypesOrdering unifiedTopLevelTypesOrdering) {
         List<Predicate<MemberDescriptor>> compiledTopLevelTypesSelectors =
                 unifiedTopLevelTypesOrdering.getTopLevelTypeSelectors().stream()
                         .<Predicate<MemberDescriptor>>map(topLevelTypeSelector -> {

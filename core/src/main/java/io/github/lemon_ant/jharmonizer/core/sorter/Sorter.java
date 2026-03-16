@@ -23,6 +23,7 @@ public final class Sorter {
      * @param spoonAstModel the SpoonASTModel to sort
      * @return a SortingResult containing the sorted SpoonASTModel and statistics
      */
+    @NonNull
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
             spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit());

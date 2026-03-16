@@ -9,6 +9,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import spoon.compiler.Environment;
 import spoon.reflect.cu.SourcePosition;
@@ -43,27 +44,27 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     @Override
-    public <A extends Annotation> void visitCtAnnotationType(CtAnnotationType<A> annotationType) {
+    public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {
         printTypeStructure(annotationType);
     }
 
     @Override
-    public <T> void visitCtClass(CtClass<T> ctClass) {
+    public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
         printTypeStructure(ctClass);
     }
 
     @Override
-    public <T extends Enum<?>> void visitCtEnum(CtEnum<T> ctEnum) {
+    public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
         printTypeStructure(ctEnum);
     }
 
     @Override
-    public <T> void visitCtInterface(CtInterface<T> intrface) {
+    public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
         printTypeStructure(intrface);
     }
 
     @Override
-    public void visitCtRecord(CtRecord recordType) {
+    public void visitCtRecord(@NonNull CtRecord recordType) {
         printTypeStructure(recordType);
     }
 
@@ -172,7 +173,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     @Override
-    public void visitCtCompilationUnit(CtCompilationUnit compilationUnit) {
+    public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {
             super.visitCtCompilationUnit(compilationUnit);
         }

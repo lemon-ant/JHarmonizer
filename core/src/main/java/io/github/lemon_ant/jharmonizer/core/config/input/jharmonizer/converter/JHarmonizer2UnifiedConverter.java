@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public final class JHarmonizer2UnifiedConverter {
 
+    @NonNull
     public static UnifiedConfig convert2Unified(@NonNull JHarmonizerConfig vendor) {
         // 1) Top-level types ordering
         UnifiedTopLevelTypesOrdering top = TopLevelTypesOrderingMapper.map(vendor.getTopLevelTypesOrdering());

@@ -58,7 +58,7 @@ class SortableTypeMember {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (this == other) {
             return true;
         }
@@ -97,6 +97,7 @@ class SortableTypeMember {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class OrderingKey {
 
+        @NonNull
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();

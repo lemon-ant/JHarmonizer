@@ -15,7 +15,7 @@ public class SpoonSourcePrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
 
-    static int findIndentationStart(int start, String sourceCode) {
+    static int findIndentationStart(int start, @NonNull String sourceCode) {
         int pos = start - 1;
         while (pos >= 0) {
             char c = sourceCode.charAt(pos);
@@ -75,14 +75,14 @@ public class SpoonSourcePrinterUtils {
         return "\r";
     }
 
-    static boolean needsSeparatorAfter(CtTypeMember member) {
+    static boolean needsSeparatorAfter(@NonNull CtTypeMember member) {
         // Add the separator in any way if it's not field
         boolean isNotField = !(member instanceof CtField);
 
         return isNotField || !member.getAnnotations().isEmpty();
     }
 
-    static boolean needsSeparatorBefore(CtTypeMember member, boolean first) {
+    static boolean needsSeparatorBefore(@NonNull CtTypeMember member, boolean first) {
         // Has annotations on the member
         boolean hasAnnotations = !member.getAnnotations().isEmpty();
 

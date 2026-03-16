@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import lombok.NonNull;
 import picocli.CommandLine.Command;
 
 /**
@@ -24,6 +25,7 @@ final class CheckFastCommand extends BaseCommand {
     }
 
     @Override
+    @NonNull
     protected FlowType getFlowType() {
         return FlowType.CHECK_FAIL_FAST;
     }

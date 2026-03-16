@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +57,7 @@ public class JHarmonizerTopLevelTypesOrdering {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof JHarmonizerTopLevelTypesOrdering that)) {
             return false;
         }

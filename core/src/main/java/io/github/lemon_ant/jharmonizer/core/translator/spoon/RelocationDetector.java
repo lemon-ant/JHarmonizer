@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.cu.SourcePosition;
@@ -61,9 +62,10 @@ public class RelocationDetector {
      * @param spoonAstModel model holding the working {@code CtCompilationUnit} and the original indices snapshot
      * @return list of pairs {@code (element, offset)} for all moved elements (offset ≠ 0), in current encounter order
      */
+    @NonNull
     public static List<Pair<CtElement, Integer>> findRelocations(
-            /*TODO Create a dedicated type*/ Map<SourcePosition, Integer> originalOrderIndices,
-            CtCompilationUnit reorderedCompilationUnit) {
+            /*TODO Create a dedicated type*/ @NonNull Map<SourcePosition, Integer> originalOrderIndices,
+            @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
         AtomicInteger runningIndex = new AtomicInteger(0);
 
@@ -81,7 +83,8 @@ public class RelocationDetector {
     }
 
     public static boolean isRelocated(
-            Map<SourcePosition, Integer> originalOrderIndices, CtCompilationUnit reorderedCompilationUnit) {
+            @NonNull Map<SourcePosition, Integer> originalOrderIndices,
+            @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
         AtomicInteger runningIndex = new AtomicInteger(0);
 
@@ -104,7 +107,9 @@ public class RelocationDetector {
      * @param relocations the collection of relocations to format
      * @return a formatted string representing the relocations
      */
-    public static String printRelocations(Path path, Collection<Pair<CtElement, Integer>> relocations) {
+    @NonNull
+    public static String printRelocations(
+            @NonNull Path path, @NonNull Collection<Pair<CtElement, Integer>> relocations) {
         return String.format(
                 "Scanning finished with a sorting failure on file: %s%n%s",
                 path.getFileName(),
@@ -149,7 +154,8 @@ public class RelocationDetector {
      * Main entry: map of CtElement to its current encounter index.
      */
     // TODO Create a dedicated type instead of Map
-    static Map<SourcePosition, Integer> indexElementsByOrder(CtCompilationUnit compilationUnit) {
+    @NonNull
+    static Map<SourcePosition, Integer> indexElementsByOrder(@NonNull CtCompilationUnit compilationUnit) {
         AtomicInteger runningIndex = new AtomicInteger(0);
         return streamDeclaredHierarchy(compilationUnit)
                 .map(CtElement::getPosition)

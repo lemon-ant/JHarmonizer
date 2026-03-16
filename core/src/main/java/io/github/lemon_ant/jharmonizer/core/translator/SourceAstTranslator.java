@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtCompilationUnit;
@@ -25,7 +26,8 @@ import spoon.reflect.declaration.CtTypeMember;
 public final class SourceAstTranslator {
 
     @SuppressWarnings("PMD.GuardLogStatement")
-    public static ParsingResult parseSourceFile(SrcFile sourceSrcFile) {
+    @NonNull
+    public static ParsingResult parseSourceFile(@NonNull SrcFile sourceSrcFile) {
         log.debug("Parsing {}", sourceSrcFile.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
@@ -37,7 +39,8 @@ public final class SourceAstTranslator {
     }
 
     @SuppressWarnings("PMD.GuardLogStatement")
-    public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
+    @NonNull
+    public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
         TimedResult<String> serializationTimedResult = StopWatch.measure(

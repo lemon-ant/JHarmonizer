@@ -228,7 +228,7 @@ public class MemberDescriptor {
 
     // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (this == other) {
             return true;
         }
@@ -244,6 +244,7 @@ public class MemberDescriptor {
     /**
      * Optional-returning getter for access level.
      */
+    @NonNull
     public Optional<MemberAccess> getMemberAccess() {
         return Optional.ofNullable(memberAccess);
     }
@@ -251,6 +252,7 @@ public class MemberDescriptor {
     /**
      * Optional-returning getter for name.
      */
+    @NonNull
     public Optional<String> getName() {
         return Optional.ofNullable(name);
     }

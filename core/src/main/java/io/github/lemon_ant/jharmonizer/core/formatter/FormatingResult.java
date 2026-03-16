@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.formatter;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -19,7 +20,7 @@ public class FormatingResult {
     FormatingStatistic formatingStatistic;
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof FormatingResult that)) {
             return false;
         }

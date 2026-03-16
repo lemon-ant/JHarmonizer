@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import java.io.Serial;
 import java.nio.file.Path;
+import lombok.NonNull;
 
 /**
  * Thrown by {@link CheckFailFastFlow} when the formatted output of a source file
@@ -20,6 +21,7 @@ public class NotFormattedException extends RuntimeException {
     }
 
     @Override
+    @NonNull
     public String getMessage() {
         return String.format("[NotFormattedException] File not formatted: %s%n%s", offendingFile.getFileName(), diff);
     }

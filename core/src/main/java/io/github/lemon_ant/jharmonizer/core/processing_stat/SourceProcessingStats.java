@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
@@ -23,6 +24,7 @@ import lombok.experimental.UtilityClass;
 public class SourceProcessingStats {
 
     // Collector for parallel processing
+    @NonNull
     public Collector<FileProcessingStatistic, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
@@ -48,6 +50,7 @@ public class SourceProcessingStats {
         FileProcessingStatistic largestFile;
 
         @Override
+        @NonNull
         public String toString() {
             return String.format(
                     "Harmonization result:%nFiles processed: %,d%n" + "Total size: %s%n" + "Average size: %s%n"
@@ -96,7 +99,7 @@ public class SourceProcessingStats {
         private final LongAdder totalSize = new LongAdder();
         private final LongAdder totalTime = new LongAdder();
 
-        void accumulate(FileProcessingStatistic stats) {
+        void accumulate(@NonNull FileProcessingStatistic stats) {
             count.increment();
             totalSize.add(stats.getSize());
             totalTime.add(stats.getProcessingTimeNanos());
@@ -108,7 +111,8 @@ public class SourceProcessingStats {
                     stats, (current, next) -> current == null || next.getSize() > current.getSize() ? next : current);
         }
 
-        StatsContainer combine(StatsContainer other) {
+        @NonNull
+        StatsContainer combine(@NonNull StatsContainer other) {
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
             totalTime.add(other.totalTime.sum());
@@ -126,6 +130,7 @@ public class SourceProcessingStats {
             return this;
         }
 
+        @NonNull
         AggregatedProcessingStatistic toAggregatedStats() {
             return new AggregatedProcessingStatistic(
                     count.sum(), totalSize.sum(), totalTime.sum(), minSize.get(), maxSize.get());

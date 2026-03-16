@@ -18,6 +18,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class TopLevelTypesOrderingMapper {
 
+    @NonNull
     static UnifiedTopLevelTypesOrdering map(@NonNull JHarmonizerTopLevelTypesOrdering srcTopLevelTypesOrdering) {
         List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors =
                 srcTopLevelTypesOrdering.getTopLevelTypeSelectors().stream()

@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.Objects;
 import lombok.NonNull;
@@ -18,7 +19,7 @@ public class SortingResult {
     SortingStatistic sortingStatistic;
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (SortingResult) obj;

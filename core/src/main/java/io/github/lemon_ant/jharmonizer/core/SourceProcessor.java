@@ -18,6 +18,7 @@ import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,8 +66,12 @@ public final class SourceProcessor {
      *
      * @param paths List of paths to source files to be processed.
      */
+    @NonNull
     public AggregatedProcessingStatistic processSources(
-            Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs, FlowType flowType) {
+            @NonNull Path baseDir,
+            @NonNull Collection<String> includeGlobs,
+            @NonNull Collection<String> excludeGlobs,
+            @NonNull FlowType flowType) {
         log.info(
                 "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
                 flowType,

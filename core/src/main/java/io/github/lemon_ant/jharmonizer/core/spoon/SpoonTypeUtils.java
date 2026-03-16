@@ -4,6 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 
 import java.util.List;
 import java.util.stream.Stream;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.compress.utils.FileNameUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
@@ -19,30 +20,35 @@ public class SpoonTypeUtils {
     private static final int ONE_ROOT_TYPE = 1;
     private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
-    public static List<CtTypeMember> getAllTypeMembers(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static List<CtTypeMember> getAllTypeMembers(@NonNull CtCompilationUnit compilationUnit) {
         return getAllTypes(compilationUnit).stream()
                 .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
                 .toList();
     }
 
-    public static List<CtType<?>> getAllTypes(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static List<CtType<?>> getAllTypes(@NonNull CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit)
                 .flatMap(SpoonTypeUtils::streamTypesTree)
                 .toList();
     }
 
-    public static List<CtType<?>> getRootTypes(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static List<CtType<?>> getRootTypes(@NonNull CtCompilationUnit compilationUnit) {
         return compilationUnit.getDeclaredTypes();
     }
 
     /**
      * Current order for a whole compilation unit: declared types as-is.
      */
-    public static Stream<CtElement> streamDeclaredHierarchy(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static Stream<CtElement> streamDeclaredHierarchy(@NonNull CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
-    public static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static CtType<?> findMainType(@NonNull CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {
             return declaredTypes.getFirst();

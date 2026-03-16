@@ -62,6 +62,7 @@ public class CompiledMemberGroup {
         this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
+    @NonNull
     public Optional<CompiledMemberGroup> classifyRecursively(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();
@@ -75,7 +76,7 @@ public class CompiledMemberGroup {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof CompiledMemberGroup that)) {
             return false;
         }

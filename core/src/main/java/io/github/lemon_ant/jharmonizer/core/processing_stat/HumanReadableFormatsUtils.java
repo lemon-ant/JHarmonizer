@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.util.Locale;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -25,6 +26,7 @@ final class HumanReadableFormatsUtils {
     private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
 
     @SuppressWarnings("PMD.UnsynchronizedStaticFormatter")
+    @NonNull
     static String formatBytes(long bytes) {
         if (bytes < 0) {
             throw new IllegalArgumentException("Byte size must be non-negative, but was: " + bytes);
@@ -42,6 +44,7 @@ final class HumanReadableFormatsUtils {
         return formatBinary(bytes, GIB, " GiB");
     }
 
+    @NonNull
     static String formatSecondsMicrosecondsFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
@@ -54,6 +57,7 @@ final class HumanReadableFormatsUtils {
         return String.format(Locale.ROOT, "%d.%03d", totalSeconds, millisecondsPart);
     }
 
+    @NonNull
     static String formatHmsMillisFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");

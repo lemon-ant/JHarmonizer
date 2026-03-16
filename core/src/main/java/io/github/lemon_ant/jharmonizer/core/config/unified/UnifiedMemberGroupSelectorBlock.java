@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.Set;
 import lombok.Builder;
@@ -35,7 +36,7 @@ public class UnifiedMemberGroupSelectorBlock {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof UnifiedMemberGroupSelectorBlock that)) {
             return false;
         }

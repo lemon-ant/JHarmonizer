@@ -5,6 +5,7 @@ import com.github.difflib.patch.Patch;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +19,8 @@ import org.apache.commons.lang3.StringUtils;
 // TODO Review the entire class
 public class DiffReporter {
 
-    public static String computeDiff(String originalText, String generatedText) {
+    @NonNull
+    public static String computeDiff(@NonNull String originalText, @NonNull String generatedText) {
         Patch<String> diff = DiffUtils.diff(
                 originalText.lines().toList(), generatedText.lines().toList());
         return format(diff);

@@ -66,7 +66,7 @@ public enum DeclarationModifier {
         return this.conflicts.contains(other);
     }
 
-    boolean isApplicableTo(TargetCategory targetCategory) {
+    boolean isApplicableTo(@NonNull TargetCategory targetCategory) {
         return applicableTargets.contains(targetCategory);
     }
 }

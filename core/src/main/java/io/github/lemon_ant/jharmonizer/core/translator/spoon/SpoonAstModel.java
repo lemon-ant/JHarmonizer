@@ -42,6 +42,7 @@ public class SpoonAstModel {
     @NonNull
     Supplier<String> serializedSourceCode;
 
+    @NonNull
     public Optional<CtType<?>> getMainType() {
         return Optional.ofNullable(mainType);
     }

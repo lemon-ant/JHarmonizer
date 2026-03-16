@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -18,7 +19,7 @@ public class UnifiedNameMatcher {
     String value;
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof UnifiedNameMatcher that)) {
             return false;
         }

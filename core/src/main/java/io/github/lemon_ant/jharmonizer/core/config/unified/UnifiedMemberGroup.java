@@ -70,7 +70,7 @@ public class UnifiedMemberGroup {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (!(o instanceof UnifiedMemberGroup that)) {
             return false;
         }

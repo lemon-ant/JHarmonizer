@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.utilities;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,7 +32,7 @@ public class StopWatch {
         T result;
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (!(o instanceof TimedResult<?> that)) {
                 return false;
             }
@@ -51,6 +52,7 @@ public class StopWatch {
         }
 
         @Override
+        @NonNull
         public String toString() {
             return "Result: " + result + ", time: " + getMillis() + " ms";
         }

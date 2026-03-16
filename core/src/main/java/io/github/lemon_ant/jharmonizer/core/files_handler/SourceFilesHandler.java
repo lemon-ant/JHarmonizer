@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.files_handler;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.globpathfinder.GlobPathFinder;
 import io.github.lemon_ant.globpathfinder.PathQuery;
@@ -32,8 +33,9 @@ public class SourceFilesHandler {
      * @return stream of unique absolute Java file paths (normalized)
      */
     // TODO Hide it and expose a new method readJavaFiles that combines findJavaFiles + readFile
+    @NonNull
     public static Stream<Path> findJavaFiles(
-            Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs) {
+            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(baseDir)
                 .includeGlobs(includeGlobs)
@@ -91,7 +93,7 @@ public class SourceFilesHandler {
         Path path;
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (!(o instanceof SrcFile that)) {
                 return false;
             }
