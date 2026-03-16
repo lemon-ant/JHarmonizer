@@ -28,6 +28,11 @@ public final class Formatter {
 
     private final Function<String, String> formattingMethod;
 
+    /**
+     * Creates a new Formatter.
+     * @param style the style
+     * @param fixImports the fix imports
+     */
     public Formatter(@NonNull UnifiedFormatterStyle style, boolean fixImports) {
         Style formatterStyle = UNIFIED_2_PALANTIR_FORMATTING_STYLE.get(style);
         Builder formatterBuilder = JavaFormatterOptions.builder();

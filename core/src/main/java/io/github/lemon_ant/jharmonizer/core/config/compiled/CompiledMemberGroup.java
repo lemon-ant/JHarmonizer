@@ -62,6 +62,11 @@ public class CompiledMemberGroup {
         this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
+    /**
+     * Classifies the recursively.
+     * @param descriptor the member descriptor to inspect
+     * @return the recursively
+     */
     public Optional<CompiledMemberGroup> classifyRecursively(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();
@@ -74,6 +79,11 @@ public class CompiledMemberGroup {
                 .or(() -> Optional.of(this)); // fallback to parent bucket
     }
 
+    /**
+     * Checks whether this compiled member group matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CompiledMemberGroup that)) {
@@ -89,6 +99,10 @@ public class CompiledMemberGroup {
                 && orderingRules.equals(that.orderingRules);
     }
 
+    /**
+     * Returns the hash code of this compiled member group.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = compiledSubGroups.hashCode();

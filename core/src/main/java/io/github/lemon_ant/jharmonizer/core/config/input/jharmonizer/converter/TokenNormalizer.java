@@ -15,6 +15,11 @@ import org.apache.commons.lang3.StringUtils;
 @UtilityClass
 class TokenNormalizer {
 
+    /**
+     * Normalizes the tokens.
+     * @param rawTokens the raw tokens to normalize
+     * @return the resulting set
+     */
     static Set<String> normalizeTokens(Set<String> rawTokens) {
         return rawTokens.stream()
                 .map(StringUtils::trimToNull)

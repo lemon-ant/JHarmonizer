@@ -65,16 +65,32 @@ abstract class BaseCommand implements Callable<Integer> {
             description = "Enable verbose (DEBUG level) logging.")
     private boolean verbose;
 
+    /**
+     * Creates a new BaseCommand.
+     */
     protected BaseCommand() {
         this(new SourceProcessor());
     }
 
+    /**
+     * Returns the processing flow implemented by the command.
+     *
+     * @return the flow type to execute
+     */
     protected abstract FlowType getFlowType();
 
+    /**
+     * Performs the check failed exit code.
+     * @return the result
+     */
     protected int checkFailedExitCode() {
         return 1;
     }
 
+    /**
+     * Performs the call.
+     * @return the result
+     */
     @Override
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {

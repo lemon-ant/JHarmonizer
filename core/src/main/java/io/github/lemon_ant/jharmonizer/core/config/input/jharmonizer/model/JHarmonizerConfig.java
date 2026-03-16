@@ -30,6 +30,14 @@ public class JHarmonizerConfig {
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
     // TODO Make it package
+    /**
+     * Creates a new JHarmonizerConfig.
+     * @param topLevelTypesOrdering the top level types ordering
+     * @param formatting the formatting
+     * @param backupsEnabled the backups enabled
+     * @param headerLine the header line
+     * @param memberGroups the member groups
+     */
     public JHarmonizerConfig(
             @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
                     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
@@ -46,6 +54,11 @@ public class JHarmonizerConfig {
         this.memberGroups = Collections.unmodifiableList(memberGroups);
     }
 
+    /**
+     * Checks whether this jharmonizer config matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof JHarmonizerConfig that)) {
@@ -59,6 +72,10 @@ public class JHarmonizerConfig {
                 && topLevelTypesOrdering.equals(that.topLevelTypesOrdering);
     }
 
+    /**
+     * Returns the hash code of this jharmonizer config.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = formatting.hashCode();

@@ -18,6 +18,12 @@ import org.apache.commons.lang3.StringUtils;
 // TODO Review the entire class
 public class DiffReporter {
 
+    /**
+     * Performs the compute diff.
+     * @param originalText the original text
+     * @param generatedText the generated text
+     * @return the result
+     */
     public static String computeDiff(String originalText, String generatedText) {
         Patch<String> diff = DiffUtils.diff(
                 originalText.lines().toList(), generatedText.lines().toList());
@@ -32,7 +38,6 @@ public class DiffReporter {
 
     private static String format(Patch<String> diffs) {
         StringBuilder diffBuilder = new StringBuilder();
-
         diffs.getDeltas().stream()
                 .sorted(Comparator.comparingInt(delta -> delta.getSource().getPosition()))
                 .forEach(delta -> {

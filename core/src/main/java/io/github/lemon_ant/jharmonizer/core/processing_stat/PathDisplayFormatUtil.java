@@ -17,6 +17,12 @@ public class PathDisplayFormatUtil {
     private static final String ELLIPSIS = "...";
     private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
+    /**
+     * Abbreviates the path for display.
+     * @param path the path to use
+     * @param maxTotalLength the max total length
+     * @return the result
+     */
     @NonNull
     public static String abbreviatePathForDisplay(@NonNull Path path, int maxTotalLength) {
         String fullPathString = path.toString();

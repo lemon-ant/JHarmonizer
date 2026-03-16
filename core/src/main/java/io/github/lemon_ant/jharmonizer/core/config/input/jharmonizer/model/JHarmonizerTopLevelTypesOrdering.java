@@ -26,6 +26,12 @@ public class JHarmonizerTopLevelTypesOrdering {
     @NonNull
     List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors;
 
+    /**
+     * Creates a new JHarmonizerTopLevelTypesOrdering.
+     * @param mainTypeFirst the main type first
+     * @param topLevelTypeSelectors the top level type selectors
+     * @param orderingRules the ordering rules
+     */
     JHarmonizerTopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
             @NonNull @JsonProperty(value = "type-groups", required = true)
@@ -55,6 +61,11 @@ public class JHarmonizerTopLevelTypesOrdering {
                 });
     }
 
+    /**
+     * Checks whether this jharmonizer top level types ordering matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof JHarmonizerTopLevelTypesOrdering that)) {
@@ -66,6 +77,10 @@ public class JHarmonizerTopLevelTypesOrdering {
                 && orderingRules.equals(that.orderingRules);
     }
 
+    /**
+     * Returns the hash code of this jharmonizer top level types ordering.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = Boolean.hashCode(mainTypeFirst);

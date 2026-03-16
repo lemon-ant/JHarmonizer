@@ -27,6 +27,11 @@ public class UnifiedMemberGroupSelectorBlock {
     @Singular
     Set<UnifiedMemberGroupRuleLine> includes;
 
+    /**
+     * Creates a new UnifiedMemberGroupSelectorBlock.
+     * @param excludes the excludes
+     * @param includes the includes
+     */
     public UnifiedMemberGroupSelectorBlock(
             @NonNull Set<UnifiedMemberGroupRuleLine> excludes, @NonNull Set<UnifiedMemberGroupRuleLine> includes) {
 
@@ -34,6 +39,11 @@ public class UnifiedMemberGroupSelectorBlock {
         this.includes = Collections.unmodifiableSet(includes);
     }
 
+    /**
+     * Checks whether this unified member group selector block matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof UnifiedMemberGroupSelectorBlock that)) {
@@ -43,6 +53,10 @@ public class UnifiedMemberGroupSelectorBlock {
         return includes.equals(that.includes) && excludes.equals(that.excludes);
     }
 
+    /**
+     * Returns the hash code of this unified member group selector block.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = includes.hashCode();

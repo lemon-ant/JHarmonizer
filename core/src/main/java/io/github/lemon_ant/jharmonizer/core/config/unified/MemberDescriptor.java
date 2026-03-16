@@ -160,7 +160,6 @@ public class MemberDescriptor {
             @NonNull TargetCategory targetCategory,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
             @NonNull String validationContext) {
-
         declarationModifiers.stream()
                 .filter(declarationModifier -> !declarationModifier.isApplicableTo(targetCategory))
                 .findAny()
@@ -227,6 +226,11 @@ public class MemberDescriptor {
     }
 
     // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
+    /**
+     * Checks whether this member descriptor matches another object.
+     * @param other the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -255,6 +259,10 @@ public class MemberDescriptor {
         return Optional.ofNullable(name);
     }
 
+    /**
+     * Returns the hash code of this member descriptor.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = featureMask;

@@ -16,6 +16,11 @@ public class UnifiedAnnotationMatcher {
     @NonNull
     String value; // exact value or regex pattern
 
+    /**
+     * Checks whether this unified annotation matcher matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof UnifiedAnnotationMatcher that)) {
@@ -25,6 +30,10 @@ public class UnifiedAnnotationMatcher {
         return matchMethod == that.matchMethod && value.equals(that.value);
     }
 
+    /**
+     * Returns the hash code of this unified annotation matcher.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = matchMethod.hashCode();

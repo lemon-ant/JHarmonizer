@@ -20,6 +20,11 @@ public class FileProcessingStatistic {
     long processingTimeNanos;
     long size;
 
+    /**
+     * Performs the convert.
+     * @param flowProcessingResult the flow processing result
+     * @return the result
+     */
     public static FileProcessingStatistic convert(FlowProcessingResult flowProcessingResult) {
         long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()

@@ -16,6 +16,10 @@ public class UnifiedTopLevelTypeSelector {
     @NonNull
     Set<@NonNull UnifiedTypeKind> typeKinds;
 
+    /**
+     * Creates a new UnifiedTopLevelTypeSelector.
+     * @param typeKinds the type kinds
+     */
     public UnifiedTopLevelTypeSelector(@NonNull Set<@NonNull UnifiedTypeKind> typeKinds) {
         Validate.notEmpty(typeKinds, "Type kinds cannot be empty");
         this.typeKinds = Collections.unmodifiableSet(new TreeSet<>(typeKinds));

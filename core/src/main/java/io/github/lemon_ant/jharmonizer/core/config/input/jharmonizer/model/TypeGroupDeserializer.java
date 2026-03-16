@@ -16,6 +16,12 @@ import java.util.TreeSet;
  */
 class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTopLevelTypeSelector> {
 
+    /**
+     * Performs the deserialize.
+     * @param p the parser to read from
+     * @param ctxt the deserialization context
+     * @return the result
+     */
     @Override
     public JHarmonizerTopLevelTypeSelector deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         ObjectCodec codec = p.getCodec();

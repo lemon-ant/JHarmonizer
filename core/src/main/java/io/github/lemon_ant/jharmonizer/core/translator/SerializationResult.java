@@ -16,6 +16,11 @@ public class SerializationResult {
     @NonNull
     String serializedSrcCode;
 
+    /**
+     * Checks whether this serialization result matches another object.
+     * @param obj the obj
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -25,6 +30,10 @@ public class SerializationResult {
                 && Objects.equals(this.serializationStatistic, that.serializationStatistic);
     }
 
+    /**
+     * Returns the hash code of this serialization result.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         return Objects.hash(serializedSrcCode, serializationStatistic);

@@ -14,12 +14,23 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class RestructureCommand extends BaseCommand {
 
+    /**
+     * Creates a new RestructureCommand.
+     */
     RestructureCommand() {}
 
+    /**
+     * Creates a new RestructureCommand.
+     * @param sourceProcessor the source processor
+     */
     RestructureCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
 
+    /**
+     * Returns the flow type.
+     * @return the flow type
+     */
     @Override
     protected FlowType getFlowType() {
         return FlowType.RESTRUCTURE;

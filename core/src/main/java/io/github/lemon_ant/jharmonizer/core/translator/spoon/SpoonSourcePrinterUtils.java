@@ -15,6 +15,12 @@ public class SpoonSourcePrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
 
+    /**
+     * Finds the indentation start.
+     * @param start the start
+     * @param sourceCode the source code to process
+     * @return the matching indentation start
+     */
     static int findIndentationStart(int start, String sourceCode) {
         int pos = start - 1;
         while (pos >= 0) {
@@ -27,6 +33,11 @@ public class SpoonSourcePrinterUtils {
         return pos + 1;
     }
 
+    /**
+     * Detects the dominant line separator.
+     * @param source the source
+     * @return the dominant line separator
+     */
     @NonNull
     @SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidReassigningLoopVariables"})
     static String detectDominantLineSeparator(@NonNull String source) {
@@ -75,6 +86,11 @@ public class SpoonSourcePrinterUtils {
         return "\r";
     }
 
+    /**
+     * Returns whether needs separator after.
+     * @param member the member
+     * @return {@code true} if needs separator after; otherwise {@code false}
+     */
     static boolean needsSeparatorAfter(CtTypeMember member) {
         // Add the separator in any way if it's not field
         boolean isNotField = !(member instanceof CtField);
@@ -82,6 +98,12 @@ public class SpoonSourcePrinterUtils {
         return isNotField || !member.getAnnotations().isEmpty();
     }
 
+    /**
+     * Returns whether needs separator before.
+     * @param member the member
+     * @param first the first
+     * @return {@code true} if needs separator before; otherwise {@code false}
+     */
     static boolean needsSeparatorBefore(CtTypeMember member, boolean first) {
         // Has annotations on the member
         boolean hasAnnotations = !member.getAnnotations().isEmpty();

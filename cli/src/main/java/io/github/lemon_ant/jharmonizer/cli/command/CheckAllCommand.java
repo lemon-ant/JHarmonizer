@@ -13,12 +13,23 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckAllCommand extends BaseCommand {
 
+    /**
+     * Creates a new CheckAllCommand.
+     */
     CheckAllCommand() {}
 
+    /**
+     * Creates a new CheckAllCommand.
+     * @param sourceProcessor the source processor
+     */
     CheckAllCommand(SourceProcessor sourceProcessor) {
         super(sourceProcessor);
     }
 
+    /**
+     * Returns the flow type.
+     * @return the flow type
+     */
     @Override
     protected FlowType getFlowType() {
         return FlowType.CHECK_ALL;

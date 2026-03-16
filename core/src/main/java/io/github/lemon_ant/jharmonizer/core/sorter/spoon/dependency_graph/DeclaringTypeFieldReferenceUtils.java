@@ -24,6 +24,11 @@ import spoon.reflect.visitor.filter.TypeFilter;
 @UtilityClass
 class DeclaringTypeFieldReferenceUtils {
 
+    /**
+     * Performs the require declaring type.
+     * @param typeMember the type member
+     * @return the result
+     */
     @NonNull
     static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
         CtType<?> declaringType = typeMember.getDeclaringType();
@@ -54,6 +59,12 @@ class DeclaringTypeFieldReferenceUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    /**
+     * Finds the fields read by member.
+     * @param member the member
+     * @param memberAstRoot the member ast root
+     * @return the matching fields read by member
+     */
     @NonNull
     static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
@@ -62,6 +73,12 @@ class DeclaringTypeFieldReferenceUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    /**
+     * Finds the fields written by member.
+     * @param member the member
+     * @param memberAstRoot the member ast root
+     * @return the matching fields written by member
+     */
     @NonNull
     static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
@@ -113,6 +130,11 @@ class DeclaringTypeFieldReferenceUtils {
         return providerSourceStart < dependentSourceStart;
     }
 
+    /**
+     * Performs the require source start.
+     * @param typeMember the type member
+     * @return the result
+     */
     static int requireSourceStart(@NonNull CtTypeMember typeMember) {
         SourcePosition memberPosition = typeMember.getPosition();
         if (memberPosition != null && memberPosition.isValidPosition()) {

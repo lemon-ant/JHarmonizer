@@ -13,11 +13,20 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class JHarmonizerConfigurationManager {
+    /**
+     * Parses the unified default config.
+     * @return the unified default config
+     */
     public static UnifiedConfig parseUnifiedDefaultConfig() {
         JHarmonizerConfig defaultJHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
         return JHarmonizer2UnifiedConverter.convert2Unified(defaultJHarmonizerConfig);
     }
 
+    /**
+     * Parses the unified config from classpath resource.
+     * @param classpathResource the classpath resource to read
+     * @return the unified config from classpath resource
+     */
     public static UnifiedConfig parseUnifiedConfigFromClasspathResource(URL classpathResource) {
         JHarmonizerConfig loadedConfig = JHarmonizerConfigLoader.loadFromClasspathResource(classpathResource);
         return JHarmonizer2UnifiedConverter.convert2Unified(loadedConfig);

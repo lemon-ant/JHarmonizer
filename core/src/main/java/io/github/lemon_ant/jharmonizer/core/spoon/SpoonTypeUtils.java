@@ -19,18 +19,33 @@ public class SpoonTypeUtils {
     private static final int ONE_ROOT_TYPE = 1;
     private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
+    /**
+     * Returns the all type members.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the all type members
+     */
     public static List<CtTypeMember> getAllTypeMembers(CtCompilationUnit compilationUnit) {
         return getAllTypes(compilationUnit).stream()
                 .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
                 .toList();
     }
 
+    /**
+     * Returns the all types.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the all types
+     */
     public static List<CtType<?>> getAllTypes(CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit)
                 .flatMap(SpoonTypeUtils::streamTypesTree)
                 .toList();
     }
 
+    /**
+     * Returns the root types.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the root types
+     */
     public static List<CtType<?>> getRootTypes(CtCompilationUnit compilationUnit) {
         return compilationUnit.getDeclaredTypes();
     }
@@ -42,6 +57,11 @@ public class SpoonTypeUtils {
         return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
+    /**
+     * Finds the main type.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the matching main type
+     */
     public static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {

@@ -69,6 +69,11 @@ public class UnifiedMemberGroup {
         this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
+    /**
+     * Checks whether this unified member group matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof UnifiedMemberGroup that)) {
@@ -83,6 +88,10 @@ public class UnifiedMemberGroup {
                 && orderingRules.equals(that.orderingRules);
     }
 
+    /**
+     * Returns the hash code of this unified member group.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = Objects.hashCode(groupName);

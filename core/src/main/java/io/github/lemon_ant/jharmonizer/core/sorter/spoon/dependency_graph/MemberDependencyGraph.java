@@ -13,22 +13,6 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Directed graph between members of a single type.
- *
- * <p>Edges are always directed {@code provider -> dependent}, but their meaning depends on
- * {@link MemberDependencyEdgeKind}:
- * <ul>
- *   <li>{@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} encodes a real declaration-order constraint.</li>
- *   <li>{@link MemberDependencyEdgeKind#ACCESSOR_BUNDLE} encodes a keep-together constraint for accessors.</li>
- * </ul>
- *
- * <p>Implementation note: edges are stored as "flat" neighbor+kind values.
- * Filtering by edge kind is applied on query rather than being encoded into the storage structure.
- *
- * <p>Performance note: transitive queries are cached per (start member, edge-kind mask).
- * The graph is expected to be populated first and queried afterwards; any edge insertion invalidates caches.
- */
 /*
 TODO(performance): Reduce allocations in transitive reachability computation (BFS).
 
@@ -68,6 +52,22 @@ Suggested micro-benchmark:
 - Add JMH benchmark or at least a stress test over a large synthetic CtType
   to compare allocations/time before/after (focus on transitiveOutgoing/incoming queries).
 */
+/**
+ * Directed graph between members of a single type.
+ *
+ * <p>Edges are always directed {@code provider -> dependent}, but their meaning depends on
+ * {@link MemberDependencyEdgeKind}:
+ * <ul>
+ *   <li>{@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} encodes a real declaration-order constraint.</li>
+ *   <li>{@link MemberDependencyEdgeKind#ACCESSOR_BUNDLE} encodes a keep-together constraint for accessors.</li>
+ * </ul>
+ *
+ * <p>Implementation note: edges are stored as "flat" neighbor+kind values.
+ * Filtering by edge kind is applied on query rather than being encoded into the storage structure.
+ *
+ * <p>Performance note: transitive queries are cached per (start member, edge-kind mask).
+ * The graph is expected to be populated first and queried afterwards; any edge insertion invalidates caches.
+ */
 @SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.TooManyMethods"})
 public final class MemberDependencyGraph {
 
@@ -146,6 +146,12 @@ public final class MemberDependencyGraph {
         return dependencyEdgeStream.map(MemberDependencyArc::getAdjacentMember).collect(Collectors.toUnmodifiableSet());
     }
 
+    /**
+     * Performs the add edge.
+     * @param providerMember the provider member
+     * @param dependentMember the dependent member
+     * @param edgeKind the edge kind
+     */
     void addEdge(
             @NonNull CtTypeMember providerMember,
             @NonNull CtTypeMember dependentMember,
@@ -160,11 +166,22 @@ public final class MemberDependencyGraph {
         invalidateTransitiveCaches();
     }
 
+    /**
+     * Finds the transitive dependents.
+     * @param providerMember the provider member
+     * @return the matching transitive dependents
+     */
     @NonNull
     public Set<@NonNull CtTypeMember> findTransitiveDependents(@NonNull CtTypeMember providerMember) {
         return findTransitiveDependents(providerMember, ALL_EDGE_KINDS);
     }
 
+    /**
+     * Finds the transitive dependents.
+     * @param providerMember the provider member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching transitive dependents
+     */
     @NonNull
     public Set<@NonNull CtTypeMember> findTransitiveDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
@@ -172,11 +189,22 @@ public final class MemberDependencyGraph {
                 providerMember, allowedEdgeKinds, transitiveDependentsCacheByProvider, outgoingEdgesByProvider);
     }
 
+    /**
+     * Finds the transitive providers.
+     * @param dependentMember the dependent member
+     * @return the matching transitive providers
+     */
     @NonNull
     public Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
         return findTransitiveProviders(dependentMember, ALL_EDGE_KINDS);
     }
 
+    /**
+     * Finds the transitive providers.
+     * @param dependentMember the dependent member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching transitive providers
+     */
     @NonNull
     public Set<@NonNull CtTypeMember> findTransitiveProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
@@ -184,12 +212,24 @@ public final class MemberDependencyGraph {
                 dependentMember, allowedEdgeKinds, transitiveProvidersCacheByDependent, incomingEdgesByDependent);
     }
 
+    /**
+     * Finds the direct dependents.
+     * @param providerMember the provider member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching direct dependents
+     */
     @NonNull
     public Set<@NonNull CtTypeMember> findDirectDependents(
             @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
         return findDirectNeighbors(outgoingEdgesByProvider, providerMember, allowedEdgeKinds);
     }
 
+    /**
+     * Finds the direct providers.
+     * @param dependentMember the dependent member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching direct providers
+     */
     @NonNull
     public Set<@NonNull CtTypeMember> findDirectProviders(
             @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {

@@ -23,6 +23,10 @@ import lombok.experimental.UtilityClass;
 public class SourceProcessingStats {
 
     // Collector for parallel processing
+    /**
+     * Performs the stats collector.
+     * @return the result
+     */
     public Collector<FileProcessingStatistic, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
@@ -47,6 +51,10 @@ public class SourceProcessingStats {
         @Nullable
         FileProcessingStatistic largestFile;
 
+        /**
+         * Performs the to string.
+         * @return the result
+         */
         @Override
         public String toString() {
             return String.format(
@@ -77,11 +85,19 @@ public class SourceProcessingStats {
         }
 
         // Average time spent on processing a file
+        /**
+         * Performs the calculate average processing time.
+         * @return the result
+         */
         long calculateAverageProcessingTime() {
             return fileCount > 0 ? totalProcessingTimeNanos / fileCount : 0;
         }
 
         // Average size of all files processed
+        /**
+         * Performs the calculate average size.
+         * @return the result
+         */
         long calculateAverageSize() {
             return fileCount > 0 ? totalSize / fileCount : 0;
         }
@@ -96,6 +112,10 @@ public class SourceProcessingStats {
         private final LongAdder totalSize = new LongAdder();
         private final LongAdder totalTime = new LongAdder();
 
+        /**
+         * Performs the accumulate.
+         * @param stats the stats
+         */
         void accumulate(FileProcessingStatistic stats) {
             count.increment();
             totalSize.add(stats.getSize());
@@ -108,6 +128,11 @@ public class SourceProcessingStats {
                     stats, (current, next) -> current == null || next.getSize() > current.getSize() ? next : current);
         }
 
+        /**
+         * Performs the combine.
+         * @param other the object to compare with
+         * @return the result
+         */
         StatsContainer combine(StatsContainer other) {
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
@@ -126,6 +151,10 @@ public class SourceProcessingStats {
             return this;
         }
 
+        /**
+         * Performs the to aggregated stats.
+         * @return the result
+         */
         AggregatedProcessingStatistic toAggregatedStats() {
             return new AggregatedProcessingStatistic(
                     count.sum(), totalSize.sum(), totalTime.sum(), minSize.get(), maxSize.get());

@@ -18,6 +18,11 @@ public class FormatingResult {
     @NonNull
     FormatingStatistic formatingStatistic;
 
+    /**
+     * Checks whether this formating result matches another object.
+     * @param o the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof FormatingResult that)) {
@@ -27,6 +32,10 @@ public class FormatingResult {
         return formatedSrcCode.equals(that.formatedSrcCode) && formatingStatistic.equals(that.formatingStatistic);
     }
 
+    /**
+     * Returns the hash code of this formating result.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         int result = formatedSrcCode.hashCode();

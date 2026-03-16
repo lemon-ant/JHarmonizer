@@ -37,6 +37,13 @@ class SortableTypeMember {
     @NonNull
     Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
+    /**
+     * Creates a new SortableTypeMember.
+     * @param typeMember the type member
+     * @param representativeTypeMember the representative type member
+     * @param orderingDependentsInGroup the ordering dependents in group
+     * @param orderingKeyProvider the ordering key provider
+     */
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
             @Nullable SortableTypeMember representativeTypeMember,
@@ -48,6 +55,10 @@ class SortableTypeMember {
         this.orderingKey = orderingKeyProvider.apply(typeMember);
     }
 
+    /**
+     * Performs the to string.
+     * @return the result
+     */
     @Override
     @NonNull
     public String toString() {
@@ -57,6 +68,11 @@ class SortableTypeMember {
                 + ", orderingDependentsInGroupCount=" + orderingDependentsInGroup.size();
     }
 
+    /**
+     * Checks whether this sortable type member matches another object.
+     * @param other the object to compare with
+     * @return {@code true} if the check succeeds; otherwise {@code false}
+     */
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -73,6 +89,10 @@ class SortableTypeMember {
                 && Objects.equals(orderingDependentsInGroup, otherSortableTypeMember.orderingDependentsInGroup);
     }
 
+    /**
+     * Returns the hash code of this sortable type member.
+     * @return the hash code value
+     */
     @Override
     public int hashCode() {
         return Objects.hash(
@@ -97,6 +117,10 @@ class SortableTypeMember {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class OrderingKey {
 
+        /**
+         * Returns the ordering key provider.
+         * @return the ordering key provider
+         */
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();

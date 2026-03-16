@@ -12,16 +12,32 @@ import spoon.reflect.declaration.CtType;
 final class ExplicitThisInitializerFieldDependencyProvider
         extends AbstractExplicitInitializerForwardReferenceDependencyProvider {
 
+    /**
+     * Returns whether is supported referenced field.
+     * @param referencedField the referenced field
+     * @return {@code true} if is supported referenced field; otherwise {@code false}
+     */
     @Override
     protected boolean isSupportedReferencedField(@NonNull CtField<?> referencedField) {
         return !isStaticField(referencedField);
     }
 
+    /**
+     * Returns whether is supported referrer field.
+     * @param referrerField the referrer field
+     * @return {@code true} if is supported referrer field; otherwise {@code false}
+     */
     @Override
     protected boolean isSupportedReferrerField(@NonNull CtField<?> referrerField) {
         return !isStaticField(referrerField);
     }
 
+    /**
+     * Returns whether has explicit reference to.
+     * @param referrerField the referrer field
+     * @param referencedField the referenced field
+     * @return {@code true} if has explicit reference to; otherwise {@code false}
+     */
     @Override
     protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
         return hasExplicitQualifiedReferenceTo(

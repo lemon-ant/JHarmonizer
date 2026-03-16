@@ -17,6 +17,11 @@ public class JHarmonizerFormatting {
     // TODO Exclude to a dedicated class
     FormatterStyle formatterStyle;
 
+    /**
+     * Creates a new JHarmonizerFormatting.
+     * @param fixImports the fix imports
+     * @param formatterStyle the formatter style
+     */
     public JHarmonizerFormatting(
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle) {
