@@ -10,6 +10,12 @@ The goals are:
 - Avoid “false regressions” caused by broken fixtures (fixtures must compile).
 
 If review feedback or repeated task work reveals a stable testing rule that is missing here or not clearly stated, update this document in the same task.
+Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.md` aligned:
+
+- `docs/test-conventions.md` is the detailed source for test-specific rules.
+- `AGENTS.md` should keep the repository-wide maintenance guidance and point to this document for tests.
+- `.github/copilot-instructions.md` must mirror the complete operative test rules from this document so Copilot can follow them without relying on cross-file traversal.
+- When a test rule changes here, update the mirrored guidance in `.github/copilot-instructions.md` in the same task, and update `AGENTS.md` too if the maintenance guidance or document responsibilities changed.
 
 ## Tooling and libraries
 
