@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizer2FlexibleUnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizer2UnifiedConverter;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter.JHarmonizerFlexible2FlexibleUnifiedConverter;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -14,25 +14,29 @@ import lombok.experimental.UtilityClass;
 // TODO Merge with JHarmonizerConfigLoader
 @UtilityClass
 public class JHarmonizerConfigurationManager {
+    @NonNull
     public static UnifiedConfig parseUnifiedDefaultConfig() {
         JHarmonizerConfig defaultJHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
         return JHarmonizer2UnifiedConverter.convert2Unified(defaultJHarmonizerConfig);
     }
 
-    public static UnifiedConfig parseUnifiedConfigFromClasspathResource(URL classpathResource) {
+    @NonNull
+    public static UnifiedConfig parseUnifiedConfigFromClasspathResource(@NonNull URL classpathResource) {
         JHarmonizerConfig loadedConfig = JHarmonizerConfigLoader.loadFromClasspathResource(classpathResource);
         return JHarmonizer2UnifiedConverter.convert2Unified(loadedConfig);
     }
 
+    @NonNull
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromClasspathResource(
             @NonNull URL classpathResource) {
         JHarmonizerFlexibleConfig flexibleConfig =
                 JHarmonizerConfigLoader.loadFlexibleFromClasspathResource(classpathResource);
-        return JHarmonizer2FlexibleUnifiedConverter.convert2Flexible(flexibleConfig);
+        return JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(flexibleConfig);
     }
 
+    @NonNull
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromFile(@NonNull Path configFilePath) {
         JHarmonizerFlexibleConfig flexibleConfig = JHarmonizerConfigLoader.loadFlexibleFrom(configFilePath.toFile());
-        return JHarmonizer2FlexibleUnifiedConverter.convert2Flexible(flexibleConfig);
+        return JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(flexibleConfig);
     }
 }

@@ -7,8 +7,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -16,7 +14,6 @@ import lombok.Value;
  * Flexible overlay for JHarmonizerConfig. All fields are optional.
  */
 @Value
-@Getter(AccessLevel.NONE)
 public class JHarmonizerFlexibleConfig {
 
     @Nullable
@@ -49,27 +46,27 @@ public class JHarmonizerFlexibleConfig {
     }
 
     @NonNull
-    public Optional<JHarmonizerFormatting> getFormatting() {
+    public Optional<JHarmonizerFormatting> getOptionalFormatting() {
         return ofNullable(formatting);
     }
 
     @NonNull
-    public Optional<Boolean> getBackupsEnabled() {
+    public Optional<Boolean> getOptionalBackupsEnabled() {
         return ofNullable(backupsEnabled);
     }
 
     @NonNull
-    public Optional<JHarmonizerHeaderLine> getHeaderLine() {
+    public Optional<JHarmonizerHeaderLine> getOptionalHeaderLine() {
         return ofNullable(headerLine);
     }
 
     @NonNull
-    public Optional<List<JHarmonizerMemberGroup>> getMemberGroups() {
+    public Optional<List<JHarmonizerMemberGroup>> getOptionalMemberGroups() {
         return ofNullable(memberGroups);
     }
 
     @NonNull
-    public Optional<JHarmonizerTopLevelTypesOrdering> getTopLevelTypesOrdering() {
+    public Optional<JHarmonizerTopLevelTypesOrdering> getOptionalTopLevelTypesOrdering() {
         return ofNullable(topLevelTypesOrdering);
     }
 }
