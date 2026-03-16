@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
+import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
@@ -25,27 +26,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spoon.reflect.declaration.CtElement;
 
+@Getter(AccessLevel.PROTECTED)
 abstract class AbstractOptOutFlow implements IFlow {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractOptOutFlow.class);
+
+    @NonNull
     private final Formatter formatter;
+
+    @NonNull
     private final Sorter sorter;
+
+    @NonNull
     private final FlowDebugStageRecorder debugStageRecorder;
 
     protected AbstractOptOutFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull FlowType flowType) {
         this.formatter = formatter;
         this.sorter = sorter;
         this.debugStageRecorder = new FlowDebugStageRecorder(flowType);
-    }
-
-    protected final Formatter getFormatter() {
-        return formatter;
-    }
-
-    protected final Sorter getSorter() {
-        return sorter;
-    }
-
-    protected final FlowDebugStageRecorder getDebugStageRecorder() {
-        return debugStageRecorder;
     }
 
     @NonNull
@@ -67,9 +64,9 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected final FlowProcessingResult buildFileOptOutSkippedResult(
+    protected static FlowProcessingResult buildFileOptOutSkippedResult(
             @NonNull SrcFile srcFile,
-            @NonNull io.github.lemon_ant.jharmonizer.core.translator.ParsingResult parsingResult,
+            @NonNull ParsingResult parsingResult,
             boolean checkingOnly,
             @Nullable Collection<Pair<CtElement, Integer>> relocations,
             @Nullable String srcDiff,
@@ -94,13 +91,12 @@ abstract class AbstractOptOutFlow implements IFlow {
                 new SerializationStatistic(srcFile.getSrcCode().length(), 0), srcFile.getSrcCode(), List.of());
     }
 
-    private void logFileOptOutSkip(
+    private static void logFileOptOutSkip(
             @NonNull SrcFile srcFile,
             @NonNull String skippedOperationDescription,
             @NonNull JHarmonizerOptOutMode optOutMode) {
-        Logger logger = LoggerFactory.getLogger(getClass());
-        if (logger.isInfoEnabled()) {
-            logger.info(
+        if (LOG.isInfoEnabled()) {
+            LOG.info(
                     "Skipping {} for {} because of {} ({})",
                     skippedOperationDescription,
                     srcFile.getPath(),

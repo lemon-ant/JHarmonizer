@@ -6,15 +6,16 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
-import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
-import io.github.lemon_ant.jharmonizer.core.optout.ResolvedJHarmonizerOptOut;
 import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import spoon.compiler.Environment;
+import spoon.reflect.code.CtComment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtClass;
@@ -30,14 +31,22 @@ import spoon.reflect.visitor.TokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
-    private final JHarmonizerOptOuts optOuts;
+    @NonNull
+    private final Set<CtType<?>> formattingSkippedTypes;
+
+    @NonNull
     private final List<SourceCharacterRange> formattingExclusionRanges = new ArrayList<>();
+
+    @NonNull
     private final String originalSourceCode;
 
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
-    SpoonCustomSourcePrinter(Environment env, String originalSourceCode, JHarmonizerOptOuts optOuts) {
+    SpoonCustomSourcePrinter(
+            @NonNull Environment env,
+            @NonNull String originalSourceCode,
+            @NonNull Set<CtType<?>> formattingSkippedTypes) {
         super(env);
-        this.optOuts = optOuts;
+        this.formattingSkippedTypes = Set.copyOf(formattingSkippedTypes);
         this.originalSourceCode = originalSourceCode;
         String lineSeparator = detectDominantLineSeparator(originalSourceCode);
         setLineSeparator(lineSeparator);
@@ -68,10 +77,6 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         printTypeStructure(recordType);
     }
 
-    private TokenWriter printOriginalFragment(SourcePosition pos) {
-        return printOriginalFragment(pos.getSourceStart(), pos.getSourceEnd());
-    }
-
     private TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSourceCode);
         if (startWithIndent <= end && end <= originalSourceCode.length()) {
@@ -94,11 +99,15 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     private void printTypeStructure(CtType<?> type) {
         getPrinterTokenWriter().writeln();
-        Optional<ResolvedJHarmonizerOptOut> typeOptOut = optOuts.findTypeOptOut(type);
-        if (typeOptOut.filter(ResolvedJHarmonizerOptOut::skipsFormatting).isPresent()) {
+        if (formattingSkippedTypes.contains(type)) {
             // Once an outer type is preserved as-is, nested types are not traversed separately, so formatting
             // exclusions are emitted only for the outer preserved fragment and cannot overlap.
-            printPreservedTypeFragment(typeOptOut.orElseThrow());
+            SourceCharacterRange preservedSourceRange = new SourceCharacterRange(
+                    findRenderedTypeStart(type), type.getPosition().getSourceEnd() + 1);
+            int outputStart = getResult().length();
+            printOriginalFragment(preservedSourceRange.getStartInclusive(), preservedSourceRange.getEndExclusive() - 1);
+            int outputEndExclusive = getResult().length() - getLineSeparator().length();
+            formattingExclusionRanges.add(new SourceCharacterRange(outputStart, outputEndExclusive));
             return;
         }
         SourcePosition typePosition = type.getPosition();
@@ -113,14 +122,17 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
         if (explicitTypeMembers.isEmpty()) {
             // If no nested elements, then print the original source fragment entirely
-            printOriginalFragment(typePosition).writeln();
+            printOriginalFragment(typePosition.getSourceStart(), typePosition.getSourceEnd())
+                    .writeln();
             return;
         }
 
         // TODO Optimize algorithm by precalculating of the original member sequence
         // Find the minimal nested element start position
         int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(this::findRenderedMemberStart)
+                .mapToInt(typeMember -> typeMember instanceof CtType<?> nestedType
+                        ? findRenderedTypeStart(nestedType)
+                        : typeMember.getPosition().getSourceStart())
                 .min()
                 .orElseThrow(IllegalStateException::new);
 
@@ -164,7 +176,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             // TODO Optimize algorithm by precalculating of the original member sequence
             // Copy class member code from the original code without changes
             int nextElementStart = explicitTypeMembers.stream()
-                    .mapToInt(this::findRenderedMemberStart)
+                    .mapToInt(typeMember -> typeMember instanceof CtType<?> nestedType
+                            ? findRenderedTypeStart(nestedType)
+                            : typeMember.getPosition().getSourceStart())
                     .filter(start -> start > member.getPosition().getSourceEnd())
                     .min()
                     .orElse(member.getPosition().getSourceEnd() + 1);
@@ -212,26 +226,16 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         }
     }
 
-    private int findRenderedMemberStart(CtTypeMember typeMember) {
-        if (typeMember instanceof CtType<?> nestedType) {
-            return findRenderedTypeStart(nestedType);
-        }
-        return typeMember.getPosition().getSourceStart();
-    }
-
     private int findRenderedTypeStart(CtType<?> type) {
-        return optOuts.findTypeOptOut(type)
-                .flatMap(ResolvedJHarmonizerOptOut::getPreservedSourceRange)
-                .map(SourceCharacterRange::getStartInclusive)
-                .orElse(type.getPosition().getSourceStart());
-    }
-
-    private void printPreservedTypeFragment(ResolvedJHarmonizerOptOut directive) {
-        SourceCharacterRange preservedSourceRange =
-                directive.getPreservedSourceRange().orElseThrow(IllegalStateException::new);
-        int outputStart = getResult().length();
-        printOriginalFragment(preservedSourceRange.getStartInclusive(), preservedSourceRange.getEndExclusive() - 1);
-        int outputEndExclusive = getResult().length() - getLineSeparator().length();
-        formattingExclusionRanges.add(new SourceCharacterRange(outputStart, outputEndExclusive));
+        if (!formattingSkippedTypes.contains(type)) {
+            return type.getPosition().getSourceStart();
+        }
+        return findIndentationStart(
+                type.getComments().stream()
+                        .map(CtComment::getPosition)
+                        .mapToInt(SourcePosition::getSourceStart)
+                        .min()
+                        .orElse(type.getPosition().getSourceStart()),
+                originalSourceCode);
     }
 }

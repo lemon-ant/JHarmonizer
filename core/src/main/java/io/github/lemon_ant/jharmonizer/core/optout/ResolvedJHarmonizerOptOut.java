@@ -5,6 +5,7 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.Value;
 import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtType;
 
 @Value
 public class ResolvedJHarmonizerOptOut {
@@ -21,16 +22,14 @@ public class ResolvedJHarmonizerOptOut {
     JHarmonizerOptOutScope scope;
 
     @Nullable
-    ResolvedOptOutTargetType targetType;
+    CtType<?> targetType;
 
     public boolean skipsFormatting() {
         return mode.skipsFormatting();
     }
 
     public boolean skipsSorting() {
-        return switch (mode) {
-            case FULLY_OFF, SORTING_OFF -> true;
-        };
+        return true;
     }
 
     @NonNull
@@ -39,7 +38,7 @@ public class ResolvedJHarmonizerOptOut {
     }
 
     @NonNull
-    public Optional<ResolvedOptOutTargetType> getTargetType() {
+    public Optional<CtType<?>> getTargetType() {
         return Optional.ofNullable(targetType);
     }
 }

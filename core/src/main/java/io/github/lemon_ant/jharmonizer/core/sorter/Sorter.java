@@ -25,7 +25,9 @@ public final class Sorter {
      */
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
-            spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit(), spoonAstModel.getOptOuts());
+            spoonSorter.sortCompilationUnitRecursively(
+                    spoonAstModel.getCompilationUnit(),
+                    spoonAstModel.getOptOuts().getSortingSkippedTypes());
             return spoonAstModel;
         });
 

@@ -43,8 +43,8 @@ public class SpoonParser {
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(path, originalSourceCode, compilationUnit);
         Supplier<SerializedSourceSnapshot> serializedSourceCode = () -> {
-            SpoonCustomSourcePrinter printer =
-                    new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode, optOuts);
+            SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
+                    launcher.getEnvironment(), originalSourceCode, optOuts.getFormattingSkippedTypes());
             printer.printCompilationUnit(compilationUnit);
             return new SerializedSourceSnapshot(printer.getResult(), printer.getFormattingExclusionRanges());
         };

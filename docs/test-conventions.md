@@ -16,6 +16,8 @@ If review feedback or repeated task work reveals a stable testing rule that is m
 - **JUnit 5** is the test runner.
 - **AssertJ** is the assertion library.
   - Do not use `org.junit.jupiter.api.Assertions.*` in new/updated tests.
+- Prefer ordinary imports over repeated fully qualified names in tests.
+- Prefer Lombok for test-side boilerplate (constructors, getters, `toString`, etc.) when it reduces ceremony and matches the surrounding style.
 - Prefer using production pipeline building blocks (parsers, converters, compilers, factories) instead of test-only reimplementations.
 
 ## Code reuse and deduplication

@@ -73,7 +73,7 @@ class JHarmonizerOptOutResolverTest {
         assertThat(spoonAstModel.getOptOuts().findTypeOptOut(sampleType))
                 .get()
                 .extracting(ResolvedJHarmonizerOptOut::getMode, optOut -> optOut.getTargetType()
-                        .map(ResolvedOptOutTargetType::getSimpleName)
+                        .map(CtType::getSimpleName)
                         .orElseThrow())
                 .containsExactly(JHarmonizerOptOutMode.FULLY_OFF, "Sample");
     }
@@ -158,7 +158,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_legacyOffAlias_resolveFullyOffOptOut() {
+    void parseJavaSourceResource_legacyOffAlias_ignoreInvalidOptOut() {
         // Given
         String srcCode = """
                 // @jharmonizer:off
@@ -169,9 +169,6 @@ class JHarmonizerOptOutResolverTest {
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), srcCode);
 
         // Then
-        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
-                .get()
-                .extracting(ResolvedJHarmonizerOptOut::getMode)
-                .isEqualTo(JHarmonizerOptOutMode.FULLY_OFF);
+        assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
     }
 }

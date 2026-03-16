@@ -114,7 +114,7 @@ public final class JHarmonizerOptOutResolver {
             @NonNull ResolvedJHarmonizerOptOut resolvedOptOut,
             @NonNull CtComment comment) {
         ResolvedJHarmonizerOptOut previousOptOut = typeOptOuts.putIfAbsent(
-                resolvedOptOut.getTargetType().orElseThrow().getSourcePosition(), resolvedOptOut);
+                resolvedOptOut.getTargetType().orElseThrow().getPosition(), resolvedOptOut);
         if (previousOptOut != null) {
             logIgnoredOptOut(
                     comment,
@@ -149,11 +149,7 @@ public final class JHarmonizerOptOutResolver {
                 findIndentationStart(originalSourceCode, comment.getPosition().getSourceStart()),
                 targetType.getPosition().getSourceEnd() + 1);
         return new ResolvedJHarmonizerOptOut(
-                comment.getPosition(),
-                mode,
-                preservedSourceRange,
-                JHarmonizerOptOutScope.TYPE_SCOPE,
-                ResolvedOptOutTargetType.from(targetType));
+                comment.getPosition(), mode, preservedSourceRange, JHarmonizerOptOutScope.TYPE_SCOPE, targetType);
     }
 
     private static int findIndentationStart(@NonNull String sourceCode, int startIndex) {

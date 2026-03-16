@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -45,14 +45,9 @@ public class JHarmonizerOptOuts {
         return fileOptOut == null && typeOptOutsByTargetPosition.isEmpty();
     }
 
-    public boolean isFormattingSkippedForType(@NonNull CtType<?> type) {
-        return findTypeOptOut(type)
-                .map(ResolvedJHarmonizerOptOut::skipsFormatting)
-                .orElse(false);
-    }
-
-    public boolean isSortingSkippedForType(@NonNull CtType<?> type) {
-        return findTypeOptOut(type).isPresent();
+    @NonNull
+    public Optional<ResolvedJHarmonizerOptOut> findTypeOptOut(@NonNull SourcePosition sourcePosition) {
+        return Optional.ofNullable(typeOptOutsByTargetPosition.get(sourcePosition));
     }
 
     @NonNull
@@ -61,19 +56,24 @@ public class JHarmonizerOptOuts {
     }
 
     @NonNull
-    public Optional<ResolvedJHarmonizerOptOut> findTypeOptOut(@NonNull SourcePosition sourcePosition) {
-        return Optional.ofNullable(typeOptOutsByTargetPosition.get(sourcePosition));
-    }
-
-    @NonNull
     public Optional<ResolvedJHarmonizerOptOut> getFileOptOut() {
         return Optional.ofNullable(fileOptOut);
     }
 
     @NonNull
-    public List<ResolvedJHarmonizerOptOut> getFormattingSkippedTypeOptOuts() {
+    public Set<CtType<?>> getFormattingSkippedTypes() {
         return typeOptOutsByTargetPosition.values().stream()
                 .filter(ResolvedJHarmonizerOptOut::skipsFormatting)
-                .toList();
+                .map(ResolvedJHarmonizerOptOut::getTargetType)
+                .flatMap(Optional::stream)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    public Set<CtType<?>> getSortingSkippedTypes() {
+        return typeOptOutsByTargetPosition.values().stream()
+                .map(ResolvedJHarmonizerOptOut::getTargetType)
+                .flatMap(Optional::stream)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 }

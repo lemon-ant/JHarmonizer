@@ -99,7 +99,7 @@ class OptOutSourceProcessorIntegrationTest {
 
         // Then
         assertThat(processedSourceCode).contains(ignoredFragment);
-        assertThat(processedSourceCode).containsSubsequence("class Gamma", "class Beta", "class Alpha", "class Delta");
+        assertThat(processedSourceCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
     }
 
     @Test
@@ -122,7 +122,7 @@ class OptOutSourceProcessorIntegrationTest {
         String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).containsSubsequence("class Gamma", "class Beta", "class Alpha", "class Delta");
+        assertThat(processedSourceCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
         assertThat(processedSourceCode)
                 .contains("class Beta {\n    int z;\n    int a;\n}")
                 .doesNotContain("class Beta {\n    int a;\n    int z;\n}");
