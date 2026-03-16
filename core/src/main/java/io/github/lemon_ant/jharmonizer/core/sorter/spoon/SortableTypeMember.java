@@ -17,6 +17,11 @@ import lombok.NonNull;
 import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * A sortable wrapper around a Spoon {@code CtTypeMember} that caches the ordering key,
+ * the representative member for accessor-pair bundling, and the set of declaration dependents
+ * within the same member group.
+ */
 @Value
 class SortableTypeMember {
 

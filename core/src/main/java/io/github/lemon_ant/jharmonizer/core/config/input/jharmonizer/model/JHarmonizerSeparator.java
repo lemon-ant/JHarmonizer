@@ -6,6 +6,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Separator style values supported in the JHarmonizer YAML config for member groups.
+ * Each constant maps to a corresponding {@link UnifiedSeparator}.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum JHarmonizerSeparator {

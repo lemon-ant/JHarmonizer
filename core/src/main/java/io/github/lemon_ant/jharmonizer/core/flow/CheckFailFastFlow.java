@@ -21,6 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
+/**
+ * Flow that stops immediately when the first ordering or formatting violation is detected.
+ * Throws {@link NotOrderedException} if member order is wrong, or
+ * {@link NotFormattedException} if the formatted output differs from the original.
+ */
 @Slf4j
 @AllArgsConstructor
 public class CheckFailFastFlow implements IFlow {

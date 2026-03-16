@@ -7,6 +7,10 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Utility for measuring the wall-clock execution time of a supplier expression.
+ * Returns a {@link TimedResult} that combines the result value with the elapsed nanoseconds.
+ */
 @UtilityClass
 public class StopWatch {
 

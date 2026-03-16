@@ -18,6 +18,10 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
+ * Optionally renames the original file to a backup before overwriting it.
+ */
 @Slf4j
 @AllArgsConstructor
 public class RestructureFlow implements IFlow {

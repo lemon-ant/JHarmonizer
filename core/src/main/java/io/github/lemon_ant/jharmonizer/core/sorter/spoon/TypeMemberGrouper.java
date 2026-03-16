@@ -10,6 +10,10 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Groups type members into {@link MemberGroupBlock}s according to their effective
+ * compiled member group, preserving group declaration order.
+ */
 @UtilityClass
 class TypeMemberGrouper {
 

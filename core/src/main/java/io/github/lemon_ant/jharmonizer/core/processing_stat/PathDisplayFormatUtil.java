@@ -6,6 +6,11 @@ import java.util.Deque;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Utility for abbreviating long file-system paths to a maximum display width.
+ * Keeps the file name and as many parent path segments as fit,
+ * prefixing the truncated result with an ellipsis ({@code ...}).
+ */
 @UtilityClass
 public class PathDisplayFormatUtil {
 

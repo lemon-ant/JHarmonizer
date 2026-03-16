@@ -4,6 +4,10 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Java type-kind values supported in the JHarmonizer YAML config.
+ * Each constant maps to a corresponding {@link UnifiedTypeKind}.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum JHarmonizerTypeKind {

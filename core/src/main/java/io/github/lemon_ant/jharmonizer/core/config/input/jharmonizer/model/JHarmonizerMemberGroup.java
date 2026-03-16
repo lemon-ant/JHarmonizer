@@ -17,6 +17,11 @@ import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
+/**
+ * Deserialization model for a single member-group entry in a JHarmonizer YAML config.
+ * Captures the group name, include/exclude selector sets, ordering rules, separator style,
+ * accessor-pair bundling flag, and optional sub-groups.
+ */
 @Value
 public class JHarmonizerMemberGroup implements Serializable {
 

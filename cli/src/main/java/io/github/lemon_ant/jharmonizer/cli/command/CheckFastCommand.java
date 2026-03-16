@@ -4,6 +4,10 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import picocli.CommandLine.Command;
 
+/**
+ * CLI command that checks Java source files in fail-fast mode,
+ * stopping at the first file that requires restructuring and returning a distinct exit code.
+ */
 @Command(
         name = "check-fast",
         description =

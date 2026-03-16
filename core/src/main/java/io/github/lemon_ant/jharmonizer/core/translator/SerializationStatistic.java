@@ -3,6 +3,9 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 import java.util.Objects;
 import lombok.Value;
 
+/**
+ * Timing and size statistics collected during a single AST-to-source serialization pass.
+ */
 @Value
 public class SerializationStatistic {
     long processingTimeInNanos;

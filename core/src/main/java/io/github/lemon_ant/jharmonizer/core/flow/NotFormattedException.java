@@ -3,6 +3,10 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import java.io.Serial;
 import java.nio.file.Path;
 
+/**
+ * Thrown by {@link CheckFailFastFlow} when the formatted output of a source file
+ * differs from its original content, indicating that the file is not properly formatted.
+ */
 public class NotFormattedException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 6019397228008880777L;

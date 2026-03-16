@@ -15,6 +15,10 @@ import java.nio.file.Files;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Loads {@link JHarmonizerConfig} instances from YAML sources:
+ * the embedded default config, an {@link InputStream}, a classpath URL, or a file on disk.
+ */
 @UtilityClass
 class JHarmonizerConfigLoader {
     private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";

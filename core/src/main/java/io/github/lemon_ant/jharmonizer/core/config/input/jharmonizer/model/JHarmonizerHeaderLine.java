@@ -3,6 +3,10 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
 
+/**
+ * Header-line descriptor from a JHarmonizer YAML config,
+ * specifying the separator character and left-padding width used between member groups.
+ */
 @Value
 public class JHarmonizerHeaderLine {
 

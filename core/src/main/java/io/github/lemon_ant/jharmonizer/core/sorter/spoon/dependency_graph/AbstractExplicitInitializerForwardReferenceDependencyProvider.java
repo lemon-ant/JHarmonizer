@@ -23,6 +23,11 @@ import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
+/**
+ * Base provider that detects forward-reference declaration dependencies between fields
+ * that have an explicit (non-default-value) initializer.
+ * Subclasses specify which fields qualify as referenced/referrer fields and how to detect the reference.
+ */
 abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider implements MemberDependencyProvider {
 
     @NonNull

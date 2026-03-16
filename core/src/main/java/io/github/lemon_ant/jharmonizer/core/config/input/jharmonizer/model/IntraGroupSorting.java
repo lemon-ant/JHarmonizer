@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Locale;
 import lombok.NonNull;
 
+/**
+ * Intra-group sorting strategies available in the JHarmonizer YAML config.
+ */
 public enum IntraGroupSorting {
     ALPHA,
     PRESERVE,

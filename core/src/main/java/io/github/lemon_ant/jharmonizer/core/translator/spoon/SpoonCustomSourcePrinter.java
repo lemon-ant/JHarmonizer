@@ -26,6 +26,11 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.TokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
+/**
+ * Custom Spoon source printer that inserts group-separator headers between member groups,
+ * preserves the original source fragments for opt-out ranges,
+ * and normalises line separators to match the dominant separator of the original file.
+ */
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     private final String originalSourceCode;
 

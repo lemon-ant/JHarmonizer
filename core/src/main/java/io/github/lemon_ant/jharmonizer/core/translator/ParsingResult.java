@@ -5,6 +5,10 @@ import java.util.Objects;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Result of parsing one Java source file into a Spoon AST model.
+ * Bundles the parsed model with its associated timing and size statistics.
+ */
 @Value
 public class ParsingResult {
     @NonNull

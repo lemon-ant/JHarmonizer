@@ -3,6 +3,10 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Unified Java type-kind values used when ordering top-level types.
+ * Each constant maps to the corresponding {@link MemberKind} for use in selectors.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum UnifiedTypeKind {

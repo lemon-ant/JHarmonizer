@@ -4,6 +4,10 @@ import java.util.Objects;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Result of serializing a sorted Spoon AST back to Java source code.
+ * Bundles the serialized source string with the associated timing and size statistics.
+ */
 @Value
 public class SerializationResult {
     @NonNull

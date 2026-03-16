@@ -17,6 +17,10 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * Utility methods for extracting ordering-relevant attributes from Spoon {@code CtTypeMember} instances,
+ * such as alpha keys, visibility ranks, and source-position starts.
+ */
 @UtilityClass
 public class SpoonTypeMemberUtils {
 

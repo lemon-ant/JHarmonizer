@@ -4,6 +4,10 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Ordering rule values supported in the JHarmonizer YAML config.
+ * Each constant maps to a corresponding {@link UnifiedOrderingRule}.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum JHarmonizerOrderingRule {

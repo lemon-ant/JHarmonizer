@@ -5,6 +5,10 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Compiles a list of {@link UnifiedOrderingRule} values into the corresponding
+ * compiled {@link OrderingRule} values used during member sorting.
+ */
 @UtilityClass
 class OrderingRuleCompiler {
 
