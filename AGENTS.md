@@ -27,6 +27,9 @@ This file defines repository-wide conventions for coding agents working in this 
   - Private method parameters do not need nullability annotations just because the method is private.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
+- Do not change signatures declared outside this repository when overriding or implementing external/JDK/framework APIs.
+  - Do not add nullability annotations to such overridden methods just to satisfy local conventions.
+  - Preserve standard external contracts exactly, especially `equals(Object)`.
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.

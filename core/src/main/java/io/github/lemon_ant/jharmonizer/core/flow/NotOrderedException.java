@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 import lombok.Getter;
-import lombok.NonNull;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
@@ -41,7 +40,6 @@ public class NotOrderedException extends RuntimeException {
      * @return the message
      */
     @Override
-    @NonNull
     public String getMessage() {
         return printRelocations(offendingFile, relocations);
     }

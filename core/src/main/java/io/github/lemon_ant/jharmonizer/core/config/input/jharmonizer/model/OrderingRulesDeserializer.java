@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -26,9 +25,7 @@ class OrderingRulesDeserializer extends JsonDeserializer<List<JHarmonizerOrderin
      */
     @Override
     @SuppressWarnings("PMD.CyclomaticComplexity")
-    @NonNull
-    public List<JHarmonizerOrderingRule> deserialize(@NonNull JsonParser p, @NonNull DeserializationContext ctxt)
-            throws IOException {
+    public List<JHarmonizerOrderingRule> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         ObjectCodec codec = p.getCodec();
         JsonNode node = codec.readTree(p);
 

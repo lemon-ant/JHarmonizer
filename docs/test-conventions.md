@@ -23,6 +23,9 @@ Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.
 - **AssertJ** is the assertion library.
   - Do not use `org.junit.jupiter.api.Assertions.*` in new/updated tests.
 - Prefer using production pipeline building blocks (parsers, converters, compilers, factories) instead of test-only reimplementations.
+- When test code overrides or implements methods declared outside this repository, preserve the external signature exactly.
+  - Do not add nullability annotations to external/JDK/framework method signatures in tests.
+  - In particular, keep `equals(Object)` unchanged.
 
 ## Code reuse and deduplication
 

@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
 import java.util.Objects;
-import lombok.NonNull;
 import lombok.Value;
 
 /**
@@ -37,7 +36,6 @@ public class SerializationStatistic {
     }
 
     @Override
-    @NonNull
     public String toString() {
         return "SerializationStatistic[" + "serializedCodeLength="
                 + serializedCodeLength + ", " + "processingTimeInNanos="
