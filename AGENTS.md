@@ -28,7 +28,9 @@ This file defines repository-wide conventions for coding agents working in this 
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
-    - Private method parameters do not need nullability annotations just because the method is private.
+    - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
+  - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
+  - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
 - Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
