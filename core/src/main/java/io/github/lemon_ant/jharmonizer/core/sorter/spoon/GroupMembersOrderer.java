@@ -68,7 +68,7 @@ class GroupMembersOrderer {
     @NonNull
     private static List<@NonNull CtTypeMember> orderMembersInsideGroup(
             CompiledMemberGroup compiledMemberGroup,
-            List<@NonNull CtTypeMember> groupMembers,
+            List<CtTypeMember> groupMembers,
             MemberDependencyGraph memberDependencyGraph) {
         if (groupMembers.size() <= ONE) {
             return List.copyOf(groupMembers);
@@ -219,7 +219,7 @@ class GroupMembersOrderer {
 
     @NonNull
     private static Map<CtTypeMember, List<CtTypeMember>> buildAccessorBundleMembersByMember(
-            Set<@NonNull CtTypeMember> groupMembers,
+            Set<CtTypeMember> groupMembers,
             MemberDependencyGraph memberDependencyGraph,
             Comparator<CtTypeMember> typeMemberBaseComparator) {
         @SuppressWarnings("PMD.UseConcurrentHashMap")

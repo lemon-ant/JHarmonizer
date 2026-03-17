@@ -19,7 +19,9 @@
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
-  - Private method parameters do not need nullability annotations just because the method is private.
+  - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
+  - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
+  - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
   - This repository-wide rule also applies to private helper methods in tests.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
@@ -147,8 +149,9 @@
 - Use `IllegalStateException` for unexpected setup or state.
 - Use `UncheckedIOException` for I/O problems.
 - For internal test-only utility classes, prefer Lombok for null checks.
-- Use `@NonNull` on parameters instead of `Objects.requireNonNull(...)`.
+- Use `@NonNull` on non-private parameters instead of `Objects.requireNonNull(...)`.
 - Use `@UtilityClass` for pure utility classes.
+- Private helper method parameters must not use Lombok `@NonNull`; use `@Nullable` only when the helper intentionally accepts `null`.
 - If a private test helper returns a reference type, annotate the return contract explicitly with `@NonNull` or `@Nullable`.
 - If a helper returns `Optional<T>`, treat that as part of the test logic.
 - Prefer `findXxx(...)` returning `Optional<T>`.
