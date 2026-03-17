@@ -43,24 +43,11 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                     srcFile, parsingResult, true, List.of(), "", "all harmonization checks");
         }
 
-        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
-        SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
-
-        FormatingResult formattingResult = getFormatter()
-                .formatSource(
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
-                        srcFile.getPath(),
-                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormatedSrcCode());
+        SortAndFormatPassResult sortAndFormatPassResult =
+                sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
+        SortingPassResult sortingPassResult = sortAndFormatPassResult.getSortingPassResult();
+        FormatingResult formattingResult = sortAndFormatPassResult.getFormatingResult();
+        SpoonAstModel sortedSpoonAstModel = sortAndFormatPassResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;

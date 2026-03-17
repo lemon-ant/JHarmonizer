@@ -44,24 +44,10 @@ public class RestructureFlow extends AbstractOptOutFlow {
         }
 
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
-        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting");
-        SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
-
-        FormatingResult formattingResult = getFormatter()
-                .formatSource(
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
-                        srcFile.getPath(),
-                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormatedSrcCode());
+        SortAndFormatPassResult sortAndFormatPassResult = sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
+        SortingPassResult sortingPassResult = sortAndFormatPassResult.getSortingPassResult();
+        FormatingResult formattingResult = sortAndFormatPassResult.getFormatingResult();
+        SpoonAstModel sortedSpoonAstModel = sortAndFormatPassResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
         if (hasChanges) {
