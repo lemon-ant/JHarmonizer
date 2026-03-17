@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import picocli.CommandLine.Command;
 
@@ -14,10 +13,8 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class RestructureCommand extends BaseCommand {
 
-    RestructureCommand() {}
-
-    RestructureCommand(SourceProcessor sourceProcessor) {
-        super(sourceProcessor);
+    RestructureCommand() {
+        // Required by Picocli (command instantiation).
     }
 
     @Override
