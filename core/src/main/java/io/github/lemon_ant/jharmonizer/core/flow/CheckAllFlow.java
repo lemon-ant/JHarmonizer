@@ -26,7 +26,6 @@ public class CheckAllFlow extends AbstractOptOutFlow {
 
     /**
      * Processes the source.
-     *
      * @param srcFile the source file
      * @return the result
      */

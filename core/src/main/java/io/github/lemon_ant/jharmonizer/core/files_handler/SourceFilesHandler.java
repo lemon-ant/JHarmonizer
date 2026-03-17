@@ -30,8 +30,9 @@ public class SourceFilesHandler {
      * @param excludeGlobs the exclude globs to apply
      * @return the matching Java file paths
      */
+    @NonNull
     public static Stream<Path> findJavaFiles(
-            Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs) {
+            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(baseDir)
                 .includeGlobs(includeGlobs)

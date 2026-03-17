@@ -17,8 +17,9 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Loads {@link JHarmonizerConfig} instances from YAML sources:
- * the embedded default config, an {@link InputStream}, a classpath URL, or a file on disk.
+ * Loads strict {@link JHarmonizerConfig} and flexible {@link JHarmonizerFlexibleConfig}
+ * instances from YAML sources such as the embedded default config, an {@link InputStream},
+ * a classpath URL, or a file on disk.
  */
 @UtilityClass
 public class JHarmonizerConfigLoader {
@@ -82,10 +83,10 @@ public class JHarmonizerConfigLoader {
     }
 
     /**
-     * Loads a flexible JHarmonizer config from a classpath resource.
+     * Loads a flexible {@link JHarmonizerFlexibleConfig} from a classpath resource URL.
      *
-     * @param classpathResource the classpath resource to read
-     * @return the loaded flexible configuration
+     * @param classpathResource classpath URL pointing to a YAML config
+     * @return parsed flexible vendor config
      */
     @NonNull
     static JHarmonizerFlexibleConfig loadFlexibleFromClasspathResource(@NonNull URL classpathResource) {
@@ -98,10 +99,10 @@ public class JHarmonizerConfigLoader {
     }
 
     /**
-     * Loads a flexible JHarmonizer config from a YAML file.
+     * Loads a flexible {@link JHarmonizerFlexibleConfig} from a YAML file on disk.
      *
-     * @param yamlFile the YAML file to read
-     * @return the loaded flexible configuration
+     * @param yamlFile YAML config file
+     * @return parsed flexible vendor config
      */
     @NonNull
     static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull File yamlFile) {
@@ -113,11 +114,11 @@ public class JHarmonizerConfigLoader {
     }
 
     /**
-     * Loads a flexible JHarmonizer config from a YAML input stream.
+     * Loads a flexible {@link JHarmonizerFlexibleConfig} directly from a YAML input stream.
      *
-     * @param configInput the configuration input stream
-     * @return the loaded flexible configuration
-     * @throws IOException if the configuration cannot be read
+     * @param configInput YAML content stream
+     * @return parsed flexible vendor config
+     * @throws IOException when the YAML cannot be read or parsed
      */
     @NonNull
     static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull InputStream configInput) throws IOException {

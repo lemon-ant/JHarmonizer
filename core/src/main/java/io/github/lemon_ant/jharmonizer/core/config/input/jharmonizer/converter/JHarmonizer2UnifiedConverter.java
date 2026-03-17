@@ -25,6 +25,7 @@ public final class JHarmonizer2UnifiedConverter {
      * @param vendor the vendor configuration to convert
      * @return the converted 2 unified
      */
+    @NonNull
     public static UnifiedConfig convert2Unified(@NonNull JHarmonizerConfig vendor) {
         // 1) Top-level types ordering
         UnifiedTopLevelTypesOrdering top = TopLevelTypesOrderingMapper.map(vendor.getTopLevelTypesOrdering());

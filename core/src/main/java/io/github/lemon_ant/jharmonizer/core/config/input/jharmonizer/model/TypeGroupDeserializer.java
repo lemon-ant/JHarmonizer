@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import lombok.NonNull;
 
 /**
  * Jackson deserializer that converts a YAML scalar or sequence into a
@@ -23,7 +24,9 @@ class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTopLevelTypeSele
      * @return the result
      */
     @Override
-    public JHarmonizerTopLevelTypeSelector deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    @NonNull
+    public JHarmonizerTopLevelTypeSelector deserialize(@NonNull JsonParser p, @NonNull DeserializationContext ctxt)
+            throws IOException {
         ObjectCodec codec = p.getCodec();
         JsonNode node = codec.readTree(p);
 

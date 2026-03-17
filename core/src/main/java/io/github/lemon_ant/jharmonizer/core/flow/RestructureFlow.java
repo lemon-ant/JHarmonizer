@@ -14,6 +14,10 @@ import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
+/**
+ * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
+ * Optionally renames the original file to a backup before overwriting it.
+ */
 public class RestructureFlow extends AbstractOptOutFlow {
 
     private final boolean backupsEnabled;

@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
+import lombok.NonNull;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -20,7 +21,7 @@ public final class JHarmonizerCliApplication {
      * Starts the CLI application.
      * @param args the command-line arguments
      */
-    public static void main(String[] args) {
+    public static void main(@NonNull String[] args) {
         int exitCode = new CommandLine(JHarmonizerCliApplication.class).execute(args);
         System.exit(exitCode);
     }

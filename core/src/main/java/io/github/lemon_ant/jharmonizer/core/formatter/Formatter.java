@@ -34,9 +34,10 @@ public final class Formatter {
 
     private final Style formatterStyle;
 
+
+
     /**
      * Creates a new Formatter.
-     *
      * @param style the style
      * @param fixImports the fix imports
      */
@@ -58,7 +59,7 @@ public final class Formatter {
      * @return a FormatingResult containing the formatted source code and statistics
      */
     @NonNull
-    public FormatingResult formatSource(String srcCode, Path srcPath) {
+    public FormatingResult formatSource(@NonNull String srcCode, @NonNull Path srcPath) {
         return formatSource(srcCode, srcPath, List.of());
     }
 

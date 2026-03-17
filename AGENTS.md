@@ -27,11 +27,19 @@ This file defines repository-wide conventions for coding agents working in this 
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
+- Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
+    - Private method parameters do not need nullability annotations just because the method is private.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
 - Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
+- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
+- Do not change standard `Object` method signatures when overriding them.
+    - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
+    - Preserve standard contracts exactly, especially `equals(Object)`.
+- Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
+    - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.

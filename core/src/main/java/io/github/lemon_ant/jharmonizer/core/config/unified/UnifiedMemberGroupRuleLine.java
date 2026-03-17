@@ -128,6 +128,7 @@ public class UnifiedMemberGroupRuleLine {
          * @return the builder
          * @throws IllegalStateException if nameMatcher has already been assigned
          */
+        @NonNull
         public UnifiedMemberGroupRuleLineBuilder nameMatcher(@Nullable UnifiedNameMatcher nameMatcher) {
             if (this.nameMatcherAlreadyAssigned) {
                 throw new IllegalStateException("nameMatcher has already been assigned for " + this);

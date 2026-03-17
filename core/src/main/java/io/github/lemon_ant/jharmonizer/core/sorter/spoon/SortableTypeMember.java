@@ -56,7 +56,6 @@ class SortableTypeMember {
     }
 
     @Override
-    @NonNull
     public String toString() {
         return "member=" + describeTypeMember(typeMember)
                 + ", orderingKey=" + orderingKey
@@ -108,6 +107,7 @@ class SortableTypeMember {
          * Returns the ordering key provider.
          * @return the ordering key provider
          */
+        @NonNull
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();

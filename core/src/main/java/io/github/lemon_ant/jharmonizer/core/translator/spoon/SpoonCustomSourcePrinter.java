@@ -66,53 +66,54 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     /**
-     * Performs the visit ct annotation type.
+     * Visits an annotation type and prints it using the shared type-structure logic.
      *
-     * @param annotationType the annotation type
+     * @param annotationType the annotation type to print
      */
     @Override
-    public <A extends Annotation> void visitCtAnnotationType(CtAnnotationType<A> annotationType) {
+    public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {
         printTypeStructure(annotationType);
     }
 
     /**
      * Performs the visit ct class.
-     *
      * @param ctClass the ct class
      */
     @Override
-    public <T> void visitCtClass(CtClass<T> ctClass) {
+    public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
         printTypeStructure(ctClass);
     }
 
     /**
      * Performs the visit ct enum.
-     *
      * @param ctEnum the ct enum
      */
     @Override
-    public <T extends Enum<?>> void visitCtEnum(CtEnum<T> ctEnum) {
+    public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
         printTypeStructure(ctEnum);
     }
 
     /**
      * Performs the visit ct interface.
-     *
      * @param intrface the intrface
      */
     @Override
-    public <T> void visitCtInterface(CtInterface<T> intrface) {
+    public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
         printTypeStructure(intrface);
     }
 
     /**
      * Performs the visit ct record.
-     *
      * @param recordType the record type
      */
     @Override
-    public void visitCtRecord(CtRecord recordType) {
+    public void visitCtRecord(@NonNull CtRecord recordType) {
         printTypeStructure(recordType);
+    }
+
+    @NonNull
+    private TokenWriter printOriginalFragment(SourcePosition pos) {
+        return printOriginalFragment(pos.getSourceStart(), pos.getSourceEnd());
     }
 
     @NonNull
@@ -246,11 +247,10 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     /**
      * Performs the visit ct compilation unit.
-     *
      * @param compilationUnit the compilation unit to inspect
      */
     @Override
-    public void visitCtCompilationUnit(CtCompilationUnit compilationUnit) {
+    public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {
             super.visitCtCompilationUnit(compilationUnit);
         }

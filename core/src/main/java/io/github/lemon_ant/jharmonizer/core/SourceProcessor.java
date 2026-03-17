@@ -69,8 +69,12 @@ public final class SourceProcessor {
      *
      * @param paths List of paths to source files to be processed.
      */
+    @NonNull
     public AggregatedProcessingStatistic processSources(
-            Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs, FlowType flowType) {
+            @NonNull Path baseDir,
+            @NonNull Collection<String> includeGlobs,
+            @NonNull Collection<String> excludeGlobs,
+            @NonNull FlowType flowType) {
         log.info(
                 "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
                 flowType,

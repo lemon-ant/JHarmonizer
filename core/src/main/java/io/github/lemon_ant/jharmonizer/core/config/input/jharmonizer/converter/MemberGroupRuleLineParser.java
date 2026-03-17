@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -32,7 +33,8 @@ class MemberGroupRuleLineParser {
      * @param rawTokens the raw tokens to normalize
      * @return the result
      */
-    static UnifiedMemberGroupRuleLine parse(Set<String> rawTokens) {
+    @NonNull
+    static UnifiedMemberGroupRuleLine parse(@NonNull Set<String> rawTokens) {
         Set<String> tokens = TokenNormalizer.normalizeTokens(rawTokens);
 
         UnifiedMemberGroupRuleLineBuilder ruleLineBuilder = UnifiedMemberGroupRuleLine.builder();

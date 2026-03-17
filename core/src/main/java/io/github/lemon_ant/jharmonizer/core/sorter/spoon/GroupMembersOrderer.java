@@ -98,10 +98,10 @@ class GroupMembersOrderer {
      */
     @NonNull
     static List<@NonNull SortableTypeMember> convertTypeMembers2SortableTypeMembers(
-            CompiledMemberGroup compiledMemberGroup,
-            List<@NonNull CtTypeMember> groupMembers,
-            MemberDependencyGraph memberDependencyGraph,
-            Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
+            @NonNull CompiledMemberGroup compiledMemberGroup,
+            @NonNull List<@NonNull CtTypeMember> groupMembers,
+            @NonNull MemberDependencyGraph memberDependencyGraph,
+            @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 

@@ -76,6 +76,7 @@ abstract class BaseCommand implements Callable<Integer> {
      *
      * @return the flow type to execute
      */
+    @NonNull
     protected abstract FlowType getFlowType();
 
     /**
@@ -93,6 +94,7 @@ abstract class BaseCommand implements Callable<Integer> {
      * @return the process exit code
      */
     @Override
+    @NonNull
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
         Path effectiveBaseDir = baseDir != null ? baseDir : Path.of(".");

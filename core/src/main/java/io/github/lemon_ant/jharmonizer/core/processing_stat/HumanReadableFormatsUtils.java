@@ -31,6 +31,7 @@ final class HumanReadableFormatsUtils {
      * @return the result
      */
     @SuppressWarnings("PMD.UnsynchronizedStaticFormatter")
+    @NonNull
     static String formatBytes(long bytes) {
         if (bytes < 0) {
             throw new IllegalArgumentException("Byte size must be non-negative, but was: " + bytes);
@@ -53,6 +54,7 @@ final class HumanReadableFormatsUtils {
      * @param durationNanos the duration nanos
      * @return the result
      */
+    @NonNull
     static String formatSecondsMicrosecondsFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
@@ -70,6 +72,7 @@ final class HumanReadableFormatsUtils {
      * @param durationNanos the duration nanos
      * @return the result
      */
+    @NonNull
     static String formatHmsMillisFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");

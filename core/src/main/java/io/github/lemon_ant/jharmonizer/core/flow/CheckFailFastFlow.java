@@ -17,6 +17,11 @@ import lombok.NonNull;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
+/**
+ * Flow that stops immediately when the first ordering or formatting violation is detected.
+ * Throws {@link NotOrderedException} if member order is wrong, or
+ * {@link NotFormattedException} if the formatted output differs from the original.
+ */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
 
     public CheckFailFastFlow(@NonNull Formatter formatter, @NonNull Sorter sorter) {
@@ -25,7 +30,6 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
     /**
      * Processes the source.
-     *
      * @param srcFile the source file
      * @return the result
      */

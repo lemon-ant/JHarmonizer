@@ -31,7 +31,8 @@ public final class SourceAstTranslator {
      * @return the source file
      */
     @SuppressWarnings("PMD.GuardLogStatement")
-    public static ParsingResult parseSourceFile(SrcFile sourceSrcFile) {
+    @NonNull
+    public static ParsingResult parseSourceFile(@NonNull SrcFile sourceSrcFile) {
         log.debug("Parsing {}", sourceSrcFile.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
@@ -49,7 +50,8 @@ public final class SourceAstTranslator {
      * @return the serialization result containing the source code and statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
-    public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
+    @NonNull
+    public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
         TimedResult<SerializedSourceSnapshot> serializationTimedResult = StopWatch.measure(
