@@ -33,8 +33,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @Nullable
-    private static UnifiedTopLevelTypesOrdering readTopLevelTypesOrdering(
-            @NonNull JHarmonizerFlexibleConfig vendorConfig) {
+    private static UnifiedTopLevelTypesOrdering readTopLevelTypesOrdering(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalTopLevelTypesOrdering()
                 .map(TopLevelTypesOrderingMapper::map)
@@ -42,7 +41,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @Nullable
-    private static UnifiedFormatting readFormatting(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
+    private static UnifiedFormatting readFormatting(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalFormatting()
                 .map(JHarmonizerFlexible2FlexibleUnifiedConverter::mapFormatting)
@@ -50,7 +49,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @Nullable
-    private static UnifiedHeaderLine readHeaderLine(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
+    private static UnifiedHeaderLine readHeaderLine(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalHeaderLine()
                 .map(headerLine -> new UnifiedHeaderLine(headerLine.getCharacter(), headerLine.getLeftPadding()))
@@ -58,7 +57,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @Nullable
-    private static List<UnifiedMemberGroup> readRootMemberGroups(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
+    private static List<UnifiedMemberGroup> readRootMemberGroups(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalMemberGroups()
                 .map(memberGroups ->
@@ -67,7 +66,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @NonNull
-    private static UnifiedFormatting mapFormatting(@NonNull JHarmonizerFormatting vendorFormatting) {
+    private static UnifiedFormatting mapFormatting(JHarmonizerFormatting vendorFormatting) {
         return new UnifiedFormatting(
                 vendorFormatting.isFixImports(),
                 vendorFormatting.getFormatterStyle().getUnifiedFormatterStyle());

@@ -53,8 +53,7 @@ public class SpoonSorter {
     }
 
     private static void reorderTopLevelTypes(
-            @NonNull CtCompilationUnit compilationUnit,
-            @NonNull CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
+            CtCompilationUnit compilationUnit, CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() <= SINGLE_TOP_LEVEL_TYPE_COUNT) {
             return;
@@ -77,7 +76,7 @@ public class SpoonSorter {
     }
 
     private static int findTopLevelTypeGroupIndex(
-            @NonNull CtType<?> topLevelType, @NonNull CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
+            CtType<?> topLevelType, CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
         MemberDescriptor topLevelTypeDescriptor = SpoonMemberDescriptorFactory.describeMember(topLevelType);
         List<Predicate<MemberDescriptor>> topLevelTypesSelectors =
                 compiledTopLevelTypesOrdering.getTopLevelTypesSelectors();

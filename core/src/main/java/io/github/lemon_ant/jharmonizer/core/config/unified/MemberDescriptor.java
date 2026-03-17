@@ -88,10 +88,10 @@ public class MemberDescriptor {
     }
 
     private static void enforceAbstractNotPrivate(
-            @NonNull TargetCategory targetCategory,
+            TargetCategory targetCategory,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull String validationContext) {
+            Set<DeclarationModifier> declarationModifiers,
+            String validationContext) {
 
         if (targetCategory == TargetCategory.METHOD
                 && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
@@ -102,7 +102,7 @@ public class MemberDescriptor {
     }
 
     private static void enforceAbstractNotStaticMethod(
-            @NonNull TargetCategory targetCategory, @NonNull Set<@NonNull DeclarationModifier> declarationModifiers) {
+            TargetCategory targetCategory, Set<DeclarationModifier> declarationModifiers) {
 
         if (targetCategory == TargetCategory.METHOD
                 && declarationModifiers.contains(DeclarationModifier.ABSTRACT)
@@ -112,7 +112,7 @@ public class MemberDescriptor {
     }
 
     private static void validateAccessForMemberKind(
-            @NonNull MemberKind memberKind, @Nullable MemberAccess memberAccess, @NonNull String validationContext) {
+            MemberKind memberKind, @Nullable MemberAccess memberAccess, String validationContext) {
 
         boolean accessLevelApplicable = memberKind.getTargetCategory().isAccessLevelApplicable();
         boolean accessLevelProvided = (memberAccess != null);
@@ -127,10 +127,10 @@ public class MemberDescriptor {
 
     private static @Nullable String validateAndNormalizeName(
             @Nullable String rawName,
-            @NonNull MemberKind memberKind,
+            MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull Set<@NonNull String> annotationQualifiedNames) {
+            Set<DeclarationModifier> declarationModifiers,
+            Set<String> annotationQualifiedNames) {
 
         String trimmedName = trimToNull(rawName);
 
@@ -156,10 +156,10 @@ public class MemberDescriptor {
     }
 
     private static void validateModifierApplicability(
-            @NonNull MemberKind memberKind,
-            @NonNull TargetCategory targetCategory,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull String validationContext) {
+            MemberKind memberKind,
+            TargetCategory targetCategory,
+            Set<DeclarationModifier> declarationModifiers,
+            String validationContext) {
         declarationModifiers.stream()
                 .filter(declarationModifier -> !declarationModifier.isApplicableTo(targetCategory))
                 .findAny()
@@ -172,9 +172,7 @@ public class MemberDescriptor {
     }
 
     private static void validateModifierPairwiseConflicts(
-            @NonNull MemberKind memberKind,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull String validationContext) {
+            MemberKind memberKind, Set<DeclarationModifier> declarationModifiers, String validationContext) {
 
         if (declarationModifiers.size() > ONE) {
             DeclarationModifier[] declarationModifierArray = declarationModifiers.toArray(new DeclarationModifier[0]);
@@ -194,10 +192,10 @@ public class MemberDescriptor {
     }
 
     private static void validateModifiers(
-            @NonNull MemberKind memberKind,
+            MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull String validationContext) {
+            Set<DeclarationModifier> declarationModifiers,
+            String validationContext) {
 
         TargetCategory targetCategory = memberKind.getTargetCategory();
 
@@ -210,10 +208,10 @@ public class MemberDescriptor {
     private static @NonNull String formatValidationContext(
             @Nullable String rawName,
             @Nullable String normalizedName,
-            @NonNull MemberKind memberKind,
+            MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
-            @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull Set<@NonNull String> annotationQualifiedNames) {
+            Set<DeclarationModifier> declarationModifiers,
+            Set<String> annotationQualifiedNames) {
 
         return "\ncontext{memberKind=" + memberKind
                 + ",\ntargetCategory=" + memberKind.getTargetCategory()

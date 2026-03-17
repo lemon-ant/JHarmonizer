@@ -26,7 +26,7 @@ class OrderingRuleCompiler {
     }
 
     @NonNull
-    private static OrderingRule compileOrderingRule(@NonNull UnifiedOrderingRule unifiedOrderingRule) {
+    private static OrderingRule compileOrderingRule(UnifiedOrderingRule unifiedOrderingRule) {
         return switch (unifiedOrderingRule) {
             case ALPHA -> OrderingRule.ALPHA;
             case PRESERVE -> OrderingRule.PRESERVE;

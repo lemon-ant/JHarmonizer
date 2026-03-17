@@ -27,8 +27,7 @@ import spoon.reflect.declaration.ModifierKind;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class InitializationOrderDependencyUtils {
 
-    private static boolean matchesInitializationMemberStaticness(
-            @NonNull CtTypeMember typeMember, boolean requiredStaticness) {
+    private static boolean matchesInitializationMemberStaticness(CtTypeMember typeMember, boolean requiredStaticness) {
         return (typeMember instanceof CtField<?> || typeMember instanceof CtAnonymousExecutable)
                 && typeMember.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness;
     }
@@ -109,8 +108,7 @@ final class InitializationOrderDependencyUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static boolean isFieldWrittenByMember(
-            @NonNull CtTypeMember candidateProviderMember, @NonNull CtField<?> blankFinalField) {
+    private static boolean isFieldWrittenByMember(CtTypeMember candidateProviderMember, CtField<?> blankFinalField) {
         return resolveInitializationAstRoot(candidateProviderMember)
                 .map(astRoot ->
                         DeclaringTypeFieldReferenceUtils.findFieldsWrittenByMember(candidateProviderMember, astRoot))
