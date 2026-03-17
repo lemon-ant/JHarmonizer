@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.NonNull;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtAnonymousExecutable;
@@ -231,6 +232,7 @@ class EffectiveMemberGroupResolverTest {
                 .hasMessageContaining("providerMember=");
     }
 
+    @NonNull
     private static Map<CtTypeMember, CompiledMemberGroup> createNaturalGroupMappingInOrder(
             List<CtTypeMember> insertionOrder, Map<CtTypeMember, CompiledMemberGroup> naturalGroupsByMember) {
         LinkedHashMap<CtTypeMember, CompiledMemberGroup> orderedMapping = new LinkedHashMap<>();
@@ -239,10 +241,12 @@ class EffectiveMemberGroupResolverTest {
         return orderedMapping;
     }
 
+    @NonNull
     private static CtTypeMember requireFixtureMember(CtType<?> fixtureMainType, String simpleName) {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(fixtureMainType.getTypeMembers(), simpleName);
     }
 
+    @NonNull
     private static CtTypeMember requireUniqueInitializerBlockMember(
             CtType<?> declaringType, boolean requiredStaticness) {
         List<CtAnonymousExecutable> initializerBlocks = declaringType.getTypeMembers().stream()

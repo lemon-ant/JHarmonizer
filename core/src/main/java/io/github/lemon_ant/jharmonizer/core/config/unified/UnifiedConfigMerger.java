@@ -12,6 +12,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class UnifiedConfigMerger {
 
+    /**
+     * Performs the merge.
+     * @param baseline the baseline
+     * @param overlay the overlay
+     * @return the result
+     */
     @NonNull
     public static UnifiedConfig merge(@NonNull UnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
         Objects.requireNonNull(baseline, "baseline");

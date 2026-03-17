@@ -14,6 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -102,6 +103,7 @@ class GroupMembersOrdererSortableModelTest {
         assertThat(middleSortableTypeMember.getRepresentativeTypeMember()).isSameAs(middleSortableTypeMember);
     }
 
+    @NonNull
     private static SortableTypeMember requireSortableTypeMember(
             List<SortableTypeMember> sortableTypeMembers, CtTypeMember expectedTypeMember) {
         return sortableTypeMembers.stream()
@@ -125,6 +127,7 @@ class GroupMembersOrdererSortableModelTest {
                 .thenReturn(accessorBundleDependents);
     }
 
+    @NonNull
     private static CtTypeMember requireFixtureMemberBySimpleName(String expectedSimpleName) {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(FIXTURE_MEMBERS, expectedSimpleName);
     }

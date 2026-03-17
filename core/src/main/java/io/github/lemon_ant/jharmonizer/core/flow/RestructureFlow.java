@@ -31,6 +31,11 @@ public class RestructureFlow implements IFlow {
     private final Sorter sorter;
     private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(RESTRUCTURE);
 
+    /**
+     * Processes the source.
+     * @param srcFile the source file
+     * @return the result
+     */
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {

@@ -21,18 +21,16 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class SourceFilesHandler {
 
-    /**
-     * Recursively resolves all `.java` files matching the given include and exclude glob patterns.
-     * Supports mixed absolute and relative globs. Duplicates are removed.
-     * For absolute globs, baseDir is extracted from the glob prefix. TODO rewrite
-     * For relative globs, baseDir is current dir (".").
-     * Excludes are applied as relative to each baseDir (assume excludes are relative; extend if needed for abs excludes).
-     *
-     * @param includeGlobs glob patterns to include (mixed abs/rel)
-     * @param excludeGlobs glob patterns to exclude (relative to bases)
-     * @return stream of unique absolute Java file paths (normalized)
-     */
     // TODO Hide it and expose a new method readJavaFiles that combines findJavaFiles + readFile
+    /**
+     * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
+     * Supports mixed absolute and relative globs and removes duplicates from the result.
+     *
+     * @param baseDir the base directory to scan
+     * @param includeGlobs the include globs to apply
+     * @param excludeGlobs the exclude globs to apply
+     * @return the matching Java file paths
+     */
     @NonNull
     public static Stream<Path> findJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
@@ -45,6 +43,11 @@ public class SourceFilesHandler {
         return GlobPathFinder.findPaths(pathQuery);
     }
 
+    /**
+     * Performs the overwrite.
+     * @param path the path to use
+     * @param fileContent the file content
+     */
     public static void overwrite(@NonNull Path path, @NonNull String fileContent) {
         try {
             Files.writeString(path, fileContent, StandardCharsets.UTF_8);
@@ -54,8 +57,14 @@ public class SourceFilesHandler {
         log.trace("File content has been overwritten at {}", fileContent);
     }
 
-    @NonNull
     // TODO Hide in readJavaFiles method
+    /**
+     * Reads a source file into a {@link SrcFile} value.
+     *
+     * @param file the source file to read
+     * @return the loaded source file wrapper
+     */
+    @NonNull
     public static SourceFilesHandler.SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
@@ -67,8 +76,13 @@ public class SourceFilesHandler {
         return srcFile;
     }
 
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     // TODO Hide in the Overwrite method
+    /**
+     * Renames the source file to its backup variant with a {@code .bak} suffix.
+     *
+     * @param sourceFile the source file to back up
+     */
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public static void renameToBackup(@NonNull Path sourceFile) {
         if (!Files.exists(sourceFile) || !Files.isRegularFile(sourceFile)) {
             throw new UncheckedIOException(

@@ -37,6 +37,13 @@ class SortableTypeMember {
     @NonNull
     Set<@NonNull CtTypeMember> orderingDependentsInGroup;
 
+    /**
+     * Creates a new SortableTypeMember.
+     * @param typeMember the type member
+     * @param representativeTypeMember the representative type member
+     * @param orderingDependentsInGroup the ordering dependents in group
+     * @param orderingKeyProvider the ordering key provider
+     */
     SortableTypeMember(
             @NonNull CtTypeMember typeMember,
             @Nullable SortableTypeMember representativeTypeMember,
@@ -97,6 +104,10 @@ class SortableTypeMember {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class OrderingKey {
 
+        /**
+         * Returns the ordering key provider.
+         * @return the ordering key provider
+         */
         @NonNull
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")

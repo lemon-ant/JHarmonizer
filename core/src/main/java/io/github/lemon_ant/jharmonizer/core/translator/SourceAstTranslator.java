@@ -25,6 +25,11 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 public final class SourceAstTranslator {
 
+    /**
+     * Parses the source file.
+     * @param sourceSrcFile the source src file
+     * @return the source file
+     */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
     public static ParsingResult parseSourceFile(@NonNull SrcFile sourceSrcFile) {
@@ -38,6 +43,12 @@ public final class SourceAstTranslator {
         return new ParsingResult(statistic, spoonASTModel);
     }
 
+    /**
+     * Serializes the sorted AST model back to source code.
+     *
+     * @param sortedSpoonAstModel the sorted Spoon AST model to serialize
+     * @return the serialization result containing the source code and statistics
+     */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
@@ -52,6 +63,7 @@ public final class SourceAstTranslator {
                 serializedSourceCode);
     }
 
+    @NonNull
     private static ParsingStatistic createParsingStatistic(
             String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();

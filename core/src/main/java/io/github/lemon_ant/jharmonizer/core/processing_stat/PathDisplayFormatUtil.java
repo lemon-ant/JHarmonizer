@@ -17,6 +17,12 @@ public class PathDisplayFormatUtil {
     private static final String ELLIPSIS = "...";
     private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
+    /**
+     * Abbreviates the path for display.
+     * @param path the path to use
+     * @param maxTotalLength the max total length
+     * @return the result
+     */
     @NonNull
     public static String abbreviatePathForDisplay(@NonNull Path path, int maxTotalLength) {
         String fullPathString = path.toString();
@@ -72,11 +78,13 @@ public class PathDisplayFormatUtil {
         }
     }
 
+    @NonNull
     private static String renderAbbreviatedPath(String fileSystemSeparator, Deque<String> selectedTailElements) {
         String abbreviatedTail = String.join(fileSystemSeparator, selectedTailElements);
         return ELLIPSIS + fileSystemSeparator + abbreviatedTail;
     }
 
+    @NonNull
     private static String extractFileName(Path pathToFile) {
         Path fileNamePath = pathToFile.getFileName();
         return fileNamePath == null ? "" : fileNamePath.toString();

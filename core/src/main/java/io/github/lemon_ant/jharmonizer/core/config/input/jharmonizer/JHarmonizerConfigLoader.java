@@ -22,12 +22,16 @@ import lombok.experimental.UtilityClass;
  * a classpath URL, or a file on disk.
  */
 @UtilityClass
-class JHarmonizerConfigLoader {
+public class JHarmonizerConfigLoader {
     private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
+    /**
+     * Loads the default.
+     * @return the default
+     */
     @NonNull
     static JHarmonizerConfig loadDefault() {
         try (InputStream configYaml =
@@ -39,11 +43,21 @@ class JHarmonizerConfigLoader {
         }
     }
 
+    /**
+     * Loads the from.
+     * @param configInput the configuration input stream
+     * @return the from
+     */
     @NonNull
     static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
         return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
     }
 
+    /**
+     * Loads the from classpath resource.
+     * @param classpathResource the classpath resource to read
+     * @return the from classpath resource
+     */
     @NonNull
     static JHarmonizerConfig loadFromClasspathResource(@NonNull URL classpathResource) {
         try (InputStream inputStream = classpathResource.openStream()) {
@@ -54,6 +68,11 @@ class JHarmonizerConfigLoader {
         }
     }
 
+    /**
+     * Loads the from.
+     * @param yamlFile the YAML file to read
+     * @return the from
+     */
     @NonNull
     static JHarmonizerConfig loadFrom(@NonNull File yamlFile) {
         try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {

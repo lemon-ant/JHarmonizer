@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtAnonymousExecutable;
@@ -435,12 +436,14 @@ class MemberDependencyGraphBuilderTest {
                 .hasMessageContaining("Natural group was not resolved");
     }
 
+    @NonNull
     private static Map<CtTypeMember, CompiledMemberGroup> buildTypeMember2NaturalGroup(
             CtType<?> mainType, CompiledMemberGroup compiledMemberGroup) {
         return streamExplicitSourceTypeMembers(mainType)
                 .collect(Collectors.toUnmodifiableMap(typeMember -> typeMember, ignoredMember -> compiledMemberGroup));
     }
 
+    @NonNull
     private static CtTypeMember requireUniqueInitializerBlockMember(
             CtType<?> declaringType, boolean requiredStaticness) {
         List<CtAnonymousExecutable> initializerBlocks = streamExplicitSourceTypeMembers(declaringType)

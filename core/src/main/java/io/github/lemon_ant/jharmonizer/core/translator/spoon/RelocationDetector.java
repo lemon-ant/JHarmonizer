@@ -82,6 +82,12 @@ public class RelocationDetector {
                 .toList();
     }
 
+    /**
+     * Returns whether is relocated.
+     * @param originalOrderIndices the original order indices by source position
+     * @param reorderedCompilationUnit the reordered compilation unit to inspect
+     * @return {@code true} if is relocated; otherwise {@code false}
+     */
     public static boolean isRelocated(
             @NonNull Map<SourcePosition, Integer> originalOrderIndices,
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
@@ -133,6 +139,7 @@ public class RelocationDetector {
      * @param element the type element whose deep parent simple name is to be constructed
      * @return the deep parent simple name of the type element
      */
+    @NonNull
     private static String computeParentSimpleName(CtElement element) {
         if (element instanceof CtTypeMember member) {
             var nonBlankName = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
@@ -150,10 +157,12 @@ public class RelocationDetector {
         return "<nameless>";
     }
 
-    /**
-     * Main entry: map of CtElement to its current encounter index.
-     */
     // TODO Create a dedicated type instead of Map
+    /**
+     * Indexes the elements by order.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the index of elements by order
+     */
     @NonNull
     static Map<SourcePosition, Integer> indexElementsByOrder(@NonNull CtCompilationUnit compilationUnit) {
         AtomicInteger runningIndex = new AtomicInteger(0);

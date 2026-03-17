@@ -12,6 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtMethod;
@@ -275,10 +276,12 @@ class GroupMembersOrdererOrderingRulesTest {
                 .containsExactly(valueFieldMember, staticInitializerMember, readFieldMember);
     }
 
+    @NonNull
     private static CtTypeMember requireFixtureMemberBySimpleName(String expectedSimpleName) {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.FIXTURE_MEMBERS, expectedSimpleName);
     }
 
+    @NonNull
     private static CtMethod<?> requireFixtureMethodByNameAndParameterQualifiedNames(
             String expectedMethodName, List<String> expectedParameterTypeQualifiedNames) {
         return Constants.FIXTURE_MEMBERS.stream()
@@ -303,6 +306,7 @@ class GroupMembersOrdererOrderingRulesTest {
                                                 .toList())));
     }
 
+    @NonNull
     private static List<String> extractParameterTypeQualifiedNames(CtMethod<?> method) {
         return method.getParameters().stream()
                 .map(parameter -> parameter.getType().getQualifiedName())

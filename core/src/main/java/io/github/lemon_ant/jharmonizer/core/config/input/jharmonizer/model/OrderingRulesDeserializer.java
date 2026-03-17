@@ -18,6 +18,12 @@ import org.apache.commons.lang3.StringUtils;
  */
 class OrderingRulesDeserializer extends JsonDeserializer<List<JHarmonizerOrderingRule>> {
 
+    /**
+     * Performs the deserialize.
+     * @param p the parser to read from
+     * @param ctxt the deserialization context
+     * @return the resulting list
+     */
     @Override
     @SuppressWarnings("PMD.CyclomaticComplexity")
     @NonNull

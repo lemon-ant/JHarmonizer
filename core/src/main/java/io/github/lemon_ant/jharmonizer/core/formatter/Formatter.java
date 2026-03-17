@@ -28,6 +28,11 @@ public final class Formatter {
 
     private final Function<String, String> formattingMethod;
 
+    /**
+     * Creates a new Formatter.
+     * @param style the style
+     * @param fixImports the fix imports
+     */
     public Formatter(@NonNull UnifiedFormatterStyle style, boolean fixImports) {
         Style formatterStyle = UNIFIED_2_PALANTIR_FORMATTING_STYLE.get(style);
         Builder formatterBuilder = JavaFormatterOptions.builder();
@@ -43,6 +48,7 @@ public final class Formatter {
     /**
      * Single try/catch wrapper for any Palantir operation that takes only the source code.
      */
+    @NonNull
     private static Function<String, String> wrapFailableFunction(
             FailableFunction<String, String, FormatterException> palantirMethod) {
         return src -> {
@@ -70,6 +76,7 @@ public final class Formatter {
                 formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
     }
 
+    @NonNull
     private Function<String, String> prepareSrcFormattingMethod(
             boolean fixImports, Style formatterStyle, com.palantir.javaformat.java.Formatter formatter) {
         Optional<FailableFunction<String, String, FormatterException>> palantirMethod;

@@ -17,6 +17,11 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 class TypeMemberGrouper {
 
+    /**
+     * Performs the group members by effective groups.
+     * @param member2effectiveGroup the member2effective group
+     * @return the resulting list
+     */
     @NonNull
     List<@NonNull MemberGroupBlock> groupMembersByEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> member2effectiveGroup) {

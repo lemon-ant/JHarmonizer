@@ -17,16 +17,29 @@ final class CheckFastCommand extends BaseCommand {
 
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
+    /**
+     * Creates a new {@code check-fast} command.
+     */
     CheckFastCommand() {
         // Required by Picocli (command instantiation).
     }
 
+    /**
+     * Returns the flow type.
+     *
+     * @return the flow type
+     */
     @Override
     @NonNull
     protected FlowType getFlowType() {
         return FlowType.CHECK_FAIL_FAST;
     }
 
+    /**
+     * Returns the exit code used when a check detects formatting or ordering changes.
+     *
+     * @return the fail-fast check exit code
+     */
     @Override
     protected int checkFailedExitCode() {
         return EXIT_CODE_CHECK_FAILED;

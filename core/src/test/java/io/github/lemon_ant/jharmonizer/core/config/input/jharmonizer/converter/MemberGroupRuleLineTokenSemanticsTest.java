@@ -22,6 +22,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesO
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class MemberGroupRuleLineTokenSemanticsTest {
@@ -88,6 +89,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
         assertThat(matchesInstanceInitializer).isTrue();
     }
 
+    @NonNull
     private static CompiledMemberGroup compileSingleRootGroup(UnifiedMemberGroup rootGroup) {
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
                 .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
@@ -101,6 +103,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
         return compiledConfig.getRootMemberGroups().getFirst();
     }
 
+    @NonNull
     private static UnifiedTopLevelTypesOrdering createMinimalTopLevelTypesOrdering() {
         return UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(false)

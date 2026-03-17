@@ -19,6 +19,10 @@ public class JHarmonizerTopLevelTypeSelector {
     @NonNull
     Set<@NonNull JHarmonizerTypeKind> typeKinds;
 
+    /**
+     * Creates a new JHarmonizerTopLevelTypeSelector.
+     * @param typeKinds the type kinds
+     */
     JHarmonizerTopLevelTypeSelector(
             @NonNull @JsonProperty(value = "kinds", required = true) Set<@NonNull JHarmonizerTypeKind> typeKinds) {
         Validate.notEmpty(typeKinds, "kinds cannot be empty");

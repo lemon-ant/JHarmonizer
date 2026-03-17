@@ -35,6 +35,11 @@ import spoon.reflect.visitor.printer.CommentOffset;
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     private final String originalSourceCode;
 
+    /**
+     * Creates a new SpoonCustomSourcePrinter.
+     * @param env the env
+     * @param originalSourceCode the original source code
+     */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(Environment env, String originalSourceCode) {
         super(env);
@@ -43,35 +48,57 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         setLineSeparator(lineSeparator);
     }
 
+    /**
+     * Performs the visit ct annotation type.
+     * @param annotationType the annotation type
+     */
     @Override
     public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {
         printTypeStructure(annotationType);
     }
 
+    /**
+     * Performs the visit ct class.
+     * @param ctClass the ct class
+     */
     @Override
     public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
         printTypeStructure(ctClass);
     }
 
+    /**
+     * Performs the visit ct enum.
+     * @param ctEnum the ct enum
+     */
     @Override
     public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
         printTypeStructure(ctEnum);
     }
 
+    /**
+     * Performs the visit ct interface.
+     * @param intrface the intrface
+     */
     @Override
     public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
         printTypeStructure(intrface);
     }
 
+    /**
+     * Performs the visit ct record.
+     * @param recordType the record type
+     */
     @Override
     public void visitCtRecord(@NonNull CtRecord recordType) {
         printTypeStructure(recordType);
     }
 
+    @NonNull
     private TokenWriter printOriginalFragment(SourcePosition pos) {
         return printOriginalFragment(pos.getSourceStart(), pos.getSourceEnd());
     }
 
+    @NonNull
     private TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSourceCode);
         if (startWithIndent <= end && end <= originalSourceCode.length()) {
@@ -139,7 +166,6 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             // The member was marked as the first member of a group
             Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
                     .map(Object::toString);
-
             groupHeaderMetadata.ifPresent(groupHeader -> {
                 if (!groupHeader.isEmpty()) {
                     getPrinterTokenWriter()
@@ -172,6 +198,10 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         // TODO Check trailing indents
     }
 
+    /**
+     * Performs the visit ct compilation unit.
+     * @param compilationUnit the compilation unit to inspect
+     */
     @Override
     public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {

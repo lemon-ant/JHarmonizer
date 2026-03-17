@@ -23,6 +23,10 @@ public enum TargetCategory {
      */
     private final boolean accessLevelApplicable;
 
+    /**
+     * Returns whether is initializer.
+     * @return {@code true} if is initializer; otherwise {@code false}
+     */
     public boolean isInitializer() {
         return this == TargetCategory.INIT_BLOCK;
     }

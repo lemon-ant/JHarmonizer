@@ -17,6 +17,12 @@ import lombok.NonNull;
  */
 class TypeGroupDeserializer extends JsonDeserializer<JHarmonizerTopLevelTypeSelector> {
 
+    /**
+     * Performs the deserialize.
+     * @param p the parser to read from
+     * @param ctxt the deserialization context
+     * @return the result
+     */
     @Override
     @NonNull
     public JHarmonizerTopLevelTypeSelector deserialize(@NonNull JsonParser p, @NonNull DeserializationContext ctxt)

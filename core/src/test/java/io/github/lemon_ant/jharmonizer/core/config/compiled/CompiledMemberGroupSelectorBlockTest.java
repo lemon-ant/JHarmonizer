@@ -9,6 +9,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class CompiledMemberGroupSelectorBlockTest {
@@ -84,6 +85,7 @@ class CompiledMemberGroupSelectorBlockTest {
         assertThat(matches).isFalse();
     }
 
+    @NonNull
     private static MemberDescriptor createFieldDescriptor(
             String fieldName, MemberAccess memberAccess, DeclarationModifier... declarationModifiers) {
         EnumSet<DeclarationModifier> declarationModifiersSet = declarationModifiers.length == 0

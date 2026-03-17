@@ -39,6 +39,9 @@ public final class SourceProcessor {
     private final Formatter formatter;
     private final Sorter sorter;
 
+    /**
+     * Creates a new SourceProcessor.
+     */
     public SourceProcessor() {
         this((FlexibleUnifiedConfig) null);
     }
@@ -103,6 +106,7 @@ public final class SourceProcessor {
         return aggregatedProcessingStatistic;
     }
 
+    @NonNull
     private static String formatSingleFileLogMessage(Path path, String status) {
         String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH);
         return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;

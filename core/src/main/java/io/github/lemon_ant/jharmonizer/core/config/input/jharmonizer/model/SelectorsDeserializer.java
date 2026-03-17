@@ -34,6 +34,12 @@ import org.apache.commons.lang3.StringUtils;
  */
 class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
 
+    /**
+     * Performs the deserialize.
+     * @param jsonParser the parser to read from
+     * @param deserializationContext the deserialization context
+     * @return the resulting set
+     */
     @Override
     @NonNull
     public Set<Set<String>> deserialize(
@@ -54,6 +60,7 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
         throw new IllegalArgumentException("Unsupported selector value type: " + currentToken);
     }
 
+    @NonNull
     private Set<Set<String>> parseTopLevelArray(JsonParser jsonParser) throws IOException {
         Set<Set<String>> alternatives = new HashSet<>();
         Set<String> singleLineFlowGroup = new HashSet<>();
@@ -96,6 +103,7 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
         return Collections.unmodifiableSet(alternatives);
     }
 
+    @NonNull
     private Set<String> parseNestedArrayItem(JsonParser jsonParser) throws IOException {
         Set<String> group = new HashSet<>();
         while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
@@ -110,6 +118,7 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
         return Collections.unmodifiableSet(group);
     }
 
+    @NonNull
     private Set<String> parseCommaSeparated(String text) {
         return Arrays.stream(StringUtils.split(text, ','))
                 .map(String::trim)

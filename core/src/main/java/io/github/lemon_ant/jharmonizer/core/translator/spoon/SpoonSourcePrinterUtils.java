@@ -15,6 +15,13 @@ public class SpoonSourcePrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
 
+    /**
+     * Finds the first indentation character position for the source fragment.
+     *
+     * @param start the source index to scan backward from
+     * @param sourceCode the source code text to inspect
+     * @return the indentation start offset for the fragment
+     */
     static int findIndentationStart(int start, @NonNull String sourceCode) {
         int pos = start - 1;
         while (pos >= 0) {
@@ -27,6 +34,12 @@ public class SpoonSourcePrinterUtils {
         return pos + 1;
     }
 
+    /**
+     * Detects the dominant line separator.
+     *
+     * @param source the source code text to inspect
+     * @return the dominant line separator
+     */
     @NonNull
     @SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidReassigningLoopVariables"})
     static String detectDominantLineSeparator(@NonNull String source) {
@@ -60,6 +73,7 @@ public class SpoonSourcePrinterUtils {
         return selectDominantLineSeparator(crlfCount, lfCount, crCount);
     }
 
+    @NonNull
     private static String selectDominantLineSeparator(int crlfCount, int lfCount, int crCount) {
         if (crlfCount == 0 && lfCount == 0 && crCount == 0) {
             return System.lineSeparator();
@@ -75,6 +89,12 @@ public class SpoonSourcePrinterUtils {
         return "\r";
     }
 
+    /**
+     * Returns whether a separator is needed after the member.
+     *
+     * @param member the member to inspect
+     * @return {@code true} if a separator is needed after the member; otherwise {@code false}
+     */
     static boolean needsSeparatorAfter(@NonNull CtTypeMember member) {
         // Add the separator in any way if it's not field
         boolean isNotField = !(member instanceof CtField);
@@ -82,6 +102,13 @@ public class SpoonSourcePrinterUtils {
         return isNotField || !member.getAnnotations().isEmpty();
     }
 
+    /**
+     * Returns whether a separator is needed before the member.
+     *
+     * @param member the member to inspect
+     * @param first whether the member is the first one in the printed sequence
+     * @return {@code true} if a separator is needed before the member; otherwise {@code false}
+     */
     static boolean needsSeparatorBefore(@NonNull CtTypeMember member, boolean first) {
         // Has annotations on the member
         boolean hasAnnotations = !member.getAnnotations().isEmpty();

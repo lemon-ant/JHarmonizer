@@ -52,6 +52,7 @@ class ExternalCliProcessRunner {
         }
     }
 
+    @NonNull
     private static String readAndMirror(InputStream inputStream, PrintStream mirrorStream) throws IOException {
         ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
@@ -64,6 +65,7 @@ class ExternalCliProcessRunner {
         return outputBuffer.toString(StandardCharsets.UTF_8);
     }
 
+    @NonNull
     private static String getOutput(Future<String> outputFuture) throws InterruptedException {
         try {
             return outputFuture.get();

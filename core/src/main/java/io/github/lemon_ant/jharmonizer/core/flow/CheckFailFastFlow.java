@@ -34,6 +34,11 @@ public class CheckFailFastFlow implements IFlow {
     private final Sorter sorter;
     private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(FlowType.CHECK_FAIL_FAST);
 
+    /**
+     * Processes the source.
+     * @param srcFile the source file
+     * @return the result
+     */
     @Override
     public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
         debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());

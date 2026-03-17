@@ -16,6 +16,11 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 final class MemberGroupMapper {
 
+    /**
+     * Performs the map.
+     * @param srcMemberGroup the source member group
+     * @return the result
+     */
     @NonNull
     static UnifiedMemberGroup map(@NonNull JHarmonizerMemberGroup srcMemberGroup) {
         UnifiedMemberGroupSelectorBlock.UnifiedMemberGroupSelectorBlockBuilder selectorBlockBuilder =

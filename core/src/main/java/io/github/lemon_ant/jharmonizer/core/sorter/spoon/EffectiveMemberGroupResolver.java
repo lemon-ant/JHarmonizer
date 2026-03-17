@@ -24,6 +24,12 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 class EffectiveMemberGroupResolver {
 
+    /**
+     * Resolves the effective groups.
+     * @param typeMember2NaturalMemberGroup the type member2 natural member group
+     * @param memberDependencyGraph the member dependency graph
+     * @return the effective groups
+     */
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> resolveEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> typeMember2NaturalMemberGroup,
@@ -39,6 +45,7 @@ class EffectiveMemberGroupResolver {
                         }));
     }
 
+    @NonNull
     private static CompiledMemberGroup resolveEffectiveGroupForProvider(
             CtTypeMember providerMember,
             Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
@@ -54,6 +61,7 @@ class EffectiveMemberGroupResolver {
                                 + "providerMember=" + describeTypeMember(providerMember)));
     }
 
+    @NonNull
     private static CompiledMemberGroup requireNaturalMemberGroup(
             Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
             CtTypeMember providerMember,
@@ -70,10 +78,12 @@ class EffectiveMemberGroupResolver {
         return naturalMemberGroup;
     }
 
+    @NonNull
     private static String describeTypeMember(CtTypeMember typeMember) {
         return typeMember.getClass().getSimpleName() + "(" + typeMember.getShortRepresentation() + ")";
     }
 
+    @NonNull
     private static CompiledMemberGroup selectEarlierGroup(
             CompiledMemberGroup leftGroup, CompiledMemberGroup rightGroup) {
         return leftGroup.getOrderIndex() <= rightGroup.getOrderIndex() ? leftGroup : rightGroup;

@@ -26,11 +26,20 @@ public class NotOrderedException extends RuntimeException {
     private final Path offendingFile;
     private final Collection<Pair<CtElement, Integer>> relocations;
 
+    /**
+     * Creates a new NotOrderedException.
+     * @param offendingFile the offending file
+     * @param relocations the relocations
+     */
     public NotOrderedException(@Nonnull Path offendingFile, @Nonnull Collection<Pair<CtElement, Integer>> relocations) {
         this.offendingFile = offendingFile;
         this.relocations = unmodifiableCollection(relocations);
     }
 
+    /**
+     * Returns the message.
+     * @return the message
+     */
     @Override
     @NonNull
     public String getMessage() {

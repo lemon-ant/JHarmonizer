@@ -29,9 +29,11 @@ import picocli.CommandLine.Option;
 abstract class BaseCommand implements Callable<Integer> {
 
     /**
-     * Protected so only concrete commands in this hierarchy can instantiate the base type.
+     * Creates a new base CLI command.
      */
-    protected BaseCommand() {}
+    protected BaseCommand() {
+        // Protected so only concrete commands in this hierarchy can instantiate the base type.
+    }
 
     @Option(
             names = {"-b", "--base-dir"},
@@ -69,13 +71,28 @@ abstract class BaseCommand implements Callable<Integer> {
     @Nullable
     private Path configFilePath;
 
+    /**
+     * Returns the processing flow implemented by the command.
+     *
+     * @return the flow type to execute
+     */
     @NonNull
     protected abstract FlowType getFlowType();
 
+    /**
+     * Returns the exit code used when a check command detects violations.
+     *
+     * @return the exit code for check failures
+     */
     protected int checkFailedExitCode() {
         return 1;
     }
 
+    /**
+     * Parses command-line options and runs the selected processing flow.
+     *
+     * @return the process exit code
+     */
     @Override
     @NonNull
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
@@ -96,7 +113,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         CommandOptions commandOptions = new CommandOptions(
-                effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
+                absoluteBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }

@@ -15,6 +15,7 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStat
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
@@ -36,7 +37,9 @@ class CheckFastCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
-        verify(constructedProcessor).processSources(eq(Path.of("src")), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
+        verify(constructedProcessor)
+                .processSources(
+                        eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
     }
 
     @Test
@@ -80,7 +83,7 @@ class CheckFastCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Path.of("src")),
+                        eq(Path.of("src").toAbsolutePath().normalize()),
                         eq(Set.of("src/main/java/**/*.java", "src/test/java/**/*.java")),
                         eq(Set.of("**/internal/**", "**/*Test.java")),
                         eq(FlowType.CHECK_FAIL_FAST));
@@ -155,6 +158,7 @@ class CheckFastCommandTest {
         assertThat(exitCode).isEqualTo(1);
     }
 
+    @NonNull
     private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
         return mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))

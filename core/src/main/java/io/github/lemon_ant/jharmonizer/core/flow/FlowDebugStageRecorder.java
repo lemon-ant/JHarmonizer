@@ -33,6 +33,10 @@ final class FlowDebugStageRecorder {
     private final String runTimestampPrefix;
     private final Path flowOutputDirectory;
 
+    /**
+     * Creates a new FlowDebugStageRecorder.
+     * @param flowType the processing flow to run
+     */
     FlowDebugStageRecorder(@NonNull FlowType flowType) {
         this(flowType, Clock.systemDefaultZone());
     }
@@ -58,6 +62,12 @@ final class FlowDebugStageRecorder {
         }
     }
 
+    /**
+     * Performs the record src stage.
+     * @param fileName the file name
+     * @param stage the stage
+     * @param javaSourceText the java source text
+     */
     @SuppressWarnings("PMD.GuardLogStatement")
     void recordSrcStage(
             @NonNull Path fileName,

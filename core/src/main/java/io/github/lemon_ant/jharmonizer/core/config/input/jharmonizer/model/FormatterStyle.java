@@ -21,6 +21,11 @@ public enum FormatterStyle {
 
     private final UnifiedFormatterStyle unifiedFormatterStyle;
 
+    /**
+     * Performs the from string.
+     * @param value the raw value to parse
+     * @return the result
+     */
     @NonNull
     @JsonCreator
     static FormatterStyle fromString(@NonNull String value) {
