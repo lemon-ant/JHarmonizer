@@ -20,6 +20,7 @@
 - Prefer explicit Java types over `var`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters do not need nullability annotations just because the method is private.
+  - This repository-wide rule also applies to private helper methods in tests.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
 - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
@@ -142,6 +143,7 @@
 - For internal test-only utility classes, prefer Lombok for null checks.
 - Use `@NonNull` on parameters instead of `Objects.requireNonNull(...)`.
 - Use `@UtilityClass` for pure utility classes.
+- If a private test helper returns a reference type, annotate the return contract explicitly with `@NonNull` or `@Nullable`.
 - If a helper returns `Optional<T>`, treat that as part of the test logic.
 - Prefer `findXxx(...)` returning `Optional<T>`.
 - Prefer `requireXxx(...)` returning `T` and throwing `IllegalStateException` if missing or ambiguous.

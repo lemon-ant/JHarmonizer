@@ -228,6 +228,7 @@ For internal **test-only** utility classes, prefer Lombok for null checks:
 
 - Use `@NonNull` on parameters instead of `Objects.requireNonNull(...)`.
 - Use `@UtilityClass` for pure utility classes.
+- If a private test helper returns a reference type, annotate the return contract explicitly with `@NonNull` or `@Nullable`.
 
 Example:
 
