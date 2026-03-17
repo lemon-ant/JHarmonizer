@@ -4,6 +4,6 @@
         <Class name="io.github.lemon_ant.jharmonizer.jharmonizer_maven_plugin.HelpMojo" />
     </Match>
     <Match>
-        <Bug code="CT_CONSTRUCTOR_THROW" />
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
 </FindBugsFilter>
