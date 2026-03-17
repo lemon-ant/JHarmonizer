@@ -37,8 +37,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     /**
      * Creates a new SpoonCustomSourcePrinter.
-     * @param env the env
-     * @param originalSourceCode the original source code
+     *
+     * @param env the Spoon environment configuration used by the pretty printer
+     * @param originalSourceCode the original source code used to preserve exact source fragments
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(Environment env, String originalSourceCode) {
@@ -49,8 +50,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     /**
-     * Performs the visit ct annotation type.
-     * @param annotationType the annotation type
+     * Visits an annotation type and prints it using the shared type-structure logic.
+     *
+     * @param annotationType the annotation type to print
      */
     @Override
     public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {

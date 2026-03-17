@@ -22,7 +22,7 @@ import lombok.experimental.UtilityClass;
  * a classpath URL, or a file on disk.
  */
 @UtilityClass
-public class JHarmonizerConfigLoader {
+class JHarmonizerConfigLoader {
     private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
