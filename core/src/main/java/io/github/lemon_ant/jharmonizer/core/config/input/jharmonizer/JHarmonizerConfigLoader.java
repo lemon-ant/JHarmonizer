@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +21,7 @@ import lombok.experimental.UtilityClass;
  * the embedded default config, an {@link InputStream}, a classpath URL, or a file on disk.
  */
 @UtilityClass
-class JHarmonizerConfigLoader {
+public class JHarmonizerConfigLoader {
     private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -78,5 +79,48 @@ class JHarmonizerConfigLoader {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to load JHarmonizer config from file: " + yamlFile, e);
         }
+    }
+
+    /**
+     * Loads a flexible JHarmonizer config from a classpath resource.
+     *
+     * @param classpathResource the classpath resource to read
+     * @return the loaded flexible configuration
+     */
+    @NonNull
+    static JHarmonizerFlexibleConfig loadFlexibleFromClasspathResource(@NonNull URL classpathResource) {
+        try (InputStream inputStream = classpathResource.openStream()) {
+            return JHarmonizerConfigLoader.loadFlexibleFrom(inputStream);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException(
+                    "Failed to load flexible JHarmonizer config from classpath URL: " + classpathResource, ioException);
+        }
+    }
+
+    /**
+     * Loads a flexible JHarmonizer config from a YAML file.
+     *
+     * @param yamlFile the YAML file to read
+     * @return the loaded flexible configuration
+     */
+    @NonNull
+    static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull File yamlFile) {
+        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
+            return loadFlexibleFrom(configYaml);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load flexible JHarmonizer config from file: " + yamlFile, e);
+        }
+    }
+
+    /**
+     * Loads a flexible JHarmonizer config from a YAML input stream.
+     *
+     * @param configInput the configuration input stream
+     * @return the loaded flexible configuration
+     * @throws IOException if the configuration cannot be read
+     */
+    @NonNull
+    static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull InputStream configInput) throws IOException {
+        return YAML_MAPPER.readValue(configInput, JHarmonizerFlexibleConfig.class);
     }
 }

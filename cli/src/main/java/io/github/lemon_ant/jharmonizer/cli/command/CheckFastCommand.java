@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import picocli.CommandLine.Command;
 
@@ -18,20 +17,15 @@ final class CheckFastCommand extends BaseCommand {
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
     /**
-     * Creates a new CheckFastCommand.
+     * Creates a new {@code check-fast} command.
      */
-    CheckFastCommand() {}
-
-    /**
-     * Creates a new CheckFastCommand.
-     * @param sourceProcessor the source processor
-     */
-    CheckFastCommand(SourceProcessor sourceProcessor) {
-        super(sourceProcessor);
+    CheckFastCommand() {
+        // Required by Picocli (command instantiation).
     }
 
     /**
      * Returns the flow type.
+     *
      * @return the flow type
      */
     @Override
@@ -40,8 +34,9 @@ final class CheckFastCommand extends BaseCommand {
     }
 
     /**
-     * Performs the check failed exit code.
-     * @return the result
+     * Returns the exit code used when a check detects formatting or ordering changes.
+     *
+     * @return the fail-fast check exit code
      */
     @Override
     protected int checkFailedExitCode() {

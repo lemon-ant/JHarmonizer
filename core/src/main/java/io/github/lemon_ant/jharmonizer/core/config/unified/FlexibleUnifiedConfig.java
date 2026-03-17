@@ -68,7 +68,7 @@ public class FlexibleUnifiedConfig {
         this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
         this.rootMemberGroups =
-                ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(List.of());
+                ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(null);
     }
 
     /**

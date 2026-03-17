@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import picocli.CommandLine.Command;
 
@@ -14,20 +13,15 @@ import picocli.CommandLine.Command;
 final class CheckAllCommand extends BaseCommand {
 
     /**
-     * Creates a new CheckAllCommand.
+     * Creates a new {@code check-all} command.
      */
-    CheckAllCommand() {}
-
-    /**
-     * Creates a new CheckAllCommand.
-     * @param sourceProcessor the source processor
-     */
-    CheckAllCommand(SourceProcessor sourceProcessor) {
-        super(sourceProcessor);
+    CheckAllCommand() {
+        // Required by Picocli (command instantiation).
     }
 
     /**
      * Returns the flow type.
+     *
      * @return the flow type
      */
     @Override
