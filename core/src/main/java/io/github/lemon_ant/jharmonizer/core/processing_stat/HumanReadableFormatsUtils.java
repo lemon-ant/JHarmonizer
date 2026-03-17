@@ -25,6 +25,11 @@ final class HumanReadableFormatsUtils {
 
     private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
 
+    /**
+     * Formats the bytes.
+     * @param bytes the bytes
+     * @return the result
+     */
     @SuppressWarnings("PMD.UnsynchronizedStaticFormatter")
     static String formatBytes(long bytes) {
         if (bytes < 0) {
@@ -43,6 +48,11 @@ final class HumanReadableFormatsUtils {
         return formatBinary(bytes, GIB, " GiB");
     }
 
+    /**
+     * Formats the seconds microseconds from nanos.
+     * @param durationNanos the duration nanos
+     * @return the result
+     */
     static String formatSecondsMicrosecondsFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
@@ -55,6 +65,11 @@ final class HumanReadableFormatsUtils {
         return String.format(Locale.ROOT, "%d.%03d", totalSeconds, millisecondsPart);
     }
 
+    /**
+     * Formats the hms millis from nanos.
+     * @param durationNanos the duration nanos
+     * @return the result
+     */
     static String formatHmsMillisFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");

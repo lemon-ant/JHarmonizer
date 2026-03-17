@@ -12,6 +12,12 @@ import org.apache.commons.lang3.StringUtils;
  */
 @UtilityClass
 class EnumDeserializerUtil {
+    /**
+     * Performs the deserialize.
+     * @param enumClass the enum type to read from
+     * @param value the raw value to parse
+     * @return the result
+     */
     @NonNull
     static <T extends Enum<T>> T deserialize(@NonNull Class<T> enumClass, @NonNull String value) {
         String trimmedValue = Objects.requireNonNull(StringUtils.trimToNull(value));

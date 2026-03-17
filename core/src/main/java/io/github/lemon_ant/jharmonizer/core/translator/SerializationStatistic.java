@@ -11,6 +11,11 @@ public class SerializationStatistic {
     long processingTimeInNanos;
     long serializedCodeLength;
 
+    /**
+     * Creates a new SerializationStatistic.
+     * @param serializedCodeLength the serialized code length
+     * @param processingTimeInNanos the processing time in nanos
+     */
     public SerializationStatistic(long serializedCodeLength, long processingTimeInNanos) {
         this.serializedCodeLength = serializedCodeLength;
         this.processingTimeInNanos = processingTimeInNanos;

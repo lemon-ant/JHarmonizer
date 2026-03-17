@@ -27,6 +27,11 @@ class MemberGroupRuleLineParser {
     private static final Map<String, MemberKind> KIND_BY_TOKEN = TokenMaps.KIND_BY_TOKEN;
     private static final Map<String, DeclarationModifier> MOD_BY_TOKEN = TokenMaps.MODIFIER_BY_TOKEN;
 
+    /**
+     * Performs the parse.
+     * @param rawTokens the raw tokens to normalize
+     * @return the result
+     */
     static UnifiedMemberGroupRuleLine parse(Set<String> rawTokens) {
         Set<String> tokens = TokenNormalizer.normalizeTokens(rawTokens);
 

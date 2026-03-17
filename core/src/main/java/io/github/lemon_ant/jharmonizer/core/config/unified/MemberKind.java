@@ -30,10 +30,18 @@ public enum MemberKind {
 
     private final TargetCategory targetCategory;
 
+    /**
+     * Returns whether is initializer.
+     * @return {@code true} if is initializer; otherwise {@code false}
+     */
     public boolean isInitializer() {
         return this.getTargetCategory().isInitializer();
     }
 
+    /**
+     * Returns whether is type.
+     * @return {@code true} if is type; otherwise {@code false}
+     */
     public boolean isType() {
         return this.getTargetCategory().isType();
     }

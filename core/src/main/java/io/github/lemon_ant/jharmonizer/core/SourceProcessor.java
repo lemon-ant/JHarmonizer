@@ -39,6 +39,9 @@ public final class SourceProcessor {
     private final Formatter formatter;
     private final Sorter sorter;
 
+    /**
+     * Creates a new SourceProcessor.
+     */
     public SourceProcessor() {
         this((FlexibleUnifiedConfig) null);
     }

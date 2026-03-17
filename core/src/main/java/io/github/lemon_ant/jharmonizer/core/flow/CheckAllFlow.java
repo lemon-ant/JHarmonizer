@@ -34,6 +34,11 @@ public class CheckAllFlow implements IFlow {
     private final Sorter sorter;
     private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(CHECK_ALL);
 
+    /**
+     * Processes the source.
+     * @param srcFile the source file
+     * @return the result
+     */
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {

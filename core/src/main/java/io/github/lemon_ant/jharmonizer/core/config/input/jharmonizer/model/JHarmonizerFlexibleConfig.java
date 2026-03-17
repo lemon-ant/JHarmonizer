@@ -31,6 +31,15 @@ public class JHarmonizerFlexibleConfig {
     @Nullable
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
+    /**
+     * Creates a flexible JHarmonizer configuration with optional overlay values.
+     *
+     * @param topLevelTypesOrdering the optional top-level types ordering override
+     * @param formatting the optional formatting override
+     * @param backupsEnabled the optional backups-enabled override
+     * @param headerLine the optional header-line override
+     * @param memberGroups the optional member group overrides
+     */
     public JHarmonizerFlexibleConfig(
             @Nullable @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable @JsonProperty("formatting") JHarmonizerFormatting formatting,
@@ -45,26 +54,51 @@ public class JHarmonizerFlexibleConfig {
                 ofNullable(memberGroups).map(Collections::unmodifiableList).orElse(null);
     }
 
+    /**
+     * Returns the optional formatting override.
+     *
+     * @return the optional formatting override
+     */
     @NonNull
     public Optional<JHarmonizerFormatting> getOptionalFormatting() {
         return ofNullable(formatting);
     }
 
+    /**
+     * Returns the optional backups-enabled override.
+     *
+     * @return the optional backups-enabled override
+     */
     @NonNull
     public Optional<Boolean> getOptionalBackupsEnabled() {
         return ofNullable(backupsEnabled);
     }
 
+    /**
+     * Returns the optional header-line override.
+     *
+     * @return the optional header-line override
+     */
     @NonNull
     public Optional<JHarmonizerHeaderLine> getOptionalHeaderLine() {
         return ofNullable(headerLine);
     }
 
+    /**
+     * Returns the optional member group overrides.
+     *
+     * @return the optional member group overrides
+     */
     @NonNull
     public Optional<List<JHarmonizerMemberGroup>> getOptionalMemberGroups() {
         return ofNullable(memberGroups);
     }
 
+    /**
+     * Returns the optional top-level types ordering override.
+     *
+     * @return the optional top-level types ordering override
+     */
     @NonNull
     public Optional<JHarmonizerTopLevelTypesOrdering> getOptionalTopLevelTypesOrdering() {
         return ofNullable(topLevelTypesOrdering);

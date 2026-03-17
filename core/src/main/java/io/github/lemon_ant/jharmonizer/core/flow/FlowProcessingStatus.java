@@ -15,6 +15,13 @@ public enum FlowProcessingStatus {
     UNCHANGED,
     ;
 
+    /**
+     * Performs the define flow processing status.
+     * @param hasRelocations the has relocations
+     * @param contentChanged the content changed
+     * @param checkingOnly the checking only
+     * @return the result
+     */
     @NonNull
     public static FlowProcessingStatus defineFlowProcessingStatus(
             boolean hasRelocations, boolean contentChanged, boolean checkingOnly) {

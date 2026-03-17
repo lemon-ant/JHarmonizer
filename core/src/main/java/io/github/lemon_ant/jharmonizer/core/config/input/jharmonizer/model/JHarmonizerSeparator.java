@@ -19,6 +19,11 @@ public enum JHarmonizerSeparator {
 
     private final UnifiedSeparator unifiedSeparator;
 
+    /**
+     * Performs the from string.
+     * @param value the raw value to parse
+     * @return the result
+     */
     @NonNull
     @JsonCreator
     static JHarmonizerSeparator fromString(@NonNull String value) {

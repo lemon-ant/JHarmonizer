@@ -16,6 +16,11 @@ import spoon.reflect.declaration.CtTypeMember;
 final class FieldInitializerBackwardReferenceDependencyProvider
         extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
+    /**
+     * Resolves the dependent ast root.
+     * @param dependentMember the dependent member
+     * @return the dependent ast root
+     */
     @NonNull
     @Override
     protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {

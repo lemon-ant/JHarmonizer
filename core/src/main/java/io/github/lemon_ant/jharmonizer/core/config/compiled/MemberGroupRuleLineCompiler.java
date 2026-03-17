@@ -29,6 +29,11 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class MemberGroupRuleLineCompiler {
 
+    /**
+     * Compiles the rule line.
+     * @param unifiedMemberGroupRuleLine the unified member group rule line
+     * @return the compiled rule line
+     */
     static Predicate<MemberDescriptor> compileRuleLine(UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine) {
 
         Predicate<MemberDescriptor> namePredicateOpt =

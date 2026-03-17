@@ -10,6 +10,12 @@ import lombok.NonNull;
  */
 @FunctionalInterface
 public interface IFlow {
+    /**
+     * Processes a single source file with the current flow strategy.
+     *
+     * @param srcFile the source file to process
+     * @return the processing result for the source file
+     */
     @NonNull
     FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile);
 }

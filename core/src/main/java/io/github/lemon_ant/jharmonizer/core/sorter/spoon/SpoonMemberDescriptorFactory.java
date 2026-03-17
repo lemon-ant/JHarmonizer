@@ -54,6 +54,11 @@ class SpoonMemberDescriptorFactory {
             // TODO Map SEALED / NON_SEALED once Spoon exposes them (Java 17+ features).
             );
 
+    /**
+     * Performs the describe members.
+     * @param type the type
+     * @return the resulting map
+     */
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
         return streamExplicitSourceTypeMembers(type)
@@ -61,6 +66,11 @@ class SpoonMemberDescriptorFactory {
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
 
+    /**
+     * Performs the describe member.
+     * @param typeMember the type member
+     * @return the result
+     */
     static MemberDescriptor describeMember(CtTypeMember typeMember) {
         MemberKind memberKind = resolveMemberKind(typeMember);
         MemberAccess memberAccess = resolveMemberAccessIfApplicable(typeMember);

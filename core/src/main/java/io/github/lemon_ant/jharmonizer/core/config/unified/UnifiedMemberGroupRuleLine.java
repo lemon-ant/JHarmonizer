@@ -46,6 +46,14 @@ public class UnifiedMemberGroupRuleLine {
     UnifiedNameMatcher nameMatcher;
 
     // TODO Remove builder
+    /**
+     * Creates a new UnifiedMemberGroupRuleLine.
+     * @param memberKinds the member kinds
+     * @param memberAccesses the member accesses
+     * @param declarationModifiers the declaration modifiers
+     * @param nameMatcher the name matcher
+     * @param annotationMatchers the annotation matchers
+     */
     @Builder
     public UnifiedMemberGroupRuleLine(
             @NonNull @Singular Set<@NonNull MemberKind> memberKinds,

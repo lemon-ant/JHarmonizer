@@ -12,10 +12,18 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckAllCommand extends BaseCommand {
 
+    /**
+     * Creates a new {@code check-all} command.
+     */
     CheckAllCommand() {
         // Required by Picocli (command instantiation).
     }
 
+    /**
+     * Returns the flow type.
+     *
+     * @return the flow type
+     */
     @Override
     protected FlowType getFlowType() {
         return FlowType.CHECK_ALL;

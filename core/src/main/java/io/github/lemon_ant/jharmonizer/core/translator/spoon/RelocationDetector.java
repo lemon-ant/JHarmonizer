@@ -81,6 +81,12 @@ public class RelocationDetector {
                 .toList();
     }
 
+    /**
+     * Returns whether is relocated.
+     * @param originalOrderIndices the original order indices by source position
+     * @param reorderedCompilationUnit the reordered compilation unit to inspect
+     * @return {@code true} if is relocated; otherwise {@code false}
+     */
     public static boolean isRelocated(
             Map<SourcePosition, Integer> originalOrderIndices, CtCompilationUnit reorderedCompilationUnit) {
 
@@ -147,10 +153,12 @@ public class RelocationDetector {
         return "<nameless>";
     }
 
-    /**
-     * Main entry: map of CtElement to its current encounter index.
-     */
     // TODO Create a dedicated type instead of Map
+    /**
+     * Indexes the elements by order.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the index of elements by order
+     */
     static Map<SourcePosition, Integer> indexElementsByOrder(CtCompilationUnit compilationUnit) {
         AtomicInteger runningIndex = new AtomicInteger(0);
         return streamDeclaredHierarchy(compilationUnit)

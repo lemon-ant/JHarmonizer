@@ -27,6 +27,11 @@ public class UnifiedMemberGroupSelectorBlock {
     @Singular
     Set<UnifiedMemberGroupRuleLine> includes;
 
+    /**
+     * Creates a new UnifiedMemberGroupSelectorBlock.
+     * @param excludes the excludes
+     * @param includes the includes
+     */
     public UnifiedMemberGroupSelectorBlock(
             @NonNull Set<UnifiedMemberGroupRuleLine> excludes, @NonNull Set<UnifiedMemberGroupRuleLine> includes) {
 

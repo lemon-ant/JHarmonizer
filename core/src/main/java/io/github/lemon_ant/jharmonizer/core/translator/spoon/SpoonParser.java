@@ -19,12 +19,23 @@ public class SpoonParser {
 
     private static final int JAVA_VERSION = 21;
 
+    /**
+     * Parses the java source resource.
+     * @param javaSourcePath the Java source path to parse
+     * @return the java source resource
+     */
     public static SpoonAstModel parseJavaSourceResource(Path javaSourcePath) throws IOException {
         Path normalizedSourcePath = javaSourcePath.normalize().toAbsolutePath();
         String originalSourceCode = Files.readString(normalizedSourcePath);
         return parseJavaSourceResource(normalizedSourcePath, originalSourceCode);
     }
 
+    /**
+     * Parses the java source resource.
+     * @param originalSourceFile the original source file
+     * @param originalSourceCode the original source code
+     * @return the java source resource
+     */
     public static SpoonAstModel parseJavaSourceResource(Path originalSourceFile, String originalSourceCode) {
         VirtualFile virtualFile = new VirtualFile(originalSourceCode, originalSourceFile.toString());
 

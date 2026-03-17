@@ -39,6 +39,14 @@ public class CompiledConfig {
     @NonNull
     CompiledTopLevelTypesOrdering topLevelTypesOrdering;
 
+    /**
+     * Creates a new CompiledConfig.
+     * @param rootMemberGroups the root member groups
+     * @param topLevelTypesOrdering the top level types ordering
+     * @param formatting the formatting
+     * @param backupsEnabled the backups enabled
+     * @param headerLine the header line
+     */
     CompiledConfig(
             @NonNull List<CompiledMemberGroup> rootMemberGroups,
             @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
@@ -52,6 +60,11 @@ public class CompiledConfig {
         this.headerLine = headerLine;
     }
 
+    /**
+     * Matches the root group.
+     * @param descriptor the member descriptor to inspect
+     * @return the optional result
+     */
     @NonNull
     public Optional<CompiledMemberGroup> matchRootGroup(@NonNull MemberDescriptor descriptor) {
         return rootMemberGroups.stream()

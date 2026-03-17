@@ -160,7 +160,6 @@ public class MemberDescriptor {
             @NonNull TargetCategory targetCategory,
             @NonNull Set<@NonNull DeclarationModifier> declarationModifiers,
             @NonNull String validationContext) {
-
         declarationModifiers.stream()
                 .filter(declarationModifier -> !declarationModifier.isApplicableTo(targetCategory))
                 .findAny()

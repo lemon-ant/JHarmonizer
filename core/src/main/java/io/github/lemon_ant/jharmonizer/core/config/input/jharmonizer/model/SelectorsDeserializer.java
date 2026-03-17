@@ -34,6 +34,12 @@ import org.apache.commons.lang3.StringUtils;
  */
 class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
 
+    /**
+     * Performs the deserialize.
+     * @param jsonParser the parser to read from
+     * @param deserializationContext the deserialization context
+     * @return the resulting set
+     */
     @Override
     public Set<Set<String>> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {

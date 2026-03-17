@@ -16,6 +16,10 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 @UtilityClass
 class GroupBoundaryMarker {
+    /**
+     * Performs the mark group boundaries.
+     * @param orderedBlocks the ordered blocks
+     */
     void markGroupBoundaries(@NonNull List<@NonNull MemberGroupBlock> orderedBlocks) {
         orderedBlocks.stream()
                 .filter(memberGroupBlock -> !memberGroupBlock.getTypeMembers().isEmpty())

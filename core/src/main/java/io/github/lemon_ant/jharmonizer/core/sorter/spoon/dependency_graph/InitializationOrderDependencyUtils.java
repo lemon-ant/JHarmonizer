@@ -33,6 +33,11 @@ final class InitializationOrderDependencyUtils {
                 && typeMember.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness;
     }
 
+    /**
+     * Resolves the initialization ast root.
+     * @param typeMember the type member
+     * @return the initialization ast root
+     */
     @NonNull
     static Optional<CtElement> resolveInitializationAstRoot(@NonNull CtTypeMember typeMember) {
         if (typeMember instanceof CtField<?> fieldWithPotentialInitializer) {
@@ -46,10 +51,20 @@ final class InitializationOrderDependencyUtils {
         return Optional.empty();
     }
 
+    /**
+     * Returns whether is blank final field.
+     * @param field the field
+     * @return {@code true} if is blank final field; otherwise {@code false}
+     */
     static boolean isBlankFinalField(@NonNull CtField<?> field) {
         return field.getModifiers().contains(ModifierKind.FINAL) && field.getDefaultExpression() == null;
     }
 
+    /**
+     * Returns whether is static compile time constant variable.
+     * @param field the field
+     * @return {@code true} if is static compile time constant variable; otherwise {@code false}
+     */
     static boolean isStaticCompileTimeConstantVariable(@NonNull CtField<?> field) {
         if (!field.getModifiers().contains(ModifierKind.STATIC)) {
             return false;

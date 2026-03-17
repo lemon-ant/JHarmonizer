@@ -15,6 +15,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class JHarmonizerFlexible2FlexibleUnifiedConverter {
 
+    /**
+     * Converts a flexible JHarmonizer config into the flexible unified config model.
+     *
+     * @param vendorConfig the flexible vendor config to convert
+     * @return the converted flexible unified config
+     */
     @NonNull
     public static FlexibleUnifiedConfig convert2FlexibleUnified(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
         UnifiedTopLevelTypesOrdering topLevelTypesOrdering = readTopLevelTypesOrdering(vendorConfig);

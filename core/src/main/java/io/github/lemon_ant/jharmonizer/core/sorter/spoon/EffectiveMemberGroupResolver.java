@@ -24,6 +24,12 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 class EffectiveMemberGroupResolver {
 
+    /**
+     * Resolves the effective groups.
+     * @param typeMember2NaturalMemberGroup the type member2 natural member group
+     * @param memberDependencyGraph the member dependency graph
+     * @return the effective groups
+     */
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> resolveEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> typeMember2NaturalMemberGroup,

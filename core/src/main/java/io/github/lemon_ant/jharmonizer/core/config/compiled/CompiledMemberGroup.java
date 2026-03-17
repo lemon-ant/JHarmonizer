@@ -62,6 +62,11 @@ public class CompiledMemberGroup {
         this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
+    /**
+     * Classifies the recursively.
+     * @param descriptor the member descriptor to inspect
+     * @return the recursively
+     */
     public Optional<CompiledMemberGroup> classifyRecursively(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();

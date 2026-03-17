@@ -30,6 +30,14 @@ public class JHarmonizerConfig {
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
     // TODO Make it package
+    /**
+     * Creates a new JHarmonizerConfig.
+     * @param topLevelTypesOrdering the top level types ordering
+     * @param formatting the formatting
+     * @param backupsEnabled the backups enabled
+     * @param headerLine the header line
+     * @param memberGroups the member groups
+     */
     public JHarmonizerConfig(
             @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
                     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,

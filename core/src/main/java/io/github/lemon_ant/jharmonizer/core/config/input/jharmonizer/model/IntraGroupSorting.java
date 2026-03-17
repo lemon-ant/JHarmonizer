@@ -15,6 +15,11 @@ public enum IntraGroupSorting {
     VISIBILITY_DESC,
     ;
 
+    /**
+     * Performs the from string.
+     * @param value the raw value to parse
+     * @return the result
+     */
     @NonNull
     @JsonCreator
     static IntraGroupSorting fromString(@NonNull String value) {

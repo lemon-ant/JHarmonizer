@@ -26,6 +26,12 @@ public class JHarmonizerTopLevelTypesOrdering {
     @NonNull
     List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors;
 
+    /**
+     * Creates a new JHarmonizerTopLevelTypesOrdering.
+     * @param mainTypeFirst the main type first
+     * @param topLevelTypeSelectors the top level type selectors
+     * @param orderingRules the ordering rules
+     */
     JHarmonizerTopLevelTypesOrdering(
             @JsonProperty(value = "main-type-first", required = true) boolean mainTypeFirst,
             @NonNull @JsonProperty(value = "type-groups", required = true)

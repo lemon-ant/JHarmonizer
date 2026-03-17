@@ -18,18 +18,35 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class JHarmonizerConfigurationManager {
+    /**
+     * Parses the embedded default configuration into the unified model.
+     *
+     * @return the unified default configuration
+     */
     @NonNull
     public static UnifiedConfig parseUnifiedDefaultConfig() {
         JHarmonizerConfig defaultJHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
         return JHarmonizer2UnifiedConverter.convert2Unified(defaultJHarmonizerConfig);
     }
 
+    /**
+     * Parses a classpath configuration resource into the unified model.
+     *
+     * @param classpathResource the classpath resource to read
+     * @return the unified configuration loaded from the resource
+     */
     @NonNull
     public static UnifiedConfig parseUnifiedConfigFromClasspathResource(@NonNull URL classpathResource) {
         JHarmonizerConfig loadedConfig = JHarmonizerConfigLoader.loadFromClasspathResource(classpathResource);
         return JHarmonizer2UnifiedConverter.convert2Unified(loadedConfig);
     }
 
+    /**
+     * Parses a classpath configuration resource into the flexible unified model.
+     *
+     * @param classpathResource the classpath resource to read
+     * @return the flexible unified configuration loaded from the resource
+     */
     @NonNull
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromClasspathResource(
             @NonNull URL classpathResource) {
@@ -38,6 +55,12 @@ public class JHarmonizerConfigurationManager {
         return JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(flexibleConfig);
     }
 
+    /**
+     * Parses a filesystem configuration file into the flexible unified model.
+     *
+     * @param configFilePath the configuration file path to read
+     * @return the flexible unified configuration loaded from the file
+     */
     @NonNull
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromFile(@NonNull Path configFilePath) {
         JHarmonizerFlexibleConfig flexibleConfig = JHarmonizerConfigLoader.loadFlexibleFrom(configFilePath.toFile());

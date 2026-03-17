@@ -46,6 +46,14 @@ public class UnifiedConfig {
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
     // TODO Remove builder
+    /**
+     * Creates a new UnifiedConfig.
+     * @param topLevelTypesOrdering the top level types ordering
+     * @param formatting the formatting
+     * @param backupsEnabled the backups enabled
+     * @param headerLine the header line
+     * @param rootMemberGroups the root member groups
+     */
     @Builder
     public UnifiedConfig(
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,

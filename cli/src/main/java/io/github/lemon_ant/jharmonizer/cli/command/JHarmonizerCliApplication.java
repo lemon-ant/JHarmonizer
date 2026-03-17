@@ -16,6 +16,10 @@ public final class JHarmonizerCliApplication {
 
     private JHarmonizerCliApplication() {}
 
+    /**
+     * Starts the CLI application.
+     * @param args the command-line arguments
+     */
     public static void main(String[] args) {
         int exitCode = new CommandLine(JHarmonizerCliApplication.class).execute(args);
         System.exit(exitCode);

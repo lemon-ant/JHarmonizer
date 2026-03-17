@@ -14,11 +14,20 @@ public class NotFormattedException extends RuntimeException {
     private final String diff; // String of diff output or similar information about the formatting issue
     private final Path offendingFile;
 
+    /**
+     * Creates a new NotFormattedException.
+     * @param offendingFile the offending file
+     * @param diff the diff
+     */
     public NotFormattedException(Path offendingFile, String diff) {
         this.offendingFile = offendingFile;
         this.diff = diff;
     }
 
+    /**
+     * Returns the message.
+     * @return the message
+     */
     @Override
     public String getMessage() {
         return String.format("[NotFormattedException] File not formatted: %s%n%s", offendingFile.getFileName(), diff);

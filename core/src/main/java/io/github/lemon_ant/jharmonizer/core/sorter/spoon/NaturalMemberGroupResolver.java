@@ -18,6 +18,12 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 class NaturalMemberGroupResolver {
 
+    /**
+     * Resolves the natural groups.
+     * @param rootMemberGroup the root member group
+     * @param typeMember2Descriptor the type member2 descriptor
+     * @return the natural groups
+     */
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> resolveNaturalGroups(
             @NonNull CompiledMemberGroup rootMemberGroup,

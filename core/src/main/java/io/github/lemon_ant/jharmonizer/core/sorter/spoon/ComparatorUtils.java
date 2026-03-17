@@ -15,14 +15,26 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 class ComparatorUtils {
 
+    /**
+     * Performs the build type member base comparator.
+     * @param orderingKeyProvider the ordering key provider
+     * @param orderingKeyComparator the ordering key comparator
+     * @return the result
+     */
     static @NonNull Comparator<CtTypeMember> buildTypeMemberBaseComparator(
             @NonNull Function<CtTypeMember, OrderingKey> orderingKeyProvider,
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return Comparator.comparing(orderingKeyProvider, orderingKeyComparator);
     }
 
-    @NonNull
     // Intentional identity check: the compared CtTypeMember objects come from the same Spoon model instance.
+    /**
+     * Builds the comparator used to order grouped type members.
+     *
+     * @param orderingKeyComparator the comparator for member ordering keys
+     * @return the comparator for sortable members
+     */
+    @NonNull
     static Comparator<SortableTypeMember> buildGroupComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
@@ -43,6 +55,11 @@ class ComparatorUtils {
         };
     }
 
+    /**
+     * Performs the build ordering comparator.
+     * @param orderingRules the ordering rules
+     * @return the result
+     */
     @NonNull
     static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(
             @NonNull List<OrderingRule> orderingRules) {

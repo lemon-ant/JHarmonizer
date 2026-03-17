@@ -30,6 +30,12 @@ import spoon.reflect.visitor.filter.TypeFilter;
  */
 abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider implements MemberDependencyProvider {
 
+    /**
+     * Finds the direct provider edges.
+     * @param dependentMember the dependent member
+     * @param keepAccessorsTogether the keep accessors together
+     * @return the matching direct provider edges
+     */
     @NonNull
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
@@ -48,13 +54,39 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    /**
+     * Returns whether the referenced field participates in this dependency rule.
+     *
+     * @param referencedField the referenced field to inspect
+     * @return {@code true} if the referenced field is supported; otherwise {@code false}
+     */
     protected abstract boolean isSupportedReferencedField(@NonNull CtField<?> referencedField);
 
+    /**
+     * Returns whether the referrer field participates in this dependency rule.
+     *
+     * @param referrerField the referrer field to inspect
+     * @return {@code true} if the referrer field is supported; otherwise {@code false}
+     */
     protected abstract boolean isSupportedReferrerField(@NonNull CtField<?> referrerField);
 
+    /**
+     * Returns whether the referrer field explicitly references the referenced field.
+     *
+     * @param referrerField the field containing the reference
+     * @param referencedField the referenced field to match
+     * @return {@code true} if the explicit reference exists; otherwise {@code false}
+     */
     protected abstract boolean hasExplicitReferenceTo(
             @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
 
+    /**
+     * Returns whether has explicit qualified reference to.
+     * @param referrerField the referrer field
+     * @param referencedField the referenced field
+     * @param qualifierMatcher the qualifier matcher
+     * @return {@code true} if has explicit qualified reference to; otherwise {@code false}
+     */
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     protected boolean hasExplicitQualifiedReferenceTo(
             @NonNull CtField<?> referrerField,
@@ -143,6 +175,11 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 && isNumericZeroLiteral(operandLiteral.getValue());
     }
 
+    /**
+     * Returns whether is static field.
+     * @param field the field
+     * @return {@code true} if is static field; otherwise {@code false}
+     */
     protected static boolean isStaticField(@NonNull CtField<?> field) {
         return field.getModifiers().contains(ModifierKind.STATIC);
     }
