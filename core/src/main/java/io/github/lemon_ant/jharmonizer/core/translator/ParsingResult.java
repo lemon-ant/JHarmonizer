@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.Objects;
 import lombok.NonNull;
@@ -19,7 +18,7 @@ public class ParsingResult {
     SpoonAstModel spoonAstModel;
 
     @Override
-    public boolean equals(@Nullable Object obj) {
+    public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (ParsingResult) obj;

@@ -81,7 +81,7 @@ public class CompiledMemberGroup {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (!(o instanceof CompiledMemberGroup that)) {
             return false;
         }

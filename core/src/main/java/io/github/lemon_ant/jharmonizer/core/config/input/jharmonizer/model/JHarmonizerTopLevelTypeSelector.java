@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.Set;
 import lombok.NonNull;
@@ -30,7 +29,7 @@ public class JHarmonizerTopLevelTypeSelector {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         return (o instanceof JHarmonizerTopLevelTypeSelector other) && typeKinds.equals(other.typeKinds);
     }
 

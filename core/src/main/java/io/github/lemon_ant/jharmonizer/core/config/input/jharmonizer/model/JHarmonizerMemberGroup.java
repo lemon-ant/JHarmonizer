@@ -87,7 +87,7 @@ public class JHarmonizerMemberGroup implements Serializable {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (!(o instanceof JHarmonizerMemberGroup that)) {
             return false;
         }

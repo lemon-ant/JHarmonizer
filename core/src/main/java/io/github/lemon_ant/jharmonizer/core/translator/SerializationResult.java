@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 import lombok.NonNull;
 import lombok.Value;
@@ -18,7 +17,7 @@ public class SerializationResult {
     String serializedSrcCode;
 
     @Override
-    public boolean equals(@Nullable Object obj) {
+    public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (SerializationResult) obj;

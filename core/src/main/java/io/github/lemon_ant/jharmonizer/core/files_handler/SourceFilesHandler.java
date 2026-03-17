@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.files_handler;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.globpathfinder.GlobPathFinder;
 import io.github.lemon_ant.globpathfinder.PathQuery;
@@ -107,7 +106,7 @@ public class SourceFilesHandler {
         Path path;
 
         @Override
-        public boolean equals(@Nullable Object o) {
+        public boolean equals(Object o) {
             if (!(o instanceof SrcFile that)) {
                 return false;
             }

@@ -227,7 +227,7 @@ public class MemberDescriptor {
 
     // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
         if (this == other) {
             return true;
         }

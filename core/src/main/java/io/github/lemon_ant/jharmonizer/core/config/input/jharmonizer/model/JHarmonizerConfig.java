@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;
@@ -56,7 +55,7 @@ public class JHarmonizerConfig {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (!(o instanceof JHarmonizerConfig that)) {
             return false;
         }

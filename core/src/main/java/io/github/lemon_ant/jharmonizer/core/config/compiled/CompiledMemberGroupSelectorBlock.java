@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +32,7 @@ public class CompiledMemberGroupSelectorBlock {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (!(o instanceof CompiledMemberGroupSelectorBlock that)) {
             return false;
         }

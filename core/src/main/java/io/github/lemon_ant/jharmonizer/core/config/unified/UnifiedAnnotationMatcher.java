@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -18,7 +17,7 @@ public class UnifiedAnnotationMatcher {
     String value; // exact value or regex pattern
 
     @Override
-    public boolean equals(@Nullable Object o) {
+    public boolean equals(Object o) {
         if (!(o instanceof UnifiedAnnotationMatcher that)) {
             return false;
         }
