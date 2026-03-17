@@ -60,6 +60,7 @@ public class StopWatch {
         }
 
         @Override
+        @NonNull
         public String toString() {
             return "Result: " + result + ", time: " + getMillis() + " ms";
         }

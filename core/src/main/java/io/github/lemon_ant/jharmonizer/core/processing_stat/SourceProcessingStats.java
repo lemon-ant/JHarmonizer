@@ -54,6 +54,7 @@ public class SourceProcessingStats {
         FileProcessingStatistic largestFile;
 
         @Override
+        @NonNull
         public String toString() {
             return String.format(
                     "Harmonization result:%nFiles processed: %,d%n" + "Total size: %s%n" + "Average size: %s%n"

@@ -56,6 +56,7 @@ class SortableTypeMember {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "member=" + describeTypeMember(typeMember)
                 + ", orderingKey=" + orderingKey
