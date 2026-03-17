@@ -86,11 +86,6 @@ public class JHarmonizerMemberGroup implements Serializable {
                 ofNullable(memberSubGroups).map(Collections::unmodifiableList).orElse(List.of());
     }
 
-    /**
-     * Checks whether this jharmonizer member group matches another object.
-     * @param o the object to compare with
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof JHarmonizerMemberGroup that)) {
@@ -106,10 +101,6 @@ public class JHarmonizerMemberGroup implements Serializable {
                 && memberSubGroups.equals(that.memberSubGroups);
     }
 
-    /**
-     * Returns the hash code of this jharmonizer member group.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         int result = name.hashCode();

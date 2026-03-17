@@ -31,11 +31,6 @@ public class CompiledMemberGroupSelectorBlock {
         this.excludePredicate = Collections.unmodifiableList(excludePredicate);
     }
 
-    /**
-     * Checks whether this compiled member group selector block matches another object.
-     * @param o the object to compare with
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CompiledMemberGroupSelectorBlock that)) {
@@ -45,10 +40,6 @@ public class CompiledMemberGroupSelectorBlock {
         return includePredicate.equals(that.includePredicate) && excludePredicate.equals(that.excludePredicate);
     }
 
-    /**
-     * Returns the hash code of this compiled member group selector block.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         int result = includePredicate.hashCode();

@@ -91,11 +91,6 @@ public class UnifiedMemberGroupRuleLine {
                 || hasAnnotationMatchersConfigured;
     }
 
-    /**
-     * Checks whether this unified member group rule line matches another object.
-     * @param o the object to compare with
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof UnifiedMemberGroupRuleLine that)) {
@@ -109,10 +104,6 @@ public class UnifiedMemberGroupRuleLine {
                 && annotationMatchers.equals(that.annotationMatchers);
     }
 
-    /**
-     * Returns the hash code of this unified member group rule line.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         int result = memberKinds.hashCode();

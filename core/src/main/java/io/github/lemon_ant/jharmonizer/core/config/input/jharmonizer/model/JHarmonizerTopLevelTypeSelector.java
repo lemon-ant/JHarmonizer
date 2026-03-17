@@ -28,20 +28,11 @@ public class JHarmonizerTopLevelTypeSelector {
         this.typeKinds = Collections.unmodifiableSet(typeKinds);
     }
 
-    /**
-     * Checks whether this jharmonizer top level type selector matches another object.
-     * @param o the object to compare with
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object o) {
         return (o instanceof JHarmonizerTopLevelTypeSelector other) && typeKinds.equals(other.typeKinds);
     }
 
-    /**
-     * Returns the hash code of this jharmonizer top level type selector.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         return typeKinds.hashCode();

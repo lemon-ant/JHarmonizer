@@ -35,11 +35,6 @@ public class StopWatch {
         @NonNull
         T result;
 
-        /**
-         * Checks whether this stop watch matches another object.
-         * @param o the object to compare with
-         * @return {@code true} if the check succeeds; otherwise {@code false}
-         */
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof TimedResult<?> that)) {
@@ -57,10 +52,6 @@ public class StopWatch {
             return nanos / 1_000_000.0;
         }
 
-        /**
-         * Returns the hash code of this stop watch.
-         * @return the hash code value
-         */
         @Override
         public int hashCode() {
             int result1 = result.hashCode();
@@ -68,10 +59,6 @@ public class StopWatch {
             return result1;
         }
 
-        /**
-         * Performs the to string.
-         * @return the result
-         */
         @Override
         public String toString() {
             return "Result: " + result + ", time: " + getMillis() + " ms";

@@ -51,10 +51,6 @@ public class SourceProcessingStats {
         @Nullable
         FileProcessingStatistic largestFile;
 
-        /**
-         * Performs the to string.
-         * @return the result
-         */
         @Override
         public String toString() {
             return String.format(

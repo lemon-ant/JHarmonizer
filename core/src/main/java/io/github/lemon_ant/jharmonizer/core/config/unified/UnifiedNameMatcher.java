@@ -17,11 +17,6 @@ public class UnifiedNameMatcher {
     @NonNull
     String value;
 
-    /**
-     * Checks whether this unified name matcher matches another object.
-     * @param o the object to compare with
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof UnifiedNameMatcher that)) {
@@ -31,10 +26,6 @@ public class UnifiedNameMatcher {
         return matchMethod == that.matchMethod && value.equals(that.value);
     }
 
-    /**
-     * Returns the hash code of this unified name matcher.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         int result = matchMethod.hashCode();

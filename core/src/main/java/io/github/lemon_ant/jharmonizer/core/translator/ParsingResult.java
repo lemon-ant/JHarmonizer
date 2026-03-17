@@ -17,11 +17,6 @@ public class ParsingResult {
     @NonNull
     SpoonAstModel spoonAstModel;
 
-    /**
-     * Checks whether this parsing result matches another object.
-     * @param obj the obj
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -31,10 +26,6 @@ public class ParsingResult {
                 && Objects.equals(this.parsingStatistic, that.parsingStatistic);
     }
 
-    /**
-     * Returns the hash code of this parsing result.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         int result = spoonAstModel.hashCode();

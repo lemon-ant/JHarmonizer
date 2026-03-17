@@ -104,11 +104,6 @@ public class SourceFilesHandler {
         @NonNull
         Path path;
 
-        /**
-         * Checks whether this source files handler matches another object.
-         * @param o the object to compare with
-         * @return {@code true} if the check succeeds; otherwise {@code false}
-         */
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof SrcFile that)) {
@@ -117,10 +112,6 @@ public class SourceFilesHandler {
             return path.equals(that.path) && srcCode.equals(that.srcCode);
         }
 
-        /**
-         * Returns the hash code of this source files handler.
-         * @return the hash code value
-         */
         @Override
         public int hashCode() {
             int result = path.hashCode();

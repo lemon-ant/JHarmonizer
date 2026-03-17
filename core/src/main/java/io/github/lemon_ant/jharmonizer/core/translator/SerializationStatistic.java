@@ -21,11 +21,6 @@ public class SerializationStatistic {
         this.processingTimeInNanos = processingTimeInNanos;
     }
 
-    /**
-     * Checks whether this serialization statistic matches another object.
-     * @param obj the obj
-     * @return {@code true} if the check succeeds; otherwise {@code false}
-     */
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -35,20 +30,11 @@ public class SerializationStatistic {
                 && this.processingTimeInNanos == that.processingTimeInNanos;
     }
 
-    /**
-     * Returns the hash code of this serialization statistic.
-     * @return the hash code value
-     */
     @Override
     public int hashCode() {
         return Objects.hash(serializedCodeLength, processingTimeInNanos);
     }
 
-    /**
-     * Returns the string representation of this serialization statistic.
-     *
-     * @return the string representation of this statistic
-     */
     @Override
     public String toString() {
         return "SerializationStatistic[" + "serializedCodeLength="
