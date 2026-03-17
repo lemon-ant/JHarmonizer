@@ -43,6 +43,7 @@ public class SpoonTestCaseUtils {
      * - Uses {@link URL#getPath()} to avoid parsing full external form.
      * - Does not URL-decode (%20 etc.). If you need decoding, use a URI-based variant.
      */
+    @NonNull
     private static String extractFileNameWithExtension(URL resourceUrl) {
         String urlPath = resourceUrl.getPath();
         if (urlPath == null || urlPath.isEmpty()) {

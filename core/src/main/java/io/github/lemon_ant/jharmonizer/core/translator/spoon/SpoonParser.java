@@ -37,6 +37,7 @@ public class SpoonParser {
         return buildSpoonAstModel(originalSourceFile, launcher);
     }
 
+    @NonNull
     private static SpoonAstModel buildSpoonAstModel(@NonNull Path path, @NonNull Launcher launcher) {
         var compilationUnit = extractCompilationUnit(launcher);
         var mainType = SpoonTypeUtils.findMainType(compilationUnit);
@@ -56,6 +57,7 @@ public class SpoonParser {
      *
      * @return preconfigured Launcher to parse a stand-alone Java source file without package directory structure
      */
+    @NonNull
     private static Launcher createPreconfiguredParserLauncher() {
         Launcher launcher = new Launcher();
         launcher.getEnvironment().setComplianceLevel(JAVA_VERSION);
@@ -66,6 +68,7 @@ public class SpoonParser {
         return launcher;
     }
 
+    @NonNull
     private static CtCompilationUnit extractCompilationUnit(Launcher launcher) {
         Collection<CtType<?>> allTypes = launcher.buildModel().getAllTypes();
         // TODO Flesh out the corner cases with package-info.java and module-info.java

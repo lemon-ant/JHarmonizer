@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class MemberGroupCompilerTest {
@@ -109,6 +110,7 @@ class MemberGroupCompilerTest {
                 .containsExactly(OrderingRule.VISIBILITY_DESC, OrderingRule.ALPHA, OrderingRule.PRESERVE);
     }
 
+    @NonNull
     private static UnifiedMemberGroup createGroup(
             String groupName,
             Boolean keepAccessorsTogether,
@@ -126,6 +128,7 @@ class MemberGroupCompilerTest {
                 .build();
     }
 
+    @NonNull
     private static List<CompiledMemberGroup> collectAllGroups(List<CompiledMemberGroup> rootGroups) {
         Deque<CompiledMemberGroup> queue = new ArrayDeque<>(rootGroups);
         List<CompiledMemberGroup> collectedGroups = new ArrayList<>();

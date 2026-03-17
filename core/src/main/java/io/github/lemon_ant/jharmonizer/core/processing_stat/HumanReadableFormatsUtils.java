@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.util.Locale;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -72,6 +73,7 @@ final class HumanReadableFormatsUtils {
         return String.format(Locale.ROOT, "%d:%02d:%02d.%03d", totalHours, minutesPart, secondsPart, millisecondsPart);
     }
 
+    @NonNull
     private static String formatBinary(long bytes, long unit, String suffix) {
         double value = (double) bytes / (double) unit;
         DecimalFormat decimalFormat = value < 10.0 ? DECIMAL_1 : DECIMAL_0;

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import lombok.NonNull;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -352,11 +353,13 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("Base directory does not exist or is not a directory");
     }
 
+    @NonNull
     private Path copyBasicProject(String targetDirectoryName) throws IOException {
         return TemporaryProjectCopier.copyProject(
                 Constants.BASIC_PROJECT_RESOURCE, temporaryDirectory.resolve(targetDirectoryName));
     }
 
+    @NonNull
     private Path copyDirectory(Path sourceDirectory, String targetDirectoryName) throws IOException {
         Path targetDirectory = temporaryDirectory.resolve(targetDirectoryName);
         Files.createDirectories(targetDirectory);

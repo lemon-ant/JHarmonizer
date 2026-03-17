@@ -9,6 +9,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import spoon.compiler.Environment;
 import spoon.reflect.cu.SourcePosition;
@@ -67,10 +68,12 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         printTypeStructure(recordType);
     }
 
+    @NonNull
     private TokenWriter printOriginalFragment(SourcePosition pos) {
         return printOriginalFragment(pos.getSourceStart(), pos.getSourceEnd());
     }
 
+    @NonNull
     private TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSourceCode);
         if (startWithIndent <= end && end <= originalSourceCode.length()) {

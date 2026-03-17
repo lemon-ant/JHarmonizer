@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.cu.SourcePosition;
@@ -128,6 +129,7 @@ public class RelocationDetector {
      * @param element the type element whose deep parent simple name is to be constructed
      * @return the deep parent simple name of the type element
      */
+    @NonNull
     private static String computeParentSimpleName(CtElement element) {
         if (element instanceof CtTypeMember member) {
             var nonBlankName = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();

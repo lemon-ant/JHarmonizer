@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.stream.Stream;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -281,23 +282,28 @@ class MemberDescriptorTest {
         assertThat(buildMethodDescriptor("x").build().isInitializer()).isFalse();
     }
 
+    @NonNull
     private static Stream<DeclarationModifier> abstractConflicts() {
         return Stream.of(FINAL, STATIC, NATIVE, SYNCHRONIZED);
     }
 
+    @NonNull
     private static Stream<MemberKind> accessApplicableKinds() {
         return Stream.of(
                 FIELD, METHOD, CONSTRUCTOR, TYPE_CLASS, TYPE_INTERFACE, TYPE_ENUM, TYPE_RECORD, TYPE_ANNOTATION);
     }
 
+    @NonNull
     private static Stream<MemberKind> accessNotApplicableKinds() {
         return Stream.of(INIT_BLOCK, ENUM_CONSTANT, RECORD_COMPONENT);
     }
 
+    @NonNull
     private static Stream<DeclarationModifier> defaultConflicts() {
         return Stream.of(ABSTRACT, STATIC, FINAL, SYNCHRONIZED, NATIVE);
     }
 
+    @NonNull
     private static Stream<Arguments> kindsRequiringNonBlankName() {
         return Stream.of(
                 Arguments.of(FIELD),
@@ -311,10 +317,12 @@ class MemberDescriptorTest {
                 Arguments.of(TYPE_ANNOTATION));
     }
 
+    @NonNull
     private static Stream<Arguments> kindsRequiringNullName() {
         return Stream.of(Arguments.of(CONSTRUCTOR), Arguments.of(INIT_BLOCK));
     }
 
+    @NonNull
     private static Stream<Arguments> noModifierCases() {
         return Stream.of(
                 Arguments.of(INIT_BLOCK, null, FINAL),
@@ -322,6 +330,7 @@ class MemberDescriptorTest {
                 Arguments.of(RECORD_COMPONENT, null, FINAL));
     }
 
+    @NonNull
     private MemberDescriptor.MemberDescriptorBuilder buildBaseDescriptor(
             MemberKind memberKind, MemberAccess memberAccess, String name) {
         return MemberDescriptor.builder()
@@ -330,14 +339,17 @@ class MemberDescriptorTest {
                 .name(name);
     }
 
+    @NonNull
     private MemberDescriptor.MemberDescriptorBuilder buildFieldDescriptor(String name) {
         return buildBaseDescriptor(FIELD, PUBLIC, name);
     }
 
+    @NonNull
     private MemberDescriptor.MemberDescriptorBuilder buildMethodDescriptor(String name) {
         return buildBaseDescriptor(METHOD, PUBLIC, name);
     }
 
+    @NonNull
     private MemberDescriptor.MemberDescriptorBuilder buildTypeDescriptor(MemberKind memberKind, String name) {
         assertThat(memberKind.isType()).isTrue();
         return buildBaseDescriptor(memberKind, PUBLIC, name);

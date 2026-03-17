@@ -77,6 +77,7 @@ class SpoonMemberDescriptorFactory {
                 .build();
     }
 
+    @NonNull
     private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
         if (typeMember instanceof CtEnumValue<?>) {
             return MemberKind.ENUM_CONSTANT;
@@ -104,6 +105,7 @@ class SpoonMemberDescriptorFactory {
                 "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
     }
 
+    @NonNull
     private static String composeDebugExceptionMessage(CtTypeMember typeMember) {
         Class<?> runtimeClass = typeMember.getClass();
 
@@ -134,6 +136,7 @@ class SpoonMemberDescriptorFactory {
                 + "}";
     }
 
+    @NonNull
     private static MemberKind resolveNestedTypeKind(CtType<?> nestedType) {
         // In Spoon annotation types may also appear as interfaces, so handle this first.
         if (nestedType.isAnnotationType()) {
@@ -174,6 +177,7 @@ class SpoonMemberDescriptorFactory {
                 .orElse(MemberAccess.PACKAGE);
     }
 
+    @NonNull
     private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
         return typeMember.getModifiers().stream()
                 .map(DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND::get)
@@ -182,6 +186,7 @@ class SpoonMemberDescriptorFactory {
                         Collectors.toCollection(() -> EnumSet.noneOf(DeclarationModifier.class)), Set::copyOf));
     }
 
+    @NonNull
     private static Set<String> resolveAnnotationQualifiedNames(CtTypeMember typeMember) {
         return typeMember.getAnnotations().stream()
                 .map(CtAnnotation::getAnnotationType)

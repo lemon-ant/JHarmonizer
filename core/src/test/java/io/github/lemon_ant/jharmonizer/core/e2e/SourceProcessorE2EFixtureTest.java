@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import lombok.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,7 +41,10 @@ class SourceProcessorE2EFixtureTest {
     private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("src/test/resources");
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
+
+    @NonNull
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
+
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
     private static final String CONFIG_FILE = "config.yml";
@@ -179,6 +183,7 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
+    @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
@@ -189,6 +194,7 @@ class SourceProcessorE2EFixtureTest {
                 });
     }
 
+    @NonNull
     private static Path resolveFixturesRoot() {
         try {
             return Path.of(FIXTURE_RESOURCES_ROOT_DIR.toURI());
@@ -221,6 +227,7 @@ class SourceProcessorE2EFixtureTest {
                 sourceFilePath.getParent(), List.of(sourceFilePath.getFileName().toString()), List.of(), flowType);
     }
 
+    @NonNull
     private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
         Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
         try {
@@ -232,14 +239,17 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
+    @NonNull
     private static Path resolveConfig(Path scenario) {
         return scenario.resolve(CONFIG_FILE);
     }
 
+    @NonNull
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
     }
 
+    @NonNull
     private static Path resolveProjectExpectedSourceFile(Path scenarioDir, Path sourceFile) {
         String fixturesResourceRelative = FIXTURES_RESOURCE.substring(1);
         return PROJECT_TEST_RESOURCES_ROOT
@@ -249,6 +259,7 @@ class SourceProcessorE2EFixtureTest {
                 .resolve(sourceFile);
     }
 
+    @NonNull
     private static Path resolveInput(Path scenario) {
         return scenario.resolve(INPUT_DIRECTORY);
     }

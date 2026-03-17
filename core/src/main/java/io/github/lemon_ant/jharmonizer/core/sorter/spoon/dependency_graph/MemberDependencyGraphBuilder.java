@@ -50,6 +50,7 @@ public class MemberDependencyGraphBuilder {
         return memberDependencyGraph;
     }
 
+    @NonNull
     private static CompiledMemberGroup resolveNaturalGroupOrThrow(
             CtTypeMember typeMember, Map<CtTypeMember, CompiledMemberGroup> typeMember2CompiledMemberGroup) {
 

@@ -43,6 +43,7 @@ public final class Formatter {
     /**
      * Single try/catch wrapper for any Palantir operation that takes only the source code.
      */
+    @NonNull
     private static Function<String, String> wrapFailableFunction(
             FailableFunction<String, String, FormatterException> palantirMethod) {
         return src -> {
@@ -70,6 +71,7 @@ public final class Formatter {
                 formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
     }
 
+    @NonNull
     private Function<String, String> prepareSrcFormattingMethod(
             boolean fixImports, Style formatterStyle, com.palantir.javaformat.java.Formatter formatter) {
         Optional<FailableFunction<String, String, FormatterException>> palantirMethod;

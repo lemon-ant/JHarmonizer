@@ -4,6 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 
 import java.util.List;
 import java.util.stream.Stream;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.compress.utils.FileNameUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
@@ -66,6 +67,7 @@ public class SpoonTypeUtils {
         return fileNameMatchType;
     }
 
+    @NonNull
     private static Stream<CtType<?>> streamRootTypes(CtCompilationUnit compilationUnit) {
         return getRootTypes(compilationUnit).stream();
     }
@@ -73,6 +75,7 @@ public class SpoonTypeUtils {
     /**
      * Current order for a type: the type, then its members as they are in lists; recurse for nested types.
      */
+    @NonNull
     private static Stream<CtElement> streamTypeAndNestedElements(CtType<?> ownerType) {
         Stream<CtElement> self = Stream.of(ownerType);
         Stream<CtElement> membersAndNested = streamExplicitSourceTypeMembers(ownerType)
@@ -86,6 +89,7 @@ public class SpoonTypeUtils {
         return Stream.concat(self, membersAndNested);
     }
 
+    @NonNull
     private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
         return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonTypeUtils::streamTypesTree));
     }

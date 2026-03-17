@@ -39,12 +39,14 @@ class JavaRunMainTestUtils {
         return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
     }
 
+    @NonNull
     private static String resolveClassName(Path javaFile) {
         String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
         String packageName = extractPackageName(javaFile);
         return packageName.isBlank() ? className : packageName + "." + className;
     }
 
+    @NonNull
     private static String extractPackageName(Path javaFile) {
         try (Stream<String> lines = Files.lines(javaFile, StandardCharsets.UTF_8)) {
             return lines.map(String::trim)

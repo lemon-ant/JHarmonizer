@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -69,6 +70,7 @@ class ConfigModelSnapshotTest {
                 .isEqualTo(newSnapshot);
     }
 
+    @NonNull
     private static String formatNestedSelectorLines(String json) {
         Matcher selectorBlockMatcher = SELECTOR_BLOCK_PATTERN.matcher(json);
         StringBuffer reformattedJson = new StringBuffer();
@@ -84,6 +86,7 @@ class ConfigModelSnapshotTest {
         return reformattedJson.toString();
     }
 
+    @NonNull
     private static String buildFormattedSelectorBlock(
             String baseIndent, String selectorField, String selectorItems, String trailingComma) {
         String itemIndent = baseIndent + "  ";

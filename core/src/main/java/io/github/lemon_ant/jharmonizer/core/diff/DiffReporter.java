@@ -2,9 +2,11 @@ package io.github.lemon_ant.jharmonizer.core.diff;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.Patch;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +32,7 @@ public class DiffReporter {
         }
     }
 
+    @NonNull
     private static String format(Patch<String> diffs) {
         StringBuilder diffBuilder = new StringBuilder();
 
@@ -50,6 +53,7 @@ public class DiffReporter {
         return diffBuilder.toString();
     }
 
+    @Nullable
     private static String getLineSafe(List<String> list, int index) {
         return (index >= 0 && index < list.size()) ? list.get(index) : null;
     }
@@ -64,6 +68,7 @@ public class DiffReporter {
         sb.append(System.lineSeparator());
     }
 
+    @NonNull
     private static String visualizeWhitespace(String line) {
         if (StringUtils.isBlank(line)) {
             return "[blank line]";
