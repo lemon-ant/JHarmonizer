@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import lombok.NonNull;
 import picocli.CommandLine.Command;
@@ -18,10 +17,8 @@ final class CheckFastCommand extends BaseCommand {
 
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
-    CheckFastCommand() {}
-
-    CheckFastCommand(SourceProcessor sourceProcessor) {
-        super(sourceProcessor);
+    CheckFastCommand() {
+        // Required by Picocli (command instantiation).
     }
 
     @Override
