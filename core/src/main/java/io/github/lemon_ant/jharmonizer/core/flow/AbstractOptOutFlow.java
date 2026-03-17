@@ -4,6 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingStatistic;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
@@ -63,6 +64,37 @@ abstract class AbstractOptOutFlow implements IFlow {
                 sortingResult, SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel()), false);
     }
 
+    /**
+     * Performs the shared sorting, serialization, formatting, and debug-stage recording pipeline.
+     *
+     * @param srcFile the source file being processed
+     * @param parsedSpoonAstModel the parsed Spoon AST model for the source file
+     * @param sortingDescription the human-readable sorting description used in skip logging
+     * @return the combined sorting and formatting pipeline result
+     */
+    @NonNull
+    protected final SortAndFormatPassResult sortAndFormatSource(
+            @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
+        SortingPassResult sortingPassResult =
+                sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, sortingDescription);
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
+        FormatingResult formattingResult = getFormatter()
+                .formatSource(
+                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                        srcFile.getPath(),
+                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormatedSrcCode());
+        return new SortAndFormatPassResult(sortingPassResult, formattingResult);
+    }
+
     @NonNull
     protected static FlowProcessingResult buildFileOptOutSkippedResult(
             @NonNull SrcFile srcFile,
@@ -119,6 +151,21 @@ abstract class AbstractOptOutFlow implements IFlow {
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {
             return sortingResult.getSortedSpoonAstModel();
+        }
+    }
+
+    @Getter
+    @AllArgsConstructor(access = AccessLevel.PROTECTED)
+    protected static class SortAndFormatPassResult {
+        @NonNull
+        private final SortingPassResult sortingPassResult;
+
+        @NonNull
+        private final FormatingResult formattingResult;
+
+        @NonNull
+        SpoonAstModel getSortedSpoonAstModel() {
+            return sortingPassResult.getSortedSpoonAstModel();
         }
     }
 }
