@@ -10,7 +10,7 @@ import picocli.CommandLine.Command;
 final class RestructureCommand extends BaseCommand {
 
     RestructureCommand() {
-        // Required for Picocli command instantiation.
+        // Required by Picocli (command instantiation).
     }
 
     @Override

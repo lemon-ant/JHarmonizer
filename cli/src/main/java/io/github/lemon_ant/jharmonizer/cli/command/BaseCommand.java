@@ -23,6 +23,11 @@ import picocli.CommandLine.Option;
 @Slf4j
 abstract class BaseCommand implements Callable<Integer> {
 
+    /**
+     * Protected so only concrete commands in this hierarchy can instantiate the base type.
+     */
+    protected BaseCommand() {}
+
     @Option(
             names = {"-b", "--base-dir"},
             description = "Base directory containing Java source files (default: current directory).")
@@ -56,6 +61,7 @@ abstract class BaseCommand implements Callable<Integer> {
     @Option(
             names = {"-c", "--config"},
             description = "Path to custom YAML configuration file merged over the built-in defaults.")
+    @Nullable
     private Path configFilePath;
 
     protected abstract FlowType getFlowType();
@@ -121,6 +127,7 @@ abstract class BaseCommand implements Callable<Integer> {
         return new SourceProcessor(externalConfig);
     }
 
+    @Nullable
     private static Path toAbsoluteNormalizedPath(@Nullable Path path) {
         return path == null ? null : path.toAbsolutePath().normalize();
     }

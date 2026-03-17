@@ -177,8 +177,8 @@ class RestructureCommandTest {
 
     private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
         return mockConstruction(SourceProcessor.class, (mock, context) -> {
-            AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null);
-            when(mock.processSources(any(Path.class), any(), any(), any())).thenReturn(stats);
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(new AggregatedProcessingStatistic(0, 0, 0, null, null));
         });
     }
 }

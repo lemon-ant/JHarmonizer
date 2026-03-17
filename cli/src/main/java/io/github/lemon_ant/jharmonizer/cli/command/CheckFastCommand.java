@@ -13,7 +13,7 @@ final class CheckFastCommand extends BaseCommand {
     private static final int EXIT_CODE_CHECK_FAILED = 3;
 
     CheckFastCommand() {
-        // Required for Picocli command instantiation.
+        // Required by Picocli (command instantiation).
     }
 
     @Override

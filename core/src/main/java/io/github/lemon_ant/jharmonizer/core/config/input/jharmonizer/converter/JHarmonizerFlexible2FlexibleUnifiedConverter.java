@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -25,6 +26,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 topLevelTypesOrdering, formatting, backupsEnabled, headerLine, rootMemberGroups);
     }
 
+    @Nullable
     private static UnifiedTopLevelTypesOrdering readTopLevelTypesOrdering(
             @NonNull JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
@@ -33,6 +35,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 .orElse(null);
     }
 
+    @Nullable
     private static UnifiedFormatting readFormatting(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalFormatting()
@@ -40,6 +43,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 .orElse(null);
     }
 
+    @Nullable
     private static UnifiedHeaderLine readHeaderLine(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalHeaderLine()
@@ -47,6 +51,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 .orElse(null);
     }
 
+    @Nullable
     private static List<UnifiedMemberGroup> readRootMemberGroups(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getOptionalMemberGroups()
