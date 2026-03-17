@@ -17,7 +17,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
@@ -164,18 +163,15 @@ class SourceProcessorTest {
                 .isLessThan(processedSourceCode.indexOf("class Sample"));
     }
 
-    @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 
-    @NonNull
     private static Path writeConfigFile(Path configFilePath) throws Exception {
         return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
     }
 
-    @NonNull
     private static ListAppender<ILoggingEvent> attachListAppender() {
         Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
         ListAppender<ILoggingEvent> listAppender = new ListAppender<>();

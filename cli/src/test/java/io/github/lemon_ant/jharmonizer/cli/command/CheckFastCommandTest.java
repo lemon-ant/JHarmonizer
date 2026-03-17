@@ -15,7 +15,6 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStat
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
@@ -156,7 +155,6 @@ class CheckFastCommandTest {
         assertThat(exitCode).isEqualTo(1);
     }
 
-    @NonNull
     private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
         return mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))

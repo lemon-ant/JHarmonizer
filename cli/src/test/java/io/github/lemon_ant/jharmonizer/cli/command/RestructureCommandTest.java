@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
-import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
@@ -172,12 +171,10 @@ class RestructureCommandTest {
         assertThat(exitCode).isEqualTo(1);
     }
 
-    @NonNull
     private static Path writeConfigFile(Path configFilePath) throws Exception {
         return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
     }
 
-    @NonNull
     private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
         return mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
