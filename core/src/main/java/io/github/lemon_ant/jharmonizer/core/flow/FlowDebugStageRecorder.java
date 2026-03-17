@@ -15,6 +15,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Optional debug helper that writes intermediate source-code snapshots to disk for each
+ * processing stage when DEBUG logging is enabled.
+ * Files are written to a {@code debug/} subdirectory with a timestamp-based name.
+ */
 @Slf4j
 final class FlowDebugStageRecorder {
 
@@ -28,6 +33,10 @@ final class FlowDebugStageRecorder {
     private final String runTimestampPrefix;
     private final Path flowOutputDirectory;
 
+    /**
+     * Creates a new FlowDebugStageRecorder.
+     * @param flowType the processing flow to run
+     */
     FlowDebugStageRecorder(@NonNull FlowType flowType) {
         this(flowType, Clock.systemDefaultZone());
     }
@@ -53,6 +62,12 @@ final class FlowDebugStageRecorder {
         }
     }
 
+    /**
+     * Performs the record src stage.
+     * @param fileName the file name
+     * @param stage the stage
+     * @param javaSourceText the java source text
+     */
     @SuppressWarnings("PMD.GuardLogStatement")
     void recordSrcStage(
             @NonNull Path fileName,

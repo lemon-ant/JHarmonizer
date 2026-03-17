@@ -5,6 +5,10 @@ import java.util.Objects;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Result of sorting all members in a single compilation unit.
+ * Bundles the reordered Spoon AST model with the associated timing statistics.
+ */
 @Value
 public class SortingResult {
     @NonNull

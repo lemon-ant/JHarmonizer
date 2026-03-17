@@ -1,0 +1,106 @@
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
+
+import static java.util.Optional.ofNullable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import lombok.NonNull;
+import lombok.Value;
+
+/**
+ * Flexible overlay for JHarmonizerConfig. All fields are optional.
+ */
+@Value
+public class JHarmonizerFlexibleConfig {
+
+    @Nullable
+    JHarmonizerFormatting formatting;
+
+    @Nullable
+    Boolean backupsEnabled;
+
+    @Nullable
+    JHarmonizerHeaderLine headerLine;
+
+    @Nullable
+    List<JHarmonizerMemberGroup> memberGroups;
+
+    @Nullable
+    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
+
+    /**
+     * Creates a flexible JHarmonizer configuration with optional overlay values.
+     *
+     * @param topLevelTypesOrdering the optional top-level types ordering override
+     * @param formatting the optional formatting override
+     * @param backupsEnabled the optional backups-enabled override
+     * @param headerLine the optional header-line override
+     * @param memberGroups the optional member group overrides
+     */
+    public JHarmonizerFlexibleConfig(
+            @Nullable @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
+            @Nullable @JsonProperty("formatting") JHarmonizerFormatting formatting,
+            @Nullable @JsonProperty("backups-enabled") Boolean backupsEnabled,
+            @Nullable @JsonProperty("header-line") JHarmonizerHeaderLine headerLine,
+            @Nullable @JsonProperty("type-members-ordering") List<@NonNull JHarmonizerMemberGroup> memberGroups) {
+        this.topLevelTypesOrdering = topLevelTypesOrdering;
+        this.formatting = formatting;
+        this.backupsEnabled = backupsEnabled;
+        this.headerLine = headerLine;
+        this.memberGroups =
+                ofNullable(memberGroups).map(Collections::unmodifiableList).orElse(null);
+    }
+
+    /**
+     * Returns the optional formatting override.
+     *
+     * @return the optional formatting override
+     */
+    @NonNull
+    public Optional<JHarmonizerFormatting> getOptionalFormatting() {
+        return ofNullable(formatting);
+    }
+
+    /**
+     * Returns the optional backups-enabled override.
+     *
+     * @return the optional backups-enabled override
+     */
+    @NonNull
+    public Optional<Boolean> getOptionalBackupsEnabled() {
+        return ofNullable(backupsEnabled);
+    }
+
+    /**
+     * Returns the optional header-line override.
+     *
+     * @return the optional header-line override
+     */
+    @NonNull
+    public Optional<JHarmonizerHeaderLine> getOptionalHeaderLine() {
+        return ofNullable(headerLine);
+    }
+
+    /**
+     * Returns the optional member group overrides.
+     *
+     * @return the optional member group overrides
+     */
+    @NonNull
+    public Optional<List<JHarmonizerMemberGroup>> getOptionalMemberGroups() {
+        return ofNullable(memberGroups);
+    }
+
+    /**
+     * Returns the optional top-level types ordering override.
+     *
+     * @return the optional top-level types ordering override
+     */
+    @NonNull
+    public Optional<JHarmonizerTopLevelTypesOrdering> getOptionalTopLevelTypesOrdering() {
+        return ofNullable(topLevelTypesOrdering);
+    }
+}

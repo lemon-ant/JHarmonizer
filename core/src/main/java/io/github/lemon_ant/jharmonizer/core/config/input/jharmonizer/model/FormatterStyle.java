@@ -6,6 +6,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Formatter style choices supported in the JHarmonizer YAML config.
+ * Each constant maps to a corresponding {@link UnifiedFormatterStyle}.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum FormatterStyle {
@@ -17,6 +21,11 @@ public enum FormatterStyle {
 
     private final UnifiedFormatterStyle unifiedFormatterStyle;
 
+    /**
+     * Performs the from string.
+     * @param value the raw value to parse
+     * @return the result
+     */
     @NonNull
     @JsonCreator
     static FormatterStyle fromString(@NonNull String value) {

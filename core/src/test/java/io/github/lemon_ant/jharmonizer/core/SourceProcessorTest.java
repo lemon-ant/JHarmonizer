@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
@@ -15,6 +17,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,19 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
+            package demo;
+            public class Sample {}
+            interface Alpha {}
+            """;
+    private static final String PARTIAL_TOP_LEVEL_TYPES_CONFIG = """
+            top-level-types-ordering:
+              main-type-first: false
+              type-groups:
+                - [ interface ]
+                - [ class ]
+              ordering-rules: [ alpha ]
+            """;
 
     @TempDir
     Path temporaryDirectory;
@@ -129,11 +145,37 @@ class SourceProcessorTest {
                 .contains("public class InternalToolForLoggingVerification");
     }
 
+    @Test
+    void processSources_partialConfigFile_reordersUsingMergedDefaults() throws Exception {
+        // Given
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES);
+        Path customConfigFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
+        FlexibleUnifiedConfig externalConfig =
+                JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(customConfigFilePath);
+        SourceProcessor sourceProcessor = new SourceProcessor(externalConfig);
+
+        // When
+        sourceProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+
+        // Then
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        assertThat(processedSourceCode.indexOf("interface Alpha"))
+                .isLessThan(processedSourceCode.indexOf("class Sample"));
+    }
+
+    @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 
+    @NonNull
+    private static Path writeConfigFile(Path configFilePath) throws Exception {
+        return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
+    }
+
+    @NonNull
     private static ListAppender<ILoggingEvent> attachListAppender() {
         Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
         ListAppender<ILoggingEvent> listAppender = new ListAppender<>();

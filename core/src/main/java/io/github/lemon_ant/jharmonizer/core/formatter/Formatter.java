@@ -34,6 +34,12 @@ public final class Formatter {
 
     private final Style formatterStyle;
 
+    /**
+     * Creates a new Formatter.
+     *
+     * @param style the style
+     * @param fixImports the fix imports
+     */
     public Formatter(@NonNull UnifiedFormatterStyle style, boolean fixImports) {
         this.fixImports = fixImports;
         this.formatterStyle = UNIFIED_2_PALANTIR_FORMATTING_STYLE.get(style);

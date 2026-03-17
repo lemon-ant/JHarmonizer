@@ -34,6 +34,11 @@ public class ConfigurationManager {
         return Unified2CompiledModelCompiler.compile(dafaultUnifiedConfig);
     }
 
+    /**
+     * Overrides the default config.
+     * @param externalConfig the external configuration overrides
+     * @return the result
+     */
     @NonNull
     public static CompiledConfig overrideDefaultConfig(@Nullable FlexibleUnifiedConfig externalConfig) {
         if (null == externalConfig) {

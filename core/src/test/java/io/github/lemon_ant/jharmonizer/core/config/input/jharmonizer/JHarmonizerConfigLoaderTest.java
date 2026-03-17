@@ -115,8 +115,9 @@ class JHarmonizerConfigLoaderTest {
         assertThat(topLevelTypesOrdering).isNotNull();
         assertThat(topLevelTypesOrdering.isMainTypeFirst()).isTrue();
         assertThat(topLevelTypesOrdering.getTopLevelTypeSelectors()).isNotEmpty();
-        topLevelTypesOrdering.getTopLevelTypeSelectors().forEach(entry -> assertThat(entry.getTypeKinds())
-                .isNotEmpty());
+        topLevelTypesOrdering
+                .getTopLevelTypeSelectors()
+                .forEach(entry -> assertThat(entry.getTypeKinds()).isNotEmpty());
         assertThat(topLevelTypesOrdering.getOrderingRules())
                 .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();

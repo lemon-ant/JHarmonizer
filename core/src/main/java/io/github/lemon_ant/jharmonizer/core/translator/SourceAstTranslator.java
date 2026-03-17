@@ -10,16 +10,26 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Facade for parsing Java source files into Spoon AST models and serializing them back to source code.
+ * Wraps {@link SpoonParser} and the Spoon source-printer, adding per-phase timing statistics.
+ */
 @Slf4j
 @UtilityClass
 public final class SourceAstTranslator {
 
+    /**
+     * Parses the source file.
+     * @param sourceSrcFile the source src file
+     * @return the source file
+     */
     @SuppressWarnings("PMD.GuardLogStatement")
     public static ParsingResult parseSourceFile(SrcFile sourceSrcFile) {
         log.debug("Parsing {}", sourceSrcFile.getPath());
@@ -32,6 +42,12 @@ public final class SourceAstTranslator {
         return new ParsingResult(statistic, spoonASTModel);
     }
 
+    /**
+     * Serializes the sorted AST model back to source code.
+     *
+     * @param sortedSpoonAstModel the sorted Spoon AST model to serialize
+     * @return the serialization result containing the source code and statistics
+     */
     @SuppressWarnings("PMD.GuardLogStatement")
     public static SerializationResult serialize(SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
@@ -47,6 +63,7 @@ public final class SourceAstTranslator {
                 serializedSourceSnapshot.getFormattingExclusionRanges());
     }
 
+    @NonNull
     private static ParsingStatistic createParsingStatistic(
             String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();

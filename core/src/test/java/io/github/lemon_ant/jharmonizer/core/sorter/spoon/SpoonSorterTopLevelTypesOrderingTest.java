@@ -21,6 +21,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class SpoonSorterTopLevelTypesOrderingTest {
@@ -115,11 +116,13 @@ class SpoonSorterTopLevelTypesOrderingTest {
                         "ZetaKind");
     }
 
+    @NonNull
     private static SpoonAstModel parseFixture(String fixtureFileName) {
         URL fixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(FIXTURES_RESOURCE_ROOT_URL, fixtureFileName);
         return SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource(fixtureResourceUrl);
     }
 
+    @NonNull
     private static CompiledConfig createCompiledConfig(UnifiedTopLevelTypesOrdering topLevelTypesOrdering) {
         UnifiedMemberGroup rootMemberGroup = UnifiedMemberGroup.builder()
                 .groupName("Root")

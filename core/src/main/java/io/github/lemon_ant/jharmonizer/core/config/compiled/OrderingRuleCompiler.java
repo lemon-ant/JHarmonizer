@@ -5,9 +5,18 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Compiles a list of {@link UnifiedOrderingRule} values into the corresponding
+ * compiled {@link OrderingRule} values used during member sorting.
+ */
 @UtilityClass
 class OrderingRuleCompiler {
 
+    /**
+     * Compiles the ordering rules.
+     * @param unifiedOrderingRules the unified ordering rules
+     * @return the compiled ordering rules
+     */
     @NonNull
     static List<OrderingRule> compileOrderingRules(@NonNull List<UnifiedOrderingRule> unifiedOrderingRules) {
         // Unified model guarantees non-empty list; preserve order and map 1:1.
@@ -16,6 +25,7 @@ class OrderingRuleCompiler {
                 .toList();
     }
 
+    @NonNull
     private static OrderingRule compileOrderingRule(@NonNull UnifiedOrderingRule unifiedOrderingRule) {
         return switch (unifiedOrderingRule) {
             case ALPHA -> OrderingRule.ALPHA;

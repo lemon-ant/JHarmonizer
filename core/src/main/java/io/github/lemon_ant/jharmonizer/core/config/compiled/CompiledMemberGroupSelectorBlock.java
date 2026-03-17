@@ -19,6 +19,11 @@ public class CompiledMemberGroupSelectorBlock {
     @NonNull
     List<Predicate<MemberDescriptor>> includePredicate; // immutable, ordered
 
+    /**
+     * Creates a new CompiledMemberGroupSelectorBlock.
+     * @param includePredicate the include predicate
+     * @param excludePredicate the exclude predicate
+     */
     CompiledMemberGroupSelectorBlock(
             @NonNull List<Predicate<MemberDescriptor>> includePredicate,
             @NonNull List<Predicate<MemberDescriptor>> excludePredicate) {
@@ -42,6 +47,11 @@ public class CompiledMemberGroupSelectorBlock {
         return result;
     }
 
+    /**
+     * Performs the match.
+     * @param descriptor the member descriptor to inspect
+     * @return {@code true} if match; otherwise {@code false}
+     */
     public boolean match(@NonNull MemberDescriptor descriptor) {
         return matchIncludes(descriptor) && !matchExcludes(descriptor);
     }

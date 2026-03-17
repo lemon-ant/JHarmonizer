@@ -6,6 +6,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Separator style values supported in the JHarmonizer YAML config for member groups.
+ * Each constant maps to a corresponding {@link UnifiedSeparator}.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum JHarmonizerSeparator {
@@ -15,6 +19,11 @@ public enum JHarmonizerSeparator {
 
     private final UnifiedSeparator unifiedSeparator;
 
+    /**
+     * Performs the from string.
+     * @param value the raw value to parse
+     * @return the result
+     */
     @NonNull
     @JsonCreator
     static JHarmonizerSeparator fromString(@NonNull String value) {

@@ -7,9 +7,18 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Utility for measuring the wall-clock execution time of a supplier expression.
+ * Returns a {@link TimedResult} that combines the result value with the elapsed nanoseconds.
+ */
 @UtilityClass
 public class StopWatch {
 
+    /**
+     * Performs the measure.
+     * @param supplier the supplier
+     * @return the result
+     */
     @NonNull
     public static <TResult> TimedResult<TResult> measure(@NonNull Supplier<TResult> supplier) {
         long start = System.nanoTime();
@@ -35,6 +44,10 @@ public class StopWatch {
             return nanos == that.nanos && result.equals(that.result);
         }
 
+        /**
+         * Returns the millis.
+         * @return the millis
+         */
         public double getMillis() {
             return nanos / 1_000_000.0;
         }

@@ -72,9 +72,11 @@ class JHarmonizerOptOutResolverTest {
         // Then
         assertThat(spoonAstModel.getOptOuts().findTypeOptOut(sampleType))
                 .get()
-                .extracting(ResolvedJHarmonizerOptOut::getMode, optOut -> optOut.getTargetType()
-                        .map(CtType::getSimpleName)
-                        .orElseThrow())
+                .extracting(
+                        ResolvedJHarmonizerOptOut::getMode,
+                        optOut -> optOut.getTargetType()
+                                .map(CtType::getSimpleName)
+                                .orElseThrow())
                 .containsExactly(JHarmonizerOptOutMode.FULLY_OFF, "Sample");
     }
 

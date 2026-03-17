@@ -47,6 +47,10 @@ public class SpoonAstModel {
     @NonNull
     JHarmonizerOptOuts optOuts;
 
+    /**
+     * Returns the main type.
+     * @return the main type
+     */
     public Optional<CtType<?>> getMainType() {
         return Optional.ofNullable(mainType);
     }

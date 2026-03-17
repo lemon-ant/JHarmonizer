@@ -13,6 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 public final class Sorter {
     private final SpoonSorter spoonSorter;
 
+    /**
+     * Creates a new Sorter.
+     * @param config the compiled configuration to use
+     */
     public Sorter(CompiledConfig config) {
         this.spoonSorter = new SpoonSorter(config);
     }

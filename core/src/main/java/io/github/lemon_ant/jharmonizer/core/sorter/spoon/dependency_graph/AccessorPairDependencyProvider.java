@@ -13,6 +13,12 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 final class AccessorPairDependencyProvider implements MemberDependencyProvider {
 
+    /**
+     * Finds the direct provider edges.
+     * @param dependentMember the dependent member
+     * @param keepAccessorsTogether the keep accessors together
+     * @return the matching direct provider edges
+     */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(

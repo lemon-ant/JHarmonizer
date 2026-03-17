@@ -7,6 +7,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
 import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceSnapshot;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,11 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.TokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
+/**
+ * Custom Spoon source printer that inserts group-separator headers between member groups,
+ * preserves the original source fragments for opt-out ranges,
+ * and normalises line separators to match the dominant separator of the original file.
+ */
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     private final Set<CtType<?>> formattingSkippedTypes;
@@ -40,6 +46,13 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     private final String originalSourceCode;
 
+    /**
+     * Creates a new SpoonCustomSourcePrinter.
+     *
+     * @param env the env
+     * @param originalSourceCode the original source code
+     * @param formattingSkippedTypes the types that must stay unformatted
+     */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(
             @NonNull Environment env,
@@ -52,31 +65,57 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         setLineSeparator(lineSeparator);
     }
 
+    /**
+     * Performs the visit ct annotation type.
+     *
+     * @param annotationType the annotation type
+     */
     @Override
     public <A extends Annotation> void visitCtAnnotationType(CtAnnotationType<A> annotationType) {
         printTypeStructure(annotationType);
     }
 
+    /**
+     * Performs the visit ct class.
+     *
+     * @param ctClass the ct class
+     */
     @Override
     public <T> void visitCtClass(CtClass<T> ctClass) {
         printTypeStructure(ctClass);
     }
 
+    /**
+     * Performs the visit ct enum.
+     *
+     * @param ctEnum the ct enum
+     */
     @Override
     public <T extends Enum<?>> void visitCtEnum(CtEnum<T> ctEnum) {
         printTypeStructure(ctEnum);
     }
 
+    /**
+     * Performs the visit ct interface.
+     *
+     * @param intrface the intrface
+     */
     @Override
     public <T> void visitCtInterface(CtInterface<T> intrface) {
         printTypeStructure(intrface);
     }
 
+    /**
+     * Performs the visit ct record.
+     *
+     * @param recordType the record type
+     */
     @Override
     public void visitCtRecord(CtRecord recordType) {
         printTypeStructure(recordType);
     }
 
+    @NonNull
     private TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSourceCode);
         if (startWithIndent <= end && end <= originalSourceCode.length()) {
@@ -93,10 +132,19 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                 + ". Expected indentationStart <= end < sourceLength.");
     }
 
-    List<SourceCharacterRange> getFormattingExclusionRanges() {
-        return List.copyOf(formattingExclusionRanges);
+    /**
+     * Serializes the compilation unit and returns both the source code and formatting exclusions.
+     *
+     * @param compilationUnit the compilation unit to print
+     * @return the serialized source snapshot
+     */
+    @NonNull
+    SerializedSourceSnapshot serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
+        printCompilationUnit(compilationUnit);
+        return new SerializedSourceSnapshot(getResult(), formattingExclusionRanges);
     }
 
+    @NonNull
     private void printTypeStructure(CtType<?> type) {
         getPrinterTokenWriter().writeln();
         if (formattingSkippedTypes.contains(type)) {
@@ -162,7 +210,6 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             // The member was marked as the first member of a group
             Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
                     .map(Object::toString);
-
             groupHeaderMetadata.ifPresent(groupHeader -> {
                 if (!groupHeader.isEmpty()) {
                     getPrinterTokenWriter()
@@ -197,6 +244,11 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         // TODO Check trailing indents
     }
 
+    /**
+     * Performs the visit ct compilation unit.
+     *
+     * @param compilationUnit the compilation unit to inspect
+     */
     @Override
     public void visitCtCompilationUnit(CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {
@@ -226,6 +278,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         }
     }
 
+    @NonNull
     private int findRenderedTypeStart(CtType<?> type) {
         if (!formattingSkippedTypes.contains(type)) {
             return type.getPosition().getSourceStart();

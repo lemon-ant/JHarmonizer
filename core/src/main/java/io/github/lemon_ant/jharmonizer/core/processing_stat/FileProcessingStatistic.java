@@ -7,6 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Per-file processing statistics derived from a {@link FlowProcessingResult}.
+ * Aggregates wall-clock processing time across all phases and records the original file size.
+ */
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileProcessingStatistic {
@@ -16,6 +20,11 @@ public class FileProcessingStatistic {
     long processingTimeNanos;
     long size;
 
+    /**
+     * Performs the convert.
+     * @param flowProcessingResult the flow processing result
+     * @return the result
+     */
     public static FileProcessingStatistic convert(FlowProcessingResult flowProcessingResult) {
         long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()

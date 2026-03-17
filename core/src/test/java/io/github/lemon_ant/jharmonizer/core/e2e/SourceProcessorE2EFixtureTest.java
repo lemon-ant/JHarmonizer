@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
@@ -28,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import lombok.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -41,7 +41,10 @@ class SourceProcessorE2EFixtureTest {
     private static final Path PROJECT_TEST_RESOURCES_ROOT = Path.of("src/test/resources");
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
+
+    @NonNull
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
+
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
     private static final String CONFIG_FILE = "config.yml";
@@ -180,6 +183,7 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
+    @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
@@ -190,6 +194,7 @@ class SourceProcessorE2EFixtureTest {
                 });
     }
 
+    @NonNull
     private static Path resolveFixturesRoot() {
         try {
             return Path.of(FIXTURE_RESOURCES_ROOT_DIR.toURI());
@@ -214,19 +219,15 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void runProcessorForSingleFile(Path sourceFilePath, Path config, FlowType flowType) {
-        UnifiedConfig unifiedConfig =
-                JHarmonizerConfigurationManager.parseUnifiedConfigFromClasspathResource(E2EFileUtils.toUrl(config));
-        FlexibleUnifiedConfig flexibleConfig = new FlexibleUnifiedConfig(
-                unifiedConfig.getTopLevelTypesOrdering(),
-                unifiedConfig.getFormatting(),
-                unifiedConfig.isBackupsEnabled(),
-                unifiedConfig.getHeaderLine(),
-                unifiedConfig.getRootMemberGroups());
+        FlexibleUnifiedConfig flexibleConfig =
+                JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
+                        E2EFileUtils.toUrl(config));
         SourceProcessor sourceProcessor = new SourceProcessor(flexibleConfig);
         sourceProcessor.processSources(
                 sourceFilePath.getParent(), List.of(sourceFilePath.getFileName().toString()), List.of(), flowType);
     }
 
+    @NonNull
     private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
         Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
         try {
@@ -238,14 +239,17 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
+    @NonNull
     private static Path resolveConfig(Path scenario) {
         return scenario.resolve(CONFIG_FILE);
     }
 
+    @NonNull
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
     }
 
+    @NonNull
     private static Path resolveProjectExpectedSourceFile(Path scenarioDir, Path sourceFile) {
         String fixturesResourceRelative = FIXTURES_RESOURCE.substring(1);
         return PROJECT_TEST_RESOURCES_ROOT
@@ -255,6 +259,7 @@ class SourceProcessorE2EFixtureTest {
                 .resolve(sourceFile);
     }
 
+    @NonNull
     private static Path resolveInput(Path scenario) {
         return scenario.resolve(INPUT_DIRECTORY);
     }

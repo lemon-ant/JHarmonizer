@@ -11,8 +11,18 @@ import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Jackson deserializer for the {@code ordering-rules} field in JHarmonizer YAML configs.
+ * Accepts either a comma-separated string or a YAML sequence of strings.
+ */
 class OrderingRulesDeserializer extends JsonDeserializer<List<JHarmonizerOrderingRule>> {
 
+    /**
+     * Performs the deserialize.
+     * @param p the parser to read from
+     * @param ctxt the deserialization context
+     * @return the resulting list
+     */
     @Override
     @SuppressWarnings("PMD.CyclomaticComplexity")
     public List<JHarmonizerOrderingRule> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {

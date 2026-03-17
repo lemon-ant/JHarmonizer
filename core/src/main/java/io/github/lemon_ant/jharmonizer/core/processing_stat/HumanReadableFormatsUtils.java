@@ -6,8 +6,12 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.util.Locale;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Internal utility methods for formatting byte sizes and durations into human-readable strings.
+ */
 @UtilityClass
 final class HumanReadableFormatsUtils {
 
@@ -21,6 +25,11 @@ final class HumanReadableFormatsUtils {
 
     private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
 
+    /**
+     * Formats the bytes.
+     * @param bytes the bytes
+     * @return the result
+     */
     @SuppressWarnings("PMD.UnsynchronizedStaticFormatter")
     static String formatBytes(long bytes) {
         if (bytes < 0) {
@@ -39,6 +48,11 @@ final class HumanReadableFormatsUtils {
         return formatBinary(bytes, GIB, " GiB");
     }
 
+    /**
+     * Formats the seconds microseconds from nanos.
+     * @param durationNanos the duration nanos
+     * @return the result
+     */
     static String formatSecondsMicrosecondsFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
@@ -51,6 +65,11 @@ final class HumanReadableFormatsUtils {
         return String.format(Locale.ROOT, "%d.%03d", totalSeconds, millisecondsPart);
     }
 
+    /**
+     * Formats the hms millis from nanos.
+     * @param durationNanos the duration nanos
+     * @return the result
+     */
     static String formatHmsMillisFromNanos(long durationNanos) {
         if (durationNanos < 0) {
             throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
@@ -69,6 +88,7 @@ final class HumanReadableFormatsUtils {
         return String.format(Locale.ROOT, "%d:%02d:%02d.%03d", totalHours, minutesPart, secondsPart, millisecondsPart);
     }
 
+    @NonNull
     private static String formatBinary(long bytes, long unit, String suffix) {
         double value = (double) bytes / (double) unit;
         DecimalFormat decimalFormat = value < 10.0 ? DECIMAL_1 : DECIMAL_0;

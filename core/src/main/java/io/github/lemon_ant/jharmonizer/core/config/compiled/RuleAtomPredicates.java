@@ -16,6 +16,11 @@ class RuleAtomPredicates {
     private static final String ZERO_REQUIRED_DECLARATION_FLAGS_MASK_MESSAGE =
             "Required declaration flags mask must not be zero";
 
+    /**
+     * Creates the annotation exact fqn or simple.
+     * @param expectedName the expected name
+     * @return the created annotation exact fqn or simple
+     */
     @NonNull
     static Predicate<MemberDescriptor> createAnnotationExactFqnOrSimple(@NonNull String expectedName) {
         return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
@@ -23,6 +28,11 @@ class RuleAtomPredicates {
                         fqcn.equals(expectedName) || extractSimpleName(fqcn).equals(expectedName));
     }
 
+    /**
+     * Creates the annotation regex fqn or simple.
+     * @param pattern the pattern
+     * @return the created annotation regex fqn or simple
+     */
     @NonNull
     static Predicate<MemberDescriptor> createAnnotationRegexFqnOrSimple(@NonNull Pattern pattern) {
         return memberDescriptor -> memberDescriptor.getAnnotationQualifiedNames().stream()
@@ -42,6 +52,11 @@ class RuleAtomPredicates {
                 memberDescriptor.getFeatureMask(), requiredDeclarationFlagsMask);
     }
 
+    /**
+     * Creates the mask contains any.
+     * @param requiredDeclarationFlagsMask the required declaration flags mask
+     * @return the created mask contains any
+     */
     @NonNull
     static Predicate<MemberDescriptor> createMaskContainsAny(int requiredDeclarationFlagsMask) {
         if (requiredDeclarationFlagsMask == 0) {
@@ -77,6 +92,7 @@ class RuleAtomPredicates {
     /**
      * Extracts simple name from fully qualified name, tolerant to non-qualified names.
      */
+    @NonNull
     private static String extractSimpleName(@NonNull String qualifiedName) {
         int lastDot = qualifiedName.lastIndexOf('.');
         return (lastDot < 0) ? qualifiedName : qualifiedName.substring(lastDot + 1);

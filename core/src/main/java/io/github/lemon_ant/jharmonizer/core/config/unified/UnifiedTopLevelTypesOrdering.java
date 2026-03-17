@@ -22,6 +22,12 @@ public class UnifiedTopLevelTypesOrdering {
     List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors;
 
     // TODO Remove builder
+    /**
+     * Creates a new UnifiedTopLevelTypesOrdering.
+     * @param mainTypeFirst the main type first
+     * @param topLevelTypeSelectors the top level type selectors
+     * @param orderingRules the ordering rules
+     */
     @Builder
     public UnifiedTopLevelTypesOrdering(
             boolean mainTypeFirst,

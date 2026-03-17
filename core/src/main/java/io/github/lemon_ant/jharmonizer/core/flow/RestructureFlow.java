@@ -23,6 +23,12 @@ public class RestructureFlow extends AbstractOptOutFlow {
         this.backupsEnabled = backupsEnabled;
     }
 
+    /**
+     * Processes the source.
+     *
+     * @param srcFile the source file
+     * @return the result
+     */
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {

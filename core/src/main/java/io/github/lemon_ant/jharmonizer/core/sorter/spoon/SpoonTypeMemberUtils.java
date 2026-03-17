@@ -17,9 +17,18 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * Utility methods for extracting ordering-relevant attributes from Spoon {@code CtTypeMember} instances,
+ * such as alpha keys, visibility ranks, and source-position starts.
+ */
 @UtilityClass
 public class SpoonTypeMemberUtils {
 
+    /**
+     * Normalizes the type reference by erasure and boxing.
+     * @param typeReference the type reference
+     * @return the result
+     */
     @NonNull
     public static CtTypeReference<?> normalizeTypeReferenceByErasureAndBoxing(
             @NonNull CtTypeReference<?> typeReference) {
@@ -28,6 +37,11 @@ public class SpoonTypeMemberUtils {
         return erasedTypeReference.isPrimitive() ? erasedTypeReference.box() : erasedTypeReference;
     }
 
+    /**
+     * Performs the derive alpha sorting rank.
+     * @param typeMember the type member
+     * @return the result
+     */
     static int deriveAlphaSortingRank(@NonNull CtTypeMember typeMember) {
         if (typeMember instanceof CtAnonymousExecutable) {
             return 1;
@@ -35,6 +49,11 @@ public class SpoonTypeMemberUtils {
         return 0;
     }
 
+    /**
+     * Performs the derive visibility rank.
+     * @param typeMember the type member
+     * @return the result
+     */
     static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
         if (typeMember instanceof CtAnonymousExecutable) {
             // Initializer blocks do not declare an explicit visibility modifier;
@@ -56,6 +75,11 @@ public class SpoonTypeMemberUtils {
         return 2; // package-private
     }
 
+    /**
+     * Performs the extract source start.
+     * @param typeMember the type member
+     * @return the result
+     */
     static int extractSourceStart(@NonNull CtTypeMember typeMember) {
         if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
             return Integer.MAX_VALUE;
@@ -63,6 +87,11 @@ public class SpoonTypeMemberUtils {
         return typeMember.getPosition().getSourceStart();
     }
 
+    /**
+     * Performs the derive alpha key.
+     * @param typeMember the type member
+     * @return the result
+     */
     @NonNull
     static String deriveAlphaKey(@NonNull CtTypeMember typeMember) {
         switch (typeMember) {
@@ -115,6 +144,11 @@ public class SpoonTypeMemberUtils {
                 .collect(Collectors.joining(","));
     }
 
+    /**
+     * Streams the explicit source type members.
+     * @param declaringType the declaring type
+     * @return the stream of explicit source type members
+     */
     @NonNull
     public static Stream<@NonNull CtTypeMember> streamExplicitSourceTypeMembers(@NonNull CtType<?> declaringType) {
         return declaringType.getTypeMembers().stream()

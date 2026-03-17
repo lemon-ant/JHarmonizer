@@ -39,6 +39,7 @@ public class SpoonSorter {
      * Flattens blocks into a single member list preserving the block order.
      * Group boundary markers are expected to be applied before flattening.
      */
+    @NonNull
     private static List<CtTypeMember> flattenMembers(List<MemberGroupBlock> memberGroupBlocks) {
         return memberGroupBlocks.stream()
                 .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream())

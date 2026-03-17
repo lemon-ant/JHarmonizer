@@ -54,6 +54,11 @@ class SpoonMemberDescriptorFactory {
             // TODO Map SEALED / NON_SEALED once Spoon exposes them (Java 17+ features).
             );
 
+    /**
+     * Performs the describe members.
+     * @param type the type
+     * @return the resulting map
+     */
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
         return streamExplicitSourceTypeMembers(type)
@@ -61,6 +66,11 @@ class SpoonMemberDescriptorFactory {
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
 
+    /**
+     * Performs the describe member.
+     * @param typeMember the type member
+     * @return the result
+     */
     static MemberDescriptor describeMember(CtTypeMember typeMember) {
         MemberKind memberKind = resolveMemberKind(typeMember);
         MemberAccess memberAccess = resolveMemberAccessIfApplicable(typeMember);
@@ -77,6 +87,7 @@ class SpoonMemberDescriptorFactory {
                 .build();
     }
 
+    @NonNull
     private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
         if (typeMember instanceof CtEnumValue<?>) {
             return MemberKind.ENUM_CONSTANT;
@@ -104,6 +115,7 @@ class SpoonMemberDescriptorFactory {
                 "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
     }
 
+    @NonNull
     private static String composeDebugExceptionMessage(CtTypeMember typeMember) {
         Class<?> runtimeClass = typeMember.getClass();
 
@@ -134,6 +146,7 @@ class SpoonMemberDescriptorFactory {
                 + "}";
     }
 
+    @NonNull
     private static MemberKind resolveNestedTypeKind(CtType<?> nestedType) {
         // In Spoon annotation types may also appear as interfaces, so handle this first.
         if (nestedType.isAnnotationType()) {
@@ -174,6 +187,7 @@ class SpoonMemberDescriptorFactory {
                 .orElse(MemberAccess.PACKAGE);
     }
 
+    @NonNull
     private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
         return typeMember.getModifiers().stream()
                 .map(DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND::get)
@@ -182,6 +196,7 @@ class SpoonMemberDescriptorFactory {
                         Collectors.toCollection(() -> EnumSet.noneOf(DeclarationModifier.class)), Set::copyOf));
     }
 
+    @NonNull
     private static Set<String> resolveAnnotationQualifiedNames(CtTypeMember typeMember) {
         return typeMember.getAnnotations().stream()
                 .map(CtAnnotation::getAnnotationType)

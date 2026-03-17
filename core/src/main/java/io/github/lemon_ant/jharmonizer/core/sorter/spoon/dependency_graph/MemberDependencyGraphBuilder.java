@@ -25,6 +25,11 @@ public class MemberDependencyGraphBuilder {
             new ExplicitDeclaringTypeInitializerFieldDependencyProvider(),
             new InitializerBlockDependencyProvider());
 
+    /**
+     * Performs the build dependency graph.
+     * @param typeMember2NaturalMemberGroup the type member2 natural member group
+     * @return the result
+     */
     @NonNull
     public static MemberDependencyGraph buildDependencyGraph(
             @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
@@ -50,6 +55,7 @@ public class MemberDependencyGraphBuilder {
         return memberDependencyGraph;
     }
 
+    @NonNull
     private static CompiledMemberGroup resolveNaturalGroupOrThrow(
             CtTypeMember typeMember, Map<CtTypeMember, CompiledMemberGroup> typeMember2CompiledMemberGroup) {
 

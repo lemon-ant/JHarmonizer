@@ -23,6 +23,10 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Orders type members inside each {@link MemberGroupBlock} according to the group's configured ordering rules,
+ * respecting declaration dependencies and optional accessor-pair bundling.
+ */
 @UtilityClass
 class GroupMembersOrderer {
 
@@ -33,6 +37,12 @@ class GroupMembersOrderer {
             EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
     private static final int ONE = 1;
 
+    /**
+     * Performs the order members inside groups.
+     * @param unorderedMemberGroupBlocks the unordered member group blocks
+     * @param memberDependencyGraph the member dependency graph
+     * @return the resulting list
+     */
     @NonNull
     static List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
             @NonNull List<@NonNull MemberGroupBlock> unorderedMemberGroupBlocks,
@@ -42,6 +52,7 @@ class GroupMembersOrderer {
                 .toList();
     }
 
+    @NonNull
     private static MemberGroupBlock orderMembersInsideGroup(
             MemberGroupBlock memberGroupBlock, MemberDependencyGraph memberDependencyGraph) {
 
@@ -77,6 +88,14 @@ class GroupMembersOrderer {
                 .toList();
     }
 
+    /**
+     * Converts the type members2 sortable type members.
+     * @param compiledMemberGroup the compiled member group
+     * @param groupMembers the group members
+     * @param memberDependencyGraph the member dependency graph
+     * @param orderingKeyComparator the ordering key comparator
+     * @return the converted type members2 sortable type members
+     */
     @NonNull
     static List<@NonNull SortableTypeMember> convertTypeMembers2SortableTypeMembers(
             CompiledMemberGroup compiledMemberGroup,

@@ -23,6 +23,12 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         super(formatter, sorter, FlowType.CHECK_FAIL_FAST);
     }
 
+    /**
+     * Processes the source.
+     *
+     * @param srcFile the source file
+     * @return the result
+     */
     @Override
     public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
         getDebugStageRecorder()

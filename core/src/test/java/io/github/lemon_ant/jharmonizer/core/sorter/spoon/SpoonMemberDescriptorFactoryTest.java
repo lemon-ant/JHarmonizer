@@ -24,6 +24,7 @@ import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
@@ -249,6 +250,7 @@ class SpoonMemberDescriptorFactoryTest {
         assertThat(describedFieldNames).doesNotContain("beta");
     }
 
+    @NonNull
     private static CtType<?> parseMainTypeFromResource(String fileName) {
         URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(TEST_CASES_RESOURCE_ROOT_URL, fileName);
         return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResource);

@@ -49,6 +49,10 @@ public enum DeclarationModifier {
     @SuppressWarnings("PMD.UseEnumCollections")
     private final Set<DeclarationModifier> conflicts = new HashSet<>();
 
+    /**
+     * Creates a new DeclarationModifier.
+     * @param applicableTargets the applicable targets
+     */
     DeclarationModifier(Set<TargetCategory> applicableTargets) {
         this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
     }
@@ -66,6 +70,11 @@ public enum DeclarationModifier {
         return this.conflicts.contains(other);
     }
 
+    /**
+     * Returns whether is applicable to.
+     * @param targetCategory the target category
+     * @return {@code true} if is applicable to; otherwise {@code false}
+     */
     boolean isApplicableTo(TargetCategory targetCategory) {
         return applicableTargets.contains(targetCategory);
     }

@@ -49,6 +49,14 @@ public class FlexibleUnifiedConfig {
     @Nullable
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
+    /**
+     * Creates a new FlexibleUnifiedConfig.
+     * @param topLevelTypesOrdering the top level types ordering
+     * @param formatting the formatting
+     * @param backupsEnabled the backups enabled
+     * @param headerLine the header line
+     * @param rootMemberGroups the root member groups
+     */
     public FlexibleUnifiedConfig(
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable UnifiedFormatting formatting,
@@ -60,29 +68,49 @@ public class FlexibleUnifiedConfig {
         this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
         this.rootMemberGroups =
-                ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(List.of());
+                ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(null);
     }
 
+    /**
+     * Returns the formatting.
+     * @return the formatting
+     */
     @NonNull
     public Optional<UnifiedFormatting> getFormatting() {
         return ofNullable(formatting);
     }
 
+    /**
+     * Returns the backups enabled.
+     * @return the backups enabled
+     */
     @NonNull
     public Optional<Boolean> getBackupsEnabled() {
         return ofNullable(backupsEnabled);
     }
 
+    /**
+     * Returns the header line.
+     * @return the header line
+     */
     @NonNull
     public Optional<UnifiedHeaderLine> getHeaderLine() {
         return ofNullable(headerLine);
     }
 
+    /**
+     * Returns the root member groups.
+     * @return the root member groups
+     */
     @NonNull
     public Optional<List<UnifiedMemberGroup>> getRootMemberGroups() {
         return ofNullable(rootMemberGroups);
     }
 
+    /**
+     * Returns the top level types ordering.
+     * @return the top level types ordering
+     */
     @NonNull
     public Optional<UnifiedTopLevelTypesOrdering> getTopLevelTypesOrdering() {
         return ofNullable(topLevelTypesOrdering);

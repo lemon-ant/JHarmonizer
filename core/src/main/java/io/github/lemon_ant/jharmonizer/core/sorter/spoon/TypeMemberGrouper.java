@@ -10,9 +10,18 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
+/**
+ * Groups type members into {@link MemberGroupBlock}s according to their effective
+ * compiled member group, preserving group declaration order.
+ */
 @UtilityClass
 class TypeMemberGrouper {
 
+    /**
+     * Performs the group members by effective groups.
+     * @param member2effectiveGroup the member2effective group
+     * @return the resulting list
+     */
     @NonNull
     List<@NonNull MemberGroupBlock> groupMembersByEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> member2effectiveGroup) {
