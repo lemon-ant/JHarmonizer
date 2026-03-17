@@ -23,6 +23,7 @@ class TopLevelTypesOrderingMapper {
      * @param srcTopLevelTypesOrdering the source top level types ordering
      * @return the result
      */
+    @NonNull
     static UnifiedTopLevelTypesOrdering map(@NonNull JHarmonizerTopLevelTypesOrdering srcTopLevelTypesOrdering) {
         List<UnifiedTopLevelTypeSelector> topLevelTypeSelectors =
                 srcTopLevelTypesOrdering.getTopLevelTypeSelectors().stream()

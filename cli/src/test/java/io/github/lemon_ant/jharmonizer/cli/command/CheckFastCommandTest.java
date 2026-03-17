@@ -37,7 +37,9 @@ class CheckFastCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
-        verify(constructedProcessor).processSources(eq(Path.of("src")), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
+        verify(constructedProcessor)
+                .processSources(
+                        eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
     }
 
     @Test
@@ -81,7 +83,7 @@ class CheckFastCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Path.of("src")),
+                        eq(Path.of("src").toAbsolutePath().normalize()),
                         eq(Set.of("src/main/java/**/*.java", "src/test/java/**/*.java")),
                         eq(Set.of("**/internal/**", "**/*Test.java")),
                         eq(FlowType.CHECK_FAIL_FAST));

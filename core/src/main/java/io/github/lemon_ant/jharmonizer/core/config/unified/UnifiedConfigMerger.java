@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import java.util.List;
 import java.util.Objects;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -17,7 +18,8 @@ public class UnifiedConfigMerger {
      * @param overlay the overlay
      * @return the result
      */
-    public static UnifiedConfig merge(UnifiedConfig baseline, FlexibleUnifiedConfig overlay) {
+    @NonNull
+    public static UnifiedConfig merge(@NonNull UnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
         Objects.requireNonNull(baseline, "baseline");
         Objects.requireNonNull(overlay, "overlay");
 

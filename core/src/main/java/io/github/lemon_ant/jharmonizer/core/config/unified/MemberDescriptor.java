@@ -243,6 +243,7 @@ public class MemberDescriptor {
     /**
      * Optional-returning getter for access level.
      */
+    @NonNull
     public Optional<MemberAccess> getMemberAccess() {
         return Optional.ofNullable(memberAccess);
     }
@@ -250,6 +251,7 @@ public class MemberDescriptor {
     /**
      * Optional-returning getter for name.
      */
+    @NonNull
     public Optional<String> getName() {
         return Optional.ofNullable(name);
     }

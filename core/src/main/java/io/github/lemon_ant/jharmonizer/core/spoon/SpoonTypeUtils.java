@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -25,7 +26,8 @@ public class SpoonTypeUtils {
      * @param compilationUnit the compilation unit to inspect
      * @return the all type members
      */
-    public static List<CtTypeMember> getAllTypeMembers(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static List<CtTypeMember> getAllTypeMembers(@NonNull CtCompilationUnit compilationUnit) {
         return getAllTypes(compilationUnit).stream()
                 .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
                 .toList();
@@ -36,7 +38,8 @@ public class SpoonTypeUtils {
      * @param compilationUnit the compilation unit to inspect
      * @return the all types
      */
-    public static List<CtType<?>> getAllTypes(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static List<CtType<?>> getAllTypes(@NonNull CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit)
                 .flatMap(SpoonTypeUtils::streamTypesTree)
                 .toList();
@@ -47,14 +50,16 @@ public class SpoonTypeUtils {
      * @param compilationUnit the compilation unit to inspect
      * @return the root types
      */
-    public static List<CtType<?>> getRootTypes(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static List<CtType<?>> getRootTypes(@NonNull CtCompilationUnit compilationUnit) {
         return compilationUnit.getDeclaredTypes();
     }
 
     /**
      * Current order for a whole compilation unit: declared types as-is.
      */
-    public static Stream<CtElement> streamDeclaredHierarchy(CtCompilationUnit compilationUnit) {
+    @NonNull
+    public static Stream<CtElement> streamDeclaredHierarchy(@NonNull CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
@@ -63,7 +68,8 @@ public class SpoonTypeUtils {
      * @param compilationUnit the compilation unit to inspect
      * @return the matching main type
      */
-    public static CtType<?> findMainType(CtCompilationUnit compilationUnit) {
+    @Nullable
+    public static CtType<?> findMainType(@NonNull CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {
             return declaredTypes.getFirst();

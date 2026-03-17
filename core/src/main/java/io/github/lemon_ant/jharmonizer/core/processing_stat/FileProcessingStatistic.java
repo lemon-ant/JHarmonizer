@@ -25,7 +25,8 @@ public class FileProcessingStatistic {
      * @param flowProcessingResult the flow processing result
      * @return the result
      */
-    public static FileProcessingStatistic convert(FlowProcessingResult flowProcessingResult) {
+    @NonNull
+    public static FileProcessingStatistic convert(@NonNull FlowProcessingResult flowProcessingResult) {
         long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()
                 + flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos()

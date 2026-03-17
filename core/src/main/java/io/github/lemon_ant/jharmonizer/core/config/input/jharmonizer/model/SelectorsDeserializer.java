@@ -41,8 +41,9 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
      * @return the resulting set
      */
     @Override
-    public Set<Set<String>> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-            throws IOException {
+    @NonNull
+    public Set<Set<String>> deserialize(
+            @NonNull JsonParser jsonParser, @NonNull DeserializationContext deserializationContext) throws IOException {
         JsonToken currentToken = jsonParser.currentToken();
         if (currentToken == null) {
             currentToken = jsonParser.nextToken();

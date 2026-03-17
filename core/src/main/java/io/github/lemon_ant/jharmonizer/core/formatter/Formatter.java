@@ -67,7 +67,7 @@ public final class Formatter {
      * @return a FormatingResult containing the formatted source code and statistics
      */
     @NonNull
-    public FormatingResult formatSource(String sourceCode, Path srcPath) {
+    public FormatingResult formatSource(@NonNull String sourceCode, @NonNull Path srcPath) {
         log.debug("Formatting {}", srcPath);
         TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
 

@@ -37,8 +37,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     /**
      * Creates a new SpoonCustomSourcePrinter.
-     * @param env the env
-     * @param originalSourceCode the original source code
+     *
+     * @param env the Spoon environment configuration used by the pretty printer
+     * @param originalSourceCode the original source code used to preserve exact source fragments
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(Environment env, String originalSourceCode) {
@@ -49,11 +50,12 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     /**
-     * Performs the visit ct annotation type.
-     * @param annotationType the annotation type
+     * Visits an annotation type and prints it using the shared type-structure logic.
+     *
+     * @param annotationType the annotation type to print
      */
     @Override
-    public <A extends Annotation> void visitCtAnnotationType(CtAnnotationType<A> annotationType) {
+    public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {
         printTypeStructure(annotationType);
     }
 
@@ -62,7 +64,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      * @param ctClass the ct class
      */
     @Override
-    public <T> void visitCtClass(CtClass<T> ctClass) {
+    public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
         printTypeStructure(ctClass);
     }
 
@@ -71,7 +73,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      * @param ctEnum the ct enum
      */
     @Override
-    public <T extends Enum<?>> void visitCtEnum(CtEnum<T> ctEnum) {
+    public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
         printTypeStructure(ctEnum);
     }
 
@@ -80,7 +82,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      * @param intrface the intrface
      */
     @Override
-    public <T> void visitCtInterface(CtInterface<T> intrface) {
+    public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
         printTypeStructure(intrface);
     }
 
@@ -89,7 +91,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      * @param recordType the record type
      */
     @Override
-    public void visitCtRecord(CtRecord recordType) {
+    public void visitCtRecord(@NonNull CtRecord recordType) {
         printTypeStructure(recordType);
     }
 
@@ -203,7 +205,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      * @param compilationUnit the compilation unit to inspect
      */
     @Override
-    public void visitCtCompilationUnit(CtCompilationUnit compilationUnit) {
+    public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {
             super.visitCtCompilationUnit(compilationUnit);
         }

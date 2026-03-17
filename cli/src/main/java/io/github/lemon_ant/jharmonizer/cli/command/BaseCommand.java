@@ -76,6 +76,7 @@ abstract class BaseCommand implements Callable<Integer> {
      *
      * @return the flow type to execute
      */
+    @NonNull
     protected abstract FlowType getFlowType();
 
     /**
@@ -93,6 +94,7 @@ abstract class BaseCommand implements Callable<Integer> {
      * @return the process exit code
      */
     @Override
+    @NonNull
     @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
     public final Integer call() {
         Path effectiveBaseDir = baseDir != null ? baseDir : Path.of(".");
@@ -102,12 +104,12 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
-        if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
-            log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
+        if (effectiveConfigFilePath != null && !Files.exists(effectiveConfigFilePath)) {
+            log.error("Config file does not exist: {}", effectiveConfigFilePath);
             return 1;
         }
         CommandOptions commandOptions = new CommandOptions(
-                effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
+                absoluteBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }

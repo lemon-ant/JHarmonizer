@@ -57,7 +57,11 @@ class RestructureCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
-                .processSources(eq(Path.of("src/main/java")), any(), any(), eq(FlowType.RESTRUCTURE));
+                .processSources(
+                        eq(Path.of("src/main/java").toAbsolutePath().normalize()),
+                        any(),
+                        any(),
+                        eq(FlowType.RESTRUCTURE));
     }
 
     @Test
@@ -106,7 +110,7 @@ class RestructureCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Path.of("src")),
+                        eq(Path.of("src").toAbsolutePath().normalize()),
                         eq(Set.of(
                                 "src/main/java/**/*.java",
                                 "src/test/java/**/*.java",

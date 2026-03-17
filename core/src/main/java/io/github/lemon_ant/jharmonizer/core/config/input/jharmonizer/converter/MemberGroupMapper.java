@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.Un
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.List;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -20,7 +21,8 @@ final class MemberGroupMapper {
      * @param srcMemberGroup the source member group
      * @return the result
      */
-    static UnifiedMemberGroup map(JHarmonizerMemberGroup srcMemberGroup) {
+    @NonNull
+    static UnifiedMemberGroup map(@NonNull JHarmonizerMemberGroup srcMemberGroup) {
         UnifiedMemberGroupSelectorBlock.UnifiedMemberGroupSelectorBlockBuilder selectorBlockBuilder =
                 UnifiedMemberGroupSelectorBlock.builder();
         srcMemberGroup.getIncludes().stream()

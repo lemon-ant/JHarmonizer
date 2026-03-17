@@ -46,6 +46,7 @@ public class SpoonAstModel {
      * Returns the main type.
      * @return the main type
      */
+    @NonNull
     public Optional<CtType<?>> getMainType() {
         return Optional.ofNullable(mainType);
     }

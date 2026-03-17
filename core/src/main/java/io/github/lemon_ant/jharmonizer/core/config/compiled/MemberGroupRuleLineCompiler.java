@@ -34,7 +34,8 @@ class MemberGroupRuleLineCompiler {
      * @param unifiedMemberGroupRuleLine the unified member group rule line
      * @return the compiled rule line
      */
-    static Predicate<MemberDescriptor> compileRuleLine(UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine) {
+    @NonNull
+    static Predicate<MemberDescriptor> compileRuleLine(@NonNull UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine) {
 
         Predicate<MemberDescriptor> namePredicateOpt =
                 compileNamePredicate(unifiedMemberGroupRuleLine.getNameMatcher());

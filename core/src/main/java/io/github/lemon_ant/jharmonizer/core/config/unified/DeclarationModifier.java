@@ -75,7 +75,7 @@ public enum DeclarationModifier {
      * @param targetCategory the target category
      * @return {@code true} if is applicable to; otherwise {@code false}
      */
-    boolean isApplicableTo(TargetCategory targetCategory) {
+    boolean isApplicableTo(@NonNull TargetCategory targetCategory) {
         return applicableTargets.contains(targetCategory);
     }
 }

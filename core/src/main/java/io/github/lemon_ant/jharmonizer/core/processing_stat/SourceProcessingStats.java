@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
@@ -27,6 +28,7 @@ public class SourceProcessingStats {
      * Performs the stats collector.
      * @return the result
      */
+    @NonNull
     public Collector<FileProcessingStatistic, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
@@ -112,7 +114,7 @@ public class SourceProcessingStats {
          * Performs the accumulate.
          * @param stats the stats
          */
-        void accumulate(FileProcessingStatistic stats) {
+        void accumulate(@NonNull FileProcessingStatistic stats) {
             count.increment();
             totalSize.add(stats.getSize());
             totalTime.add(stats.getProcessingTimeNanos());
@@ -129,7 +131,8 @@ public class SourceProcessingStats {
          * @param other the object to compare with
          * @return the result
          */
-        StatsContainer combine(StatsContainer other) {
+        @NonNull
+        StatsContainer combine(@NonNull StatsContainer other) {
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
             totalTime.add(other.totalTime.sum());
@@ -151,6 +154,7 @@ public class SourceProcessingStats {
          * Performs the to aggregated stats.
          * @return the result
          */
+        @NonNull
         AggregatedProcessingStatistic toAggregatedStats() {
             return new AggregatedProcessingStatistic(
                     count.sum(), totalSize.sum(), totalTime.sum(), minSize.get(), maxSize.get());

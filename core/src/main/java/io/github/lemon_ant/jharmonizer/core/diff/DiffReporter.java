@@ -26,7 +26,8 @@ public class DiffReporter {
      * @param generatedText the generated text
      * @return the result
      */
-    public static String computeDiff(String originalText, String generatedText) {
+    @NonNull
+    public static String computeDiff(@NonNull String originalText, @NonNull String generatedText) {
         Patch<String> diff = DiffUtils.diff(
                 originalText.lines().toList(), generatedText.lines().toList());
         return format(diff);

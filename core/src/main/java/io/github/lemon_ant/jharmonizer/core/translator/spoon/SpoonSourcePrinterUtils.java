@@ -22,7 +22,7 @@ public class SpoonSourcePrinterUtils {
      * @param sourceCode the source code text to inspect
      * @return the indentation start offset for the fragment
      */
-    static int findIndentationStart(int start, String sourceCode) {
+    static int findIndentationStart(int start, @NonNull String sourceCode) {
         int pos = start - 1;
         while (pos >= 0) {
             char c = sourceCode.charAt(pos);
@@ -95,7 +95,7 @@ public class SpoonSourcePrinterUtils {
      * @param member the member to inspect
      * @return {@code true} if a separator is needed after the member; otherwise {@code false}
      */
-    static boolean needsSeparatorAfter(CtTypeMember member) {
+    static boolean needsSeparatorAfter(@NonNull CtTypeMember member) {
         // Add the separator in any way if it's not field
         boolean isNotField = !(member instanceof CtField);
 
@@ -109,7 +109,7 @@ public class SpoonSourcePrinterUtils {
      * @param first whether the member is the first one in the printed sequence
      * @return {@code true} if a separator is needed before the member; otherwise {@code false}
      */
-    static boolean needsSeparatorBefore(CtTypeMember member, boolean first) {
+    static boolean needsSeparatorBefore(@NonNull CtTypeMember member, boolean first) {
         // Has annotations on the member
         boolean hasAnnotations = !member.getAnnotations().isEmpty();
 

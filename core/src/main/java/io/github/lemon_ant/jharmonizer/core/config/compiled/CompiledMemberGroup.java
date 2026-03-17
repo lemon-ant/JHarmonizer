@@ -67,6 +67,7 @@ public class CompiledMemberGroup {
      * @param descriptor the member descriptor to inspect
      * @return the recursively
      */
+    @NonNull
     public Optional<CompiledMemberGroup> classifyRecursively(@NonNull MemberDescriptor descriptor) {
         if (!selectorBlock.match(descriptor)) {
             return Optional.empty();
