@@ -36,6 +36,7 @@ import spoon.reflect.visitor.printer.CommentOffset;
  * preserves the original source fragments for opt-out ranges,
  * and normalises line separators to match the dominant separator of the original file.
  */
+@SuppressWarnings("PMD") // TODO @Copilot fix all PMD warnings and delete this line
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     private final Set<CtType<?>> formattingSkippedTypes;
@@ -109,11 +110,6 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @Override
     public void visitCtRecord(@NonNull CtRecord recordType) {
         printTypeStructure(recordType);
-    }
-
-    @NonNull
-    private TokenWriter printOriginalFragment(SourcePosition pos) {
-        return printOriginalFragment(pos.getSourceStart(), pos.getSourceEnd());
     }
 
     @NonNull

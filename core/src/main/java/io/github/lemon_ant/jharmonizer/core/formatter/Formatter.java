@@ -34,8 +34,6 @@ public final class Formatter {
 
     private final Style formatterStyle;
 
-
-
     /**
      * Creates a new Formatter.
      * @param style the style
