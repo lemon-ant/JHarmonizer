@@ -19,12 +19,12 @@ public class SerializationResult {
     String serializedSrcCode;
 
     @NonNull
-    List<SourceCharacterRange> formattingExclusionRanges;
+    List<@NonNull SourceCharacterRange> formattingExclusionRanges;
 
     public SerializationResult(
             @NonNull SerializationStatistic serializationStatistic,
             @NonNull String serializedSrcCode,
-            @NonNull List<SourceCharacterRange> formattingExclusionRanges) {
+            @NonNull List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
         this.serializationStatistic = serializationStatistic;
         this.serializedSrcCode = serializedSrcCode;
         this.formattingExclusionRanges = List.copyOf(formattingExclusionRanges);

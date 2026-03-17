@@ -65,7 +65,7 @@ public final class Formatter {
     public FormatingResult formatSource(
             @NonNull String srcCode,
             @NonNull Path srcPath,
-            @NonNull List<SourceCharacterRange> formattingExclusionRanges) {
+            @NonNull List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
         log.debug("Formatting {}", srcPath);
         TimedResult<String> formatingResult =
                 StopWatch.measure(() -> applyFormatting(srcCode, formattingExclusionRanges));
@@ -76,7 +76,7 @@ public final class Formatter {
     }
 
     @NonNull
-    private String applyFormatting(String srcCode, List<SourceCharacterRange> formattingExclusionRanges) {
+    private String applyFormatting(String srcCode, List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
         if (formatterStyle == null) {
             return fixImports ? invokePalantir(() -> formatter.fixImports(srcCode)) : srcCode;
         }

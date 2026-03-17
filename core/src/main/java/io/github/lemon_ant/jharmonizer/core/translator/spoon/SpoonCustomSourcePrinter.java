@@ -36,13 +36,13 @@ import spoon.reflect.visitor.printer.CommentOffset;
  * preserves the original source fragments for opt-out ranges,
  * and normalises line separators to match the dominant separator of the original file.
  */
-@SuppressWarnings("PMD") // TODO @Copilot fix all PMD warnings and delete this line
+@SuppressWarnings("PMD") // TODO narrow this suppression to the specific printer warnings still emitted here
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     private final Set<CtType<?>> formattingSkippedTypes;
 
     @NonNull
-    private final List<SourceCharacterRange> formattingExclusionRanges = new ArrayList<>();
+    private final List<@NonNull SourceCharacterRange> formattingExclusionRanges = new ArrayList<>();
 
     @NonNull
     private final String originalSourceCode;
