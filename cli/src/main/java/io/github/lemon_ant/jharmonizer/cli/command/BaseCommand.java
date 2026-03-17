@@ -3,8 +3,9 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Option;
 
 @Slf4j
-@SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Lombok @NonNull guard; class is not finalizable")
 abstract class BaseCommand implements Callable<Integer> {
 
     @Option(
@@ -59,11 +59,6 @@ abstract class BaseCommand implements Callable<Integer> {
     private Path configFilePath;
 
     protected abstract FlowType getFlowType();
-
-    @NonNull
-    protected SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
-        return configFilePath != null ? new SourceProcessor(configFilePath) : new SourceProcessor();
-    }
 
     protected int checkFailedExitCode() {
         return 1;
@@ -116,6 +111,14 @@ abstract class BaseCommand implements Callable<Integer> {
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
             return checkFailedExitCode();
         }
+    }
+
+    @NonNull
+    private static SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+        FlexibleUnifiedConfig externalConfig = configFilePath != null
+                ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
+                : null;
+        return new SourceProcessor(externalConfig);
     }
 
     private static Path toAbsoluteNormalizedPath(@Nullable Path path) {

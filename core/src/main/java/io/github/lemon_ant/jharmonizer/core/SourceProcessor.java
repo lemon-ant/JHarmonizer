@@ -18,7 +18,6 @@ import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
 import lombok.AccessLevel;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,10 +47,6 @@ public final class SourceProcessor {
      */
     public SourceProcessor(FlexibleUnifiedConfig externalConfig) {
         this(ConfigurationManager.overrideDefaultConfig(externalConfig));
-    }
-
-    public SourceProcessor(@NonNull Path externalConfigPath) {
-        this(ConfigurationManager.overrideDefaultConfig(externalConfigPath));
     }
 
     private SourceProcessor(CompiledConfig compiledConfig) {

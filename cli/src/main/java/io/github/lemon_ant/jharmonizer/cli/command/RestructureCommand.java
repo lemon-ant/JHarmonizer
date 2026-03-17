@@ -9,8 +9,9 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class RestructureCommand extends BaseCommand {
 
-    // Explicit no-arg constructor is required for Picocli command instantiation.
-    RestructureCommand() {}
+    RestructureCommand() {
+        // Required for Picocli command instantiation.
+    }
 
     @Override
     protected FlowType getFlowType() {
