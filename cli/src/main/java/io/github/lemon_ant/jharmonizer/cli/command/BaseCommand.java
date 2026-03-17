@@ -109,7 +109,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         CommandOptions commandOptions = new CommandOptions(
-                effectiveBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
+                absoluteBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }

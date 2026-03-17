@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
