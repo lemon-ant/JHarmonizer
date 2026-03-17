@@ -17,8 +17,9 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Loads {@link JHarmonizerConfig} instances from YAML sources:
- * the embedded default config, an {@link InputStream}, a classpath URL, or a file on disk.
+ * Loads strict {@link JHarmonizerConfig} and flexible {@link JHarmonizerFlexibleConfig}
+ * instances from YAML sources such as the embedded default config, an {@link InputStream},
+ * a classpath URL, or a file on disk.
  */
 @UtilityClass
 class JHarmonizerConfigLoader {
