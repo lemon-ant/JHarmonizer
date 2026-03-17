@@ -125,7 +125,8 @@ public class MemberDescriptor {
         }
     }
 
-    private static @Nullable String validateAndNormalizeName(
+    @Nullable
+    private static String validateAndNormalizeName(
             @Nullable String rawName,
             MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
@@ -205,7 +206,8 @@ public class MemberDescriptor {
         enforceAbstractNotStaticMethod(targetCategory, declarationModifiers);
     }
 
-    private static @NonNull String formatValidationContext(
+    @NonNull
+    private static String formatValidationContext(
             @Nullable String rawName,
             @Nullable String normalizedName,
             MemberKind memberKind,

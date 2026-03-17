@@ -26,6 +26,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
+  - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
 - Do not change standard `Object` method signatures when overriding them.

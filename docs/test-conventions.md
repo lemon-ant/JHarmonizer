@@ -233,6 +233,7 @@ For internal **test-only** utility classes, prefer Lombok for null checks:
 - Use `@UtilityClass` for pure utility classes.
 - Private helper method parameters must not use Lombok `@NonNull`; use `@Nullable` only when the helper intentionally accepts `null`.
 - If a private test helper returns a reference type, annotate the return contract explicitly with `@NonNull` or `@Nullable`.
+- Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
 
 Example:
 
