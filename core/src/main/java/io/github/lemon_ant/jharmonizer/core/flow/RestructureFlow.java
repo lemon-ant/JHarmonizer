@@ -46,7 +46,7 @@ public class RestructureFlow extends AbstractOptOutFlow {
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         SortAndFormatPassResult sortAndFormatPassResult = sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
         SortingPassResult sortingPassResult = sortAndFormatPassResult.getSortingPassResult();
-        FormatingResult formattingResult = sortAndFormatPassResult.getFormatingResult();
+        FormatingResult formattingResult = sortAndFormatPassResult.getFormattingResult();
         SpoonAstModel sortedSpoonAstModel = sortAndFormatPassResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());

@@ -82,7 +82,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
                         sortingPassResult.getSerializationResult().getSerializedSrcCode());
-        FormatingResult formatingResult = getFormatter()
+        FormatingResult formattingResult = getFormatter()
                 .formatSource(
                         sortingPassResult.getSerializationResult().getSerializedSrcCode(),
                         srcFile.getPath(),
@@ -91,8 +91,8 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formatingResult.getFormatedSrcCode());
-        return new SortAndFormatPassResult(sortingPassResult, formatingResult);
+                        formattingResult.getFormatedSrcCode());
+        return new SortAndFormatPassResult(sortingPassResult, formattingResult);
     }
 
     @NonNull
@@ -161,7 +161,7 @@ abstract class AbstractOptOutFlow implements IFlow {
         private final SortingPassResult sortingPassResult;
 
         @NonNull
-        private final FormatingResult formatingResult;
+        private final FormatingResult formattingResult;
 
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {

@@ -46,7 +46,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         SortAndFormatPassResult sortAndFormatPassResult =
                 sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SortingPassResult sortingPassResult = sortAndFormatPassResult.getSortingPassResult();
-        FormatingResult formattingResult = sortAndFormatPassResult.getFormatingResult();
+        FormatingResult formattingResult = sortAndFormatPassResult.getFormattingResult();
         SpoonAstModel sortedSpoonAstModel = sortAndFormatPassResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
