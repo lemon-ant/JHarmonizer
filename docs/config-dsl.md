@@ -219,6 +219,19 @@ type-sort:
 * The `fallback` rule (instead of `default`) avoids clashing with the Java `default` keyword.
 * Aliases improve maintainability and reduce duplication.
 
+### Merging custom `type-members-ordering` with the default model
+
+When a custom configuration is applied on top of the embedded default configuration, root groups from
+`type-members-ordering` are merged by **exact root-group name**:
+
+* if the custom root-group name matches a default root-group name, the default root group is fully replaced;
+* the replacement stays on the original default position, even if the custom file defines it in another place;
+* if the custom root-group name is new, that root group is inserted before all default root groups;
+* several new custom root groups keep their relative order from the custom file;
+* nested `groups:` blocks are not merged recursively — replacing a root group replaces its whole subtree.
+
+This means you can override only one named root group and keep the rest of the default model unchanged.
+
 ---
 
 For questions or feature suggestions, open an issue or contact the maintainer.

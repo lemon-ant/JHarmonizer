@@ -18,6 +18,8 @@
 - Keep changes surgical and avoid unrelated cleanup.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
+- Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
+- Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `build`, or `merge`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
@@ -34,6 +36,7 @@
 - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases, place it in a neutral package instead of under a phase-specific package.
 - Non-obvious build/configuration workarounds must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
+- When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
 
 ## Test conventions
@@ -97,6 +100,9 @@
 - Store fixtures under `src/test/resources/test-cases/**`.
 - Use explicit scenario folder names instead of generic names such as `example/`.
 - Prefer resource fixtures under `src/test/resources/test-cases/**` over large inline YAML or Java strings embedded directly in test classes.
+- Do not keep non-trivial multi-line textual fixtures such as YAML, JSON, XML, Java source, or long expected-output snippets inline in test code.
+- Store those fixtures under `src/test/resources/test-cases/**` and load them through shared helpers such as `TestCaseResourceUtils`.
+- Only tiny one-off inline snippets are acceptable when extracting a file would hurt readability.
 - Use `valid/` for fixtures that must compile and be compilable by the build gate.
 - Use `invalid/` for fixtures that may intentionally not compile in negative tests.
 - All `valid/**/*.java` fixtures must compile as part of the build.

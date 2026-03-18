@@ -16,6 +16,7 @@ import lombok.Value;
  * Flexible overlay for UnifiedConfig. All fields are optional.
  * Use UnifiedConfigMerger.merge(baseline, overlay) to produce a strict UnifiedConfig.
  * This class does NOT define defaults and does NOT invent values.
+ * Root member groups are merged only at the root level when provided.
  */
 @Value
 @SuppressWarnings("PMD.DataClass")
@@ -38,7 +39,8 @@ public class FlexibleUnifiedConfig {
     UnifiedHeaderLine headerLine;
 
     /**
-     * Optional override for root member groups (full replacement).
+     * Optional override for root member groups.
+     * Matching root-group names replace baseline groups in place, and new root groups are prepended.
      */
     @Nullable
     List<UnifiedMemberGroup> rootMemberGroups;
