@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +55,16 @@ public class UnifiedConfigMerger {
     @NonNull
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
-        Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectNamedGroupsByName(baselineRootGroups);
-        List<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
-                .filter(overlayRootGroup ->
-                        isNewRootGroupAndReplaceMatchedGroup(baselineRootGroupsByName, overlayRootGroup))
-                .toList();
+        Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
+        List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
+        for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
+            String overlayGroupName = overlayRootGroup.getGroupName();
+            if (overlayGroupName == null || !baselineRootGroupsByName.containsKey(overlayGroupName)) {
+                prependedNewRootGroups.add(overlayRootGroup);
+                continue;
+            }
+            baselineRootGroupsByName.put(overlayGroupName, overlayRootGroup);
+        }
         Stream<UnifiedMemberGroup> mergedBaselineRootGroups = baselineRootGroups.stream()
                 .map(baselineRootGroup -> getMergedBaselineRootGroup(baselineRootGroupsByName, baselineRootGroup));
         return Stream.concat(prependedNewRootGroups.stream(), mergedBaselineRootGroups)
@@ -66,7 +72,7 @@ public class UnifiedConfigMerger {
     }
 
     @NonNull
-    private static Map<String, UnifiedMemberGroup> collectNamedGroupsByName(List<UnifiedMemberGroup> memberGroups) {
+    private static Map<String, UnifiedMemberGroup> collectGroupsByName(List<UnifiedMemberGroup> memberGroups) {
         return memberGroups.stream()
                 .filter(memberGroup -> memberGroup.getGroupName() != null)
                 .collect(Collectors.toMap(
@@ -84,15 +90,5 @@ public class UnifiedConfigMerger {
             return baselineRootGroup;
         }
         return baselineRootGroupsByName.getOrDefault(baselineGroupName, baselineRootGroup);
-    }
-
-    private static boolean isNewRootGroupAndReplaceMatchedGroup(
-            Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
-        String overlayGroupName = overlayRootGroup.getGroupName();
-        if (overlayGroupName == null || !baselineRootGroupsByName.containsKey(overlayGroupName)) {
-            return true;
-        }
-        baselineRootGroupsByName.put(overlayGroupName, overlayRootGroup);
-        return false;
     }
 }
