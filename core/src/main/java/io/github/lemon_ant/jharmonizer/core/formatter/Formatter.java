@@ -51,17 +51,17 @@ public final class Formatter {
     }
 
     @NonNull
-    public FormatingResult formatSource(
+    public FormattingResult formatSource(
             @NonNull String srcCode,
             @NonNull Path srcPath,
             @NonNull List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
         log.debug("Formatting {}", srcPath);
-        TimedResult<String> formatingResult =
+        TimedResult<String> formattingResult =
                 StopWatch.measure(() -> applyFormatting(srcCode, formattingSkippedRanges));
 
-        String formattedSource = formatingResult.getResult();
-        return new FormatingResult(
-                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
+        String formattedSource = formattingResult.getResult();
+        return new FormattingResult(
+                formattedSource, new FormattingStatistic(formattedSource.length(), formattingResult.getNanos()));
     }
 
     @NonNull
