@@ -23,6 +23,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Keep changes surgical and avoid unrelated cleanup.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
+- Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.

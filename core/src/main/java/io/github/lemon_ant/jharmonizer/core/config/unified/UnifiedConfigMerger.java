@@ -1,11 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -55,49 +56,36 @@ public class UnifiedConfigMerger {
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
         Set<String> baselineGroupNames = collectNamedGroupNames(baselineRootGroups);
-        List<UnifiedMemberGroup> mergedRootGroups =
-                new ArrayList<>(baselineRootGroups.size() + overlayRootGroups.size());
-
-        for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
-            String overlayGroupName = overlayRootGroup.getGroupName();
-            if (overlayGroupName == null || !baselineGroupNames.contains(overlayGroupName)) {
-                mergedRootGroups.add(overlayRootGroup);
-            }
-        }
-
-        for (UnifiedMemberGroup baselineRootGroup : baselineRootGroups) {
-            String baselineGroupName = baselineRootGroup.getGroupName();
-            UnifiedMemberGroup replacementGroup = findReplacementGroup(overlayRootGroups, baselineGroupName);
-            mergedRootGroups.add(replacementGroup == null ? baselineRootGroup : replacementGroup);
-        }
-
-        return List.copyOf(mergedRootGroups);
+        Stream<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
+                .filter(overlayRootGroup -> isNewRootGroup(overlayRootGroup, baselineGroupNames));
+        Stream<UnifiedMemberGroup> mergedBaselineRootGroups = baselineRootGroups.stream()
+                .map(baselineRootGroup -> findReplacementGroup(overlayRootGroups, baselineRootGroup)
+                        .orElse(baselineRootGroup));
+        return Stream.concat(prependedNewRootGroups, mergedBaselineRootGroups).toList();
     }
 
     @NonNull
     private static Set<String> collectNamedGroupNames(List<UnifiedMemberGroup> memberGroups) {
-        Set<String> groupNames = new LinkedHashSet<>();
-        for (UnifiedMemberGroup memberGroup : memberGroups) {
-            String groupName = memberGroup.getGroupName();
-            if (groupName != null) {
-                groupNames.add(groupName);
-            }
-        }
-        return groupNames;
+        return memberGroups.stream()
+                .map(UnifiedMemberGroup::getGroupName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    @Nullable
-    private static UnifiedMemberGroup findReplacementGroup(
-            List<UnifiedMemberGroup> overlayRootGroups, @Nullable String baselineGroupName) {
+    @NonNull
+    private static Optional<UnifiedMemberGroup> findReplacementGroup(
+            List<UnifiedMemberGroup> overlayRootGroups, UnifiedMemberGroup baselineRootGroup) {
+        String baselineGroupName = baselineRootGroup.getGroupName();
         if (baselineGroupName == null) {
-            return null;
+            return Optional.empty();
         }
-        for (int overlayGroupIndex = overlayRootGroups.size() - 1; overlayGroupIndex >= 0; overlayGroupIndex--) {
-            UnifiedMemberGroup overlayRootGroup = overlayRootGroups.get(overlayGroupIndex);
-            if (baselineGroupName.equals(overlayRootGroup.getGroupName())) {
-                return overlayRootGroup;
-            }
-        }
-        return null;
+        return overlayRootGroups.stream()
+                .filter(overlayRootGroup -> baselineGroupName.equals(overlayRootGroup.getGroupName()))
+                .reduce((ignoredPreviousGroup, currentGroup) -> currentGroup);
+    }
+
+    private static boolean isNewRootGroup(UnifiedMemberGroup overlayRootGroup, Set<String> baselineGroupNames) {
+        String overlayGroupName = overlayRootGroup.getGroupName();
+        return overlayGroupName == null || !baselineGroupNames.contains(overlayGroupName);
     }
 }
