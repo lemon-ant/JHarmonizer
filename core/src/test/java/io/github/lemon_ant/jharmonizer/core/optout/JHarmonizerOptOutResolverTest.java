@@ -143,6 +143,22 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
+    void resolveFileOptOutMode_sortOffThenFullyOff_resolvesFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:sort-off
+                // @jharmonizer:fully-off
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(srcCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
     void parseJavaSourceResource_legacyOffAlias_ignoreInvalidOptOut() {
         // Given
         String srcCode = """

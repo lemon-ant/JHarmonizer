@@ -19,6 +19,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -52,8 +53,11 @@ abstract class AbstractOptOutFlow implements IFlow {
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull String skippedOperationDescription) {
-        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.SORTING_OFF)) {
-            logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.SORTING_OFF);
+        Optional<JHarmonizerOptOutMode> fileOptOutMode =
+                parsedSpoonAstModel.getOptOuts().getFileOptOutMode();
+        if (fileOptOutMode.isPresent()) {
+            JHarmonizerOptOutMode mode = fileOptOutMode.get();
+            logFileOptOutSkip(srcFile, skippedOperationDescription, mode);
             String originalSrcCode = srcFile.getSrcCode();
             return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
