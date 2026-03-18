@@ -40,6 +40,7 @@ This file defines repository-wide conventions for coding agents working in this 
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
 - Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
+- When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 
 ## Test conventions
 

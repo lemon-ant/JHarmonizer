@@ -133,7 +133,7 @@ class UnifiedConfigMergerTest {
 
         // When / Then
         assertThatThrownBy(() -> UnifiedConfigMerger.merge(createConfig(List.of(unnamedBaselineGroup)), overlayConfig))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Baseline root member groups must have non-null names");
     }
 

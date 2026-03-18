@@ -18,6 +18,8 @@ public class UnifiedMemberGroup {
 
     /**
      * Stable, human-readable identifier of the group.
+     * Nullable by design: overlay configs may be imported from external formats that do not support
+     * naming groups, and those unnamed groups are still allowed to be applied on top of the strict baseline config.
      */
     @Nullable
     String groupName;

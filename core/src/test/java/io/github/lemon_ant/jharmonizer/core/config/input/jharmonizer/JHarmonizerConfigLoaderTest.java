@@ -8,8 +8,6 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
@@ -96,12 +94,11 @@ class JHarmonizerConfigLoaderTest {
 
         // When / Then
         assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(openYaml(configYaml)))
-                .isInstanceOf(ValueInstantiationException.class)
-                .hasMessageContaining("non-null name");
+                .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
-    void loadFlexibleFrom_groupNameMissing_preservesNullName() throws IOException {
+    void loadFlexibleFrom_groupNameMissing_throwsException() {
         // Given
         String configYaml = """
                 type-members-ordering:
@@ -110,14 +107,9 @@ class JHarmonizerConfigLoaderTest {
                     ordering-rules: [ALPHA]
                 """;
 
-        // When
-        JHarmonizerFlexibleConfig flexibleConfig = JHarmonizerConfigLoader.loadFlexibleFrom(openYaml(configYaml));
-
-        // Then
-        assertThat(flexibleConfig.getMemberGroups())
-                .singleElement()
-                .extracting(JHarmonizerMemberGroup::getName)
-                .isNull();
+        // When / Then
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFlexibleFrom(openYaml(configYaml)))
+                .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test

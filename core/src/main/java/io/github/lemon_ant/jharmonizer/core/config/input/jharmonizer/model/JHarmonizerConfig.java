@@ -51,19 +51,7 @@ public class JHarmonizerConfig {
         this.backupsEnabled = backupsEnabled;
         this.headerLine = headerLine;
         Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
-        validateMemberGroupNames(memberGroups);
         this.memberGroups = Collections.unmodifiableList(memberGroups);
-    }
-
-    private static void validateMemberGroupNames(List<JHarmonizerMemberGroup> memberGroups) {
-        memberGroups.forEach(memberGroup -> {
-            Validate.isTrue(
-                    memberGroup.getName() != null,
-                    "Strict type-members-ordering requires a non-null name for every member group");
-            if (!memberGroup.getMemberSubGroups().isEmpty()) {
-                validateMemberGroupNames(memberGroup.getMemberSubGroups());
-            }
-        });
     }
 
     @Override
