@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import java.util.Comparator;
 import java.util.List;
@@ -35,24 +36,24 @@ public final class JHarmonizerOptOutResolver {
 
     @NonNull
     private JHarmonizerOptOuts resolve() {
-        Optional<JHarmonizerOptOutMode> fileOptOutMode = resolveFileOptOutMode();
-        if (fileOptOutMode.orElse(null) == JHarmonizerOptOutMode.FULLY_OFF) {
+        JHarmonizerOptOutMode fileOptOutMode = resolveFileOptOutMode();
+        if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
             return new JHarmonizerOptOuts(JHarmonizerOptOutMode.FULLY_OFF, Map.of());
         }
 
         Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new ConcurrentHashMap<>();
-        boolean sortingDisabledInParents = fileOptOutMode.orElse(null) == JHarmonizerOptOutMode.SORTING_OFF;
+        boolean sortingDisabledInParents = fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF;
         for (CtType<?> declaredType : compilationUnit.getDeclaredTypes()) {
             collectTypeOptOutModes(declaredType, sortingDisabledInParents, typeOptOutModes);
         }
 
-        return typeOptOutModes.isEmpty() && fileOptOutMode.isEmpty()
+        return typeOptOutModes.isEmpty() && fileOptOutMode == null
                 ? JHarmonizerOptOuts.empty()
-                : new JHarmonizerOptOuts(fileOptOutMode.orElse(null), typeOptOutModes);
+                : new JHarmonizerOptOuts(fileOptOutMode, typeOptOutModes);
     }
 
-    @NonNull
-    private Optional<JHarmonizerOptOutMode> resolveFileOptOutMode() {
+    @Nullable
+    private JHarmonizerOptOutMode resolveFileOptOutMode() {
         List<CtComment> fileComments = compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
                 .filter(comment -> !hasStructuredOwner(comment))
                 .filter(this::isPotentialOptOutComment)
@@ -66,6 +67,12 @@ public final class JHarmonizerOptOutResolver {
             if (parsedMode.isEmpty()) {
                 continue;
             }
+            JHarmonizerOptOutMode currentMode = parsedMode.orElseThrow();
+            if (currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
+                fileOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
+                firstFileComment = fileComment;
+                break;
+            }
             if (fileOptOutMode != null) {
                 logIgnoredOptOut(
                         fileComment,
@@ -73,28 +80,24 @@ public final class JHarmonizerOptOutResolver {
                                 .formatted(formatLocation(firstFileComment.getPosition())));
                 continue;
             }
-            fileOptOutMode = parsedMode.orElseThrow();
+            fileOptOutMode = currentMode;
             firstFileComment = fileComment;
-            if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
-                break;
-            }
         }
-        return Optional.ofNullable(fileOptOutMode);
+        return fileOptOutMode;
     }
 
     private void collectTypeOptOutModes(
             @NonNull CtType<?> currentType,
             boolean sortingDisabledInParents,
             @NonNull Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
-        Optional<JHarmonizerOptOutMode> directOptOutMode =
-                resolveDirectTypeOptOutMode(currentType, sortingDisabledInParents);
-        if (directOptOutMode.orElse(null) == JHarmonizerOptOutMode.FULLY_OFF) {
+        JHarmonizerOptOutMode directOptOutMode = resolveDirectTypeOptOutMode(currentType, sortingDisabledInParents);
+        if (directOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
             typeOptOutModes.put(currentType, JHarmonizerOptOutMode.FULLY_OFF);
             return;
         }
 
         boolean sortingDisabledForNestedTypes = sortingDisabledInParents;
-        if (directOptOutMode.orElse(null) == JHarmonizerOptOutMode.SORTING_OFF) {
+        if (directOptOutMode == JHarmonizerOptOutMode.SORTING_OFF) {
             typeOptOutModes.put(currentType, JHarmonizerOptOutMode.SORTING_OFF);
             sortingDisabledForNestedTypes = true;
         }
@@ -104,8 +107,8 @@ public final class JHarmonizerOptOutResolver {
         }
     }
 
-    @NonNull
-    private Optional<JHarmonizerOptOutMode> resolveDirectTypeOptOutMode(
+    @Nullable
+    private JHarmonizerOptOutMode resolveDirectTypeOptOutMode(
             @NonNull CtType<?> currentType, boolean sortingDisabledInParents) {
         List<CtComment> leadingTypeComments = currentType.getComments().stream()
                 .filter(this::isPotentialOptOutComment)
@@ -139,7 +142,7 @@ public final class JHarmonizerOptOutResolver {
                 break;
             }
         }
-        return Optional.ofNullable(directOptOutMode);
+        return directOptOutMode;
     }
 
     @NonNull

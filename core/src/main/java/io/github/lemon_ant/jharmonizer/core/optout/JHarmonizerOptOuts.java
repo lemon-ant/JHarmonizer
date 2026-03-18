@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -24,11 +25,11 @@ public class JHarmonizerOptOuts {
      * @param fileOptOutMode the file-level opt-out mode, or {@code null} when the file stays fully enabled
      * @param typeOptOutModes the type-level opt-out modes keyed by the affected types
      */
-    public JHarmonizerOptOuts(
+    JHarmonizerOptOuts(
             @Nullable JHarmonizerOptOutMode fileOptOutMode,
             @NonNull Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
         this.fileOptOutMode = fileOptOutMode;
-        this.typeOptOutModes = Map.copyOf(typeOptOutModes);
+        this.typeOptOutModes = Collections.unmodifiableMap(typeOptOutModes);
     }
 
     @NonNull
