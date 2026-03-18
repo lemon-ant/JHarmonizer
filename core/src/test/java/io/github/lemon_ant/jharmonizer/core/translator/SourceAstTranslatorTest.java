@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -80,7 +80,7 @@ class SourceAstTranslatorTest {
 
         // When
         SerializationResult result = SourceAstTranslator.serialize(spoonAstModel);
-        List<SourceCharacterRange> formattingSkippedRanges =
+        List<SrcCharacterRange> formattingSkippedRanges =
                 result.getFormattingSkippedRanges(spoonAstModel.getOptOuts().getFormattingSkippedTypes());
         String serializedSrcCode =
                 result.getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode();

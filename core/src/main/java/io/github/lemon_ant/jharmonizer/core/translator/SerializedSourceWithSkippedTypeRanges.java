@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import java.util.Collections;
 import java.util.Map;
 import lombok.NonNull;
@@ -13,11 +13,11 @@ public class SerializedSourceWithSkippedTypeRanges {
     String serializedSrcCode;
 
     @NonNull
-    Map<@NonNull CtType<?>, @NonNull SourceCharacterRange> sortingSkippedTypeRanges;
+    Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges;
 
     public SerializedSourceWithSkippedTypeRanges(
             @NonNull String serializedSrcCode,
-            @NonNull Map<@NonNull CtType<?>, @NonNull SourceCharacterRange> sortingSkippedTypeRanges) {
+            @NonNull Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges) {
         this.serializedSrcCode = serializedSrcCode;
         this.sortingSkippedTypeRanges = Collections.unmodifiableMap(sortingSkippedTypeRanges);
     }

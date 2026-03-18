@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.formatter;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle.PALANTIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ class FormatterTest {
 
         // When
         FormatingResult formatingResult = formatter.formatSource(
-                sourceCode, Path.of("Person.java"), List.of(new SourceCharacterRange(0, sourceCode.length())));
+                sourceCode, Path.of("Person.java"), List.of(new SrcCharacterRange(0, sourceCode.length())));
 
         // Then
         assertThat(formatingResult.getFormatedSrcCode()).isEqualTo(sourceCode);

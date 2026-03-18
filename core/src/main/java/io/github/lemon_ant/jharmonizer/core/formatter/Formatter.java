@@ -10,7 +10,7 @@ import com.palantir.javaformat.java.JavaFormatterOptions.Style;
 import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.common.StopWatch.TimedResult;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
-import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +54,7 @@ public final class Formatter {
     public FormatingResult formatSource(
             @NonNull String srcCode,
             @NonNull Path srcPath,
-            @NonNull List<@NonNull SourceCharacterRange> formattingSkippedRanges) {
+            @NonNull List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
         log.debug("Formatting {}", srcPath);
         TimedResult<String> formatingResult =
                 StopWatch.measure(() -> applyFormatting(srcCode, formattingSkippedRanges));
@@ -65,7 +65,7 @@ public final class Formatter {
     }
 
     @NonNull
-    private String applyFormatting(String srcCode, List<@NonNull SourceCharacterRange> formattingSkippedRanges) {
+    private String applyFormatting(String srcCode, List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
         if (formatterStyle == null) {
             return fixImports ? invokePalantir(() -> formatter.fixImports(srcCode)) : srcCode;
         }
@@ -77,7 +77,7 @@ public final class Formatter {
 
         String partlyFormattedSrc = srcCode;
         Collection<Range<Integer>> formattingRanges =
-                SourceCharacterRange.invert(srcCode.length(), formattingSkippedRanges).stream()
+                SrcCharacterRange.invert(srcCode.length(), formattingSkippedRanges).stream()
                         .map(range -> Range.closedOpen(range.getStartInclusive(), range.getEndExclusive()))
                         .toList();
         if (!formattingRanges.isEmpty()) {
