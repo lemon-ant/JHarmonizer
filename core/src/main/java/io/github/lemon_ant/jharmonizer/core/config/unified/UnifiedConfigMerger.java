@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,12 +59,11 @@ public class UnifiedConfigMerger {
         Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
         List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
         for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
-            String overlayGroupName = overlayRootGroup.getGroupName();
-            if (overlayGroupName == null || !baselineRootGroupsByName.containsKey(overlayGroupName)) {
-                prependedNewRootGroups.add(overlayRootGroup);
-                continue;
+            UnifiedMemberGroup prependedNewRootGroup =
+                    processOverlayRootGroup(baselineRootGroupsByName, overlayRootGroup);
+            if (prependedNewRootGroup != null) {
+                prependedNewRootGroups.add(prependedNewRootGroup);
             }
-            baselineRootGroupsByName.put(overlayGroupName, overlayRootGroup);
         }
         Stream<UnifiedMemberGroup> mergedBaselineRootGroups = baselineRootGroups.stream()
                 .map(baselineRootGroup -> getMergedBaselineRootGroup(baselineRootGroupsByName, baselineRootGroup));
@@ -78,7 +78,7 @@ public class UnifiedConfigMerger {
                 .collect(Collectors.toMap(
                         UnifiedMemberGroup::getGroupName,
                         memberGroup -> memberGroup,
-                        (ignoredPreviousGroup, currentGroup) -> currentGroup,
+                        (existingGroup, replacementGroup) -> replacementGroup,
                         LinkedHashMap::new));
     }
 
@@ -90,5 +90,16 @@ public class UnifiedConfigMerger {
             return baselineRootGroup;
         }
         return baselineRootGroupsByName.getOrDefault(baselineGroupName, baselineRootGroup);
+    }
+
+    @Nullable
+    private static UnifiedMemberGroup processOverlayRootGroup(
+            Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
+        String overlayGroupName = overlayRootGroup.getGroupName();
+        if (overlayGroupName == null || !baselineRootGroupsByName.containsKey(overlayGroupName)) {
+            return overlayRootGroup;
+        }
+        baselineRootGroupsByName.put(overlayGroupName, overlayRootGroup);
+        return null;
     }
 }
