@@ -34,8 +34,7 @@ public class SerializationResult {
      * @return the source ranges to exclude from formatting
      */
     @NonNull
-    public List<@NonNull SrcCharacterRange> getFormattingSkippedRanges(
-            @NonNull Set<CtType<?>> formattingSkippedTypes) {
+    public List<@NonNull SrcCharacterRange> getFormattingSkippedRanges(@NonNull Set<CtType<?>> formattingSkippedTypes) {
         return serializedSourceWithSkippedTypeRanges.getSortingSkippedTypeRanges().entrySet().stream()
                 .filter(entry -> formattingSkippedTypes.contains(entry.getKey()))
                 .map(java.util.Map.Entry::getValue)

@@ -6,8 +6,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
@@ -65,7 +65,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
             throw new NotOrderedException(srcFile.getPath(), elementRelocations);
         }
 
-        FormatingResult formattingResult = getFormatter()
+        FormattingResult formattingResult = getFormatter()
                 .formatSource(
                         sortingAndSerializationResult
                                 .getSerializationResult()
@@ -80,10 +80,10 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormatedSrcCode());
+                        formattingResult.getFormattedSrcCode());
 
-        if (!srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode())) {
-            String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+        if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
+            String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
             throw new NotFormattedException(srcFile.getPath(), srcDiff);
         }
 
@@ -96,7 +96,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(
                         sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
-                .formatingStatistic(formattingResult.getFormatingStatistic())
+                .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
                 .build();
     }

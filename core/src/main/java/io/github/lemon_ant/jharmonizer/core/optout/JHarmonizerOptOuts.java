@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +26,7 @@ public class JHarmonizerOptOuts {
      * @param fileOptOutMode the file-level opt-out mode, or {@code null} when the file stays fully enabled
      * @param typeOptOutModes the type-level opt-out modes keyed by the affected types
      */
+    @SuppressFBWarnings("SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR")
     JHarmonizerOptOuts(
             @Nullable JHarmonizerOptOutMode fileOptOutMode,
             @NonNull Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {

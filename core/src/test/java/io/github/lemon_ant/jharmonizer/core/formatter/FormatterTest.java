@@ -53,10 +53,10 @@ class FormatterTest {
         String sourceCode = "class Person {  }\n";
 
         // When
-        FormatingResult formatingResult = formatter.formatSource(
+        FormattingResult formatingResult = formatter.formatSource(
                 sourceCode, Path.of("Person.java"), List.of(new SrcCharacterRange(0, sourceCode.length())));
 
         // Then
-        assertThat(formatingResult.getFormatedSrcCode()).isEqualTo(sourceCode);
+        assertThat(formatingResult.getFormattedSrcCode()).isEqualTo(sourceCode);
     }
 }

@@ -8,8 +8,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
@@ -47,7 +47,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                 sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
-        FormatingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
+        FormattingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
         SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
@@ -59,7 +59,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
             srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
         } else if (hasChanges) {
             elementRelocations = List.of();
-            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
         } else {
             elementRelocations = List.of();
             srcDiff = "";

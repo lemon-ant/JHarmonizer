@@ -2,9 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

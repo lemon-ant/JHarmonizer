@@ -4,9 +4,9 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingStatistic;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
@@ -93,7 +93,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                                 .getSerializationResult()
                                 .getSerializedSourceWithSkippedTypeRanges()
                                 .getSerializedSrcCode());
-        FormatingResult formattingResult = getFormatter()
+        FormattingResult formattingResult = getFormatter()
                 .formatSource(
                         sortingAndSerializationResult
                                 .getSerializationResult()
@@ -108,7 +108,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormatedSrcCode());
+                        formattingResult.getFormattedSrcCode());
         return new SortingSerializationAndFormattingResult(sortingAndSerializationResult, formattingResult);
     }
 
@@ -129,7 +129,8 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .sortingStatistic(new SortingStatistic(0))
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
-                .formatingStatistic(new FormatingStatistic(srcFile.getSrcCode().length(), 0))
+                .formattingStatistic(
+                        new FormattingStatistic(srcFile.getSrcCode().length(), 0))
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, checkingOnly))
                 .build();
     }
@@ -170,7 +171,7 @@ abstract class AbstractOptOutFlow implements IFlow {
         SortingAndSerializationResult sortingAndSerializationResult;
 
         @NonNull
-        FormatingResult formattingResult;
+        FormattingResult formattingResult;
 
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {
