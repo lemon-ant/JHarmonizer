@@ -60,7 +60,9 @@ public class JHarmonizerConfig {
             Validate.isTrue(
                     memberGroup.getName() != null,
                     "Strict type-members-ordering requires a non-null name for every member group");
-            validateMemberGroupNames(memberGroup.getMemberSubGroups());
+            if (!memberGroup.getMemberSubGroups().isEmpty()) {
+                validateMemberGroupNames(memberGroup.getMemberSubGroups());
+            }
         });
     }
 

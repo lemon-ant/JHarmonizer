@@ -68,8 +68,11 @@ public class UnifiedConfigMerger {
 
     @NonNull
     private static String requireGroupName(UnifiedMemberGroup memberGroup) {
-        return Objects.requireNonNull(
-                memberGroup.getGroupName(), "Baseline root member groups must have non-null names");
+        String groupName = memberGroup.getGroupName();
+        if (groupName == null) {
+            throw new IllegalArgumentException("Baseline root member groups must have non-null names");
+        }
+        return groupName;
     }
 
     @Nullable

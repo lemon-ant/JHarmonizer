@@ -91,7 +91,7 @@ class JHarmonizerConfigLoaderTest {
                 type-members-ordering:
                   - includes:
                       - [field]
-                    ordering-rules: [ALPHA]
+                    ordering-rules: [alpha]
                 """;
 
         // When / Then
