@@ -25,7 +25,7 @@ class ParseAllJava21FeaturesTest {
         SrcFile srcFile = new SrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        ParsingResult parsingResult = SourceAstTranslator.parseSrcFile(srcFile);
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then

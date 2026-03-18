@@ -27,7 +27,7 @@ class SourceAstTranslatorTest {
         SrcFile srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // When
-        ParsingResult result = SourceAstTranslator.parseSrcFile(srcFile);
+        ParsingResult result = SourceAstTranslator.parse(srcFile);
 
         // Then
         assertThat(result).isNotNull();
@@ -43,7 +43,7 @@ class SourceAstTranslatorTest {
         // Given: simple source code
         String source = "class Demo { void m() {} }";
         SrcFile srcFile = new SrcFile(source, Path.of("Demo.java"));
-        SpoonAstModel model = SourceAstTranslator.parseSrcFile(srcFile).getSpoonAstModel();
+        SpoonAstModel model = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
         SerializationResult result = SourceAstTranslator.serialize(model);
@@ -75,7 +75,7 @@ class SourceAstTranslatorTest {
                 %s
                 """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
         SrcFile srcFile = new SrcFile(sourceCode, Path.of("Sample.java"));
-        SpoonAstModel spoonAstModel = SourceAstTranslator.parseSrcFile(srcFile).getSpoonAstModel();
+        SpoonAstModel spoonAstModel = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
         SerializationResult result = SourceAstTranslator.serialize(spoonAstModel);

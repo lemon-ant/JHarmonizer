@@ -6,7 +6,6 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import java.lang.annotation.Annotation;
@@ -48,24 +47,23 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     private final TypeStructurePrinter typeStructurePrinter;
 
     @NonNull
-    private final String originalSourceCode;
+    private final String originalSrcCode;
 
     /**
      * Creates a new SpoonCustomSourcePrinter.
      *
      * @param env the env
-     * @param srcFile the original source file
      * @param sortingSkippedTypes the types that must be copied without sorting
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(
-            @NonNull Environment env, @NonNull SrcFile srcFile, @NonNull Set<CtType<?>> sortingSkippedTypes) {
+            @NonNull Environment env, @NonNull String srcCode, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         super(env);
         this.sortingSkippedTypes = Set.copyOf(sortingSkippedTypes);
         this.typeStructurePrinter = new TypeStructurePrinter();
-        String lineSeparator = detectDominantLineSeparator(srcFile.getSrcCode());
+        String lineSeparator = detectDominantLineSeparator(srcCode);
         setLineSeparator(lineSeparator);
-        this.originalSourceCode = srcFile.getSrcCode();
+        this.originalSrcCode = srcCode;
     }
 
     /**
@@ -116,10 +114,10 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     @NonNull
     private spoon.reflect.visitor.TokenWriter printOriginalFragment(int start, int end) {
-        int startWithIndent = findIndentationStart(start, originalSourceCode);
-        if (startWithIndent <= end && end <= originalSourceCode.length()) {
+        int startWithIndent = findIndentationStart(start, originalSrcCode);
+        if (startWithIndent <= end && end <= originalSrcCode.length()) {
             String originalCodeFragment =
-                    StringUtils.stripEnd(originalSourceCode.substring(startWithIndent, end + 1), null);
+                    StringUtils.stripEnd(originalSrcCode.substring(startWithIndent, end + 1), null);
             return getPrinterTokenWriter()
                     .writeCodeSnippet(originalCodeFragment)
                     .writeln();
@@ -127,7 +125,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         throw new IllegalStateException("Invalid source fragment range: start=" + start
                 + ", end=" + end
                 + ", indentationStart=" + startWithIndent
-                + ", sourceLength=" + originalSourceCode.length()
+                + ", sourceLength=" + originalSrcCode.length()
                 + ". Expected indentationStart <= end < sourceLength.");
     }
 
@@ -188,7 +186,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                         .mapToInt(SourcePosition::getSourceStart)
                         .min()
                         .orElse(type.getPosition().getSourceStart()),
-                originalSourceCode);
+                originalSrcCode);
     }
 
     // This helper stays non-static because it must coordinate outer printer state such as token writer access,

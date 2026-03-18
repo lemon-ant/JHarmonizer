@@ -5,8 +5,6 @@ import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.function.Supplier;
 import lombok.NonNull;
@@ -21,17 +19,6 @@ import spoon.support.compiler.VirtualFile;
 public class SpoonParser {
 
     private static final int JAVA_VERSION = 21;
-
-    /**
-     * Parses the java source resource.
-     * @param javaSrcPath the Java source path to parse
-     * @return the java source resource
-     */
-    @NonNull
-    public static SpoonAstModel parseJavaSourceResource(@NonNull Path javaSourcePath) throws IOException {
-        Path normalizedSourcePath = javaSourcePath.normalize().toAbsolutePath();
-        return parseJavaSourceResource(SourceFilesHandler.readFile(normalizedSourcePath));
-    }
 
     /**
      * Parses the java source resource.
@@ -54,16 +41,16 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        Supplier<SerializedSourceWithSkippedTypeRanges> serializedSourceCode = () -> {
-            SpoonCustomSourcePrinter printer =
-                    new SpoonCustomSourcePrinter(launcher.getEnvironment(), srcFile, optOuts.getSortingSkippedTypes());
+        Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
+            SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
+                    launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
             return printer.serializeCompilationUnit(compilationUnit);
         };
         return SpoonAstModel.builder()
                 .originalElements2OrderIndices(RelocationDetector.indexElementsByOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
-                .serializedSourceCode(serializedSourceCode)
+                .serializedSrcCode(serializedSrcCode)
                 .optOuts(optOuts)
                 .path(srcFile.getPath())
                 .build();

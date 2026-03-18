@@ -42,7 +42,7 @@ public class SpoonAstModel {
     Path path;
 
     @NonNull
-    Supplier<SerializedSourceWithSkippedTypeRanges> serializedSourceCode;
+    Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode;
 
     @NonNull
     JHarmonizerOptOuts optOuts;

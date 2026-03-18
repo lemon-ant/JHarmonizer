@@ -7,8 +7,10 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootT
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.common.StopWatch.TimedResult;
+import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -32,7 +34,7 @@ public final class SourceAstTranslator {
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
-    public static ParsingResult parseSrcFile(@NonNull SrcFile srcFile) {
+    public static ParsingResult parse(@NonNull SrcFile srcFile) {
         log.debug("Parsing {}", srcFile.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
@@ -54,7 +56,7 @@ public final class SourceAstTranslator {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
         TimedResult<SerializedSourceWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
-                () -> sortedSpoonAstModel.getSerializedSourceCode().get());
+                () -> sortedSpoonAstModel.getSerializedSrcCode().get());
         SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
                 serializationTimedResult.getResult();
         String serializedSourceCode = serializedSourceWithSkippedTypeRanges.getSerializedSrcCode();
@@ -76,17 +78,17 @@ public final class SourceAstTranslator {
 
     @NonNull
     private static ParsingStatistic createParsingStatistic(
-            String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
+            String originalSrcCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         CtCompilationUnit compilationUnit = spoonASTModel.getCompilationUnit();
 
-        // TODO It doesn't work String originalSourceCode = compilationUnit.getOriginalSourceCode();
+        // TODO It doesn't work String originalSrcCode = compilationUnit.getOriginalSourceCode();
         List<CtType<?>> rootTypes = getRootTypes(compilationUnit);
         List<CtType<?>> allDeclaredTypes = getAllTypes(compilationUnit);
         List<CtTypeMember> allTypesMembers = getAllTypeMembers(compilationUnit);
 
         return new ParsingStatistic(
-                originalSourceCode.length(),
+                originalSrcCode.length(),
                 allTypesMembers.size(),
                 rootTypes.size(),
                 allDeclaredTypes.size(),

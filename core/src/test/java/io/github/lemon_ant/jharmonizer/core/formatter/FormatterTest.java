@@ -18,7 +18,7 @@ class FormatterTest {
         String expectedClass = "public class Person {}\n";
 
         // When
-        FormatingResult formatingResult = formatter.formatSource(sourceClass, Path.of(""));
+        FormatingResult formatingResult = formatter.formatSource(sourceClass, Path.of(""), List.of());
         FormatingStatistic formatingStatistic = formatingResult.getFormatingStatistic();
 
         // Then
@@ -36,7 +36,7 @@ class FormatterTest {
         String expectedClass = "public class Person {}\n";
 
         // When
-        FormatingResult formatingResult = formatter.formatSource(sourceClass, Path.of(""));
+        FormatingResult formatingResult = formatter.formatSource(sourceClass, Path.of(""), List.of());
         FormatingStatistic formatingStatistic = formatingResult.getFormatingStatistic();
 
         // Then

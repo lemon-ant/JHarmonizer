@@ -50,17 +50,6 @@ public final class Formatter {
         formatter = com.palantir.javaformat.java.Formatter.createFormatter(options);
     }
 
-    /**
-     * Formats the given source code.
-     *
-     * @param srcCode the source code to format
-     * @return a FormatingResult containing the formatted source code and statistics
-     */
-    @NonNull
-    public FormatingResult formatSource(@NonNull String srcCode, @NonNull Path srcPath) {
-        return formatSource(srcCode, srcPath, List.of());
-    }
-
     @NonNull
     public FormatingResult formatSource(
             @NonNull String srcCode,

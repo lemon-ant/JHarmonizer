@@ -13,7 +13,6 @@ import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtType;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -99,7 +98,8 @@ public final class JHarmonizerOptOutResolver {
             @NonNull CtComment comment, @NonNull JHarmonizerOptOutMode mode) {
         return placementResolver
                 .findTypeTarget(comment)
-                .map(targetType -> resolveTypeOptOut(comment, mode, targetType));
+                .map(targetType -> new ResolvedJHarmonizerOptOut(
+                        comment.getPosition(), mode, JHarmonizerOptOutScope.TYPE_SCOPE, targetType));
     }
 
     private void storeTypeOptOut(
@@ -123,8 +123,8 @@ public final class JHarmonizerOptOutResolver {
             ResolvedJHarmonizerOptOut currentFileOptOut,
             @NonNull CtComment comment,
             @NonNull JHarmonizerOptOutMode mode) {
-        ResolvedJHarmonizerOptOut resolvedOptOut = new ResolvedJHarmonizerOptOut(
-                comment.getPosition(), mode, null, JHarmonizerOptOutScope.FILE_SCOPE, null);
+        ResolvedJHarmonizerOptOut resolvedOptOut =
+                new ResolvedJHarmonizerOptOut(comment.getPosition(), mode, JHarmonizerOptOutScope.FILE_SCOPE, null);
         if (currentFileOptOut != null) {
             logIgnoredOptOut(
                     comment,
@@ -133,28 +133,6 @@ public final class JHarmonizerOptOutResolver {
             return currentFileOptOut;
         }
         return resolvedOptOut;
-    }
-
-    @NonNull
-    private ResolvedJHarmonizerOptOut resolveTypeOptOut(
-            @NonNull CtComment comment, @NonNull JHarmonizerOptOutMode mode, @NonNull CtType<?> targetType) {
-        SourceCharacterRange preservedSourceRange = new SourceCharacterRange(
-                findIndentationStart(srcFile.getSrcCode(), comment.getPosition().getSourceStart()),
-                targetType.getPosition().getSourceEnd() + 1);
-        return new ResolvedJHarmonizerOptOut(
-                comment.getPosition(), mode, preservedSourceRange, JHarmonizerOptOutScope.TYPE_SCOPE, targetType);
-    }
-
-    private static int findIndentationStart(@NonNull String sourceCode, int startIndex) {
-        int index = startIndex - 1;
-        while (index >= 0) {
-            char symbol = sourceCode.charAt(index);
-            if (symbol != ' ' && symbol != '\t') {
-                break;
-            }
-            index--;
-        }
-        return index + 1;
     }
 
     private void logIgnoredOptOut(@NonNull CtComment comment, @NonNull String message) {

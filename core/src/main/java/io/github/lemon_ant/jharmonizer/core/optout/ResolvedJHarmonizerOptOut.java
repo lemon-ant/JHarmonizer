@@ -15,9 +15,6 @@ public class ResolvedJHarmonizerOptOut {
     @NonNull
     JHarmonizerOptOutMode mode;
 
-    @Nullable
-    SourceCharacterRange preservedSourceRange;
-
     @NonNull
     JHarmonizerOptOutScope scope;
 
@@ -26,11 +23,6 @@ public class ResolvedJHarmonizerOptOut {
 
     public boolean skipsFormatting() {
         return mode.skipsFormatting();
-    }
-
-    @NonNull
-    public Optional<SourceCharacterRange> getPreservedSourceRange() {
-        return Optional.ofNullable(preservedSourceRange);
     }
 
     @NonNull

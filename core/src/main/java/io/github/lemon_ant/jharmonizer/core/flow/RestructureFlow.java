@@ -39,7 +39,7 @@ public class RestructureFlow extends AbstractOptOutFlow {
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
         getDebugStageRecorder()
                 .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parseSrcFile(srcFile);
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         if (parsingResult.getSpoonAstModel().getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFileOptOutSkippedResult(srcFile, parsingResult, false, null, null, "all harmonization");
         }

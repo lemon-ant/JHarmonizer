@@ -36,7 +36,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
         getDebugStageRecorder()
                 .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parseSrcFile(srcFile);
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFileOptOutSkippedResult(
