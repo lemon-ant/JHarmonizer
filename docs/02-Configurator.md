@@ -103,6 +103,19 @@ public interface Configurator {
 - Multiple `merge()` calls are expected in sequence.
 - Final `Configuration` must be fully initialized and validated (non-null + correct values).
 
+## Root member groups merge semantics
+
+When an external model overrides `type-members-ordering`, JHarmonizer does not replace the whole default root-group list anymore.
+The merge is performed only for the **root member groups**, without recursive subgroup merging:
+
+1. If an external root group has a `name` that exactly matches a default root-group name, the default root group is removed.
+2. The external root group is inserted into the **same position** where the matched default group originally was.
+3. If an external root group name does not exist in the default configuration, that external group is treated as new.
+4. All new external root groups are inserted **before** the default root groups, preserving their order from the external model.
+5. Nested `groups:` blocks are not merged by name. Once a root group matches, its whole subtree from the external model replaces the default subtree as-is.
+
+This allows users to redefine only selected default root groups while keeping all untouched default groups and their original ordering.
+
 ## Optional Configuration Sources Control
 
 For advanced usage, the configurator supports **optional control over which sources to include** when resolving the final configuration.
