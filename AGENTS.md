@@ -45,3 +45,4 @@ This file defines repository-wide conventions for coding agents working in this 
 ## Test conventions
 
 - See `docs/test-conventions.md`.
+- In particular, keep non-trivial multi-line textual test fixtures in `src/test/resources/test-cases/**` instead of embedding them inline in test classes.

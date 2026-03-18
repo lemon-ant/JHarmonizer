@@ -1,0 +1,4 @@
+type-members-ordering:
+  - includes:
+      - [field]
+    ordering-rules: [ALPHA]

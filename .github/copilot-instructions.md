@@ -100,6 +100,9 @@
 - Store fixtures under `src/test/resources/test-cases/**`.
 - Use explicit scenario folder names instead of generic names such as `example/`.
 - Prefer resource fixtures under `src/test/resources/test-cases/**` over large inline YAML or Java strings embedded directly in test classes.
+- Do not keep non-trivial multi-line textual fixtures such as YAML, JSON, XML, Java source, or long expected-output snippets inline in test code.
+- Store those fixtures under `src/test/resources/test-cases/**` and load them through shared helpers such as `TestCaseResourceUtils`.
+- Only tiny one-off inline snippets are acceptable when extracting a file would hurt readability.
 - Use `valid/` for fixtures that must compile and be compilable by the build gate.
 - Use `invalid/` for fixtures that may intentionally not compile in negative tests.
 - All `valid/**/*.java` fixtures must compile as part of the build.
