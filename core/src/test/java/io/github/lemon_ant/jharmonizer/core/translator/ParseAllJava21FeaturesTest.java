@@ -47,7 +47,7 @@ class ParseAllJava21FeaturesTest {
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSourceResource(
-                SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH, SAMPLE_ALL_JAVA21_SOURCE_CODE);
+                new SrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
 
         // When
         SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);

@@ -5,10 +5,12 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTy
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
+import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -35,8 +37,8 @@ public final class SourceAstTranslator {
     public static ParsingResult parseSourceFile(@NonNull SrcFile sourceSrcFile) {
         log.debug("Parsing {}", sourceSrcFile.getPath());
 
-        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
-                () -> SpoonParser.parseJavaSourceResource(sourceSrcFile.getPath(), sourceSrcFile.getSrcCode()));
+        TimedResult<SpoonAstModel> parsingTimedResult =
+                StopWatch.measure(() -> SpoonParser.parseJavaSourceResource(sourceSrcFile));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         ParsingStatistic statistic = createParsingStatistic(sourceSrcFile.getSrcCode(), parsingTimedResult);
@@ -54,15 +56,25 @@ public final class SourceAstTranslator {
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<SerializedSourceSnapshot> serializationTimedResult = StopWatch.measure(
+        TimedResult<SerializedSourceWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());
-        SerializedSourceSnapshot serializedSourceSnapshot = serializationTimedResult.getResult();
-        String serializedSourceCode = serializedSourceSnapshot.getSerializedSrcCode();
+        SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
+                serializationTimedResult.getResult();
+        String serializedSourceCode = serializedSourceWithSkippedTypeRanges.getSerializedSrcCode();
+        List<SourceCharacterRange> formattingSkippedRanges =
+                serializedSourceWithSkippedTypeRanges.getSortingSkippedTypeRanges().entrySet().stream()
+                        .filter(entry -> sortedSpoonAstModel
+                                .getOptOuts()
+                                .getFormattingSkippedTypes()
+                                .contains(entry.getKey()))
+                        .map(java.util.Map.Entry::getValue)
+                        .sorted(Comparator.comparingInt(SourceCharacterRange::getStartInclusive))
+                        .toList();
 
         return new SerializationResult(
                 new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
                 serializedSourceCode,
-                serializedSourceSnapshot.getFormattingSkippedRanges());
+                formattingSkippedRanges);
     }
 
     @NonNull

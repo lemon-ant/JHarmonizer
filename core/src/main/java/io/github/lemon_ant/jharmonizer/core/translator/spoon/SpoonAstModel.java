@@ -6,7 +6,7 @@ import static lombok.AccessLevel.PRIVATE;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceSnapshot;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +42,7 @@ public class SpoonAstModel {
     Path path;
 
     @NonNull
-    Supplier<SerializedSourceSnapshot> serializedSourceCode;
+    Supplier<SerializedSourceWithSkippedTypeRanges> serializedSourceCode;
 
     @NonNull
     JHarmonizerOptOuts optOuts;

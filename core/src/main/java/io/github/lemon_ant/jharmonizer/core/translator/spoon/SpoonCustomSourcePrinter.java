@@ -6,13 +6,15 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceSnapshot;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import spoon.compiler.Environment;
@@ -21,14 +23,12 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtCompilationUnit.UNIT_TYPE;
 import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtRecord;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
-import spoon.reflect.visitor.TokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
 /**
@@ -41,38 +41,31 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     private final Set<CtType<?>> sortingSkippedTypes;
 
     @NonNull
-    private final Set<CtType<?>> formattingSkippedTypes;
-
-    @NonNull
-    private final List<@NonNull SourceCharacterRange> formattingSkippedRanges = new ArrayList<>();
-
-    @NonNull
-    private final String originalSourceCode;
+    private final Map<@NonNull CtType<?>, @NonNull SourceCharacterRange> sortingSkippedTypeRanges =
+            new ConcurrentHashMap<>();
 
     @NonNull
     private final TypeStructurePrinter typeStructurePrinter;
+
+    @NonNull
+    private final String originalSourceCode;
 
     /**
      * Creates a new SpoonCustomSourcePrinter.
      *
      * @param env the env
-     * @param originalSourceCode the original source code
+     * @param srcFile the original source file
      * @param sortingSkippedTypes the types that must be copied without sorting
-     * @param formattingSkippedTypes the copied types that must also stay unformatted
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(
-            @NonNull Environment env,
-            @NonNull String originalSourceCode,
-            @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull Set<CtType<?>> formattingSkippedTypes) {
+            @NonNull Environment env, @NonNull SrcFile srcFile, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         super(env);
         this.sortingSkippedTypes = Set.copyOf(sortingSkippedTypes);
-        this.formattingSkippedTypes = Set.copyOf(formattingSkippedTypes);
-        this.originalSourceCode = originalSourceCode;
         this.typeStructurePrinter = new TypeStructurePrinter();
-        String lineSeparator = detectDominantLineSeparator(originalSourceCode);
+        String lineSeparator = detectDominantLineSeparator(srcFile.getSrcCode());
         setLineSeparator(lineSeparator);
+        this.originalSourceCode = srcFile.getSrcCode();
     }
 
     /**
@@ -122,7 +115,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     @NonNull
-    private TokenWriter printOriginalFragment(int start, int end) {
+    private spoon.reflect.visitor.TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSourceCode);
         if (startWithIndent <= end && end <= originalSourceCode.length()) {
             String originalCodeFragment =
@@ -139,15 +132,15 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     /**
-     * Serializes the compilation unit and returns both the source code and formatting exclusions.
+     * Serializes the compilation unit and returns both the source code and skipped-type ranges.
      *
      * @param compilationUnit the compilation unit to print
-     * @return the serialized source snapshot
+     * @return the serialized source with skipped-type ranges
      */
     @NonNull
-    SerializedSourceSnapshot serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
+    SerializedSourceWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         printCompilationUnit(compilationUnit);
-        return new SerializedSourceSnapshot(getResult(), formattingSkippedRanges);
+        return new SerializedSourceWithSkippedTypeRanges(getResult(), sortingSkippedTypeRanges);
     }
 
     /**
@@ -156,7 +149,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
-        if (compilationUnit.getUnitType() != UNIT_TYPE.TYPE_DECLARATION) {
+        if (compilationUnit.getUnitType() != CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION) {
             super.visitCtCompilationUnit(compilationUnit);
         }
         CtCompilationUnit outerCompilationUnit = this.sourceCompilationUnit;
@@ -221,15 +214,11 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         }
 
         private void printPreservedSkippedType(CtType<?> type) {
-            // Once an outer type is preserved as-is, nested types are not traversed separately, so formatting
-            // exclusions are emitted only for the outer preserved fragment and cannot overlap.
             int outputStart = getResult().length();
             printOriginalFragment(
                     findRenderedTypeStart(type), type.getPosition().getSourceEnd());
             int outputEndExclusive = getResult().length();
-            if (formattingSkippedTypes.contains(type)) {
-                formattingSkippedRanges.add(new SourceCharacterRange(outputStart, outputEndExclusive));
-            }
+            sortingSkippedTypeRanges.put(type, new SourceCharacterRange(outputStart, outputEndExclusive));
         }
 
         @NonNull

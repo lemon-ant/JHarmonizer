@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;
@@ -33,7 +34,7 @@ public class SpoonTestCaseUtils {
 
         String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
         return SpoonParser.parseJavaSourceResource(
-                Path.of(extractFileNameWithExtension(javaFixtureResource)), sourceCode);
+                new SrcFile(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
     }
 
     /**
