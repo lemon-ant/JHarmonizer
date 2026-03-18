@@ -68,20 +68,22 @@ public final class JHarmonizerOptOutResolver {
                 continue;
             }
             JHarmonizerOptOutMode currentMode = parsedMode.orElseThrow();
-            if (currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
-                fileOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
+            if (fileOptOutMode == null
+                    || (fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF
+                            && currentMode == JHarmonizerOptOutMode.FULLY_OFF)) {
+                fileOptOutMode = currentMode;
                 firstFileComment = fileComment;
-                break;
+                if (currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
+                    break;
+                }
+                continue;
             }
-            if (fileOptOutMode != null) {
+            if (fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF) {
                 logIgnoredOptOut(
                         fileComment,
                         "Conflicting file-scope opt-out; keeping the first one from %s"
                                 .formatted(formatLocation(firstFileComment.getPosition())));
-                continue;
             }
-            fileOptOutMode = currentMode;
-            firstFileComment = fileComment;
         }
         return fileOptOutMode;
     }
@@ -153,7 +155,8 @@ public final class JHarmonizerOptOutResolver {
         }
 
         String normalizedContent = comment.getContent().trim().toLowerCase(java.util.Locale.ROOT);
-        if (!normalizedContent.startsWith(JHarmonizerOptOutMode.TOKEN_PREFIX)) {
+        String normalizedTokenPrefix = JHarmonizerOptOutMode.TOKEN_PREFIX.toLowerCase(java.util.Locale.ROOT);
+        if (!normalizedContent.startsWith(normalizedTokenPrefix)) {
             logIgnoredOptOut(comment, "Malformed opt-out comment is ignored");
             return Optional.empty();
         }

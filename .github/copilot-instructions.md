@@ -18,6 +18,9 @@
 - Keep changes surgical and avoid unrelated cleanup.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
+- Use the minimal necessary access level for production classes, constructors, and methods.
+  - Prefer package-private over `public` when access outside the package is not required.
+  - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
@@ -170,6 +173,7 @@
 
 ### Code style in tests
 
+- Tests do not need aggressive access minimization; prefer the access level that keeps test setup and readability straightforward.
 - Prefer fully descriptive variable names instead of names such as `i`, `tmp`, or `m`.
 - Prefer Stream API when it makes the flow clearer.
 - Keep helpers small and single-purpose.
