@@ -56,7 +56,10 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode());
+                        sortingAndSerializationResult
+                                .getSerializationResult()
+                                .getSerializedSourceWithSkippedTypeRanges()
+                                .getSerializedSrcCode());
 
         if (!elementRelocations.isEmpty()) {
             throw new NotOrderedException(srcFile.getPath(), elementRelocations);
@@ -64,9 +67,15 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
         FormatingResult formattingResult = getFormatter()
                 .formatSource(
-                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode(),
+                        sortingAndSerializationResult
+                                .getSerializationResult()
+                                .getSerializedSourceWithSkippedTypeRanges()
+                                .getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingAndSerializationResult.getSerializationResult().getFormattingSkippedRanges());
+                        sortingAndSerializationResult
+                                .getSerializationResult()
+                                .getFormattingSkippedRanges(
+                                        sortedSpoonAstModel.getOptOuts().getFormattingSkippedTypes()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),

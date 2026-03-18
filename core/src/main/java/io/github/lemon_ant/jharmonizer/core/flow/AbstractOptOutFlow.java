@@ -14,14 +14,15 @@ import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Value;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,8 @@ abstract class AbstractOptOutFlow implements IFlow {
             return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
                     new SerializationResult(
-                            new SerializationStatistic(originalSrcCode.length(), 0), originalSrcCode, List.of()),
+                            new SerializationStatistic(originalSrcCode.length(), 0),
+                            new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
                     true);
         }
 
@@ -83,12 +85,21 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode());
+                        sortingAndSerializationResult
+                                .getSerializationResult()
+                                .getSerializedSourceWithSkippedTypeRanges()
+                                .getSerializedSrcCode());
         FormatingResult formattingResult = getFormatter()
                 .formatSource(
-                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode(),
+                        sortingAndSerializationResult
+                                .getSerializationResult()
+                                .getSerializedSourceWithSkippedTypeRanges()
+                                .getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingAndSerializationResult.getSerializationResult().getFormattingSkippedRanges());
+                        sortingAndSerializationResult
+                                .getSerializationResult()
+                                .getFormattingSkippedRanges(
+                                        parsedSpoonAstModel.getOptOuts().getFormattingSkippedTypes()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
@@ -133,16 +144,15 @@ abstract class AbstractOptOutFlow implements IFlow {
         }
     }
 
-    @Getter
-    @AllArgsConstructor(access = AccessLevel.PROTECTED)
+    @Value
     static class SortingAndSerializationResult {
         @NonNull
-        private final SortingResult sortingResult;
+        SortingResult sortingResult;
 
         @NonNull
-        private final SerializationResult serializationResult;
+        SerializationResult serializationResult;
 
-        private final boolean sortingSkipped;
+        boolean sortingSkipped;
 
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {
@@ -150,14 +160,13 @@ abstract class AbstractOptOutFlow implements IFlow {
         }
     }
 
-    @Getter
-    @AllArgsConstructor(access = AccessLevel.PROTECTED)
+    @Value
     static class SortingSerializationAndFormattingResult {
         @NonNull
-        private final SortingAndSerializationResult sortingAndSerializationResult;
+        SortingAndSerializationResult sortingAndSerializationResult;
 
         @NonNull
-        private final FormatingResult formattingResult;
+        FormatingResult formattingResult;
 
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {

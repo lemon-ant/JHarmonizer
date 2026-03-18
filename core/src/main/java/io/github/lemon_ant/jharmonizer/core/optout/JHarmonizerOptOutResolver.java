@@ -69,7 +69,12 @@ public final class JHarmonizerOptOutResolver {
             logIgnoredOptOut(potentialOptOutComment, "Opt-out comment is not in a supported file or type location");
         }
 
-        return JHarmonizerOptOuts.of(fileOptOut, typeOptOuts);
+        return JHarmonizerOptOuts.of(
+                (fileOptOut == null) ? null : fileOptOut.getMode(),
+                typeOptOuts.values().stream()
+                        .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                                resolvedOptOut -> resolvedOptOut.getTargetType().orElseThrow(),
+                                ResolvedJHarmonizerOptOut::getMode)));
     }
 
     @NonNull
