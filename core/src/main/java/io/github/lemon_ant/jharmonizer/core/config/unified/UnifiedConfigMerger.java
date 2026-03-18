@@ -1,10 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -49,7 +51,15 @@ public class UnifiedConfigMerger {
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
         Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
+        Set<String> seenOverlayGroupNames = new HashSet<>();
         Stream<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
+                .peek(overlayRootGroup -> {
+                    String overlayGroupName = overlayRootGroup.getGroupName();
+                    if (overlayGroupName != null && !seenOverlayGroupNames.add(overlayGroupName)) {
+                        throw new IllegalStateException(
+                                "Overlay root member group names must be unique: " + overlayGroupName);
+                    }
+                })
                 .map(overlayRootGroup -> findPrependedNewRootGroup(baselineRootGroupsByName, overlayRootGroup))
                 .filter(Objects::nonNull);
         return Stream.concat(prependedNewRootGroups, baselineRootGroupsByName.values().stream())
@@ -60,10 +70,17 @@ public class UnifiedConfigMerger {
     private static Map<String, UnifiedMemberGroup> collectGroupsByName(List<UnifiedMemberGroup> memberGroups) {
         return memberGroups.stream()
                 .collect(Collectors.toMap(
-                        memberGroup -> Objects.requireNonNull(
-                                memberGroup.getGroupName(), "Baseline root member groups must have non-null names"),
+                        memberGroup -> {
+                            String groupName = memberGroup.getGroupName();
+                            if (groupName == null) {
+                                throw new IllegalStateException("Baseline root member groups must have non-null names");
+                            }
+                            return groupName;
+                        },
                         memberGroup -> memberGroup,
-                        (ignoredExistingGroup, duplicateGroup) -> duplicateGroup,
+                        (ignoredExistingGroup, duplicateGroup) -> {
+                            throw new IllegalStateException("Baseline root member group names must be unique");
+                        },
                         LinkedHashMap::new));
     }
 

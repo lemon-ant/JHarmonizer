@@ -89,7 +89,7 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_duplicateOverlayNames_usesLastReplacement() {
+    void merge_duplicateOverlayNames_throwsException() {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
         UnifiedMemberGroup baselineFallbackGroup = createGroup("Fallback");
@@ -99,14 +99,10 @@ class UnifiedConfigMergerTest {
         FlexibleUnifiedConfig overlayConfig =
                 new FlexibleUnifiedConfig(null, null, null, null, List.of(firstReplacementGroup, lastReplacementGroup));
 
-        // When
-        UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getRootMemberGroups()).containsExactly(lastReplacementGroup, baselineFallbackGroup);
-        assertThat(mergedConfig.getRootMemberGroups().getFirst().getMemberSubGroups())
-                .extracting(UnifiedMemberGroup::getGroupName)
-                .containsExactly("Last Overlay");
+        // When / Then
+        assertThatThrownBy(() -> UnifiedConfigMerger.merge(baselineConfig, overlayConfig))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Overlay root member group names must be unique");
     }
 
     @Test
@@ -133,8 +129,22 @@ class UnifiedConfigMergerTest {
 
         // When / Then
         assertThatThrownBy(() -> UnifiedConfigMerger.merge(createConfig(List.of(unnamedBaselineGroup)), overlayConfig))
-                .isInstanceOf(NullPointerException.class)
+                .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Baseline root member groups must have non-null names");
+    }
+
+    @Test
+    void merge_duplicateBaselineNames_throwsException() {
+        // Given
+        UnifiedMemberGroup firstBaselineGroup = createGroup("Default Rule");
+        UnifiedMemberGroup duplicateBaselineGroup = createGroup("Default Rule", List.of(createGroup("Duplicate")));
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, null, null, List.of());
+
+        // When / Then
+        assertThatThrownBy(() -> UnifiedConfigMerger.merge(
+                        createConfig(List.of(firstBaselineGroup, duplicateBaselineGroup)), overlayConfig))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Baseline root member group names must be unique");
     }
 
     @NonNull
