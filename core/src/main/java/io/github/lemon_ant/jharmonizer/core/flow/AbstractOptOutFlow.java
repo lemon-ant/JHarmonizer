@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
+import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
@@ -100,10 +101,11 @@ abstract class AbstractOptOutFlow implements IFlow {
                                 .getSerializedSourceWithSkippedTypeRanges()
                                 .getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingAndSerializationResult
-                                .getSerializationResult()
-                                .getFormattingSkippedRanges(
-                                        parsedSpoonAstModel.getOptOuts().getFormattingSkippedTypes()));
+                        OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
+                                parsedSpoonAstModel.getOptOuts(),
+                                sortingAndSerializationResult
+                                        .getSerializationResult()
+                                        .getSerializedSourceWithSkippedTypeRanges()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),

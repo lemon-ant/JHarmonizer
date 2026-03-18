@@ -21,6 +21,8 @@
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
+- Keep production models and value objects focused on state plus simple accessors or validation.
+  - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.

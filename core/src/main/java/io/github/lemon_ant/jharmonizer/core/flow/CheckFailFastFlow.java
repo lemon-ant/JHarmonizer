@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
+import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
@@ -72,10 +73,11 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                                 .getSerializedSourceWithSkippedTypeRanges()
                                 .getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingAndSerializationResult
-                                .getSerializationResult()
-                                .getFormattingSkippedRanges(
-                                        sortedSpoonAstModel.getOptOuts().getFormattingSkippedTypes()));
+                        OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
+                                sortedSpoonAstModel.getOptOuts(),
+                                sortingAndSerializationResult
+                                        .getSerializationResult()
+                                        .getSerializedSourceWithSkippedTypeRanges()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),

@@ -28,6 +28,8 @@ This file defines repository-wide conventions for coding agents working in this 
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
+- Keep production models and value objects focused on state plus simple accessors or validation.
+  - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.

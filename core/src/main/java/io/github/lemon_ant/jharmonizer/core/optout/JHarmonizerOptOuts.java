@@ -58,14 +58,6 @@ public class JHarmonizerOptOuts {
     }
 
     @NonNull
-    public Set<CtType<?>> getFormattingSkippedTypes() {
-        return typeOptOutModes.entrySet().stream()
-                .filter(entry -> entry.getValue().skipsFormatting())
-                .map(Map.Entry::getKey)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-    }
-
-    @NonNull
     public Set<CtType<?>> getSortingSkippedTypes() {
         return typeOptOutModes.keySet();
     }

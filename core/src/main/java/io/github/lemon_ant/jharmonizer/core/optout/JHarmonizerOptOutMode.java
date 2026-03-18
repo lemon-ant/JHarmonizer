@@ -30,8 +30,4 @@ public enum JHarmonizerOptOutMode {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported JHarmonizer opt-out token: " + token));
     }
-
-    public boolean skipsFormatting() {
-        return this == FULLY_OFF;
-    }
 }
