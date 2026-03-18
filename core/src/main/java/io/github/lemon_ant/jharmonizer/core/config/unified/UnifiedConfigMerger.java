@@ -1,12 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -64,18 +64,40 @@ public class UnifiedConfigMerger {
                 prependedNewRootGroups.add(overlayRootGroup);
             }
         }
-        prependedNewRootGroups.addAll(baselineRootGroupsByName.values());
-        return Collections.unmodifiableList(prependedNewRootGroups);
+        return Stream.concat(
+                        prependedNewRootGroups.stream(),
+                        baselineRootGroups.stream()
+                                .map(baselineRootGroup ->
+                                        resolveMergedBaselineRootGroup(baselineRootGroupsByName, baselineRootGroup)))
+                .toList();
     }
 
     @NonNull
     private static Map<String, UnifiedMemberGroup> collectGroupsByName(List<UnifiedMemberGroup> memberGroups) {
         return memberGroups.stream()
-                .filter(memberGroup -> memberGroup.getGroupName() != null)
                 .collect(Collectors.toMap(
-                        UnifiedMemberGroup::getGroupName,
+                        UnifiedConfigMerger::requireGroupName,
                         memberGroup -> memberGroup,
                         (ignoredExistingGroup, duplicateGroup) -> duplicateGroup,
                         LinkedHashMap::new));
+    }
+
+    @NonNull
+    private static UnifiedMemberGroup resolveMergedBaselineRootGroup(
+            Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup baselineRootGroup) {
+        String baselineRootGroupName = baselineRootGroup.getGroupName();
+        if (baselineRootGroupName == null) {
+            return baselineRootGroup;
+        }
+        return baselineRootGroupsByName.getOrDefault(baselineRootGroupName, baselineRootGroup);
+    }
+
+    @NonNull
+    private static String requireGroupName(UnifiedMemberGroup memberGroup) {
+        String groupName = memberGroup.getGroupName();
+        if (groupName == null) {
+            throw new IllegalArgumentException("Baseline root member groups must have names to support overlay merge");
+        }
+        return groupName;
     }
 }
