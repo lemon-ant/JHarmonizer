@@ -65,10 +65,10 @@ public final class Formatter {
     public FormatingResult formatSource(
             @NonNull String srcCode,
             @NonNull Path srcPath,
-            @NonNull List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
+            @NonNull List<@NonNull SourceCharacterRange> formattingSkippedRanges) {
         log.debug("Formatting {}", srcPath);
         TimedResult<String> formatingResult =
-                StopWatch.measure(() -> applyFormatting(srcCode, formattingExclusionRanges));
+                StopWatch.measure(() -> applyFormatting(srcCode, formattingSkippedRanges));
 
         String formattedSource = formatingResult.getResult();
         return new FormatingResult(
@@ -76,19 +76,19 @@ public final class Formatter {
     }
 
     @NonNull
-    private String applyFormatting(String srcCode, List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
+    private String applyFormatting(String srcCode, List<@NonNull SourceCharacterRange> formattingSkippedRanges) {
         if (formatterStyle == null) {
             return fixImports ? invokePalantir(() -> formatter.fixImports(srcCode)) : srcCode;
         }
 
-        if (formattingExclusionRanges.isEmpty()) {
+        if (formattingSkippedRanges.isEmpty()) {
             return invokePalantir(
                     () -> fixImports ? formatter.formatSourceAndFixImports(srcCode) : formatter.formatSource(srcCode));
         }
 
         String partlyFormattedSrc = srcCode;
         Collection<Range<Integer>> formattingRanges =
-                SourceCharacterRange.invert(srcCode.length(), formattingExclusionRanges).stream()
+                SourceCharacterRange.invert(srcCode.length(), formattingSkippedRanges).stream()
                         .map(range -> Range.closedOpen(range.getStartInclusive(), range.getEndExclusive()))
                         .toList();
         if (!formattingRanges.isEmpty()) {

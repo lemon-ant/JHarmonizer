@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -52,5 +54,40 @@ class SourceAstTranslatorTest {
         assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
         assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
                 .isGreaterThan(0);
+    }
+
+    @Test
+    void serialize_sortOffAndFullyOffTypes_returnFormattingSkippedRangesOnlyForFullyOffTypes() {
+        // Given
+        String sortOffFragment = """
+                // @jharmonizer:sort-off
+                class Beta{int z;  int a;}
+                """;
+        String fullyOffFragment = """
+                // @jharmonizer:fully-off
+                class Gamma{int y;  int x;}
+                """;
+        String sourceCode = """
+                class Alpha {}
+
+                %s
+
+                %s
+                """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
+        SrcFile srcFile = new SrcFile(sourceCode, Path.of("Sample.java"));
+        SpoonAstModel spoonAstModel =
+                SourceAstTranslator.parseSourceFile(srcFile).getSpoonAstModel();
+
+        // When
+        SerializationResult result = SourceAstTranslator.serialize(spoonAstModel);
+        List<SourceCharacterRange> formattingSkippedRanges = result.getFormattingSkippedRanges();
+
+        // Then
+        assertThat(result.getSerializedSrcCode()).contains(sortOffFragment).contains(fullyOffFragment);
+        assertThat(formattingSkippedRanges)
+                .singleElement()
+                .satisfies(range -> assertThat(result.getSerializedSrcCode()
+                                .substring(range.getStartInclusive(), range.getEndExclusive()))
+                        .isEqualTo(fullyOffFragment));
     }
 }

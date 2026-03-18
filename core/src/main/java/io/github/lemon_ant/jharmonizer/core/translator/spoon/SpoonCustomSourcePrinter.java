@@ -36,32 +36,41 @@ import spoon.reflect.visitor.printer.CommentOffset;
  * preserves the original source fragments for opt-out ranges,
  * and normalises line separators to match the dominant separator of the original file.
  */
-@SuppressWarnings("PMD") // TODO narrow this suppression to the specific printer warnings still emitted here
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
+    @NonNull
+    private final Set<CtType<?>> sortingSkippedTypes;
+
     @NonNull
     private final Set<CtType<?>> formattingSkippedTypes;
 
     @NonNull
-    private final List<@NonNull SourceCharacterRange> formattingExclusionRanges = new ArrayList<>();
+    private final List<@NonNull SourceCharacterRange> formattingSkippedRanges = new ArrayList<>();
 
     @NonNull
     private final String originalSourceCode;
+
+    @NonNull
+    private final TypeStructurePrinter typeStructurePrinter;
 
     /**
      * Creates a new SpoonCustomSourcePrinter.
      *
      * @param env the env
      * @param originalSourceCode the original source code
-     * @param formattingSkippedTypes the types that must stay unformatted
+     * @param sortingSkippedTypes the types that must be copied without sorting
+     * @param formattingSkippedTypes the copied types that must also stay unformatted
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSourcePrinter(
             @NonNull Environment env,
             @NonNull String originalSourceCode,
+            @NonNull Set<CtType<?>> sortingSkippedTypes,
             @NonNull Set<CtType<?>> formattingSkippedTypes) {
         super(env);
+        this.sortingSkippedTypes = Set.copyOf(sortingSkippedTypes);
         this.formattingSkippedTypes = Set.copyOf(formattingSkippedTypes);
         this.originalSourceCode = originalSourceCode;
+        this.typeStructurePrinter = new TypeStructurePrinter();
         String lineSeparator = detectDominantLineSeparator(originalSourceCode);
         setLineSeparator(lineSeparator);
     }
@@ -73,7 +82,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {
-        printTypeStructure(annotationType);
+        typeStructurePrinter.printTypeStructure(annotationType);
     }
 
     /**
@@ -82,7 +91,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
-        printTypeStructure(ctClass);
+        typeStructurePrinter.printTypeStructure(ctClass);
     }
 
     /**
@@ -91,7 +100,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
-        printTypeStructure(ctEnum);
+        typeStructurePrinter.printTypeStructure(ctEnum);
     }
 
     /**
@@ -100,7 +109,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
-        printTypeStructure(intrface);
+        typeStructurePrinter.printTypeStructure(intrface);
     }
 
     /**
@@ -109,7 +118,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public void visitCtRecord(@NonNull CtRecord recordType) {
-        printTypeStructure(recordType);
+        typeStructurePrinter.printTypeStructure(recordType);
     }
 
     @NonNull
@@ -138,107 +147,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     SerializedSourceSnapshot serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         printCompilationUnit(compilationUnit);
-        return new SerializedSourceSnapshot(getResult(), formattingExclusionRanges);
-    }
-
-    @NonNull
-    private void printTypeStructure(CtType<?> type) {
-        getPrinterTokenWriter().writeln();
-        if (formattingSkippedTypes.contains(type)) {
-            // Once an outer type is preserved as-is, nested types are not traversed separately, so formatting
-            // exclusions are emitted only for the outer preserved fragment and cannot overlap.
-            int outputStart = getResult().length();
-            printOriginalFragment(
-                    findRenderedTypeStart(type), type.getPosition().getSourceEnd());
-            int outputEndExclusive = getResult().length();
-            formattingExclusionRanges.add(new SourceCharacterRange(outputStart, outputEndExclusive));
-            return;
-        }
-        SourcePosition typePosition = type.getPosition();
-
-        List<CtTypeMember> explicitTypeMembers = type.getTypeMembers().stream()
-                // Spoon creates implicit constructors which don't exist in the source code
-                .filter(typeMember -> typeMember.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit())
-                .toList();
-
-        if (explicitTypeMembers.isEmpty()) {
-            // If no nested elements, then print the original source fragment entirely
-            // TODO Check if we have comments before and after
-            printOriginalFragment(typePosition.getSourceStart(), typePosition.getSourceEnd())
-                    .writeln();
-            return;
-        }
-
-        // TODO Optimize algorithm by precalculating of the original member sequence
-        // Find the minimal nested element start position
-        int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember instanceof CtType<?> nestedType
-                        ? findRenderedTypeStart(nestedType)
-                        : typeMember.getPosition().getSourceStart())
-                .min()
-                .orElseThrow(IllegalStateException::new);
-
-        // Print the type header until the start of the topmost element
-        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
-
-        // Print elements in the actual possibly resorted order
-        boolean first = true;
-        boolean previousElementNeedSeparatorAfter = false;
-        for (CtTypeMember member : explicitTypeMembers) {
-
-            // TODO Orphaned comments
-
-            boolean needsSeparatorBefore = needsSeparatorBefore(member, first);
-            if (needsSeparatorBefore || previousElementNeedSeparatorAfter) {
-                getPrinterTokenWriter().writeln();
-            }
-            previousElementNeedSeparatorAfter = needsSeparatorAfter(member);
-            first = false;
-
-            if (member instanceof CtType<?> typeMember) {
-                // Nested type declaration
-                printTypeStructure(typeMember);
-                continue;
-            }
-
-            // The member was marked as the first member of a group
-            Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
-                    .map(Object::toString);
-            groupHeaderMetadata.ifPresent(groupHeader -> {
-                if (!groupHeader.isEmpty()) {
-                    getPrinterTokenWriter()
-                            .writeCodeSnippet("// " + groupHeader)
-                            .writeln();
-                } else {
-                    getPrinterTokenWriter().writeln();
-                }
-            });
-
-            // TODO Optimize algorithm by precalculating of the original member sequence
-            // Copy class member code from the original code without changes
-            int nextElementStart = explicitTypeMembers.stream()
-                    .mapToInt(typeMember -> typeMember instanceof CtType<?> nestedType
-                            ? findRenderedTypeStart(nestedType)
-                            : typeMember.getPosition().getSourceStart())
-                    .filter(start -> start > member.getPosition().getSourceEnd())
-                    .min()
-                    .orElse(member.getPosition().getSourceEnd() + 1);
-            printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
-        }
-
-        // TODO Optimize algorithm by precalculating of the original member sequence
-        // Print the type footer from the end of the bottommost nested element until end of the type fragment
-        int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
-                .max()
-                .orElseThrow(IllegalStateException::new);
-
-        // TODO Check trailing comments
-        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
-        // TODO Check trailing indents
+        return new SerializedSourceSnapshot(getResult(), formattingSkippedRanges);
     }
 
     /**
@@ -277,7 +186,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     private int findRenderedTypeStart(CtType<?> type) {
         // TODO Find out why we are searching type's start differently
-        if (!formattingSkippedTypes.contains(type)) {
+        if (!sortingSkippedTypes.contains(type)) {
             return type.getPosition().getSourceStart();
         }
         return findIndentationStart(
@@ -287,5 +196,118 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                         .min()
                         .orElse(type.getPosition().getSourceStart()),
                 originalSourceCode);
+    }
+
+    // This helper stays non-static because it must coordinate outer printer state such as token writer access,
+    // preserved-range accumulation, and recursive rendering via findRenderedTypeStart/printOriginalFragment.
+    private final class TypeStructurePrinter {
+        private void printTypeStructure(CtType<?> type) {
+            getPrinterTokenWriter().writeln();
+            if (sortingSkippedTypes.contains(type)) {
+                printPreservedSkippedType(type);
+                return;
+            }
+            SourcePosition typePosition = type.getPosition();
+            List<CtTypeMember> explicitTypeMembers = findExplicitTypeMembers(type);
+
+            if (explicitTypeMembers.isEmpty()) {
+                // If no nested elements, then print the original source fragment entirely
+                // TODO Check if we have comments before and after
+                printOriginalFragment(typePosition.getSourceStart(), typePosition.getSourceEnd())
+                        .writeln();
+                return;
+            }
+            printStructuredTypeMembers(typePosition, explicitTypeMembers);
+        }
+
+        private void printPreservedSkippedType(CtType<?> type) {
+            // Once an outer type is preserved as-is, nested types are not traversed separately, so formatting
+            // exclusions are emitted only for the outer preserved fragment and cannot overlap.
+            int outputStart = getResult().length();
+            printOriginalFragment(
+                    findRenderedTypeStart(type), type.getPosition().getSourceEnd());
+            int outputEndExclusive = getResult().length();
+            if (formattingSkippedTypes.contains(type)) {
+                formattingSkippedRanges.add(new SourceCharacterRange(outputStart, outputEndExclusive));
+            }
+        }
+
+        @NonNull
+        private List<CtTypeMember> findExplicitTypeMembers(CtType<?> type) {
+            return type.getTypeMembers().stream()
+                    // Spoon creates implicit constructors which don't exist in the source code
+                    .filter(typeMember -> typeMember.getPosition().isValidPosition())
+                    /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
+                    Today implicit record fields/components still produce wrong source-printer output. */
+                    .filter(typeMember -> !typeMember.isImplicit())
+                    .toList();
+        }
+
+        private void printStructuredTypeMembers(SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
+            int minMemberStart = explicitTypeMembers.stream()
+                    .mapToInt(this::findMemberStart)
+                    .min()
+                    .orElseThrow(IllegalStateException::new);
+
+            printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
+
+            boolean first = true;
+            boolean previousElementNeedSeparatorAfter = false;
+            for (CtTypeMember member : explicitTypeMembers) {
+                previousElementNeedSeparatorAfter = printStructuredTypeMember(
+                        member, explicitTypeMembers, first, previousElementNeedSeparatorAfter);
+                first = false;
+            }
+
+            int maxMemberEnd = explicitTypeMembers.stream()
+                    .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                    .max()
+                    .orElseThrow(IllegalStateException::new);
+            printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
+        }
+
+        private boolean printStructuredTypeMember(
+                CtTypeMember member,
+                List<CtTypeMember> explicitTypeMembers,
+                boolean first,
+                boolean previousElementNeedSeparatorAfter) {
+            // TODO Orphaned comments
+            boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
+            if (needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter) {
+                getPrinterTokenWriter().writeln();
+            }
+            boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter(member);
+
+            if (member instanceof CtType<?> typeMember) {
+                printTypeStructure(typeMember);
+                return currentElementNeedsSeparatorAfter;
+            }
+
+            Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
+                    .map(Object::toString);
+            groupHeaderMetadata.ifPresent(groupHeader -> {
+                if (!groupHeader.isEmpty()) {
+                    getPrinterTokenWriter()
+                            .writeCodeSnippet("// " + groupHeader)
+                            .writeln();
+                } else {
+                    getPrinterTokenWriter().writeln();
+                }
+            });
+            int nextElementStart = explicitTypeMembers.stream()
+                    .mapToInt(this::findMemberStart)
+                    .filter(start -> start > member.getPosition().getSourceEnd())
+                    .min()
+                    .orElse(member.getPosition().getSourceEnd() + 1);
+            printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
+            return currentElementNeedsSeparatorAfter;
+        }
+
+        private int findMemberStart(CtTypeMember typeMember) {
+            if (typeMember instanceof CtType<?> nestedType) {
+                return findRenderedTypeStart(nestedType);
+            }
+            return typeMember.getPosition().getSourceStart();
+        }
     }
 }

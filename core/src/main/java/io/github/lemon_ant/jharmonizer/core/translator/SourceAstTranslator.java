@@ -57,12 +57,12 @@ public final class SourceAstTranslator {
         TimedResult<SerializedSourceSnapshot> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());
         SerializedSourceSnapshot serializedSourceSnapshot = serializationTimedResult.getResult();
-        String serializedSourceCode = serializedSourceSnapshot.getSourceCode();
+        String serializedSourceCode = serializedSourceSnapshot.getSerializedSrcCode();
 
         return new SerializationResult(
                 new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
                 serializedSourceCode,
-                serializedSourceSnapshot.getFormattingExclusionRanges());
+                serializedSourceSnapshot.getFormattingSkippedRanges());
     }
 
     @NonNull

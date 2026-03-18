@@ -88,7 +88,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .formatSource(
                         sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingAndSerializationResult.getSerializationResult().getFormattingExclusionRanges());
+                        sortingAndSerializationResult.getSerializationResult().getFormattingSkippedRanges());
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),

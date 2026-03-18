@@ -19,29 +19,29 @@ public class SerializationResult {
     String serializedSrcCode;
 
     @NonNull
-    List<@NonNull SourceCharacterRange> formattingExclusionRanges;
+    List<@NonNull SourceCharacterRange> formattingSkippedRanges;
 
     public SerializationResult(
             @NonNull SerializationStatistic serializationStatistic,
             @NonNull String serializedSrcCode,
-            @NonNull List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
+            @NonNull List<@NonNull SourceCharacterRange> formattingSkippedRanges) {
         this.serializationStatistic = serializationStatistic;
         this.serializedSrcCode = serializedSrcCode;
-        this.formattingExclusionRanges = List.copyOf(formattingExclusionRanges);
+        this.formattingSkippedRanges = List.copyOf(formattingSkippedRanges);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (SerializationResult) obj;
+        SerializationResult that = (SerializationResult) obj;
         return Objects.equals(this.serializedSrcCode, that.serializedSrcCode)
                 && Objects.equals(this.serializationStatistic, that.serializationStatistic)
-                && Objects.equals(this.formattingExclusionRanges, that.formattingExclusionRanges);
+                && Objects.equals(this.formattingSkippedRanges, that.formattingSkippedRanges);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(serializedSrcCode, serializationStatistic, formattingExclusionRanges);
+        return Objects.hash(serializedSrcCode, serializationStatistic, formattingSkippedRanges);
     }
 }

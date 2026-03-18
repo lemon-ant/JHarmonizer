@@ -9,14 +9,14 @@ import lombok.Value;
 @Value
 public class SerializedSourceSnapshot {
     @NonNull
-    List<@NonNull SourceCharacterRange> formattingExclusionRanges;
+    List<@NonNull SourceCharacterRange> formattingSkippedRanges;
 
     @NonNull
-    String sourceCode;
+    String serializedSrcCode;
 
     public SerializedSourceSnapshot(
-            @NonNull String sourceCode, @NonNull List<@NonNull SourceCharacterRange> formattingExclusionRanges) {
-        this.sourceCode = sourceCode;
-        this.formattingExclusionRanges = Collections.unmodifiableList(formattingExclusionRanges);
+            @NonNull String serializedSrcCode, @NonNull List<@NonNull SourceCharacterRange> formattingSkippedRanges) {
+        this.serializedSrcCode = serializedSrcCode;
+        this.formattingSkippedRanges = Collections.unmodifiableList(formattingSkippedRanges);
     }
 }
