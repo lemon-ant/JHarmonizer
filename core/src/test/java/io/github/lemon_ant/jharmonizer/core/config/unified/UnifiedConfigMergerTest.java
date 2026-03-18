@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Set;
@@ -89,22 +88,6 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_baselineGroupUnnamed_throwsIllegalArgumentException() {
-        // Given
-        UnifiedMemberGroup baselineUnnamedGroup = createUnnamedGroup();
-        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
-        UnifiedConfig baselineConfig = createConfig(List.of(baselineUnnamedGroup, baselineNamedGroup));
-        UnifiedMemberGroup replacementNamedGroup = createGroup("Default Rule");
-        FlexibleUnifiedConfig overlayConfig =
-                new FlexibleUnifiedConfig(null, null, null, null, List.of(replacementNamedGroup));
-
-        // When / Then
-        assertThatThrownBy(() -> UnifiedConfigMerger.merge(baselineConfig, overlayConfig))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Baseline root member groups must have names to support overlay merge");
-    }
-
-    @Test
     void merge_duplicateOverlayNames_usesLastReplacement() {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
@@ -146,16 +129,6 @@ class UnifiedConfigMergerTest {
         return UnifiedMemberGroup.builder()
                 .groupName(groupName)
                 .memberSubGroups(memberSubGroups)
-                .selectorBlock(SELECTOR_BLOCK)
-                .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.ALPHA)
-                .build();
-    }
-
-    @NonNull
-    private static UnifiedMemberGroup createUnnamedGroup() {
-        return UnifiedMemberGroup.builder()
-                .memberSubGroups(List.of())
                 .selectorBlock(SELECTOR_BLOCK)
                 .separator(UnifiedSeparator.NONE)
                 .orderingRule(UnifiedOrderingRule.ALPHA)

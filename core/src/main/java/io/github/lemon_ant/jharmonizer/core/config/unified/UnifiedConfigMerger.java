@@ -59,8 +59,7 @@ public class UnifiedConfigMerger {
         List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
         for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
             String overlayGroupName = overlayRootGroup.getGroupName();
-            if (overlayGroupName == null
-                    || baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null) {
+            if (baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null) {
                 prependedNewRootGroups.add(overlayRootGroup);
             }
         }
@@ -76,7 +75,7 @@ public class UnifiedConfigMerger {
     private static Map<String, UnifiedMemberGroup> collectGroupsByName(List<UnifiedMemberGroup> memberGroups) {
         return memberGroups.stream()
                 .collect(Collectors.toMap(
-                        UnifiedConfigMerger::requireGroupName,
+                        UnifiedMemberGroup::getGroupName,
                         memberGroup -> memberGroup,
                         (ignoredExistingGroup, duplicateGroup) -> duplicateGroup,
                         LinkedHashMap::new));
@@ -85,16 +84,7 @@ public class UnifiedConfigMerger {
     @NonNull
     private static UnifiedMemberGroup resolveMergedBaselineRootGroup(
             Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup baselineRootGroup) {
-        String baselineRootGroupName = requireGroupName(baselineRootGroup);
+        String baselineRootGroupName = baselineRootGroup.getGroupName();
         return baselineRootGroupsByName.getOrDefault(baselineRootGroupName, baselineRootGroup);
-    }
-
-    @NonNull
-    private static String requireGroupName(UnifiedMemberGroup memberGroup) {
-        String groupName = memberGroup.getGroupName();
-        if (groupName == null) {
-            throw new IllegalArgumentException("Baseline root member groups must have names to support overlay merge");
-        }
-        return groupName;
     }
 }

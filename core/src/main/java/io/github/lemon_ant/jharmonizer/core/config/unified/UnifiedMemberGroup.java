@@ -19,7 +19,7 @@ public class UnifiedMemberGroup {
     /**
      * Stable, human-readable identifier of the group.
      */
-    @Nullable
+    @NonNull
     String groupName;
 
     /**
@@ -54,7 +54,7 @@ public class UnifiedMemberGroup {
 
     @Builder
     private UnifiedMemberGroup(
-            @Nullable String groupName,
+            @NonNull String groupName,
             @Nullable Boolean keepAccessorsTogether,
             @NonNull @Singular List<@NonNull UnifiedMemberGroup> memberSubGroups,
             @NonNull UnifiedMemberGroupSelectorBlock selectorBlock,
@@ -75,7 +75,7 @@ public class UnifiedMemberGroup {
             return false;
         }
 
-        return Objects.equals(groupName, that.groupName)
+        return groupName.equals(that.groupName)
                 && Objects.equals(keepAccessorsTogether, that.keepAccessorsTogether)
                 && memberSubGroups.equals(that.memberSubGroups)
                 && selectorBlock.equals(that.selectorBlock)
@@ -85,7 +85,7 @@ public class UnifiedMemberGroup {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(groupName);
+        int result = groupName.hashCode();
         result = 31 * result + Objects.hashCode(keepAccessorsTogether);
         result = 31 * result + memberSubGroups.hashCode();
         result = 31 * result + selectorBlock.hashCode();
