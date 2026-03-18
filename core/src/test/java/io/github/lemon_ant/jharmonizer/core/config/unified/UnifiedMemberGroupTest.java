@@ -8,7 +8,7 @@ class UnifiedMemberGroupTest {
 
     @Test
     void build_groupNameMissing_throwsNullPointerException() {
-        // When / Then
+        // Given / When / Then
         assertThatThrownBy(() -> UnifiedMemberGroup.builder()
                         .selectorBlock(UnifiedMemberGroupSelectorBlock.builder().build())
                         .separator(UnifiedSeparator.NONE)

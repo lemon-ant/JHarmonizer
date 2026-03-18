@@ -10,7 +10,7 @@ class CompiledMemberGroupTest {
 
     @Test
     void build_nameMissing_throwsNullPointerException() {
-        // When / Then
+        // Given / When / Then
         assertThatThrownBy(() -> CompiledMemberGroup.builder()
                         .compiledSubGroups(List.of())
                         .keepAccessorsTogether(false)
