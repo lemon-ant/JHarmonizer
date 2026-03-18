@@ -89,7 +89,7 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_rootMemberGroupsBaselineUnnamedGroupPresent_throwsIllegalArgumentException() {
+    void merge_baselineGroupUnnamed_throwsIllegalArgumentException() {
         // Given
         UnifiedMemberGroup baselineUnnamedGroup = createUnnamedGroup();
         UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
@@ -105,7 +105,7 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_rootMemberGroupsDuplicateOverlayNamesPresent_usesLastReplacement() {
+    void merge_duplicateOverlayNames_usesLastReplacement() {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
         UnifiedMemberGroup baselineFallbackGroup = createGroup("Fallback");

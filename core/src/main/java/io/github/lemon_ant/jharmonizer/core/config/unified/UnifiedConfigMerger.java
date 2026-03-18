@@ -85,10 +85,7 @@ public class UnifiedConfigMerger {
     @NonNull
     private static UnifiedMemberGroup resolveMergedBaselineRootGroup(
             Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup baselineRootGroup) {
-        String baselineRootGroupName = baselineRootGroup.getGroupName();
-        if (baselineRootGroupName == null) {
-            return baselineRootGroup;
-        }
+        String baselineRootGroupName = requireGroupName(baselineRootGroup);
         return baselineRootGroupsByName.getOrDefault(baselineRootGroupName, baselineRootGroup);
     }
 
