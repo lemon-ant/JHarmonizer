@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Set;
@@ -106,6 +107,34 @@ class UnifiedConfigMergerTest {
         assertThat(mergedConfig.getRootMemberGroups().getFirst().getMemberSubGroups())
                 .extracting(UnifiedMemberGroup::getGroupName)
                 .containsExactly("Last Overlay");
+    }
+
+    @Test
+    void merge_overlayRootGroupNameMissing_prependsUnnamedGroup() {
+        // Given
+        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
+        UnifiedMemberGroup unnamedOverlayGroup = createGroup(null);
+        FlexibleUnifiedConfig overlayConfig =
+                new FlexibleUnifiedConfig(null, null, null, null, List.of(unnamedOverlayGroup));
+
+        // When
+        UnifiedConfig mergedConfig =
+                UnifiedConfigMerger.merge(createConfig(List.of(baselineDefaultGroup)), overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups()).containsExactly(unnamedOverlayGroup, baselineDefaultGroup);
+    }
+
+    @Test
+    void merge_baselineRootGroupNameMissing_throwsException() {
+        // Given
+        UnifiedMemberGroup unnamedBaselineGroup = createGroup(null);
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, null, null, List.of());
+
+        // When / Then
+        assertThatThrownBy(() -> UnifiedConfigMerger.merge(createConfig(List.of(unnamedBaselineGroup)), overlayConfig))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("Baseline root member groups must have non-null names");
     }
 
     @NonNull

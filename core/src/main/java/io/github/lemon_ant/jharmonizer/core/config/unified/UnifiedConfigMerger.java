@@ -60,16 +60,25 @@ public class UnifiedConfigMerger {
     private static Map<String, UnifiedMemberGroup> collectGroupsByName(List<UnifiedMemberGroup> memberGroups) {
         return memberGroups.stream()
                 .collect(Collectors.toMap(
-                        UnifiedMemberGroup::getGroupName,
+                        memberGroup -> requireGroupName(memberGroup),
                         memberGroup -> memberGroup,
                         (ignoredExistingGroup, duplicateGroup) -> duplicateGroup,
                         LinkedHashMap::new));
+    }
+
+    @NonNull
+    private static String requireGroupName(UnifiedMemberGroup memberGroup) {
+        return Objects.requireNonNull(
+                memberGroup.getGroupName(), "Baseline root member groups must have non-null names");
     }
 
     @Nullable
     private static UnifiedMemberGroup findPrependedNewRootGroup(
             Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
         String overlayGroupName = overlayRootGroup.getGroupName();
+        if (overlayGroupName == null) {
+            return overlayRootGroup;
+        }
         return baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null ? overlayRootGroup : null;
     }
 }

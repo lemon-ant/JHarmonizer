@@ -1,9 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
@@ -23,7 +25,7 @@ public class CompiledMemberGroup {
     // TODO How to compile it???
     boolean keepAccessorsTogether;
 
-    @NonNull
+    @Nullable
     String name;
 
     int orderIndex;
@@ -44,7 +46,7 @@ public class CompiledMemberGroup {
             @NonNull List<CompiledMemberGroup> compiledSubGroups,
             boolean keepAccessorsTogether,
             int orderIndex,
-            @NonNull String name,
+            @Nullable String name,
             @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
             @NonNull UnifiedSeparator separator,
             @NonNull @Singular List<@NonNull OrderingRule> orderingRules) {
@@ -87,7 +89,7 @@ public class CompiledMemberGroup {
         return keepAccessorsTogether == that.keepAccessorsTogether
                 && orderIndex == that.orderIndex
                 && compiledSubGroups.equals(that.compiledSubGroups)
-                && name.equals(that.name)
+                && Objects.equals(name, that.name)
                 && selectorBlock.equals(that.selectorBlock)
                 && separator == that.separator
                 && orderingRules.equals(that.orderingRules);
@@ -97,7 +99,7 @@ public class CompiledMemberGroup {
     public int hashCode() {
         int result = compiledSubGroups.hashCode();
         result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
-        result = 31 * result + name.hashCode();
+        result = 31 * result + Objects.hashCode(name);
         result = 31 * result + orderIndex;
         result = 31 * result + selectorBlock.hashCode();
         result = 31 * result + separator.hashCode();

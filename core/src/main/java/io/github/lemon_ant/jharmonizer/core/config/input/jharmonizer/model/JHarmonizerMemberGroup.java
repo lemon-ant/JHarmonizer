@@ -43,7 +43,7 @@ public class JHarmonizerMemberGroup implements Serializable {
     @SuppressFBWarnings("EI_EXPOSE_REP")
     List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
 
-    @NonNull
+    @Nullable
     String name;
 
     @NonNull
@@ -54,7 +54,7 @@ public class JHarmonizerMemberGroup implements Serializable {
 
     @Builder
     private JHarmonizerMemberGroup(
-            @NonNull @JsonProperty(value = "name", required = true) String name,
+            @Nullable @JsonProperty("name") String name,
             @NonNull
                     @JsonDeserialize(using = SelectorsDeserializer.class)
                     @JsonProperty(value = "includes", required = true)
@@ -93,7 +93,7 @@ public class JHarmonizerMemberGroup implements Serializable {
         }
 
         return Objects.equals(keepAccessorsTogether, that.keepAccessorsTogether)
-                && name.equals(that.name)
+                && Objects.equals(name, that.name)
                 && includes.equals(that.includes)
                 && excludes.equals(that.excludes)
                 && orderingRules.equals(that.orderingRules)
@@ -103,7 +103,7 @@ public class JHarmonizerMemberGroup implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
+        int result = Objects.hashCode(name);
         result = 31 * result + includes.hashCode();
         result = 31 * result + excludes.hashCode();
         result = 31 * result + orderingRules.hashCode();
