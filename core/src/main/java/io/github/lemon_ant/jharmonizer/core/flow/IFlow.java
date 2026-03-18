@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import lombok.NonNull;
 
 /**
@@ -17,5 +17,5 @@ public interface IFlow {
      * @return the processing result for the source file
      */
     @NonNull
-    FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile);
+    FlowProcessingResult processSource(@NonNull SrcFile srcFile);
 }

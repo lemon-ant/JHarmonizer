@@ -4,7 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
@@ -34,10 +34,10 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @return the result
      */
     @Override
-    public @NonNull FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
+    public @NonNull FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
         getDebugStageRecorder()
                 .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+        ParsingResult parsingResult = SourceAstTranslator.parseSrcFile(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFileOptOutSkippedResult(srcFile, parsingResult, true, null, "", "all harmonization checks");

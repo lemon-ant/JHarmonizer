@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import java.nio.file.Path;
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,10 +19,7 @@ import spoon.reflect.declaration.CtType;
 @RequiredArgsConstructor
 public final class JHarmonizerOptOutResolver {
     @NonNull
-    private final Path sourcePath;
-
-    @NonNull
-    private final String originalSourceCode;
+    private final SrcFile srcFile;
 
     @NonNull
     private final CtCompilationUnit compilationUnit;
@@ -31,13 +28,9 @@ public final class JHarmonizerOptOutResolver {
     private final JHarmonizerOptOutPlacementResolver placementResolver;
 
     @NonNull
-    public static JHarmonizerOptOuts resolve(
-            @NonNull Path sourcePath, @NonNull String originalSourceCode, @NonNull CtCompilationUnit compilationUnit) {
+    public static JHarmonizerOptOuts resolve(@NonNull SrcFile srcFile, @NonNull CtCompilationUnit compilationUnit) {
         return new JHarmonizerOptOutResolver(
-                        sourcePath,
-                        originalSourceCode,
-                        compilationUnit,
-                        new JHarmonizerOptOutPlacementResolver(compilationUnit))
+                        srcFile, compilationUnit, new JHarmonizerOptOutPlacementResolver(compilationUnit))
                 .resolve();
     }
 
@@ -146,7 +139,7 @@ public final class JHarmonizerOptOutResolver {
     private ResolvedJHarmonizerOptOut resolveTypeOptOut(
             @NonNull CtComment comment, @NonNull JHarmonizerOptOutMode mode, @NonNull CtType<?> targetType) {
         SourceCharacterRange preservedSourceRange = new SourceCharacterRange(
-                findIndentationStart(originalSourceCode, comment.getPosition().getSourceStart()),
+                findIndentationStart(srcFile.getSrcCode(), comment.getPosition().getSourceStart()),
                 targetType.getPosition().getSourceEnd() + 1);
         return new ResolvedJHarmonizerOptOut(
                 comment.getPosition(), mode, preservedSourceRange, JHarmonizerOptOutScope.TYPE_SCOPE, targetType);
@@ -172,6 +165,6 @@ public final class JHarmonizerOptOutResolver {
 
     @NonNull
     private String formatLocation(@NonNull SourcePosition sourcePosition) {
-        return sourcePath + ":" + sourcePosition.getLine() + ":" + sourcePosition.getColumn();
+        return srcFile.getPath() + ":" + sourcePosition.getLine() + ":" + sourcePosition.getColumn();
     }
 }

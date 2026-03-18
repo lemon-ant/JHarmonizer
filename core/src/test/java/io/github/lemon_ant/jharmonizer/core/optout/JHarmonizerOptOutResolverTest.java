@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.optout;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.nio.file.Path;
@@ -22,7 +23,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOut())
@@ -44,7 +45,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOut())
@@ -65,7 +66,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst();
 
@@ -93,7 +94,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Outer.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Outer.java")));
         CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
         CtType<?> outerType = compilationUnit.getDeclaredTypes().getFirst();
         CtType<?> nestedType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
@@ -118,7 +119,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
@@ -135,7 +136,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
@@ -150,7 +151,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), sourceCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOut())
@@ -168,7 +169,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSourceResource(Path.of("Sample.java"), srcCode);
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();

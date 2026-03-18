@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;

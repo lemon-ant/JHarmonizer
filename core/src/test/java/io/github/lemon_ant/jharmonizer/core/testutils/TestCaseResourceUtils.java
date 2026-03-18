@@ -11,7 +11,7 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Test-only utilities for working with resources from the classpath.
+ * Test-only common for working with resources from the classpath.
  *
  * <p>We intentionally avoid resolving resources to {@link java.nio.file.Path} because resources may be packed into a
  * JAR or provided by a non-standard class loader in some runners.

@@ -4,11 +4,11 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTy
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTypes;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootTypes;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
+import io.github.lemon_ant.jharmonizer.core.common.StopWatch.TimedResult;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
-import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
-import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -27,19 +27,18 @@ public final class SourceAstTranslator {
 
     /**
      * Parses the source file.
-     * @param sourceSrcFile the source src file
+     * @param srcFile the source src file
      * @return the source file
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
-    public static ParsingResult parseSourceFile(@NonNull SrcFile sourceSrcFile) {
-        log.debug("Parsing {}", sourceSrcFile.getPath());
+    public static ParsingResult parseSrcFile(@NonNull SrcFile srcFile) {
+        log.debug("Parsing {}", srcFile.getPath());
 
-        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
-                () -> SpoonParser.parseJavaSourceResource(sourceSrcFile.getPath(), sourceSrcFile.getSrcCode()));
+        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
-        ParsingStatistic statistic = createParsingStatistic(sourceSrcFile.getSrcCode(), parsingTimedResult);
+        ParsingStatistic statistic = createParsingStatistic(srcFile.getSrcCode(), parsingTimedResult);
         return new ParsingResult(statistic, spoonASTModel);
     }
 

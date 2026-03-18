@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.utilities;
+package io.github.lemon_ant.jharmonizer.core.common;
 
 import java.util.function.Supplier;
 import lombok.AccessLevel;

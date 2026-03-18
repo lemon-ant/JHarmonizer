@@ -4,6 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.RESTRUCTURE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -35,10 +36,10 @@ public class RestructureFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
+    public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
         getDebugStageRecorder()
                 .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+        ParsingResult parsingResult = SourceAstTranslator.parseSrcFile(srcFile);
         if (parsingResult.getSpoonAstModel().getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFileOptOutSkippedResult(srcFile, parsingResult, false, null, null, "all harmonization");
         }

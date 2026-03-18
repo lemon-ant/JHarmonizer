@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.testutils;
 
 import static java.util.Objects.requireNonNull;
 
+import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -32,8 +33,8 @@ public class SpoonTestCaseUtils {
         requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
 
         String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
-        return SpoonParser.parseJavaSourceResource(
-                Path.of(extractFileNameWithExtension(javaFixtureResource)), sourceCode);
+        return SpoonParser.parseJavaSrcFile(
+                new SrcFile(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
     }
 
     /**
