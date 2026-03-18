@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
@@ -131,7 +132,7 @@ public class SpoonSorter {
         }
 
         Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = typeMembers.stream()
-                .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                .collect(Collectors.toUnmodifiableMap(
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
 
         Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember =
