@@ -59,10 +59,10 @@ public class UnifiedConfigMerger {
         Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
         List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
         for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
-            UnifiedMemberGroup prependedNewRootGroup =
-                    prependNewGroupOrUpdateBaselineMap(baselineRootGroupsByName, overlayRootGroup);
-            if (prependedNewRootGroup != null) {
-                prependedNewRootGroups.add(prependedNewRootGroup);
+            UnifiedMemberGroup newGroupOrNull =
+                    getNewGroupOrUpdateBaselineMap(baselineRootGroupsByName, overlayRootGroup);
+            if (newGroupOrNull != null) {
+                prependedNewRootGroups.add(newGroupOrNull);
             }
         }
         Stream<UnifiedMemberGroup> mergedBaselineRootGroups = baselineRootGroups.stream()
@@ -93,7 +93,7 @@ public class UnifiedConfigMerger {
     }
 
     @Nullable
-    private static UnifiedMemberGroup prependNewGroupOrUpdateBaselineMap(
+    private static UnifiedMemberGroup getNewGroupOrUpdateBaselineMap(
             Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
         String overlayGroupName = overlayRootGroup.getGroupName();
         if (overlayGroupName == null || !baselineRootGroupsByName.containsKey(overlayGroupName)) {
