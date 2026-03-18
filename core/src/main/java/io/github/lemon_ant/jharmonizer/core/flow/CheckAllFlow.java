@@ -43,16 +43,17 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                     srcFile, parsingResult, true, List.of(), "", "all harmonization checks");
         }
 
-        SortAndFormatPassResult sortAndFormatPassResult =
+        SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
                 sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
-        SortingPassResult sortingPassResult = sortAndFormatPassResult.getSortingPassResult();
-        FormatingResult formattingResult = sortAndFormatPassResult.getFormattingResult();
-        SpoonAstModel sortedSpoonAstModel = sortAndFormatPassResult.getSortedSpoonAstModel();
+        SortingAndSerializationResult sortingAndSerializationResult =
+                sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
+        FormatingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
+        SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
         String srcDiff;
-        if (hasChanges && !sortingPassResult.isSortingSkipped()) {
+        if (hasChanges && !sortingAndSerializationResult.isSortingSkipped()) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
             srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
@@ -69,9 +70,10 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                 .relocations(elementRelocations)
                 .diff(srcDiff)
                 .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(sortingPassResult.getSortingResult().getSortingStatistic())
+                .sortingStatistic(
+                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(
-                        sortingPassResult.getSerializationResult().getSerializationStatistic())
+                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
                 .formatingStatistic(formattingResult.getFormatingStatistic())
                 .flowProcessingStatus(
                         defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))

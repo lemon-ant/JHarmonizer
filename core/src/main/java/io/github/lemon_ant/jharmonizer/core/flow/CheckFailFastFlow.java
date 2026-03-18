@@ -43,9 +43,10 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
             return buildFileOptOutSkippedResult(srcFile, parsingResult, true, null, "", "all harmonization checks");
         }
 
-        SortingPassResult sortingPassResult = sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
-        SpoonAstModel sortedSpoonAstModel = sortingPassResult.getSortedSpoonAstModel();
-        List<Pair<CtElement, Integer>> elementRelocations = sortingPassResult.isSortingSkipped()
+        SortingAndSerializationResult sortingAndSerializationResult =
+                sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
+        SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
+        List<Pair<CtElement, Integer>> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
                 : findRelocations(
                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),
@@ -55,7 +56,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
+                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode());
 
         if (!elementRelocations.isEmpty()) {
             throw new NotOrderedException(srcFile.getPath(), elementRelocations);
@@ -63,9 +64,9 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
         FormatingResult formattingResult = getFormatter()
                 .formatSource(
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+                        sortingAndSerializationResult.getSerializationResult().getFormattingExclusionRanges());
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
@@ -82,9 +83,10 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .relocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(sortingPassResult.getSortingResult().getSortingStatistic())
+                .sortingStatistic(
+                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(
-                        sortingPassResult.getSerializationResult().getSerializationStatistic())
+                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
                 .formatingStatistic(formattingResult.getFormatingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
                 .build();

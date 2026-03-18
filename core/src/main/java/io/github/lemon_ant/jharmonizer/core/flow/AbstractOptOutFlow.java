@@ -47,20 +47,22 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected final SortingPassResult sortOrReuseOriginalSource(
+    protected final SortingAndSerializationResult sortOrReuseOriginalSource(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull String skippedOperationDescription) {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.SORTING_OFF)) {
             logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.SORTING_OFF);
-            return new SortingPassResult(
+            String originalSrcCode = srcFile.getSrcCode();
+            return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
-                    createOriginalSourceSerializationResult(srcFile),
+                    new SerializationResult(
+                            new SerializationStatistic(originalSrcCode.length(), 0), originalSrcCode, List.of()),
                     true);
         }
 
         SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
-        return new SortingPassResult(
+        return new SortingAndSerializationResult(
                 sortingResult, SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel()), false);
     }
 
@@ -73,26 +75,26 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the combined sorting and formatting pipeline result
      */
     @NonNull
-    protected final SortAndFormatPassResult sortAndFormatSource(
+    protected final SortingSerializationAndFormattingResult sortAndFormatSource(
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
-        SortingPassResult sortingPassResult =
+        SortingAndSerializationResult sortingAndSerializationResult =
                 sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, sortingDescription);
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode());
+                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode());
         FormatingResult formattingResult = getFormatter()
                 .formatSource(
-                        sortingPassResult.getSerializationResult().getSerializedSrcCode(),
+                        sortingAndSerializationResult.getSerializationResult().getSerializedSrcCode(),
                         srcFile.getPath(),
-                        sortingPassResult.getSerializationResult().getFormattingExclusionRanges());
+                        sortingAndSerializationResult.getSerializationResult().getFormattingExclusionRanges());
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
                         formattingResult.getFormatedSrcCode());
-        return new SortAndFormatPassResult(sortingPassResult, formattingResult);
+        return new SortingSerializationAndFormattingResult(sortingAndSerializationResult, formattingResult);
     }
 
     @NonNull
@@ -117,12 +119,6 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .build();
     }
 
-    @NonNull
-    private static SerializationResult createOriginalSourceSerializationResult(@NonNull SrcFile srcFile) {
-        return new SerializationResult(
-                new SerializationStatistic(srcFile.getSrcCode().length(), 0), srcFile.getSrcCode(), List.of());
-    }
-
     private static void logFileOptOutSkip(
             @NonNull SrcFile srcFile,
             @NonNull String skippedOperationDescription,
@@ -139,7 +135,7 @@ abstract class AbstractOptOutFlow implements IFlow {
 
     @Getter
     @AllArgsConstructor(access = AccessLevel.PROTECTED)
-    protected static class SortingPassResult {
+    static class SortingAndSerializationResult {
         @NonNull
         private final SortingResult sortingResult;
 
@@ -156,16 +152,16 @@ abstract class AbstractOptOutFlow implements IFlow {
 
     @Getter
     @AllArgsConstructor(access = AccessLevel.PROTECTED)
-    protected static class SortAndFormatPassResult {
+    static class SortingSerializationAndFormattingResult {
         @NonNull
-        private final SortingPassResult sortingPassResult;
+        private final SortingAndSerializationResult sortingAndSerializationResult;
 
         @NonNull
         private final FormatingResult formattingResult;
 
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {
-            return sortingPassResult.getSortedSpoonAstModel();
+            return sortingAndSerializationResult.getSortedSpoonAstModel();
         }
     }
 }

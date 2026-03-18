@@ -147,11 +147,10 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         if (formattingSkippedTypes.contains(type)) {
             // Once an outer type is preserved as-is, nested types are not traversed separately, so formatting
             // exclusions are emitted only for the outer preserved fragment and cannot overlap.
-            SourceCharacterRange preservedSourceRange = new SourceCharacterRange(
-                    findRenderedTypeStart(type), type.getPosition().getSourceEnd() + 1);
             int outputStart = getResult().length();
-            printOriginalFragment(preservedSourceRange.getStartInclusive(), preservedSourceRange.getEndExclusive() - 1);
-            int outputEndExclusive = getResult().length() - getLineSeparator().length();
+            printOriginalFragment(
+                    findRenderedTypeStart(type), type.getPosition().getSourceEnd());
+            int outputEndExclusive = getResult().length();
             formattingExclusionRanges.add(new SourceCharacterRange(outputStart, outputEndExclusive));
             return;
         }
@@ -167,6 +166,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
         if (explicitTypeMembers.isEmpty()) {
             // If no nested elements, then print the original source fragment entirely
+            // TODO Check if we have comments before and after
             printOriginalFragment(typePosition.getSourceStart(), typePosition.getSourceEnd())
                     .writeln();
             return;
@@ -276,6 +276,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
     @NonNull
     private int findRenderedTypeStart(CtType<?> type) {
+        // TODO Find out why we are searching type's start differently
         if (!formattingSkippedTypes.contains(type)) {
             return type.getPosition().getSourceStart();
         }

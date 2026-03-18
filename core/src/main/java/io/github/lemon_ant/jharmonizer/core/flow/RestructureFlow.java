@@ -44,10 +44,12 @@ public class RestructureFlow extends AbstractOptOutFlow {
         }
 
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
-        SortAndFormatPassResult sortAndFormatPassResult = sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
-        SortingPassResult sortingPassResult = sortAndFormatPassResult.getSortingPassResult();
-        FormatingResult formattingResult = sortAndFormatPassResult.getFormattingResult();
-        SpoonAstModel sortedSpoonAstModel = sortAndFormatPassResult.getSortedSpoonAstModel();
+        SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
+                sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
+        SortingAndSerializationResult sortingAndSerializationResult =
+                sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
+        FormatingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
+        SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
         if (hasChanges) {
@@ -62,12 +64,13 @@ public class RestructureFlow extends AbstractOptOutFlow {
                 .relocations(null)
                 .diff(null)
                 .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(sortingPassResult.getSortingResult().getSortingStatistic())
+                .sortingStatistic(
+                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(
-                        sortingPassResult.getSerializationResult().getSerializationStatistic())
+                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
                 .formatingStatistic(formattingResult.getFormatingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(
-                        !sortingPassResult.isSortingSkipped()
+                        !sortingAndSerializationResult.isSortingSkipped()
                                 && isRelocated(
                                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),
                                         sortedSpoonAstModel.getCompilationUnit()),
