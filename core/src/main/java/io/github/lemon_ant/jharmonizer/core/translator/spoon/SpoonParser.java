@@ -4,9 +4,8 @@ import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceSnapshot;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.function.Supplier;
@@ -29,14 +28,14 @@ public class SpoonParser {
      * @return the java source resource
      */
     @NonNull
-    public static SpoonAstModel parseJavaSrcFile(@NonNull Path javaSrcPath) throws IOException {
-        Path normalizedSourcePath = javaSrcPath.normalize().toAbsolutePath();
-        String originalSourceCode = Files.readString(normalizedSourcePath);
-        return parseJavaSrcFile(new SrcFile(originalSourceCode, normalizedSourcePath));
+    public static SpoonAstModel parseJavaSourceResource(@NonNull Path javaSourcePath) throws IOException {
+        Path normalizedSourcePath = javaSourcePath.normalize().toAbsolutePath();
+        return parseJavaSourceResource(SourceFilesHandler.readFile(normalizedSourcePath));
     }
 
     /**
      * Parses the java source resource.
+     * @param srcFile the original source file
      * @return the java source resource
      */
     @NonNull
@@ -55,12 +54,9 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        Supplier<SerializedSourceSnapshot> serializedSourceCode = () -> {
-            SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
-                    launcher.getEnvironment(),
-                    srcFile.getSrcCode(),
-                    optOuts.getSortingSkippedTypes(),
-                    optOuts.getFormattingSkippedTypes());
+        Supplier<SerializedSourceWithSkippedTypeRanges> serializedSourceCode = () -> {
+            SpoonCustomSourcePrinter printer =
+                    new SpoonCustomSourcePrinter(launcher.getEnvironment(), srcFile, optOuts.getSortingSkippedTypes());
             return printer.serializeCompilationUnit(compilationUnit);
         };
         return SpoonAstModel.builder()

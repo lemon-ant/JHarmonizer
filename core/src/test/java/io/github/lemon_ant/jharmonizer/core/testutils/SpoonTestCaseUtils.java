@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;

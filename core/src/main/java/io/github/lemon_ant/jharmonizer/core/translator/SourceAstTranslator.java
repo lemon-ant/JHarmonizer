@@ -53,15 +53,25 @@ public final class SourceAstTranslator {
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<SerializedSourceSnapshot> serializationTimedResult = StopWatch.measure(
+        TimedResult<SerializedSourceWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSourceCode().get());
-        SerializedSourceSnapshot serializedSourceSnapshot = serializationTimedResult.getResult();
-        String serializedSourceCode = serializedSourceSnapshot.getSerializedSrcCode();
+        SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
+                serializationTimedResult.getResult();
+        String serializedSourceCode = serializedSourceWithSkippedTypeRanges.getSerializedSrcCode();
+        List<SourceCharacterRange> formattingSkippedRanges =
+                serializedSourceWithSkippedTypeRanges.getSortingSkippedTypeRanges().entrySet().stream()
+                        .filter(entry -> sortedSpoonAstModel
+                                .getOptOuts()
+                                .getFormattingSkippedTypes()
+                                .contains(entry.getKey()))
+                        .map(java.util.Map.Entry::getValue)
+                        .sorted(Comparator.comparingInt(SourceCharacterRange::getStartInclusive))
+                        .toList();
 
         return new SerializationResult(
                 new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
                 serializedSourceCode,
-                serializedSourceSnapshot.getFormattingSkippedRanges());
+                formattingSkippedRanges);
     }
 
     @NonNull
