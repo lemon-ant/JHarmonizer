@@ -7,10 +7,8 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootT
 import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.common.StopWatch.TimedResult;
-import io.github.lemon_ant.jharmonizer.core.optout.SourceCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
-import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -59,21 +57,14 @@ public final class SourceAstTranslator {
                 () -> sortedSpoonAstModel.getSerializedSrcCode().get());
         SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
                 serializationTimedResult.getResult();
-        String serializedSourceCode = serializedSourceWithSkippedTypeRanges.getSerializedSrcCode();
-        List<SourceCharacterRange> formattingSkippedRanges =
-                serializedSourceWithSkippedTypeRanges.getSortingSkippedTypeRanges().entrySet().stream()
-                        .filter(entry -> sortedSpoonAstModel
-                                .getOptOuts()
-                                .getFormattingSkippedTypes()
-                                .contains(entry.getKey()))
-                        .map(java.util.Map.Entry::getValue)
-                        .sorted(Comparator.comparingInt(SourceCharacterRange::getStartInclusive))
-                        .toList();
 
         return new SerializationResult(
-                new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
-                serializedSourceCode,
-                formattingSkippedRanges);
+                new SerializationStatistic(
+                        serializedSourceWithSkippedTypeRanges
+                                .getSerializedSrcCode()
+                                .length(),
+                        serializationTimedResult.getNanos()),
+                serializedSourceWithSkippedTypeRanges);
     }
 
     @NonNull

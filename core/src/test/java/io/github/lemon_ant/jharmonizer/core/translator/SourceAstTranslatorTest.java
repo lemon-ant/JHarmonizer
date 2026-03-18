@@ -50,7 +50,8 @@ class SourceAstTranslatorTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getSerializedSrcCode()).contains("class Demo");
+        assertThat(result.getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode())
+                .contains("class Demo");
         assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
         assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
                 .isGreaterThan(0);
@@ -79,14 +80,17 @@ class SourceAstTranslatorTest {
 
         // When
         SerializationResult result = SourceAstTranslator.serialize(spoonAstModel);
-        List<SourceCharacterRange> formattingSkippedRanges = result.getFormattingSkippedRanges();
+        List<SourceCharacterRange> formattingSkippedRanges =
+                result.getFormattingSkippedRanges(spoonAstModel.getOptOuts().getFormattingSkippedTypes());
+        String serializedSrcCode =
+                result.getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode();
 
         // Then
-        assertThat(result.getSerializedSrcCode()).contains(sortOffFragment).contains(fullyOffFragment);
+        assertThat(serializedSrcCode).contains(sortOffFragment).contains(fullyOffFragment);
         assertThat(formattingSkippedRanges)
                 .singleElement()
-                .satisfies(range -> assertThat(result.getSerializedSrcCode()
-                                .substring(range.getStartInclusive(), range.getEndExclusive()))
+                .satisfies(range -> assertThat(
+                                serializedSrcCode.substring(range.getStartInclusive(), range.getEndExclusive()))
                         .isEqualTo(fullyOffFragment));
     }
 }

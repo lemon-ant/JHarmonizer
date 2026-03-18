@@ -8,7 +8,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtType;
 
 @Value
@@ -17,10 +16,10 @@ public class JHarmonizerOptOuts {
     private static final JHarmonizerOptOuts EMPTY_OPT_OUTS = new JHarmonizerOptOuts(null, Map.of());
 
     @Nullable
-    ResolvedJHarmonizerOptOut fileOptOut;
+    JHarmonizerOptOutMode fileOptOutMode;
 
     @NonNull
-    Map<SourcePosition, ResolvedJHarmonizerOptOut> typeOptOutsByTargetPosition;
+    Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes;
 
     @NonNull
     public static JHarmonizerOptOuts empty() {
@@ -29,51 +28,39 @@ public class JHarmonizerOptOuts {
 
     @NonNull
     public static JHarmonizerOptOuts of(
-            @Nullable ResolvedJHarmonizerOptOut fileOptOut,
-            @NonNull Map<SourcePosition, ResolvedJHarmonizerOptOut> typeOptOutsByTargetPosition) {
-        return new JHarmonizerOptOuts(fileOptOut, Map.copyOf(typeOptOutsByTargetPosition));
+            @Nullable JHarmonizerOptOutMode fileOptOutMode,
+            @NonNull Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
+        return new JHarmonizerOptOuts(fileOptOutMode, Map.copyOf(typeOptOutModes));
     }
 
     public boolean hasFileOptOutMode(@NonNull JHarmonizerOptOutMode mode) {
-        return getFileOptOut()
-                .map(ResolvedJHarmonizerOptOut::getMode)
-                .filter(mode::equals)
-                .isPresent();
+        return mode == fileOptOutMode;
     }
 
     public boolean isEmpty() {
-        return fileOptOut == null && typeOptOutsByTargetPosition.isEmpty();
+        return fileOptOutMode == null && typeOptOutModes.isEmpty();
     }
 
     @NonNull
-    public Optional<ResolvedJHarmonizerOptOut> findTypeOptOut(@NonNull SourcePosition sourcePosition) {
-        return Optional.ofNullable(typeOptOutsByTargetPosition.get(sourcePosition));
+    public Optional<JHarmonizerOptOutMode> findTypeOptOutMode(@NonNull CtType<?> type) {
+        return Optional.ofNullable(typeOptOutModes.get(type));
     }
 
     @NonNull
-    public Optional<ResolvedJHarmonizerOptOut> findTypeOptOut(@NonNull CtType<?> type) {
-        return findTypeOptOut(type.getPosition());
-    }
-
-    @NonNull
-    public Optional<ResolvedJHarmonizerOptOut> getFileOptOut() {
-        return Optional.ofNullable(fileOptOut);
+    public Optional<JHarmonizerOptOutMode> getFileOptOutMode() {
+        return Optional.ofNullable(fileOptOutMode);
     }
 
     @NonNull
     public Set<CtType<?>> getFormattingSkippedTypes() {
-        return typeOptOutsByTargetPosition.values().stream()
-                .filter(ResolvedJHarmonizerOptOut::skipsFormatting)
-                .map(ResolvedJHarmonizerOptOut::getTargetType)
-                .flatMap(Optional::stream)
+        return typeOptOutModes.entrySet().stream()
+                .filter(entry -> entry.getValue().skipsFormatting())
+                .map(Map.Entry::getKey)
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
     @NonNull
     public Set<CtType<?>> getSortingSkippedTypes() {
-        return typeOptOutsByTargetPosition.values().stream()
-                .map(ResolvedJHarmonizerOptOut::getTargetType)
-                .flatMap(Optional::stream)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+        return typeOptOutModes.keySet();
     }
 }

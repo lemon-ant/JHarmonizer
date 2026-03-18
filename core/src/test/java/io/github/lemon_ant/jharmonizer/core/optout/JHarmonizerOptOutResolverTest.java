@@ -26,10 +26,7 @@ class JHarmonizerOptOutResolverTest {
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
-        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
-                .get()
-                .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
-                .containsExactly(JHarmonizerOptOutMode.FULLY_OFF, JHarmonizerOptOutScope.FILE_SCOPE);
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
     }
 
     @Test
@@ -48,10 +45,7 @@ class JHarmonizerOptOutResolverTest {
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
-        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
-                .get()
-                .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
-                .containsExactly(JHarmonizerOptOutMode.SORTING_OFF, JHarmonizerOptOutScope.FILE_SCOPE);
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
     }
 
     @Test
@@ -71,14 +65,7 @@ class JHarmonizerOptOutResolverTest {
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst();
 
         // Then
-        assertThat(spoonAstModel.getOptOuts().findTypeOptOut(sampleType))
-                .get()
-                .extracting(
-                        ResolvedJHarmonizerOptOut::getMode,
-                        optOut -> optOut.getTargetType()
-                                .map(CtType::getSimpleName)
-                                .orElseThrow())
-                .containsExactly(JHarmonizerOptOutMode.FULLY_OFF, "Sample");
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(sampleType)).contains(JHarmonizerOptOutMode.FULLY_OFF);
     }
 
     @Test
@@ -100,10 +87,8 @@ class JHarmonizerOptOutResolverTest {
         CtType<?> nestedType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
 
         // Then
-        assertThat(spoonAstModel.getOptOuts().findTypeOptOut(nestedType))
-                .get()
-                .extracting(ResolvedJHarmonizerOptOut::getMode, ResolvedJHarmonizerOptOut::getScope)
-                .containsExactly(JHarmonizerOptOutMode.SORTING_OFF, JHarmonizerOptOutScope.TYPE_SCOPE);
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(nestedType))
+                .contains(JHarmonizerOptOutMode.SORTING_OFF);
     }
 
     @Test
@@ -154,10 +139,7 @@ class JHarmonizerOptOutResolverTest {
         SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(new SrcFile(sourceCode, Path.of("Sample.java")));
 
         // Then
-        assertThat(spoonAstModel.getOptOuts().getFileOptOut())
-                .get()
-                .extracting(ResolvedJHarmonizerOptOut::getMode)
-                .isEqualTo(JHarmonizerOptOutMode.SORTING_OFF);
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
     }
 
     @Test

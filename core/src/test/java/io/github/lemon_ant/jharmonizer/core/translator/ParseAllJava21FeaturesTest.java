@@ -54,7 +54,10 @@ class ParseAllJava21FeaturesTest {
 
         // Then
         assertThat(serializationResult).isNotNull();
-        assertThat(serializationResult.getSerializedSrcCode()).contains("SampleAllJava21FeaturesList");
+        assertThat(serializationResult
+                        .getSerializedSourceWithSkippedTypeRanges()
+                        .getSerializedSrcCode())
+                .contains("SampleAllJava21FeaturesList");
         assertThat(serializationResult.getSerializationStatistic()).isNotNull();
         SerializationStatistic serializationStatistic = serializationResult.getSerializationStatistic();
         // Use withPercentage because the serializer may add or remove a few line separators.
