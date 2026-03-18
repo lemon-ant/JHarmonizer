@@ -9,7 +9,7 @@ import lombok.Value;
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class FormatingStatistic {
+public class FormattingStatistic {
     long formattedCodeLength;
     long formattingTimeInNanos;
 }

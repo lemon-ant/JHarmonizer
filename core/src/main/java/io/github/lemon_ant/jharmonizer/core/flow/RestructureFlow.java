@@ -6,8 +6,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -49,17 +49,17 @@ public class RestructureFlow implements IFlow {
         debugStageRecorder.recordSrcStage(
                 srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
-        FormatingResult formatingResult =
+        FormattingResult formattingResult =
                 formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
         debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormattedSrcCode());
 
-        boolean hasChanged = !srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode());
+        boolean hasChanged = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         if (hasChanged) {
             if (backupsEnabled) {
                 SourceFilesHandler.renameToBackup(srcFile.getPath());
             }
-            SourceFilesHandler.overwrite(srcFile.getPath(), formatingResult.getFormatedSrcCode());
+            SourceFilesHandler.overwrite(srcFile.getPath(), formattingResult.getFormattedSrcCode());
         }
 
         return FlowProcessingResult.builder()
@@ -69,7 +69,7 @@ public class RestructureFlow implements IFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(sortingResult.getSortingStatistic())
                 .serializationStatistic(serializationResult.getSerializationStatistic())
-                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(
                         isRelocated(
                                 sortedSpoonAstModel.getOriginalElements2OrderIndices(),

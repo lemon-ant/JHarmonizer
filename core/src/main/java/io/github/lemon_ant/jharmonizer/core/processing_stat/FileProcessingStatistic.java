@@ -30,7 +30,7 @@ public class FileProcessingStatistic {
         long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()
                 + flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos()
-                + flowProcessingResult.getFormatingStatistic().getFormattingTimeInNanos();
+                + flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
         return new FileProcessingStatistic(
                 flowProcessingResult.getPath(),
                 processingTime,

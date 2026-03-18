@@ -6,8 +6,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -62,13 +62,13 @@ public class CheckFailFastFlow implements IFlow {
         }
 
         // Format (Fail Fast)
-        FormatingResult formatingResult =
+        FormattingResult formattingResult =
                 formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
         debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formatingResult.getFormatedSrcCode());
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormattedSrcCode());
 
-        if (!srcFile.getSrcCode().equals(formatingResult.getFormatedSrcCode())) {
-            String srcDiff = computeDiff(srcFile.getSrcCode(), formatingResult.getFormatedSrcCode());
+        if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
+            String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
             throw new NotFormattedException(srcFile.getPath(), srcDiff);
         }
 
@@ -79,7 +79,7 @@ public class CheckFailFastFlow implements IFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(sortingResult.getSortingStatistic())
                 .serializationStatistic(serializationResult.getSerializationStatistic())
-                .formatingStatistic(formatingResult.getFormatingStatistic())
+                .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
                 .build();
     }

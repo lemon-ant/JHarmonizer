@@ -64,16 +64,16 @@ public final class Formatter {
      * Formats the given source code.
      *
      * @param sourceCode the source code to format
-     * @return a FormatingResult containing the formatted source code and statistics
+     * @return a FormattingResult containing the formatted source code and statistics
      */
     @NonNull
-    public FormatingResult formatSource(@NonNull String sourceCode, @NonNull Path srcPath) {
+    public FormattingResult formatSource(@NonNull String sourceCode, @NonNull Path srcPath) {
         log.debug("Formatting {}", srcPath);
-        TimedResult<String> formatingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
+        TimedResult<String> formattingResult = StopWatch.measure(() -> formattingMethod.apply(sourceCode));
 
-        String formattedSource = formatingResult.getResult();
-        return new FormatingResult(
-                formattedSource, new FormatingStatistic(formattedSource.length(), formatingResult.getNanos()));
+        String formattedSource = formattingResult.getResult();
+        return new FormattingResult(
+                formattedSource, new FormattingStatistic(formattedSource.length(), formattingResult.getNanos()));
     }
 
     @NonNull
