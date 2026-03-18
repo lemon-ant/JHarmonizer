@@ -60,7 +60,7 @@ public class UnifiedConfigMerger {
         List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
         for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
             UnifiedMemberGroup prependedNewRootGroup =
-                    processOverlayRootGroup(baselineRootGroupsByName, overlayRootGroup);
+                    prependNewGroupOrUpdateBaselineMap(baselineRootGroupsByName, overlayRootGroup);
             if (prependedNewRootGroup != null) {
                 prependedNewRootGroups.add(prependedNewRootGroup);
             }
@@ -78,7 +78,7 @@ public class UnifiedConfigMerger {
                 .collect(Collectors.toMap(
                         UnifiedMemberGroup::getGroupName,
                         memberGroup -> memberGroup,
-                        (existingGroup, replacementGroup) -> replacementGroup,
+                        (ignoredExistingGroup, duplicateGroup) -> duplicateGroup,
                         LinkedHashMap::new));
     }
 
@@ -93,7 +93,7 @@ public class UnifiedConfigMerger {
     }
 
     @Nullable
-    private static UnifiedMemberGroup processOverlayRootGroup(
+    private static UnifiedMemberGroup prependNewGroupOrUpdateBaselineMap(
             Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
         String overlayGroupName = overlayRootGroup.getGroupName();
         if (overlayGroupName == null || !baselineRootGroupsByName.containsKey(overlayGroupName)) {
