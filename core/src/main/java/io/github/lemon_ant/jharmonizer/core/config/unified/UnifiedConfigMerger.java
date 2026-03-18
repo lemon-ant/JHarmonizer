@@ -1,12 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -51,15 +49,7 @@ public class UnifiedConfigMerger {
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
         Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
-        Set<String> seenOverlayGroupNames = new HashSet<>();
         Stream<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
-                .peek(overlayRootGroup -> {
-                    String overlayGroupName = overlayRootGroup.getGroupName();
-                    if (overlayGroupName != null && !seenOverlayGroupNames.add(overlayGroupName)) {
-                        throw new IllegalStateException(
-                                "Overlay root member group names must be unique: " + overlayGroupName);
-                    }
-                })
                 .map(overlayRootGroup -> findPrependedNewRootGroup(baselineRootGroupsByName, overlayRootGroup))
                 .filter(Objects::nonNull);
         return Stream.concat(prependedNewRootGroups, baselineRootGroupsByName.values().stream())

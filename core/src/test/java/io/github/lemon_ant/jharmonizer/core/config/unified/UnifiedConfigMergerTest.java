@@ -89,23 +89,6 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_duplicateOverlayNames_throwsException() {
-        // Given
-        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
-        UnifiedMemberGroup baselineFallbackGroup = createGroup("Fallback");
-        UnifiedConfig baselineConfig = createConfig(List.of(baselineDefaultGroup, baselineFallbackGroup));
-        UnifiedMemberGroup firstReplacementGroup = createGroup("Default Rule", List.of(createGroup("First Overlay")));
-        UnifiedMemberGroup lastReplacementGroup = createGroup("Default Rule", List.of(createGroup("Last Overlay")));
-        FlexibleUnifiedConfig overlayConfig =
-                new FlexibleUnifiedConfig(null, null, null, null, List.of(firstReplacementGroup, lastReplacementGroup));
-
-        // When / Then
-        assertThatThrownBy(() -> UnifiedConfigMerger.merge(baselineConfig, overlayConfig))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Overlay root member group names must be unique");
-    }
-
-    @Test
     void merge_overlayRootGroupNameMissing_prependsUnnamedGroup() {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
