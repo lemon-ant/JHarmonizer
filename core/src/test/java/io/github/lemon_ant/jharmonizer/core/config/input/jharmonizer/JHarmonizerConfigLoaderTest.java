@@ -24,14 +24,14 @@ import org.junit.jupiter.api.io.TempDir;
 
 // TODO Refactor
 class JHarmonizerConfigLoaderTest {
-    private static final URL INVALID_INCLUDES_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml");
-    private static final URL STRICT_MISSING_GROUP_NAME_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/config/input/jharmonizer/invalid-config-missing-member-group-name.yml");
-    private static final URL FLEXIBLE_MISSING_GROUP_NAME_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml");
-    private static final URL SIMPLE_WORKING_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/config/input/jharmonizer/simplest-working-config.yml");
+    private static final String INVALID_INCLUDES_CONFIG_PATH =
+            "/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml";
+    private static final String STRICT_MISSING_GROUP_NAME_CONFIG_PATH =
+            "/test-cases/core/config/input/jharmonizer/invalid-config-missing-member-group-name.yml";
+    private static final String FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH =
+            "/test-cases/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml";
+    private static final String SIMPLE_WORKING_CONFIG_PATH =
+            "/test-cases/core/config/input/jharmonizer/simplest-working-config.yml";
     private static final URL MIXED_GROUP_SYNTAX_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
 
@@ -51,7 +51,7 @@ class JHarmonizerConfigLoaderTest {
     @Test
     void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() throws IOException {
         // Given
-        try (InputStream configYaml = INVALID_INCLUDES_CONFIG_URL.openStream()) {
+        try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(INVALID_INCLUDES_CONFIG_PATH)) {
 
             // When / Then
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
@@ -78,7 +78,8 @@ class JHarmonizerConfigLoaderTest {
     @Test
     void loadFrom_groupNameMissing_throwsException() throws IOException {
         // Given
-        try (InputStream configYaml = STRICT_MISSING_GROUP_NAME_CONFIG_URL.openStream()) {
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(STRICT_MISSING_GROUP_NAME_CONFIG_PATH)) {
 
             // When / Then
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
@@ -89,7 +90,8 @@ class JHarmonizerConfigLoaderTest {
     @Test
     void loadFlexibleFrom_groupNameMissing_throwsException() throws IOException {
         // Given
-        try (InputStream configYaml = FLEXIBLE_MISSING_GROUP_NAME_CONFIG_URL.openStream()) {
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH)) {
 
             // When / Then
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml))
@@ -100,7 +102,7 @@ class JHarmonizerConfigLoaderTest {
     @Test
     void loadFrom_simpleWorkingConfigFile_doesNotThrow() throws IOException {
         // Given
-        try (InputStream configYaml = SIMPLE_WORKING_CONFIG_URL.openStream()) {
+        try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(SIMPLE_WORKING_CONFIG_PATH)) {
 
             // When / Then
             assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(configYaml)).doesNotThrowAnyException();
