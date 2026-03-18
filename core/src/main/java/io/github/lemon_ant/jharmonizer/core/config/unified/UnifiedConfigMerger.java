@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -27,18 +27,11 @@ public class UnifiedConfigMerger {
      */
     @NonNull
     public static UnifiedConfig merge(@NonNull UnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
-        Objects.requireNonNull(baseline, "baseline");
-        Objects.requireNonNull(overlay, "overlay");
-
         UnifiedTopLevelTypesOrdering top =
                 overlay.getTopLevelTypesOrdering().orElse(baseline.getTopLevelTypesOrdering());
-
         UnifiedFormatting formatting = overlay.getFormatting().orElse(baseline.getFormatting());
-
         UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
-
         Boolean backupsEnabled = overlay.getBackupsEnabled().orElse(baseline.isBackupsEnabled());
-
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
                 .map(overlayRootGroups -> mergeRootMemberGroups(baseline.getRootMemberGroups(), overlayRootGroups))
                 .orElse(baseline.getRootMemberGroups());
@@ -56,11 +49,10 @@ public class UnifiedConfigMerger {
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
         Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
-        List<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
-                .flatMap(overlayRootGroup ->
-                        findPrependedNewRootGroup(baselineRootGroupsByName, overlayRootGroup).stream())
-                .toList();
-        return Stream.concat(prependedNewRootGroups.stream(), baselineRootGroupsByName.values().stream())
+        Stream<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
+                .map(overlayRootGroup -> findPrependedNewRootGroup(baselineRootGroupsByName, overlayRootGroup))
+                .filter(Objects::nonNull);
+        return Stream.concat(prependedNewRootGroups, baselineRootGroupsByName.values().stream())
                 .toList();
     }
 
@@ -74,13 +66,10 @@ public class UnifiedConfigMerger {
                         LinkedHashMap::new));
     }
 
-    @NonNull
-    private static Optional<UnifiedMemberGroup> findPrependedNewRootGroup(
+    @Nullable
+    private static UnifiedMemberGroup findPrependedNewRootGroup(
             Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
         String overlayGroupName = overlayRootGroup.getGroupName();
-        if (baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null) {
-            return Optional.of(overlayRootGroup);
-        }
-        return Optional.empty();
+        return baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null ? overlayRootGroup : null;
     }
 }
