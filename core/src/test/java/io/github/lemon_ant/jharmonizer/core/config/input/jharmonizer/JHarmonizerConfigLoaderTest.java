@@ -12,13 +12,16 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarm
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -65,6 +68,47 @@ class JHarmonizerConfigLoaderTest {
             assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
                     .isInstanceOf(MismatchedInputException.class);
         }
+    }
+
+    @Test
+    void loadFrom_groupNameMissing_throwsException() {
+        // Given
+        String configYaml = """
+                top-level-types-ordering:
+                  main-type-first: true
+                  type-order:
+                    - [class]
+                formatting:
+                  fix-imports: true
+                  style: PALANTIR
+                backups-enabled: true
+                header-line:
+                  char: "-"
+                  left-padding: 2
+                type-members-ordering:
+                  - includes:
+                      - [field]
+                    ordering-rules: [ALPHA]
+                """;
+
+        // When / Then
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(openYaml(configYaml)))
+                .isInstanceOf(MismatchedInputException.class);
+    }
+
+    @Test
+    void loadFlexibleFrom_groupNameMissing_throwsException() {
+        // Given
+        String configYaml = """
+                type-members-ordering:
+                  - includes:
+                      - [field]
+                    ordering-rules: [ALPHA]
+                """;
+
+        // When / Then
+        assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFlexibleFrom(openYaml(configYaml)))
+                .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test
@@ -122,5 +166,10 @@ class JHarmonizerConfigLoaderTest {
                 .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
         assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+    }
+
+    @NonNull
+    private static InputStream openYaml(String yaml) {
+        return new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -56,18 +56,11 @@ public class UnifiedConfigMerger {
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
         Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
-        List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
-        for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
-            String overlayGroupName = overlayRootGroup.getGroupName();
-            if (baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null) {
-                prependedNewRootGroups.add(overlayRootGroup);
-            }
-        }
-        return Stream.concat(
-                        prependedNewRootGroups.stream(),
-                        baselineRootGroups.stream()
-                                .map(baselineRootGroup ->
-                                        resolveMergedBaselineRootGroup(baselineRootGroupsByName, baselineRootGroup)))
+        List<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
+                .flatMap(overlayRootGroup ->
+                        getPrependedNewRootGroup(baselineRootGroupsByName, overlayRootGroup).stream())
+                .toList();
+        return Stream.concat(prependedNewRootGroups.stream(), baselineRootGroupsByName.values().stream())
                 .toList();
     }
 
@@ -82,9 +75,12 @@ public class UnifiedConfigMerger {
     }
 
     @NonNull
-    private static UnifiedMemberGroup resolveMergedBaselineRootGroup(
-            Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup baselineRootGroup) {
-        String baselineRootGroupName = baselineRootGroup.getGroupName();
-        return baselineRootGroupsByName.getOrDefault(baselineRootGroupName, baselineRootGroup);
+    private static Optional<UnifiedMemberGroup> getPrependedNewRootGroup(
+            Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
+        String overlayGroupName = overlayRootGroup.getGroupName();
+        if (baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null) {
+            return Optional.of(overlayRootGroup);
+        }
+        return Optional.empty();
     }
 }
