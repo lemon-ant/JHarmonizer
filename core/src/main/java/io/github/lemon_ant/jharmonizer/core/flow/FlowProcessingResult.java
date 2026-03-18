@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingStatistic;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
@@ -31,7 +31,7 @@ public class FlowProcessingResult {
     FlowProcessingStatus flowProcessingStatus;
 
     @NonNull
-    FormatingStatistic formatingStatistic;
+    FormattingStatistic formattingStatistic;
 
     @NonNull
     ParsingStatistic parsingStatistic;

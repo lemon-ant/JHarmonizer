@@ -7,8 +7,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormatingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -52,18 +52,18 @@ public class CheckAllFlow implements IFlow {
         debugStageRecorder.recordSrcStage(
                 srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
 
-        FormatingResult formattingResult =
+        FormattingResult formattingResult =
                 formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
         debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormatedSrcCode());
+                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormattedSrcCode());
 
-        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormatedSrcCode());
+        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
         String srcDiff;
         if (hasChanges) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormatedSrcCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
         } else {
             elementRelocations = List.of();
             srcDiff = "";
@@ -76,7 +76,7 @@ public class CheckAllFlow implements IFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(sortingResult.getSortingStatistic())
                 .serializationStatistic(serializationResult.getSerializationStatistic())
-                .formatingStatistic(formattingResult.getFormatingStatistic())
+                .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(
                         defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();

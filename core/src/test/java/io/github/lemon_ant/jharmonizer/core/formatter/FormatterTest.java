@@ -16,14 +16,14 @@ class FormatterTest {
         String expectedClass = "public class Person {}\n";
 
         // When
-        FormatingResult formatingResult = formatter.formatSource(sourceClass, Path.of(""));
-        FormatingStatistic formatingStatistic = formatingResult.getFormatingStatistic();
+        FormattingResult formattingResult = formatter.formatSource(sourceClass, Path.of(""));
+        FormattingStatistic formattingStatistic = formattingResult.getFormattingStatistic();
 
         // Then
-        assertThat(formatingResult.getFormatedSrcCode()).isEqualTo(expectedClass);
-        assertThat(formatingStatistic).isNotNull();
-        assertThat(formatingStatistic.getFormattedCodeLength()).isEqualTo(expectedClass.length());
-        assertThat(formatingStatistic.getFormattingTimeInNanos()).isGreaterThan(1_000_000);
+        assertThat(formattingResult.getFormattedSrcCode()).isEqualTo(expectedClass);
+        assertThat(formattingStatistic).isNotNull();
+        assertThat(formattingStatistic.getFormattedCodeLength()).isEqualTo(expectedClass.length());
+        assertThat(formattingStatistic.getFormattingTimeInNanos()).isGreaterThan(1_000_000);
     }
 
     @Test
@@ -34,13 +34,13 @@ class FormatterTest {
         String expectedClass = "public class Person {}\n";
 
         // When
-        FormatingResult formatingResult = formatter.formatSource(sourceClass, Path.of(""));
-        FormatingStatistic formatingStatistic = formatingResult.getFormatingStatistic();
+        FormattingResult formattingResult = formatter.formatSource(sourceClass, Path.of(""));
+        FormattingStatistic formattingStatistic = formattingResult.getFormattingStatistic();
 
         // Then
-        assertThat(formatingResult.getFormatedSrcCode()).isEqualTo(expectedClass);
-        assertThat(formatingStatistic).isNotNull();
-        assertThat(formatingStatistic.getFormattedCodeLength()).isEqualTo(expectedClass.length());
-        assertThat(formatingStatistic.getFormattingTimeInNanos()).isGreaterThan(1_000_000);
+        assertThat(formattingResult.getFormattedSrcCode()).isEqualTo(expectedClass);
+        assertThat(formattingStatistic).isNotNull();
+        assertThat(formattingStatistic.getFormattedCodeLength()).isEqualTo(expectedClass.length());
+        assertThat(formattingStatistic.getFormattingTimeInNanos()).isGreaterThan(1_000_000);
     }
 }

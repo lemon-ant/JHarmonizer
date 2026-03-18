@@ -11,26 +11,26 @@ import lombok.Value;
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class FormatingResult {
+public class FormattingResult {
     @NonNull
-    String formatedSrcCode;
+    String formattedSrcCode;
 
     @NonNull
-    FormatingStatistic formatingStatistic;
+    FormattingStatistic formattingStatistic;
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FormatingResult that)) {
+        if (!(o instanceof FormattingResult that)) {
             return false;
         }
 
-        return formatedSrcCode.equals(that.formatedSrcCode) && formatingStatistic.equals(that.formatingStatistic);
+        return formattedSrcCode.equals(that.formattedSrcCode) && formattingStatistic.equals(that.formattingStatistic);
     }
 
     @Override
     public int hashCode() {
-        int result = formatedSrcCode.hashCode();
-        result = 31 * result + formatingStatistic.hashCode();
+        int result = formattedSrcCode.hashCode();
+        result = 31 * result + formattingStatistic.hashCode();
         return result;
     }
 }
