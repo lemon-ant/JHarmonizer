@@ -3,10 +3,12 @@ package io.github.lemon_ant.jharmonizer.core.optout;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +23,7 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @Slf4j
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JHarmonizerOptOutResolver {
     @NonNull
     private final SrcFile srcFile;
@@ -41,7 +43,7 @@ public final class JHarmonizerOptOutResolver {
             return new JHarmonizerOptOuts(JHarmonizerOptOutMode.FULLY_OFF, Map.of());
         }
 
-        Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new ConcurrentHashMap<>();
+        Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new HashMap<>();
         boolean sortingDisabledInParents = fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF;
         for (CtType<?> declaredType : compilationUnit.getDeclaredTypes()) {
             collectTypeOptOutModes(declaredType, sortingDisabledInParents, typeOptOutModes);
