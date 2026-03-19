@@ -32,6 +32,8 @@ This file defines repository-wide conventions for coding agents working in this 
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
+- Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
+- Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `build`, or `merge`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
     - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
@@ -51,7 +53,9 @@ This file defines repository-wide conventions for coding agents working in this 
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
 - Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
+- When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 
 ## Test conventions
 
 - See `docs/test-conventions.md`.
+- In particular, keep non-trivial multi-line textual test fixtures in `src/test/resources/test-cases/**` instead of embedding them inline in test classes.

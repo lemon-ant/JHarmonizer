@@ -52,6 +52,16 @@ public class TestCaseResourceUtils {
     }
 
     @NonNull
+    public static InputStream openClasspathResourceStream(@NonNull String classpathAbsolutePath) {
+        URL resourceUrl = requireClasspathResourceUrl(classpathAbsolutePath);
+        try {
+            return resourceUrl.openStream();
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to open resource URL: " + resourceUrl, ioException);
+        }
+    }
+
+    @NonNull
     @Deprecated
     public static InputStream openClasspathResourceStream(
             @NonNull Class<?> anchorClass, @NonNull String classpathAbsolutePath) {
