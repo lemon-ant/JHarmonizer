@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -128,6 +128,12 @@ public final class JHarmonizerOptOutResolver {
             JHarmonizerOptOutMode currentMode = parsedMode.orElseThrow();
             if (sortingDisabledInParents && currentMode == JHarmonizerOptOutMode.SORTING_OFF) {
                 continue;
+            }
+            if (directOptOutMode == JHarmonizerOptOutMode.SORTING_OFF
+                    && currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
+                directOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
+                firstTypeComment = leadingTypeComment;
+                break;
             }
             if (directOptOutMode != null) {
                 logIgnoredOptOut(

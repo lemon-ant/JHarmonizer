@@ -6,8 +6,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
+import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
@@ -216,7 +216,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             printOriginalFragment(
                     findRenderedTypeStart(type), type.getPosition().getSourceEnd());
             int outputEndExclusive = getResult().length();
-            sortingSkippedTypeRanges.put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
+            sortingSkippedTypeRanges.put(type, SrcCharacterRange.of(outputStart, outputEndExclusive));
         }
 
         @NonNull

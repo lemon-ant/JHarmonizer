@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.files_handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -51,9 +50,9 @@ class SourceFilesHandlerTest {
         Path path1 = tempDir.resolve("A.java");
         Path path2 = tempDir.resolve("B.java");
 
-        SrcFile fc1a = new SrcFile("x", path1);
-        SrcFile fc1b = new SrcFile("x", path1);
-        SrcFile fc2 = new SrcFile("y", path2);
+        SrcFile fc1a = SrcFile.of("x", path1);
+        SrcFile fc1b = SrcFile.of("x", path1);
+        SrcFile fc2 = SrcFile.of("y", path2);
 
         // When / Then
         assertThat(fc1a).isEqualTo(fc1b);
@@ -81,7 +80,7 @@ class SourceFilesHandlerTest {
     void overwrite_existingFile_replacesFileContent() throws IOException {
         // Given
         Path sourceFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SrcFile srcFile = new SrcFile("new content", sourceFile);
+        SrcFile srcFile = SrcFile.of("new content", sourceFile);
 
         // When
         SourceFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
@@ -97,7 +96,7 @@ class SourceFilesHandlerTest {
         Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
 
         // When
-        SrcFile content = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile content = SrcFile.of(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // Then
         assertThat(content.getPath()).isEqualTo(file);

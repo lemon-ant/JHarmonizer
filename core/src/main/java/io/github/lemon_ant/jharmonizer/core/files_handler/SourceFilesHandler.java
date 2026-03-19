@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.files_handler;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.globpathfinder.GlobPathFinder;
 import io.github.lemon_ant.globpathfinder.PathQuery;
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -67,7 +66,7 @@ public class SourceFilesHandler {
     public static SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
-            srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+            srcFile = SrcFile.of(Files.readString(file, StandardCharsets.UTF_8), file);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

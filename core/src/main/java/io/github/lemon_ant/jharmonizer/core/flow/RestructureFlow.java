@@ -4,8 +4,8 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.RESTRUCTURE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;

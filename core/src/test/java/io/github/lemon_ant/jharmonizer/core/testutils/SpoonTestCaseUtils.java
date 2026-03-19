@@ -2,9 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.testutils;
 
 import static java.util.Objects.requireNonNull;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;
@@ -34,7 +34,7 @@ public class SpoonTestCaseUtils {
 
         String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
         return SpoonParser.parseJavaSrcFile(
-                new SrcFile(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
+                SrcFile.of(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
     }
 
     /**

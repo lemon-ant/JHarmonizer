@@ -2,9 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
@@ -25,7 +24,7 @@ class SourceAstTranslatorTest {
     void parseSourceFile_validJavaSrc_returnParsingResult() throws Exception {
         // Given
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
-        SrcFile srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile srcFile = SrcFile.of(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // When
         ParsingResult result = SourceAstTranslator.parse(srcFile);
@@ -43,7 +42,7 @@ class SourceAstTranslatorTest {
     void serialize_validSpoonAstModel_returnSerializedCode() {
         // Given: simple source code
         String source = "class Demo { void m() {} }";
-        SrcFile srcFile = new SrcFile(source, Path.of("Demo.java"));
+        SrcFile srcFile = SrcFile.of(source, Path.of("Demo.java"));
         SpoonAstModel model = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
@@ -76,7 +75,7 @@ class SourceAstTranslatorTest {
 
                 %s
                 """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
-        SrcFile srcFile = new SrcFile(sourceCode, Path.of("Sample.java"));
+        SrcFile srcFile = SrcFile.of(sourceCode, Path.of("Sample.java"));
         SpoonAstModel spoonAstModel = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When

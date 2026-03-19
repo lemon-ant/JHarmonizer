@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.common;
+package io.github.lemon_ant.jharmonizer.core.translator;
 
 import static java.util.Comparator.comparingInt;
 
@@ -15,7 +15,12 @@ public class SrcCharacterRange {
     int startInclusive;
     int endExclusive;
 
-    public SrcCharacterRange(int startInclusive, int endExclusive) {
+    @NonNull
+    public static SrcCharacterRange of(int startInclusive, int endExclusive) {
+        return new SrcCharacterRange(startInclusive, endExclusive);
+    }
+
+    SrcCharacterRange(int startInclusive, int endExclusive) {
         Validate.isTrue(startInclusive >= 0, "Range start must be non-negative: %s", startInclusive);
         Validate.isTrue(
                 endExclusive >= startInclusive, "Range end must be >= start: %s < %s", endExclusive, startInclusive);
@@ -50,13 +55,13 @@ public class SrcCharacterRange {
                     nextStart);
 
             if (nextStart < excludedRange.getStartInclusive()) {
-                includedRanges.add(new SrcCharacterRange(nextStart, excludedRange.getStartInclusive()));
+                includedRanges.add(SrcCharacterRange.of(nextStart, excludedRange.getStartInclusive()));
             }
             nextStart = excludedRange.getEndExclusive();
         }
 
         if (nextStart < sourceLength) {
-            includedRanges.add(new SrcCharacterRange(nextStart, sourceLength));
+            includedRanges.add(SrcCharacterRange.of(nextStart, sourceLength));
         }
 
         return Collections.unmodifiableList(includedRanges);

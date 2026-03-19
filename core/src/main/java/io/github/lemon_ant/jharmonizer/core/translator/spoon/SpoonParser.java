@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;

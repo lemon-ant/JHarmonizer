@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcCharacterRange;
 import java.util.Collections;
 import java.util.Map;
 import lombok.NonNull;

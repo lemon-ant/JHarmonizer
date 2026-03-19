@@ -4,7 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
@@ -45,7 +45,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         }
 
         SortingAndSerializationResult sortingAndSerializationResult =
-                sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
+                sortAndSerializeOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
         List<Pair<CtElement, Integer>> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()

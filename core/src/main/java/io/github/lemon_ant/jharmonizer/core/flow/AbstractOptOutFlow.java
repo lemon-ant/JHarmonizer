@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.common.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
@@ -50,7 +50,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected final SortingAndSerializationResult sortOrReuseOriginalSource(
+    protected final SortingAndSerializationResult sortAndSerializeOrReuseOriginalSource(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull String skippedOperationDescription) {
@@ -69,8 +69,8 @@ abstract class AbstractOptOutFlow implements IFlow {
         }
 
         SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
-        return new SortingAndSerializationResult(
-                sortingResult, SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel()), false);
+        SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+        return new SortingAndSerializationResult(sortingResult, serializationResult, false);
     }
 
     /**
@@ -85,7 +85,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     protected final SortingSerializationAndFormattingResult sortAndFormatSource(
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
         SortingAndSerializationResult sortingAndSerializationResult =
-                sortOrReuseOriginalSource(srcFile, parsedSpoonAstModel, sortingDescription);
+                sortAndSerializeOrReuseOriginalSource(srcFile, parsedSpoonAstModel, sortingDescription);
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
