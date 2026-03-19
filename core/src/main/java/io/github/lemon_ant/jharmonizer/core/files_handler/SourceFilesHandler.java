@@ -66,7 +66,7 @@ public class SourceFilesHandler {
     public static SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
-            srcFile = SrcFile.of(Files.readString(file, StandardCharsets.UTF_8), file);
+            srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -50,9 +50,9 @@ class SourceFilesHandlerTest {
         Path path1 = tempDir.resolve("A.java");
         Path path2 = tempDir.resolve("B.java");
 
-        SrcFile fc1a = SrcFile.of("x", path1);
-        SrcFile fc1b = SrcFile.of("x", path1);
-        SrcFile fc2 = SrcFile.of("y", path2);
+        SrcFile fc1a = new SrcFile("x", path1);
+        SrcFile fc1b = new SrcFile("x", path1);
+        SrcFile fc2 = new SrcFile("y", path2);
 
         // When / Then
         assertThat(fc1a).isEqualTo(fc1b);
@@ -80,7 +80,7 @@ class SourceFilesHandlerTest {
     void overwrite_existingFile_replacesFileContent() throws IOException {
         // Given
         Path sourceFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SrcFile srcFile = SrcFile.of("new content", sourceFile);
+        SrcFile srcFile = new SrcFile("new content", sourceFile);
 
         // When
         SourceFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
@@ -96,7 +96,7 @@ class SourceFilesHandlerTest {
         Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
 
         // When
-        SrcFile content = SrcFile.of(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile content = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // Then
         assertThat(content.getPath()).isEqualTo(file);

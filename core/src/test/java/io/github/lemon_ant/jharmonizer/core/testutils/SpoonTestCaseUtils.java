@@ -34,7 +34,7 @@ public class SpoonTestCaseUtils {
 
         String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
         return SpoonParser.parseJavaSrcFile(
-                SrcFile.of(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
+                new SrcFile(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
     }
 
     /**

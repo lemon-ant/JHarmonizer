@@ -22,7 +22,7 @@ class ParseAllJava21FeaturesTest {
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
-        SrcFile srcFile = SrcFile.of(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
+        SrcFile srcFile = new SrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
         ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
@@ -47,7 +47,7 @@ class ParseAllJava21FeaturesTest {
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
-                SrcFile.of(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
+            new SrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
 
         // When
         SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);
