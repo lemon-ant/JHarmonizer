@@ -44,7 +44,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         }
 
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
-                sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
+                sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
         FormattingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();

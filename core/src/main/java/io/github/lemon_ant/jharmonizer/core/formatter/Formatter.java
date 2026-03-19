@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.formatter;
 
+import static java.util.Comparator.comparingInt;
 import static java.util.Map.entry;
 
 import com.google.common.collect.Range;
@@ -7,16 +8,18 @@ import com.palantir.javaformat.java.FormatterException;
 import com.palantir.javaformat.java.JavaFormatterOptions;
 import com.palantir.javaformat.java.JavaFormatterOptions.Builder;
 import com.palantir.javaformat.java.JavaFormatterOptions.Style;
-import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
-import io.github.lemon_ant.jharmonizer.core.common.StopWatch.TimedResult;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
+import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Validate;
 
 @Slf4j
 public final class Formatter {
@@ -77,7 +80,7 @@ public final class Formatter {
 
         String partlyFormattedSrc = srcCode;
         Collection<Range<Integer>> formattingRanges =
-                SrcCharacterRange.invert(srcCode.length(), formattingSkippedRanges).stream()
+                invertExcludedRanges(srcCode.length(), formattingSkippedRanges).stream()
                         .map(range -> Range.closedOpen(range.getStartInclusive(), range.getEndExclusive()))
                         .toList();
         if (!formattingRanges.isEmpty()) {
@@ -95,6 +98,48 @@ public final class Formatter {
         } catch (FormatterException exception) {
             throw new IllegalArgumentException("Palantir formatting failure: " + exception.getMessage(), exception);
         }
+    }
+
+    /**
+     * Inverts excluded ranges into the complementary ranges that should be formatted.
+     */
+    @NonNull
+    private static List<SrcCharacterRange> invertExcludedRanges(
+            int sourceLength, List<SrcCharacterRange> excludedRanges) {
+        Validate.isTrue(sourceLength >= 0, "Source length must be non-negative: %s", sourceLength);
+
+        List<SrcCharacterRange> normalizedRanges = excludedRanges.stream()
+                .sorted(comparingInt(SrcCharacterRange::getStartInclusive)
+                        .thenComparingInt(SrcCharacterRange::getEndExclusive))
+                .toList();
+        List<SrcCharacterRange> includedRanges = new ArrayList<>();
+        int nextStart = 0;
+
+        for (SrcCharacterRange excludedRange : normalizedRanges) {
+            Validate.isTrue(
+                    excludedRange.getEndExclusive() <= sourceLength,
+                    "Excluded range [%s, %s) exceeds source length %s",
+                    excludedRange.getStartInclusive(),
+                    excludedRange.getEndExclusive(),
+                    sourceLength);
+            Validate.isTrue(
+                    excludedRange.getStartInclusive() >= nextStart,
+                    "Excluded ranges must be sorted and non-overlapping, but [%s, %s) overlaps before %s",
+                    excludedRange.getStartInclusive(),
+                    excludedRange.getEndExclusive(),
+                    nextStart);
+
+            if (nextStart < excludedRange.getStartInclusive()) {
+                includedRanges.add(SrcCharacterRange.of(nextStart, excludedRange.getStartInclusive()));
+            }
+            nextStart = excludedRange.getEndExclusive();
+        }
+
+        if (nextStart < sourceLength) {
+            includedRanges.add(SrcCharacterRange.of(nextStart, sourceLength));
+        }
+
+        return List.copyOf(includedRanges);
     }
 
     @FunctionalInterface

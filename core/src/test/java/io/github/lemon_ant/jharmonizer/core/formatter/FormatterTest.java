@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.formatter;
 
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle.PALANTIR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.nio.file.Path;
@@ -58,5 +59,39 @@ class FormatterTest {
 
         // Then
         assertThat(formatingResult.getFormattedSrcCode()).isEqualTo(sourceCode);
+    }
+
+    @Test
+    void formatSource_middleExclusionRange_preserveExcludedFragment() {
+        // Given
+        Formatter formatter = new Formatter(PALANTIR, false);
+        String excludedFragment = "int  preserved;";
+        String sourceCode = "class Person{int a;  %s}\n".formatted(excludedFragment);
+        int excludedStart = sourceCode.indexOf(excludedFragment);
+        int excludedEnd = excludedStart + excludedFragment.length();
+
+        // When
+        FormattingResult formattingResult = formatter.formatSource(
+                sourceCode, Path.of("Person.java"), List.of(SrcCharacterRange.of(excludedStart, excludedEnd)));
+
+        // Then
+        assertThat(formattingResult.getFormattedSrcCode())
+                .contains("class Person {")
+                .contains("int a;")
+                .contains(excludedFragment);
+    }
+
+    @Test
+    void formatSource_overlappingExclusionRanges_throwIllegalArgumentException() {
+        // Given
+        Formatter formatter = new Formatter(PALANTIR, false);
+        String sourceCode = "class Person{int a; int b;}\n";
+        List<SrcCharacterRange> formattingSkippedRanges =
+                List.of(SrcCharacterRange.of(0, 10), SrcCharacterRange.of(8, 15));
+
+        // When / Then
+        assertThatThrownBy(() -> formatter.formatSource(sourceCode, Path.of("Person.java"), formattingSkippedRanges))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Excluded ranges must be sorted and non-overlapping");
     }
 }

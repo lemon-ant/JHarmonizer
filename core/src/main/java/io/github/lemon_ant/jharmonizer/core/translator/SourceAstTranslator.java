@@ -4,11 +4,11 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTy
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTypes;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootTypes;
 
-import io.github.lemon_ant.jharmonizer.core.common.StopWatch;
-import io.github.lemon_ant.jharmonizer.core.common.StopWatch.TimedResult;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
+import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;

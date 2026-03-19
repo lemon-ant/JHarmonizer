@@ -82,7 +82,7 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the combined sorting and formatting pipeline result
      */
     @NonNull
-    protected final SortingSerializationAndFormattingResult sortAndFormatSource(
+    protected final SortingSerializationAndFormattingResult sortSerializeAndFormatSource(
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSource(srcFile, parsedSpoonAstModel, sortingDescription);

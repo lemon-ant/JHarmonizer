@@ -46,7 +46,7 @@ public class RestructureFlow extends AbstractOptOutFlow {
 
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
-                sortAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
+                sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
         FormattingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
