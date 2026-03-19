@@ -4,7 +4,6 @@ import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -24,8 +23,7 @@ class ParseAllJava21FeaturesTest {
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
-        SrcFile srcFile =
-                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
+        SrcFile srcFile = createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
         ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);

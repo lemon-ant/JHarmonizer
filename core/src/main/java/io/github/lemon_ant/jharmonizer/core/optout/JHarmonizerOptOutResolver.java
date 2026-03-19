@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +42,7 @@ public final class JHarmonizerOptOutResolver {
             return new JHarmonizerOptOuts(JHarmonizerOptOutMode.FULLY_OFF, Map.of());
         }
 
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new HashMap<>();
         boolean sortingDisabledInParents = fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF;
         for (CtType<?> declaredType : compilationUnit.getDeclaredTypes()) {
@@ -134,7 +134,6 @@ public final class JHarmonizerOptOutResolver {
             if (directOptOutMode == JHarmonizerOptOutMode.SORTING_OFF
                     && currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
                 directOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
-                firstTypeComment = leadingTypeComment;
                 break;
             }
             if (directOptOutMode != null) {
