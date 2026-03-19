@@ -56,24 +56,16 @@ abstract class AbstractOptOutFlow implements IFlow {
             @NonNull String skippedOperationDescription) {
         Optional<JHarmonizerOptOutMode> fileOptOutMode =
                 parsedSpoonAstModel.getOptOuts().getFileOptOutMode();
-        if (fileOptOutMode.isPresent()
-                && switch (fileOptOutMode.get()) {
-                    case FULLY_OFF, SORTING_OFF -> true;
-                }) {
-            JHarmonizerOptOutMode mode = fileOptOutMode.get();
-            logFileOptOutSkip(srcFile, skippedOperationDescription, mode);
-            String originalSrcCode = srcFile.getSrcCode();
-            return new SortingAndSerializationResult(
-                    new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
-                    new SerializationResult(
-                            new SerializationStatistic(originalSrcCode.length(), 0),
-                            new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
-                    true);
-        }
-
-        SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
-        SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
-        return new SortingAndSerializationResult(sortingResult, serializationResult, false);
+        return fileOptOutMode
+                .filter(mode -> mode == JHarmonizerOptOutMode.FULLY_OFF || mode == JHarmonizerOptOutMode.SORTING_OFF)
+                .map(mode -> buildFileOptOutSortingAndSerializationResult(
+                        srcFile, parsedSpoonAstModel, skippedOperationDescription, mode))
+                .orElseGet(() -> {
+                    SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
+                    SerializationResult serializationResult =
+                            SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+                    return new SortingAndSerializationResult(sortingResult, serializationResult, false);
+                });
     }
 
     /**
@@ -152,6 +144,22 @@ abstract class AbstractOptOutFlow implements IFlow {
                     optOutMode.getDisplayName(),
                     optOutMode.getToken());
         }
+    }
+
+    @NonNull
+    private static SortingAndSerializationResult buildFileOptOutSortingAndSerializationResult(
+            SrcFile srcFile,
+            SpoonAstModel parsedSpoonAstModel,
+            String skippedOperationDescription,
+            JHarmonizerOptOutMode optOutMode) {
+        logFileOptOutSkip(srcFile, skippedOperationDescription, optOutMode);
+        String originalSrcCode = srcFile.getSrcCode();
+        return new SortingAndSerializationResult(
+                new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
+                new SerializationResult(
+                        new SerializationStatistic(originalSrcCode.length(), 0),
+                        new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
+                true);
     }
 
     @Value
