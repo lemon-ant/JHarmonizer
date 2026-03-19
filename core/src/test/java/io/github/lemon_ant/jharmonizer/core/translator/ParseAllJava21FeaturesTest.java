@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 
@@ -24,7 +25,7 @@ class ParseAllJava21FeaturesTest {
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
         SrcFile srcFile =
-                SourceFilesHandler.createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
+                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
         ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
@@ -49,7 +50,7 @@ class ParseAllJava21FeaturesTest {
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
-                SourceFilesHandler.createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
+                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
 
         // When
         SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);

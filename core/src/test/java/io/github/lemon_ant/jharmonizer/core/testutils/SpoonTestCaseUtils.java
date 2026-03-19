@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.testutils;
 
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static java.util.Objects.requireNonNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
@@ -33,7 +34,7 @@ public class SpoonTestCaseUtils {
         requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
 
         String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
-        return SpoonParser.parseJavaSrcFile(SourceFilesHandler.createSrcFile(
+        return SpoonParser.parseJavaSrcFile(createSrcFile(
                 sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
     }
 

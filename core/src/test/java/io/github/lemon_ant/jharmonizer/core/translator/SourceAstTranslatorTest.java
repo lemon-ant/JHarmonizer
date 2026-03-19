@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
@@ -24,7 +25,7 @@ class SourceAstTranslatorTest {
     void parseSourceFile_validJavaSrc_returnParsingResult() throws Exception {
         // Given
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
-        SrcFile srcFile = SourceFilesHandler.createSrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile srcFile = createSrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // When
         ParsingResult result = SourceAstTranslator.parse(srcFile);
@@ -42,7 +43,7 @@ class SourceAstTranslatorTest {
     void serialize_validSpoonAstModel_returnSerializedCode() {
         // Given: simple source code
         String source = "class Demo { void m() {} }";
-        SrcFile srcFile = SourceFilesHandler.createSrcFile(source, Path.of("Demo.java"));
+        SrcFile srcFile = createSrcFile(source, Path.of("Demo.java"));
         SpoonAstModel model = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
@@ -75,7 +76,7 @@ class SourceAstTranslatorTest {
 
                 %s
                 """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
-        SrcFile srcFile = SourceFilesHandler.createSrcFile(sourceCode, Path.of("Sample.java"));
+        SrcFile srcFile = createSrcFile(sourceCode, Path.of("Sample.java"));
         SpoonAstModel spoonAstModel = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When

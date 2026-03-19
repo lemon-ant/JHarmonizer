@@ -66,24 +66,12 @@ public class SourceFilesHandler {
     public static SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
-            srcFile = createSrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+            srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
         log.trace("File content has been read from {}", file);
         return srcFile;
-    }
-
-    /**
-     * Builds a source-file wrapper from already loaded source text and its path.
-     *
-     * @param srcCode the source text
-     * @param path the source file path
-     * @return the source file wrapper
-     */
-    @NonNull
-    public static SrcFile createSrcFile(@NonNull String srcCode, @NonNull Path path) {
-        return new SrcFile(srcCode, path);
     }
 
     // TODO Hide in the Overwrite method
