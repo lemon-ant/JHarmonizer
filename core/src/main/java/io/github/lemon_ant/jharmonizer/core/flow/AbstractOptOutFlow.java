@@ -56,7 +56,10 @@ abstract class AbstractOptOutFlow implements IFlow {
             @NonNull String skippedOperationDescription) {
         Optional<JHarmonizerOptOutMode> fileOptOutMode =
                 parsedSpoonAstModel.getOptOuts().getFileOptOutMode();
-        if (fileOptOutMode.isPresent()) {
+        if (fileOptOutMode.isPresent()
+                && switch (fileOptOutMode.get()) {
+                    case FULLY_OFF, SORTING_OFF -> true;
+                }) {
             JHarmonizerOptOutMode mode = fileOptOutMode.get();
             logFileOptOutSkip(srcFile, skippedOperationDescription, mode);
             String originalSrcCode = srcFile.getSrcCode();

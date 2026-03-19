@@ -283,7 +283,6 @@ The test decides which one to use:
 
 ## Code style in tests
 
-- Tests do not need aggressive access minimization; prefer the access level that keeps test setup and readability straightforward.
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.
