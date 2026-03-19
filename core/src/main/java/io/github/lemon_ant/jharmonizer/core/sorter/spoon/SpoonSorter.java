@@ -7,13 +7,16 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import lombok.AllArgsConstructor;
+import java.util.stream.Collectors;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
@@ -25,12 +28,13 @@ import spoon.reflect.declaration.CtTypeMember;
  * - recursively processes nested types (depth-first),
  * - applies member sorting to each type via
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SpoonSorter {
     private static final int SINGLE_TOP_LEVEL_TYPE_COUNT = 1;
+    private static final int MIN_MEMBERS_REQUIRING_SORT = 2;
 
     @NonNull
-    CompiledConfig compiledConfig;
+    private final CompiledConfig compiledConfig;
 
     /**
      * Flattens blocks into a single member list preserving the block order.
@@ -43,13 +47,10 @@ public class SpoonSorter {
                 .toList();
     }
 
-    /**
-     * Entry point used by Sorter: sorts all types (top-level + nested) in the compilation unit.
-     */
-    public void sortCompilationUnitRecursively(@NonNull CtCompilationUnit compilationUnit) {
+    public void sortCompilationUnitRecursively(
+            @NonNull CtCompilationUnit compilationUnit, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
-
-        compilationUnit.getDeclaredTypes().forEach(this::sortTypeRecursively);
+        compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, sortingSkippedTypes));
     }
 
     private static void reorderTopLevelTypes(
@@ -105,7 +106,11 @@ public class SpoonSorter {
      * This order keeps the logic deterministic and ensures nested types are already "clean"
      * when the outer type is printed.
      */
-    private void sortTypeRecursively(CtType<?> currentType) {
+    private void sortTypeRecursively(@NonNull CtType<?> currentType, @NonNull Set<CtType<?>> sortingSkippedTypes) {
+        if (sortingSkippedTypes.contains(currentType)) {
+            return;
+        }
+
         MemberDescriptor topLevelTypeDescriptor = SpoonMemberDescriptorFactory.describeMember(currentType);
 
         CompiledMemberGroup rootMemberGroup = compiledConfig
@@ -114,10 +119,21 @@ public class SpoonSorter {
                         new IllegalStateException("No matching root member group for top-level type: qualifiedName="
                                 + currentType.getQualifiedName()
                                 + ", descriptor=" + topLevelTypeDescriptor));
-        currentType.getNestedTypes().forEach(this::sortTypeRecursively);
+        currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes));
+        currentType.setTypeMembers(sortMembersPreservingSkippedNestedTypes(
+                currentType.getTypeMembers(), rootMemberGroup, sortingSkippedTypes));
+    }
 
-        Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor =
-                SpoonMemberDescriptorFactory.describeMembers(currentType);
+    @NonNull
+    private static List<CtTypeMember> sortMemberSegment(
+            @NonNull List<CtTypeMember> typeMembers, @NonNull CompiledMemberGroup rootMemberGroup) {
+        if (typeMembers.size() < MIN_MEMBERS_REQUIRING_SORT) {
+            return typeMembers;
+        }
+
+        Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = typeMembers.stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        Function.identity(), SpoonMemberDescriptorFactory::describeMember));
 
         Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember =
                 NaturalMemberGroupResolver.resolveNaturalGroups(rootMemberGroup, typeMember2Descriptor);
@@ -135,10 +151,26 @@ public class SpoonSorter {
                 GroupMembersOrderer.orderMembersInsideGroups(memberGroupBlocks, memberDependencyGraph);
 
         GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
+        return flattenMembers(orderedMemberGroupBlocks);
+    }
 
-        List<CtTypeMember> flattenedSortedMembers = flattenMembers(orderedMemberGroupBlocks);
-
-        // Apply to Spoon model.
-        currentType.setTypeMembers(flattenedSortedMembers);
+    @NonNull
+    private static List<CtTypeMember> sortMembersPreservingSkippedNestedTypes(
+            @NonNull List<CtTypeMember> originalMembers,
+            @NonNull CompiledMemberGroup rootMemberGroup,
+            @NonNull Set<CtType<?>> sortingSkippedTypes) {
+        List<CtTypeMember> reorderedMembers = new ArrayList<>(originalMembers.size());
+        List<CtTypeMember> currentSortableSegment = new ArrayList<>();
+        for (CtTypeMember originalMember : originalMembers) {
+            if (originalMember instanceof CtType<?> nestedType && sortingSkippedTypes.contains(nestedType)) {
+                reorderedMembers.addAll(sortMemberSegment(List.copyOf(currentSortableSegment), rootMemberGroup));
+                currentSortableSegment.clear();
+                reorderedMembers.add(originalMember);
+                continue;
+            }
+            currentSortableSegment.add(originalMember);
+        }
+        reorderedMembers.addAll(sortMemberSegment(List.copyOf(currentSortableSegment), rootMemberGroup));
+        return List.copyOf(reorderedMembers);
     }
 }

@@ -15,9 +15,10 @@ import lombok.experimental.UtilityClass;
 public class StopWatch {
 
     /**
-     * Performs the measure.
-     * @param supplier the supplier
-     * @return the result
+     * Measures the wall-clock execution time of the given supplier.
+     *
+     * @param supplier the supplier to measure
+     * @return a timed result containing the supplier value and the elapsed nanoseconds
      */
     @NonNull
     public static <TResult> TimedResult<TResult> measure(@NonNull Supplier<TResult> supplier) {
@@ -35,33 +36,13 @@ public class StopWatch {
         @NonNull
         T result;
 
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof TimedResult<?> that)) {
-                return false;
-            }
-
-            return nanos == that.nanos && result.equals(that.result);
-        }
-
         /**
-         * Returns the millis.
-         * @return the millis
+         * Converts the measured nanoseconds to milliseconds.
+         *
+         * @return the elapsed time in milliseconds
          */
         public double getMillis() {
             return nanos / 1_000_000.0;
-        }
-
-        @Override
-        public int hashCode() {
-            int result1 = result.hashCode();
-            result1 = 31 * result1 + Long.hashCode(nanos);
-            return result1;
-        }
-
-        @Override
-        public String toString() {
-            return "Result: " + result + ", time: " + getMillis() + " ms";
         }
     }
 }

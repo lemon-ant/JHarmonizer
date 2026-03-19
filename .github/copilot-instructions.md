@@ -18,6 +18,11 @@
 - Keep changes surgical and avoid unrelated cleanup.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
+- Use the minimal necessary access level for production classes, constructors, and methods.
+  - Prefer package-private over `public` when access outside the package is not required.
+  - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
+- Keep production models and value objects focused on state plus simple accessors or validation.
+  - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
 - Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `build`, or `merge`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
@@ -176,6 +181,7 @@
 
 ### Code style in tests
 
+- Tests do not need aggressive access minimization; prefer the access level that keeps test setup and readability straightforward.
 - Prefer fully descriptive variable names instead of names such as `i`, `tmp`, or `m`.
 - Prefer Stream API when it makes the flow clearer.
 - Keep helpers small and single-purpose.

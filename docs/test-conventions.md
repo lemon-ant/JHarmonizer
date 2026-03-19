@@ -22,6 +22,8 @@ Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.
 - **JUnit 5** is the test runner.
 - **AssertJ** is the assertion library.
   - Do not use `org.junit.jupiter.api.Assertions.*` in new/updated tests.
+- Prefer ordinary imports over repeated fully qualified names in tests.
+- Prefer Lombok for test-side boilerplate (constructors, getters, `toString`, etc.) when it reduces ceremony and matches the surrounding style.
 - Prefer using production pipeline building blocks (parsers, converters, compilers, factories) instead of test-only reimplementations.
 - When test code overrides standard `Object` methods, preserve the standard signature exactly.
   - Do not add nullability annotations to `Object` overrides in tests.
@@ -281,6 +283,7 @@ The test decides which one to use:
 
 ## Code style in tests
 
+- Tests do not need aggressive access minimization; prefer the access level that keeps test setup and readability straightforward.
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.

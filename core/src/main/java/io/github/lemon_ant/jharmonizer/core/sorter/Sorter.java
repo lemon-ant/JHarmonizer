@@ -30,7 +30,9 @@ public final class Sorter {
     @NonNull
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
-            spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit());
+            spoonSorter.sortCompilationUnitRecursively(
+                    spoonAstModel.getCompilationUnit(),
+                    spoonAstModel.getOptOuts().getSortingSkippedTypes());
             return spoonAstModel;
         });
 

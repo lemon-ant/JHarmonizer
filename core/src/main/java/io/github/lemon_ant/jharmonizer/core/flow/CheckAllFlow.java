@@ -5,34 +5,26 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
-/**
- * Flow that processes every source file, collects relocations and diffs,
- * and returns a result for all files regardless of whether changes are required.
- */
-@Slf4j
-@AllArgsConstructor
-public class CheckAllFlow implements IFlow {
+public class CheckAllFlow extends AbstractOptOutFlow {
 
-    private final Formatter formatter;
-    private final Sorter sorter;
-    private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(CHECK_ALL);
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
+    public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter) {
+        super(formatter, sorter, CHECK_ALL);
+    }
 
     /**
      * Processes the source.
@@ -42,27 +34,31 @@ public class CheckAllFlow implements IFlow {
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
-        debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        getDebugStageRecorder()
+                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
+        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
+            return buildFileOptOutSkippedResult(
+                    srcFile, parsingResult, true, List.of(), "", "all harmonization checks");
+        }
 
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
-
-        SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
-        SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
-        SerializationResult serializationResult = SourceAstTranslator.serialize(sortedSpoonAstModel);
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
-
-        FormattingResult formattingResult =
-                formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormattedSrcCode());
+        SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
+                sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
+        SortingAndSerializationResult sortingAndSerializationResult =
+                sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
+        FormattingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
+        SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
         String srcDiff;
-        if (hasChanges) {
+        if (hasChanges && !sortingAndSerializationResult.isSortingSkipped()) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
+            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
+        } else if (hasChanges) {
+            elementRelocations = List.of();
             srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
         } else {
             elementRelocations = List.of();
@@ -74,8 +70,10 @@ public class CheckAllFlow implements IFlow {
                 .relocations(elementRelocations)
                 .diff(srcDiff)
                 .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(sortingResult.getSortingStatistic())
-                .serializationStatistic(serializationResult.getSerializationStatistic())
+                .sortingStatistic(
+                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                .serializationStatistic(
+                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
                 .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(
                         defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
