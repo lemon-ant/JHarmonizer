@@ -5,6 +5,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -136,10 +137,8 @@ public final class JHarmonizerOptOutResolver {
 
     @Nullable
     private JHarmonizerOptOutMode parseOptOutMode(CtComment comment) {
-        String trimmedContent = comment.getContent().trim();
-        String normalizedContent = trimmedContent.toLowerCase(Locale.ROOT);
-        String normalizedTokenPrefix = JHarmonizerOptOutMode.TOKEN_PREFIX.toLowerCase(Locale.ROOT);
-        int tokenPrefixIndex = normalizedContent.indexOf(normalizedTokenPrefix);
+        String normalizedContent = comment.getContent().trim().toLowerCase(Locale.ROOT);
+        int tokenPrefixIndex = normalizedContent.indexOf(JHarmonizerOptOutMode.TOKEN_PREFIX);
         if (tokenPrefixIndex < 0) {
             return null;
         }
@@ -153,7 +152,7 @@ public final class JHarmonizerOptOutResolver {
         }
 
         try {
-            return JHarmonizerOptOutMode.fromToken(trimmedContent);
+            return JHarmonizerOptOutMode.fromToken(normalizedContent);
         } catch (IllegalArgumentException exception) {
             logIgnoredOptOut(comment, exception.getMessage());
             return null;
