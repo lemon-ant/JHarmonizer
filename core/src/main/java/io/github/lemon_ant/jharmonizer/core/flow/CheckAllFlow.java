@@ -38,8 +38,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
-            return buildFullyOffFileSkippedResult(
-                    srcFile, parsingResult, true, List.of(), "", "all harmonization checks");
+            return buildFullyOffFileSkippedResult(srcFile, parsingResult, true, null, "", "all harmonization checks");
         }
 
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
@@ -51,13 +50,15 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         boolean hasChanges =
                 !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations = List.of();
-        if (!sortingAndSerializationResult.isSortingSkipped() && hasChanges) {
-            elementRelocations = findRelocations(
-                    sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
+        String srcDiff = "";
+        if (hasChanges) {
+            if (!sortingAndSerializationResult.isSortingSkipped()) {
+                elementRelocations = findRelocations(
+                        sortedSpoonAstModel.getOriginalElements2OrderIndices(),
+                        sortedSpoonAstModel.getCompilationUnit());
+            }
+            srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
-        String srcDiff = hasChanges
-                ? computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode())
-                : "";
 
         return FlowProcessingResult.builder()
                 .path(srcFile.getPath())

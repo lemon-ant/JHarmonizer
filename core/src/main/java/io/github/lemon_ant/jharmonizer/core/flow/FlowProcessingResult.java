@@ -24,6 +24,7 @@ import spoon.reflect.declaration.CtElement;
 @Builder(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FlowProcessingResult {
+    // TODO Make it non null???
     @Nullable
     String diff;
 
@@ -39,6 +40,7 @@ public class FlowProcessingResult {
     @NonNull
     Path path;
 
+    // TODO Make it non null
     @Nullable
     Collection<Pair<CtElement, Integer>> relocations;
 
