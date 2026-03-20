@@ -44,8 +44,9 @@ public final class JHarmonizerOptOutResolver {
 
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new HashMap<>();
+        boolean sortingDisabledInParents = fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF;
         for (CtType<?> declaredType : compilationUnit.getDeclaredTypes()) {
-            collectTypeOptOutModes(declaredType, fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF, typeOptOutModes);
+            collectTypeOptOutModes(declaredType, sortingDisabledInParents, typeOptOutModes);
         }
 
         return typeOptOutModes.isEmpty() && fileOptOutMode == null
