@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import spoon.compiler.Environment;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.cu.SourcePosition;
@@ -119,7 +118,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         int startWithIndent = findIndentationStart(start, originalSrcCode);
         if (startWithIndent <= end && end <= originalSrcCode.length()) {
             String originalCodeFragment =
-                    StringUtils.stripEnd(originalSrcCode.substring(startWithIndent, end + 1), null);
+                    originalSrcCode.substring(startWithIndent, end + 1).stripTrailing();
             return getPrinterTokenWriter()
                     .writeCodeSnippet(originalCodeFragment)
                     .writeln();

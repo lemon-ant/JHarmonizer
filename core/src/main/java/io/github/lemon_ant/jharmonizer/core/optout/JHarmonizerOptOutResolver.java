@@ -70,8 +70,9 @@ public final class JHarmonizerOptOutResolver {
             if (fileOptOutMode != null) {
                 logIgnoredOptOut(
                         fileComment,
-                        "Overriding file-scope opt-out; the first appearance was %s"
-                                .formatted(formatLocation(previousFileComment.getPosition())));
+                        "Later file-scope opt-out replaces the previously parsed one from %s; the last applicable"
+                                        .formatted(formatLocation(previousFileComment.getPosition()))
+                                + " file-scope opt-out wins");
             }
 
             fileOptOutMode = currentMode;
@@ -121,10 +122,11 @@ public final class JHarmonizerOptOutResolver {
             if (typeOptOutMode != null) {
                 logIgnoredOptOut(
                         leadingTypeComment,
-                        "Type '%s' overrides earlier opt-out commment from %s"
-                                .formatted(
-                                        currentType.getQualifiedName(),
-                                        formatLocation(previousTypeComment.getPosition())));
+                        "Later opt-out comment for type '%s' replaces the previously parsed one from %s; the last"
+                                        .formatted(
+                                                currentType.getQualifiedName(),
+                                                formatLocation(previousTypeComment.getPosition()))
+                                + " applicable type-level opt-out wins");
             }
             typeOptOutMode = currentMode;
             previousTypeComment = leadingTypeComment;
