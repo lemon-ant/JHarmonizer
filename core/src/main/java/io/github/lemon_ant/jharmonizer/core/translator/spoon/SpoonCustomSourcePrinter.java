@@ -138,7 +138,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     SerializedSourceWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         printCompilationUnit(compilationUnit);
-        return new SerializedSourceWithSkippedTypeRanges(getResult(), sortingSkippedTypeRanges);
+        return SerializedSourceWithSkippedTypeRanges.of(getResult(), sortingSkippedTypeRanges);
     }
 
     /**

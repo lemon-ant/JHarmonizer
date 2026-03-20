@@ -6,7 +6,7 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
- * Internal common shared between the custom Spoon source printer and its callers.
+ * Internal utilities shared between the custom Spoon source printer and its callers.
  * Provides helpers for detecting the dominant line separator, locating indentation boundaries,
  * and deciding whether a member group separator is needed before or after a given member.
  */

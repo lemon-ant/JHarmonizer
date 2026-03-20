@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
@@ -85,22 +86,14 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult
-                                .getSerializationResult()
-                                .getSerializedSourceWithSkippedTypeRanges()
-                                .getSerializedSrcCode());
+                        sortingAndSerializationResult.getSerializedSrcCode());
         FormattingResult formattingResult = getFormatter()
                 .formatSource(
-                        sortingAndSerializationResult
-                                .getSerializationResult()
-                                .getSerializedSourceWithSkippedTypeRanges()
-                                .getSerializedSrcCode(),
+                        sortingAndSerializationResult.getSerializedSrcCode(),
                         srcFile.getPath(),
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                                 parsedSpoonAstModel.getOptOuts(),
-                                sortingAndSerializationResult
-                                        .getSerializationResult()
-                                        .getSerializedSourceWithSkippedTypeRanges()));
+                                sortingAndSerializationResult.getSerializedSourceWithSkippedTypeRanges()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
@@ -158,11 +151,12 @@ abstract class AbstractOptOutFlow implements IFlow {
                 new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
                 new SerializationResult(
                         new SerializationStatistic(originalSrcCode.length(), 0),
-                        new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
+                        SerializedSourceWithSkippedTypeRanges.of(originalSrcCode, Map.of())),
                 true);
     }
 
     @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class SortingAndSerializationResult {
         @NonNull
         SortingResult sortingResult;
@@ -176,9 +170,25 @@ abstract class AbstractOptOutFlow implements IFlow {
         SpoonAstModel getSortedSpoonAstModel() {
             return sortingResult.getSortedSpoonAstModel();
         }
+
+        @NonNull
+        SerializationStatistic getSerializationStatistic() {
+            return serializationResult.getSerializationStatistic();
+        }
+
+        @NonNull
+        SerializedSourceWithSkippedTypeRanges getSerializedSourceWithSkippedTypeRanges() {
+            return serializationResult.getSerializedSourceWithSkippedTypeRanges();
+        }
+
+        @NonNull
+        String getSerializedSrcCode() {
+            return getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode();
+        }
     }
 
     @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class SortingSerializationAndFormattingResult {
         @NonNull
         SortingAndSerializationResult sortingAndSerializationResult;
@@ -189,6 +199,16 @@ abstract class AbstractOptOutFlow implements IFlow {
         @NonNull
         SpoonAstModel getSortedSpoonAstModel() {
             return sortingAndSerializationResult.getSortedSpoonAstModel();
+        }
+
+        @NonNull
+        String getFormattedSrcCode() {
+            return formattingResult.getFormattedSrcCode();
+        }
+
+        @NonNull
+        FormattingStatistic getFormattingStatistic() {
+            return formattingResult.getFormattingStatistic();
         }
     }
 }

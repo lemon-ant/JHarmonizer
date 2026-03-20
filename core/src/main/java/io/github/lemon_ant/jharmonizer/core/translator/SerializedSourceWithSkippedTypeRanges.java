@@ -14,10 +14,18 @@ public class SerializedSourceWithSkippedTypeRanges {
     @NonNull
     Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges;
 
-    public SerializedSourceWithSkippedTypeRanges(
+    @NonNull
+    public static SerializedSourceWithSkippedTypeRanges of(
+            @NonNull String serializedSrcCode,
+            @NonNull Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges) {
+        return new SerializedSourceWithSkippedTypeRanges(
+                serializedSrcCode, Collections.unmodifiableMap(sortingSkippedTypeRanges));
+    }
+
+    private SerializedSourceWithSkippedTypeRanges(
             @NonNull String serializedSrcCode,
             @NonNull Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges) {
         this.serializedSrcCode = serializedSrcCode;
-        this.sortingSkippedTypeRanges = Collections.unmodifiableMap(sortingSkippedTypeRanges);
+        this.sortingSkippedTypeRanges = sortingSkippedTypeRanges;
     }
 }

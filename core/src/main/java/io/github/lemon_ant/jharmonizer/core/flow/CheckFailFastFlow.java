@@ -57,10 +57,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult
-                                .getSerializationResult()
-                                .getSerializedSourceWithSkippedTypeRanges()
-                                .getSerializedSrcCode());
+                        sortingAndSerializationResult.getSerializedSrcCode());
 
         if (!elementRelocations.isEmpty()) {
             throw new NotOrderedException(srcFile.getPath(), elementRelocations);
@@ -68,16 +65,11 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
         FormattingResult formattingResult = getFormatter()
                 .formatSource(
-                        sortingAndSerializationResult
-                                .getSerializationResult()
-                                .getSerializedSourceWithSkippedTypeRanges()
-                                .getSerializedSrcCode(),
+                        sortingAndSerializationResult.getSerializedSrcCode(),
                         srcFile.getPath(),
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                                 sortedSpoonAstModel.getOptOuts(),
-                                sortingAndSerializationResult
-                                        .getSerializationResult()
-                                        .getSerializedSourceWithSkippedTypeRanges()));
+                                sortingAndSerializationResult.getSerializedSourceWithSkippedTypeRanges()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
@@ -96,8 +88,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                .serializationStatistic(
-                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
+                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
                 .build();

@@ -23,7 +23,6 @@ Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.
 - **AssertJ** is the assertion library.
   - Do not use `org.junit.jupiter.api.Assertions.*` in new/updated tests.
 - Prefer ordinary imports over repeated fully qualified names in tests.
-- Prefer Lombok for test-side boilerplate (constructors, getters, `toString`, etc.) when it reduces ceremony and matches the surrounding style.
 - Prefer using production pipeline building blocks (parsers, converters, compilers, factories) instead of test-only reimplementations.
 - When test code overrides standard `Object` methods, preserve the standard signature exactly.
   - Do not add nullability annotations to `Object` overrides in tests.

@@ -5,8 +5,8 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -58,21 +58,18 @@ public final class JHarmonizerOptOutResolver {
     private JHarmonizerOptOutMode resolveFileOptOutMode() {
         List<CtComment> fileComments = compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
                 .filter(comment -> !hasStructuredOwner(comment))
-                .filter(this::isPotentialOptOutComment)
-                .filter(this::isFileScopeOptOut)
+                .filter(JHarmonizerOptOutResolver::containsOptOutTokenPrefix)
+                .filter(this::isBeforeFirstDeclaredType)
                 .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
                 .toList();
         JHarmonizerOptOutMode fileOptOutMode = null;
         CtComment firstFileComment = null;
         for (CtComment fileComment : fileComments) {
-            Optional<JHarmonizerOptOutMode> parsedMode = parseOptOutMode(fileComment);
-            if (parsedMode.isEmpty()) {
+            JHarmonizerOptOutMode currentMode = parseOptOutMode(fileComment);
+            if (currentMode == null) {
                 continue;
             }
-            JHarmonizerOptOutMode currentMode = parsedMode.orElseThrow();
-            if (fileOptOutMode == null
-                    || (fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF
-                            && currentMode == JHarmonizerOptOutMode.FULLY_OFF)) {
+            if (fileOptOutMode == null) {
                 fileOptOutMode = currentMode;
                 firstFileComment = fileComment;
                 if (currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
@@ -80,20 +77,23 @@ public final class JHarmonizerOptOutResolver {
                 }
                 continue;
             }
-            if (fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF) {
-                logIgnoredOptOut(
-                        fileComment,
-                        "Conflicting file-scope opt-out; keeping the first one from %s"
-                                .formatted(formatLocation(firstFileComment.getPosition())));
+            if (fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF && currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
+                fileOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
+                firstFileComment = fileComment;
+                break;
             }
+            logIgnoredOptOut(
+                    fileComment,
+                    "Conflicting file-scope opt-out; keeping the first one from %s"
+                            .formatted(formatLocation(firstFileComment.getPosition())));
         }
         return fileOptOutMode;
     }
 
     private void collectTypeOptOutModes(
-            @NonNull CtType<?> currentType,
+            CtType<?> currentType,
             boolean sortingDisabledInParents,
-            @NonNull Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
+            Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
         JHarmonizerOptOutMode directOptOutMode = resolveDirectTypeOptOutMode(currentType, sortingDisabledInParents);
         if (directOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
             typeOptOutModes.put(currentType, JHarmonizerOptOutMode.FULLY_OFF);
@@ -112,10 +112,9 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @Nullable
-    private JHarmonizerOptOutMode resolveDirectTypeOptOutMode(
-            @NonNull CtType<?> currentType, boolean sortingDisabledInParents) {
+    private JHarmonizerOptOutMode resolveDirectTypeOptOutMode(CtType<?> currentType, boolean sortingDisabledInParents) {
         List<CtComment> leadingTypeComments = currentType.getComments().stream()
-                .filter(this::isPotentialOptOutComment)
+                .filter(JHarmonizerOptOutResolver::containsOptOutTokenPrefix)
                 .filter(comment -> comment.getPosition().getEndLine()
                         < currentType.getPosition().getLine())
                 .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
@@ -123,11 +122,10 @@ public final class JHarmonizerOptOutResolver {
         JHarmonizerOptOutMode directOptOutMode = null;
         CtComment firstTypeComment = null;
         for (CtComment leadingTypeComment : leadingTypeComments) {
-            Optional<JHarmonizerOptOutMode> parsedMode = parseOptOutMode(leadingTypeComment);
-            if (parsedMode.isEmpty()) {
+            JHarmonizerOptOutMode currentMode = parseOptOutMode(leadingTypeComment);
+            if (currentMode == null) {
                 continue;
             }
-            JHarmonizerOptOutMode currentMode = parsedMode.orElseThrow();
             if (sortingDisabledInParents && currentMode == JHarmonizerOptOutMode.SORTING_OFF) {
                 continue;
             }
@@ -154,38 +152,38 @@ public final class JHarmonizerOptOutResolver {
         return directOptOutMode;
     }
 
-    @NonNull
-    private Optional<JHarmonizerOptOutMode> parseOptOutMode(@NonNull CtComment comment) {
+    @Nullable
+    private JHarmonizerOptOutMode parseOptOutMode(CtComment comment) {
         if (comment.getCommentType() == CommentType.JAVADOC) {
             logIgnoredOptOut(comment, "Javadoc opt-out comments are ignored");
-            return Optional.empty();
+            return null;
         }
 
-        String normalizedContent = comment.getContent().trim().toLowerCase(java.util.Locale.ROOT);
-        String normalizedTokenPrefix = JHarmonizerOptOutMode.TOKEN_PREFIX.toLowerCase(java.util.Locale.ROOT);
+        String normalizedContent = comment.getContent().trim().toLowerCase(Locale.ROOT);
+        String normalizedTokenPrefix = JHarmonizerOptOutMode.TOKEN_PREFIX.toLowerCase(Locale.ROOT);
         if (!normalizedContent.startsWith(normalizedTokenPrefix)) {
             logIgnoredOptOut(comment, "Malformed opt-out comment is ignored");
-            return Optional.empty();
+            return null;
         }
 
         try {
-            return Optional.of(JHarmonizerOptOutMode.fromToken(normalizedContent));
+            return JHarmonizerOptOutMode.fromToken(normalizedContent);
         } catch (IllegalArgumentException exception) {
             logIgnoredOptOut(comment, exception.getMessage());
-            return Optional.empty();
+            return null;
         }
     }
 
-    private boolean isPotentialOptOutComment(@NonNull CtComment comment) {
+    private static boolean containsOptOutTokenPrefix(CtComment comment) {
         return StringUtils.containsIgnoreCase(comment.getContent(), JHarmonizerOptOutMode.TOKEN_PREFIX);
     }
 
-    private boolean hasStructuredOwner(@NonNull CtComment comment) {
+    private static boolean hasStructuredOwner(CtComment comment) {
         CtElement parent = comment.getParent();
         return parent instanceof CtType<?> || parent instanceof CtTypeMember;
     }
 
-    private boolean isFileScopeOptOut(@NonNull CtComment comment) {
+    private boolean isBeforeFirstDeclaredType(CtComment comment) {
         return comment.getPosition().getSourceEnd()
                 < compilationUnit.getDeclaredTypes().stream()
                         .map(CtType::getPosition)
@@ -194,14 +192,14 @@ public final class JHarmonizerOptOutResolver {
                         .orElse(Integer.MAX_VALUE);
     }
 
-    private void logIgnoredOptOut(@NonNull CtComment comment, @NonNull String message) {
+    private void logIgnoredOptOut(CtComment comment, String message) {
         if (log.isWarnEnabled()) {
             log.warn("{} at {}", message, formatLocation(comment.getPosition()));
         }
     }
 
     @NonNull
-    private String formatLocation(@NonNull SourcePosition sourcePosition) {
+    private String formatLocation(SourcePosition sourcePosition) {
         return srcFile.getPath() + ":" + sourcePosition.getLine() + ":" + sourcePosition.getColumn();
     }
 }

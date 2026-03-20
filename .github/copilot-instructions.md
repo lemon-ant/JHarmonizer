@@ -18,6 +18,7 @@
 - Keep changes surgical and avoid unrelated cleanup.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
+- Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.

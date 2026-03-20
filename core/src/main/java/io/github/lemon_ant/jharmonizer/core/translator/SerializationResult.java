@@ -14,11 +14,4 @@ public class SerializationResult {
 
     @NonNull
     SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges;
-
-    public SerializationResult(
-            @NonNull SerializationStatistic serializationStatistic,
-            @NonNull SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges) {
-        this.serializationStatistic = serializationStatistic;
-        this.serializedSourceWithSkippedTypeRanges = serializedSourceWithSkippedTypeRanges;
-    }
 }

@@ -7,7 +7,6 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -49,15 +48,16 @@ public class RestructureFlow extends AbstractOptOutFlow {
                 sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
-        FormattingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
         SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
-        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
+        boolean hasChanges =
+                !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
         if (hasChanges) {
             if (backupsEnabled) {
                 SourceFilesHandler.renameToBackup(srcFile.getPath());
             }
-            SourceFilesHandler.overwrite(srcFile.getPath(), formattingResult.getFormattedSrcCode());
+            SourceFilesHandler.overwrite(
+                    srcFile.getPath(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
 
         return FlowProcessingResult.builder()
@@ -67,9 +67,8 @@ public class RestructureFlow extends AbstractOptOutFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                .serializationStatistic(
-                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
-                .formattingStatistic(formattingResult.getFormattingStatistic())
+                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(
                         !sortingAndSerializationResult.isSortingSkipped()
                                 && isRelocated(

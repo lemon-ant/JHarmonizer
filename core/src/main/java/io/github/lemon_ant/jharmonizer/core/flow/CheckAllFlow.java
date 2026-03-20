@@ -8,7 +8,6 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -47,19 +46,19 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                 sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
-        FormattingResult formattingResult = sortingSerializationAndFormattingResult.getFormattingResult();
         SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
-        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
+        boolean hasChanges =
+                !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
         List<Pair<CtElement, Integer>> elementRelocations;
         String srcDiff;
         if (hasChanges && !sortingAndSerializationResult.isSortingSkipped()) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         } else if (hasChanges) {
             elementRelocations = List.of();
-            srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
+            srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         } else {
             elementRelocations = List.of();
             srcDiff = "";
@@ -72,9 +71,8 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                .serializationStatistic(
-                        sortingAndSerializationResult.getSerializationResult().getSerializationStatistic())
-                .formattingStatistic(formattingResult.getFormattingStatistic())
+                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
                 .flowProcessingStatus(
                         defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();
