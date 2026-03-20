@@ -73,7 +73,8 @@ abstract class AbstractOptOutFlow implements IFlow {
             String originalSrcCode = srcFile.getSrcCode();
             return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
-                    SerializationResult.skippedWithoutSerialization(
+                    new SerializationResult(
+                            new SerializationStatistic(originalSrcCode.length(), 0),
                             new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
                     true);
         }
@@ -134,7 +135,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(
-                        FormattingStatistic.skipped(srcFile.getSrcCode().length()))
+                        new FormattingStatistic(srcFile.getSrcCode().length(), 0))
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, checkingOnly))
                 .build();
     }

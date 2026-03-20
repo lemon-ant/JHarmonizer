@@ -24,6 +24,7 @@ Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.
   - Do not use `org.junit.jupiter.api.Assertions.*` in new/updated tests.
 - Prefer ordinary imports over repeated fully qualified names in tests.
 - Prefer using production pipeline building blocks (parsers, converters, compilers, factories) instead of test-only reimplementations.
+- When an annotation argument in test code only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 - When test code overrides standard `Object` methods, preserve the standard signature exactly.
   - Do not add nullability annotations to `Object` overrides in tests.
   - In particular, keep `equals(Object)` unchanged.
