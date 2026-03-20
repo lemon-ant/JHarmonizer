@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.optout;
 
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +30,6 @@ public class OptOutFormattingRangeResolver {
                 .map(Map.Entry::getKey)
                 .map(sortingSkippedTypeRanges::get)
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(SrcCharacterRange::getStartInclusive))
                 .toList();
     }
 }
