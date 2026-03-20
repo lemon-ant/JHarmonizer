@@ -7,7 +7,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -120,8 +119,7 @@ public class SpoonSorter {
                                 + currentType.getQualifiedName()
                                 + ", descriptor=" + topLevelTypeDescriptor));
         currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes));
-        currentType.setTypeMembers(sortMembersPreservingSkippedNestedTypes(
-                currentType.getTypeMembers(), rootMemberGroup, sortingSkippedTypes));
+        currentType.setTypeMembers(sortMemberSegment(currentType.getTypeMembers(), rootMemberGroup));
     }
 
     @NonNull
@@ -152,25 +150,5 @@ public class SpoonSorter {
 
         GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
         return flattenMembers(orderedMemberGroupBlocks);
-    }
-
-    @NonNull
-    private static List<CtTypeMember> sortMembersPreservingSkippedNestedTypes(
-            @NonNull List<CtTypeMember> originalMembers,
-            @NonNull CompiledMemberGroup rootMemberGroup,
-            @NonNull Set<CtType<?>> sortingSkippedTypes) {
-        List<CtTypeMember> reorderedMembers = new ArrayList<>(originalMembers.size());
-        List<CtTypeMember> currentSortableSegment = new ArrayList<>();
-        for (CtTypeMember originalMember : originalMembers) {
-            if (originalMember instanceof CtType<?> nestedType && sortingSkippedTypes.contains(nestedType)) {
-                reorderedMembers.addAll(sortMemberSegment(List.copyOf(currentSortableSegment), rootMemberGroup));
-                currentSortableSegment.clear();
-                reorderedMembers.add(originalMember);
-                continue;
-            }
-            currentSortableSegment.add(originalMember);
-        }
-        reorderedMembers.addAll(sortMemberSegment(List.copyOf(currentSortableSegment), rootMemberGroup));
-        return List.copyOf(reorderedMembers);
     }
 }

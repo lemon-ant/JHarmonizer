@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
@@ -15,6 +15,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSe
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -213,7 +214,33 @@ class OptOutSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_nestedTypeOptOutOff_checkFailFastDoesNotFailWithOptOuts() throws Exception {
+    void processSources_nestedTypeOptOutSortOff_moveNestedTypeWithinParentOrdering() throws Exception {
+        // Given
+        String originalSourceCode = """
+                class Outer {
+                    int z;
+
+                    // @jharmonizer:sort-off
+                    static class Inner {int z;int a;}
+
+                    int a;
+                }
+                """;
+        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSourceCode)
+                .containsSubsequence("static class Inner", "int a;", "int z;")
+                .contains("static class Inner {\n        int z;\n        int a;\n    }");
+    }
+
+    @Test
+    void processSources_nestedTypeOptOutOff_failFastReportsParentLevelRelocation() throws Exception {
         // Given
         String originalSourceCode = """
                 class Outer {
@@ -228,9 +255,11 @@ class OptOutSourceProcessorIntegrationTest {
         SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When / Then
-        assertThatCode(() -> sourceProcessor.processSources(
+        assertThatThrownBy(() -> sourceProcessor.processSources(
                         temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST))
-                .doesNotThrowAnyException();
+                .isInstanceOf(NotOrderedException.class)
+                .hasMessageContaining("Outer$Inner expected to relocate UP")
+                .hasMessageContaining("Outer$a expected to relocate DOWN");
     }
 
     private Path writeJavaFile(String fileName, String fileContent) throws Exception {
