@@ -5,12 +5,14 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
+import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
@@ -35,7 +37,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      */
     @Override
     public @NonNull FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
-        ParsingResult parsingResult = recordOriginalStageAndParseSource(srcFile);
+        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, true, null, "", "all harmonization checks");

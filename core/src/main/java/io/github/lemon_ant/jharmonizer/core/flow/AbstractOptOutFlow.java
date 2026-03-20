@@ -51,13 +51,6 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected final ParsingResult recordOriginalStageAndParseSource(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder()
-                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        return SourceAstTranslator.parse(srcFile);
-    }
-
-    @NonNull
     protected final SortingAndSerializationResult sortAndSerializeOrReuseOriginalSource(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,

@@ -6,10 +6,12 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDe
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
+import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
@@ -35,12 +37,13 @@ public class RestructureFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
-        ParsingResult parsingResult = recordOriginalStageAndParseSource(srcFile);
-        if (parsingResult.getSpoonAstModel().getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
+        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
+        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, false, null, null, "all harmonization");
         }
 
-        SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
                 sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
         SortingAndSerializationResult sortingAndSerializationResult =
