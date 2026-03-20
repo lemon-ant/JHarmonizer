@@ -29,8 +29,7 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @RequiredArgsConstructor
 public class SpoonSorter {
-    private static final int SINGLE_TOP_LEVEL_TYPE_COUNT = 1;
-    private static final int MIN_MEMBERS_REQUIRING_SORT = 2;
+    private static final int MAX_MEMBERS_WITHOUT_SORTING = 1;
 
     @NonNull
     private final CompiledConfig compiledConfig;
@@ -55,7 +54,7 @@ public class SpoonSorter {
     private static void reorderTopLevelTypes(
             CtCompilationUnit compilationUnit, CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
-        if (declaredTypes.size() <= SINGLE_TOP_LEVEL_TYPE_COUNT) {
+        if (declaredTypes.size() <= MAX_MEMBERS_WITHOUT_SORTING) {
             return;
         }
 
@@ -110,7 +109,7 @@ public class SpoonSorter {
      * This order keeps the logic deterministic and ensures nested types are already "clean"
      * when the outer type is printed.
      */
-    private void sortTypeRecursively(@NonNull CtType<?> currentType, @NonNull Set<CtType<?>> sortingSkippedTypes) {
+    private void sortTypeRecursively(CtType<?> currentType, Set<CtType<?>> sortingSkippedTypes) {
         if (sortingSkippedTypes.contains(currentType)) {
             return;
         }
@@ -124,13 +123,13 @@ public class SpoonSorter {
                                 + currentType.getQualifiedName()
                                 + ", descriptor=" + topLevelTypeDescriptor));
         currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes));
-        currentType.setTypeMembers(sortMemberSegment(currentType.getTypeMembers(), rootMemberGroup));
+        currentType.setTypeMembers(sortTypeMembers(currentType.getTypeMembers(), rootMemberGroup));
     }
 
     @NonNull
-    private static List<CtTypeMember> sortMemberSegment(
-            @NonNull List<CtTypeMember> typeMembers, @NonNull CompiledMemberGroup rootMemberGroup) {
-        if (typeMembers.size() < MIN_MEMBERS_REQUIRING_SORT) {
+    private static List<CtTypeMember> sortTypeMembers(
+            List<CtTypeMember> typeMembers, CompiledMemberGroup rootMemberGroup) {
+        if (typeMembers.size() <= MAX_MEMBERS_WITHOUT_SORTING) {
             return typeMembers;
         }
 
