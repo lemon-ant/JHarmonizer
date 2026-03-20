@@ -13,11 +13,12 @@ public enum JHarmonizerOptOutMode {
     SORTING_OFF("sort-off"),
     ;
 
-    public static final String TOKEN_PREFIX = "@JHarmonizer:";
+    public static final String TOKEN_PREFIX = "@jharmonizer:";
 
     private final String displayName;
 
     @NonNull
+    // TODO Calculate it once in constructor
     public String getToken() {
         return TOKEN_PREFIX + displayName;
     }
@@ -26,7 +27,7 @@ public enum JHarmonizerOptOutMode {
     public static JHarmonizerOptOutMode fromToken(String token) {
         String normalizedToken = token.toLowerCase(Locale.ROOT);
         return Arrays.stream(values())
-                .filter(mode -> mode.getToken().toLowerCase(Locale.ROOT).equals(normalizedToken))
+                .filter(mode -> mode.getToken().equals(normalizedToken))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported JHarmonizer opt-out token: " + token));
     }

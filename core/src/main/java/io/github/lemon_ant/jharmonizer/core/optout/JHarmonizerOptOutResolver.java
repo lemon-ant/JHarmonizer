@@ -5,7 +5,6 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -61,32 +60,24 @@ public final class JHarmonizerOptOutResolver {
                 .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
                 .toList();
         JHarmonizerOptOutMode fileOptOutMode = null;
-        CtComment firstFileComment = null;
+        CtComment previousFileComment = null;
         for (CtComment fileComment : fileComments) {
             JHarmonizerOptOutMode currentMode = parseOptOutMode(fileComment);
             if (currentMode == null) {
                 continue;
             }
-            if (fileOptOutMode == null) {
-                fileOptOutMode = currentMode;
-                firstFileComment = fileComment;
-                if (currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
-                    break;
-                }
-                continue;
-            }
-            if (currentMode == JHarmonizerOptOutMode.FULLY_OFF) {
+            if (fileOptOutMode != null) {
                 logIgnoredOptOut(
                         fileComment,
-                        "File-scope fully-off overrides earlier sort-off from %s"
-                                .formatted(formatLocation(firstFileComment.getPosition())));
-                fileOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
+                        "Overriding file-scope opt-out; the first appearance was %s"
+                                .formatted(formatLocation(previousFileComment.getPosition())));
+            }
+
+            fileOptOutMode = currentMode;
+            previousFileComment = fileComment;
+            if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
                 break;
             }
-            logIgnoredOptOut(
-                    fileComment,
-                    "Conflicting file-scope opt-out; keeping the first one from %s"
-                            .formatted(formatLocation(firstFileComment.getPosition())));
         }
         return fileOptOutMode;
     }
@@ -95,7 +86,7 @@ public final class JHarmonizerOptOutResolver {
             CtType<?> currentType,
             boolean sortingDisabledInParents,
             Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
-        JHarmonizerOptOutMode directOptOutMode = resolveDirectTypeOptOutMode(currentType);
+        JHarmonizerOptOutMode directOptOutMode = findTypeOptOutMode(currentType);
         if (directOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
             typeOptOutModes.put(currentType, JHarmonizerOptOutMode.FULLY_OFF);
             return;
@@ -105,8 +96,6 @@ public final class JHarmonizerOptOutResolver {
         if (directOptOutMode == JHarmonizerOptOutMode.SORTING_OFF && !sortingDisabledInParents) {
             typeOptOutModes.put(currentType, JHarmonizerOptOutMode.SORTING_OFF);
             sortingDisabledForCurrentType = true;
-        } else if (directOptOutMode == JHarmonizerOptOutMode.SORTING_OFF) {
-            sortingDisabledForCurrentType = true;
         }
 
         for (CtType<?> nestedType : currentType.getNestedTypes()) {
@@ -115,68 +104,54 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @Nullable
-    private JHarmonizerOptOutMode resolveDirectTypeOptOutMode(CtType<?> currentType) {
+    private JHarmonizerOptOutMode findTypeOptOutMode(CtType<?> currentType) {
         List<CtComment> leadingTypeComments = currentType.getComments().stream()
                 .filter(comment -> comment.getPosition().getEndLine()
                         < currentType.getPosition().getLine())
                 .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
                 .toList();
-        JHarmonizerOptOutMode directOptOutMode = null;
-        CtComment firstTypeComment = null;
+        JHarmonizerOptOutMode typeOptOutMode = null;
+        CtComment previousTypeComment = null;
         for (CtComment leadingTypeComment : leadingTypeComments) {
             JHarmonizerOptOutMode currentMode = parseOptOutMode(leadingTypeComment);
             if (currentMode == null) {
                 continue;
             }
-            if (directOptOutMode != null) {
-                if (currentMode == JHarmonizerOptOutMode.FULLY_OFF
-                        && directOptOutMode != JHarmonizerOptOutMode.FULLY_OFF) {
-                    logIgnoredOptOut(
-                            leadingTypeComment,
-                            "Type '%s' fully-off overrides earlier sort-off from %s"
-                                    .formatted(
-                                            currentType.getQualifiedName(),
-                                            formatLocation(firstTypeComment.getPosition())));
-                    directOptOutMode = JHarmonizerOptOutMode.FULLY_OFF;
-                    break;
-                }
+            if (typeOptOutMode != null) {
                 logIgnoredOptOut(
                         leadingTypeComment,
-                        "Duplicate opt-out for type '%s'; keeping the first one from %s"
+                        "Type '%s' overrides earlier opt-out commment from %s"
                                 .formatted(
                                         currentType.getQualifiedName(),
-                                        formatLocation(firstTypeComment.getPosition())));
-                continue;
+                                        formatLocation(previousTypeComment.getPosition())));
             }
-            directOptOutMode = currentMode;
-            firstTypeComment = leadingTypeComment;
-            if (directOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
+            typeOptOutMode = currentMode;
+            previousTypeComment = leadingTypeComment;
+            if (typeOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
                 break;
             }
         }
-        return directOptOutMode;
+        return typeOptOutMode;
     }
 
     @Nullable
     private JHarmonizerOptOutMode parseOptOutMode(CtComment comment) {
-        if (comment.getCommentType() == CommentType.JAVADOC) {
-            logIgnoredOptOut(comment, "Javadoc opt-out comments are ignored");
-            return null;
-        }
-
         String trimmedContent = comment.getContent().trim();
         int tokenPrefixIndex = StringUtils.indexOfIgnoreCase(trimmedContent, JHarmonizerOptOutMode.TOKEN_PREFIX);
         if (tokenPrefixIndex < 0) {
+            return null;
+        }
+        if (comment.getCommentType() == CommentType.JAVADOC) {
+            logIgnoredOptOut(comment, "Javadoc opt-out comments are ignored");
             return null;
         }
         if (tokenPrefixIndex != 0) {
             logIgnoredOptOut(comment, "Malformed opt-out comment is ignored");
             return null;
         }
-        String normalizedContent = trimmedContent.toLowerCase(Locale.ROOT);
 
         try {
-            return JHarmonizerOptOutMode.fromToken(normalizedContent);
+            return JHarmonizerOptOutMode.fromToken(trimmedContent);
         } catch (IllegalArgumentException exception) {
             logIgnoredOptOut(comment, exception.getMessage());
             return null;
@@ -185,7 +160,7 @@ public final class JHarmonizerOptOutResolver {
 
     private static boolean isStandaloneComment(CtComment comment) {
         CtElement parent = comment.getParent();
-        return !(parent instanceof CtType<?> || parent instanceof CtTypeMember);
+        return !(parent instanceof CtTypeMember);
     }
 
     private boolean isBeforeFirstDeclaredType(CtComment comment) {
