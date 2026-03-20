@@ -55,7 +55,7 @@ class FormatterTest {
 
         // When
         FormattingResult formatingResult = formatter.formatSource(
-                sourceCode, Path.of("Person.java"), List.of(SrcCharacterRange.of(0, sourceCode.length())));
+                sourceCode, Path.of("Person.java"), List.of(new SrcCharacterRange(0, sourceCode.length())));
 
         // Then
         assertThat(formatingResult.getFormattedSrcCode()).isEqualTo(sourceCode);
@@ -72,7 +72,7 @@ class FormatterTest {
 
         // When
         FormattingResult formattingResult = formatter.formatSource(
-                sourceCode, Path.of("Person.java"), List.of(SrcCharacterRange.of(excludedStart, excludedEnd)));
+                sourceCode, Path.of("Person.java"), List.of(new SrcCharacterRange(excludedStart, excludedEnd)));
 
         // Then
         assertThat(formattingResult.getFormattedSrcCode())
@@ -87,7 +87,7 @@ class FormatterTest {
         Formatter formatter = new Formatter(PALANTIR, false);
         String sourceCode = "class Person{int a; int b;}\n";
         List<SrcCharacterRange> formattingSkippedRanges =
-                List.of(SrcCharacterRange.of(0, 10), SrcCharacterRange.of(8, 15));
+                List.of(new SrcCharacterRange(0, 10), new SrcCharacterRange(8, 15));
 
         // When / Then
         assertThatThrownBy(() -> formatter.formatSource(sourceCode, Path.of("Person.java"), formattingSkippedRanges))

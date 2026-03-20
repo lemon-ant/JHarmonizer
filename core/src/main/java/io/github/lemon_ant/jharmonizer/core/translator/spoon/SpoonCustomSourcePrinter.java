@@ -176,7 +176,6 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         }
     }
 
-    @NonNull
     private int findRenderedTypeStart(CtType<?> type) {
         // TODO Find out why we are searching type's start differently
         if (!sortingSkippedTypes.contains(type)) {
@@ -218,7 +217,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
             printOriginalFragment(
                     findRenderedTypeStart(type), type.getPosition().getSourceEnd());
             int outputEndExclusive = getResult().length();
-            sortingSkippedTypeRanges.put(type, SrcCharacterRange.of(outputStart, outputEndExclusive));
+            sortingSkippedTypeRanges.put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
         }
 
         @NonNull

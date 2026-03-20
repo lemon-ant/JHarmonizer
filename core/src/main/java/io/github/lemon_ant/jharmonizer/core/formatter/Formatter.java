@@ -80,10 +80,7 @@ public final class Formatter {
         }
 
         String partlyFormattedSrc = srcCode;
-        Collection<Range<Integer>> formattingRanges =
-                invertExcludedRanges(srcCode.length(), formattingSkippedRanges).stream()
-                        .map(range -> Range.closedOpen(range.getStartInclusive(), range.getEndExclusive()))
-                        .toList();
+        Collection<Range<Integer>> formattingRanges = invertExcludedRanges(srcCode.length(), formattingSkippedRanges);
         if (!formattingRanges.isEmpty()) {
             partlyFormattedSrc = invokePalantir(() -> formatter.formatSource(srcCode, formattingRanges));
         }
@@ -105,15 +102,14 @@ public final class Formatter {
      * Inverts excluded ranges into the complementary ranges that should be formatted.
      */
     @NonNull
-    private static List<SrcCharacterRange> invertExcludedRanges(
-            int sourceLength, List<SrcCharacterRange> excludedRanges) {
+    private static List<Range<Integer>> invertExcludedRanges(int sourceLength, List<SrcCharacterRange> excludedRanges) {
         Validate.isTrue(sourceLength >= 0, "Source length must be non-negative: %s", sourceLength);
 
         List<SrcCharacterRange> normalizedRanges = excludedRanges.stream()
                 .sorted(comparingInt(SrcCharacterRange::getStartInclusive)
                         .thenComparingInt(SrcCharacterRange::getEndExclusive))
                 .toList();
-        List<SrcCharacterRange> includedRanges = new ArrayList<>();
+        List<Range<Integer>> includedRanges = new ArrayList<>();
         int nextStart = 0;
 
         for (SrcCharacterRange excludedRange : normalizedRanges) {
@@ -131,13 +127,13 @@ public final class Formatter {
                     nextStart);
 
             if (nextStart < excludedRange.getStartInclusive()) {
-                includedRanges.add(SrcCharacterRange.of(nextStart, excludedRange.getStartInclusive()));
+                includedRanges.add(Range.closedOpen(nextStart, excludedRange.getStartInclusive()));
             }
             nextStart = excludedRange.getEndExclusive();
         }
 
         if (nextStart < sourceLength) {
-            includedRanges.add(SrcCharacterRange.of(nextStart, sourceLength));
+            includedRanges.add(Range.closedOpen(nextStart, sourceLength));
         }
 
         return Collections.unmodifiableList(includedRanges);
