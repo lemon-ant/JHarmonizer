@@ -25,6 +25,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Prefer explicit Java types over `var`.
 - Prefer normal imports over repeated fully qualified class names.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
+- When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.

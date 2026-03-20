@@ -19,6 +19,7 @@
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
+- When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
@@ -62,6 +63,7 @@
 - AssertJ is the assertion library.
 - Do not use `org.junit.jupiter.api.Assertions.*` in new or updated tests.
 - Prefer using production pipeline building blocks such as parsers, converters, compilers, and factories instead of test-only reimplementations.
+- When an annotation argument in test code only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 
 ### Code reuse and deduplication
 

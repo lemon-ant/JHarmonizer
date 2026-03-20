@@ -11,7 +11,6 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
@@ -166,7 +165,9 @@ public final class JHarmonizerOptOutResolver {
         }
 
         String trimmedContent = comment.getContent().trim();
-        int tokenPrefixIndex = StringUtils.indexOfIgnoreCase(trimmedContent, JHarmonizerOptOutMode.TOKEN_PREFIX);
+        String normalizedContent = trimmedContent.toLowerCase(Locale.ROOT);
+        String normalizedTokenPrefix = JHarmonizerOptOutMode.TOKEN_PREFIX.toLowerCase(Locale.ROOT);
+        int tokenPrefixIndex = normalizedContent.indexOf(normalizedTokenPrefix);
         if (tokenPrefixIndex < 0) {
             return null;
         }
@@ -174,7 +175,6 @@ public final class JHarmonizerOptOutResolver {
             logIgnoredOptOut(comment, "Malformed opt-out comment is ignored");
             return null;
         }
-        String normalizedContent = trimmedContent.toLowerCase(Locale.ROOT);
 
         try {
             return JHarmonizerOptOutMode.fromToken(normalizedContent);
