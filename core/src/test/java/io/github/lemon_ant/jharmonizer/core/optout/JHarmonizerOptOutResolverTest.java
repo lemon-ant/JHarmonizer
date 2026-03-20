@@ -143,6 +143,13 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
+    void getToken_supportedOptOutMode_returnLowercaseCanonicalToken() {
+        // When / Then
+        assertThat(JHarmonizerOptOutMode.FULLY_OFF.getToken()).isEqualTo("@jharmonizer:fully-off");
+        assertThat(JHarmonizerOptOutMode.SORTING_OFF.getToken()).isEqualTo("@jharmonizer:sort-off");
+    }
+
+    @Test
     void resolveFileOptOutMode_sortOffThenFullyOff_resolvesFullyOff() {
         // Given
         String srcCode = """

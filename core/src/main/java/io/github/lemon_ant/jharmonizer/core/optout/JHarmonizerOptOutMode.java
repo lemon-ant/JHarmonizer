@@ -13,7 +13,7 @@ public enum JHarmonizerOptOutMode {
     SORTING_OFF("sort-off"),
     ;
 
-    public static final String TOKEN_PREFIX = "@JHarmonizer:";
+    public static final String TOKEN_PREFIX = "@jharmonizer:";
 
     private final String displayName;
 
