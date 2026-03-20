@@ -15,6 +15,7 @@ import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -139,7 +140,7 @@ public final class Formatter {
             includedRanges.add(SrcCharacterRange.of(nextStart, sourceLength));
         }
 
-        return List.copyOf(includedRanges);
+        return Collections.unmodifiableList(includedRanges);
     }
 
     @FunctionalInterface

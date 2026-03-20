@@ -181,6 +181,33 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
+    void getSortingSkippedTypes_nestedSortOffWithinSortOffParent_skipOnlyParentType() {
+        // Given
+        String srcCode = """
+                class Sample {
+                    // @jharmonizer:sort-off
+                    class Outer {
+                        // @jharmonizer:sort-off
+                        class Inner {}
+                    }
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        CtType<?> outerType = spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getNestedTypes().stream()
+                .findFirst()
+                .orElseThrow();
+        CtType<?> innerType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getSortingSkippedTypes())
+                .contains(outerType)
+                .doesNotContain(innerType);
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(innerType)).isEmpty();
+    }
+
+    @Test
     void parseJavaSourceResource_legacyOffAlias_ignoreInvalidOptOut() {
         // Given
         String srcCode = """

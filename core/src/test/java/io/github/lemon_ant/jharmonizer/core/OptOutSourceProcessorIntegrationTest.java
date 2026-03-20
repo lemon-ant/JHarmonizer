@@ -71,6 +71,28 @@ class OptOutSourceProcessorIntegrationTest {
     }
 
     @Test
+    void processSources_fileMixedCaseSortOffDirective_formatWithoutSortingTopLevelTypes() throws Exception {
+        // Given
+        String originalSourceCode = """
+                // @JHarmonizer:SoRt-OfF
+                import java.util.List;
+                class Z{int b;int a;}
+                class A{}
+                """;
+        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSourceCode).doesNotContain("import java.util.List;");
+        assertThat(processedSourceCode).containsSubsequence("class Z", "class A");
+        assertThat(processedSourceCode).contains("int a;").contains("int b;");
+    }
+
+    @Test
     void processSources_topLevelTypeOptOutOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
         // Given
         String ignoredFragment = """

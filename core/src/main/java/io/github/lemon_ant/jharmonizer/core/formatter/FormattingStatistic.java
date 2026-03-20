@@ -8,8 +8,12 @@ import lombok.Value;
  * Timing and size statistics collected during a single source-file formatting pass.
  */
 @Value
-@AllArgsConstructor(access = AccessLevel.PUBLIC)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class FormattingStatistic {
     long formattedCodeLength;
     long formattingTimeInNanos;
+
+    public static FormattingStatistic skipped(long formattedCodeLength) {
+        return new FormattingStatistic(formattedCodeLength, 0);
+    }
 }

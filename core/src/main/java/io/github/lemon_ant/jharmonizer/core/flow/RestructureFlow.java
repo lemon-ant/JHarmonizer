@@ -10,7 +10,6 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
@@ -36,11 +35,9 @@ public class RestructureFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder()
-                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        ParsingResult parsingResult = recordOriginalStageAndParseSource(srcFile);
         if (parsingResult.getSpoonAstModel().getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
-            return buildFileOptOutSkippedResult(srcFile, parsingResult, false, null, null, "all harmonization");
+            return buildFullyOffFileSkippedResult(srcFile, parsingResult, false, null, null, "all harmonization");
         }
 
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();

@@ -11,7 +11,6 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
@@ -33,12 +32,10 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder()
-                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        ParsingResult parsingResult = recordOriginalStageAndParseSource(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
-            return buildFileOptOutSkippedResult(
+            return buildFullyOffFileSkippedResult(
                     srcFile, parsingResult, true, List.of(), "", "all harmonization checks");
         }
 
@@ -50,19 +47,14 @@ public class CheckAllFlow extends AbstractOptOutFlow {
 
         boolean hasChanges =
                 !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
-        List<Pair<CtElement, Integer>> elementRelocations;
-        String srcDiff;
-        if (hasChanges && !sortingAndSerializationResult.isSortingSkipped()) {
+        List<Pair<CtElement, Integer>> elementRelocations = List.of();
+        if (!sortingAndSerializationResult.isSortingSkipped() && hasChanges) {
             elementRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalElements2OrderIndices(), sortedSpoonAstModel.getCompilationUnit());
-            srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
-        } else if (hasChanges) {
-            elementRelocations = List.of();
-            srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
-        } else {
-            elementRelocations = List.of();
-            srcDiff = "";
         }
+        String srcDiff = hasChanges
+                ? computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode())
+                : "";
 
         return FlowProcessingResult.builder()
                 .path(srcFile.getPath())

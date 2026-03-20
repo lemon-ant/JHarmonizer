@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.Value;
 import spoon.reflect.declaration.CtType;
@@ -59,6 +60,10 @@ public class JHarmonizerOptOuts {
 
     @NonNull
     public Set<CtType<?>> getSortingSkippedTypes() {
-        return typeOptOutModes.keySet();
+        return typeOptOutModes.entrySet().stream()
+                .filter(entry -> entry.getValue() == JHarmonizerOptOutMode.FULLY_OFF
+                        || entry.getValue() == JHarmonizerOptOutMode.SORTING_OFF)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }

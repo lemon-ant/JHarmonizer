@@ -37,6 +37,7 @@ Rules:
 - Before copying code into another test, search for an existing shared test utility and reuse it.
 - If similar fragments appear in more than one test (or are likely to be reused), extract them into a shared test utility class.
 - Re-run this reuse analysis regularly: when adding new tests, when refactoring tests, and during cleanup passes.
+- When a test in another package must create a production type with package-private construction, prefer a dedicated test creator/helper in the target package instead of widening the production constructor visibility.
 
 ## Naming
 

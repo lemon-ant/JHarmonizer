@@ -9,6 +9,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +29,7 @@ import spoon.reflect.declaration.CtRecord;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.TokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
 /**
@@ -59,7 +61,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     SpoonCustomSourcePrinter(
             @NonNull Environment env, @NonNull String srcCode, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         super(env);
-        this.sortingSkippedTypes = Set.copyOf(sortingSkippedTypes);
+        this.sortingSkippedTypes = Collections.unmodifiableSet(sortingSkippedTypes);
         this.typeStructurePrinter = new TypeStructurePrinter();
         String lineSeparator = detectDominantLineSeparator(srcCode);
         setLineSeparator(lineSeparator);
@@ -113,7 +115,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     }
 
     @NonNull
-    private spoon.reflect.visitor.TokenWriter printOriginalFragment(int start, int end) {
+    private TokenWriter printOriginalFragment(int start, int end) {
         int startWithIndent = findIndentationStart(start, originalSrcCode);
         if (startWithIndent <= end && end <= originalSrcCode.length()) {
             String originalCodeFragment =
@@ -138,7 +140,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     SerializedSourceWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         printCompilationUnit(compilationUnit);
-        return SerializedSourceWithSkippedTypeRanges.of(getResult(), sortingSkippedTypeRanges);
+        return new SerializedSourceWithSkippedTypeRanges(getResult(), sortingSkippedTypeRanges);
     }
 
     /**

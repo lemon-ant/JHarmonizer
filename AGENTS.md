@@ -33,6 +33,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
+- If a boolean helper is always consumed through negation at its call sites, invert the helper logic and rename it so callers stay positive and direct.
 - Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `build`, or `merge`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
     - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
@@ -52,6 +53,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
+- In private helper code, prefer unmodifiable wrappers over defensive copies unless you specifically need an isolated snapshot.
 - Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 

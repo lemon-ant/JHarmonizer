@@ -51,22 +51,36 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
+    protected final ParsingResult recordOriginalStageAndParseSource(@NonNull SrcFile srcFile) {
+        getDebugStageRecorder()
+                .recordSrcStage(srcFile.getPath(), FlowDebugStageRecorder.SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        return SourceAstTranslator.parse(srcFile);
+    }
+
+    @NonNull
     protected final SortingAndSerializationResult sortAndSerializeOrReuseOriginalSource(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull String skippedOperationDescription) {
         Optional<JHarmonizerOptOutMode> fileOptOutMode =
                 parsedSpoonAstModel.getOptOuts().getFileOptOutMode();
-        return fileOptOutMode
-                .filter(mode -> mode == JHarmonizerOptOutMode.FULLY_OFF || mode == JHarmonizerOptOutMode.SORTING_OFF)
-                .map(mode -> buildFileOptOutSortingAndSerializationResult(
-                        srcFile, parsedSpoonAstModel, skippedOperationDescription, mode))
-                .orElseGet(() -> {
-                    SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
-                    SerializationResult serializationResult =
-                            SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
-                    return new SortingAndSerializationResult(sortingResult, serializationResult, false);
-                });
+        boolean reuseOriginalSource = fileOptOutMode
+                .map(mode -> mode == JHarmonizerOptOutMode.FULLY_OFF || mode == JHarmonizerOptOutMode.SORTING_OFF)
+                .orElse(false);
+        if (reuseOriginalSource) {
+            JHarmonizerOptOutMode reuseMode = fileOptOutMode.orElseThrow();
+            logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
+            String originalSrcCode = srcFile.getSrcCode();
+            return new SortingAndSerializationResult(
+                    new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
+                    SerializationResult.skippedWithoutSerialization(
+                            new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
+                    true);
+        }
+
+        SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
+        SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+        return new SortingAndSerializationResult(sortingResult, serializationResult, false);
     }
 
     /**
@@ -103,7 +117,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected static FlowProcessingResult buildFileOptOutSkippedResult(
+    protected static FlowProcessingResult buildFullyOffFileSkippedResult(
             @NonNull SrcFile srcFile,
             @NonNull ParsingResult parsingResult,
             boolean checkingOnly,
@@ -120,7 +134,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(
-                        new FormattingStatistic(srcFile.getSrcCode().length(), 0))
+                        FormattingStatistic.skipped(srcFile.getSrcCode().length()))
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, checkingOnly))
                 .build();
     }
@@ -137,22 +151,6 @@ abstract class AbstractOptOutFlow implements IFlow {
                     optOutMode.getDisplayName(),
                     optOutMode.getToken());
         }
-    }
-
-    @NonNull
-    private static SortingAndSerializationResult buildFileOptOutSortingAndSerializationResult(
-            SrcFile srcFile,
-            SpoonAstModel parsedSpoonAstModel,
-            String skippedOperationDescription,
-            JHarmonizerOptOutMode optOutMode) {
-        logFileOptOutSkip(srcFile, skippedOperationDescription, optOutMode);
-        String originalSrcCode = srcFile.getSrcCode();
-        return new SortingAndSerializationResult(
-                new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
-                new SerializationResult(
-                        new SerializationStatistic(originalSrcCode.length(), 0),
-                        SerializedSourceWithSkippedTypeRanges.of(originalSrcCode, Map.of())),
-                true);
     }
 
     @Value
