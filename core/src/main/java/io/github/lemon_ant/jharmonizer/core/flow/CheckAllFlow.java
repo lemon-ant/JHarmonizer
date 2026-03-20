@@ -38,7 +38,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
-            return buildFullyOffFileSkippedResult(srcFile, parsingResult, true, null, "", "all harmonization checks");
+            return buildFullyOffFileSkippedResult(srcFile, parsingResult, true, "", "all harmonization checks");
         }
 
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =

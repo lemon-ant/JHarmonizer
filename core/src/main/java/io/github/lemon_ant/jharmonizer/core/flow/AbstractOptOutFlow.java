@@ -18,7 +18,6 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -26,10 +25,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spoon.reflect.declaration.CtElement;
 
 @Getter(AccessLevel.PROTECTED)
 abstract class AbstractOptOutFlow implements IFlow {
@@ -115,13 +112,12 @@ abstract class AbstractOptOutFlow implements IFlow {
             @NonNull SrcFile srcFile,
             @NonNull ParsingResult parsingResult,
             boolean checkingOnly,
-            @Nullable Collection<Pair<CtElement, Integer>> relocations,
             @Nullable String srcDiff,
             @NonNull String skippedOperationDescription) {
         logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
         return FlowProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(relocations)
+                .relocations(null)
                 .diff(srcDiff)
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(new SortingStatistic(0))

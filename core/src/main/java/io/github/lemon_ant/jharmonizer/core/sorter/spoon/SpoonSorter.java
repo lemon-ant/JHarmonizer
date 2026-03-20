@@ -63,16 +63,21 @@ public class SpoonSorter {
                 compiledTopLevelTypesOrdering.isMainTypeFirst() ? SpoonTypeUtils.findMainType(compilationUnit) : null;
         Comparator<SortableTypeMember.OrderingKey> orderingComparator =
                 ComparatorUtils.buildOrderingComparator(compiledTopLevelTypesOrdering.getOrderingRules());
-        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
-        Comparator<CtType<?>> declaredTypeComparator = Comparator.<CtType<?>>comparingInt(type ->
-                        compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
-                .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))
-                .thenComparing(orderingKeyProvider, orderingComparator);
+        Comparator<CtType<?>> declaredTypeComparator = createTypeComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
         List<CtType<?>> sortedDeclaredTypes =
                 declaredTypes.stream().sorted(declaredTypeComparator).toList();
         compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
+    }
+
+@NonNull
+    private static  Comparator<CtType<?>> createTypeComparator(CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering, CtType<?> mainType, Comparator<SortableTypeMember.OrderingKey> orderingComparator) {
+        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
+                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
+        return Comparator.<CtType<?>>comparingInt(type ->
+                        compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
+                .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))
+                .thenComparing(orderingKeyProvider, orderingComparator);
     }
 
     private static int findTopLevelTypeGroupIndex(
