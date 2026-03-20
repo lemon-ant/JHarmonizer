@@ -143,7 +143,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void getToken_supportedOptOutMode_returnLowercaseCanonicalToken() {
+    void getToken_supportedOptOutMode_returnsLowercaseCanonicalToken() {
         // When / Then
         assertThat(JHarmonizerOptOutMode.FULLY_OFF.getToken()).isEqualTo("@jharmonizer:fully-off");
         assertThat(JHarmonizerOptOutMode.SORTING_OFF.getToken()).isEqualTo("@jharmonizer:sort-off");
