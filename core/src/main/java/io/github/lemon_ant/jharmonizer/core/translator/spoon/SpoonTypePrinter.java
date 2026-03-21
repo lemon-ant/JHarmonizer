@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -21,6 +23,7 @@ import spoon.reflect.visitor.TokenWriter;
 /**
  * Prints structured type declarations while preserving original source fragments and skipped-type ranges.
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 final class SpoonTypePrinter {
     @NonNull
     private final String originalSrcCode;
@@ -34,19 +37,6 @@ final class SpoonTypePrinter {
 
     @NonNull
     private final TokenWriter tokenWriter;
-
-    /**
-     * Creates a type-structure printer bound to the current source-printer state.
-     *
-     * @param srcCode             the original source text
-     * @param sortingSkippedTypes the types that must stay unsorted in the output
-     */
-    SpoonTypePrinter(
-            @NonNull String srcCode, @NonNull Set<CtType<?>> sortingSkippedTypes, @NonNull TokenWriter tokenWriter) {
-        this.originalSrcCode = srcCode;
-        this.sortingSkippedTypes = sortingSkippedTypes;
-        this.tokenWriter = tokenWriter;
-    }
 
     /**
      * Prints a type declaration using preserved source fragments and group-separator metadata.
