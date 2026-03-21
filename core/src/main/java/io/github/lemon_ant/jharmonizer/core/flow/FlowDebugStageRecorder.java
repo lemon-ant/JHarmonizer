@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Optional debug helper that writes intermediate source-code snapshots to disk for each
  * processing stage when DEBUG logging is enabled.
- * Files are written to a {@code debug/} subdirectory with a timestamp-based name.
+ * Files are written directly into the {@code debug/} directory with timestamp-prefixed file names.
  */
 @Slf4j
 final class FlowDebugStageRecorder {
@@ -63,10 +63,11 @@ final class FlowDebugStageRecorder {
     }
 
     /**
-     * Performs the record src stage.
-     * @param fileName the file name
-     * @param stage the stage
-     * @param javaSourceText the java source text
+     * Writes one intermediate source snapshot for the given processing stage.
+     *
+     * @param fileName the source file path being recorded
+     * @param stage the processing stage represented by the snapshot
+     * @param javaSourceText the Java source text to persist
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     void recordSrcStage(
