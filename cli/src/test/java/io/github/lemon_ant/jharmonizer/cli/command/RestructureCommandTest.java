@@ -9,13 +9,11 @@ import static org.mockito.Mockito.when;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -42,14 +40,15 @@ class RestructureCommandTest {
     Path temporaryDirectory;
 
     @Test
-    void restructureCommand_baseDirOption_invokesProcessorWithCorrectBaseDir() {
+    void restructureCommand_invoked_usesRestructureFlow() {
         // Given
         CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
             exitCode = cmd.execute("--base-dir", "src/main/java");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
@@ -61,61 +60,6 @@ class RestructureCommandTest {
                         eq(Path.of("src/main/java").toAbsolutePath().normalize()),
                         any(),
                         any(),
-                        eq(FlowType.RESTRUCTURE));
-    }
-
-    @Test
-    void restructureCommand_includeOption_parsesIncludePatternCorrectly() {
-        // Given
-        CommandLine cmd = new CommandLine(new RestructureCommand());
-
-        // When
-        int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(constructedProcessor)
-                .processSources(any(Path.class), eq(java.util.Set.of("**/*.java")), any(), eq(FlowType.RESTRUCTURE));
-    }
-
-    @Test
-    void restructureCommand_mixedCollectionOptions_combineAllValuesCorrectly() {
-        // Given
-        CommandLine cmd = new CommandLine(new RestructureCommand());
-
-        // When
-        int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute(
-                    "-b",
-                    "src",
-                    "-i",
-                    "src/main/java/**/*.java,src/test/java/**/*.java",
-                    "--include",
-                    "src/integrationTest/java/**/*.java",
-                    "-e",
-                    "**/internal/**",
-                    "--exclude",
-                    "**/excluded/**,**/*Test.java");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(constructedProcessor)
-                .processSources(
-                        eq(Path.of("src").toAbsolutePath().normalize()),
-                        eq(Set.of(
-                                "src/main/java/**/*.java",
-                                "src/test/java/**/*.java",
-                                "src/integrationTest/java/**/*.java")),
-                        eq(Set.of("**/internal/**", "**/excluded/**", "**/*Test.java")),
                         eq(FlowType.RESTRUCTURE));
     }
 
@@ -179,13 +123,5 @@ class RestructureCommandTest {
     @NonNull
     private static Path writeConfigFile(Path configFilePath) throws Exception {
         return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
-    }
-
-    @NonNull
-    private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
-        return mockConstruction(SourceProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(new AggregatedProcessingStatistic(0, 0, 0, null, null));
-        });
     }
 }

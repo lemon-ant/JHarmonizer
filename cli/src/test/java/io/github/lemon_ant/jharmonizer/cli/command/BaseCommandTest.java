@@ -1,0 +1,140 @@
+package io.github.lemon_ant.jharmonizer.cli.command;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import java.nio.file.Path;
+import java.util.Set;
+import lombok.NonNull;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
+import picocli.CommandLine;
+
+class BaseCommandTest {
+
+    @Test
+    void call_baseDirOptionInvoked_passesNormalizedAbsoluteBaseDir() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+
+        // When
+        int exitCode;
+        SourceProcessor constructedProcessor;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute("--base-dir", "src");
+            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(constructedProcessor)
+                .processSources(
+                        eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.RESTRUCTURE));
+    }
+
+    @Test
+    void call_includeOptionInvoked_parsesIncludePatternCorrectly() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+
+        // When
+        int exitCode;
+        SourceProcessor constructedProcessor;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
+            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(constructedProcessor)
+                .processSources(any(Path.class), eq(Set.of("**/*.java")), any(), eq(FlowType.RESTRUCTURE));
+    }
+
+    @Test
+    void call_mixedCollectionOptionsInvoked_combinesAllValuesCorrectly() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+
+        // When
+        int exitCode;
+        SourceProcessor constructedProcessor;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute(
+                    "-b",
+                    "src",
+                    "-i",
+                    "src/main/java/**/*.java,src/test/java/**/*.java",
+                    "--include",
+                    "src/integrationTest/java/**/*.java",
+                    "-e",
+                    "**/internal/**",
+                    "--exclude",
+                    "**/excluded/**,**/*Test.java");
+            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(constructedProcessor)
+                .processSources(
+                        eq(Path.of("src").toAbsolutePath().normalize()),
+                        eq(Set.of(
+                                "src/main/java/**/*.java",
+                                "src/test/java/**/*.java",
+                                "src/integrationTest/java/**/*.java")),
+                        eq(Set.of("**/internal/**", "**/excluded/**", "**/*Test.java")),
+                        eq(FlowType.RESTRUCTURE));
+    }
+
+    @Test
+    void call_processingSucceeds_returnsExitCode0() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SourceProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = cmd.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+    }
+
+    @Test
+    void call_processorThrowsRuntimeException_returnsExitCode1() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenThrow(new RuntimeException("Unexpected error"));
+        })) {
+            exitCode = cmd.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    private static final class TestCommand extends BaseCommand {
+
+        @Override
+        @NonNull
+        protected FlowType getFlowType() {
+            return FlowType.RESTRUCTURE;
+        }
+    }
+}
