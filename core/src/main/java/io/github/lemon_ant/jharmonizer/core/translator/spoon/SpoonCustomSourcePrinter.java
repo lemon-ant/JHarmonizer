@@ -111,8 +111,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @Override
     public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION) {
-            // TODO Test this logic, I think we must return after the super.visitCtCompilationUnit(compilationUnit);
+            // For non-type-declaration units, delegate to the default implementation and stop.
             super.visitCtCompilationUnit(compilationUnit);
+            return;
         }
         CtCompilationUnit outerCompilationUnit = this.sourceCompilationUnit;
         try {
