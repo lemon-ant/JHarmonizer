@@ -4,12 +4,8 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
-import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import lombok.NonNull;
 import spoon.compiler.Environment;
@@ -29,15 +25,9 @@ import spoon.reflect.visitor.printer.CommentOffset;
  * and normalises line separators to match the dominant separator of the original file.
  */
 class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
-    @NonNull
-    private final Set<CtType<?>> sortingSkippedTypes;
 
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private final Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges = new HashMap<>();
-
-    @NonNull
-    private final SpoonTypeStructurePrinter typeStructurePrinter;
+    private final SpoonTypePrinter typeStructurePrinter;
 
     /**
      * Creates a new SpoonCustomSourcePrinter.
@@ -50,15 +40,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     SpoonCustomSourcePrinter(
             @NonNull Environment env, @NonNull String srcCode, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         super(env);
-        this.sortingSkippedTypes = Collections.unmodifiableSet(sortingSkippedTypes);
         String lineSeparator = detectDominantLineSeparator(srcCode);
         setLineSeparator(lineSeparator);
-        this.typeStructurePrinter = new SpoonTypeStructurePrinter(
-                srcCode,
-                this.sortingSkippedTypes,
-                sortingSkippedTypeRanges,
-                this::getResult,
-                this::getPrinterTokenWriter);
+        this.typeStructurePrinter = new SpoonTypePrinter(srcCode, sortingSkippedTypes, getPrinterTokenWriter());
     }
 
     /**
@@ -68,7 +52,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <A extends Annotation> void visitCtAnnotationType(@NonNull CtAnnotationType<A> annotationType) {
-        typeStructurePrinter.printTypeStructure(annotationType);
+        typeStructurePrinter.printType(annotationType);
     }
 
     /**
@@ -77,7 +61,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
-        typeStructurePrinter.printTypeStructure(ctClass);
+        typeStructurePrinter.printType(ctClass);
     }
 
     /**
@@ -86,7 +70,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
-        typeStructurePrinter.printTypeStructure(ctEnum);
+        typeStructurePrinter.printType(ctEnum);
     }
 
     /**
@@ -95,7 +79,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
-        typeStructurePrinter.printTypeStructure(intrface);
+        typeStructurePrinter.printType(intrface);
     }
 
     /**
@@ -104,7 +88,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public void visitCtRecord(@NonNull CtRecord recordType) {
-        typeStructurePrinter.printTypeStructure(recordType);
+        typeStructurePrinter.printType(recordType);
     }
 
     /**
@@ -116,7 +100,8 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @NonNull
     SerializedSourceWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         printCompilationUnit(compilationUnit);
-        return new SerializedSourceWithSkippedTypeRanges(getResult(), sortingSkippedTypeRanges);
+        return new SerializedSourceWithSkippedTypeRanges(
+                getResult(), typeStructurePrinter.getSortingSkippedTypeRanges());
     }
 
     /**
