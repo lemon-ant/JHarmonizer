@@ -99,7 +99,7 @@ class SourceAstTranslatorTest {
     }
 
     @Test
-    void serialize_fullyOffTypeRanges_returnsUnmodifiableMap() {
+    void serializedSourceWithSkippedTypeRanges_mutableInputMap_returnsUnmodifiableMap() {
         // Given
         String sourceCode = "class Gamma {}";
         SrcFile srcFile = createSrcFile(sourceCode, Path.of("Gamma.java"));
