@@ -11,11 +11,8 @@ import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
-import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
@@ -23,14 +20,15 @@ import picocli.CommandLine;
 class CheckFastCommandTest {
 
     @Test
-    void checkFastCommand_baseDirOption_invokesProcessorWithCheckFailFastFlow() {
+    void checkFastCommand_invoked_usesCheckFailFastFlow() {
         // Given
         CommandLine cmd = new CommandLine(new CheckFastCommand());
 
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
             exitCode = cmd.execute("--base-dir", "src");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
@@ -40,53 +38,6 @@ class CheckFastCommandTest {
         verify(constructedProcessor)
                 .processSources(
                         eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.CHECK_FAIL_FAST));
-    }
-
-    @Test
-    void checkFastCommand_includeOption_parsesIncludePatternCorrectly() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
-        // When
-        int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(constructedProcessor).processSources(any(Path.class), eq(java.util.Set.of("**/*.java")), any(), any());
-    }
-
-    @Test
-    void checkFastCommand_longCollectionOptions_parseCommaSeparatedPatternsCorrectly() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
-        // When
-        int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks = mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute(
-                    "--base-dir",
-                    "src",
-                    "--include",
-                    "src/main/java/**/*.java,src/test/java/**/*.java",
-                    "--exclude",
-                    "**/internal/**,**/*Test.java");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(constructedProcessor)
-                .processSources(
-                        eq(Path.of("src").toAbsolutePath().normalize()),
-                        eq(Set.of("src/main/java/**/*.java", "src/test/java/**/*.java")),
-                        eq(Set.of("**/internal/**", "**/*Test.java")),
-                        eq(FlowType.CHECK_FAIL_FAST));
     }
 
     @Test
@@ -126,21 +77,6 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_noChangesDetected_returnsExitCode0() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
-        // When
-        int exitCode;
-        try (MockedConstruction<SourceProcessor> ignored = mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-    }
-
-    @Test
     void checkFastCommand_processorThrowsRuntimeException_returnsExitCode1() {
         // Given
         CommandLine cmd = new CommandLine(new CheckFastCommand());
@@ -156,13 +92,5 @@ class CheckFastCommandTest {
 
         // Then
         assertThat(exitCode).isEqualTo(1);
-    }
-
-    @NonNull
-    private static MockedConstruction<SourceProcessor> mockSuccessfulProcessorConstruction() {
-        return mockConstruction(SourceProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(new AggregatedProcessingStatistic(0, 0, 0, null, null));
-        });
     }
 }
