@@ -94,6 +94,29 @@ class OptOutSourceProcessorIntegrationTest {
     }
 
     @Test
+    void processSources_fileSortOffAndNestedFullyOff_preserveFullyOffFragmentWhileFormattingRestOfFile()
+            throws Exception {
+        // Given
+        String expectedFullyOffFragment = "    // @jharmonizer:fully-off\n    static class Inner{int z;  int a;}";
+        String originalSourceCode = """
+                // @jharmonizer:sort-off
+                class Outer{int b;int a;
+                %s
+                }
+                """.formatted(expectedFullyOffFragment);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSourceCode).contains(expectedFullyOffFragment);
+        assertThat(processedSourceCode).contains("class Outer {");
+    }
+
+    @Test
     void processSources_topLevelTypeOptOutOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
         // Given
         String ignoredFragment = """

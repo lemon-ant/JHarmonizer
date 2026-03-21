@@ -64,7 +64,12 @@ abstract class AbstractOptOutFlow implements IFlow {
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
                     new SerializationResult(
                             new SerializationStatistic(originalSrcCode.length(), 0),
-                            new SerializedSourceWithSkippedTypeRanges(originalSrcCode, Map.of())),
+                            new SerializedSourceWithSkippedTypeRanges(
+                                    originalSrcCode,
+                                    reuseMode == JHarmonizerOptOutMode.SORTING_OFF
+                                            ? OptOutFormattingRangeResolver.resolveFullyOffTypeRanges(
+                                                    parsedSpoonAstModel.getOptOuts(), originalSrcCode)
+                                            : Map.of())),
                     true);
         }
 

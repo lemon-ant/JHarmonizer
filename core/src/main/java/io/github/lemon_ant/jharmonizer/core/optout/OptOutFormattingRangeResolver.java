@@ -5,6 +5,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtType;
@@ -13,7 +14,7 @@ import spoon.reflect.declaration.CtType;
 public class OptOutFormattingRangeResolver {
 
     /**
-     * Resolves formatting exclusion ranges for fully skipped types.
+     * Resolves formatting exclusion ranges for fully-off types.
      *
      * @param optOuts the resolved opt-out modes for the source file
      * @param serializedSourceWithSkippedTypeRanges the serialized source snapshot with preserved type ranges
@@ -31,5 +32,48 @@ public class OptOutFormattingRangeResolver {
                 .map(sortingSkippedTypeRanges::get)
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    /**
+     * Resolves original-source ranges for fully-off types when formatting runs on the original source text.
+     *
+     * @param optOuts the resolved opt-out modes for the source file
+     * @param originalSrcCode the original source text that serves as the formatting base
+     * @return the original-source ranges keyed by fully-off types
+     */
+    @NonNull
+    public Map<CtType<?>, SrcCharacterRange> resolveFullyOffTypeRanges(
+            @NonNull JHarmonizerOptOuts optOuts, @NonNull String originalSrcCode) {
+        return optOuts.getTypeOptOutModes().entrySet().stream()
+                .filter(entry -> entry.getValue() == JHarmonizerOptOutMode.FULLY_OFF)
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey, entry -> resolveOriginalTypeRange(entry.getKey(), originalSrcCode)));
+    }
+
+    @NonNull
+    private static SrcCharacterRange resolveOriginalTypeRange(CtType<?> type, String originalSrcCode) {
+        int originalStart = findIndentationStart(type.getPosition().getSourceStart(), originalSrcCode);
+        int originalEndExclusive = type.getPosition().getSourceEnd() + 1;
+        if (originalEndExclusive > originalSrcCode.length()) {
+            throw new IllegalStateException("Invalid type source range: start="
+                    + originalStart
+                    + ", endExclusive="
+                    + originalEndExclusive
+                    + ", sourceLength="
+                    + originalSrcCode.length());
+        }
+        return new SrcCharacterRange(originalStart, originalEndExclusive);
+    }
+
+    private static int findIndentationStart(int start, String originalSrcCode) {
+        int position = start - 1;
+        while (position >= 0) {
+            char character = originalSrcCode.charAt(position);
+            if (character != '\t' && character != ' ') {
+                break;
+            }
+            position--;
+        }
+        return position + 1;
     }
 }
