@@ -6,7 +6,6 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -167,6 +166,6 @@ final class SpoonTypePrinter {
 
     @NonNull
     Map<CtType<?>, SrcCharacterRange> getSortingSkippedTypeRanges() {
-        return Collections.unmodifiableMap(sortingSkippedTypeRanges);
+        return sortingSkippedTypeRanges;
     }
 }
