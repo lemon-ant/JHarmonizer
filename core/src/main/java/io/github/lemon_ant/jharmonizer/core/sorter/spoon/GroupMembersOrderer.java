@@ -6,6 +6,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -248,7 +249,7 @@ class GroupMembersOrderer {
                     bundleMember -> accessorBundleMembersByMember.put(bundleMember, sortedBundleMembersInGroup));
         }
 
-        return accessorBundleMembersByMember;
+        return Collections.unmodifiableMap(accessorBundleMembersByMember);
     }
 
     @NonNull
