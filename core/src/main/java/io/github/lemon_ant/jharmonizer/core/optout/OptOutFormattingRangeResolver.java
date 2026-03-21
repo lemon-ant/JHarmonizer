@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
+import io.github.lemon_ant.jharmonizer.core.source.SrcCodeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.util.List;
@@ -54,7 +55,7 @@ public class OptOutFormattingRangeResolver {
     private static SrcCharacterRange resolveOriginalTypeRange(CtType<?> type, String originalSrcCode) {
         // Match the preserved-fragment start used by the custom Spoon printer so original-source reuse
         // excludes the same leading indentation from formatter rewrites.
-        int originalStart = findIndentationStart(type.getPosition().getSourceStart(), originalSrcCode);
+        int originalStart = SrcCodeUtils.findIndentationStart(type.getPosition().getSourceStart(), originalSrcCode);
         int originalEndExclusive = type.getPosition().getSourceEnd() + 1;
         if (originalEndExclusive > originalSrcCode.length()) {
             throw new IllegalStateException("Invalid type source range: start="
@@ -65,18 +66,5 @@ public class OptOutFormattingRangeResolver {
                     + originalSrcCode.length());
         }
         return new SrcCharacterRange(originalStart, originalEndExclusive);
-    }
-
-    private static int findIndentationStart(int start, String srcCode) {
-        // Walk backward over spaces/tabs to include the full line indentation in the excluded range.
-        int position = start - 1;
-        while (position >= 0) {
-            char character = srcCode.charAt(position);
-            if (character != '\t' && character != ' ') {
-                break;
-            }
-            position--;
-        }
-        return position + 1;
     }
 }

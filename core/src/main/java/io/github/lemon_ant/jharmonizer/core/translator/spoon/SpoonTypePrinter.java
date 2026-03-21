@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.GROUP_HEADER_METADATA;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.findIndentationStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
+import io.github.lemon_ant.jharmonizer.core.source.SrcCodeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,7 +72,7 @@ final class SpoonTypePrinter {
      */
     @NonNull
     TokenWriter printOriginalFragment(int start, int end) {
-        int startWithIndent = findIndentationStart(start, originalSrcCode);
+        int startWithIndent = SrcCodeUtils.findIndentationStart(start, originalSrcCode);
         try {
             String originalCodeFragment =
                     originalSrcCode.substring(startWithIndent, end + 1).stripTrailing();

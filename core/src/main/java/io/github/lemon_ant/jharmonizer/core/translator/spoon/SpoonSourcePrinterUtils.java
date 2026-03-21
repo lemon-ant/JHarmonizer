@@ -7,32 +7,13 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Internal utilities shared between the custom Spoon source printer and its callers.
- * Provides helpers for detecting the dominant line separator, locating indentation boundaries,
+ * Provides helpers for detecting the dominant line separator
  * and deciding whether a member group separator is needed before or after a given member.
  */
 @UtilityClass
 public class SpoonSourcePrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
-
-    /**
-     * Finds the first indentation character position for the source fragment.
-     *
-     * @param start the source index to scan backward from
-     * @param sourceCode the source code text to inspect
-     * @return the indentation start offset for the fragment
-     */
-    static int findIndentationStart(int start, @NonNull String sourceCode) {
-        int pos = start - 1;
-        while (pos >= 0) {
-            char c = sourceCode.charAt(pos);
-            if (c != '\t' && c != ' ') {
-                break;
-            }
-            pos--;
-        }
-        return pos + 1;
-    }
 
     /**
      * Detects the dominant line separator.
