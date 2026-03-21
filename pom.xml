@@ -16,7 +16,9 @@
     </modules>
 
     <properties>
+        <!-- Late-bound by Surefire so JaCoCo can inject its test agent without leaving an unresolved @{argLine}. -->
         <argLine/>
+        <!-- Late-bound by Failsafe so integration-test coverage can inject its agent without unresolved placeholders. -->
         <failsafeArgLine/>
         <jackson.version>2.21.1</jackson.version>
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
@@ -181,6 +183,7 @@
                                 <goal>prepare-agent</goal>
                             </goals>
                             <configuration>
+                                <!-- Append so later test executions in the same module do not overwrite earlier coverage data. -->
                                 <append>true</append>
                             </configuration>
                         </execution>
@@ -190,6 +193,7 @@
                                 <goal>prepare-agent-integration</goal>
                             </goals>
                             <configuration>
+                                <!-- Append so unit-test and integration-test coverage can accumulate in one module build. -->
                                 <append>true</append>
                                 <propertyName>failsafeArgLine</propertyName>
                             </configuration>

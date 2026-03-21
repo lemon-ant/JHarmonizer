@@ -50,6 +50,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <!-- Keep the javac module opens while letting JaCoCo inject its late-bound test agent. -->
                     <argLine>@{argLine} --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
                     --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
                     --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
@@ -62,6 +63,7 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.5.5</version>
                 <configuration>
+                    <!-- Populated by JaCoCo's integration-test agent so Failsafe runs can contribute coverage data. -->
                     <argLine>@{failsafeArgLine}</argLine>
                     <systemPropertyVariables>
                         <jharmonizer.cli.executableJar>${project.build.directory}/${project.build.finalName}.jar</jharmonizer.cli.executableJar>
