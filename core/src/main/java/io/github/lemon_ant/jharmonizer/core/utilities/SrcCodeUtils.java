@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.source;
+package io.github.lemon_ant.jharmonizer.core.utilities;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;

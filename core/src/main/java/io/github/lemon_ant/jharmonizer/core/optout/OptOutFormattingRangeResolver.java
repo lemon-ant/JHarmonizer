@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import io.github.lemon_ant.jharmonizer.core.source.SrcCodeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
