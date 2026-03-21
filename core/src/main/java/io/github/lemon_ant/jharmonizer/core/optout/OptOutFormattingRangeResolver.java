@@ -38,37 +38,40 @@ public class OptOutFormattingRangeResolver {
      * Resolves original-source ranges for fully-off types when formatting runs on the original source text.
      *
      * @param optOuts the resolved opt-out modes for the source file
-     * @param originalSrcCode the original source text that serves as the formatting base
+     * @param srcCode the original source text that serves as the formatting base
      * @return the original-source ranges keyed by fully-off types
      */
     @NonNull
     public Map<CtType<?>, SrcCharacterRange> resolveFullyOffTypeRanges(
-            @NonNull JHarmonizerOptOuts optOuts, @NonNull String originalSrcCode) {
+            @NonNull JHarmonizerOptOuts optOuts, @NonNull String srcCode) {
         return optOuts.getTypeOptOutModes().entrySet().stream()
                 .filter(entry -> entry.getValue() == JHarmonizerOptOutMode.FULLY_OFF)
                 .collect(Collectors.toUnmodifiableMap(
-                        Map.Entry::getKey, entry -> resolveOriginalTypeRange(entry.getKey(), originalSrcCode)));
+                        Map.Entry::getKey, entry -> resolveOriginalTypeRange(entry.getKey(), srcCode)));
     }
 
     @NonNull
-    private static SrcCharacterRange resolveOriginalTypeRange(CtType<?> type, String originalSrcCode) {
-        int originalStart = findIndentationStart(type.getPosition().getSourceStart(), originalSrcCode);
+    private static SrcCharacterRange resolveOriginalTypeRange(CtType<?> type, String srcCode) {
+        // Match the preserved-fragment start used by the custom Spoon printer so original-source reuse
+        // excludes the same leading indentation from formatter rewrites.
+        int originalStart = findIndentationStart(type.getPosition().getSourceStart(), srcCode);
         int originalEndExclusive = type.getPosition().getSourceEnd() + 1;
-        if (originalEndExclusive > originalSrcCode.length()) {
+        if (originalEndExclusive > srcCode.length()) {
             throw new IllegalStateException("Invalid type source range: start="
                     + originalStart
                     + ", endExclusive="
                     + originalEndExclusive
                     + ", sourceLength="
-                    + originalSrcCode.length());
+                    + srcCode.length());
         }
         return new SrcCharacterRange(originalStart, originalEndExclusive);
     }
 
-    private static int findIndentationStart(int start, String originalSrcCode) {
+    private static int findIndentationStart(int start, String srcCode) {
+        // Walk backward over spaces/tabs to include the full line indentation in the excluded range.
         int position = start - 1;
         while (position >= 0) {
-            char character = originalSrcCode.charAt(position);
+            char character = srcCode.charAt(position);
             if (character != '\t' && character != ' ') {
                 break;
             }

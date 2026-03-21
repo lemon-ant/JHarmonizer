@@ -97,7 +97,10 @@ class OptOutSourceProcessorIntegrationTest {
     void processSources_fileSortOffAndNestedFullyOff_preserveFullyOffFragmentWhileFormattingRestOfFile()
             throws Exception {
         // Given
-        String expectedFullyOffFragment = "    // @jharmonizer:fully-off\n    static class Inner{int z;  int a;}";
+        String expectedFullyOffFragment = """
+                    // @jharmonizer:fully-off
+                    static class Inner{int z;  int a;}
+                """.stripTrailing();
         String originalSourceCode = """
                 // @jharmonizer:sort-off
                 class Outer{int b;int a;
@@ -113,6 +116,7 @@ class OptOutSourceProcessorIntegrationTest {
 
         // Then
         assertThat(processedSourceCode).contains(expectedFullyOffFragment);
+        assertThat(processedSourceCode).contains("static class Inner{int z;  int a;}");
         assertThat(processedSourceCode).contains("class Outer {");
     }
 
