@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -48,6 +49,7 @@ class SourceProcessorE2EFixtureTest {
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
     private static final String CONFIG_FILE = "config.yml";
+    private static final String FAILURE_MESSAGE_FILE = "failure-message.txt";
     private static final String WORKING_DIRECTORY_NAME = "SourceProcessorE2E-working-dir";
     private static final String COMPILE_BEFORE_DIRECTORY_NAME = "SourceProcessorE2E-compile-before";
     private static final String COMPILE_AFTER_DIRECTORY_NAME = "SourceProcessorE2E-compile-after";
@@ -113,6 +115,23 @@ class SourceProcessorE2EFixtureTest {
                         "Expected main method execution to succeed for %s. Output:%n%s",
                         runAfterResult.getClassName(), runAfterResult.getOutput())
                 .isZero();
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("failingFixtureScenarios")
+    void processFixtureScenario_specialJavaFileWithoutTypes_throwsExpectedFailure(Path scenarioDir) throws Exception {
+        // Given
+        Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
+        Path workingScenarioRoot =
+                temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioDir.toString());
+        copyInputDirectory(resolveInput(fixtureScenario), workingScenarioRoot);
+        String expectedFailureMessage = Files.readString(resolveFailureMessage(fixtureScenario), StandardCharsets.UTF_8)
+                .trim();
+
+        // When / Then
+        assertThatThrownBy(() -> runProcessorForScenario(workingScenarioRoot, resolveConfig(fixtureScenario)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(expectedFailureMessage);
     }
 
     @Test
@@ -186,12 +205,27 @@ class SourceProcessorE2EFixtureTest {
     @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
+                .filter(fixtureInputFile ->
+                        !hasExpectedFailure(fixtureInputFile.getParent().getParent()))
                 .sorted()
                 .map(fixtureInputFile -> {
                     Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
                     Path sourceFile = fixtureInputFile.getFileName();
                     return Arguments.of(scenarioDir, sourceFile);
                 });
+    }
+
+    @NonNull
+    private static Stream<Path> failingFixtureScenarios() throws IOException {
+        try (Stream<Path> children = Files.list(FIXTURES_ROOT)) {
+            return children
+                    .filter(Files::isDirectory)
+                    .filter(SourceProcessorE2EFixtureTest::hasExpectedFailure)
+                    .map(Path::getFileName)
+                    .sorted()
+                    .toList()
+                    .stream();
+        }
     }
 
     @NonNull
@@ -227,6 +261,14 @@ class SourceProcessorE2EFixtureTest {
                 sourceFilePath.getParent(), List.of(sourceFilePath.getFileName().toString()), List.of(), flowType);
     }
 
+    private static void runProcessorForScenario(Path scenarioInputRoot, Path config) {
+        FlexibleUnifiedConfig flexibleConfig =
+                JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
+                        E2EFileUtils.toUrl(config));
+        SourceProcessor sourceProcessor = new SourceProcessor(flexibleConfig);
+        sourceProcessor.processSources(scenarioInputRoot, List.of(), List.of(), FlowType.RESTRUCTURE);
+    }
+
     @NonNull
     private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
         Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
@@ -239,6 +281,19 @@ class SourceProcessorE2EFixtureTest {
         }
     }
 
+    private static void copyInputDirectory(Path fixtureInputDirectory, Path workingScenarioRoot) {
+        try {
+            FileUtils.copyDirectory(fixtureInputDirectory.toFile(), workingScenarioRoot.toFile());
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Failed to copy fixture input directory: " + fixtureInputDirectory, exception);
+        }
+    }
+
+    private static boolean hasExpectedFailure(Path scenarioDirectory) {
+        return Files.isRegularFile(resolveFailureMessage(scenarioDirectory));
+    }
+
     @NonNull
     private static Path resolveConfig(Path scenario) {
         return scenario.resolve(CONFIG_FILE);
@@ -247,6 +302,11 @@ class SourceProcessorE2EFixtureTest {
     @NonNull
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
+    }
+
+    @NonNull
+    private static Path resolveFailureMessage(Path scenario) {
+        return scenario.resolve(FAILURE_MESSAGE_FILE);
     }
 
     @NonNull

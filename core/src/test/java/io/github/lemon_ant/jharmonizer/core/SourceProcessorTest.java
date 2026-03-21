@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -11,8 +10,6 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,14 +17,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 import lombok.NonNull;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -41,8 +33,6 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
-    private static final URL SPECIAL_JAVA_FIXTURES_ROOT_URL =
-            TestCaseResourceUtils.requireClasspathDirectoryUrl("/test-cases/core/source-processor/special-java-files/");
     private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
             package demo;
             public class Sample {}
@@ -59,20 +49,6 @@ class SourceProcessorTest {
 
     @TempDir
     Path temporaryDirectory;
-
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("specialJavaFixtureDirectories")
-    void processSources_specialJavaFixture_propagatesParserFailure(String fixtureDirectoryName) throws Exception {
-        // Given
-        Path projectDirectory = copyFixtureProject(fixtureDirectoryName);
-        SourceProcessor sourceProcessor = new SourceProcessor();
-
-        // When / Then
-        assertThatThrownBy(() -> sourceProcessor.processSources(
-                        projectDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("AllTypes cannot be empty");
-    }
 
     @Test
     void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
@@ -212,34 +188,5 @@ class SourceProcessorTest {
         Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
         logger.detachAppender(listAppender);
         listAppender.stop();
-    }
-
-    @NonNull
-    private static Stream<Arguments> specialJavaFixtureDirectories() {
-        return Stream.of(
-                Arguments.of("package-info-only"),
-                Arguments.of("module-info-only"),
-                Arguments.of("package-info-with-type"),
-                Arguments.of("module-info-with-type"),
-                Arguments.of("module-and-package-info-with-type"));
-    }
-
-    @NonNull
-    private Path copyFixtureProject(String fixtureDirectoryName) throws IOException {
-        Path srcPath = toPath(
-                TestCaseResourceUtils.resolveRelativeUrl(SPECIAL_JAVA_FIXTURES_ROOT_URL, fixtureDirectoryName + "/"));
-        Path targetProjectDirectory = temporaryDirectory.resolve(fixtureDirectoryName);
-        Files.createDirectories(targetProjectDirectory);
-        FileUtils.copyDirectory(srcPath.toFile(), targetProjectDirectory.toFile());
-        return targetProjectDirectory;
-    }
-
-    @NonNull
-    private static Path toPath(URL resourceUrl) {
-        try {
-            return Path.of(resourceUrl.toURI());
-        } catch (URISyntaxException exception) {
-            throw new IllegalArgumentException("Failed to convert test resource URL to URI: " + resourceUrl, exception);
-        }
     }
 }
