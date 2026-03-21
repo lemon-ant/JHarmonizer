@@ -22,7 +22,9 @@ Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.
 - **JUnit 5** is the test runner.
 - **AssertJ** is the assertion library.
   - Do not use `org.junit.jupiter.api.Assertions.*` in new/updated tests.
+- Prefer ordinary imports over repeated fully qualified names in tests.
 - Prefer using production pipeline building blocks (parsers, converters, compilers, factories) instead of test-only reimplementations.
+- When an annotation argument in test code only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 - When test code overrides standard `Object` methods, preserve the standard signature exactly.
   - Do not add nullability annotations to `Object` overrides in tests.
   - In particular, keep `equals(Object)` unchanged.
@@ -36,6 +38,7 @@ Rules:
 - Before copying code into another test, search for an existing shared test utility and reuse it.
 - If similar fragments appear in more than one test (or are likely to be reused), extract them into a shared test utility class.
 - Re-run this reuse analysis regularly: when adding new tests, when refactoring tests, and during cleanup passes.
+- When a test in another package must create a production type with package-private construction, prefer a dedicated test creator/helper in the target package instead of widening the production constructor visibility.
 
 ## Naming
 

@@ -129,6 +129,7 @@ public class UnifiedMemberGroupRuleLine {
          * @throws IllegalStateException if nameMatcher has already been assigned
          */
         @NonNull
+        // TODO Why we do not use this method result???
         public UnifiedMemberGroupRuleLineBuilder nameMatcher(@Nullable UnifiedNameMatcher nameMatcher) {
             if (this.nameMatcherAlreadyAssigned) {
                 throw new IllegalStateException("nameMatcher has already been assigned for " + this);

@@ -5,61 +5,59 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.RESTRUCTURE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
  * Optionally renames the original file to a backup before overwriting it.
  */
-@Slf4j
-@AllArgsConstructor
-public class RestructureFlow implements IFlow {
+public class RestructureFlow extends AbstractOptOutFlow {
 
-    private final Formatter formatter;
     private final boolean backupsEnabled;
-    private final Sorter sorter;
-    private final FlowDebugStageRecorder debugStageRecorder = new FlowDebugStageRecorder(RESTRUCTURE);
+
+    public RestructureFlow(@NonNull Formatter formatter, boolean backupsEnabled, @NonNull Sorter sorter) {
+        super(formatter, sorter, RESTRUCTURE);
+        this.backupsEnabled = backupsEnabled;
+    }
 
     /**
      * Processes the source.
+     *
      * @param srcFile the source file
      * @return the result
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull SourceFilesHandler.SrcFile srcFile) {
-        debugStageRecorder.recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+    public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
+        if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
+            return buildFullyOffFileSkippedResult(srcFile, parsingResult, false, "all harmonization");
+        }
 
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+        SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
+                sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
+        SortingAndSerializationResult sortingAndSerializationResult =
+                sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
+        SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
-        SortingResult sortingResult = sorter.sort(parsingResult.getSpoonAstModel());
-        SpoonAstModel sortedSpoonAstModel = sortingResult.getSortedSpoonAstModel();
-        SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.SORTED, serializationResult.getSerializedSrcCode());
-
-        FormattingResult formattingResult =
-                formatter.formatSource(serializationResult.getSerializedSrcCode(), srcFile.getPath());
-        debugStageRecorder.recordSrcStage(
-                srcFile.getPath(), SrcFlowStage.FORMATTED, formattingResult.getFormattedSrcCode());
-
-        boolean hasChanged = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
-        if (hasChanged) {
+        boolean hasChanges =
+                !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
+        if (hasChanges) {
             if (backupsEnabled) {
                 SourceFilesHandler.renameToBackup(srcFile.getPath());
             }
-            SourceFilesHandler.overwrite(srcFile.getPath(), formattingResult.getFormattedSrcCode());
+            SourceFilesHandler.overwrite(
+                    srcFile.getPath(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
 
         return FlowProcessingResult.builder()
@@ -67,14 +65,16 @@ public class RestructureFlow implements IFlow {
                 .relocations(null)
                 .diff(null)
                 .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(sortingResult.getSortingStatistic())
-                .serializationStatistic(serializationResult.getSerializationStatistic())
-                .formattingStatistic(formattingResult.getFormattingStatistic())
+                .sortingStatistic(
+                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(
-                        isRelocated(
-                                sortedSpoonAstModel.getOriginalElements2OrderIndices(),
-                                sortedSpoonAstModel.getCompilationUnit()),
-                        hasChanged,
+                        !sortingAndSerializationResult.isSortingSkipped()
+                                && isRelocated(
+                                        sortedSpoonAstModel.getOriginalElements2OrderIndices(),
+                                        sortedSpoonAstModel.getCompilationUnit()),
+                        hasChanges,
                         false))
                 .build();
     }

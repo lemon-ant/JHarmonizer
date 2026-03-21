@@ -1,9 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
+import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
 import java.util.Collection;
 import java.util.function.Supplier;
 import lombok.NonNull;
@@ -21,48 +22,37 @@ public class SpoonParser {
 
     /**
      * Parses the java source resource.
-     * @param javaSourcePath the Java source path to parse
+     * @param srcFile the original source file
      * @return the java source resource
      */
     @NonNull
-    public static SpoonAstModel parseJavaSourceResource(@NonNull Path javaSourcePath) throws IOException {
-        Path normalizedSourcePath = javaSourcePath.normalize().toAbsolutePath();
-        String originalSourceCode = Files.readString(normalizedSourcePath);
-        return parseJavaSourceResource(normalizedSourcePath, originalSourceCode);
-    }
-
-    /**
-     * Parses the java source resource.
-     * @param originalSourceFile the original source file
-     * @param originalSourceCode the original source code
-     * @return the java source resource
-     */
-    @NonNull
-    public static SpoonAstModel parseJavaSourceResource(
-            @NonNull Path originalSourceFile, @NonNull String originalSourceCode) {
-        VirtualFile virtualFile = new VirtualFile(originalSourceCode, originalSourceFile.toString());
+    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile) {
+        VirtualFile virtualFile =
+                new VirtualFile(srcFile.getSrcCode(), srcFile.getPath().toString());
 
         Launcher launcher = createPreconfiguredParserLauncher();
         launcher.addInputResource(virtualFile);
-        launcher.getEnvironment()
-                .setPrettyPrinterCreator(
-                        () -> new SpoonCustomSourcePrinter(launcher.getEnvironment(), originalSourceCode));
 
-        return buildSpoonAstModel(originalSourceFile, launcher);
+        return buildSpoonAstModel(srcFile, launcher);
     }
 
     @NonNull
-    private static SpoonAstModel buildSpoonAstModel(Path path, Launcher launcher) {
-        var compilationUnit = extractCompilationUnit(launcher);
-        var mainType = SpoonTypeUtils.findMainType(compilationUnit);
-        Supplier<String> serializedSourceCode =
-                () -> launcher.createPrettyPrinter().printCompilationUnit(compilationUnit);
+    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
+        CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
+        CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
+        JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
+        Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
+            SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
+                    launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
+            return printer.serializeCompilationUnit(compilationUnit);
+        };
         return SpoonAstModel.builder()
                 .originalElements2OrderIndices(RelocationDetector.indexElementsByOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
-                .serializedSourceCode(serializedSourceCode)
-                .path(path)
+                .serializedSrcCode(serializedSrcCode)
+                .optOuts(optOuts)
+                .path(srcFile.getPath())
                 .build();
     }
 

@@ -1,0 +1,224 @@
+package io.github.lemon_ant.jharmonizer.core.optout;
+
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtCompilationUnit;
+import spoon.reflect.declaration.CtType;
+
+class JHarmonizerOptOutResolverTest {
+
+    @Test
+    void parseJavaSourceResource_fileOptOutBeforePackage_resolveFileOptOutOff() {
+        // Given
+        String sourceCode = """
+                // @jharmonizer:fully-off
+                package demo;
+
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_fileOptOutBetweenPackageAndImport_resolveFileSortOffOptOut() {
+        // Given
+        String sourceCode = """
+                package demo;
+
+                /* @jharmonizer:sort-off */
+                import java.util.List;
+
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_typeOptOutBeforeAnnotatedTopLevelType_resolveTypeOptOut() {
+        // Given
+        String sourceCode = """
+                package demo;
+
+                // @jharmonizer:fully-off
+                @Deprecated
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        CtType<?> sampleType =
+                spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst();
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(sampleType)).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_typeOptOutBeforeNestedType_resolveNestedTypeOptOut() {
+        // Given
+        String sourceCode = """
+                package demo;
+
+                class Outer {
+                    /* @jharmonizer:sort-off */
+                    class Inner {}
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Outer.java")));
+        CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
+        CtType<?> outerType = compilationUnit.getDeclaredTypes().getFirst();
+        CtType<?> nestedType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(nestedType))
+                .contains(JHarmonizerOptOutMode.SORTING_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
+        // Given
+        String sourceCode = """
+                package demo;
+
+                class Sample {
+                    // @jharmonizer:fully-off
+                    int value;
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
+    }
+
+    @Test
+    void parseJavaSourceResource_unsupportedOptOutToken_ignoreInvalidOptOut() {
+        // Given
+        String sourceCode = """
+                package demo;
+
+                // @jharmonizer:format-off
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
+    }
+
+    @Test
+    void parseJavaSourceResource_mixedCaseOptOutToken_resolveIgnoringCase() {
+        // Given
+        String sourceCode = """
+                // @JHarmonizer:SoRt-OfF
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
+    }
+
+    @Test
+    void resolveFileOptOutMode_sortOffThenFullyOff_resolvesFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:sort-off
+                // @jharmonizer:fully-off
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void resolveTypeOptOutMode_sortOffThenFullyOff_resolvesFullyOff() {
+        // Given
+        String srcCode = """
+                class Sample {
+                    // @jharmonizer:sort-off
+                    // @jharmonizer:fully-off
+                    class Nested {}
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        CtType<?> nestedType =
+                spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getNestedTypes().stream()
+                        .findFirst()
+                        .orElseThrow();
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(nestedType)).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void getSortingSkippedTypes_nestedSortOffWithinSortOffParent_skipOnlyParentType() {
+        // Given
+        String srcCode = """
+                class Sample {
+                    // @jharmonizer:sort-off
+                    class Outer {
+                        // @jharmonizer:sort-off
+                        class Inner {}
+                    }
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        CtType<?> outerType = spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getNestedTypes().stream()
+                .findFirst()
+                .orElseThrow();
+        CtType<?> innerType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getSortingSkippedTypes())
+                .contains(outerType)
+                .doesNotContain(innerType);
+        assertThat(spoonAstModel.getOptOuts().findTypeOptOutMode(innerType)).isEmpty();
+    }
+
+    @Test
+    void parseJavaSourceResource_legacyOffAlias_ignoreInvalidOptOut() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:off
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
+    }
+}

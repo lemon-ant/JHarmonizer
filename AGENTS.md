@@ -23,22 +23,38 @@ This file defines repository-wide conventions for coding agents working in this 
 - Keep changes surgical and avoid unrelated cleanup.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
+- Prefer normal imports over repeated fully qualified class names.
+- Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
+- When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
+- Use the minimal necessary access level for production classes, constructors, and methods.
+  - Prefer package-private over `public` when access outside the package is not required.
+  - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
+- Keep production models and value objects focused on state plus simple accessors or validation.
+  - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
+- Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
+- Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
+- If a boolean helper is always consumed through negation at its call sites, invert the helper logic and rename it so callers stay positive and direct.
 - Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `build`, or `merge`.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
-  - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
+    - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
   - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
-- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
-- Do not change standard `Object` method signatures when overriding them.
-  - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
-  - Preserve standard contracts exactly, especially `equals(Object)`.
+- Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
+- Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
+- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
+- Do not change standard `Object` method signatures when overriding them.
+    - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
+    - Preserve standard contracts exactly, especially `equals(Object)`.
+- Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
+    - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
+- In private helper code, prefer unmodifiable wrappers over defensive copies unless you specifically need an isolated snapshot.
 - Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 

@@ -1,9 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
@@ -22,10 +23,10 @@ class ParseAllJava21FeaturesTest {
     @Test
     void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
-        SrcFile srcFile = new SrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
+        SrcFile srcFile = createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        ParsingResult parsingResult = SourceAstTranslator.parseSourceFile(srcFile);
+        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then
@@ -46,15 +47,18 @@ class ParseAllJava21FeaturesTest {
     @Test
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
         // Given
-        SpoonAstModel spoonASTModel = SpoonParser.parseJavaSourceResource(
-                SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH, SAMPLE_ALL_JAVA21_SOURCE_CODE);
+        SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
+                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
 
         // When
         SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);
 
         // Then
         assertThat(serializationResult).isNotNull();
-        assertThat(serializationResult.getSerializedSrcCode()).contains("SampleAllJava21FeaturesList");
+        assertThat(serializationResult
+                        .getSerializedSourceWithSkippedTypeRanges()
+                        .getSerializedSrcCode())
+                .contains("SampleAllJava21FeaturesList");
         assertThat(serializationResult.getSerializationStatistic()).isNotNull();
         SerializationStatistic serializationStatistic = serializationResult.getSerializationStatistic();
         // Use withPercentage because the serializer may add or remove a few line separators.

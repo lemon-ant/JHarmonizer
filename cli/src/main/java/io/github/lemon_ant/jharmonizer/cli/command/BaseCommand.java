@@ -104,8 +104,8 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
-        if (effectiveConfigFilePath != null && !Files.exists(effectiveConfigFilePath)) {
-            log.error("Config file does not exist: {}", effectiveConfigFilePath);
+        if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
+            log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
             return 1;
         }
         CommandOptions commandOptions = new CommandOptions(

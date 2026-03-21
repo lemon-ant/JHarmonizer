@@ -2,8 +2,11 @@ package io.github.lemon_ant.jharmonizer.core.formatter;
 
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle.PALANTIR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class FormatterTest {
@@ -16,7 +19,7 @@ class FormatterTest {
         String expectedClass = "public class Person {}\n";
 
         // When
-        FormattingResult formattingResult = formatter.formatSource(sourceClass, Path.of(""));
+        FormattingResult formattingResult = formatter.formatSource(sourceClass, Path.of(""), List.of());
         FormattingStatistic formattingStatistic = formattingResult.getFormattingStatistic();
 
         // Then
@@ -34,7 +37,7 @@ class FormatterTest {
         String expectedClass = "public class Person {}\n";
 
         // When
-        FormattingResult formattingResult = formatter.formatSource(sourceClass, Path.of(""));
+        FormattingResult formattingResult = formatter.formatSource(sourceClass, Path.of(""), List.of());
         FormattingStatistic formattingStatistic = formattingResult.getFormattingStatistic();
 
         // Then
@@ -42,5 +45,53 @@ class FormatterTest {
         assertThat(formattingStatistic).isNotNull();
         assertThat(formattingStatistic.getFormattedCodeLength()).isEqualTo(expectedClass.length());
         assertThat(formattingStatistic.getFormattingTimeInNanos()).isGreaterThan(1_000_000);
+    }
+
+    @Test
+    void formatSource_withFullExclusionRange_keepSourceUnchanged() {
+        // Given
+        Formatter formatter = new Formatter(PALANTIR, false);
+        String sourceCode = "class Person {  }\n";
+
+        // When
+        FormattingResult formatingResult = formatter.formatSource(
+                sourceCode, Path.of("Person.java"), List.of(new SrcCharacterRange(0, sourceCode.length())));
+
+        // Then
+        assertThat(formatingResult.getFormattedSrcCode()).isEqualTo(sourceCode);
+    }
+
+    @Test
+    void formatSource_middleExclusionRange_preserveExcludedFragment() {
+        // Given
+        Formatter formatter = new Formatter(PALANTIR, false);
+        String excludedFragment = "int  preserved;";
+        String sourceCode = "class Person{int a;  %s}\n".formatted(excludedFragment);
+        int excludedStart = sourceCode.indexOf(excludedFragment);
+        int excludedEnd = excludedStart + excludedFragment.length();
+
+        // When
+        FormattingResult formattingResult = formatter.formatSource(
+                sourceCode, Path.of("Person.java"), List.of(new SrcCharacterRange(excludedStart, excludedEnd)));
+
+        // Then
+        assertThat(formattingResult.getFormattedSrcCode())
+                .contains("class Person {")
+                .contains("int a;")
+                .contains(excludedFragment);
+    }
+
+    @Test
+    void formatSource_overlappingExclusionRanges_throwIllegalArgumentException() {
+        // Given
+        Formatter formatter = new Formatter(PALANTIR, false);
+        String sourceCode = "class Person{int a; int b;}\n";
+        List<SrcCharacterRange> formattingSkippedRanges =
+                List.of(new SrcCharacterRange(0, 10), new SrcCharacterRange(8, 15));
+
+        // When / Then
+        assertThatThrownBy(() -> formatter.formatSource(sourceCode, Path.of("Person.java"), formattingSkippedRanges))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Excluded ranges must be sorted and non-overlapping");
     }
 }

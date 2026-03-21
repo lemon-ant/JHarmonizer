@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,7 +63,7 @@ public class SourceFilesHandler {
      * @return the loaded source file wrapper
      */
     @NonNull
-    public static SourceFilesHandler.SrcFile readFile(@NonNull Path file) {
+    public static SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
             srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
@@ -95,29 +94,5 @@ public class SourceFilesHandler {
             throw new UncheckedIOException(e);
         }
         log.trace("File has been renamed to backup in {}", backupPath);
-    }
-
-    @Value
-    public static class SrcFile {
-        @NonNull
-        String srcCode;
-
-        @NonNull
-        Path path;
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof SrcFile that)) {
-                return false;
-            }
-            return path.equals(that.path) && srcCode.equals(that.srcCode);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = path.hashCode();
-            result = 31 * result + srcCode.hashCode();
-            return result;
-        }
     }
 }

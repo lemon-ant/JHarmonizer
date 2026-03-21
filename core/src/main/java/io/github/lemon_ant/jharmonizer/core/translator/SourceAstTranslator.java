@@ -4,7 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTy
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTypes;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootTypes;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
@@ -27,19 +27,18 @@ public final class SourceAstTranslator {
 
     /**
      * Parses the source file.
-     * @param sourceSrcFile the source src file
+     * @param srcFile the source src file
      * @return the source file
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
-    public static ParsingResult parseSourceFile(@NonNull SrcFile sourceSrcFile) {
-        log.debug("Parsing {}", sourceSrcFile.getPath());
+    public static ParsingResult parse(@NonNull SrcFile srcFile) {
+        log.debug("Parsing {}", srcFile.getPath());
 
-        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(
-                () -> SpoonParser.parseJavaSourceResource(sourceSrcFile.getPath(), sourceSrcFile.getSrcCode()));
+        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
-        ParsingStatistic statistic = createParsingStatistic(sourceSrcFile.getSrcCode(), parsingTimedResult);
+        ParsingStatistic statistic = createParsingStatistic(srcFile.getSrcCode(), parsingTimedResult);
         return new ParsingResult(statistic, spoonASTModel);
     }
 
@@ -54,28 +53,33 @@ public final class SourceAstTranslator {
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<String> serializationTimedResult = StopWatch.measure(
-                () -> sortedSpoonAstModel.getSerializedSourceCode().get());
-        String serializedSourceCode = serializationTimedResult.getResult();
+        TimedResult<SerializedSourceWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
+                () -> sortedSpoonAstModel.getSerializedSrcCode().get());
+        SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
+                serializationTimedResult.getResult();
 
         return new SerializationResult(
-                new SerializationStatistic(serializedSourceCode.length(), serializationTimedResult.getNanos()),
-                serializedSourceCode);
+                new SerializationStatistic(
+                        serializedSourceWithSkippedTypeRanges
+                                .getSerializedSrcCode()
+                                .length(),
+                        serializationTimedResult.getNanos()),
+                serializedSourceWithSkippedTypeRanges);
     }
 
     @NonNull
     private static ParsingStatistic createParsingStatistic(
-            String originalSourceCode, TimedResult<SpoonAstModel> parsingTimedResult) {
+            String originalSrcCode, TimedResult<SpoonAstModel> parsingTimedResult) {
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         CtCompilationUnit compilationUnit = spoonASTModel.getCompilationUnit();
 
-        // TODO It doesn't work String originalSourceCode = compilationUnit.getOriginalSourceCode();
+        // TODO It doesn't work String originalSrcCode = compilationUnit.getOriginalSourceCode();
         List<CtType<?>> rootTypes = getRootTypes(compilationUnit);
         List<CtType<?>> allDeclaredTypes = getAllTypes(compilationUnit);
         List<CtTypeMember> allTypesMembers = getAllTypeMembers(compilationUnit);
 
         return new ParsingStatistic(
-                originalSourceCode.length(),
+                originalSrcCode.length(),
                 allTypesMembers.size(),
                 rootTypes.size(),
                 allDeclaredTypes.size(),
