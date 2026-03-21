@@ -24,9 +24,9 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
- * Utility class to detect relocations of type members in the sorted Spoon AST model.
- * This class is used to identify type members that have been moved from their original positions
- * during the sorting process.
+ * Utility class to detect relocations of type members in a reordered Spoon compilation unit.
+ * This class identifies declared elements whose encounter order changed relative to the
+ * original source snapshot captured before sorting.
  *
  * @deprecated This is a primitive utility to satisfy the basic needs of the Fail Fast processing. More verbose detector needed.
  */
@@ -44,7 +44,7 @@ public class RelocationDetector {
      *   <li>Traverses the current Spoon model using {@code streamDeclaredHierarchy(...)} —
      *       i.e., top-level types, nested types, and all declarative members in encounter order.</li>
      *   <li>For each encountered element, looks up its original sequential index from
-     *       {@code spoonAstModel.getOriginalElements2OrderIndices()} and computes
+     *       {@code originalOrderIndices} and computes
      *       {@code offset = currentIndex - originalIndex}.</li>
      *   <li>Elements not present in the original snapshot (newly added) are ignored.</li>
      *   <li>Only non-zero offsets are reported (unchanged elements are skipped).</li>
@@ -59,7 +59,8 @@ public class RelocationDetector {
      *       used the same {@code CtElement} identities, or switch to a stable ID mapping.</li>
      * </ul>
      *
-     * @param spoonAstModel model holding the working {@code CtCompilationUnit} and the original indices snapshot
+     * @param originalOrderIndices original encounter indices keyed by source position
+     * @param reorderedCompilationUnit the reordered compilation unit to inspect
      * @return list of pairs {@code (element, offset)} for all moved elements (offset ≠ 0), in current encounter order
      */
     @NonNull

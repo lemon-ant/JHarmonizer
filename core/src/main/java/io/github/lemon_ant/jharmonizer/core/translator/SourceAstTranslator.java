@@ -27,8 +27,9 @@ public final class SourceAstTranslator {
 
     /**
      * Parses the source file.
-     * @param srcFile the source src file
-     * @return the source file
+     *
+     * @param srcFile the source file to parse
+     * @return the parsing result containing the Spoon model and parsing statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
