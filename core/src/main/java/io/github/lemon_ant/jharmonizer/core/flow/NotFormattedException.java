@@ -17,10 +17,11 @@ public class NotFormattedException extends RuntimeException {
 
     /**
      * Creates a new NotFormattedException.
+     *
      * @param offendingFile the offending file
      * @param diff the diff
      */
-    public NotFormattedException(Path offendingFile, String diff) {
+    public NotFormattedException(@NonNull Path offendingFile, @NonNull String diff) {
         this.offendingFile = offendingFile;
         this.diff = diff;
     }

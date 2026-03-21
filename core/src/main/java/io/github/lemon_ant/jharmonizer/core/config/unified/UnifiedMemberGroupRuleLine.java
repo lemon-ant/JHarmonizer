@@ -70,14 +70,14 @@ public class UnifiedMemberGroupRuleLine {
     }
 
     private void validateAtLeastOneSelectorIsConfigured() {
-        if (!isHasAnySelectorConfigured()) {
+        if (!hasAnySelectorConfigured()) {
             throw new IllegalArgumentException(
                     this.getClass().getSimpleName() + " must have at least one selector configured: "
                             + "memberKinds, memberAccesses, declarationModifiers, nameMatcher or annotationMatchers");
         }
     }
 
-    private boolean isHasAnySelectorConfigured() {
+    private boolean hasAnySelectorConfigured() {
         boolean hasMemberKindsConfigured = !memberKinds.isEmpty();
         boolean hasMemberAccessesConfigured = !memberAccesses.isEmpty();
         boolean hasDeclarationModifiersConfigured = !declarationModifiers.isEmpty();

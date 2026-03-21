@@ -21,6 +21,12 @@ import spoon.reflect.declaration.CtElement;
 
 public class CheckAllFlow extends AbstractOptOutFlow {
 
+    /**
+     * Creates a flow that reports all ordering and formatting violations found in one source file.
+     *
+     * @param formatter the formatter used after sorting
+     * @param sorter the sorter used to reorder members
+     */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter) {
         super(formatter, sorter, CHECK_ALL);

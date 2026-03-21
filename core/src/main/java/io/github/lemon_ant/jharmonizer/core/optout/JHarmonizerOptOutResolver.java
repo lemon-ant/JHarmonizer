@@ -30,6 +30,13 @@ public final class JHarmonizerOptOutResolver {
     @NonNull
     private final CtCompilationUnit compilationUnit;
 
+    /**
+     * Resolves file-level and type-level opt-out directives from a parsed compilation unit.
+     *
+     * @param srcFile the source file that owns the parsed compilation unit
+     * @param compilationUnit the parsed compilation unit to inspect
+     * @return the resolved opt-out summary
+     */
     @NonNull
     public static JHarmonizerOptOuts resolve(@NonNull SrcFile srcFile, @NonNull CtCompilationUnit compilationUnit) {
         return new JHarmonizerOptOutResolver(srcFile, compilationUnit).resolve();

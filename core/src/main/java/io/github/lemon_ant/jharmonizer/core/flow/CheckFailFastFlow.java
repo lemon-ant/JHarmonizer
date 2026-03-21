@@ -26,6 +26,12 @@ import spoon.reflect.declaration.CtElement;
  */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
 
+    /**
+     * Creates a flow that stops at the first ordering or formatting violation in a source file.
+     *
+     * @param formatter the formatter used after sorting
+     * @param sorter the sorter used to reorder members
+     */
     public CheckFailFastFlow(@NonNull Formatter formatter, @NonNull Sorter sorter) {
         super(formatter, sorter, FlowType.CHECK_FAIL_FAST);
     }

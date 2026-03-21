@@ -16,11 +16,12 @@ public enum FlowProcessingStatus {
     ;
 
     /**
-     * Performs the define flow processing status.
-     * @param hasRelocations the has relocations
-     * @param contentChanged the content changed
-     * @param checkingOnly the checking only
-     * @return the result
+     * Resolves the resulting processing status from the observed relocation and formatting outcomes.
+     *
+     * @param hasRelocations whether member relocations were detected
+     * @param contentChanged whether the produced source text differs from the original
+     * @param checkingOnly whether the flow only validates input without rewriting files
+     * @return the resulting processing status
      */
     @NonNull
     public static FlowProcessingStatus defineFlowProcessingStatus(
