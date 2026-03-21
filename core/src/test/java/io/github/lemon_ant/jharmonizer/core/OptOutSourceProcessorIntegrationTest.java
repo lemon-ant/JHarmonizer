@@ -292,11 +292,13 @@ class OptOutSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_optOutScenarioMatrixAcrossNestedDirectories_keepFullyOffFilesUnchanged() throws Exception {
+    void processSources_optOutCombinationMatrix_keepFullyOffFilesUnchanged() throws Exception {
         // Given
-        processScenarioInputFiles();
+        copyScenarioInputFiles();
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("**/*.java"), List.of(), FlowType.RESTRUCTURE);
         String fullyOffFile = readProcessedFile(Constants.DEEP_FULLY_OFF_FILE);
 
         // Then
@@ -304,28 +306,30 @@ class OptOutSourceProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_optOutScenarioMatrixAcrossNestedDirectories_preserveFileLevelSortOffCombinations()
-            throws Exception {
+    void processSources_fileSortOffWithNestedFullyOff_preserveBothAnnotations() throws Exception {
         // Given
-        processScenarioInputFiles();
+        copyScenarioInputFiles();
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("**/*.java"), List.of(), FlowType.RESTRUCTURE);
         String fileSortOffFile = readProcessedFile(Constants.FILE_SORT_OFF_WITH_NESTED_FULLY_OFF_FILE);
 
         // Then
         assertThat(fileSortOffFile)
-                .contains(Constants.FILE_SORT_OFF_FULLY_OFF_FRAGMENT)
+                .contains(Constants.FILE_SORT_OFF_NESTED_FULLY_OFF_FRAGMENT)
                 .containsSubsequence("class Zeta", "class Alpha")
                 .containsSubsequence("int walrus;", "int aardvark;", "static class Inner");
     }
 
     @Test
-    void processSources_optOutScenarioMatrixAcrossNestedDirectories_preserveNestedFullyOffInsideNestedSortOffType()
-            throws Exception {
+    void processSources_nestedSortOffWithDeepFullyOff_preserveInnerAnnotations() throws Exception {
         // Given
-        processScenarioInputFiles();
+        copyScenarioInputFiles();
+        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("**/*.java"), List.of(), FlowType.RESTRUCTURE);
         String nestedCombinationFile = readProcessedFile(Constants.NESTED_OPT_OUT_COMBINATION_FILE);
 
         // Then
@@ -338,6 +342,32 @@ class OptOutSourceProcessorIntegrationTest {
                 .containsSubsequence("static class Inner", "int aardvark;", "int walrus;");
     }
 
+    private static final class Constants {
+        private static final String SCENARIO_INPUT_RESOURCE_ROOT =
+                "/test-cases/core/e2e/optout/01-combination-matrix/input/";
+        private static final String DEEP_FULLY_OFF_FILE = "deep/skip/DeepFileFullyOff.java";
+        private static final String FILE_SORT_OFF_WITH_NESTED_FULLY_OFF_FILE =
+                "sortoff/FileSortOffWithNestedFullyOff.java";
+        private static final String NESTED_OPT_OUT_COMBINATION_FILE = "nested/deeper/NestedOptOutCombination.java";
+        private static final List<String> SCENARIO_RELATIVE_PATHS =
+                List.of(DEEP_FULLY_OFF_FILE, FILE_SORT_OFF_WITH_NESTED_FULLY_OFF_FILE, NESTED_OPT_OUT_COMBINATION_FILE);
+        private static final String FILE_SORT_OFF_NESTED_FULLY_OFF_FRAGMENT = """
+                    // @jharmonizer:fully-off
+                    static class Inner{int zebra;  int ant;}
+                """.stripTrailing();
+        private static final String TOP_LEVEL_FULLY_OFF_FRAGMENT = """
+                /* @jharmonizer:fully-off */
+                class Beta {
+                    int betaLast;   int betaFirst;
+                }
+                """.stripTrailing();
+        private static final String DEEP_NESTED_FULLY_OFF_FRAGMENT = """
+                        // @jharmonizer:fully-off
+                        static class DeepInner{int later;  int earlier;}
+                """.stripTrailing();
+    }
+
+    @NonNull
     private Path writeJavaFile(String fileName, String fileContent) throws Exception {
         Path javaFilePath = temporaryDirectory.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
@@ -349,12 +379,6 @@ class OptOutSourceProcessorIntegrationTest {
             Files.createDirectories(targetPath.getParent());
             Files.writeString(targetPath, readScenarioInputFile(relativePath), StandardCharsets.UTF_8);
         }
-    }
-
-    private void processScenarioInputFiles() throws Exception {
-        copyScenarioInputFiles();
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
-        sourceProcessor.processSources(temporaryDirectory, List.of("**/*.java"), List.of(), FlowType.RESTRUCTURE);
     }
 
     @NonNull
@@ -391,30 +415,5 @@ class OptOutSourceProcessorIntegrationTest {
                 false,
                 new UnifiedHeaderLine('-', 0),
                 List.of(rootMemberGroup));
-    }
-
-    private static final class Constants {
-        private static final String SCENARIO_INPUT_RESOURCE_ROOT =
-                "/test-cases/core/e2e/optout/01-combination-matrix/input/";
-        private static final String DEEP_FULLY_OFF_FILE = "deep/skip/DeepFileFullyOff.java";
-        private static final String FILE_SORT_OFF_WITH_NESTED_FULLY_OFF_FILE =
-                "sortoff/FileSortOffWithNestedFullyOff.java";
-        private static final String NESTED_OPT_OUT_COMBINATION_FILE = "nested/deeper/NestedOptOutCombination.java";
-        private static final List<String> SCENARIO_RELATIVE_PATHS =
-                List.of(DEEP_FULLY_OFF_FILE, FILE_SORT_OFF_WITH_NESTED_FULLY_OFF_FILE, NESTED_OPT_OUT_COMBINATION_FILE);
-        private static final String FILE_SORT_OFF_FULLY_OFF_FRAGMENT = """
-                    // @jharmonizer:fully-off
-                    static class Inner{int zebra;  int ant;}
-                """.stripTrailing();
-        private static final String TOP_LEVEL_FULLY_OFF_FRAGMENT = """
-                /* @jharmonizer:fully-off */
-                class Beta {
-                    int betaLast;   int betaFirst;
-                }
-                """.stripTrailing();
-        private static final String DEEP_NESTED_FULLY_OFF_FRAGMENT = """
-                        // @jharmonizer:fully-off
-                        static class DeepInner{int later;  int earlier;}
-                """.stripTrailing();
     }
 }
