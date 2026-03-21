@@ -24,7 +24,7 @@ public enum JHarmonizerOptOutMode {
      */
     @NonNull
     // TODO Calculate it once in constructor
-    public String toToken() {
+    public String buildToken() {
         return TOKEN_PREFIX + displayName;
     }
 
@@ -38,7 +38,7 @@ public enum JHarmonizerOptOutMode {
     public static JHarmonizerOptOutMode fromToken(@NonNull String token) {
         String normalizedToken = token.toLowerCase(Locale.ROOT);
         return Arrays.stream(values())
-                .filter(mode -> mode.toToken().equals(normalizedToken))
+                .filter(mode -> mode.buildToken().equals(normalizedToken))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported JHarmonizer opt-out token: " + token));
     }
