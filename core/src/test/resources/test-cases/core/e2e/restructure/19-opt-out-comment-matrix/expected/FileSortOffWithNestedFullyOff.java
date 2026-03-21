@@ -1,6 +1,4 @@
 // @jharmonizer:sort-off
-package sortoff;
-
 public class FileSortOffWithNestedFullyOff {
     int walrus;
     int aardvark;

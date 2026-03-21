@@ -58,17 +58,16 @@ class SourceProcessorE2EFixtureTest {
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
-    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceRelativePath)
-            throws Exception {
+    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
         // Given
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
-        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceRelativePath);
-        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceRelativePath);
+        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
         String scenarioName = scenarioDir.toString();
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
-        Path workingInputFile = copyInputJavaFile(fixtureInputFile, resolveInput(fixtureScenario), workingScenarioRoot);
+        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
 
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
@@ -90,7 +89,7 @@ class SourceProcessorE2EFixtureTest {
                         runBeforeResult.getClassName(), runBeforeResult.getOutput())
                 .isZero();
 
-        assertFileIsNotProcessedYet(fixtureScenario, expectedSourceFile, workingInputFile);
+        assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
 
         // When
         runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
@@ -124,15 +123,14 @@ class SourceProcessorE2EFixtureTest {
         fixtureInputFiles().forEach(fixture -> {
             Object[] argumentValues = fixture.get();
             Path scenarioDir = (Path) argumentValues[0];
-            Path sourceRelativePath = (Path) argumentValues[1];
+            Path sourceFile = (Path) argumentValues[1];
             Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
-            Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceRelativePath);
-            Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(scenarioDir, sourceRelativePath);
+            Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+            Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(scenarioDir, sourceFile);
             String scenarioName = scenarioDir.toString();
 
             Path workingScenarioRoot = regenerateWorkspace.resolve(scenarioName);
-            Path workingInputFile =
-                    copyInputJavaFile(fixtureInputFile, resolveInput(fixtureScenario), workingScenarioRoot);
+            Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
 
             runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
 
@@ -187,16 +185,12 @@ class SourceProcessorE2EFixtureTest {
 
     @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
-        return SourceFilesHandler.findJavaFiles(
-                        FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/**/*.java"), List.of())
+        return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
                 .map(fixtureInputFile -> {
-                    Path fixtureRelativePath = FIXTURES_ROOT.relativize(fixtureInputFile);
-                    Path scenarioDir = fixtureRelativePath.getName(0);
-                    // Fixture paths are rooted as <scenario>/input/**/<file>.java, so the relative source path starts
-                    // after the fixture scenario and input segments.
-                    Path sourceRelativePath = fixtureRelativePath.subpath(2, fixtureRelativePath.getNameCount());
-                    return Arguments.of(scenarioDir, sourceRelativePath);
+                    Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
+                    Path sourceFile = fixtureInputFile.getFileName();
+                    return Arguments.of(scenarioDir, sourceFile);
                 });
     }
 
@@ -211,23 +205,7 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void assertFileIsNotProcessedYet(
-            Path fixtureScenario, Path expectedSourceFile, Path workingInputFile) {
-        try {
-            if (Files.mismatch(workingInputFile, expectedSourceFile) == -1L) {
-                // Some fixture scenarios intentionally validate fully-off behavior where harmonization should leave the
-                // source unchanged, so the "dirty before processing" assertion does not apply.
-                assertThatCode(() -> runProcessorForSingleFile(
-                                workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_ALL))
-                        .doesNotThrowAnyException();
-                return;
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "Failed to compare fixture input and expected files: " + workingInputFile + " vs "
-                            + expectedSourceFile,
-                    exception);
-        }
-
+            Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
         assertThatThrownBy(() -> runProcessorForSingleFile(
                         workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
@@ -250,8 +228,8 @@ class SourceProcessorE2EFixtureTest {
     }
 
     @NonNull
-    private static Path copyInputJavaFile(Path fixtureInputFile, Path fixtureInputRoot, Path workingScenarioRoot) {
-        Path targetFile = workingScenarioRoot.resolve(fixtureInputRoot.relativize(fixtureInputFile));
+    private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
+        Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
         try {
             Files.createDirectories(targetFile.getParent());
             Files.copy(fixtureInputFile, targetFile);
