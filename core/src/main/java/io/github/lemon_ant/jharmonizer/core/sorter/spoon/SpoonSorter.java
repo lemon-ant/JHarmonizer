@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
@@ -62,15 +61,19 @@ public class SpoonSorter {
                 compiledTopLevelTypesOrdering.isMainTypeFirst() ? SpoonTypeUtils.findMainType(compilationUnit) : null;
         Comparator<SortableTypeMember.OrderingKey> orderingComparator =
                 ComparatorUtils.buildOrderingComparator(compiledTopLevelTypesOrdering.getOrderingRules());
-        Comparator<CtType<?>> declaredTypeComparator = createTypeComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
+        Comparator<CtType<?>> declaredTypeComparator =
+                createTypeComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
         List<CtType<?>> sortedDeclaredTypes =
                 declaredTypes.stream().sorted(declaredTypeComparator).toList();
         compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
     }
 
-@NonNull
-    private static  Comparator<CtType<?>> createTypeComparator(CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering, CtType<?> mainType, Comparator<SortableTypeMember.OrderingKey> orderingComparator) {
+    @NonNull
+    private static Comparator<CtType<?>> createTypeComparator(
+            CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
+            CtType<?> mainType,
+            Comparator<SortableTypeMember.OrderingKey> orderingComparator) {
         Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
                 SortableTypeMember.OrderingKey.getOrderingKeyProvider();
         return Comparator.<CtType<?>>comparingInt(type ->
@@ -123,19 +126,16 @@ public class SpoonSorter {
                                 + currentType.getQualifiedName()
                                 + ", descriptor=" + topLevelTypeDescriptor));
         currentType.getNestedTypes().forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes));
-        currentType.setTypeMembers(sortTypeMembers(currentType.getTypeMembers(), rootMemberGroup));
+        currentType.setTypeMembers(sortTypeMembers(currentType, rootMemberGroup));
     }
 
     @NonNull
-    private static List<CtTypeMember> sortTypeMembers(
-            List<CtTypeMember> typeMembers, CompiledMemberGroup rootMemberGroup) {
-        if (typeMembers.size() <= MAX_MEMBERS_WITHOUT_SORTING) {
-            return typeMembers;
+    private static List<CtTypeMember> sortTypeMembers(CtType<?> type, CompiledMemberGroup rootMemberGroup) {
+        if (type.getTypeMembers().size() <= MAX_MEMBERS_WITHOUT_SORTING) {
+            return type.getTypeMembers();
         }
 
-        Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = typeMembers.stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        Function.identity(), SpoonMemberDescriptorFactory::describeMember));
+        Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = SpoonMemberDescriptorFactory.describeMembers(type);
 
         Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember =
                 NaturalMemberGroupResolver.resolveNaturalGroups(rootMemberGroup, typeMember2Descriptor);
