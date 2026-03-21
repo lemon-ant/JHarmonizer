@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.translator;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
@@ -10,7 +11,9 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -93,5 +96,26 @@ class SourceAstTranslatorTest {
                 .satisfies(range -> assertThat(
                                 serializedSrcCode.substring(range.getStartInclusive(), range.getEndExclusive()))
                         .isEqualTo(fullyOffFragment));
+    }
+
+    @Test
+    void serializedSourceWithSkippedTypeRanges_mutableInputMap_returnsUnmodifiableMap() {
+        // Given
+        String sourceCode = "class Gamma {}";
+        SrcFile srcFile = createSrcFile(sourceCode, Path.of("Gamma.java"));
+        SpoonAstModel spoonAstModel = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
+        SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
+                new SerializedSourceWithSkippedTypeRanges(
+                        sourceCode,
+                        new HashMap<>(Map.of(
+                                spoonAstModel.getMainType().orElseThrow(),
+                                new SrcCharacterRange(0, sourceCode.length()))));
+
+        // When
+        Map<?, ?> sortingSkippedTypeRanges = serializedSourceWithSkippedTypeRanges.getSortingSkippedTypeRanges();
+
+        // Then
+        assertThat(sortingSkippedTypeRanges).hasSize(1);
+        assertThatThrownBy(sortingSkippedTypeRanges::clear).isInstanceOf(UnsupportedOperationException.class);
     }
 }

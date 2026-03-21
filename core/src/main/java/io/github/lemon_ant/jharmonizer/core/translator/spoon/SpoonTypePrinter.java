@@ -4,6 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourceP
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils;
 import java.util.Collections;
@@ -31,9 +32,9 @@ final class SpoonTypePrinter {
     @NonNull
     private final Set<CtType<?>> sortingSkippedTypes;
 
-    @NonNull
+    @Nullable
     @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private final Map<CtType<?>, SrcCharacterRange> sortingSkippedTypeRanges = new HashMap<>();
+    private Map<CtType<?>, SrcCharacterRange> sortingSkippedTypeRanges = new HashMap<>();
 
     @NonNull
     private final TokenWriter tokenWriter;
@@ -92,7 +93,7 @@ final class SpoonTypePrinter {
         printOriginalFragment(
                 type.getPosition().getSourceStart(), type.getPosition().getSourceEnd());
         int outputEndExclusive = tokenWriter.toString().length();
-        sortingSkippedTypeRanges.put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
+        requireSortingSkippedTypeRanges().put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
     }
 
     @NonNull
@@ -167,6 +168,17 @@ final class SpoonTypePrinter {
 
     @NonNull
     Map<CtType<?>, SrcCharacterRange> getSortingSkippedTypeRanges() {
-        return Collections.unmodifiableMap(sortingSkippedTypeRanges);
+        Map<CtType<?>, SrcCharacterRange> activeSortingSkippedTypeRanges = requireSortingSkippedTypeRanges();
+        // After handing the ranges off, the printer must not be reused for further skipped-range collection.
+        sortingSkippedTypeRanges = null;
+        return Collections.unmodifiableMap(activeSortingSkippedTypeRanges);
+    }
+
+    @NonNull
+    private Map<CtType<?>, SrcCharacterRange> requireSortingSkippedTypeRanges() {
+        if (sortingSkippedTypeRanges == null) {
+            throw new IllegalStateException("Sorting-skipped type ranges have already been finalized");
+        }
+        return sortingSkippedTypeRanges;
     }
 }

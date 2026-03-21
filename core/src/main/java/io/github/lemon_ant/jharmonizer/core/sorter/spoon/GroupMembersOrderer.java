@@ -71,7 +71,7 @@ class GroupMembersOrderer {
             List<CtTypeMember> groupMembers,
             MemberDependencyGraph memberDependencyGraph) {
         if (groupMembers.size() <= ONE) {
-            return List.copyOf(groupMembers);
+            return groupMembers;
         }
 
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();

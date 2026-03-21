@@ -57,7 +57,8 @@ This file defines repository-wide conventions for coding agents working in this 
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
-- In private helper code, prefer unmodifiable wrappers over defensive copies unless you specifically need an isolated snapshot.
+- Wrap collections once when returning or handing off a collection that was built mutably in the current method, including private/package-private helpers, so the receiver cannot mutate the handed-off instance.
+- Do not add a second unmodifiable wrapper or defensive copy when the collection already stays immutable upstream or never leaves the local method scope.
 - Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 
