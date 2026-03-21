@@ -23,6 +23,13 @@ public class RestructureFlow extends AbstractOptOutFlow {
 
     private final boolean backupsEnabled;
 
+    /**
+     * Creates a flow that rewrites sources in place and optionally saves backups before overwriting files.
+     *
+     * @param formatter the formatter used after sorting
+     * @param backupsEnabled whether rewritten files should keep a backup copy
+     * @param sorter the sorter used to reorder members
+     */
     public RestructureFlow(@NonNull Formatter formatter, boolean backupsEnabled, @NonNull Sorter sorter) {
         super(formatter, sorter, RESTRUCTURE);
         this.backupsEnabled = backupsEnabled;

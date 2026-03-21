@@ -35,29 +35,61 @@ public class JHarmonizerOptOuts {
         this.typeOptOutModes = Collections.unmodifiableMap(typeOptOutModes);
     }
 
+    /**
+     * Returns the shared empty opt-out summary.
+     *
+     * @return the shared empty opt-out summary
+     */
     @NonNull
     public static JHarmonizerOptOuts empty() {
         return EMPTY_OPT_OUTS;
     }
 
+    /**
+     * Checks whether the file-level opt-out mode matches the requested mode.
+     *
+     * @param mode the mode to compare against the file-level opt-out
+     * @return {@code true} when the file-level opt-out equals the requested mode
+     */
     public boolean hasFileOptOutMode(@NonNull JHarmonizerOptOutMode mode) {
         return mode == fileOptOutMode;
     }
 
+    /**
+     * Checks whether neither file-level nor type-level opt-outs are configured.
+     *
+     * @return {@code true} when no opt-outs are configured
+     */
     public boolean isEmpty() {
         return fileOptOutMode == null && typeOptOutModes.isEmpty();
     }
 
+    /**
+     * Finds the opt-out mode configured directly for the given type.
+     *
+     * @param type the type to inspect
+     * @return the configured type-level opt-out mode, if present
+     */
     @NonNull
     public Optional<JHarmonizerOptOutMode> findTypeOptOutMode(@NonNull CtType<?> type) {
         return Optional.ofNullable(typeOptOutModes.get(type));
     }
 
+    /**
+     * Returns the file-level opt-out mode.
+     *
+     * @return the file-level opt-out mode, if present
+     */
     @NonNull
     public Optional<JHarmonizerOptOutMode> getFileOptOutMode() {
         return Optional.ofNullable(fileOptOutMode);
     }
 
+    /**
+     * Collects all types whose formatting and sorting should skip internal reordering.
+     *
+     * @return the set of types that have sorting skipped
+     */
     @NonNull
     public Set<CtType<?>> getSortingSkippedTypes() {
         return typeOptOutModes.entrySet().stream()
