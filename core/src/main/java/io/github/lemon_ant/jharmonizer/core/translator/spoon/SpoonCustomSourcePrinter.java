@@ -17,7 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.NonNull;
 import spoon.compiler.Environment;
-import spoon.reflect.code.CtComment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtClass;
@@ -149,16 +148,17 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     @Override
     public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         if (compilationUnit.getUnitType() != CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION) {
+            // TODO Test this logic, I think we must return after the super.visitCtCompilationUnit(compilationUnit);
             super.visitCtCompilationUnit(compilationUnit);
         }
         CtCompilationUnit outerCompilationUnit = this.sourceCompilationUnit;
         try {
             this.sourceCompilationUnit = compilationUnit;
             int firstTypeStart = compilationUnit.getDeclaredTypes().stream()
-                    .mapToInt(this::findRenderedTypeStart)
+                    .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
                     .min()
                     .orElseThrow(IllegalStateException::new);
-            int typeDeclarationHeaderEnd = (firstTypeStart > 0) ? firstTypeStart - 1 : 0;
+            int typeDeclarationHeaderEnd = Math.max(firstTypeStart - 1, 0);
             if (typeDeclarationHeaderEnd > 0) {
                 printOriginalFragment(0, typeDeclarationHeaderEnd);
             }
@@ -173,20 +173,6 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         if (!getResult().endsWith(getLineSeparator())) {
             getPrinterTokenWriter().writeln();
         }
-    }
-
-    private int findRenderedTypeStart(CtType<?> type) {
-        // TODO Find out why we are searching type's start differently
-        if (!sortingSkippedTypes.contains(type)) {
-            return type.getPosition().getSourceStart();
-        }
-        return findIndentationStart(
-                type.getComments().stream()
-                        .map(CtComment::getPosition)
-                        .mapToInt(SourcePosition::getSourceStart)
-                        .min()
-                        .orElse(type.getPosition().getSourceStart()),
-                originalSrcCode);
     }
 
     // This helper stays non-static because it must coordinate outer printer state such as token writer access,
@@ -214,7 +200,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
         private void printPreservedSkippedType(CtType<?> type) {
             int outputStart = getResult().length();
             printOriginalFragment(
-                    findRenderedTypeStart(type), type.getPosition().getSourceEnd());
+                    type.getPosition().getSourceStart(), type.getPosition().getSourceEnd());
             int outputEndExclusive = getResult().length();
             sortingSkippedTypeRanges.put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
         }
@@ -232,7 +218,7 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
 
         private void printStructuredTypeMembers(SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
             int minMemberStart = explicitTypeMembers.stream()
-                    .mapToInt(this::findMemberStart)
+                    .mapToInt(typeMember1 -> typeMember1.getPosition().getSourceStart())
                     .min()
                     .orElseThrow(IllegalStateException::new);
 
@@ -282,19 +268,12 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
                 }
             });
             int nextElementStart = explicitTypeMembers.stream()
-                    .mapToInt(this::findMemberStart)
+                    .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
                     .filter(start -> start > member.getPosition().getSourceEnd())
                     .min()
                     .orElse(member.getPosition().getSourceEnd() + 1);
             printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
             return currentElementNeedsSeparatorAfter;
-        }
-
-        private int findMemberStart(CtTypeMember typeMember) {
-            if (typeMember instanceof CtType<?> nestedType) {
-                return findRenderedTypeStart(nestedType);
-            }
-            return typeMember.getPosition().getSourceStart();
         }
     }
 }
