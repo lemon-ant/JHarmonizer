@@ -23,6 +23,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JHarmonizerOptOutResolver {
+    // TODO rethink these fields and make the class static and stateless
     @NonNull
     private final SrcFile srcFile;
 

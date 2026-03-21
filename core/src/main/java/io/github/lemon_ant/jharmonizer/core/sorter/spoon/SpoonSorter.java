@@ -30,6 +30,7 @@ import spoon.reflect.declaration.CtTypeMember;
 public class SpoonSorter {
     private static final int MAX_MEMBERS_WITHOUT_SORTING = 1;
 
+    // TODO Try to remove this field and make the class static util
     @NonNull
     private final CompiledConfig compiledConfig;
 
@@ -62,7 +63,7 @@ public class SpoonSorter {
         Comparator<SortableTypeMember.OrderingKey> orderingComparator =
                 ComparatorUtils.buildOrderingComparator(compiledTopLevelTypesOrdering.getOrderingRules());
         Comparator<CtType<?>> declaredTypeComparator =
-                createTypeComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
+                createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
         List<CtType<?>> sortedDeclaredTypes =
                 declaredTypes.stream().sorted(declaredTypeComparator).toList();
@@ -70,7 +71,7 @@ public class SpoonSorter {
     }
 
     @NonNull
-    private static Comparator<CtType<?>> createTypeComparator(
+    private static Comparator<CtType<?>> createTopLevelTypesComparator(
             CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
             CtType<?> mainType,
             Comparator<SortableTypeMember.OrderingKey> orderingComparator) {

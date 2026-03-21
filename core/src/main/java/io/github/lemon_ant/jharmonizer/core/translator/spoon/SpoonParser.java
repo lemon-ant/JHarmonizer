@@ -37,7 +37,7 @@ public class SpoonParser {
     }
 
     @NonNull
-    private static SpoonAstModel buildSpoonAstModel(@NonNull SrcFile srcFile, @NonNull Launcher launcher) {
+    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
         CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);

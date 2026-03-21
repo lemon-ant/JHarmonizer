@@ -10,11 +10,11 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkipp
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.lang.annotation.Annotation;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.NonNull;
 import spoon.compiler.Environment;
 import spoon.reflect.code.CtComment;
@@ -41,8 +41,8 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
     private final Set<CtType<?>> sortingSkippedTypes;
 
     @NonNull
-    private final Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges =
-            new ConcurrentHashMap<>();
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private final Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges = new HashMap<>();
 
     @NonNull
     private final TypeStructurePrinter typeStructurePrinter;
