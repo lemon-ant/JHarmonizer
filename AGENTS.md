@@ -62,3 +62,4 @@ This file defines repository-wide conventions for coding agents working in this 
 
 - See `docs/test-conventions.md`.
 - In particular, keep non-trivial multi-line textual test fixtures in `src/test/resources/test-cases/**` instead of embedding them inline in test classes.
+- When extending an existing fixture-based test suite, keep its established fixture shape and avoid changing the shared harness unless explicitly requested.

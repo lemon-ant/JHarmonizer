@@ -114,6 +114,8 @@
 - Do not keep non-trivial multi-line textual fixtures such as YAML, JSON, XML, Java source, or long expected-output snippets inline in test code.
 - Store those fixtures under `src/test/resources/test-cases/**` and load them through shared helpers such as `TestCaseResourceUtils`.
 - Only tiny one-off inline snippets are acceptable when extracting a file would hurt readability.
+- When extending an existing fixture-based test suite, keep its established fixture shape such as `input/`, `expected/`, and `config.yml`, and add new scenarios as plain fixtures.
+- Do not introduce new per-scenario metadata files or change the shared test harness unless that work is explicitly requested.
 - Use `valid/` for fixtures that must compile and be compilable by the build gate.
 - Use `invalid/` for fixtures that may intentionally not compile in negative tests.
 - All `valid/**/*.java` fixtures must compile as part of the build.

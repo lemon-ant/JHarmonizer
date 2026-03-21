@@ -1,1 +1,0 @@
-AllTypes cannot be empty

@@ -128,6 +128,8 @@ void resolveGroups_nestedMatch_winOverParentGroup() {
 - Do not keep non-trivial multi-line textual fixtures (for example YAML, JSON, XML, Java source, or long expected-output snippets) inline in test code.
   - Store them under `src/test/resources/test-cases/**` and load them via shared helpers such as `TestCaseResourceUtils`.
   - Only tiny one-off snippets that stay obviously readable inline are acceptable.
+- When extending an existing fixture-based test suite, keep its established fixture shape (for example `input/`, `expected/`, and `config.yml`) and add new scenarios as plain fixtures.
+  - Do not introduce new per-scenario metadata files or change the shared test harness unless that work is explicitly requested.
 
 ### valid/ vs invalid/
 
