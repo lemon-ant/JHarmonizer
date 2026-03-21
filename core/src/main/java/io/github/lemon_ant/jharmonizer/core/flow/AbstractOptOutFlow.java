@@ -140,7 +140,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                     skippedOperationDescription,
                     srcFile.getPath(),
                     optOutMode.getDisplayName(),
-                    optOutMode.buildToken());
+                    optOutMode.computeToken());
         }
     }
 

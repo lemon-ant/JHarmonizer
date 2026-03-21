@@ -18,13 +18,13 @@ public enum JHarmonizerOptOutMode {
     private final String displayName;
 
     /**
-     * Builds the exact source token used in comments to enable this opt-out mode.
+     * Computes the exact source token used in comments to enable this opt-out mode.
      *
      * @return the full opt-out token including the common prefix
      */
     @NonNull
     // TODO Calculate it once in constructor
-    public String buildToken() {
+    public String computeToken() {
         return TOKEN_PREFIX + displayName;
     }
 
@@ -38,7 +38,7 @@ public enum JHarmonizerOptOutMode {
     public static JHarmonizerOptOutMode fromToken(@NonNull String token) {
         String normalizedToken = token.toLowerCase(Locale.ROOT);
         return Arrays.stream(values())
-                .filter(mode -> mode.buildToken().equals(normalizedToken))
+                .filter(mode -> mode.computeToken().equals(normalizedToken))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported JHarmonizer opt-out token: " + token));
     }
