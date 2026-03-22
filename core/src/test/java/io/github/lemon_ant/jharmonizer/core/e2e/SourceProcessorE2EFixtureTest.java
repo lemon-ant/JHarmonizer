@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSourceWithRelease21;
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -28,6 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -61,13 +61,14 @@ class SourceProcessorE2EFixtureTest {
     void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
         // Given
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
-        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
         Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
         String scenarioName = scenarioDir.toString();
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
-        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+        copyInputDirectory(resolveInput(fixtureScenario), workingScenarioRoot);
+        Path workingInputFile = workingScenarioRoot.resolve(sourceFile);
+        List<Path> workingScenarioFiles = findScenarioJavaFiles(workingScenarioRoot);
 
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
@@ -75,19 +76,14 @@ class SourceProcessorE2EFixtureTest {
                 temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
 
         JavaCompileTestUtils.CompileResult compileBeforeResult =
-                compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
+                JavaCompileTestUtils.compileJavaSourcesWithRelease21(workingScenarioFiles, compileBeforeOutput);
         assertThat(compileBeforeResult.getExitCode())
                 .as(
-                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile, compileBeforeResult.getOutput())
+                        "Expected javac --release 21 to compile scenario %s. Diagnostics:%n%s",
+                        scenarioName, compileBeforeResult.getOutput())
                 .isZero();
 
-        JavaRunMainTestUtils.RunResult runBeforeResult = runJavaMainMethod(workingInputFile, compileBeforeOutput);
-        assertThat(runBeforeResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runBeforeResult.getClassName(), runBeforeResult.getOutput())
-                .isZero();
+        assertRunnableFileExecutionSucceedsIfApplicable(workingInputFile, compileBeforeOutput);
 
         assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
 
@@ -97,22 +93,17 @@ class SourceProcessorE2EFixtureTest {
         // Then
         assertFileProcessingIsDeterministic(fixtureScenario, workingScenarioRoot, workingInputFile);
 
-        JavaCompileTestUtils.CompileResult compileAfterResult =
-                compileJavaSourceWithRelease21(workingInputFile, compileAfterOutput);
+        JavaCompileTestUtils.CompileResult compileAfterResult = JavaCompileTestUtils.compileJavaSourcesWithRelease21(
+                findScenarioJavaFiles(workingScenarioRoot), compileAfterOutput);
         assertThat(compileAfterResult.getExitCode())
                 .as(
-                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile, compileAfterResult.getOutput())
+                        "Expected javac --release 21 to compile scenario %s. Diagnostics:%n%s",
+                        scenarioName, compileAfterResult.getOutput())
                 .isZero();
 
         assertThat(workingInputFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
 
-        JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
-        assertThat(runAfterResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runAfterResult.getClassName(), runAfterResult.getOutput())
-                .isZero();
+        assertRunnableFileExecutionSucceedsIfApplicable(workingInputFile, compileAfterOutput);
     }
 
     @Test
@@ -125,12 +116,12 @@ class SourceProcessorE2EFixtureTest {
             Path scenarioDir = (Path) argumentValues[0];
             Path sourceFile = (Path) argumentValues[1];
             Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
-            Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
             Path projectExpectedSourceFile = resolveProjectExpectedSourceFile(scenarioDir, sourceFile);
             String scenarioName = scenarioDir.toString();
 
             Path workingScenarioRoot = regenerateWorkspace.resolve(scenarioName);
-            Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+            copyInputDirectory(resolveInput(fixtureScenario), workingScenarioRoot);
+            Path workingInputFile = workingScenarioRoot.resolve(sourceFile);
 
             runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
 
@@ -228,15 +219,39 @@ class SourceProcessorE2EFixtureTest {
     }
 
     @NonNull
-    private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
-        Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
-        try {
-            Files.createDirectories(targetFile.getParent());
-            Files.copy(fixtureInputFile, targetFile);
-            return targetFile;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to copy fixture input file: " + fixtureInputFile, exception);
+    private static List<Path> findScenarioJavaFiles(Path scenarioRoot) {
+        try (Stream<Path> javaFiles =
+                SourceFilesHandler.findJavaFiles(scenarioRoot, List.of("*.java", "**/*.java"), List.of())) {
+            return javaFiles.sorted().toList();
         }
+    }
+
+    private static void assertRunnableFileExecutionSucceedsIfApplicable(
+            Path sourceFilePath, Path compileOutputDirectory) throws IOException, InterruptedException {
+        if (isDescriptorSourceFile(sourceFilePath)) {
+            return;
+        }
+
+        JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(sourceFilePath, compileOutputDirectory);
+        assertThat(runResult.getExitCode())
+                .as(
+                        "Expected main method execution to succeed for %s. Output:%n%s",
+                        runResult.getClassName(), runResult.getOutput())
+                .isZero();
+    }
+
+    private static void copyInputDirectory(Path fixtureInputDirectory, Path workingScenarioRoot) {
+        try {
+            FileUtils.copyDirectory(fixtureInputDirectory.toFile(), workingScenarioRoot.toFile());
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Failed to copy fixture input directory: " + fixtureInputDirectory, exception);
+        }
+    }
+
+    private static boolean isDescriptorSourceFile(Path sourceFilePath) {
+        String fileName = sourceFilePath.getFileName().toString();
+        return "package-info.java".equals(fileName) || "module-info.java".equals(fileName);
     }
 
     @NonNull

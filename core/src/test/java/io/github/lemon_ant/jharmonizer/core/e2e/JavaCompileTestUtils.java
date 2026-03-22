@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.NonNull;
 import lombok.Value;
@@ -19,20 +20,31 @@ class JavaCompileTestUtils {
 
     static CompileResult compileJavaSourceWithRelease21(@NonNull Path sourceFilePath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
+        return compileJavaSourcesWithRelease21(List.of(sourceFilePath), outputDirectoryPath);
+    }
+
+    static CompileResult compileJavaSourcesWithRelease21(
+            @NonNull List<Path> sourceFilePaths, @NonNull Path outputDirectoryPath)
+            throws IOException, InterruptedException {
         ensureOutputDirectoryExists(outputDirectoryPath);
-        E2EFileUtils.requireRegularFile(sourceFilePath, "Expected Java source file to compile, but got: ");
+        if (sourceFilePaths.isEmpty()) {
+            throw new IllegalArgumentException("Expected at least one Java source file to compile");
+        }
+        for (Path sourceFilePath : sourceFilePaths) {
+            E2EFileUtils.requireRegularFile(sourceFilePath, "Expected Java source file to compile, but got: ");
+        }
 
         Path diagnosticsPath = outputDirectoryPath.resolve(TEST_COMPILE_PREFIX + "logs.txt");
 
-        List<String> command = List.of(
-                "javac",
-                "--release",
-                Integer.toString(JAVA_RELEASE),
-                "-encoding",
-                StandardCharsets.UTF_8.name(),
-                "-d",
-                outputDirectoryPath.toString(),
-                sourceFilePath.toAbsolutePath().toString());
+        List<String> command = new ArrayList<>();
+        command.add("javac");
+        command.add("--release");
+        command.add(Integer.toString(JAVA_RELEASE));
+        command.add("-encoding");
+        command.add(StandardCharsets.UTF_8.name());
+        command.add("-d");
+        command.add(outputDirectoryPath.toString());
+        sourceFilePaths.stream().map(Path::toAbsolutePath).map(Path::toString).forEach(command::add);
 
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         String javacOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
