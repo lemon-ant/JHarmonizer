@@ -64,10 +64,14 @@ class SourceProcessorE2EFixtureTest {
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
         Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
         String scenarioName = scenarioDir.toString();
+        String inputSourceCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
+        String expectedSourceCode = Files.readString(expectedSourceFile, StandardCharsets.UTF_8);
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+        boolean unchangedFullyOffFixture =
+                inputSourceCode.equals(expectedSourceCode) && hasFileLevelFullyOffDirective(inputSourceCode);
 
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
@@ -89,7 +93,7 @@ class SourceProcessorE2EFixtureTest {
                         runBeforeResult.getClassName(), runBeforeResult.getOutput())
                 .isZero();
 
-        assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
+        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFullyOffFixture);
 
         // When
         runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
@@ -105,7 +109,7 @@ class SourceProcessorE2EFixtureTest {
                         workingInputFile, compileAfterResult.getOutput())
                 .isZero();
 
-        assertThat(workingInputFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
+        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
 
         JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
         assertThat(runAfterResult.getExitCode())
@@ -205,10 +209,25 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void assertFileIsNotProcessedYet(
-            Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
+            Path fixtureScenario, Path workingInputFile, boolean unchangedFullyOffFixture) {
+        if (unchangedFullyOffFixture) {
+            // Whole-file fully-off fixtures intentionally stay unchanged, so CHECK_FAIL_FAST also passes because
+            // there is no ordering or formatting violation for it to report before RESTRUCTURE runs.
+            assertThatCode(() -> runProcessorForSingleFile(
+                            workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
+                    .doesNotThrowAnyException();
+            return;
+        }
+
         assertThatThrownBy(() -> runProcessorForSingleFile(
                         workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
+    }
+
+    private static boolean hasFileLevelFullyOffDirective(String sourceCode) {
+        String normalizedSourceCode = sourceCode.stripLeading();
+        return normalizedSourceCode.startsWith("// @jharmonizer:fully-off")
+                || normalizedSourceCode.startsWith("/* @jharmonizer:fully-off */");
     }
 
     private static void assertFileProcessingIsDeterministic(
