@@ -70,8 +70,7 @@ class SourceProcessorE2EFixtureTest {
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
-        boolean unchangedFullyOffFixture =
-                inputSourceCode.equals(expectedSourceCode) && hasFileLevelFullyOffDirective(inputSourceCode);
+        boolean unchangedFixture = inputSourceCode.equals(expectedSourceCode);
 
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
@@ -93,7 +92,7 @@ class SourceProcessorE2EFixtureTest {
                         runBeforeResult.getClassName(), runBeforeResult.getOutput())
                 .isZero();
 
-        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFullyOffFixture);
+        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
         // When
         runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
@@ -209,10 +208,10 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void assertFileIsNotProcessedYet(
-            Path fixtureScenario, Path workingInputFile, boolean unchangedFullyOffFixture) {
-        if (unchangedFullyOffFixture) {
-            // Whole-file fully-off fixtures intentionally stay unchanged, so CHECK_FAIL_FAST also passes because
-            // there is no ordering or formatting violation for it to report before RESTRUCTURE runs.
+            Path fixtureScenario, Path workingInputFile, boolean unchangedFixture) {
+        if (unchangedFixture) {
+            // Unchanged fixtures intentionally stay mismatch-free, so CHECK_FAIL_FAST also passes because there is
+            // no ordering or formatting violation for it to report before RESTRUCTURE runs.
             assertThatCode(() -> runProcessorForSingleFile(
                             workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                     .doesNotThrowAnyException();
@@ -222,12 +221,6 @@ class SourceProcessorE2EFixtureTest {
         assertThatThrownBy(() -> runProcessorForSingleFile(
                         workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
-    }
-
-    private static boolean hasFileLevelFullyOffDirective(String sourceCode) {
-        String normalizedSourceCode = sourceCode.stripLeading();
-        return normalizedSourceCode.startsWith("// @jharmonizer:fully-off")
-                || normalizedSourceCode.startsWith("/* @jharmonizer:fully-off */");
     }
 
     private static void assertFileProcessingIsDeterministic(
