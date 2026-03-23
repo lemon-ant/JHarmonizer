@@ -126,6 +126,8 @@ void resolveGroups_nestedMatch_winOverParentGroup() {
 - Use explicit scenario folder names (avoid generic `example/`).
 - Prefer resource fixtures under `src/test/resources/test-cases/**` over large inline YAML/Java strings embedded directly in test classes.
 - Do not keep non-trivial multi-line textual fixtures (for example YAML, JSON, XML, Java source, or long expected-output snippets) inline in test code.
+- For formatter-focused fixtures under `src/test/resources/test-cases/**`, keep `input/` resources valid for the parser/compiler but intentionally not already formatted like `expected/`.
+  - The scenario should require a real formatter rewrite instead of passing because `input/` already matches `expected/`.
   - Store them under `src/test/resources/test-cases/**` and load them via shared helpers such as `TestCaseResourceUtils`.
   - Only tiny one-off snippets that stay obviously readable inline are acceptable.
 
