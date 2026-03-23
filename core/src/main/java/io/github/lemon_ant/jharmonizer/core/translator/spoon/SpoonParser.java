@@ -39,11 +39,12 @@ public class SpoonParser {
 
     @NonNull
     private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
+        launcher.buildModel();
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
         Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
-            if (shouldPreserveOriginalSource(compilationUnit)) {
+            if (SpoonTypeUtils.hasNoDeclaredTypesInTypeDeclarationUnit(compilationUnit)) {
                 return new SerializedSourceWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
             }
 
@@ -79,8 +80,6 @@ public class SpoonParser {
 
     @NonNull
     private static CtCompilationUnit extractCompilationUnit(@NonNull SrcFile srcFile, Launcher launcher) {
-        launcher.buildModel();
-
         Map<String, CompilationUnit> compilationUnitsByPath =
                 launcher.getFactory().CompilationUnit().getMap();
         Validate.validState(
@@ -89,9 +88,7 @@ public class SpoonParser {
                 compilationUnitsByPath.size());
 
         CompilationUnit compilationUnit = compilationUnitsByPath.isEmpty()
-                ? launcher.getFactory()
-                        .CompilationUnit()
-                        .getOrCreate(srcFile.getPath().toString())
+                ? createMissingSrcCompilationUnit(srcFile, launcher)
                 : compilationUnitsByPath.values().iterator().next();
         Validate.validState(
                 compilationUnit instanceof CtCompilationUnit,
@@ -100,8 +97,13 @@ public class SpoonParser {
         return (CtCompilationUnit) compilationUnit;
     }
 
-    private static boolean shouldPreserveOriginalSource(CtCompilationUnit compilationUnit) {
-        return compilationUnit.getUnitType() == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
-                && compilationUnit.getDeclaredTypes().isEmpty();
+    @NonNull
+    private static CompilationUnit createMissingSrcCompilationUnit(@NonNull SrcFile srcFile, Launcher launcher) {
+        // Spoon does not always cache a compilation unit for comment-only / effectively empty source files.
+        // We still create one keyed by the virtual src path so downstream code can keep treating the file as a
+        // compilation unit and preserve the original src text instead of failing on missing declared types.
+        return launcher.getFactory()
+                .CompilationUnit()
+                .getOrCreate(srcFile.getPath().toString());
     }
 }
