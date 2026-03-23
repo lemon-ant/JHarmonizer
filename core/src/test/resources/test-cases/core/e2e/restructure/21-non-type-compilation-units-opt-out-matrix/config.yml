@@ -1,0 +1,22 @@
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR
+
+backups-enabled: false
+
+header-line:
+  character: '-'
+  left-padding: 0
+
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class, record, interface, enum, annotation ]
+  ordering-rules: [ preserve ]
+
+type-members-ordering:
+  - name: Root
+    includes: ~.*
+    ordering-rules: preserve
+    separator: none
+    groups: [ ]
