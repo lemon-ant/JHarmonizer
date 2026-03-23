@@ -110,8 +110,10 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      */
     @Override
     public void visitCtCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
-        if (compilationUnit.getUnitType() != CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION) {
-            // For non-type-declaration units, delegate to the default implementation and stop.
+        if (compilationUnit.getUnitType() != CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
+                || compilationUnit.getDeclaredTypes().isEmpty()) {
+            // For non-type-declaration units and type-declaration files without any declared types,
+            // delegate to the default implementation and stop.
             super.visitCtCompilationUnit(compilationUnit);
             return;
         }

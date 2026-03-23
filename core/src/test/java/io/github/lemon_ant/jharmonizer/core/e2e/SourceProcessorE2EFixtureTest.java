@@ -121,32 +121,47 @@ class SourceProcessorE2EFixtureTest {
 
     @ParameterizedTest(name = "[{index}] {0}/{1}/{2}")
     @MethodSource("nonTypeDefinitionFixtureInputFiles")
-    void processNonTypeFixtureInputFile_nonTypeDeclarationsPresent_failWithAllTypesCannotBeEmpty(
+    void processNonTypeFixtureInputFile_nonTypeFixture_preserveExpectedSource(
             Path scenarioDir, Path sourceFile, FlowType flowType) throws Exception {
         // Given
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
-        String inputSourceCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
+        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
+        String expectedSourceCode = Files.readString(expectedSourceFile, StandardCharsets.UTF_8);
         String scenarioName = scenarioDir + "-" + flowType.name().toLowerCase();
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
+        Path compileAfterOutput =
+                temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
 
         JavaCompileTestUtils.CompileResult compileBeforeResult =
                 compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
         assertThat(compileBeforeResult.getExitCode())
                 .as(
-                        "Expected javac --release 21 to compile file %s before exercising parser failure. Diagnostics:%n%s",
+                        "Expected javac --release 21 to compile file %s before processing non-type fixture. Diagnostics:%n%s",
                         workingInputFile, compileBeforeResult.getOutput())
                 .isZero();
 
-        // When / Then
-        assertThatThrownBy(() -> runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), flowType))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("AllTypes cannot be empty");
-        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(inputSourceCode);
+        // When
+        runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
+
+        // Then
+        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
+
+        JavaCompileTestUtils.CompileResult compileAfterResult =
+                compileJavaSourceWithRelease21(workingInputFile, compileAfterOutput);
+        assertThat(compileAfterResult.getExitCode())
+                .as(
+                        "Expected javac --release 21 to compile file %s after restructuring non-type fixture. Diagnostics:%n%s",
+                        workingInputFile, compileAfterResult.getOutput())
+                .isZero();
+
+        assertThatCode(() -> runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), flowType))
+                .doesNotThrowAnyException();
+        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
     }
 
     @Test

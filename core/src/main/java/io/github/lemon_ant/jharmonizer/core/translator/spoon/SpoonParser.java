@@ -5,12 +5,13 @@ import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
-import java.util.Collection;
+import java.util.Map;
 import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.Validate;
 import spoon.Launcher;
+import spoon.reflect.cu.CompilationUnit;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.support.compiler.VirtualFile;
@@ -38,10 +39,14 @@ public class SpoonParser {
 
     @NonNull
     private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
-        CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
+        CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
         Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
+            if (shouldPreserveOriginalSource(compilationUnit)) {
+                return new SerializedSourceWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
+            }
+
             SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
                     launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
             return printer.serializeCompilationUnit(compilationUnit);
@@ -73,11 +78,30 @@ public class SpoonParser {
     }
 
     @NonNull
-    private static CtCompilationUnit extractCompilationUnit(Launcher launcher) {
-        Collection<CtType<?>> allTypes = launcher.buildModel().getAllTypes();
-        // TODO Flesh out the corner cases with package-info.java and module-info.java
-        Validate.notEmpty(allTypes, "AllTypes cannot be empty");
-        CtType<?> firstType = allTypes.iterator().next();
-        return firstType.getPosition().getCompilationUnit();
+    private static CtCompilationUnit extractCompilationUnit(@NonNull SrcFile srcFile, Launcher launcher) {
+        launcher.buildModel();
+
+        Map<String, CompilationUnit> compilationUnitsByPath =
+                launcher.getFactory().CompilationUnit().getMap();
+        Validate.validState(
+                compilationUnitsByPath.size() <= 1,
+                "Expected at most one parsed compilation unit, got %d",
+                compilationUnitsByPath.size());
+
+        CompilationUnit compilationUnit = compilationUnitsByPath.isEmpty()
+                ? launcher.getFactory()
+                        .CompilationUnit()
+                        .getOrCreate(srcFile.getPath().toString())
+                : compilationUnitsByPath.values().iterator().next();
+        Validate.validState(
+                compilationUnit instanceof CtCompilationUnit,
+                "Expected Spoon compilation unit to implement CtCompilationUnit, got %s",
+                compilationUnit.getClass().getName());
+        return (CtCompilationUnit) compilationUnit;
+    }
+
+    private static boolean shouldPreserveOriginalSource(CtCompilationUnit compilationUnit) {
+        return compilationUnit.getUnitType() == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
+                && compilationUnit.getDeclaredTypes().isEmpty();
     }
 }
