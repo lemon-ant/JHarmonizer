@@ -65,5 +65,3 @@ This file defines repository-wide conventions for coding agents working in this 
 ## Test conventions
 
 - See `docs/test-conventions.md`.
-- In particular, keep non-trivial multi-line textual test fixtures in `src/test/resources/test-cases/**` instead of embedding them inline in test classes.
-- For formatter-focused fixtures under `src/test/resources/test-cases/**`, keep the `input/` files intentionally valid but not already formatted like `expected/`, so the scenario proves the formatter makes a real change.
