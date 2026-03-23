@@ -52,12 +52,13 @@ class SourceProcessorE2EFixtureTest {
     private static final String COMPILE_BEFORE_DIRECTORY_NAME = "SourceProcessorE2E-compile-before";
     private static final String COMPILE_AFTER_DIRECTORY_NAME = "SourceProcessorE2E-compile-after";
     private static final Pattern SCENARIO_PREFIX_PATTERN = Pattern.compile("^(\\d+)-.+$");
+    private static final String NON_TYPE_COMPILATION_UNITS_SCENARIO = "20-non-type-compilation-units";
 
     @TempDir
     Path temporaryDirectory;
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
-    @MethodSource("fixtureInputFiles")
+    @MethodSource("processableFixtureInputFiles")
     void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
         // Given
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
@@ -116,6 +117,36 @@ class SourceProcessorE2EFixtureTest {
                         "Expected main method execution to succeed for %s. Output:%n%s",
                         runAfterResult.getClassName(), runAfterResult.getOutput())
                 .isZero();
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}/{1}/{2}")
+    @MethodSource("nonTypeDefinitionFixtureInputFiles")
+    void processNonTypeFixtureInputFile_nonTypeDeclarationsPresent_failWithAllTypesCannotBeEmpty(
+            Path scenarioDir, Path sourceFile, FlowType flowType) throws Exception {
+        // Given
+        Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
+        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
+        String inputSourceCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
+        String scenarioName = scenarioDir + "-" + flowType.name().toLowerCase();
+        Path workingScenarioRoot =
+                temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
+        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+        Path compileBeforeOutput =
+                temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
+
+        JavaCompileTestUtils.CompileResult compileBeforeResult =
+                compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
+        assertThat(compileBeforeResult.getExitCode())
+                .as(
+                        "Expected javac --release 21 to compile file %s before exercising parser failure. Diagnostics:%n%s",
+                        workingInputFile, compileBeforeResult.getOutput())
+                .isZero();
+
+        // When / Then
+        assertThatThrownBy(() -> runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), flowType))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("AllTypes cannot be empty");
+        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(inputSourceCode);
     }
 
     @Test
@@ -184,6 +215,23 @@ class SourceProcessorE2EFixtureTest {
                             .boxed()
                             .toArray(Integer[]::new));
         }
+    }
+
+    @NonNull
+    private static Stream<Arguments> processableFixtureInputFiles() throws IOException {
+        return fixtureInputFiles()
+                .filter(arguments -> !NON_TYPE_COMPILATION_UNITS_SCENARIO.equals(
+                        ((Path) arguments.get()[0]).toString()));
+    }
+
+    @NonNull
+    private static Stream<Arguments> nonTypeDefinitionFixtureInputFiles() throws IOException {
+        return fixtureInputFiles()
+                .filter(arguments -> NON_TYPE_COMPILATION_UNITS_SCENARIO.equals(
+                        ((Path) arguments.get()[0]).toString()))
+                .flatMap(arguments -> Stream.of(FlowType.RESTRUCTURE, FlowType.CHECK_ALL, FlowType.CHECK_FAIL_FAST)
+                        .map(flowType ->
+                                Arguments.of(arguments.get()[0], arguments.get()[1], flowType)));
     }
 
     @NonNull
