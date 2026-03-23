@@ -4,6 +4,7 @@ import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.comp
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
@@ -102,9 +103,10 @@ class SourceProcessorE2EFixtureTest {
                         workingInputFile, compileAfterResult.getOutput())
                 .isZero();
 
-        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
-
         assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
+
+        String workingInputFileSrc = Files.readString(workingInputFile, StandardCharsets.UTF_8);
+        assertThat(workingInputFileSrc).isEqualTo(expectedSourceCode);
     }
 
     @Test

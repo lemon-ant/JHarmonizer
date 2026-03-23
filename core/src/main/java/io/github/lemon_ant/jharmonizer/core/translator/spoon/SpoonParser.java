@@ -9,9 +9,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.Validate;
 import spoon.Launcher;
-import spoon.reflect.cu.CompilationUnit;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.support.compiler.VirtualFile;
@@ -80,28 +78,6 @@ public class SpoonParser {
 
     @NonNull
     private static CtCompilationUnit extractCompilationUnit(@NonNull SrcFile srcFile, Launcher launcher) {
-        Map<String, CompilationUnit> compilationUnitsByPath =
-                launcher.getFactory().CompilationUnit().getMap();
-        Validate.validState(
-                compilationUnitsByPath.size() <= 1,
-                "Expected at most one parsed compilation unit, got %d",
-                compilationUnitsByPath.size());
-
-        CompilationUnit compilationUnit = compilationUnitsByPath.isEmpty()
-                ? createMissingSrcCompilationUnit(srcFile, launcher)
-                : compilationUnitsByPath.values().iterator().next();
-        Validate.validState(
-                compilationUnit instanceof CtCompilationUnit,
-                "Expected Spoon compilation unit to implement CtCompilationUnit, got %s",
-                compilationUnit.getClass().getName());
-        return (CtCompilationUnit) compilationUnit;
-    }
-
-    @NonNull
-    private static CompilationUnit createMissingSrcCompilationUnit(@NonNull SrcFile srcFile, Launcher launcher) {
-        // Spoon does not always cache a compilation unit for comment-only / effectively empty source files.
-        // We still create one keyed by the virtual src path so downstream code can keep treating the file as a
-        // compilation unit and preserve the original src text instead of failing on missing declared types.
         return launcher.getFactory()
                 .CompilationUnit()
                 .getOrCreate(srcFile.getPath().toString());
