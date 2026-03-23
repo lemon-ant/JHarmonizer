@@ -64,10 +64,13 @@ class SourceProcessorE2EFixtureTest {
         Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
         Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
         String scenarioName = scenarioDir.toString();
+        String inputSourceCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
+        String expectedSourceCode = Files.readString(expectedSourceFile, StandardCharsets.UTF_8);
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
+        boolean unchangedFixture = inputSourceCode.equals(expectedSourceCode);
 
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
@@ -89,7 +92,7 @@ class SourceProcessorE2EFixtureTest {
                         runBeforeResult.getClassName(), runBeforeResult.getOutput())
                 .isZero();
 
-        assertFileIsNotProcessedYet(fixtureScenario, workingScenarioRoot, workingInputFile);
+        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
         // When
         runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
@@ -105,7 +108,7 @@ class SourceProcessorE2EFixtureTest {
                         workingInputFile, compileAfterResult.getOutput())
                 .isZero();
 
-        assertThat(workingInputFile).hasSameTextualContentAs(expectedSourceFile, StandardCharsets.UTF_8);
+        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
 
         JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
         assertThat(runAfterResult.getExitCode())
@@ -205,7 +208,16 @@ class SourceProcessorE2EFixtureTest {
     }
 
     private static void assertFileIsNotProcessedYet(
-            Path fixtureScenario, Path workingScenarioRoot, Path workingInputFile) {
+            Path fixtureScenario, Path workingInputFile, boolean unchangedFixture) {
+        if (unchangedFixture) {
+            // Unchanged fixtures intentionally stay mismatch-free, so CHECK_FAIL_FAST also passes because there is
+            // no ordering or formatting violation for it to report before RESTRUCTURE runs.
+            assertThatCode(() -> runProcessorForSingleFile(
+                            workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
+                    .doesNotThrowAnyException();
+            return;
+        }
+
         assertThatThrownBy(() -> runProcessorForSingleFile(
                         workingInputFile, resolveConfig(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
