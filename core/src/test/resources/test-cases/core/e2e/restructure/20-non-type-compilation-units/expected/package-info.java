@@ -3,5 +3,5 @@
  *
  * <p>Keeps legal package annotations so the formatter and parser still have syntax to preserve.
  */
-@java.lang.Deprecated
+@Deprecated
 package io.github.lemon_ant.jharmonizer.core.e2e.nontype;

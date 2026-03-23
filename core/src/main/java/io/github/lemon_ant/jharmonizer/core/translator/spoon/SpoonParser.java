@@ -44,7 +44,7 @@ public class SpoonParser {
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
         Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
-            if (SpoonTypeUtils.hasNoDeclaredTypesInTypeDeclarationUnit(compilationUnit)) {
+            if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
                 return new SerializedSourceWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
             }
 

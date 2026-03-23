@@ -56,13 +56,13 @@ public class SpoonTypeUtils {
     }
 
     /**
-     * Checks whether the compilation unit is a type-declaration unit without declared types.
+     * Checks whether the compilation unit has no declared types to sort.
      * @param compilationUnit the compilation unit to inspect
-     * @return {@code true} when the unit is TYPE_DECLARATION and has no declared types
+     * @return {@code true} when the unit is not TYPE_DECLARATION or has no declared types
      */
-    public static boolean hasNoDeclaredTypesInTypeDeclarationUnit(@NonNull CtCompilationUnit compilationUnit) {
-        return compilationUnit.getUnitType() == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
-                && compilationUnit.getDeclaredTypes().isEmpty();
+    public static boolean hasNoDeclaredTypes(@NonNull CtCompilationUnit compilationUnit) {
+        return compilationUnit.getUnitType() != CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
+                || compilationUnit.getDeclaredTypes().isEmpty();
     }
 
     /**
