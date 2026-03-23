@@ -5,11 +5,10 @@ import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
-import java.util.Collection;
+import java.util.Map;
 import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.Validate;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
@@ -38,10 +37,15 @@ public class SpoonParser {
 
     @NonNull
     private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
-        CtCompilationUnit compilationUnit = extractCompilationUnit(launcher);
+        launcher.buildModel();
+        CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
         Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
+            if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
+                return new SerializedSourceWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
+            }
+
             SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
                     launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
             return printer.serializeCompilationUnit(compilationUnit);
@@ -73,11 +77,9 @@ public class SpoonParser {
     }
 
     @NonNull
-    private static CtCompilationUnit extractCompilationUnit(Launcher launcher) {
-        Collection<CtType<?>> allTypes = launcher.buildModel().getAllTypes();
-        // TODO Flesh out the corner cases with package-info.java and module-info.java
-        Validate.notEmpty(allTypes, "AllTypes cannot be empty");
-        CtType<?> firstType = allTypes.iterator().next();
-        return firstType.getPosition().getCompilationUnit();
+    private static CtCompilationUnit extractCompilationUnit(@NonNull SrcFile srcFile, Launcher launcher) {
+        return launcher.getFactory()
+                .CompilationUnit()
+                .getOrCreate(srcFile.getPath().toString());
     }
 }

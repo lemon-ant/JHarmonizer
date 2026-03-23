@@ -166,6 +166,7 @@ final class SpoonTypePrinter {
         return currentElementNeedsSeparatorAfter;
     }
 
+    @SuppressWarnings("PMD.NullAssignment")
     @NonNull
     Map<CtType<?>, SrcCharacterRange> getSortingSkippedTypeRanges() {
         Map<CtType<?>, SrcCharacterRange> activeSortingSkippedTypeRanges = requireSortingSkippedTypeRanges();

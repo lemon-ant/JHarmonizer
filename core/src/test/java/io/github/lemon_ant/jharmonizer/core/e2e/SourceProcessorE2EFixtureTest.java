@@ -85,12 +85,7 @@ class SourceProcessorE2EFixtureTest {
                         workingInputFile, compileBeforeResult.getOutput())
                 .isZero();
 
-        JavaRunMainTestUtils.RunResult runBeforeResult = runJavaMainMethod(workingInputFile, compileBeforeOutput);
-        assertThat(runBeforeResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runBeforeResult.getClassName(), runBeforeResult.getOutput())
-                .isZero();
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
 
         assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
@@ -108,14 +103,10 @@ class SourceProcessorE2EFixtureTest {
                         workingInputFile, compileAfterResult.getOutput())
                 .isZero();
 
-        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
 
-        JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
-        assertThat(runAfterResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runAfterResult.getClassName(), runAfterResult.getOutput())
-                .isZero();
+        String workingInputFileSrc = Files.readString(workingInputFile, StandardCharsets.UTF_8);
+        assertThat(workingInputFileSrc).isEqualTo(expectedSourceCode);
     }
 
     @Test
@@ -204,6 +195,28 @@ class SourceProcessorE2EFixtureTest {
         } catch (URISyntaxException exception) {
             throw new IllegalArgumentException(
                     "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
+        }
+    }
+
+    private static void assertMainMethodExecutionSucceedsWhenPresent(Path srcFile, Path compiledOutputDirectory)
+            throws IOException, InterruptedException {
+        if (!containsMainMethodDeclaration(srcFile)) {
+            return;
+        }
+
+        JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compiledOutputDirectory);
+        assertThat(runResult.getExitCode())
+                .as(
+                        "Expected main method execution to succeed for %s. Output:%n%s",
+                        runResult.getClassName(), runResult.getOutput())
+                .isZero();
+    }
+
+    private static boolean containsMainMethodDeclaration(Path srcFile) {
+        try (Stream<String> lines = Files.lines(srcFile, StandardCharsets.UTF_8)) {
+            return lines.map(String::trim).anyMatch(line -> line.contains("public static void main("));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to inspect source file for main method: " + srcFile, exception);
         }
     }
 

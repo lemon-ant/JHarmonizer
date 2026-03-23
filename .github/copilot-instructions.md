@@ -118,6 +118,7 @@
 - Do not keep non-trivial multi-line textual fixtures such as YAML, JSON, XML, Java source, or long expected-output snippets inline in test code.
 - Store those fixtures under `src/test/resources/test-cases/**` and load them through shared helpers such as `TestCaseResourceUtils`.
 - Only tiny one-off inline snippets are acceptable when extracting a file would hurt readability.
+- For formatter-focused fixtures under `src/test/resources/test-cases/**`, keep `input/` resources valid but intentionally not already formatted like `expected/`, so the scenario demonstrates a real formatter rewrite.
 - Use `valid/` for fixtures that must compile and be compilable by the build gate.
 - Use `invalid/` for fixtures that may intentionally not compile in negative tests.
 - All `valid/**/*.java` fixtures must compile as part of the build.
