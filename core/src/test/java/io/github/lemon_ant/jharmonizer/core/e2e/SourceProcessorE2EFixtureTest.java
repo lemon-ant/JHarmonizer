@@ -4,7 +4,6 @@ import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.comp
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
@@ -52,13 +51,12 @@ class SourceProcessorE2EFixtureTest {
     private static final String COMPILE_BEFORE_DIRECTORY_NAME = "SourceProcessorE2E-compile-before";
     private static final String COMPILE_AFTER_DIRECTORY_NAME = "SourceProcessorE2E-compile-after";
     private static final Pattern SCENARIO_PREFIX_PATTERN = Pattern.compile("^(\\d+)-.+$");
-    private static final String NON_TYPE_COMPILATION_UNITS_SCENARIO = "20-non-type-compilation-units";
 
     @TempDir
     Path temporaryDirectory;
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
-    @MethodSource("processableFixtureInputFiles")
+    @MethodSource("fixtureInputFiles")
     void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
         // Given
         Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
@@ -86,12 +84,7 @@ class SourceProcessorE2EFixtureTest {
                         workingInputFile, compileBeforeResult.getOutput())
                 .isZero();
 
-        JavaRunMainTestUtils.RunResult runBeforeResult = runJavaMainMethod(workingInputFile, compileBeforeOutput);
-        assertThat(runBeforeResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runBeforeResult.getClassName(), runBeforeResult.getOutput())
-                .isZero();
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
 
         assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
@@ -111,57 +104,7 @@ class SourceProcessorE2EFixtureTest {
 
         assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
 
-        JavaRunMainTestUtils.RunResult runAfterResult = runJavaMainMethod(workingInputFile, compileAfterOutput);
-        assertThat(runAfterResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runAfterResult.getClassName(), runAfterResult.getOutput())
-                .isZero();
-    }
-
-    @ParameterizedTest(name = "[{index}] {0}/{1}/{2}")
-    @MethodSource("nonTypeDefinitionFixtureInputFiles")
-    void processNonTypeFixtureInputFile_nonTypeFixture_preserveExpectedSource(
-            Path scenarioDir, Path sourceFile, FlowType flowType) throws Exception {
-        // Given
-        Path fixtureScenario = FIXTURES_ROOT.resolve(scenarioDir);
-        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
-        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
-        String expectedSourceCode = Files.readString(expectedSourceFile, StandardCharsets.UTF_8);
-        String scenarioName = scenarioDir + "-" + flowType.name().toLowerCase();
-        Path workingScenarioRoot =
-                temporaryDirectory.resolve(WORKING_DIRECTORY_NAME).resolve(scenarioName);
-        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
-        Path compileBeforeOutput =
-                temporaryDirectory.resolve(COMPILE_BEFORE_DIRECTORY_NAME).resolve(scenarioName);
-        Path compileAfterOutput =
-                temporaryDirectory.resolve(COMPILE_AFTER_DIRECTORY_NAME).resolve(scenarioName);
-
-        JavaCompileTestUtils.CompileResult compileBeforeResult =
-                compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
-        assertThat(compileBeforeResult.getExitCode())
-                .as(
-                        "Expected javac --release 21 to compile file %s before processing non-type fixture. Diagnostics:%n%s",
-                        workingInputFile, compileBeforeResult.getOutput())
-                .isZero();
-
-        // When
-        runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), FlowType.RESTRUCTURE);
-
-        // Then
-        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
-
-        JavaCompileTestUtils.CompileResult compileAfterResult =
-                compileJavaSourceWithRelease21(workingInputFile, compileAfterOutput);
-        assertThat(compileAfterResult.getExitCode())
-                .as(
-                        "Expected javac --release 21 to compile file %s after restructuring non-type fixture. Diagnostics:%n%s",
-                        workingInputFile, compileAfterResult.getOutput())
-                .isZero();
-
-        assertThatCode(() -> runProcessorForSingleFile(workingInputFile, resolveConfig(fixtureScenario), flowType))
-                .doesNotThrowAnyException();
-        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSourceCode);
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
     }
 
     @Test
@@ -233,23 +176,6 @@ class SourceProcessorE2EFixtureTest {
     }
 
     @NonNull
-    private static Stream<Arguments> processableFixtureInputFiles() throws IOException {
-        return fixtureInputFiles()
-                .filter(arguments -> !NON_TYPE_COMPILATION_UNITS_SCENARIO.equals(
-                        ((Path) arguments.get()[0]).toString()));
-    }
-
-    @NonNull
-    private static Stream<Arguments> nonTypeDefinitionFixtureInputFiles() throws IOException {
-        return fixtureInputFiles()
-                .filter(arguments -> NON_TYPE_COMPILATION_UNITS_SCENARIO.equals(
-                        ((Path) arguments.get()[0]).toString()))
-                .flatMap(arguments -> Stream.of(FlowType.RESTRUCTURE, FlowType.CHECK_ALL, FlowType.CHECK_FAIL_FAST)
-                        .map(flowType ->
-                                Arguments.of(arguments.get()[0], arguments.get()[1], flowType)));
-    }
-
-    @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
@@ -267,6 +193,28 @@ class SourceProcessorE2EFixtureTest {
         } catch (URISyntaxException exception) {
             throw new IllegalArgumentException(
                     "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
+        }
+    }
+
+    private static void assertMainMethodExecutionSucceedsWhenPresent(Path srcFile, Path compiledOutputDirectory)
+            throws IOException, InterruptedException {
+        if (!containsMainMethodDeclaration(srcFile)) {
+            return;
+        }
+
+        JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compiledOutputDirectory);
+        assertThat(runResult.getExitCode())
+                .as(
+                        "Expected main method execution to succeed for %s. Output:%n%s",
+                        runResult.getClassName(), runResult.getOutput())
+                .isZero();
+    }
+
+    private static boolean containsMainMethodDeclaration(Path srcFile) {
+        try (Stream<String> lines = Files.lines(srcFile, StandardCharsets.UTF_8)) {
+            return lines.map(String::trim).anyMatch(line -> line.contains("public static void main("));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to inspect source file for main method: " + srcFile, exception);
         }
     }
 
