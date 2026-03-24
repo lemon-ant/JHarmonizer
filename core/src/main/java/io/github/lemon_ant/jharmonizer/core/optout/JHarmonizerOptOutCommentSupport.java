@@ -22,19 +22,21 @@ import spoon.reflect.cu.SourcePosition;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class JHarmonizerOptOutCommentSupport {
 
-    // Matches exactly two Java comment families in raw source:
-    // 1) /\* ... *\/   (including multiline block comments)
-    // 2) // ...        (single-line comments up to newline/end-of-file)
-    //
-    // Pattern breakdown:
-    // - (?s) enables DOTALL so ".*?" can cross line breaks inside block comments.
-    // - /\*.*?\*/ is a non-greedy block comment matcher (first closing */ wins).
-    // - | alternates with single-line comments.
-    // - //.*?(?:\R|$) captures line comments and stops at a line-break or EOF.
-    //
-    // We intentionally do not parse Java syntax here; this lexer-like pattern is only used for
-    // file-scope opt-out probing in package-declaration and module-declaration units where Spoon
-    // comment attachment is unreliable.
+    /*
+     * Matches exactly two Java comment families in raw source:
+     * 1) /\* ... *\/   (including multiline block comments)
+     * 2) // ...        (single-line comments up to newline/end-of-file)
+     *
+     * Pattern breakdown:
+     * - (?s) enables DOTALL so ".*?" can cross line breaks inside block comments.
+     * - /\*.*?\*\/ is a non-greedy block comment matcher (first closing *\/ wins).
+     * - | alternates with single-line comments.
+     * - //.*?(?:\R|$) captures line comments and stops at a line-break or EOF.
+     *
+     * We intentionally do not parse Java syntax here; this lexer-like pattern is only used for
+     * file-scope opt-out probing in package-declaration and module-declaration units where Spoon
+     * comment attachment is unreliable.
+     */
     private static final Pattern COMMENT_PATTERN = Pattern.compile("(?s)/\\*.*?\\*/|//.*?(?:\\R|$)");
     private static final char LINE_FEED = '\n';
 
