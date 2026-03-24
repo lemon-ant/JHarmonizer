@@ -92,6 +92,120 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
+    void parseJavaSourceResource_packageInfoFullyOffBeforeJavadoc_resolveFileOptOutOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:fully-off
+                /**
+                 * Package docs.
+                 */
+                @Deprecated
+                package demo;
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel =
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("package-info.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_packageInfoFullyOffThenSortOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:fully-off
+                // @jharmonizer:sort-off
+                /**
+                 * Package docs.
+                 */
+                @Deprecated
+                package demo;
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel =
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("package-info.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_moduleInfoFullyOffThenSortOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:fully-off
+                // @jharmonizer:sort-off
+                @Deprecated
+                module demo.module {
+                    requires java.base;
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("module-info.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_commentOnlyFullyOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:fully-off
+                    // Intentionally comment-only source.
+                /*    No package, imports, module, or type declarations.    */
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("CommentOnly.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_commentOnlyIndentedLineDirectiveFullyOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                //     @jharmonizer:fully-off
+                // Comment-only fixture with indented token after line-comment prefix.
+                /*    Keeps intentionally odd spacing to validate tolerant parsing.    */
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("CommentOnly.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_blockDirectiveWithLeadingNewline_resolveFileSortOff() {
+        // Given
+        String srcCode = """
+                package demo;
+
+                /*
+                   @jharmonizer:sort-off
+                */
+                import java.util.List;
+                import java.util.ArrayList;
+
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
+    }
+
+    @Test
     void parseJavaSourceResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
         // Given
         String sourceCode = """

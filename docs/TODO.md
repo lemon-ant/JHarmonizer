@@ -386,3 +386,28 @@ Related parked lazy-context fixture (separate backlog track):
 ### Backlog direction
 - keep this as a dedicated dependency-analysis improvement track;
 - design a safe representation strategy for this family (without weakening valid-Java guarantees).
+
+---
+
+## 7. Spoon comment attachment gaps for non-type and comment-only units
+
+### Status
+- [ ] Open investigation / upstream tracking not yet completed
+
+### Verified current behavior
+- For some `package-info.java` and `module-info.java` sources, Spoon does not reliably expose leading file-scope
+  opt-out comments through attached `CtComment` nodes.
+- For comment-only sources, Spoon can produce `TYPE_DECLARATION` unit type with no declared types and no
+  recoverable file-scope comments from AST traversal.
+
+### Temporary workaround in code
+- `JHarmonizerOptOutResolver` keeps an AST-first strategy.
+- For known unreliable unit shapes, file-level opt-out directives are parsed from raw source comments using
+  a lexer-like fallback.
+
+### Follow-up actions
+- [ ] Create/confirm upstream Spoon issue(s) with minimal reproducible samples for:
+  - [ ] package declarations with leading file comments;
+  - [ ] module declarations with leading file comments;
+  - [ ] comment-only compilation units.
+- [ ] Re-evaluate and remove/limit raw-source fallback after upstream fix is available and verified.
