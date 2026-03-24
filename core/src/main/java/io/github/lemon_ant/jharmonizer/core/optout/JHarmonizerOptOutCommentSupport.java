@@ -8,20 +8,33 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Value;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class JHarmonizerOptOutCommentSupport {
 
-    private JHarmonizerOptOutCommentSupport() {
-        // utility class
-    }
-
+    // Matches exactly two Java comment families in raw source:
+    // 1) /\* ... *\/   (including multiline block comments)
+    // 2) // ...        (single-line comments up to newline/end-of-file)
+    //
+    // Pattern breakdown:
+    // - (?s) enables DOTALL so ".*?" can cross line breaks inside block comments.
+    // - /\*.*?\*/ is a non-greedy block comment matcher (first closing */ wins).
+    // - | alternates with single-line comments.
+    // - //.*?(?:\R|$) captures line comments and stops at a line-break or EOF.
+    //
+    // We intentionally do not parse Java syntax here; this lexer-like pattern is only used for
+    // file-scope opt-out probing in package-declaration and module-declaration units where Spoon
+    // comment attachment is unreliable.
     private static final Pattern COMMENT_PATTERN = Pattern.compile("(?s)/\\*.*?\\*/|//.*?(?:\\R|$)");
     private static final char LINE_FEED = '\n';
 
@@ -63,6 +76,8 @@ final class JHarmonizerOptOutCommentSupport {
     @Nullable
     static JHarmonizerOptOutMode parseFileScopeOptOutMode(
             @NonNull String rawComment, int commentOffset, @NonNull SrcFile srcFile) {
+        // Normalize raw text by stripping Java comment delimiters, trimming incidental whitespace,
+        // and switching to lowercase for case-insensitive token lookup.
         String normalizedContent = rawComment
                 .replaceFirst("^//", "")
                 .replaceFirst("^/\\*+", "")
@@ -70,21 +85,27 @@ final class JHarmonizerOptOutCommentSupport {
                 .trim()
                 .toLowerCase(Locale.ROOT);
 
+        // Locate the directive token in normalized comment content.
         int tokenPrefixIndex = normalizedContent.indexOf(JHarmonizerOptOutMode.TOKEN_PREFIX);
+
+        // Fast-exit for regular comments without any JHarmonizer directive token.
         if (tokenPrefixIndex < 0) {
             return null;
         }
 
+        // Keep parity with AST parsing rules: Javadoc comments are never treated as opt-out directives.
         if (rawComment.startsWith("/**")) {
             logIgnoredFileOptOut(commentOffset, "Javadoc opt-out comments are ignored", srcFile);
             return null;
         }
 
+        // Directive token must start at the beginning of comment payload after normalization.
         if (tokenPrefixIndex != 0) {
             logIgnoredFileOptOut(commentOffset, "Malformed opt-out comment is ignored", srcFile);
             return null;
         }
 
+        // Delegate token-to-mode conversion to canonical enum parser and log unsupported tokens.
         try {
             return JHarmonizerOptOutMode.fromToken(normalizedContent);
         } catch (IllegalArgumentException exception) {
@@ -100,11 +121,11 @@ final class JHarmonizerOptOutCommentSupport {
      * @return immutable list of raw matches with source offsets
      */
     @NonNull
-    static List<RawCommentMatch> collectRawComments(@NonNull String srcCode) {
+    static List<RawCommentMatch> collectRawCommentsByRegex(@NonNull String srcCode) {
         Matcher commentMatcher = COMMENT_PATTERN.matcher(srcCode);
         List<RawCommentMatch> matches = new ArrayList<>();
         while (commentMatcher.find()) {
-            matches.add(new RawCommentMatch(commentMatcher.group(), commentMatcher.start()));
+            matches.add(RawCommentMatch.of(commentMatcher.group(), commentMatcher.start()));
         }
         return Collections.unmodifiableList(matches);
     }
@@ -182,11 +203,12 @@ final class JHarmonizerOptOutCommentSupport {
         }
     }
 
-    @Value
-    static final class RawCommentMatch {
+    @Getter
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE, staticName = "of")
+    static class RawCommentMatch {
         @NonNull
-        String rawComment;
+        private final String rawComment;
 
-        int commentOffset;
+        private final int commentOffset;
     }
 }

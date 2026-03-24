@@ -54,9 +54,9 @@ public final class JHarmonizerOptOutResolver {
     }
 
     private void collectTypeOptOutModes(
-            @NonNull CtType<?> currentType,
+            CtType<?> currentType,
             boolean sortingDisabledInParents,
-            @NonNull Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
+            Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes) {
         JHarmonizerOptOutMode directOptOutMode = findTypeOptOutMode(currentType);
         if (directOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
             typeOptOutModes.put(currentType, JHarmonizerOptOutMode.FULLY_OFF);
@@ -75,7 +75,7 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @Nullable
-    private JHarmonizerOptOutMode findTypeOptOutMode(@NonNull CtType<?> currentType) {
+    private JHarmonizerOptOutMode findTypeOptOutMode(CtType<?> currentType) {
         JHarmonizerOptOutMode typeOptOutMode = null;
         CtComment previousTypeComment = null;
         for (CtComment leadingTypeComment : collectLeadingTypeComments(currentType)) {
@@ -105,7 +105,7 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @NonNull
-    private static java.util.List<CtComment> collectLeadingTypeComments(@NonNull CtType<?> currentType) {
+    private static java.util.List<CtComment> collectLeadingTypeComments(CtType<?> currentType) {
         return currentType.getComments().stream()
                 .filter(comment -> comment.getPosition().getEndLine()
                         < currentType.getPosition().getLine())
