@@ -20,9 +20,7 @@ import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @Slf4j
@@ -91,15 +89,13 @@ public final class JHarmonizerOptOutResolver {
 
     @Nullable
     private JHarmonizerOptOutMode resolveFileOptOutModeFromAstComments() {
-        List<FileScopeOptOutCandidate> fileComments =
-                compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
-                        .filter(JHarmonizerOptOutResolver::isStandaloneComment)
-                        .filter(this::isBeforeFirstDeclaredType)
-                        .sorted(Comparator.comparingInt(
-                                comment -> comment.getPosition().getSourceStart()))
-                        .map(comment -> new FileScopeOptOutCandidate(
-                                parseOptOutMode(comment), formatLocation(comment.getPosition())))
-                        .toList();
+        List<CtComment> comments = compilationUnit.getElements(new TypeFilter<>(CtComment.class));
+        List<FileScopeOptOutCandidate> fileComments = comments.stream()
+                .filter(this::isBeforeFirstDeclaredType)
+                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
+                .map(comment ->
+                        new FileScopeOptOutCandidate(parseOptOutMode(comment), formatLocation(comment.getPosition())))
+                .toList();
         return resolveFileOptOutModeFromCandidates(fileComments);
     }
 
@@ -335,16 +331,11 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @Value
-    static final class RawCommentMatch {
+    static class RawCommentMatch {
         @NonNull
         String rawComment;
 
         int commentOffset;
-    }
-
-    private static boolean isStandaloneComment(CtComment comment) {
-        CtElement parent = comment.getParent();
-        return !(parent instanceof CtTypeMember);
     }
 
     private boolean isBeforeFirstDeclaredType(CtComment comment) {

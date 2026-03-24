@@ -11,3 +11,4 @@ int alpha=1;
 
 void beta( ){for(String n:names){System.out.println(n);}}
 }
+
