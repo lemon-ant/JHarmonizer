@@ -111,7 +111,8 @@ final class SpoonTypePrinter {
         int minMemberStart = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
                 .min()
-                .orElseThrow(IllegalStateException::new /*TODO Message*/);
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute first member start from explicit type members"));
 
         printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
 
@@ -126,7 +127,8 @@ final class SpoonTypePrinter {
         int maxMemberEnd = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
                 .max()
-                .orElseThrow(IllegalStateException::new /*TODO Message*/);
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute last member end from explicit type members"));
         printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 

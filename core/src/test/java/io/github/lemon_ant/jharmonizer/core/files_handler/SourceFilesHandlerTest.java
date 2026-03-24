@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -67,7 +66,8 @@ class SourceFilesHandlerTest {
         Path txtFile = Files.writeString(tempDir.resolve("notes.txt"), "not java");
 
         // When
-        List<Path> result = SourceFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
+        List<Path> result = SourceFilesHandler.readJavaFiles(tempDir, Set.of("**.java"), Set.of())
+                .map(SrcFile::getPath)
                 .collect(Collectors.toList());
 
         // Then
@@ -96,7 +96,9 @@ class SourceFilesHandlerTest {
         Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
 
         // When
-        SrcFile content = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+        SrcFile content = SourceFilesHandler.readJavaFiles(tempDir, Set.of("ReadMe.java"), Set.of())
+                .findFirst()
+                .orElseThrow();
 
         // Then
         assertThat(content.getPath()).isEqualTo(file);

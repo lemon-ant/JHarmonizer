@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class SourceFilesHandler {
 
-    // TODO Hide it and expose a new method readJavaFiles that combines findJavaFiles + readFile
     /**
      * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
      * Supports mixed absolute and relative globs and removes duplicates from the result.
@@ -30,7 +29,7 @@ public class SourceFilesHandler {
      * @return the matching Java file paths
      */
     @NonNull
-    public static Stream<Path> findJavaFiles(
+    private static Stream<Path> findJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(baseDir)
@@ -39,6 +38,20 @@ public class SourceFilesHandler {
                 .allowedExtensions(Set.of("java"))
                 .build();
         return GlobPathFinder.findPaths(pathQuery);
+    }
+
+    /**
+     * Recursively resolves and reads all {@code .java} files matching the include and exclude globs.
+     *
+     * @param baseDir the base directory to scan
+     * @param includeGlobs the include globs to apply
+     * @param excludeGlobs the exclude globs to apply
+     * @return a stream of loaded source files
+     */
+    @NonNull
+    public static Stream<SrcFile> readJavaFiles(
+            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
+        return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SourceFilesHandler::readFile);
     }
 
     /**
@@ -52,10 +65,9 @@ public class SourceFilesHandler {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        log.trace("File content has been overwritten at {}", fileContent);
+        log.trace("File content has been overwritten at {}", path);
     }
 
-    // TODO Hide in readJavaFiles method
     /**
      * Reads a source file into a {@link SrcFile} value.
      *
@@ -63,7 +75,7 @@ public class SourceFilesHandler {
      * @return the loaded source file wrapper
      */
     @NonNull
-    public static SrcFile readFile(@NonNull Path file) {
+    private static SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
             srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
