@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
@@ -93,45 +91,42 @@ public final class JHarmonizerOptOutResolver {
 
     @Nullable
     private JHarmonizerOptOutMode resolveFileOptOutModeFromAstComments() {
-        List<CtComment> fileComments = compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
-                .filter(JHarmonizerOptOutResolver::isStandaloneComment)
-                .filter(this::isBeforeFirstDeclaredType)
-                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
-                .toList();
-        return resolveFileOptOutModeFromCandidates(
-                fileComments,
-                this::parseOptOutMode,
-                fileComment -> formatLocation(fileComment.getPosition()),
-                this::logIgnoredOptOut);
+        List<FileScopeOptOutCandidate> fileComments =
+                compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
+                        .filter(JHarmonizerOptOutResolver::isStandaloneComment)
+                        .filter(this::isBeforeFirstDeclaredType)
+                        .sorted(Comparator.comparingInt(
+                                comment -> comment.getPosition().getSourceStart()))
+                        .map(comment -> new FileScopeOptOutCandidate(
+                                parseOptOutMode(comment), formatLocation(comment.getPosition())))
+                        .toList();
+        return resolveFileOptOutModeFromCandidates(fileComments);
     }
 
     @Nullable
     JHarmonizerOptOutMode resolveFileOptOutModeFromRawSourceFallback() {
-        return resolveFileOptOutModeFromCandidates(
-                collectRawFileScopeComments(srcFile.getSrcCode()),
-                rawCommentMatch -> parseOptOutMode(rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset()),
-                rawCommentMatch -> formatFileLineAndColumnLocation(rawCommentMatch.getCommentOffset()),
-                (rawCommentMatch, message) -> logIgnoredOptOut(rawCommentMatch.getCommentOffset(), message));
+        List<FileScopeOptOutCandidate> rawFileComments = collectRawFileScopeComments(srcFile.getSrcCode()).stream()
+                .map(rawCommentMatch -> new FileScopeOptOutCandidate(
+                        parseOptOutMode(rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset()),
+                        formatFileLineAndColumnLocation(rawCommentMatch.getCommentOffset())))
+                .toList();
+        return resolveFileOptOutModeFromCandidates(rawFileComments);
     }
 
     @Nullable
-    private <T> JHarmonizerOptOutMode resolveFileOptOutModeFromCandidates(
-            List<T> optOutCandidates,
-            Function<T, JHarmonizerOptOutMode> modeResolver,
-            Function<T, String> locationFormatter,
-            BiConsumer<T, String> ignoredOptOutLogger) {
+    private JHarmonizerOptOutMode resolveFileOptOutModeFromCandidates(List<FileScopeOptOutCandidate> optOutCandidates) {
         JHarmonizerOptOutMode fileOptOutMode = null;
-        T previousCandidate = null;
-        for (T optOutCandidate : optOutCandidates) {
-            JHarmonizerOptOutMode currentMode = modeResolver.apply(optOutCandidate);
+        FileScopeOptOutCandidate previousCandidate = null;
+        for (FileScopeOptOutCandidate optOutCandidate : optOutCandidates) {
+            JHarmonizerOptOutMode currentMode = optOutCandidate.getOptOutMode();
             if (currentMode == null) {
                 continue;
             }
             if (fileOptOutMode != null) {
-                ignoredOptOutLogger.accept(
-                        optOutCandidate,
+                logIgnoredOptOutAtLocation(
+                        optOutCandidate.getLocation(),
                         "Later file-scope opt-out replaces the previously parsed one from %s; the last applicable"
-                                        .formatted(locationFormatter.apply(previousCandidate))
+                                        .formatted(previousCandidate.getLocation())
                                 + " file-scope opt-out wins");
             }
 
@@ -142,6 +137,15 @@ public final class JHarmonizerOptOutResolver {
             }
         }
         return fileOptOutMode;
+    }
+
+    @Value
+    static final class FileScopeOptOutCandidate {
+        @Nullable
+        JHarmonizerOptOutMode optOutMode;
+
+        @NonNull
+        String location;
     }
 
     private void collectTypeOptOutModes(
@@ -300,6 +304,12 @@ public final class JHarmonizerOptOutResolver {
     private void logIgnoredOptOut(int commentOffset, String message) {
         if (log.isWarnEnabled()) {
             log.warn("{} at {}", message, formatFileLineAndColumnLocation(commentOffset));
+        }
+    }
+
+    private void logIgnoredOptOutAtLocation(String location, String message) {
+        if (log.isWarnEnabled()) {
+            log.warn("{} at {}", message, location);
         }
     }
 
