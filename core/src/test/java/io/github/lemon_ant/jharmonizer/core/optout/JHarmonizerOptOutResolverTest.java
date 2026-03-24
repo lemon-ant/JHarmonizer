@@ -168,6 +168,44 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
+    void parseJavaSourceResource_commentOnlyIndentedLineDirectiveFullyOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                //     @jharmonizer:fully-off
+                // Comment-only fixture with indented token after line-comment prefix.
+                /*    Keeps intentionally odd spacing to validate tolerant parsing.    */
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("CommentOnly.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_blockDirectiveWithLeadingNewline_resolveFileSortOff() {
+        // Given
+        String srcCode = """
+                package demo;
+
+                /*
+                   @jharmonizer:sort-off
+                */
+                import java.util.List;
+                import java.util.ArrayList;
+
+                class Sample {}
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
+    }
+
+    @Test
     void parseJavaSourceResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
         // Given
         String sourceCode = """
