@@ -7,5 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 class FileSortOffBlockWithLeadingNewline {
-    List<String> values = new ArrayList<>();
+    void zeta() {
+        System.out.println(alpha);
+    }
+
+    int alpha = 1;
+
+    private final List<String> names = new ArrayList<>();
+
+    void beta() {
+        for (String n : names) {
+            System.out.println(n);
+        }
+    }
 }
