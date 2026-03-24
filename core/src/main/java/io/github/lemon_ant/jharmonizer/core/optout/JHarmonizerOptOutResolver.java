@@ -2,50 +2,24 @@ package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtComment;
-import spoon.reflect.code.CtComment.CommentType;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.visitor.filter.TypeFilter;
 
-@Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JHarmonizerOptOutResolver {
-    // Matches exactly two Java comment families in raw source:
-    // 1) /\* ... *\/   (including multiline block comments)
-    // 2) // ...        (single-line comments up to newline/end-of-file)
-    //
-    // Pattern breakdown:
-    // - (?s) enables DOTALL so ".*?" can cross line breaks inside block comments.
-    // - /\\*.*?\\*/ is a non-greedy block comment matcher (first closing */ wins).
-    // - | alternates with single-line comments.
-    // - //.*?(?:\\R|$) captures line comments and stops at a line-break or EOF.
-    //
-    // We intentionally do not parse Java syntax here; this lexer-like pattern is only used for
-    // file-scope opt-out probing in package-declaration units where Spoon comment attachment is unreliable.
-    private static final Pattern COMMENT_PATTERN = Pattern.compile("(?s)/\\*.*?\\*/|//.*?(?:\\R|$)");
-
-    // TODO rethink these fields and make the class static and stateless
-    @NonNull
-    private final SrcFile srcFile;
 
     @NonNull
     private final CtCompilationUnit compilationUnit;
+
+    @NonNull
+    private final SrcFile srcFile;
 
     /**
      * Resolves file-level and type-level opt-out directives from a parsed compilation unit.
@@ -56,12 +30,13 @@ public final class JHarmonizerOptOutResolver {
      */
     @NonNull
     public static JHarmonizerOptOuts resolve(@NonNull SrcFile srcFile, @NonNull CtCompilationUnit compilationUnit) {
-        return new JHarmonizerOptOutResolver(srcFile, compilationUnit).resolve();
+        return new JHarmonizerOptOutResolver(compilationUnit, srcFile).resolve();
     }
 
     @NonNull
     private JHarmonizerOptOuts resolve() {
-        JHarmonizerOptOutMode fileOptOutMode = resolveFileOptOutMode();
+        JHarmonizerOptOutMode fileOptOutMode =
+                JHarmonizerOptOutFileScopeResolver.resolveFileOptOutMode(srcFile, compilationUnit);
         if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
             return new JHarmonizerOptOuts(JHarmonizerOptOutMode.FULLY_OFF, Map.of());
         }
@@ -76,72 +51,6 @@ public final class JHarmonizerOptOutResolver {
         return typeOptOutModes.isEmpty() && fileOptOutMode == null
                 ? JHarmonizerOptOuts.empty()
                 : new JHarmonizerOptOuts(fileOptOutMode, typeOptOutModes);
-    }
-
-    @Nullable
-    private JHarmonizerOptOutMode resolveFileOptOutMode() {
-        if (!shouldUseRawSourceFileOptOutResolution()) {
-            return resolveFileOptOutModeFromAstComments();
-        }
-
-        return resolveFileOptOutModeFromRawSourceFallback();
-    }
-
-    @Nullable
-    private JHarmonizerOptOutMode resolveFileOptOutModeFromAstComments() {
-        List<CtComment> comments = compilationUnit.getElements(new TypeFilter<>(CtComment.class));
-        List<FileScopeOptOutCandidate> fileComments = comments.stream()
-                .filter(this::isBeforeFirstDeclaredType)
-                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
-                .map(comment ->
-                        new FileScopeOptOutCandidate(parseOptOutMode(comment), formatLocation(comment.getPosition())))
-                .toList();
-        return resolveFileOptOutModeFromCandidates(fileComments);
-    }
-
-    @Nullable
-    JHarmonizerOptOutMode resolveFileOptOutModeFromRawSourceFallback() {
-        List<FileScopeOptOutCandidate> rawFileComments = collectRawFileScopeComments(srcFile.getSrcCode()).stream()
-                .map(rawCommentMatch -> new FileScopeOptOutCandidate(
-                        parseOptOutMode(rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset()),
-                        formatFileLineAndColumnLocation(rawCommentMatch.getCommentOffset())))
-                .toList();
-        return resolveFileOptOutModeFromCandidates(rawFileComments);
-    }
-
-    @Nullable
-    private JHarmonizerOptOutMode resolveFileOptOutModeFromCandidates(List<FileScopeOptOutCandidate> optOutCandidates) {
-        JHarmonizerOptOutMode fileOptOutMode = null;
-        FileScopeOptOutCandidate previousCandidate = null;
-        for (FileScopeOptOutCandidate optOutCandidate : optOutCandidates) {
-            JHarmonizerOptOutMode currentMode = optOutCandidate.getOptOutMode();
-            if (currentMode == null) {
-                continue;
-            }
-            if (fileOptOutMode != null) {
-                logIgnoredOptOutAtLocation(
-                        optOutCandidate.getLocation(),
-                        "Later file-scope opt-out replaces the previously parsed one from %s; the last applicable"
-                                        .formatted(previousCandidate.getLocation())
-                                + " file-scope opt-out wins");
-            }
-
-            fileOptOutMode = currentMode;
-            previousCandidate = optOutCandidate;
-            if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
-                break;
-            }
-        }
-        return fileOptOutMode;
-    }
-
-    @Value
-    static final class FileScopeOptOutCandidate {
-        @Nullable
-        JHarmonizerOptOutMode optOutMode;
-
-        @NonNull
-        String location;
     }
 
     private void collectTypeOptOutModes(
@@ -167,27 +76,25 @@ public final class JHarmonizerOptOutResolver {
 
     @Nullable
     private JHarmonizerOptOutMode findTypeOptOutMode(CtType<?> currentType) {
-        List<CtComment> leadingTypeComments = currentType.getComments().stream()
-                .filter(comment -> comment.getPosition().getEndLine()
-                        < currentType.getPosition().getLine())
-                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
-                .toList();
         JHarmonizerOptOutMode typeOptOutMode = null;
         CtComment previousTypeComment = null;
-        for (CtComment leadingTypeComment : leadingTypeComments) {
-            JHarmonizerOptOutMode currentMode = parseOptOutMode(leadingTypeComment);
+        for (CtComment leadingTypeComment : collectLeadingTypeComments(currentType)) {
+            JHarmonizerOptOutMode currentMode = JHarmonizerOptOutCommentSupport.parseTypeOptOutMode(leadingTypeComment);
             if (currentMode == null) {
                 continue;
             }
             if (typeOptOutMode != null) {
-                logIgnoredOptOut(
+                JHarmonizerOptOutCommentSupport.logIgnoredTypeOptOut(
                         leadingTypeComment,
                         "Later opt-out comment for type '%s' replaces the previously parsed one from %s; the last"
                                         .formatted(
                                                 currentType.getQualifiedName(),
-                                                formatLocation(previousTypeComment.getPosition()))
-                                + " applicable type-level opt-out wins");
+                                                JHarmonizerOptOutCommentSupport.formatLocation(
+                                                        srcFile, previousTypeComment.getPosition()))
+                                + " applicable type-level opt-out wins",
+                        srcFile);
             }
+
             typeOptOutMode = currentMode;
             previousTypeComment = leadingTypeComment;
             if (typeOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
@@ -197,153 +104,12 @@ public final class JHarmonizerOptOutResolver {
         return typeOptOutMode;
     }
 
-    @Nullable
-    private JHarmonizerOptOutMode parseOptOutMode(CtComment comment) {
-        String normalizedContent = comment.getContent().trim().toLowerCase(Locale.ROOT);
-        int tokenPrefixIndex = normalizedContent.indexOf(JHarmonizerOptOutMode.TOKEN_PREFIX);
-        if (tokenPrefixIndex < 0) {
-            return null;
-        }
-        if (comment.getCommentType() == CommentType.JAVADOC) {
-            logIgnoredOptOut(comment, "Javadoc opt-out comments are ignored");
-            return null;
-        }
-        if (tokenPrefixIndex != 0) {
-            logIgnoredOptOut(comment, "Malformed opt-out comment is ignored");
-            return null;
-        }
-
-        try {
-            return JHarmonizerOptOutMode.fromToken(normalizedContent);
-        } catch (IllegalArgumentException exception) {
-            logIgnoredOptOut(comment, exception.getMessage());
-            return null;
-        }
-    }
-
-    private boolean shouldUseRawSourceFileOptOutResolution() {
-        CtCompilationUnit.UNIT_TYPE unitType = compilationUnit.getUnitType();
-        if (unitType == CtCompilationUnit.UNIT_TYPE.PACKAGE_DECLARATION
-                || unitType == CtCompilationUnit.UNIT_TYPE.MODULE_DECLARATION) {
-            return true;
-        }
-
-        return unitType == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
-                && compilationUnit.getDeclaredTypes().isEmpty();
-    }
-
-    /**
-     * Extracts raw Java comments from file-scope source text in encounter order.
-     *
-     * <p>This helper is package-private intentionally to enable focused tests for the regex behavior and
-     * comment tokenization edge cases without forcing full Spoon parsing in every combinatorial case.
-     *
-     * @param fileScopeSource source fragment that contains only file-scope text
-     * @return ordered raw comment matches with their source offsets relative to the provided fragment
-     */
     @NonNull
-    static List<RawCommentMatch> collectRawFileScopeComments(@NonNull String fileScopeSource) {
-        Matcher commentMatcher = COMMENT_PATTERN.matcher(fileScopeSource);
-        List<RawCommentMatch> matches = new ArrayList<>();
-        while (commentMatcher.find()) {
-            matches.add(new RawCommentMatch(commentMatcher.group(), commentMatcher.start()));
-        }
-        return Collections.unmodifiableList(matches);
-    }
-
-    @Nullable
-    private JHarmonizerOptOutMode parseOptOutMode(String rawComment, int commentOffset) {
-        // Normalize raw text by stripping Java comment delimiters, trimming incidental whitespace,
-        // and switching to lowercase for case-insensitive token lookup.
-        String normalizedContent = rawComment
-                .replaceFirst("^//", "")
-                .replaceFirst("^/\\*+", "")
-                .replaceFirst("\\*+/$", "")
-                .trim()
-                .toLowerCase(Locale.ROOT);
-
-        // Locate the directive token in normalized comment content.
-        int tokenPrefixIndex = normalizedContent.indexOf(JHarmonizerOptOutMode.TOKEN_PREFIX);
-
-        // Fast-exit for regular comments without any JHarmonizer directive token.
-        if (tokenPrefixIndex < 0) {
-            return null;
-        }
-
-        // Keep parity with AST parsing rules: Javadoc comments are never treated as opt-out directives.
-        if (rawComment.startsWith("/**")) {
-            logIgnoredOptOut(commentOffset, "Javadoc opt-out comments are ignored");
-            return null;
-        }
-
-        // Directive token must start at the beginning of comment payload after normalization.
-        if (tokenPrefixIndex != 0) {
-            logIgnoredOptOut(commentOffset, "Malformed opt-out comment is ignored");
-            return null;
-        }
-
-        // Delegate token-to-mode conversion to canonical enum parser and log unsupported tokens.
-        try {
-            return JHarmonizerOptOutMode.fromToken(normalizedContent);
-        } catch (IllegalArgumentException exception) {
-            logIgnoredOptOut(commentOffset, exception.getMessage());
-            return null;
-        }
-    }
-
-    private void logIgnoredOptOut(CtComment comment, String message) {
-        if (log.isWarnEnabled()) {
-            log.warn("{} at {}", message, formatLocation(comment.getPosition()));
-        }
-    }
-
-    private void logIgnoredOptOut(int commentOffset, String message) {
-        if (log.isWarnEnabled()) {
-            log.warn("{} at {}", message, formatFileLineAndColumnLocation(commentOffset));
-        }
-    }
-
-    private void logIgnoredOptOutAtLocation(String location, String message) {
-        if (log.isWarnEnabled()) {
-            log.warn("{} at {}", message, location);
-        }
-    }
-
-    @NonNull
-    private String formatLocation(SourcePosition sourcePosition) {
-        return srcFile.getPath() + ":" + sourcePosition.getLine() + ":" + sourcePosition.getColumn();
-    }
-
-    @NonNull
-    private String formatFileLineAndColumnLocation(int sourceOffset) {
-        int line = 1;
-        int column = 1;
-        String srcCode = srcFile.getSrcCode();
-        for (int index = 0; index < sourceOffset && index < srcCode.length(); index++) {
-            if (srcCode.charAt(index) == '\n') {
-                line++;
-                column = 1;
-                continue;
-            }
-            column++;
-        }
-        return srcFile.getPath() + ":" + line + ":" + column;
-    }
-
-    @Value
-    static class RawCommentMatch {
-        @NonNull
-        String rawComment;
-
-        int commentOffset;
-    }
-
-    private boolean isBeforeFirstDeclaredType(CtComment comment) {
-        return comment.getPosition().getSourceEnd()
-                < compilationUnit.getDeclaredTypes().stream()
-                        .map(CtType::getPosition)
-                        .mapToInt(SourcePosition::getSourceStart)
-                        .min()
-                        .orElse(Integer.MAX_VALUE);
+    private static java.util.List<CtComment> collectLeadingTypeComments(CtType<?> currentType) {
+        return currentType.getComments().stream()
+                .filter(comment -> comment.getPosition().getEndLine()
+                        < currentType.getPosition().getLine())
+                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
+                .toList();
     }
 }
