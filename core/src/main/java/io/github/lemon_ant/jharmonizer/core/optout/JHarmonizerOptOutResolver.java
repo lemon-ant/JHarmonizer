@@ -84,11 +84,11 @@ public final class JHarmonizerOptOutResolver {
 
     @Nullable
     private JHarmonizerOptOutMode resolveFileOptOutMode() {
-        if (!isPackageDeclarationUnit()) {
+        if (!shouldUseRawSourceFileOptOutResolution()) {
             return resolveFileOptOutModeFromAstComments();
         }
 
-        return resolveFileOptOutModeFromRawSourceForPackageDeclaration();
+        return resolveFileOptOutModeFromRawSourceFallback();
     }
 
     @Nullable
@@ -123,7 +123,7 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @Nullable
-    JHarmonizerOptOutMode resolveFileOptOutModeFromRawSourceForPackageDeclaration() {
+    JHarmonizerOptOutMode resolveFileOptOutModeFromRawSourceFallback() {
         String fileScopeSource = srcFile.getSrcCode().substring(0, findFileScopeEndExclusive());
         JHarmonizerOptOutMode fileOptOutMode = null;
         Integer previousCommentOffset = null;
@@ -236,8 +236,17 @@ public final class JHarmonizerOptOutResolver {
                 .orElse(srcFile.getSrcCode().length());
     }
 
-    private boolean isPackageDeclarationUnit() {
-        return compilationUnit.getUnitType() == CtCompilationUnit.UNIT_TYPE.PACKAGE_DECLARATION;
+    private boolean shouldUseRawSourceFileOptOutResolution() {
+        CtCompilationUnit.UNIT_TYPE unitType = compilationUnit.getUnitType();
+        if (unitType == CtCompilationUnit.UNIT_TYPE.PACKAGE_DECLARATION
+                || unitType == CtCompilationUnit.UNIT_TYPE.MODULE_DECLARATION) {
+            return true;
+        }
+
+        // TODO Track/confirm Spoon issue for comment-only units parsed as TYPE_DECLARATION with no
+        //  attached CtComment nodes and no declared types; keep raw fallback until fixed upstream.
+        return unitType == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
+                && compilationUnit.getDeclaredTypes().isEmpty();
     }
 
     /**

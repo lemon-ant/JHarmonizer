@@ -133,6 +133,41 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
+    void parseJavaSourceResource_moduleInfoFullyOffThenSortOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:fully-off
+                // @jharmonizer:sort-off
+                @Deprecated
+                module demo.module {
+                    requires java.base;
+                }
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("module-info.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
+    void parseJavaSourceResource_commentOnlyFullyOff_resolveFileFullyOff() {
+        // Given
+        String srcCode = """
+                // @jharmonizer:fully-off
+                    // Intentionally comment-only source.
+                /*    No package, imports, module, or type declarations.    */
+                """;
+
+        // When
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("CommentOnly.java")));
+
+        // Then
+        assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
+    }
+
+    @Test
     void parseJavaSourceResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
         // Given
         String sourceCode = """
