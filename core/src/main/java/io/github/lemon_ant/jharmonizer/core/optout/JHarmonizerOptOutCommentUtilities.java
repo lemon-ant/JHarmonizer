@@ -9,18 +9,18 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
 
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-final class JHarmonizerOptOutCommentSupport {
+@UtilityClass
+class JHarmonizerOptOutCommentUtilities {
 
     /*
      * Matches exactly two Java comment families in raw source:
@@ -127,7 +127,7 @@ final class JHarmonizerOptOutCommentSupport {
         Matcher commentMatcher = COMMENT_PATTERN.matcher(srcCode);
         List<RawCommentMatch> matches = new ArrayList<>();
         while (commentMatcher.find()) {
-            matches.add(RawCommentMatch.of(commentMatcher.group(), commentMatcher.start()));
+            matches.add(new RawCommentMatch(commentMatcher.group(), commentMatcher.start()));
         }
         return Collections.unmodifiableList(matches);
     }
@@ -205,12 +205,12 @@ final class JHarmonizerOptOutCommentSupport {
         }
     }
 
-    @Getter
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE, staticName = "of")
+    @Value
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     static class RawCommentMatch {
         @NonNull
-        private final String rawComment;
+        String rawComment;
 
-        private final int commentOffset;
+        int commentOffset;
     }
 }

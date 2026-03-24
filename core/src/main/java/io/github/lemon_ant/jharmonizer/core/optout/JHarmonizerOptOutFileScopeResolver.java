@@ -5,11 +5,13 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
 import java.util.List;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import spoon.reflect.code.CtComment;
+import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -60,8 +62,8 @@ final class JHarmonizerOptOutFileScopeResolver {
                         .sorted(Comparator.comparingInt(
                                 comment -> comment.getPosition().getSourceStart()))
                         .map(comment -> new FileScopeOptOutCandidate(
-                                JHarmonizerOptOutCommentSupport.parseTypeOptOutMode(comment),
-                                JHarmonizerOptOutCommentSupport.formatLocation(srcFile, comment.getPosition())))
+                                JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(comment),
+                                JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, comment.getPosition())))
                         .toList();
         return resolveFromCandidates(fileComments);
     }
@@ -69,11 +71,11 @@ final class JHarmonizerOptOutFileScopeResolver {
     @Nullable
     private JHarmonizerOptOutMode resolveFromRawSource() {
         List<FileScopeOptOutCandidate> rawFileComments =
-                JHarmonizerOptOutCommentSupport.collectRawCommentsByRegex(srcFile.getSrcCode()).stream()
+                JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex(srcFile.getSrcCode()).stream()
                         .map(rawCommentMatch -> new FileScopeOptOutCandidate(
-                                JHarmonizerOptOutCommentSupport.parseFileScopeOptOutMode(
+                                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode(
                                         rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset(), srcFile),
-                                JHarmonizerOptOutCommentSupport.formatLocation(
+                                JHarmonizerOptOutCommentUtilities.formatLocation(
                                         srcFile, rawCommentMatch.getCommentOffset())))
                         .toList();
         return resolveFromCandidates(rawFileComments);
@@ -89,7 +91,7 @@ final class JHarmonizerOptOutFileScopeResolver {
                 continue;
             }
             if (fileOptOutMode != null) {
-                JHarmonizerOptOutCommentSupport.logIgnoredFileOptOutAtLocation(
+                JHarmonizerOptOutCommentUtilities.logIgnoredFileOptOutAtLocation(
                         optOutCandidate.getLocation(),
                         "Later file-scope opt-out replaces the previously parsed one from %s; the last applicable"
                                         .formatted(previousCandidate.getLocation())
@@ -108,19 +110,19 @@ final class JHarmonizerOptOutFileScopeResolver {
     private static boolean isBeforeFirstDeclaredType(CtComment comment, CtCompilationUnit compilationUnit) {
         return comment.getPosition().getSourceEnd()
                 < compilationUnit.getDeclaredTypes().stream()
-                        .map(type -> type.getPosition())
-                        .mapToInt(position -> position.getSourceStart())
+                        .map(CtElement::getPosition)
+                        .mapToInt(SourcePosition::getSourceStart)
                         .min()
                         .orElse(Integer.MAX_VALUE);
     }
 
-    @Getter
+    @Value
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    private static final class FileScopeOptOutCandidate {
+    private static class FileScopeOptOutCandidate {
         @Nullable
-        private final JHarmonizerOptOutMode optOutMode;
+        JHarmonizerOptOutMode optOutMode;
 
         @NonNull
-        private final String location;
+        String location;
     }
 }

@@ -2,8 +2,10 @@ package io.github.lemon_ant.jharmonizer.core.optout;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -50,7 +52,7 @@ public final class JHarmonizerOptOutResolver {
 
         return typeOptOutModes.isEmpty() && fileOptOutMode == null
                 ? JHarmonizerOptOuts.empty()
-                : new JHarmonizerOptOuts(fileOptOutMode, typeOptOutModes);
+                : new JHarmonizerOptOuts(fileOptOutMode, Collections.unmodifiableMap(typeOptOutModes));
     }
 
     private void collectTypeOptOutModes(
@@ -79,17 +81,18 @@ public final class JHarmonizerOptOutResolver {
         JHarmonizerOptOutMode typeOptOutMode = null;
         CtComment previousTypeComment = null;
         for (CtComment leadingTypeComment : collectLeadingTypeComments(currentType)) {
-            JHarmonizerOptOutMode currentMode = JHarmonizerOptOutCommentSupport.parseTypeOptOutMode(leadingTypeComment);
+            JHarmonizerOptOutMode currentMode =
+                    JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(leadingTypeComment);
             if (currentMode == null) {
                 continue;
             }
             if (typeOptOutMode != null) {
-                JHarmonizerOptOutCommentSupport.logIgnoredTypeOptOut(
+                JHarmonizerOptOutCommentUtilities.logIgnoredTypeOptOut(
                         leadingTypeComment,
                         "Later opt-out comment for type '%s' replaces the previously parsed one from %s; the last"
                                         .formatted(
                                                 currentType.getQualifiedName(),
-                                                JHarmonizerOptOutCommentSupport.formatLocation(
+                                                JHarmonizerOptOutCommentUtilities.formatLocation(
                                                         srcFile, previousTypeComment.getPosition()))
                                 + " applicable type-level opt-out wins",
                         srcFile);
@@ -105,7 +108,7 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @NonNull
-    private static java.util.List<CtComment> collectLeadingTypeComments(CtType<?> currentType) {
+    private static List<CtComment> collectLeadingTypeComments(CtType<?> currentType) {
         return currentType.getComments().stream()
                 .filter(comment -> comment.getPosition().getEndLine()
                         < currentType.getPosition().getLine())
