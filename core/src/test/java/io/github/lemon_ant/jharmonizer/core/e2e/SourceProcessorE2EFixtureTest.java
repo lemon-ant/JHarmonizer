@@ -179,8 +179,11 @@ class SourceProcessorE2EFixtureTest {
 
     @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
+        Comparator<Path> fixtureExecutionOrder = Comparator.comparing(
+                        SourceProcessorE2EFixtureTest::resolveScenarioDirectoryName, Comparator.reverseOrder())
+                .thenComparing(Path::getFileName, Comparator.naturalOrder());
         return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
-                .sorted()
+                .sorted(fixtureExecutionOrder)
                 .map(fixtureInputFile -> {
                     Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
                     Path sourceFile = fixtureInputFile.getFileName();
@@ -287,5 +290,10 @@ class SourceProcessorE2EFixtureTest {
     @NonNull
     private static Path resolveInput(Path scenario) {
         return scenario.resolve(INPUT_DIRECTORY);
+    }
+
+    @NonNull
+    private static String resolveScenarioDirectoryName(Path fixtureInputFile) {
+        return fixtureInputFile.getParent().getParent().getFileName().toString();
     }
 }
