@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,15 +71,16 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_orderingRulePreserveWithEqualOrderingKeys_keepEncounterOrderStable() {
+    void orderMembersInsideGroups_orderingRulePreserveWithEqualSourceStart_applyAlphaTieBreakerDeterministically() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "preserve-equal-keys", false, List.of(OrderingRule.PRESERVE));
         CtTypeMember alphaFieldMember = createFieldTypeMember("alphaField", 100);
         CtTypeMember bravoFieldMember = createFieldTypeMember("bravoField", 100);
         CtTypeMember charlieFieldMember = createFieldTypeMember("charlieField", 100);
-        List<CtTypeMember> sourceOrderedMembers = List.of(alphaFieldMember, bravoFieldMember, charlieFieldMember);
-        List<CtTypeMember> inputMembers = new ArrayList<>(sourceOrderedMembers);
+        List<CtTypeMember> alphaTieBreakerOrderedMembers =
+                List.of(alphaFieldMember, bravoFieldMember, charlieFieldMember);
+        List<CtTypeMember> inputMembers = new ArrayList<>(alphaTieBreakerOrderedMembers);
         Collections.reverse(inputMembers);
         MemberGroupBlock inputBlock = new MemberGroupBlock(compiledMemberGroup, inputMembers);
         MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
@@ -92,7 +94,7 @@ class GroupMembersOrdererOrderingRulesTest {
 
         // Then
         assertThat(orderedBlocks).hasSize(1);
-        assertThat(orderedBlocks.getFirst().getTypeMembers()).containsExactlyElementsOf(sourceOrderedMembers);
+        assertThat(orderedBlocks.getFirst().getTypeMembers()).containsExactlyElementsOf(alphaTieBreakerOrderedMembers);
     }
 
     @Test
@@ -347,16 +349,15 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @NonNull
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private static CtTypeMember createFieldTypeMember(String fieldName, int sourceStart) {
-        CtField fieldTypeMember = mock(CtField.class);
+        CtField<?> fieldTypeMember = mock(CtField.class);
         SourcePosition sourcePosition = mock(SourcePosition.class);
-        CtTypeReference fieldTypeReference = mock(CtTypeReference.class);
+        CtTypeReference<?> fieldTypeReference = mock(CtTypeReference.class);
         when(sourcePosition.isValidPosition()).thenReturn(true);
         when(sourcePosition.getSourceStart()).thenReturn(sourceStart);
         when(fieldTypeMember.getPosition()).thenReturn(sourcePosition);
         when(fieldTypeMember.getSimpleName()).thenReturn(fieldName);
-        when(fieldTypeMember.getType()).thenReturn(fieldTypeReference);
+        doReturn(fieldTypeReference).when(fieldTypeMember).getType();
         when(fieldTypeReference.getQualifiedName()).thenReturn("int");
         return fieldTypeMember;
     }
