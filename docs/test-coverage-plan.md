@@ -7,24 +7,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 ## 6) Ordering inside a group (ordering rules + tie-breakers)
 
-- [ ] **OrderingRule.PRESERVE**
-  - **Type:** component
-  - **Targets:** `GroupMembersOrderer`, `ComparatorUtils`
-  - **Goal:** exact original source order is kept.
-  - **Must assert:** stable ordering even with equal keys.
-
-- [ ] **OrderingRule.ALPHA**
-  - **Type:** component
-  - **Targets:** `ComparatorUtils`, `SpoonTypeMemberUtils`
-  - **Goal:** alphabetical ordering is deterministic (and locale-independent).
-  - **Must assert:** tie-breakers (sourceStart/signature) are applied consistently.
-
-- [ ] **OrderingRule.VISIBILITY_ASC / VISIBILITY_DESC**
-  - **Type:** component
-  - **Targets:** `ComparatorUtils`
-  - **Goal:** visibility rank mapping is correct and both directions are correct.
-  - **Must assert:** exact rank ordering for public/protected/package-private/private.
-
 - [ ] **keepAccessorsTogether effect on final order**
   - **Type:** component
   - **Targets:** `GroupMembersOrderer`
