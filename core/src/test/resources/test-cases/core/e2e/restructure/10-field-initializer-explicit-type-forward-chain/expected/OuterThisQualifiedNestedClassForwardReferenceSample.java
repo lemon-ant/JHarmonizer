@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class OuterThisQualifiedNestedClassForwardReferenceSample {
-    private final int zDependent = new Inner().captured;
     private int aProvider = 10;
+    private final int zDependent = new Inner().captured;
 
     private final class Inner {
         private final int captured = OuterThisQualifiedNestedClassForwardReferenceSample.this.aProvider + 1;
@@ -20,7 +20,7 @@ public class OuterThisQualifiedNestedClassForwardReferenceSample {
         int utilitiesSum = zUtility() + aUtility();
         OuterThisQualifiedNestedClassForwardReferenceSample sample =
                 new OuterThisQualifiedNestedClassForwardReferenceSample();
-        if (sample.zDependent != 1 || sample.aProvider != 10 || utilitiesSum != 3) {
+        if (sample.zDependent != 11 || sample.aProvider != 10 || utilitiesSum != 3) {
             throw new IllegalStateException(
                     "Unexpected values: zDependent="
                             + sample.zDependent
