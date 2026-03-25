@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -88,18 +87,5 @@ class SourceFilesHandlerTest {
         // Then
         String newText = Files.readString(sourceFile);
         assertThat(newText).isEqualTo("new content");
-    }
-
-    @Test
-    void readFile_existingFile_returnsFileContent() throws IOException {
-        // Given
-        Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
-
-        // When
-        SrcFile content = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
-
-        // Then
-        assertThat(content.getPath()).isEqualTo(file);
-        assertThat(content.getSrcCode()).isEqualTo("class R {}");
     }
 }

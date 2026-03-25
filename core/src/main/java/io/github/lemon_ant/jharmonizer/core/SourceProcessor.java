@@ -91,10 +91,8 @@ public final class SourceProcessor {
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };
 
-        AggregatedProcessingStatistic aggregatedProcessingStatistic = SourceFilesHandler.findJavaFiles(
+        AggregatedProcessingStatistic aggregatedProcessingStatistic = SourceFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
-                // TODO Possibly include into the one method inside SourceFilesHandler
-                .map(SourceFilesHandler::readFile)
                 .map(flow::processSource)
                 .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
                         flowProcessingResult.getPath(),

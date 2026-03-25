@@ -2,27 +2,6 @@
 
 Ниже — список пунктов для поэтапного обсуждения и принятия решений.
 
-## A) LazyInitializerContextPruningProvider (только как fallback-опция)
-
-**Идея**
-- После сбора dependency по initializer-root удалять рёбра,
-  пришедшие из lazy/non-eager поддеревьев:
-  - lambda
-  - method references
-  - local type body
-
-**Комментарий к подходу (после ревью)**
-- Предпочтительный путь: оптимизировать действующие providers,
-  чтобы лишние зависимости не создавались изначально.
-- `LazyInitializerContextPruningProvider` допустим только как fallback,
-  если часть edge-cases технически неудобно выразить в текущих providers.
-- Если fallback всё же используется, он должен быть:
-  - явно ограничен только lazy/non-eager контекстами,
-  - покрыт отдельными тестами на отсутствие регрессий,
-  - документирован как временный слой, а не основной механизм.
-
----
-
 ## C) InitializerStaticnessGuardProvider
 
 **Проблема**
