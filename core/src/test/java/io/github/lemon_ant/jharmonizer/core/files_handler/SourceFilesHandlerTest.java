@@ -66,8 +66,7 @@ class SourceFilesHandlerTest {
         Path txtFile = Files.writeString(tempDir.resolve("notes.txt"), "not java");
 
         // When
-        List<Path> result = SourceFilesHandler.readJavaFiles(tempDir, Set.of("**.java"), Set.of())
-                .map(SrcFile::getPath)
+        List<Path> result = SourceFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
                 .collect(Collectors.toList());
 
         // Then

@@ -29,7 +29,7 @@ public class SourceFilesHandler {
      * @return the matching Java file paths
      */
     @NonNull
-    private static Stream<Path> findJavaFiles(
+    public static Stream<Path> findJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(baseDir)

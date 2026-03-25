@@ -180,8 +180,7 @@ class SourceProcessorE2EFixtureTest {
 
     @NonNull
     private static Stream<Arguments> fixtureInputFiles() throws IOException {
-        return SourceFilesHandler.readJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
-                .map(SrcFile::getPath)
+        return SourceFilesHandler.findJavaFiles(FIXTURES_ROOT, List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted()
                 .map(fixtureInputFile -> {
                     Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
