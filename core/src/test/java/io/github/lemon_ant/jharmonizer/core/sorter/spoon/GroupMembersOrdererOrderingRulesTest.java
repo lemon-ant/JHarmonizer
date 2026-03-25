@@ -16,6 +16,8 @@ import java.util.Locale;
 import java.util.Map;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
@@ -279,6 +281,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
+    @ResourceLock(Resources.LOCALE)
     void orderMembersInsideGroups_orderingRuleAlphaWithPolishLocale_keepLocaleIndependentOrder() {
         // Given
         Locale defaultLocale = Locale.getDefault();
