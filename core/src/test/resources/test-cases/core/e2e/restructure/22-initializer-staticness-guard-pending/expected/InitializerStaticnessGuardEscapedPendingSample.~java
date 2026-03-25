@@ -1,25 +1,29 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class InitializerStaticnessGuardEscapedPendingSample {
-    String aInstance = "A";
-    static String bStatic = "B";
-    static String staticSeen = new InitializerStaticnessGuardEscapedPendingSample().zInstance;
-    String zInstance = aInstance + "Z";
+    private static String captured = "";
+
+    static {
+        captured = new InitializerStaticnessGuardEscapedPendingSample().zuluInstance;
+    }
+
+    private static String betaStatic = "B";
+
+    private String alphaInstance = "A";
+
+    private String zuluInstance = alphaInstance + "Z";
 
     public static void main(String[] args) {
-        if (!"A".equals(new InitializerStaticnessGuardEscapedPendingSample().aInstance)
-                || !"AZ".equals(new InitializerStaticnessGuardEscapedPendingSample().zInstance)
-                || !"AZ".equals(staticSeen)
-                || !"B".equals(bStatic)) {
+        if (!"AZ".equals(captured)
+                || !"B".equals(betaStatic)
+                || !"AZ".equals(new InitializerStaticnessGuardEscapedPendingSample().zuluInstance)) {
             throw new IllegalStateException("Unexpected values:"
-                    + " aInstance="
-                    + new InitializerStaticnessGuardEscapedPendingSample().aInstance
-                    + ", zInstance="
-                    + new InitializerStaticnessGuardEscapedPendingSample().zInstance
-                    + ", staticSeen="
-                    + staticSeen
-                    + ", bStatic="
-                    + bStatic);
+                    + " captured="
+                    + captured
+                    + ", betaStatic="
+                    + betaStatic
+                    + ", zuluInstance="
+                    + new InitializerStaticnessGuardEscapedPendingSample().zuluInstance);
         }
     }
 }

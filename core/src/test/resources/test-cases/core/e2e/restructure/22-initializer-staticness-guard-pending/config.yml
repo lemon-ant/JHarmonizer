@@ -11,11 +11,16 @@ top-level-types-ordering:
     - [ class ]
   ordering-rules: [ preserve ]
 type-members-ordering:
-  - name: Fields only
+  - name: Initializer staticness guard pending
     includes: ~.*
     ordering-rules: preserve
     groups:
-      - name: Fields
+      - name: Static members
+        separator: none
+        ordering-rules: preserve
+        includes: [ static, field, initializer ]
+      - name: Instance fields
         separator: none
         ordering-rules: alpha
         includes: field
+        excludes: [ static ]
