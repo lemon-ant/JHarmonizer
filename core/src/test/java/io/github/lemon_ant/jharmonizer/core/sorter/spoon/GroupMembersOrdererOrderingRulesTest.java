@@ -11,6 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.Member
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import java.net.URL;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
@@ -276,6 +277,73 @@ class GroupMembersOrdererOrderingRulesTest {
                 .containsExactly(valueFieldMember, staticInitializerMember, readFieldMember);
     }
 
+    @Test
+    void orderMembersInsideGroups_orderingRuleAlphaWithTurkishLocale_keepLocaleIndependentOrder() {
+        // Given
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "alpha-locale", false, List.of(OrderingRule.ALPHA));
+        CtTypeMember izmirFieldMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "izmir");
+        CtTypeMember iWithDotFieldMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "İzmir");
+        CtTypeMember istanbulFieldMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "istanbul");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup, List.of(iWithDotFieldMember, istanbulFieldMember, izmirFieldMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                izmirFieldMember, compiledMemberGroup,
+                iWithDotFieldMember, compiledMemberGroup,
+                istanbulFieldMember, compiledMemberGroup));
+
+        // When
+        try {
+            List<MemberGroupBlock> orderedBlocks =
+                    GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+            // Then
+            assertThat(orderedBlocks.getFirst().getTypeMembers())
+                    .containsExactly(istanbulFieldMember, izmirFieldMember, iWithDotFieldMember);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
+
+    @Test
+    void orderMembersInsideGroups_orderingRuleAlphaWithEqualAlphaKey_applySourceStartTieBreaker() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "alpha-source-start-tie", false, List.of(OrderingRule.ALPHA));
+        CtTypeMember firstStaticInitializerMember = Constants.SOURCE_START_TIE_FIXTURE_MEMBERS.stream()
+                .filter(CtAnonymousExecutable.class::isInstance)
+                .filter(typeMember -> typeMember.getPosition().isValidPosition())
+                .min((leftMember, rightMember) -> Integer.compare(
+                        leftMember.getPosition().getSourceStart(),
+                        rightMember.getPosition().getSourceStart()))
+                .orElseThrow(() -> new IllegalStateException(
+                        "First static initializer was not found in source-start tie fixture"));
+        CtTypeMember secondStaticInitializerMember = Constants.SOURCE_START_TIE_FIXTURE_MEMBERS.stream()
+                .filter(CtAnonymousExecutable.class::isInstance)
+                .filter(typeMember -> typeMember != firstStaticInitializerMember)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Second static initializer was not found in source-start tie fixture"));
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup, List.of(secondStaticInitializerMember, firstStaticInitializerMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                firstStaticInitializerMember, compiledMemberGroup,
+                secondStaticInitializerMember, compiledMemberGroup));
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(firstStaticInitializerMember, secondStaticInitializerMember);
+    }
+
     @NonNull
     private static CtTypeMember requireFixtureMemberBySimpleName(String expectedSimpleName) {
         return SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.FIXTURE_MEMBERS, expectedSimpleName);
@@ -325,6 +393,25 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
                         FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE)
                 .toList();
+
+        private static final String SOURCE_START_TIE_FIXTURE_CLASSPATH_RESOURCE =
+                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleSourceStartTieFixture.java";
+        private static final URL SOURCE_START_TIE_FIXTURE_RESOURCE_URL =
+                GroupMembersOrdererOrderingRulesTest.class.getResource(SOURCE_START_TIE_FIXTURE_CLASSPATH_RESOURCE);
+        private static final CtType<?> SOURCE_START_TIE_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(SOURCE_START_TIE_FIXTURE_RESOURCE_URL);
+        private static final List<CtTypeMember> SOURCE_START_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
+                        SOURCE_START_TIE_FIXTURE_MAIN_TYPE)
+                .toList();
+
+        private static final String LOCALE_FIXTURE_CLASSPATH_RESOURCE =
+                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleLocaleFixture.java";
+        private static final URL LOCALE_FIXTURE_RESOURCE_URL =
+                GroupMembersOrdererOrderingRulesTest.class.getResource(LOCALE_FIXTURE_CLASSPATH_RESOURCE);
+        private static final CtType<?> LOCALE_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(LOCALE_FIXTURE_RESOURCE_URL);
+        private static final List<CtTypeMember> LOCALE_FIXTURE_MEMBERS =
+                streamExplicitSourceTypeMembers(LOCALE_FIXTURE_MAIN_TYPE).toList();
 
         private static final String FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
