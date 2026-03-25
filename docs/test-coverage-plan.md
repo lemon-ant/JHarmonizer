@@ -123,21 +123,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 ## 11) Full E2E fixtures + compilation before/after (release-quality gate)
 
-> This is the “professional guarantee” layer.
-
-- [ ] **Fixture framework in tests**
-  - **Type:** test infrastructure
-  - **Goal:** standard fixture layout and helpers:
-    - `fixtures/<scenario>/input/**`
-    - `fixtures/<scenario>/expected/**`
-    - `fixtures/<scenario>/config.yml`
-  - **Must define:** normalization rules (EOL, trailing spaces, file encoding).
-
-- [ ] **Compile-before and compile-after helper**
-  - **Type:** test infrastructure
-  - **Goal:** compile Java sources with `--release 21` for both input and output.
-  - **Must assert:** output always compiles for “valid input” scenarios.
-
 - [ ] **E2E scenario set (initial wave)**
   - **Type:** E2E
   - **Scenarios to implement:**
