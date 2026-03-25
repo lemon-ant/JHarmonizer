@@ -10,11 +10,14 @@ import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.Member
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import java.net.URL;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
@@ -278,33 +281,35 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_orderingRuleAlphaWithTurkishLocale_keepLocaleIndependentOrder() {
+    @ResourceLock(Resources.LOCALE)
+    void orderMembersInsideGroups_orderingRuleAlphaWithPolishLocale_keepLocaleIndependentOrder() {
         // Given
         Locale defaultLocale = Locale.getDefault();
-        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
-        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
-                "alpha-locale", false, List.of(OrderingRule.ALPHA));
-        CtTypeMember izmirFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "izmir");
-        CtTypeMember iWithDotFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "İzmir");
-        CtTypeMember istanbulFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "istanbul");
-        MemberGroupBlock inputBlock = new MemberGroupBlock(
-                compiledMemberGroup, List.of(iWithDotFieldMember, istanbulFieldMember, izmirFieldMember));
-        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
-                izmirFieldMember, compiledMemberGroup,
-                iWithDotFieldMember, compiledMemberGroup,
-                istanbulFieldMember, compiledMemberGroup));
-
-        // When
         try {
+            Locale.setDefault(Locale.forLanguageTag("pl-PL"));
+            CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                    "alpha-locale", false, List.of(OrderingRule.ALPHA));
+            CtTypeMember lublinFieldMember =
+                    SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "lublin");
+            CtTypeMember uppercaseLStrokeFieldMember =
+                    SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "Łodz");
+            CtTypeMember lowercaseLStrokeFieldMember =
+                    SpoonTestCaseUtils.requireTypeMemberBySimpleName(Constants.LOCALE_FIXTURE_MEMBERS, "łan");
+            MemberGroupBlock inputBlock = new MemberGroupBlock(
+                    compiledMemberGroup,
+                    List.of(uppercaseLStrokeFieldMember, lowercaseLStrokeFieldMember, lublinFieldMember));
+            MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                    lublinFieldMember, compiledMemberGroup,
+                    uppercaseLStrokeFieldMember, compiledMemberGroup,
+                    lowercaseLStrokeFieldMember, compiledMemberGroup));
+
+            // When
             List<MemberGroupBlock> orderedBlocks =
                     GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
             // Then
             assertThat(orderedBlocks.getFirst().getTypeMembers())
-                    .containsExactly(istanbulFieldMember, izmirFieldMember, iWithDotFieldMember);
+                    .containsExactly(lublinFieldMember, uppercaseLStrokeFieldMember, lowercaseLStrokeFieldMember);
         } finally {
             Locale.setDefault(defaultLocale);
         }
@@ -317,14 +322,14 @@ class GroupMembersOrdererOrderingRulesTest {
                 "alpha-source-start-tie", false, List.of(OrderingRule.ALPHA));
         CtTypeMember firstStaticInitializerMember = Constants.SOURCE_START_TIE_FIXTURE_MEMBERS.stream()
                 .filter(CtAnonymousExecutable.class::isInstance)
-                .filter(typeMember -> typeMember.getPosition().isValidPosition())
-                .min((leftMember, rightMember) -> Integer.compare(
-                        leftMember.getPosition().getSourceStart(),
-                        rightMember.getPosition().getSourceStart()))
+                .filter(typeMember -> typeMember.getModifiers().contains(ModifierKind.STATIC))
+                .min(Comparator.comparingInt(
+                        typeMember -> typeMember.getPosition().getSourceStart()))
                 .orElseThrow(() -> new IllegalStateException(
                         "First static initializer was not found in source-start tie fixture"));
         CtTypeMember secondStaticInitializerMember = Constants.SOURCE_START_TIE_FIXTURE_MEMBERS.stream()
                 .filter(CtAnonymousExecutable.class::isInstance)
+                .filter(typeMember -> typeMember.getModifiers().contains(ModifierKind.STATIC))
                 .filter(typeMember -> typeMember != firstStaticInitializerMember)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(
