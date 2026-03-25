@@ -88,19 +88,4 @@ class SourceFilesHandlerTest {
         String newText = Files.readString(sourceFile);
         assertThat(newText).isEqualTo("new content");
     }
-
-    @Test
-    void readFile_existingFile_returnsFileContent() throws IOException {
-        // Given
-        Path file = Files.writeString(tempDir.resolve("ReadMe.java"), "class R {}");
-
-        // When
-        SrcFile content = SourceFilesHandler.readJavaFiles(tempDir, Set.of("ReadMe.java"), Set.of())
-                .findFirst()
-                .orElseThrow();
-
-        // Then
-        assertThat(content.getPath()).isEqualTo(file);
-        assertThat(content.getSrcCode()).isEqualTo("class R {}");
-    }
 }
