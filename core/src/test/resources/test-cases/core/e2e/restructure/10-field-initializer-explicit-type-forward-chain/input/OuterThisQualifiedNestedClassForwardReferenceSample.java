@@ -8,16 +8,11 @@ public class OuterThisQualifiedNestedClassForwardReferenceSample {
         private final int captured = OuterThisQualifiedNestedClassForwardReferenceSample.this.aProvider + 1;
     }
 
-    private static int zUtility() {
-        return 2;
-    }
-
-    private static int aUtility() {
-        return 1;
-    }
+    private static final int zUtilityConstant = 2;
+    private static final int aUtilityConstant = 1;
 
     public static void main(String[] args) {
-        int utilitiesSum = zUtility() + aUtility();
+        int utilitiesSum = zUtilityConstant + aUtilityConstant;
         OuterThisQualifiedNestedClassForwardReferenceSample sample =
                 new OuterThisQualifiedNestedClassForwardReferenceSample();
         if (sample.zDependent != 11 || sample.aProvider != 10 || utilitiesSum != 3) {
