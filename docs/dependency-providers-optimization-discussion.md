@@ -2,24 +2,8 @@
 
 Ниже — список пунктов для поэтапного обсуждения и принятия решений.
 
-## C) InitializerStaticnessGuardProvider
-
-**Проблема**
-- Общий reference collector фильтрует в первую очередь по
-  `declaring type + source order`,
-  но не делает явный staticness-guard на этом этапе.
-
-**Что можно добавить**
-- Дополнительный статический/инстансный контекстный фильтр
-  для initializer members.
-
----
-
 ## Предложенный список новых corner-case тестов (перед финальным прогоном)
 
-1. Lazy lambda in field initializer:
-   - `int a = (() -> b).get(); int b = 1;`
-   - Проверить, что dependency не пере-консервативный.
 2. Method reference in initializer с доступом к полю.
 3. Anonymous class in initializer с чтением поля outer-type.
 4. Enum + static field mixed initialization.
