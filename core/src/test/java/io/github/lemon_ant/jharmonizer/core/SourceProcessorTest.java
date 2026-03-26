@@ -9,14 +9,23 @@ import ch.qos.logback.core.read.ListAppender;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,6 +42,10 @@ class SourceProcessorTest {
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final String FLOW_LEVEL_FIXTURES_RESOURCE = "/test-cases/core/source-processor/flow-level/";
+    private static final URL FLOW_LEVEL_FIXTURES_ROOT_URL =
+            TestCaseResourceUtils.requireClasspathDirectoryUrl(FLOW_LEVEL_FIXTURES_RESOURCE);
+    private static final Path FLOW_LEVEL_FIXTURES_ROOT = resolveFlowLevelFixturesRoot();
     private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
             package demo;
             public class Sample {}
@@ -107,6 +120,47 @@ class SourceProcessorTest {
                 .doesNotThrowAnyException();
         String finalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSourceCode).isNotBlank();
+    }
+
+    @Test
+    void processSources_checkAllWithViolations_aggregatesStatsAndContinuesOtherFiles() throws Exception {
+        // Given
+        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "check-all");
+        Map<String, String> expectedSources = readScenarioExpectedSources("check-all");
+        List<String> orderedInputFiles = List.of("A_Checked.java", "B_Reordered.java", "C_Formatted.java");
+        SourceProcessor sourceProcessor = new SourceProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        AggregatedProcessingStatistic aggregatedProcessingStatistic;
+        try {
+            aggregatedProcessingStatistic = sourceProcessor.processSources(
+                    scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("A_Checked.java");
+        assertThat(logs).contains("JHarmonizer FORMATTED");
+        assertThat(logs).contains("B_Reordered.java");
+        assertThat(logs).contains("JHarmonizer REORDERED");
+        assertThat(logs).contains("C_Formatted.java");
+        assertThat(logs).contains("JHarmonizer FORMATTED");
+        assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(3);
+        assertThat(aggregatedProcessingStatistic.getTotalSize())
+                .isEqualTo(expectedSources.values().stream()
+                        .mapToLong(String::length)
+                        .sum());
+        assertThat(aggregatedProcessingStatistic.getTotalProcessingTimeNanos()).isPositive();
+        assertThat(aggregatedProcessingStatistic.getSmallestFile())
+                .extracting(FileProcessingStatistic::getPath)
+                .isEqualTo(scenarioRoot.resolve("A_Checked.java"));
+        assertThat(aggregatedProcessingStatistic.getLargestFile())
+                .extracting(FileProcessingStatistic::getPath)
+                .isEqualTo(scenarioRoot.resolve("B_Reordered.java"));
+        assertScenarioMatchesExpectedSources(scenarioRoot, "check-all");
     }
 
     @Test
@@ -188,5 +242,80 @@ class SourceProcessorTest {
         Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
         logger.detachAppender(listAppender);
         listAppender.stop();
+    }
+
+    @NonNull
+    private static String collectLogMessages(ListAppender<ILoggingEvent> listAppender) {
+        return listAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
+    @NonNull
+    private static Path copyScenarioInputToWorkingDirectory(Path temporaryRoot, String scenarioName) {
+        Path sourceInputDirectory =
+                FLOW_LEVEL_FIXTURES_ROOT.resolve(scenarioName).resolve("input");
+        Path workingDirectory = temporaryRoot.resolve("flow-level").resolve(scenarioName);
+        try (Stream<Path> sourceFiles = Files.list(sourceInputDirectory)) {
+            Files.createDirectories(workingDirectory);
+            sourceFiles.filter(Files::isRegularFile).forEach(sourceFile -> {
+                Path targetFile = workingDirectory.resolve(sourceFile.getFileName());
+                try {
+                    Files.copy(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException exception) {
+                    throw new IllegalStateException("Failed to copy fixture file: " + sourceFile, exception);
+                }
+            });
+            return workingDirectory;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to prepare scenario fixtures: " + scenarioName, exception);
+        }
+    }
+
+    private static void assertScenarioMatchesExpectedSources(Path workingDirectory, String scenarioName) {
+        Map<String, String> expectedSources = readScenarioExpectedSources(scenarioName);
+        Map<String, String> actualSources = readDirectoryJavaSources(workingDirectory);
+        assertThat(actualSources).isEqualTo(expectedSources);
+    }
+
+    @NonNull
+    private static Map<String, String> readScenarioExpectedSources(String scenarioName) {
+        Path expectedDirectory = FLOW_LEVEL_FIXTURES_ROOT.resolve(scenarioName).resolve("expected");
+        return readDirectoryJavaSources(expectedDirectory);
+    }
+
+    @NonNull
+    private static Map<String, String> readDirectoryJavaSources(Path directory) {
+        try (Stream<Path> files = Files.list(directory)) {
+            return files.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".java"))
+                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
+                    .collect(Collectors.toMap(
+                            path -> path.getFileName().toString(),
+                            SourceProcessorTest::readSourceFile,
+                            (left, right) -> left,
+                            java.util.LinkedHashMap::new));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to read fixture directory: " + directory, exception);
+        }
+    }
+
+    @NonNull
+    private static String readSourceFile(Path sourceFile) {
+        try {
+            return Files.readString(sourceFile, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to read fixture source file: " + sourceFile, exception);
+        }
+    }
+
+    @NonNull
+    private static Path resolveFlowLevelFixturesRoot() {
+        try {
+            return Path.of(FLOW_LEVEL_FIXTURES_ROOT_URL.toURI());
+        } catch (URISyntaxException exception) {
+            throw new IllegalStateException(
+                    "Failed to resolve flow-level fixture root URL: " + FLOW_LEVEL_FIXTURES_ROOT_URL, exception);
+        }
     }
 }
