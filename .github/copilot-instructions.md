@@ -50,7 +50,7 @@
 - Do not add a second unmodifiable wrapper or defensive copy when the collection already stays immutable upstream or never leaves the local method scope.
 - Non-obvious build/configuration workarounds must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
-- Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`.
+- Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`, or an established repository abbreviation such as the `src*` naming family.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
 
 ## Test conventions

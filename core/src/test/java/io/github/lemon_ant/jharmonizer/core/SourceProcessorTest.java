@@ -63,14 +63,13 @@ class SourceProcessorTest {
     @TempDir
     Path temporaryDirectory;
 
-    private final SourceProcessor sourceProcessor = new SourceProcessor();
-
     @Test
     void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
         // Given
         String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
         String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SourceProcessor sourceProcessor = new SourceProcessor();
 
         // When
         sourceProcessor.processSources(
@@ -90,6 +89,7 @@ class SourceProcessorTest {
         String includedOriginalSourceCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
         String excludedOriginalSourceCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
         Collection<String> includeGlobs = Set.of("Included*.java");
+        SourceProcessor sourceProcessor = new SourceProcessor();
 
         // When
         sourceProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
@@ -110,6 +110,7 @@ class SourceProcessorTest {
         // Given
         String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
+        SourceProcessor sourceProcessor = new SourceProcessor();
         sourceProcessor.processSources(
                 temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
@@ -127,6 +128,7 @@ class SourceProcessorTest {
         Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "check-all");
         Map<String, String> expectedSources = readScenarioExpectedSources("check-all");
         List<String> orderedInputFiles = List.of("A_Checked.java", "B_Reordered.java", "C_Formatted.java");
+        SourceProcessor sourceProcessor = new SourceProcessor();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -170,6 +172,7 @@ class SourceProcessorTest {
                 nestedDirectoryPath,
                 "InternalToolForLoggingVerification.java",
                 "package demo; public class InternalToolForLoggingVerification {}");
+        SourceProcessor sourceProcessor = new SourceProcessor();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
