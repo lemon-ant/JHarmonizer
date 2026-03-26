@@ -73,7 +73,7 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
   - **Goal:** processes all files, aggregates counts/times/statuses deterministically.
   - **Must assert:** error cases are reported but do not prevent other files.
 
-- [ ] **RESTRUCTURE file-write + backup contract**
+- [x] **RESTRUCTURE file-write + backup contract**
   - **Type:** integration/E2E
   - **Targets:** `RestructureFlow`, `SourceFilesHandler`
   - **Goal:** file rewrite and backup naming/placement follow configuration.
