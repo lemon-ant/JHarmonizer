@@ -10,23 +10,28 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.nio.file.Path;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class CheckAllCommandTest {
 
+    private CommandLine commandLine;
+
+    @BeforeEach
+    void setUp_commandConfigured_initializeCommandLine() {
+        commandLine = new CommandLine(new CheckAllCommand());
+    }
+
     @Test
     void checkCommand_invoked_usesCheckAllFlow() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckAllCommand());
-
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
         try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
 
@@ -38,16 +43,13 @@ class CheckAllCommandTest {
 
     @Test
     void checkCommand_processorThrowsRuntimeException_returnsExitCode1() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckAllCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new RuntimeException("Unexpected error"));
         })) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then

@@ -46,6 +46,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
 - Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
+- Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term (for example `URL`, `URI`, `ID`).
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.

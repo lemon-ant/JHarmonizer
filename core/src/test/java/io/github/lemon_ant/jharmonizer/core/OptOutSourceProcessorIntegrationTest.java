@@ -30,6 +30,8 @@ class OptOutSourceProcessorIntegrationTest {
     @TempDir
     Path temporaryDirectory;
 
+    private final SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+
     @Test
     void processSources_fileOptOutOff_keepOriginalSource() throws Exception {
         // Given
@@ -40,7 +42,6 @@ class OptOutSourceProcessorIntegrationTest {
                 class A{}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -74,7 +75,6 @@ class OptOutSourceProcessorIntegrationTest {
                 class AlphaHelper{static String label(){return "alpha";}}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -93,7 +93,6 @@ class OptOutSourceProcessorIntegrationTest {
                 class A{}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -115,7 +114,6 @@ class OptOutSourceProcessorIntegrationTest {
                 class A{}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -142,7 +140,6 @@ class OptOutSourceProcessorIntegrationTest {
                 }
                 """.formatted(expectedFullyOffFragment);
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -175,7 +172,6 @@ class OptOutSourceProcessorIntegrationTest {
                 class Alpha {}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -199,7 +195,6 @@ class OptOutSourceProcessorIntegrationTest {
                 class Alpha {}
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -235,7 +230,6 @@ class OptOutSourceProcessorIntegrationTest {
                 }
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -261,7 +255,6 @@ class OptOutSourceProcessorIntegrationTest {
                 }
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -288,7 +281,6 @@ class OptOutSourceProcessorIntegrationTest {
                 }
                 """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -313,7 +305,6 @@ class OptOutSourceProcessorIntegrationTest {
                 }
                 """;
         writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
 
         // When / Then
         assertThatThrownBy(() -> sourceProcessor.processSources(
