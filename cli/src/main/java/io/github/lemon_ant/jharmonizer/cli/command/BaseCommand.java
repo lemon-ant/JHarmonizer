@@ -116,7 +116,7 @@ abstract class BaseCommand implements Callable<Integer> {
         try {
             return processWithFlow(commandOptions);
         } catch (RuntimeException e) {
-            log.error("Processing failed: {}", e.getMessage());
+            logRuntimeFailure(commandOptions.isVerbose(), e);
             return 1;
         }
     }
@@ -160,7 +160,28 @@ abstract class BaseCommand implements Callable<Integer> {
     private static String describeConfigSource(@Nullable Path configFilePath) {
         return configFilePath != null
                 ? configFilePath.toString()
-                : "embedded core default config (/default-config.yml)";
+                : "embedded default resource config (/default-config.yml)";
+    }
+
+    private static void logRuntimeFailure(boolean verbose, RuntimeException exception) {
+        if (verbose) {
+            log.error("Processing failed with detailed stack trace.", exception);
+            return;
+        }
+        String errorDetails = describeRuntimeFailure(exception);
+        log.error(
+                "Processing failed: {}. Re-run with -v/--verbose for detailed diagnostics.",
+                errorDetails);
+    }
+
+    @NonNull
+    private static String describeRuntimeFailure(RuntimeException exception) {
+        String exceptionType = exception.getClass().getSimpleName();
+        String exceptionMessage = exception.getMessage();
+        if (exceptionMessage == null || exceptionMessage.isBlank()) {
+            return exceptionType;
+        }
+        return exceptionType + ": " + exceptionMessage;
     }
 
     @Value
