@@ -5,16 +5,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 > Scope: `jharmonizer-core` (config pipeline, Spoon-based sorting, dependency graph, printing, formatting, flows).
 
-## 7) Group separators and headers in output
-
-- [ ] **SeparatorDirective behavior**
-  - **Type:** component
-  - **Targets:** printer integration of `separatorDirective`
-  - **Goal:** `HEADER` prints group name header; `NEW_LINE` prints a blank line; `NONE` prints nothing.
-  - **Must assert:** exact emitted text for each directive.
-
----
-
 ## 8) Printing / reconstruction correctness (source slicing)
 
 - [ ] **Member body integrity**
@@ -56,25 +46,3 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
   - **Targets:** config compiler + descriptor factory
   - **Goal:** modifiers not referenced in config do not break classification/ordering.
   - **Must assert:** safe default handling.
-
----
-
-## 10) Flow-level behavior beyond smoke (status + exceptions)
-
-- [ ] **CHECK_FAIL_FAST status contract**
-  - **Type:** integration
-  - **Targets:** `CheckFailFastFlow`
-  - **Goal:** first violation stops processing with correct exception type/status.
-  - **Must assert:** no additional files are processed after first failure.
-
-- [ ] **CHECK_ALL aggregation contract**
-  - **Type:** integration
-  - **Targets:** `CheckAllFlow`, `SourceProcessingStats`
-  - **Goal:** processes all files, aggregates counts/times/statuses deterministically.
-  - **Must assert:** error cases are reported but do not prevent other files.
-
-- [x] **RESTRUCTURE file-write + backup contract**
-  - **Type:** integration/E2E
-  - **Targets:** `RestructureFlow`, `SourceFilesHandler`
-  - **Goal:** file rewrite and backup naming/placement follow configuration.
-  - **Must assert:** backups created only when enabled.
