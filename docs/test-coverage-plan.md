@@ -84,9 +84,3 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
   - **Targets:** `RestructureFlow`, `SourceFilesHandler`
   - **Goal:** file rewrite and backup naming/placement follow configuration.
   - **Must assert:** backups created only when enabled.
-
-- [ ] **FlowDebugStageRecorder contract**
-  - **Type:** integration
-  - **Targets:** `FlowDebugStageRecorder`
-  - **Goal:** stage dumps are created as configured and do not affect outputs.
-  - **Must assert:** content and naming are stable.
