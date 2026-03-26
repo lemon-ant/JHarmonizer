@@ -1,0 +1,29 @@
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+backups-enabled: false
+header-line:
+  character: "-"
+  left-padding: 0
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Separator contract
+    includes: ~.*
+    ordering-rules: preserve
+    groups:
+      - name: Header fields
+        separator: header
+        ordering-rules: alpha
+        includes: [ field, ~^(a|z)$ ]
+      - name: No separator fields
+        separator: none
+        ordering-rules: alpha
+        includes: [ field, ~^(b|p)$ ]
+      - name: New line fields
+        separator: new-line
+        ordering-rules: alpha
+        includes: [ field, ~^(c|d)$ ]
