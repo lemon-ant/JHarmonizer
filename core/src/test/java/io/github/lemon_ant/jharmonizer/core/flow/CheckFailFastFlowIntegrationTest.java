@@ -1,12 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileTestFactory;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
@@ -22,8 +22,8 @@ class CheckFailFastFlowIntegrationTest {
         // Given
         CheckFailFastFlow flow = createFlow();
         List<SrcFile> sourceFiles = List.of(
-                SrcFileTestFactory.createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java")),
-                SrcFileTestFactory.createSrcFile("class CFormatted{int a;}", Path.of("C_Formatted.java")));
+                createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java")),
+                createSrcFile("class CFormatted{int a;}", Path.of("C_Formatted.java")));
         AtomicInteger processedSources = new AtomicInteger();
 
         // When / Then
