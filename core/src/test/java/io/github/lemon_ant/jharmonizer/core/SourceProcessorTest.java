@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
@@ -264,8 +264,9 @@ class SourceProcessorTest {
         String unformattedSourceCode = "package demo; public class BackupOverrideDisabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSourceCode);
         String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        FlexibleUnifiedConfig effectiveConfig = ConfigurationManager.withBackupsEnabledOverride(
-                new FlexibleUnifiedConfig(null, null, true, null, null), false);
+        FlexibleUnifiedConfig effectiveConfig = UnifiedConfigMerger.merge(
+                new FlexibleUnifiedConfig(null, null, true, null, null),
+                new FlexibleUnifiedConfig(null, null, false, null, null));
         SourceProcessor sourceProcessor = new SourceProcessor(effectiveConfig);
 
         // When

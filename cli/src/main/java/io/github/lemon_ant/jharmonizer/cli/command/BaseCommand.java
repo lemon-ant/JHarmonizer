@@ -4,9 +4,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
-import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
@@ -159,9 +159,22 @@ abstract class BaseCommand implements Callable<Integer> {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
                 : null;
-        FlexibleUnifiedConfig effectiveConfig =
-                ConfigurationManager.withBackupsEnabledOverride(externalConfig, disableBackups ? false : null);
+        FlexibleUnifiedConfig backupsOverrideConfig =
+                disableBackups ? new FlexibleUnifiedConfig(null, null, false, null, null) : null;
+        FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, backupsOverrideConfig);
         return new SourceProcessor(effectiveConfig);
+    }
+
+    @Nullable
+    private static FlexibleUnifiedConfig mergeFlexibleConfigs(
+            @Nullable FlexibleUnifiedConfig baselineConfig, @Nullable FlexibleUnifiedConfig overlayConfig) {
+        if (baselineConfig == null) {
+            return overlayConfig;
+        }
+        if (overlayConfig == null) {
+            return baselineConfig;
+        }
+        return UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
     }
 
     @Nullable

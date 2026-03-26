@@ -45,6 +45,33 @@ public class UnifiedConfigMerger {
                 .build();
     }
 
+    /**
+     * Performs a field-wise overlay of one flexible config onto another flexible config.
+     *
+     * @param baseline the baseline flexible config
+     * @param overlay the overlay flexible config
+     * @return merged flexible config
+     */
+    @NonNull
+    public static FlexibleUnifiedConfig merge(
+            @NonNull FlexibleUnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
+        UnifiedTopLevelTypesOrdering top = overlay.getTopLevelTypesOrdering()
+                .orElse(baseline.getTopLevelTypesOrdering().orElse(null));
+        UnifiedFormatting formatting =
+                overlay.getFormatting().orElse(baseline.getFormatting().orElse(null));
+        UnifiedHeaderLine header =
+                overlay.getHeaderLine().orElse(baseline.getHeaderLine().orElse(null));
+        Boolean backupsEnabled =
+                overlay.getBackupsEnabled().orElse(baseline.getBackupsEnabled().orElse(null));
+        List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
+                .map(overlayRootGroups -> baseline.getRootMemberGroups()
+                        .map(baselineRootGroups -> mergeRootMemberGroups(baselineRootGroups, overlayRootGroups))
+                        .orElse(overlayRootGroups))
+                .orElse(baseline.getRootMemberGroups().orElse(null));
+
+        return new FlexibleUnifiedConfig(top, formatting, backupsEnabled, header, root);
+    }
+
     @NonNull
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
