@@ -517,6 +517,7 @@ class GroupMembersOrdererOrderingRulesTest {
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIXTURE_MEMBERS =
                 streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
+
         private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
                 EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
         private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
