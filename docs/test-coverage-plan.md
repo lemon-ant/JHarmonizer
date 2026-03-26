@@ -5,16 +5,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 > Scope: `jharmonizer-core` (config pipeline, Spoon-based sorting, dependency graph, printing, formatting, flows).
 
-## 6) Ordering inside a group (ordering rules + tie-breakers)
-
-- [ ] **keepAccessorsTogether effect on final order**
-  - **Type:** component
-  - **Targets:** `GroupMembersOrderer`
-  - **Goal:** bundling is respected without violating declaration dependencies.
-  - **Must assert:** dependencies win over bundling where required.
-
----
-
 ## 7) Group separators and headers in output
 
 - [ ] **Boundary metadata placement**
