@@ -41,12 +41,50 @@ public class ConfigurationManager {
      */
     @NonNull
     public static CompiledConfig overrideDefaultConfig(@Nullable FlexibleUnifiedConfig externalConfig) {
-        if (null == externalConfig) {
+        return overrideDefaultConfig(externalConfig, null);
+    }
+
+    /**
+     * Overrides the default config with external configuration and optional backups override.
+     *
+     * @param externalConfig the external configuration overrides
+     * @param backupsEnabledOverride optional backups-enabled runtime override
+     * @return the merged and compiled runtime configuration
+     */
+    @NonNull
+    public static CompiledConfig overrideDefaultConfig(
+            @Nullable FlexibleUnifiedConfig externalConfig, @Nullable Boolean backupsEnabledOverride) {
+        FlexibleUnifiedConfig effectiveExternalConfig =
+                withBackupsEnabledOverride(externalConfig, backupsEnabledOverride);
+        if (effectiveExternalConfig == null) {
             return loadDefaultConfig();
         }
-
         UnifiedConfig defaultUnifiedConfig = JHarmonizerConfigurationManager.parseUnifiedDefaultConfig();
-        UnifiedConfig mergedUnifiedConfig = UnifiedConfigMerger.merge(defaultUnifiedConfig, externalConfig);
+        UnifiedConfig mergedUnifiedConfig = UnifiedConfigMerger.merge(defaultUnifiedConfig, effectiveExternalConfig);
         return Unified2CompiledModelCompiler.compile(mergedUnifiedConfig);
+    }
+
+    /**
+     * Returns an external config copy with optional backups override applied.
+     *
+     * @param externalConfig the external configuration overrides
+     * @param backupsEnabledOverride optional backups-enabled runtime override
+     * @return adjusted external config; {@code null} when no external config/override is provided
+     */
+    @Nullable
+    public static FlexibleUnifiedConfig withBackupsEnabledOverride(
+            @Nullable FlexibleUnifiedConfig externalConfig, @Nullable Boolean backupsEnabledOverride) {
+        if (backupsEnabledOverride == null) {
+            return externalConfig;
+        }
+        if (externalConfig == null) {
+            return new FlexibleUnifiedConfig(null, null, backupsEnabledOverride, null, null);
+        }
+        return new FlexibleUnifiedConfig(
+                externalConfig.getTopLevelTypesOrdering().orElse(null),
+                externalConfig.getFormatting().orElse(null),
+                backupsEnabledOverride,
+                externalConfig.getHeaderLine().orElse(null),
+                externalConfig.getRootMemberGroups().orElse(null));
     }
 }

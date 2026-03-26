@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -71,6 +72,11 @@ abstract class BaseCommand implements Callable<Integer> {
     @Nullable
     private Path configFilePath;
 
+    @Option(
+            names = {"-B", "--no-backup"},
+            description = "Disable backup (.bak) file creation even when config enables backups.")
+    private boolean noBackup;
+
     /**
      * Returns the processing flow implemented by the command.
      *
@@ -109,7 +115,12 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         CommandOptions commandOptions = new CommandOptions(
-                absoluteBaseDir, Set.copyOf(includeGlobs), Set.copyOf(excludeGlobs), verbose, effectiveConfigFilePath);
+                absoluteBaseDir,
+                Set.copyOf(includeGlobs),
+                Set.copyOf(excludeGlobs),
+                verbose,
+                effectiveConfigFilePath,
+                noBackup);
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }
@@ -130,7 +141,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 commandOptions.getBaseDir(),
                 describeConfigSource(commandOptions.getConfigFilePath()));
         try {
-            createSourceProcessor(commandOptions.getConfigFilePath())
+            createSourceProcessor(commandOptions.getConfigFilePath(), commandOptions.isNoBackup())
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
@@ -144,11 +155,13 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @NonNull
-    private static SourceProcessor createSourceProcessor(@Nullable Path configFilePath) {
+    private static SourceProcessor createSourceProcessor(@Nullable Path configFilePath, boolean disableBackups) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
                 : null;
-        return new SourceProcessor(externalConfig);
+        FlexibleUnifiedConfig effectiveConfig =
+                ConfigurationManager.withBackupsEnabledOverride(externalConfig, disableBackups ? false : null);
+        return new SourceProcessor(effectiveConfig);
     }
 
     @Nullable
@@ -197,5 +210,7 @@ abstract class BaseCommand implements Callable<Integer> {
 
         @Nullable
         Path configFilePath;
+
+        boolean noBackup;
     }
 }

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -245,6 +246,27 @@ class SourceProcessorTest {
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSourceCode);
         String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SourceProcessor sourceProcessor = new SourceProcessor(new FlexibleUnifiedConfig(null, null, false, null, null));
+
+        // When
+        sourceProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+
+        // Then
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).doesNotExist();
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSourceCode);
+    }
+
+    @Test
+    void processSources_restructureWithNoBackupOverride_doesNotCreateBackup() throws Exception {
+        // Given
+        String unformattedSourceCode = "package demo; public class BackupOverrideDisabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSourceCode);
+        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        FlexibleUnifiedConfig effectiveConfig = ConfigurationManager.withBackupsEnabledOverride(
+                new FlexibleUnifiedConfig(null, null, true, null, null), false);
+        SourceProcessor sourceProcessor = new SourceProcessor(effectiveConfig);
 
         // When
         sourceProcessor.processSources(

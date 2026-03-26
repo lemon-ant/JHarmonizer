@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -48,8 +49,10 @@ public final class SourceProcessor {
 
     /**
      * Primary constructor for SourceProcessor embedded into some wrapper.
+     *
+     * @param externalConfig optional external configuration overlay
      */
-    public SourceProcessor(FlexibleUnifiedConfig externalConfig) {
+    public SourceProcessor(@Nullable FlexibleUnifiedConfig externalConfig) {
         this(ConfigurationManager.overrideDefaultConfig(externalConfig));
     }
 
