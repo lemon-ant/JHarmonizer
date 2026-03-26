@@ -18,6 +18,15 @@ public final class CompiledMemberGroupTestCreator {
     @NonNull
     public static CompiledMemberGroup createTrivialMemberGroup(
             @NonNull String groupName, boolean keepAccessorsTogether, int orderIndex) {
+        return createTrivialMemberGroup(groupName, keepAccessorsTogether, orderIndex, UnifiedSeparator.NONE);
+    }
+
+    @NonNull
+    public static CompiledMemberGroup createTrivialMemberGroup(
+            @NonNull String groupName,
+            boolean keepAccessorsTogether,
+            int orderIndex,
+            @NonNull UnifiedSeparator separator) {
         CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(List.of(), List.of());
 
         return CompiledMemberGroup.builder()
@@ -26,13 +35,14 @@ public final class CompiledMemberGroupTestCreator {
                 .orderIndex(orderIndex)
                 .name(groupName)
                 .selectorBlock(selectorBlock)
-                .separator(UnifiedSeparator.NONE)
+                .separator(separator)
                 .orderingRule(OrderingRule.PRESERVE)
                 .build();
     }
 
+    @NonNull
     public static CompiledMemberGroup createCompiledMemberGroup(
-            String groupName, boolean keepAccessorsTogether, List<OrderingRule> orderingRules) {
+            @NonNull String groupName, boolean keepAccessorsTogether, @NonNull List<OrderingRule> orderingRules) {
         return CompiledMemberGroup.builder()
                 .name(groupName)
                 .orderIndex(1)

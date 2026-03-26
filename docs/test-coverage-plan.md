@@ -7,12 +7,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 ## 7) Group separators and headers in output
 
-- [ ] **Boundary metadata placement**
-  - **Type:** component
-  - **Targets:** `GroupBoundaryMarker`, `SpoonSourcePrinterUtils`
-  - **Goal:** metadata is written only to the first member of each non-empty group.
-  - **Must assert:** empty groups do not emit separators.
-
 - [ ] **SeparatorDirective behavior**
   - **Type:** component
   - **Targets:** printer integration of `separatorDirective`
