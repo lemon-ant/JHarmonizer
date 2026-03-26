@@ -5,16 +5,6 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 > Scope: `jharmonizer-core` (config pipeline, Spoon-based sorting, dependency graph, printing, formatting, flows).
 
-## 6) Ordering inside a group (ordering rules + tie-breakers)
-
-- [ ] **keepAccessorsTogether effect on final order**
-  - **Type:** component
-  - **Targets:** `GroupMembersOrderer`
-  - **Goal:** bundling is respected without violating declaration dependencies.
-  - **Must assert:** dependencies win over bundling where required.
-
----
-
 ## 7) Group separators and headers in output
 
 - [ ] **Boundary metadata placement**
@@ -94,9 +84,3 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
   - **Targets:** `RestructureFlow`, `SourceFilesHandler`
   - **Goal:** file rewrite and backup naming/placement follow configuration.
   - **Must assert:** backups created only when enabled.
-
-- [ ] **FlowDebugStageRecorder contract**
-  - **Type:** integration
-  - **Targets:** `FlowDebugStageRecorder`
-  - **Goal:** stage dumps are created as configured and do not affect outputs.
-  - **Must assert:** content and naming are stable.

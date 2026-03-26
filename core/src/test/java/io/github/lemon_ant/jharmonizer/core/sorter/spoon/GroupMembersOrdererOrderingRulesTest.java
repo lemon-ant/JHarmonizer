@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
@@ -16,9 +17,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -283,6 +286,45 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
+    void orderMembersInsideGroups_keepAccessorsTogetherWithDeclarationDependency_keepDependencyBeforeAccessorTail() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "accessors-with-dependency", true, List.of(OrderingRule.ALPHA));
+        CtTypeMember getValueMethodMember = requireFixtureMemberBySimpleName("getValue");
+        CtTypeMember middleMethodMember = requireFixtureMemberBySimpleName("middleMethod");
+        CtTypeMember setValueMethodMember = requireFixtureMemberBySimpleName("setValue");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup, List.of(middleMethodMember, setValueMethodMember, getValueMethodMember));
+        MemberDependencyGraph dependencyGraph = mock(MemberDependencyGraph.class);
+        doReturn(Set.of())
+                .when(dependencyGraph)
+                .findDirectDependents(middleMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        doReturn(Set.of(setValueMethodMember))
+                .when(dependencyGraph)
+                .findDirectDependents(getValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        doReturn(Set.of())
+                .when(dependencyGraph)
+                .findDirectDependents(setValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        doReturn(Set.of(setValueMethodMember))
+                .when(dependencyGraph)
+                .findTransitiveDependents(middleMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
+        doReturn(Set.of())
+                .when(dependencyGraph)
+                .findTransitiveDependents(getValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
+        doReturn(Set.of())
+                .when(dependencyGraph)
+                .findTransitiveDependents(setValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(middleMethodMember, getValueMethodMember, setValueMethodMember);
+    }
+
+    @Test
     void orderMembersInsideGroups_sameRepresentativeFieldAndInitializer_fieldComesFirst() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
@@ -475,6 +517,11 @@ class GroupMembersOrdererOrderingRulesTest {
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIXTURE_MEMBERS =
                 streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
+
+        private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
+                EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+        private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
         private Constants() {}
     }
