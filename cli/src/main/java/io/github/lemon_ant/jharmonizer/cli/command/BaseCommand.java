@@ -168,9 +168,20 @@ abstract class BaseCommand implements Callable<Integer> {
             log.error("Processing failed with detailed stack trace.", exception);
             return;
         }
+        String errorDetails = describeRuntimeFailure(exception);
         log.error(
                 "Processing failed: {}. Re-run with -v/--verbose for detailed diagnostics.",
-                exception.getMessage());
+                errorDetails);
+    }
+
+    @NonNull
+    private static String describeRuntimeFailure(RuntimeException exception) {
+        String exceptionType = exception.getClass().getSimpleName();
+        String exceptionMessage = exception.getMessage();
+        if (exceptionMessage == null || exceptionMessage.isBlank()) {
+            return exceptionType;
+        }
+        return exceptionType + ": " + exceptionMessage;
     }
 
     @Value
