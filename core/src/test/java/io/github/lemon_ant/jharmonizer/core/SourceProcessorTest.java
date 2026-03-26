@@ -164,6 +164,43 @@ class SourceProcessorTest {
                 .isLessThan(processedSourceCode.indexOf("class Sample"));
     }
 
+    @Test
+    void processSources_restructureWithBackupsEnabled_createsBackupNextToSource() throws Exception {
+        // Given
+        String unformattedSourceCode = "package demo; public class BackupEnabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSourceCode);
+        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SourceProcessor sourceProcessor = new SourceProcessor(new FlexibleUnifiedConfig(null, null, true, null, null));
+
+        // When
+        sourceProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+
+        // Then
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).exists();
+        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSourceCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSourceCode);
+    }
+
+    @Test
+    void processSources_restructureWithBackupsDisabled_doesNotCreateBackup() throws Exception {
+        // Given
+        String unformattedSourceCode = "package demo; public class BackupDisabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSourceCode);
+        SourceProcessor sourceProcessor = new SourceProcessor(new FlexibleUnifiedConfig(null, null, false, null, null));
+
+        // When
+        sourceProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+
+        // Then
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).doesNotExist();
+    }
+
     @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
