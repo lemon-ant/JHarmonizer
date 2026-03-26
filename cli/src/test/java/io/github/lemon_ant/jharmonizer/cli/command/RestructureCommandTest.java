@@ -76,6 +76,7 @@ class RestructureCommandTest {
         assertThat(usage.toString())
                 .contains("-b, --base-dir")
                 .contains("-c, --config")
+                .contains("-B, --no-backup")
                 .contains("-i, --include")
                 .contains("-e, --exclude")
                 .contains("Repeat this option or pass multiple patterns as a")

@@ -97,6 +97,7 @@ class JHarmonizerCliPackagedJarIT {
                 .as(result.toString())
                 .contains("Usage: jharmonizer " + command)
                 .contains("-b, --base-dir")
+                .contains("-B, --no-backup")
                 .contains("-i, --include")
                 .contains("-e, --exclude")
                 .contains("Repeat this option or pass multiple patterns as a")
