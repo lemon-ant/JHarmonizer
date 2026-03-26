@@ -95,7 +95,7 @@ abstract class BaseCommand implements Callable<Integer> {
      */
     @Override
     @NonNull
-    @SuppressWarnings({"PMD.GuardLogStatement", "PMD.AvoidCatchingGenericException"})
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public final Integer call() {
         Path effectiveBaseDir = baseDir != null ? baseDir : Path.of(".");
         Path absoluteBaseDir = toAbsoluteNormalizedPath(effectiveBaseDir);
@@ -169,9 +169,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return;
         }
         String errorDetails = describeRuntimeFailure(exception);
-        log.error(
-                "Processing failed: {}. Re-run with -v/--verbose for detailed diagnostics.",
-                errorDetails);
+        log.error("Processing failed: {}. Re-run with -v/--verbose for detailed diagnostics.", errorDetails);
     }
 
     @NonNull
