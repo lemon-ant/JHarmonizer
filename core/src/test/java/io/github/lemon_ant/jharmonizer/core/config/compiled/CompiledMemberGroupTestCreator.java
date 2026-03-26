@@ -40,8 +40,9 @@ public final class CompiledMemberGroupTestCreator {
                 .build();
     }
 
+    @NonNull
     public static CompiledMemberGroup createCompiledMemberGroup(
-            String groupName, boolean keepAccessorsTogether, List<OrderingRule> orderingRules) {
+            @NonNull String groupName, boolean keepAccessorsTogether, @NonNull List<OrderingRule> orderingRules) {
         return CompiledMemberGroup.builder()
                 .name(groupName)
                 .orderIndex(1)

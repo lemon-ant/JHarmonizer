@@ -17,20 +17,19 @@ class GroupBoundaryMarkerTest {
 
     private static final URL FIXTURE_URL = GroupBoundaryMarkerTest.class.getResource(
             "/test-cases/core/sorter/spoon/type-member-grouper/valid/TypeMemberGrouperFixture.java");
-    private static final CtType<?> PARSED_MAIN_TYPE =
-            SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
 
     @Test
     void markGroupBoundaries_groupsContainMembers_writeMetadataOnlyToFirstMemberOfEachNonEmptyGroup() {
         // Given
+        CtType<?> parsedMainType = parseMainType();
         CtTypeMember alphaFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_MAIN_TYPE.getTypeMembers(), "alpha");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "alpha");
         CtTypeMember bravoFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_MAIN_TYPE.getTypeMembers(), "bravo");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "bravo");
         CtTypeMember charlieMethodMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_MAIN_TYPE.getTypeMembers(), "charlie");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "charlie");
         CtTypeMember deltaMethodMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_MAIN_TYPE.getTypeMembers(), "delta");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "delta");
         List<MemberGroupBlock> orderedBlocks = List.of(
                 createGroupBlock("Header fields", UnifiedSeparator.HEADER, List.of(alphaFieldMember, bravoFieldMember)),
                 createGroupBlock("Methods", UnifiedSeparator.NEW_LINE, List.of(charlieMethodMember, deltaMethodMember)),
@@ -53,11 +52,12 @@ class GroupBoundaryMarkerTest {
     @Test
     void markGroupBoundaries_groupIsEmpty_skipSeparatorMetadataEmission() {
         // Given
+        CtType<?> parsedMainType = parseMainType();
         CtTypeMember alphaFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(PARSED_MAIN_TYPE.getTypeMembers(), "alpha");
-        alphaFieldMember.putMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA, null);
-        List<MemberGroupBlock> orderedBlocks =
-                List.of(createGroupBlock("Empty header", UnifiedSeparator.HEADER, List.of()));
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "alpha");
+        List<MemberGroupBlock> orderedBlocks = List.of(
+                createGroupBlock("Empty header", UnifiedSeparator.HEADER, List.of()),
+                createGroupBlock("No separator member", UnifiedSeparator.NONE, List.of(alphaFieldMember)));
 
         // When
         GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
@@ -65,6 +65,11 @@ class GroupBoundaryMarkerTest {
         // Then
         assertThat(alphaFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
+    }
+
+    @NonNull
+    private static CtType<?> parseMainType() {
+        return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
     }
 
     @NonNull
