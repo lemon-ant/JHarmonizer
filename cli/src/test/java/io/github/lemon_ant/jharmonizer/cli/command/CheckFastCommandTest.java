@@ -13,23 +13,28 @@ import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.file.Path;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class CheckFastCommandTest {
 
+    private CommandLine commandLine;
+
+    @BeforeEach
+    void setUp_commandConfigured_initializeCommandLine() {
+        commandLine = new CommandLine(new CheckFastCommand());
+    }
+
     @Test
     void checkFastCommand_invoked_usesCheckFailFastFlow() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
         try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
 
@@ -42,16 +47,13 @@ class CheckFastCommandTest {
 
     @Test
     void checkFastCommand_formattingChangesDetected_returnsExitCode3() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new NotFormattedException(Path.of("SomeFile.java"), "--- diff ---"));
         })) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then
@@ -60,16 +62,13 @@ class CheckFastCommandTest {
 
     @Test
     void checkFastCommand_orderingChangesDetected_returnsExitCode3() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new NotOrderedException(Path.of("SomeFile.java"), List.of()));
         })) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then
@@ -78,16 +77,13 @@ class CheckFastCommandTest {
 
     @Test
     void checkFastCommand_processorThrowsRuntimeException_returnsExitCode1() {
-        // Given
-        CommandLine cmd = new CommandLine(new CheckFastCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new RuntimeException("Unexpected error"));
         })) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then

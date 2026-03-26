@@ -15,12 +15,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.NonNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class RestructureCommandTest {
+
+    private CommandLine commandLine;
 
     private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
             package demo;
@@ -39,17 +42,19 @@ class RestructureCommandTest {
     @TempDir
     Path temporaryDirectory;
 
+    @BeforeEach
+    void setUp_commandConfigured_initializeCommandLine() {
+        commandLine = new CommandLine(new RestructureCommand());
+    }
+
     @Test
     void restructureCommand_invoked_usesRestructureFlow() {
-        // Given
-        CommandLine cmd = new CommandLine(new RestructureCommand());
-
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
         try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src/main/java");
+            exitCode = commandLine.execute("--base-dir", "src/main/java");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
 
@@ -66,11 +71,10 @@ class RestructureCommandTest {
     @Test
     void restructureCommand_helpUsage_describeOptionAliasesAndCollectionFormats() {
         // Given
-        CommandLine cmd = new CommandLine(new RestructureCommand());
         StringWriter usage = new StringWriter();
 
         // When
-        cmd.usage(new PrintWriter(usage), CommandLine.Help.Ansi.OFF);
+        commandLine.usage(new PrintWriter(usage), CommandLine.Help.Ansi.OFF);
 
         // Then
         assertThat(usage.toString())
@@ -90,10 +94,9 @@ class RestructureCommandTest {
                 SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES,
                 StandardCharsets.UTF_8);
         Path configFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
-        CommandLine cmd = new CommandLine(new RestructureCommand());
 
         // When
-        int exitCode = cmd.execute("--base-dir", temporaryDirectory.toString(), "--config", configFilePath.toString());
+        int exitCode = commandLine.execute("--base-dir", temporaryDirectory.toString(), "--config", configFilePath.toString());
 
         // Then
         assertThat(exitCode).isZero();
@@ -104,16 +107,13 @@ class RestructureCommandTest {
 
     @Test
     void restructureCommand_processorThrowsRuntimeException_returnsExitCode1() {
-        // Given
-        CommandLine cmd = new CommandLine(new RestructureCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new RuntimeException("Unexpected error"));
         })) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then
