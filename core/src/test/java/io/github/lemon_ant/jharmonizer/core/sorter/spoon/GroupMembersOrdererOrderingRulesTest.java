@@ -296,20 +296,24 @@ class GroupMembersOrdererOrderingRulesTest {
         MemberGroupBlock inputBlock = new MemberGroupBlock(
                 compiledMemberGroup, List.of(middleMethodMember, setValueMethodMember, getValueMethodMember));
         MemberDependencyGraph dependencyGraph = mock(MemberDependencyGraph.class);
-        doReturn(Set.of()).when(dependencyGraph).findDirectDependents(middleMethodMember, ACCESSOR_BUNDLE_ONLY);
-        doReturn(Set.of(setValueMethodMember))
-                .when(dependencyGraph)
-                .findDirectDependents(getValueMethodMember, ACCESSOR_BUNDLE_ONLY);
-        doReturn(Set.of()).when(dependencyGraph).findDirectDependents(setValueMethodMember, ACCESSOR_BUNDLE_ONLY);
-        doReturn(Set.of(setValueMethodMember))
-                .when(dependencyGraph)
-                .findTransitiveDependents(middleMethodMember, DECLARATION_DEPENDENCY_ONLY);
         doReturn(Set.of())
                 .when(dependencyGraph)
-                .findTransitiveDependents(getValueMethodMember, DECLARATION_DEPENDENCY_ONLY);
+                .findDirectDependents(middleMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        doReturn(Set.of(setValueMethodMember))
+                .when(dependencyGraph)
+                .findDirectDependents(getValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
         doReturn(Set.of())
                 .when(dependencyGraph)
-                .findTransitiveDependents(setValueMethodMember, DECLARATION_DEPENDENCY_ONLY);
+                .findDirectDependents(setValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        doReturn(Set.of(setValueMethodMember))
+                .when(dependencyGraph)
+                .findTransitiveDependents(middleMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
+        doReturn(Set.of())
+                .when(dependencyGraph)
+                .findTransitiveDependents(getValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
+        doReturn(Set.of())
+                .when(dependencyGraph)
+                .findTransitiveDependents(setValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
 
         // When
         List<MemberGroupBlock> orderedBlocks =
@@ -513,13 +517,11 @@ class GroupMembersOrdererOrderingRulesTest {
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIXTURE_MEMBERS =
                 streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
+        private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
+                EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+        private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
         private Constants() {}
     }
-
-    private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
-            EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
-
-    private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
-            EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 }
