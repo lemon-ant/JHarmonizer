@@ -13,16 +13,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SourceProcessorE2EFixtureTest extends AbstractSourceProcessorScenarioE2ETest {
+class SourceProcessorRegressionTest extends AbstractSourceProcessorScenarioE2ETest {
 
-    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
+    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/regression/";
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
 
     @NonNull
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
-
-    private static final String CONFIG_FILE = "config.yml";
 
     @TempDir
     Path temporaryDirectory;
@@ -47,25 +45,26 @@ class SourceProcessorE2EFixtureTest extends AbstractSourceProcessorScenarioE2ETe
     @Override
     @NonNull
     protected Optional<Path> findScenarioConfigPath(Path fixtureScenario) {
-        return Optional.of(fixtureScenario.resolve(CONFIG_FILE));
+        Path scenarioConfigPath = fixtureScenario.resolve("config.yml");
+        return java.nio.file.Files.exists(scenarioConfigPath) ? Optional.of(scenarioConfigPath) : Optional.empty();
     }
 
     @Override
     @NonNull
     protected String resolveWorkspaceDirectoryName() {
-        return "SourceProcessorE2E-working-dir";
+        return "SourceProcessorRegressionE2E-working-dir";
     }
 
     @Override
     @NonNull
     protected String resolveCompileBeforeDirectoryName() {
-        return "SourceProcessorE2E-compile-before";
+        return "SourceProcessorRegressionE2E-compile-before";
     }
 
     @Override
     @NonNull
     protected String resolveCompileAfterDirectoryName() {
-        return "SourceProcessorE2E-compile-after";
+        return "SourceProcessorRegressionE2E-compile-after";
     }
 
     @NonNull
