@@ -189,6 +189,7 @@ class SourceProcessorTest {
         // Given
         String unformattedSourceCode = "package demo; public class BackupDisabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSourceCode);
+        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SourceProcessor sourceProcessor = new SourceProcessor(new FlexibleUnifiedConfig(null, null, false, null, null));
 
         // When
@@ -199,6 +200,7 @@ class SourceProcessorTest {
         Path backupFilePath =
                 javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
         assertThat(backupFilePath).doesNotExist();
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSourceCode);
     }
 
     @NonNull
