@@ -78,6 +78,7 @@
                             </compileSourceRoots>
                             <testIncludes>
                                 <include>**/valid/*.java</include>
+                                <include>**/valid/**/*.java</include>
                             </testIncludes>
                             <outputDirectory>${project.build.directory}/test-cases-compile-check-classes</outputDirectory>
                             <!-- Use same release as tests/project (or set explicitly) -->
