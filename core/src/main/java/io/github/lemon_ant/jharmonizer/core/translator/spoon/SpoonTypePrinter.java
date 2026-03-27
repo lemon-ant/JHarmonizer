@@ -147,8 +147,10 @@ final class SpoonTypePrinter {
         boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter(member);
 
         String groupHeader = findGroupHeader(member);
-        if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader) && !hasSeparatorAlreadyPrinted) {
-            tokenWriter.writeln();
+        if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
+            if (!hasSeparatorAlreadyPrinted) {
+                tokenWriter.writeln();
+            }
         } else if (groupHeader != null && !hasMatchingLeadingComment(member, groupHeader)) {
             tokenWriter.writeCodeSnippet("// " + groupHeader).writeln();
         }

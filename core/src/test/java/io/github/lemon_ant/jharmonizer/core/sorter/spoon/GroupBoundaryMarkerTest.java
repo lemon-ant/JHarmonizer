@@ -135,6 +135,71 @@ class GroupBoundaryMarkerTest {
         assertThat(processedSourceCode).isEqualTo(expectedSourceCode);
     }
 
+    @Test
+    void processSources_newLineSeparator_printedOnlyWhenMissingAndNeverAsHeaderComment() throws Exception {
+        // Given
+        String originalSourceCode = """
+                class NewLineSeparatorBehaviorSample {
+                    int b;
+                    int a;
+                    void aMethod() {}
+                }
+                """;
+        String expectedSourceCode = """
+                class NewLineSeparatorBehaviorSample {
+                    int a;
+
+                    int b;
+
+                    void aMethod() {}
+                }
+                """;
+        String configFileContent = """
+                formatting:
+                  fix-imports: false
+                  formatter-style: PALANTIR
+                backups-enabled: false
+                header-line:
+                  character: "-"
+                  left-padding: 0
+                top-level-types-ordering:
+                  main-type-first: true
+                  type-groups:
+                    - [ class ]
+                  ordering-rules: [ preserve ]
+                type-members-ordering:
+                  - name: New-line separator rendering
+                    includes: ~.*
+                    ordering-rules: preserve
+                    groups:
+                      - name: A fields
+                        separator: none
+                        ordering-rules: alpha
+                        includes: [ field, ~^a$ ]
+                      - name: B fields
+                        separator: new-line
+                        ordering-rules: alpha
+                        includes: [ field, ~^b$ ]
+                      - name: Methods
+                        separator: new-line
+                        ordering-rules: alpha
+                        includes: [ method ]
+                """;
+        Path javaFilePath =
+                writeFile(temporaryDirectory, "NewLineSeparatorBehaviorSample.java", originalSourceCode);
+        Path configFilePath = writeFile(temporaryDirectory, ".jharmonizer.yml", configFileContent);
+        SourceProcessor sourceProcessor =
+                new SourceProcessor(JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath));
+
+        // When
+        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSourceCode).isEqualTo(expectedSourceCode);
+        assertThat(processedSourceCode).doesNotContain("// " + SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
+    }
+
     @NonNull
     private static CtType<?> parseMainType() {
         return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
@@ -148,6 +213,11 @@ class GroupBoundaryMarkerTest {
 
     @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
+        return writeFile(baseDirectoryPath, fileName, fileContent);
+    }
+
+    @NonNull
+    private static Path writeFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
