@@ -200,7 +200,7 @@ abstract class AbstractSourceProcessorScenarioE2ETest {
 
     private void assertFileProcessingIsDeterministic(Path fixtureScenario, Path workingInputFile) {
         assertThatCode(() -> runProcessorForSingleFile(
-                        workingInputFile, findScenarioConfigPath(fixtureScenario), FlowType.CHECK_ALL))
+                        workingInputFile, findScenarioConfigPath(fixtureScenario), FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
     }
 

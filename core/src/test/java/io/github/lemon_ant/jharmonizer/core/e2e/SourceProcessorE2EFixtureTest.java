@@ -12,6 +12,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+// PER_CLASS allows non-static @MethodSource from the shared base class.
+// This test keeps only immutable constants plus @TempDir, and each scenario is processed in its own
+// subdirectory, so no mutable scenario state leaks between parameterized invocations.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SourceProcessorE2EFixtureTest extends AbstractSourceProcessorScenarioE2ETest {
 
