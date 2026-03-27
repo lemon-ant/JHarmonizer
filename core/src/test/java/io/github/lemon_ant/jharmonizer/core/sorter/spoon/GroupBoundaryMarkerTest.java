@@ -36,6 +36,15 @@ class GroupBoundaryMarkerTest {
     private static final URL SEPARATOR_DIRECTIVE_EXPECTED_RESOURCE_URL =
             TestCaseResourceUtils.requireClasspathResourceUrl(
                     "/test-cases/core/sorter/spoon/group-boundary-marker/expected/SeparatorDirectiveSample.java");
+    private static final URL NEW_LINE_SEPARATOR_CONFIG_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(
+                    "/test-cases/core/sorter/spoon/group-boundary-marker/new-line-separator-config.yml");
+    private static final URL NEW_LINE_SEPARATOR_INPUT_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(
+                    "/test-cases/core/sorter/spoon/group-boundary-marker/input/NewLineSeparatorBehaviorSample.java");
+    private static final URL NEW_LINE_SEPARATOR_EXPECTED_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(
+                    "/test-cases/core/sorter/spoon/group-boundary-marker/expected/NewLineSeparatorBehaviorSample.java");
 
     @TempDir
     Path temporaryDirectory;
@@ -138,58 +147,14 @@ class GroupBoundaryMarkerTest {
     @Test
     void processSources_newLineSeparator_printedOnlyWhenMissingAndNeverAsHeaderComment() throws Exception {
         // Given
-        String originalSourceCode = """
-                class NewLineSeparatorBehaviorSample {
-                    int b;
-                    int a;
-                    void aMethod() {}
-                }
-                """;
-        String expectedSourceCode = """
-                class NewLineSeparatorBehaviorSample {
-                    int a;
-
-                    int b;
-
-                    void aMethod() {}
-                }
-                """;
-        String configFileContent = """
-                formatting:
-                  fix-imports: false
-                  formatter-style: PALANTIR
-                backups-enabled: false
-                header-line:
-                  character: "-"
-                  left-padding: 0
-                top-level-types-ordering:
-                  main-type-first: true
-                  type-groups:
-                    - [ class ]
-                  ordering-rules: [ preserve ]
-                type-members-ordering:
-                  - name: New-line separator rendering
-                    includes: ~.*
-                    ordering-rules: preserve
-                    groups:
-                      - name: A fields
-                        separator: none
-                        ordering-rules: alpha
-                        includes: [ field, ~^a$ ]
-                      - name: B fields
-                        separator: new-line
-                        ordering-rules: alpha
-                        includes: [ field, ~^b$ ]
-                      - name: Methods
-                        separator: new-line
-                        ordering-rules: alpha
-                        includes: [ method ]
-                """;
-        Path javaFilePath =
-                writeFile(temporaryDirectory, "NewLineSeparatorBehaviorSample.java", originalSourceCode);
-        Path configFilePath = writeFile(temporaryDirectory, ".jharmonizer.yml", configFileContent);
+        String originalSourceCode =
+                TestCaseResourceUtils.readClasspathResourceAsString(NEW_LINE_SEPARATOR_INPUT_RESOURCE_URL);
+        String expectedSourceCode =
+                TestCaseResourceUtils.readClasspathResourceAsString(NEW_LINE_SEPARATOR_EXPECTED_RESOURCE_URL);
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "NewLineSeparatorBehaviorSample.java", originalSourceCode);
         SourceProcessor sourceProcessor =
-                new SourceProcessor(JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath));
+                new SourceProcessor(JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
+                        NEW_LINE_SEPARATOR_CONFIG_RESOURCE_URL));
 
         // When
         sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
@@ -213,11 +178,6 @@ class GroupBoundaryMarkerTest {
 
     @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
-        return writeFile(baseDirectoryPath, fileName, fileContent);
-    }
-
-    @NonNull
-    private static Path writeFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
