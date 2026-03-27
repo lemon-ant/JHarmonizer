@@ -201,6 +201,30 @@ class SourceProcessorTest {
     }
 
     @Test
+    void processSources_fullyOffFile_logsSkippedStatus() throws Exception {
+        // Given
+        String fullyOffSourceCode = "// @jharmonizer:fully-off\npackage demo; public class FullyOffSample {}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "FullyOffSample.java", fullyOffSourceCode);
+        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SourceProcessor sourceProcessor = new SourceProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            sourceProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("FullyOffSample.java");
+        assertThat(logs).contains("JHarmonizer SKIPPED");
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSourceCode);
+    }
+
+    @Test
     void processSources_partialConfigFile_reordersUsingMergedDefaults() throws Exception {
         // Given
         Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES);
