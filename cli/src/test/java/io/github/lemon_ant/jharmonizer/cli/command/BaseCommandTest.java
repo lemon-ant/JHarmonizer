@@ -8,9 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,6 +109,32 @@ class BaseCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
+    }
+
+    @Test
+    void call_noBackupOptionInvoked_disablesBackupsInSourceProcessor() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+        AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+                mockConstruction(SourceProcessor.class, (mock, context) -> {
+                    constructorArguments.set(context.arguments());
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenReturn(new AggregatedProcessingStatistic(0, 0, 0, null, null));
+                })) {
+            exitCode = cmd.execute("--base-dir", "src", "--no-backup");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        assertThat(constructorArguments.get()).hasSize(1);
+        Object constructorConfig = constructorArguments.get().getFirst();
+        assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
+        FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
+        assertThat(flexibleConfig.getBackupsEnabled()).contains(false);
     }
 
     @Test

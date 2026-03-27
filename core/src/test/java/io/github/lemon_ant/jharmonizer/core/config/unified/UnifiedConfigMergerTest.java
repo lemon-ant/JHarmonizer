@@ -105,15 +105,28 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_baselineRootGroupNameMissing_throwsException() {
+    void merge_baselineRootGroupNameMissing_preservesUnnamedGroupInOriginalPosition() {
         // Given
+        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
         UnifiedMemberGroup unnamedBaselineGroup = createGroup(null);
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, null, null, List.of());
+        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
+        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup overlayNewUnnamedGroup = createGroup(null);
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
+                null, null, null, null, List.of(overlayReplacementNamedGroup, overlayNewUnnamedGroup));
 
-        // When / Then
-        assertThatThrownBy(() -> UnifiedConfigMerger.merge(createConfig(List.of(unnamedBaselineGroup)), overlayConfig))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Baseline root member groups must have non-null names");
+        // When
+        UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(
+                createConfig(List.of(baselineNamedGroup, unnamedBaselineGroup, baselineTrailingNamedGroup)),
+                overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .containsExactly(
+                        overlayNewUnnamedGroup,
+                        overlayReplacementNamedGroup,
+                        unnamedBaselineGroup,
+                        baselineTrailingNamedGroup);
     }
 
     @Test
@@ -128,6 +141,69 @@ class UnifiedConfigMergerTest {
                         createConfig(List.of(firstBaselineGroup, duplicateBaselineGroup)), overlayConfig))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Baseline root member group names must be unique");
+    }
+
+    @Test
+    void merge_flexibleOverlayProvided_overridesBackupsAndKeepsBaselineFields() {
+        // Given
+        FlexibleUnifiedConfig baselineConfig = new FlexibleUnifiedConfig(
+                TOP_LEVEL_TYPES_ORDERING, FORMATTING, true, HEADER_LINE, List.of(createGroup("Default Rule")));
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, false, null, null);
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getBackupsEnabled()).contains(false);
+        assertThat(mergedConfig.getFormatting()).contains(FORMATTING);
+        assertThat(mergedConfig.getTopLevelTypesOrdering()).contains(TOP_LEVEL_TYPES_ORDERING);
+        assertThat(mergedConfig.getHeaderLine()).contains(HEADER_LINE);
+        assertThat(mergedConfig.getRootMemberGroups()).contains(List.of(createGroup("Default Rule")));
+    }
+
+    @Test
+    void merge_flexibleRootGroupsProvided_mergesRootGroupsLikeStrictMerge() {
+        // Given
+        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
+        UnifiedMemberGroup baselineUnitsGroup = createGroup("Units");
+        FlexibleUnifiedConfig baselineConfig =
+                new FlexibleUnifiedConfig(null, null, null, null, List.of(baselineDefaultGroup, baselineUnitsGroup));
+        UnifiedMemberGroup replacementDefaultGroup = createGroup("Default Rule");
+        UnifiedMemberGroup newAuditGroup = createGroup("Audit");
+        FlexibleUnifiedConfig overlayConfig =
+                new FlexibleUnifiedConfig(null, null, null, null, List.of(replacementDefaultGroup, newAuditGroup));
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .contains(List.of(newAuditGroup, replacementDefaultGroup, baselineUnitsGroup));
+    }
+
+    @Test
+    void merge_flexibleBaselineUnnamedGroupsProvided_preservesUnnamedPositions() {
+        // Given
+        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup baselineUnnamedGroup = createGroup(null);
+        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
+        FlexibleUnifiedConfig baselineConfig = new FlexibleUnifiedConfig(
+                null, null, null, null, List.of(baselineNamedGroup, baselineUnnamedGroup, baselineTrailingNamedGroup));
+        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup overlayNewNamedGroup = createGroup("Audit");
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
+                null, null, null, null, List.of(overlayReplacementNamedGroup, overlayNewNamedGroup));
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .contains(List.of(
+                        overlayNewNamedGroup,
+                        overlayReplacementNamedGroup,
+                        baselineUnnamedGroup,
+                        baselineTrailingNamedGroup));
     }
 
     @NonNull
