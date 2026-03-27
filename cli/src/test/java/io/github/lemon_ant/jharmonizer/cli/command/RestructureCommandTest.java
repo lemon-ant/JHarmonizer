@@ -43,7 +43,7 @@ class RestructureCommandTest {
     Path temporaryDirectory;
 
     @BeforeEach
-    void setUp_commandConfigured_initializeCommandLine() {
+    void setUp() {
         commandLine = new CommandLine(new RestructureCommand());
     }
 

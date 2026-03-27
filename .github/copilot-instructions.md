@@ -80,6 +80,8 @@
 ### Naming
 
 - JUnit test method names must follow exactly 3 segments: `subject_condition_expectedResult`.
+- This naming rule applies only to executable test methods (for example `@Test`, `@ParameterizedTest`, and other JUnit invocation annotations).
+- It does not apply to lifecycle and helper methods such as `@BeforeEach`, `@BeforeAll`, `@AfterEach`, `@AfterAll`, or private utilities; name those with normal Java conventions such as `setUp` or `tearDown`.
 - `subject` names what is being tested and usually mirrors the production method, command, or feature name.
 - `condition` states only the relevant precondition or input shape.
 - `expectedResult` states the observable outcome.

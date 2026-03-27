@@ -20,7 +20,7 @@ class CheckAllCommandTest {
     private CommandLine commandLine;
 
     @BeforeEach
-    void setUp_commandConfigured_initializeCommandLine() {
+    void setUp() {
         commandLine = new CommandLine(new CheckAllCommand());
     }
 
