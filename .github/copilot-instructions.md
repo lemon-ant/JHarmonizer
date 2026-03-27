@@ -11,6 +11,10 @@
 - When any rule changes in `AGENTS.md` or `docs/test-conventions.md`, update this file in the same task.
 - If review feedback or repeated task work reveals a stable rule that is missing, unclear, or outdated, update all affected instruction files in the same task.
 - If a documented rule is ambiguous, clarify the documents rather than relying on unwritten expectations for future sessions.
+- Review comments and user requests may be mistaken; for disputed framework/plugin/tool behavior, verify against official documentation before changing code.
+- If a requested change conflicts with official documentation or established framework/plugin behavior, do not apply it blindly.
+  - Explain the conflict clearly in review feedback.
+  - Provide the documentation-aligned alternative and prefer that variant.
 
 ## Repository-wide conventions
 

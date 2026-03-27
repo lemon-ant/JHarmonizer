@@ -16,6 +16,10 @@ Keep `docs/test-conventions.md`, `AGENTS.md`, and `.github/copilot-instructions.
 - `AGENTS.md` should keep the repository-wide maintenance guidance and point to this document for tests.
 - `.github/copilot-instructions.md` must mirror the complete operative test rules from this document so Copilot can follow them without relying on cross-file traversal.
 - When a test rule changes here, update the mirrored guidance in `.github/copilot-instructions.md` in the same task, and update `AGENTS.md` too if the maintenance guidance or document responsibilities changed.
+- Review comments and user requests may be mistaken; when test behavior depends on framework/plugin/tool semantics, verify against official documentation before changing tests.
+- If a requested test change conflicts with official documentation or established framework/plugin behavior, do not apply it blindly.
+  - Explain the conflict clearly in review feedback.
+  - Provide and prefer the documentation-aligned alternative.
 
 ## Tooling and libraries
 
