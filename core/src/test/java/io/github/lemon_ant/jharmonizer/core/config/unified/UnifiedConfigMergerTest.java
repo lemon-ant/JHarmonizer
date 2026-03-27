@@ -105,15 +105,28 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_baselineRootGroupNameMissing_throwsException() {
+    void merge_baselineRootGroupNameMissing_preservesUnnamedGroupInOriginalPosition() {
         // Given
+        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
         UnifiedMemberGroup unnamedBaselineGroup = createGroup(null);
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, null, null, List.of());
+        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
+        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup overlayNewUnnamedGroup = createGroup(null);
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
+                null, null, null, null, List.of(overlayReplacementNamedGroup, overlayNewUnnamedGroup));
 
-        // When / Then
-        assertThatThrownBy(() -> UnifiedConfigMerger.merge(createConfig(List.of(unnamedBaselineGroup)), overlayConfig))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Baseline root member groups must have non-null names");
+        // When
+        UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(
+                createConfig(List.of(baselineNamedGroup, unnamedBaselineGroup, baselineTrailingNamedGroup)),
+                overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .containsExactly(
+                        overlayNewUnnamedGroup,
+                        overlayReplacementNamedGroup,
+                        unnamedBaselineGroup,
+                        baselineTrailingNamedGroup);
     }
 
     @Test
@@ -166,6 +179,31 @@ class UnifiedConfigMergerTest {
         // Then
         assertThat(mergedConfig.getRootMemberGroups())
                 .contains(List.of(newAuditGroup, replacementDefaultGroup, baselineUnitsGroup));
+    }
+
+    @Test
+    void merge_flexibleBaselineUnnamedGroupsProvided_preservesUnnamedPositions() {
+        // Given
+        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup baselineUnnamedGroup = createGroup(null);
+        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
+        FlexibleUnifiedConfig baselineConfig = new FlexibleUnifiedConfig(
+                null, null, null, null, List.of(baselineNamedGroup, baselineUnnamedGroup, baselineTrailingNamedGroup));
+        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup overlayNewNamedGroup = createGroup("Audit");
+        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
+                null, null, null, null, List.of(overlayReplacementNamedGroup, overlayNewNamedGroup));
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .contains(List.of(
+                        overlayNewNamedGroup,
+                        overlayReplacementNamedGroup,
+                        baselineUnnamedGroup,
+                        baselineTrailingNamedGroup));
     }
 
     @NonNull

@@ -1,11 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -15,6 +13,7 @@ import lombok.experimental.UtilityClass;
  * No defaults are provided here; caller must supply the baseline with all fields fully set.
  * Root member groups are merged only at the top level: new overlay groups are prepended,
  * and groups with matching names replace baseline groups in their original positions.
+ * Unnamed baseline groups are kept in their original relative positions.
  */
 @UtilityClass
 public class UnifiedConfigMerger {
@@ -75,38 +74,46 @@ public class UnifiedConfigMerger {
     @NonNull
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
-        Map<String, UnifiedMemberGroup> baselineRootGroupsByName = collectGroupsByName(baselineRootGroups);
-        Stream<UnifiedMemberGroup> prependedNewRootGroups = overlayRootGroups.stream()
-                .map(overlayRootGroup -> findPrependedNewRootGroup(baselineRootGroupsByName, overlayRootGroup))
-                .filter(Objects::nonNull);
-        return Stream.concat(prependedNewRootGroups, baselineRootGroupsByName.values().stream())
+        List<UnifiedMemberGroup> mergedBaselineRootGroups = new ArrayList<>(baselineRootGroups);
+        Map<String, Integer> baselineRootGroupIndicesByName = collectNamedGroupIndicesInOrder(baselineRootGroups);
+        List<UnifiedMemberGroup> prependedNewRootGroups = collectPrependedNewRootGroups(
+                overlayRootGroups, mergedBaselineRootGroups, baselineRootGroupIndicesByName);
+        return Stream.concat(prependedNewRootGroups.stream(), mergedBaselineRootGroups.stream())
                 .toList();
     }
 
     @NonNull
-    private static Map<String, UnifiedMemberGroup> collectGroupsByName(List<UnifiedMemberGroup> memberGroups) {
-        return memberGroups.stream()
-                .collect(Collectors.toMap(
-                        memberGroup -> {
-                            String groupName = memberGroup.getGroupName();
-                            if (groupName == null) {
-                                throw new IllegalStateException("Baseline root member groups must have non-null names");
-                            }
-                            return groupName;
-                        },
-                        memberGroup -> memberGroup,
-                        (ignoredExistingGroup, duplicateGroup) -> {
-                            throw new IllegalStateException("Baseline root member group names must be unique");
-                        },
-                        LinkedHashMap::new));
+    private static Map<String, Integer> collectNamedGroupIndicesInOrder(List<UnifiedMemberGroup> memberGroups) {
+        Map<String, Integer> groupIndicesByName = new HashMap<>();
+        for (int groupIndex = 0; groupIndex < memberGroups.size(); groupIndex++) {
+            UnifiedMemberGroup memberGroup = memberGroups.get(groupIndex);
+            String groupName = memberGroup.getGroupName();
+            if (groupName == null) {
+                continue;
+            }
+            if (groupIndicesByName.putIfAbsent(groupName, groupIndex) != null) {
+                throw new IllegalStateException("Baseline root member group names must be unique");
+            }
+        }
+        return groupIndicesByName;
     }
 
-    @Nullable
-    private static UnifiedMemberGroup findPrependedNewRootGroup(
-            Map<String, UnifiedMemberGroup> baselineRootGroupsByName, UnifiedMemberGroup overlayRootGroup) {
-        String overlayGroupName = overlayRootGroup.getGroupName();
-        return overlayGroupName == null || baselineRootGroupsByName.replace(overlayGroupName, overlayRootGroup) == null
-                ? overlayRootGroup
-                : null;
+    @NonNull
+    private static List<UnifiedMemberGroup> collectPrependedNewRootGroups(
+            List<UnifiedMemberGroup> overlayRootGroups,
+            List<UnifiedMemberGroup> mergedBaselineRootGroups,
+            Map<String, Integer> baselineRootGroupIndicesByName) {
+        List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
+        for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
+            String overlayGroupName = overlayRootGroup.getGroupName();
+            Integer baselineGroupIndex =
+                    overlayGroupName == null ? null : baselineRootGroupIndicesByName.get(overlayGroupName);
+            if (baselineGroupIndex == null) {
+                prependedNewRootGroups.add(overlayRootGroup);
+                continue;
+            }
+            mergedBaselineRootGroups.set(baselineGroupIndex, overlayRootGroup);
+        }
+        return prependedNewRootGroups;
     }
 }
