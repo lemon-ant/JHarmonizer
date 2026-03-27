@@ -12,23 +12,28 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.nio.file.Path;
 import java.util.Set;
 import lombok.NonNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class BaseCommandTest {
 
+    private CommandLine commandLine;
+
+    @BeforeEach
+    void setUp() {
+        commandLine = new CommandLine(new TestCommand());
+    }
+
     @Test
     void call_baseDirOptionInvoked_passesNormalizedAbsoluteBaseDir() {
-        // Given
-        CommandLine cmd = new CommandLine(new TestCommand());
-
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
         try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
 
@@ -41,15 +46,12 @@ class BaseCommandTest {
 
     @Test
     void call_includeOptionInvoked_parsesIncludePatternCorrectly() {
-        // Given
-        CommandLine cmd = new CommandLine(new TestCommand());
-
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
         try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src", "--include", "**/*.java");
+            exitCode = commandLine.execute("--base-dir", "src", "--include", "**/*.java");
             constructedProcessor = sourceProcessorMocks.constructed().getFirst();
         }
 
@@ -61,15 +63,12 @@ class BaseCommandTest {
 
     @Test
     void call_mixedCollectionOptionsInvoked_combinesAllValuesCorrectly() {
-        // Given
-        CommandLine cmd = new CommandLine(new TestCommand());
-
         // When
         int exitCode;
         SourceProcessor constructedProcessor;
         try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute(
+            exitCode = commandLine.execute(
                     "-b",
                     "src",
                     "-i",
@@ -98,13 +97,10 @@ class BaseCommandTest {
 
     @Test
     void call_processingSucceeds_returnsExitCode0() {
-        // Given
-        CommandLine cmd = new CommandLine(new TestCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then
@@ -113,16 +109,13 @@ class BaseCommandTest {
 
     @Test
     void call_processorThrowsRuntimeException_returnsExitCode1() {
-        // Given
-        CommandLine cmd = new CommandLine(new TestCommand());
-
         // When
         int exitCode;
         try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new RuntimeException("Unexpected error"));
         })) {
-            exitCode = cmd.execute("--base-dir", "src");
+            exitCode = commandLine.execute("--base-dir", "src");
         }
 
         // Then

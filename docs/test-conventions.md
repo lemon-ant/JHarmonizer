@@ -48,6 +48,11 @@ Rules:
 
   `subject_condition_expectedResult`
 
+Scope note:
+
+- This naming rule applies only to executable test methods (for example methods annotated with `@Test`, `@ParameterizedTest`, and other JUnit test-invocation annotations).
+- It does **not** apply to lifecycle and helper methods such as `@BeforeEach`, `@BeforeAll`, `@AfterEach`, `@AfterAll`, or private utility methods; name those with normal Java conventions (for example `setUp`, `tearDown`, `createSampleFile`).
+
 Examples:
 
 - `compileConfig_validYaml_produceSingleRootGroup`
