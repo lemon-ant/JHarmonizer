@@ -14,6 +14,7 @@ import spoon.reflect.declaration.CtTypeMember;
 public class SpoonSourcePrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
+    public static final String GROUP_SEPARATOR_NEW_LINE = "\n";
 
     /**
      * Detects the dominant line separator.

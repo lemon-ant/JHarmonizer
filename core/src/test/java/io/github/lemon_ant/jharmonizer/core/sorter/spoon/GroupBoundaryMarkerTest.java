@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator.createTrivialMemberGroup;
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
@@ -9,6 +10,8 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -63,9 +66,35 @@ class GroupBoundaryMarkerTest {
         assertThat(bravoFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
         assertThat(charlieMethodMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
-                .isEqualTo("");
+                .isEqualTo(SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
         assertThat(deltaMethodMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
+    }
+
+    @Test
+    void markGroupBoundaries_headerCommentAlreadyPresent_writeOnlyAlreadyPresentMetadata() {
+        // Given
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile("""
+                class HeaderFixture {
+                    // Header fields
+                    int a;
+                    int z;
+                }
+                """, Path.of("HeaderFixture.java")));
+        CtType<?> parsedMainType = spoonAstModel.getMainType().orElseThrow();
+        CtTypeMember alphaFieldMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "a");
+        CtTypeMember bravoFieldMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "z");
+        List<MemberGroupBlock> orderedBlocks = List.of(createGroupBlock(
+                "Header fields", UnifiedSeparator.HEADER, List.of(alphaFieldMember, bravoFieldMember)));
+
+        // When
+        GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
+
+        // Then
+        assertThat(alphaFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
+                .isEqualTo("Header fields");
     }
 
     @Test
