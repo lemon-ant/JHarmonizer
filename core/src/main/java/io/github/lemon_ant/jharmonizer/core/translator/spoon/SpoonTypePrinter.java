@@ -139,22 +139,20 @@ final class SpoonTypePrinter {
             boolean first,
             boolean previousElementNeedSeparatorAfter) {
         // TODO Check Orphaned comments
-        Optional<String> groupHeaderMetadata =
-                Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA)).map(Object::toString);
-        boolean hasMatchingLeadingHeaderComment = groupHeaderMetadata
-                .filter(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
-                .map(groupHeader -> hasMatchingLeadingComment(member, groupHeader))
-                .orElse(false);
+
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
-        if (first && hasMatchingLeadingHeaderComment) {
-            needsSeparatorBeforeCurrentMember = false;
-        }
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();
         }
         boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter(member);
 
+        Optional<String> groupHeaderMetadata =
+                Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA)).map(Object::toString);
+        boolean hasMatchingLeadingHeaderComment = groupHeaderMetadata
+                .filter(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
+                .map(groupHeader -> hasMatchingLeadingComment(member, groupHeader))
+                .orElse(false);
         groupHeaderMetadata.ifPresent(groupHeader -> {
             if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
                 if (hasSeparatorAlreadyPrinted) {

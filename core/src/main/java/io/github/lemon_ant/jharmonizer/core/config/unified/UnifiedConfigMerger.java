@@ -84,6 +84,7 @@ public class UnifiedConfigMerger {
 
     @NonNull
     private static Map<String, Integer> collectNamedGroupIndicesInOrder(List<UnifiedMemberGroup> memberGroups) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<String, Integer> groupIndicesByName = new HashMap<>();
         for (int groupIndex = 0; groupIndex < memberGroups.size(); groupIndex++) {
             UnifiedMemberGroup memberGroup = memberGroups.get(groupIndex);

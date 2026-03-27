@@ -97,7 +97,8 @@ class RestructureCommandTest {
         Path configFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
 
         // When
-        int exitCode = commandLine.execute("--base-dir", temporaryDirectory.toString(), "--config", configFilePath.toString());
+        int exitCode =
+                commandLine.execute("--base-dir", temporaryDirectory.toString(), "--config", configFilePath.toString());
 
         // Then
         assertThat(exitCode).isZero();

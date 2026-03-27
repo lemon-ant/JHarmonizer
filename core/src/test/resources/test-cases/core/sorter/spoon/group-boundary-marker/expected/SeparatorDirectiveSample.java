@@ -1,4 +1,5 @@
 class SeparatorDirectiveSample {
+
     // Header fields
     int a = 1;
     int z = 2;
