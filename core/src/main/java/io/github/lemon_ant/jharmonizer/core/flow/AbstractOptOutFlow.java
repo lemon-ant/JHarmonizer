@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.SKIPPED;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -128,7 +128,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(
                         new FormattingStatistic(srcFile.getSrcCode().length(), 0))
-                .flowProcessingStatus(defineFlowProcessingStatus(false, false, checkingOnly))
+                .flowProcessingStatus(SKIPPED)
                 .build();
     }
 
