@@ -115,7 +115,6 @@ abstract class AbstractOptOutFlow implements IFlow {
     protected static FlowProcessingResult buildFullyOffFileSkippedResult(
             @NonNull SrcFile srcFile,
             @NonNull ParsingResult parsingResult,
-            boolean checkingOnly,
             @NonNull String skippedOperationDescription) {
         logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
         return FlowProcessingResult.builder()
