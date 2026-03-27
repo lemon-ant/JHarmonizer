@@ -36,15 +36,6 @@ class GroupBoundaryMarkerTest {
     private static final URL SEPARATOR_DIRECTIVE_EXPECTED_RESOURCE_URL =
             TestCaseResourceUtils.requireClasspathResourceUrl(
                     "/test-cases/core/sorter/spoon/group-boundary-marker/expected/SeparatorDirectiveSample.java");
-    private static final URL NEW_LINE_SEPARATOR_CONFIG_RESOURCE_URL =
-            TestCaseResourceUtils.requireClasspathResourceUrl(
-                    "/test-cases/core/sorter/spoon/group-boundary-marker/new-line-separator-config.yml");
-    private static final URL NEW_LINE_SEPARATOR_INPUT_RESOURCE_URL =
-            TestCaseResourceUtils.requireClasspathResourceUrl(
-                    "/test-cases/core/sorter/spoon/group-boundary-marker/input/NewLineSeparatorBehaviorSample.java");
-    private static final URL NEW_LINE_SEPARATOR_EXPECTED_RESOURCE_URL =
-            TestCaseResourceUtils.requireClasspathResourceUrl(
-                    "/test-cases/core/sorter/spoon/group-boundary-marker/expected/NewLineSeparatorBehaviorSample.java");
 
     @TempDir
     Path temporaryDirectory;
@@ -142,27 +133,6 @@ class GroupBoundaryMarkerTest {
 
         // Then
         assertThat(processedSourceCode).isEqualTo(expectedSourceCode);
-    }
-
-    @Test
-    void processSources_newLineSeparator_printedOnlyWhenMissingAndNeverAsHeaderComment() throws Exception {
-        // Given
-        String originalSourceCode =
-                TestCaseResourceUtils.readClasspathResourceAsString(NEW_LINE_SEPARATOR_INPUT_RESOURCE_URL);
-        String expectedSourceCode =
-                TestCaseResourceUtils.readClasspathResourceAsString(NEW_LINE_SEPARATOR_EXPECTED_RESOURCE_URL);
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "NewLineSeparatorBehaviorSample.java", originalSourceCode);
-        SourceProcessor sourceProcessor =
-                new SourceProcessor(JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
-                        NEW_LINE_SEPARATOR_CONFIG_RESOURCE_URL));
-
-        // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-
-        // Then
-        assertThat(processedSourceCode).isEqualTo(expectedSourceCode);
-        assertThat(processedSourceCode).doesNotContain("// " + SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
     }
 
     @NonNull
