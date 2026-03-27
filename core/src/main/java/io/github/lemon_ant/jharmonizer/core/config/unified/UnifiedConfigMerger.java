@@ -74,8 +74,8 @@ public class UnifiedConfigMerger {
     @NonNull
     private static List<UnifiedMemberGroup> mergeRootMemberGroups(
             List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
-        List<UnifiedMemberGroup> mergedBaselineRootGroups = new ArrayList<>(baselineRootGroups);
         Map<String, Integer> baselineRootGroupIndicesByName = collectNamedGroupIndicesInOrder(baselineRootGroups);
+        List<UnifiedMemberGroup> mergedBaselineRootGroups = new ArrayList<>(baselineRootGroups);
         List<UnifiedMemberGroup> prependedNewRootGroups = collectPrependedNewRootGroups(
                 overlayRootGroups, mergedBaselineRootGroups, baselineRootGroupIndicesByName);
         return Stream.concat(prependedNewRootGroups.stream(), mergedBaselineRootGroups.stream())
