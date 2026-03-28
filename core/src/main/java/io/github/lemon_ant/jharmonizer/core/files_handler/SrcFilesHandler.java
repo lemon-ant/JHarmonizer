@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @UtilityClass
-public class SourceFilesHandler {
+public class SrcFilesHandler {
 
     /**
      * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
@@ -51,7 +51,7 @@ public class SourceFilesHandler {
     @NonNull
     public static Stream<SrcFile> readJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
-        return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SourceFilesHandler::readFile);
+        return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
     }
 
     /**
@@ -93,15 +93,15 @@ public class SourceFilesHandler {
      * @param sourceFile the source file to back up
      */
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
-    public static void renameToBackup(@NonNull Path sourceFile) {
-        if (!Files.exists(sourceFile) || !Files.isRegularFile(sourceFile)) {
+    public static void renameToBackup(@NonNull Path srcFile) {
+        if (!Files.exists(srcFile) || !Files.isRegularFile(srcFile)) {
             throw new UncheckedIOException(
-                    new IOException("Source file does not exist or is not a valid file: " + sourceFile));
+                    new IOException("Source file does not exist or is not a valid file: " + srcFile));
         }
 
-        Path backupPath = sourceFile.resolveSibling(sourceFile.getFileName().toString() + ".bak");
+        Path backupPath = srcFile.resolveSibling(srcFile.getFileName().toString() + ".bak");
         try {
-            Files.move(sourceFile, backupPath);
+            Files.move(srcFile, backupPath);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

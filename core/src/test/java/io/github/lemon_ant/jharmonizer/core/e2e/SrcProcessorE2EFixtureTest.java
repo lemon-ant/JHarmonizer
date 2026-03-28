@@ -12,23 +12,28 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+// PER_CLASS allows non-static @MethodSource from the shared base class.
+// This test keeps only immutable constants plus @TempDir, and each scenario is processed in its own
+// subdirectory, so no mutable scenario state leaks between parameterized invocations.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SourceProcessorRegressionTest extends AbstractSourceProcessorScenarioE2ETest {
+class SrcProcessorE2EFixtureTest extends AbstractSrcProcessorScenarioE2ETest {
 
-    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/regression/";
+    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
 
     @NonNull
     private static final Path FIXTURES_ROOT = resolveFixturesRoot();
 
+    private static final String CONFIG_FILE = "config.yml";
+
     @TempDir
     Path temporaryDirectory;
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
-    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
-        processFixtureInputFileMatchesExpectedAndCompileAfter(temporaryDirectory, scenarioDir, sourceFile);
+    void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path srcFile) throws Exception {
+        processFixtureInputFileMatchesExpectedAndCompileAfter(temporaryDirectory, scenarioDir, srcFile);
     }
 
     @Test
@@ -45,26 +50,25 @@ class SourceProcessorRegressionTest extends AbstractSourceProcessorScenarioE2ETe
     @Override
     @NonNull
     protected Optional<Path> findScenarioConfigPath(Path fixtureScenario) {
-        Path scenarioConfigPath = fixtureScenario.resolve("config.yml");
-        return java.nio.file.Files.exists(scenarioConfigPath) ? Optional.of(scenarioConfigPath) : Optional.empty();
+        return Optional.of(fixtureScenario.resolve(CONFIG_FILE));
     }
 
     @Override
     @NonNull
     protected String resolveWorkspaceDirectoryName() {
-        return "SourceProcessorRegressionE2E-working-dir";
+        return "SrcProcessorE2E-working-dir";
     }
 
     @Override
     @NonNull
     protected String resolveCompileBeforeDirectoryName() {
-        return "SourceProcessorRegressionE2E-compile-before";
+        return "SrcProcessorE2E-compile-before";
     }
 
     @Override
     @NonNull
     protected String resolveCompileAfterDirectoryName() {
-        return "SourceProcessorRegressionE2E-compile-after";
+        return "SrcProcessorE2E-compile-after";
     }
 
     @NonNull

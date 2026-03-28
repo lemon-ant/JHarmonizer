@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
@@ -139,9 +139,9 @@ abstract class BaseCommand implements Callable<Integer> {
                 "Processing sources with flow {} in: {} using config: {}",
                 flowType,
                 commandOptions.getBaseDir(),
-                describeConfigSource(commandOptions.getConfigFilePath()));
+                describeConfigSrc(commandOptions.getConfigFilePath()));
         try {
-            createSourceProcessor(commandOptions.getConfigFilePath(), commandOptions.isNoBackup())
+            createSrcProcessor(commandOptions.getConfigFilePath(), commandOptions.isNoBackup())
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
@@ -155,14 +155,14 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @NonNull
-    private static SourceProcessor createSourceProcessor(@Nullable Path configFilePath, boolean disableBackups) {
+    private static SrcProcessor createSrcProcessor(@Nullable Path configFilePath, boolean disableBackups) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
                 : null;
         FlexibleUnifiedConfig backupsOverrideConfig =
                 disableBackups ? new FlexibleUnifiedConfig(null, null, false, null, null) : null;
         FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, backupsOverrideConfig);
-        return new SourceProcessor(effectiveConfig);
+        return new SrcProcessor(effectiveConfig);
     }
 
     @Nullable
@@ -183,7 +183,7 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @NonNull
-    private static String describeConfigSource(@Nullable Path configFilePath) {
+    private static String describeConfigSrc(@Nullable Path configFilePath) {
         return configFilePath != null
                 ? configFilePath.toString()
                 : "embedded default resource config (/default-config.yml)";

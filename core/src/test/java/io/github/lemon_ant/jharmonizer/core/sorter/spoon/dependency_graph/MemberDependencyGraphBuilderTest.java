@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator.createTrivialMemberGroup;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -101,7 +101,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_explicitThisForwardReference_preservesSourceDeclarationOrder() {
+    void buildDependencyGraph_explicitThisForwardReference_preservesSrcDeclarationOrder() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_THIS_FORWARD_REFERENCE_MEMBERS);
@@ -237,7 +237,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_explicitDeclaringTypeForwardReference_preservesSourceDeclarationOrder() {
+    void buildDependencyGraph_explicitDeclaringTypeForwardReference_preservesSrcDeclarationOrder() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_EXPLICIT_DECLARING_TYPE_FORWARD_REFERENCE_MEMBERS);
@@ -439,14 +439,14 @@ class MemberDependencyGraphBuilderTest {
     @NonNull
     private static Map<CtTypeMember, CompiledMemberGroup> buildTypeMember2NaturalGroup(
             CtType<?> mainType, CompiledMemberGroup compiledMemberGroup) {
-        return streamExplicitSourceTypeMembers(mainType)
+        return streamExplicitSrcTypeMembers(mainType)
                 .collect(Collectors.toUnmodifiableMap(typeMember -> typeMember, ignoredMember -> compiledMemberGroup));
     }
 
     @NonNull
     private static CtTypeMember requireUniqueInitializerBlockMember(
             CtType<?> declaringType, boolean requiredStaticness) {
-        List<CtAnonymousExecutable> initializerBlocks = streamExplicitSourceTypeMembers(declaringType)
+        List<CtAnonymousExecutable> initializerBlocks = streamExplicitSrcTypeMembers(declaringType)
                 .filter(typeMember -> typeMember instanceof CtAnonymousExecutable)
                 .map(typeMember -> (CtAnonymousExecutable) typeMember)
                 .filter(initializerBlock ->

@@ -7,10 +7,10 @@ import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -34,11 +34,11 @@ class BaseCommandTest {
     void call_baseDirOptionInvoked_passesNormalizedAbsoluteBaseDir() {
         // When
         int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+        SrcProcessor constructedProcessor;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
             exitCode = commandLine.execute("--base-dir", "src");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+            constructedProcessor = srcProcessorMocks.constructed().getFirst();
         }
 
         // Then
@@ -52,11 +52,11 @@ class BaseCommandTest {
     void call_includeOptionInvoked_parsesIncludePatternCorrectly() {
         // When
         int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+        SrcProcessor constructedProcessor;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
             exitCode = commandLine.execute("--base-dir", "src", "--include", "**/*.java");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+            constructedProcessor = srcProcessorMocks.constructed().getFirst();
         }
 
         // Then
@@ -69,8 +69,8 @@ class BaseCommandTest {
     void call_mixedCollectionOptionsInvoked_combinesAllValuesCorrectly() {
         // When
         int exitCode;
-        SourceProcessor constructedProcessor;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
+        SrcProcessor constructedProcessor;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
                 CommandTestUtils.mockSuccessfulProcessorConstruction()) {
             exitCode = commandLine.execute(
                     "-b",
@@ -83,7 +83,7 @@ class BaseCommandTest {
                     "**/internal/**",
                     "--exclude",
                     "**/excluded/**,**/*Test.java");
-            constructedProcessor = sourceProcessorMocks.constructed().getFirst();
+            constructedProcessor = srcProcessorMocks.constructed().getFirst();
         }
 
         // Then
@@ -103,7 +103,7 @@ class BaseCommandTest {
     void call_processingSucceeds_returnsExitCode0() {
         // When
         int exitCode;
-        try (MockedConstruction<SourceProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+        try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
 
@@ -112,15 +112,15 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_noBackupOptionInvoked_disablesBackupsInSourceProcessor() {
+    void call_noBackupOptionInvoked_disablesBackupsInSrcProcessor() {
         // Given
         CommandLine cmd = new CommandLine(new TestCommand());
         AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
 
         // When
         int exitCode;
-        try (MockedConstruction<SourceProcessor> sourceProcessorMocks =
-                mockConstruction(SourceProcessor.class, (mock, context) -> {
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
+                mockConstruction(SrcProcessor.class, (mock, context) -> {
                     constructorArguments.set(context.arguments());
                     when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenReturn(new AggregatedProcessingStatistic(0, 0, 0, null, null));
@@ -141,7 +141,7 @@ class BaseCommandTest {
     void call_processorThrowsRuntimeException_returnsExitCode1() {
         // When
         int exitCode;
-        try (MockedConstruction<SourceProcessor> ignored = mockConstruction(SourceProcessor.class, (mock, context) -> {
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new RuntimeException("Unexpected error"));
         })) {

@@ -13,5 +13,5 @@ public class SerializationResult {
     SerializationStatistic serializationStatistic;
 
     @NonNull
-    SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges;
+    SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges;
 }

@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.detectDominantLineSeparator;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.detectDominantLineSeparator;
 
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
@@ -24,20 +24,20 @@ import spoon.reflect.visitor.printer.CommentOffset;
  * preserves the original source fragments for opt-out ranges,
  * and normalises line separators to match the dominant separator of the original file.
  */
-class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
+class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
 
     @NonNull
     private final SpoonTypePrinter typeStructurePrinter;
 
     /**
-     * Creates a new SpoonCustomSourcePrinter.
+     * Creates a new SpoonCustomSrcPrinter.
      *
      * @param env the Spoon printing environment
      * @param srcCode the original source text being re-serialized
      * @param sortingSkippedTypes the types that must be copied without sorting
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
-    SpoonCustomSourcePrinter(
+    SpoonCustomSrcPrinter(
             @NonNull Environment env, @NonNull String srcCode, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         super(env);
         String lineSeparator = detectDominantLineSeparator(srcCode);
@@ -98,10 +98,9 @@ class SpoonCustomSourcePrinter extends DefaultJavaPrettyPrinter {
      * @return the serialized source with skipped-type ranges
      */
     @NonNull
-    SerializedSourceWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
+    SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
         printCompilationUnit(compilationUnit);
-        return new SerializedSourceWithSkippedTypeRanges(
-                getResult(), typeStructurePrinter.getSortingSkippedTypeRanges());
+        return new SerializedSrcWithSkippedTypeRanges(getResult(), typeStructurePrinter.getSortingSkippedTypeRanges());
     }
 
     /**

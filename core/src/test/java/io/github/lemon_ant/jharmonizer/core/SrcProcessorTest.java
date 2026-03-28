@@ -11,7 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -33,11 +33,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
 
 /**
- * Integration-like tests for SourceProcessor.processSources.
+ * Integration-like tests for SrcProcessor.processSources.
  * They work against a real temporary file system and exercise
  * the full flow: config → parser → sorter → formatter.
  */
-class SourceProcessorTest {
+class SrcProcessorTest {
 
     private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
@@ -67,60 +67,58 @@ class SourceProcessorTest {
     @Test
     void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
         // Given
-        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
-        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SourceProcessor sourceProcessor = new SourceProcessor();
+        String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).isNotBlank().isNotEqualTo(originalSourceCode);
+        assertThat(processedSrcCode).isNotBlank().isNotEqualTo(originalSrcCode);
     }
 
     @Test
     void processSources_multipleJavaFiles_onlyIncludedFilesAreProcessed() throws Exception {
         // Given
-        String unformattedSourceCode = "package demo; public class Included {private int x;}";
-        Path includedJavaFilePath = writeJavaFile(temporaryDirectory, "IncludedSample.java", unformattedSourceCode);
-        Path excludedJavaFilePath = writeJavaFile(temporaryDirectory, "ExcludedSample.java", unformattedSourceCode);
-        String includedOriginalSourceCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
-        String excludedOriginalSourceCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
+        String unformattedSrcCode = "package demo; public class Included {private int x;}";
+        Path includedJavaFilePath = writeJavaFile(temporaryDirectory, "IncludedSample.java", unformattedSrcCode);
+        Path excludedJavaFilePath = writeJavaFile(temporaryDirectory, "ExcludedSample.java", unformattedSrcCode);
+        String includedOriginalSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
+        String excludedOriginalSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
         Collection<String> includeGlobs = Set.of("Included*.java");
-        SourceProcessor sourceProcessor = new SourceProcessor();
+        SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
-        String includedProcessedSourceCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
-        String excludedProcessedSourceCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        String includedProcessedSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
+        String excludedProcessedSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(includedProcessedSourceCode)
+        assertThat(includedProcessedSrcCode)
                 .as("Included file must be processed")
-                .isNotEqualTo(includedOriginalSourceCode);
-        assertThat(excludedProcessedSourceCode)
+                .isNotEqualTo(includedOriginalSrcCode);
+        assertThat(excludedProcessedSrcCode)
                 .as("Excluded file must remain unchanged")
-                .isEqualTo(excludedOriginalSourceCode);
+                .isEqualTo(excludedOriginalSrcCode);
     }
 
     @Test
     void processSources_alreadyRestructuredFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
         // Given
-        String sampleSourceCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor();
-        sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
         // When / Then
-        assertThatCode(() -> sourceProcessor.processSources(
+        assertThatCode(() -> srcProcessor.processSources(
                         temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
-        String finalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        assertThat(finalSourceCode).isNotBlank();
+        String finalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        assertThat(finalSrcCode).isNotBlank();
     }
 
     @Test
@@ -129,14 +127,14 @@ class SourceProcessorTest {
         Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "check-all");
         Map<String, String> expectedSources = readScenarioExpectedSources("check-all");
         List<String> orderedInputFiles = List.of("A_Checked.java", "B_Reordered.java", "C_Formatted.java");
-        SourceProcessor sourceProcessor = new SourceProcessor();
+        SrcProcessor srcProcessor = new SrcProcessor();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
         AggregatedProcessingStatistic aggregatedProcessingStatistic;
         try {
-            aggregatedProcessingStatistic = sourceProcessor.processSources(
-                    scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+            aggregatedProcessingStatistic =
+                    srcProcessor.processSources(scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
         } finally {
             detachListAppender(listAppender);
         }
@@ -173,12 +171,12 @@ class SourceProcessorTest {
                 nestedDirectoryPath,
                 "InternalToolForLoggingVerification.java",
                 "package demo; public class InternalToolForLoggingVerification {}");
-        SourceProcessor sourceProcessor = new SourceProcessor();
+        SrcProcessor srcProcessor = new SrcProcessor();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
         try {
-            sourceProcessor.processSources(
+            srcProcessor.processSources(
                     temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
         } finally {
             detachListAppender(listAppender);
@@ -203,15 +201,15 @@ class SourceProcessorTest {
     @Test
     void processSources_fullyOffFile_logsSkippedStatus() throws Exception {
         // Given
-        String fullyOffSourceCode = "// @jharmonizer:fully-off\npackage demo; public class FullyOffSample {}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "FullyOffSample.java", fullyOffSourceCode);
-        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SourceProcessor sourceProcessor = new SourceProcessor();
+        String fullyOffSrcCode = "// @jharmonizer:fully-off\npackage demo; public class FullyOffSample {}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "FullyOffSample.java", fullyOffSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
         try {
-            sourceProcessor.processSources(
+            srcProcessor.processSources(
                     temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
         } finally {
             detachListAppender(listAppender);
@@ -221,7 +219,7 @@ class SourceProcessorTest {
         // Then
         assertThat(logs).contains("FullyOffSample.java");
         assertThat(logs).contains("JHarmonizer SKIPPED");
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSourceCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
     }
 
     @Test
@@ -231,77 +229,72 @@ class SourceProcessorTest {
         Path customConfigFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
         FlexibleUnifiedConfig externalConfig =
                 JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(customConfigFilePath);
-        SourceProcessor sourceProcessor = new SourceProcessor(externalConfig);
+        SrcProcessor srcProcessor = new SrcProcessor(externalConfig);
 
         // When
-        sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
         // Then
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        assertThat(processedSourceCode.indexOf("interface Alpha"))
-                .isLessThan(processedSourceCode.indexOf("class Sample"));
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        assertThat(processedSrcCode.indexOf("interface Alpha")).isLessThan(processedSrcCode.indexOf("class Sample"));
     }
 
     @Test
-    void processSources_restructureWithBackupsEnabled_createsBackupNextToSource() throws Exception {
+    void processSources_restructureWithBackupsEnabled_createsBackupNextToSrc() throws Exception {
         // Given
-        String unformattedSourceCode = "package demo; public class BackupEnabled {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSourceCode);
-        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SourceProcessor sourceProcessor = new SourceProcessor(new FlexibleUnifiedConfig(null, null, true, null, null));
+        String unformattedSrcCode = "package demo; public class BackupEnabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, true, null, null));
 
         // When
-        sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
         // Then
         Path backupFilePath =
                 javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
         assertThat(backupFilePath).exists();
-        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSourceCode);
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSourceCode);
+        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
     }
 
     @Test
     void processSources_restructureWithBackupsDisabled_doesNotCreateBackup() throws Exception {
         // Given
-        String unformattedSourceCode = "package demo; public class BackupDisabled {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSourceCode);
-        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SourceProcessor sourceProcessor = new SourceProcessor(new FlexibleUnifiedConfig(null, null, false, null, null));
+        String unformattedSrcCode = "package demo; public class BackupDisabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, false, null, null));
 
         // When
-        sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
         // Then
         Path backupFilePath =
                 javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
         assertThat(backupFilePath).doesNotExist();
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSourceCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
     }
 
     @Test
     void processSources_restructureWithNoBackupOverride_doesNotCreateBackup() throws Exception {
         // Given
-        String unformattedSourceCode = "package demo; public class BackupOverrideDisabled {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSourceCode);
-        String originalSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        String unformattedSrcCode = "package demo; public class BackupOverrideDisabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         FlexibleUnifiedConfig effectiveConfig = UnifiedConfigMerger.merge(
                 new FlexibleUnifiedConfig(null, null, true, null, null),
                 new FlexibleUnifiedConfig(null, null, false, null, null));
-        SourceProcessor sourceProcessor = new SourceProcessor(effectiveConfig);
+        SrcProcessor srcProcessor = new SrcProcessor(effectiveConfig);
 
         // When
-        sourceProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
 
         // Then
         Path backupFilePath =
                 javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
         assertThat(backupFilePath).doesNotExist();
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSourceCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
     }
 
     @NonNull
@@ -317,7 +310,7 @@ class SourceProcessorTest {
 
     @NonNull
     private static ListAppender<ILoggingEvent> attachListAppender() {
-        Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
         ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
         listAppender.start();
         logger.addAppender(listAppender);
@@ -325,7 +318,7 @@ class SourceProcessorTest {
     }
 
     private static void detachListAppender(ListAppender<ILoggingEvent> listAppender) {
-        Logger logger = (Logger) LoggerFactory.getLogger(SourceProcessor.class);
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
         logger.detachAppender(listAppender);
         listAppender.stop();
     }
@@ -339,17 +332,16 @@ class SourceProcessorTest {
 
     @NonNull
     private static Path copyScenarioInputToWorkingDirectory(Path temporaryRoot, String scenarioName) {
-        Path sourceInputDirectory =
-                FLOW_LEVEL_FIXTURES_ROOT.resolve(scenarioName).resolve("input");
+        Path srcInputDirectory = FLOW_LEVEL_FIXTURES_ROOT.resolve(scenarioName).resolve("input");
         Path workingDirectory = temporaryRoot.resolve("flow-level").resolve(scenarioName);
-        try (Stream<Path> sourceFiles = Files.list(sourceInputDirectory)) {
+        try (Stream<Path> srcFiles = Files.list(srcInputDirectory)) {
             Files.createDirectories(workingDirectory);
-            sourceFiles.filter(Files::isRegularFile).forEach(sourceFile -> {
-                Path targetFile = workingDirectory.resolve(sourceFile.getFileName());
+            srcFiles.filter(Files::isRegularFile).forEach(srcFile -> {
+                Path targetFile = workingDirectory.resolve(srcFile.getFileName());
                 try {
-                    Files.copy(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(srcFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException exception) {
-                    throw new IllegalStateException("Failed to copy fixture file: " + sourceFile, exception);
+                    throw new IllegalStateException("Failed to copy fixture file: " + srcFile, exception);
                 }
             });
             return workingDirectory;
@@ -378,7 +370,7 @@ class SourceProcessorTest {
                     .sorted(Comparator.comparing(path -> path.getFileName().toString()))
                     .collect(Collectors.toMap(
                             path -> path.getFileName().toString(),
-                            SourceProcessorTest::readSourceFile,
+                            SrcProcessorTest::readSrcFile,
                             (left, right) -> left,
                             java.util.LinkedHashMap::new));
         } catch (IOException exception) {
@@ -387,11 +379,11 @@ class SourceProcessorTest {
     }
 
     @NonNull
-    private static String readSourceFile(Path sourceFile) {
+    private static String readSrcFile(Path srcFile) {
         try {
-            return Files.readString(sourceFile, StandardCharsets.UTF_8);
+            return Files.readString(srcFile, StandardCharsets.UTF_8);
         } catch (IOException exception) {
-            throw new IllegalStateException("Failed to read fixture source file: " + sourceFile, exception);
+            throw new IllegalStateException("Failed to read fixture source file: " + srcFile, exception);
         }
     }
 

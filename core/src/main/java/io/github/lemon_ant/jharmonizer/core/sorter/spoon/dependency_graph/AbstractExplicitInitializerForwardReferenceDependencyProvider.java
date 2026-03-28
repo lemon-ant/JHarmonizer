@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireDeclaringType;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSourceStart;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSrcStart;
 
 import java.util.List;
 import java.util.Objects;
@@ -113,11 +113,11 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
     @NonNull
     private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(CtField<?> referencedField) {
-        int referencedFieldSourceStart = requireSourceStart(referencedField);
+        int referencedFieldSrcStart = requireSrcStart(referencedField);
 
         return referencedField.getDeclaringType().getTypeMembers().stream()
                 .filter(typeMember -> typeMember instanceof CtField<?>)
-                .filter(typeMember -> requireSourceStart(typeMember) < referencedFieldSourceStart)
+                .filter(typeMember -> requireSrcStart(typeMember) < referencedFieldSrcStart)
                 .map(typeMember -> (CtField<?>) typeMember)
                 .filter(this::isSupportedReferrerField)
                 .filter(referrerField -> hasExplicitReferenceTo(referrerField, referencedField))

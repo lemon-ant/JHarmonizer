@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 // TODO Review this
-public class SourceProcessingStats {
+public class SrcProcessingStats {
 
     // Collector for parallel processing
     /**

@@ -4,7 +4,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckAllFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -13,8 +13,8 @@ import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SourceProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings("PMD.GuardLogStatement")
-public final class SourceProcessor {
+public final class SrcProcessor {
 
     private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
     private static final int MAX_TOTAL_PATH_LENGTH = 100;
@@ -41,22 +41,22 @@ public final class SourceProcessor {
     private final Sorter sorter;
 
     /**
-     * Creates a new SourceProcessor.
+     * Creates a new SrcProcessor.
      */
-    public SourceProcessor() {
+    public SrcProcessor() {
         this((FlexibleUnifiedConfig) null);
     }
 
     /**
-     * Primary constructor for SourceProcessor embedded into some wrapper.
+     * Primary constructor for SrcProcessor embedded into some wrapper.
      *
      * @param externalConfig optional external configuration overlay
      */
-    public SourceProcessor(@Nullable FlexibleUnifiedConfig externalConfig) {
+    public SrcProcessor(@Nullable FlexibleUnifiedConfig externalConfig) {
         this(ConfigurationManager.overrideDefaultConfig(externalConfig));
     }
 
-    private SourceProcessor(CompiledConfig compiledConfig) {
+    private SrcProcessor(CompiledConfig compiledConfig) {
         this(
                 compiledConfig,
                 new Formatter(
@@ -94,14 +94,14 @@ public final class SourceProcessor {
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };
 
-        AggregatedProcessingStatistic aggregatedProcessingStatistic = SourceFilesHandler.readJavaFiles(
+        AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
-                .map(flow::processSource)
+                .map(flow::processSrc)
                 .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
                         flowProcessingResult.getPath(),
                         flowProcessingResult.getFlowProcessingStatus().name())))
                 .map(FileProcessingStatistic::convert)
-                .collect(SourceProcessingStats.statsCollector());
+                .collect(SrcProcessingStats.statsCollector());
 
         log.info(aggregatedProcessingStatistic.toString());
         return aggregatedProcessingStatistic;

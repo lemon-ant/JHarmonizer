@@ -140,8 +140,8 @@ class JHarmonizerOptOutCommentUtilities {
      * @return formatted location string
      */
     @NonNull
-    static String formatLocation(@NonNull SrcFile srcFile, @NonNull SourcePosition sourcePosition) {
-        return srcFile.getPath() + ":" + sourcePosition.getLine() + ":" + sourcePosition.getColumn();
+    static String formatLocation(@NonNull SrcFile srcFile, @NonNull SourcePosition srcPosition) {
+        return srcFile.getPath() + ":" + srcPosition.getLine() + ":" + srcPosition.getColumn();
     }
 
     /**
@@ -152,11 +152,11 @@ class JHarmonizerOptOutCommentUtilities {
      * @return formatted location string
      */
     @NonNull
-    static String formatLocation(@NonNull SrcFile srcFile, int sourceOffset) {
+    static String formatLocation(@NonNull SrcFile srcFile, int srcOffset) {
         int line = 1;
         int column = 1;
         String srcCode = srcFile.getSrcCode();
-        for (int index = 0; index < sourceOffset && index < srcCode.length(); index++) {
+        for (int index = 0; index < srcOffset && index < srcCode.length(); index++) {
             if (srcCode.charAt(index) == LINE_FEED) {
                 line++;
                 column = 1;

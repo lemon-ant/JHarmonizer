@@ -38,13 +38,13 @@ final class JHarmonizerOptOutFileScopeResolver {
 
     @Nullable
     private JHarmonizerOptOutMode resolveFileOptOutMode() {
-        if (requiresRawSourceFallback()) {
-            return resolveFromRawSource();
+        if (requiresRawSrcFallback()) {
+            return resolveFromRawSrc();
         }
         return resolveFromAstComments();
     }
 
-    private boolean requiresRawSourceFallback() {
+    private boolean requiresRawSrcFallback() {
         CtCompilationUnit.UNIT_TYPE unitType = compilationUnit.getUnitType();
         if (unitType == CtCompilationUnit.UNIT_TYPE.PACKAGE_DECLARATION
                 || unitType == CtCompilationUnit.UNIT_TYPE.MODULE_DECLARATION) {
@@ -69,7 +69,7 @@ final class JHarmonizerOptOutFileScopeResolver {
     }
 
     @Nullable
-    private JHarmonizerOptOutMode resolveFromRawSource() {
+    private JHarmonizerOptOutMode resolveFromRawSrc() {
         List<FileScopeOptOutCandidate> rawFileComments =
                 JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex(srcFile.getSrcCode()).stream()
                         .map(rawCommentMatch -> new FileScopeOptOutCandidate(

@@ -24,37 +24,37 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class OptOutSourceProcessorIntegrationTest {
+class OptOutSrcProcessorIntegrationTest {
     private static final FlexibleUnifiedConfig OPT_OUT_TEST_CONFIG = createOptOutTestConfig();
 
     @TempDir
     Path temporaryDirectory;
 
     @Test
-    void processSources_fileOptOutOff_keepOriginalSource() throws Exception {
+    void processSources_fileOptOutOff_keepOriginalSrc() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 // @jharmonizer:fully-off
                 import java.util.List;
                 class Z{int b;int a;}
                 class A{}
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
 
         // Then
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSourceCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
     }
 
     @Test
-    void processSources_fileFullyOffWithNestedOverrides_keepOriginalSource() throws Exception {
+    void processSources_fileFullyOffWithNestedOverrides_keepOriginalSrc() throws Exception {
         // Given
         // Keep the nested declarations compact and intentionally out of order so byte-for-byte preservation
         // proves that file-level fully-off ignores nested override directives and extra declarations.
-        String originalSourceCode = """
+        String originalSrcCode = """
                 // @jharmonizer:fully-off
                 class ZuluHelper{static String label(){return "zulu";}}
                 public class Sample{int zebra;
@@ -73,58 +73,58 @@ class OptOutSourceProcessorIntegrationTest {
                 }
                 class AlphaHelper{static String label(){return "alpha";}}
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
 
         // Then
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSourceCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
     }
 
     @Test
     void processSources_fileOptOutSortOff_formatWithoutSortingTopLevelTypes() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 // @jharmonizer:sort-off
                 import java.util.List;
                 class Z{int b;int a;}
                 class A{}
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).doesNotContain("import java.util.List;");
-        assertThat(processedSourceCode).containsSubsequence("class Z", "class A");
-        assertThat(processedSourceCode).contains("int a;").contains("int b;");
+        assertThat(processedSrcCode).doesNotContain("import java.util.List;");
+        assertThat(processedSrcCode).containsSubsequence("class Z", "class A");
+        assertThat(processedSrcCode).contains("int a;").contains("int b;");
     }
 
     @Test
     void processSources_fileMixedCaseSortOffDirective_formatWithoutSortingTopLevelTypes() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 // @JHarmonizer:SoRt-OfF
                 import java.util.List;
                 class Z{int b;int a;}
                 class A{}
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).doesNotContain("import java.util.List;");
-        assertThat(processedSourceCode).containsSubsequence("class Z", "class A");
-        assertThat(processedSourceCode).contains("int a;").contains("int b;");
+        assertThat(processedSrcCode).doesNotContain("import java.util.List;");
+        assertThat(processedSrcCode).containsSubsequence("class Z", "class A");
+        assertThat(processedSrcCode).contains("int a;").contains("int b;");
     }
 
     @Test
@@ -135,23 +135,23 @@ class OptOutSourceProcessorIntegrationTest {
                     // @jharmonizer:fully-off
                     static class Inner{int z;  int a;}
                 """.stripTrailing();
-        String originalSourceCode = """
+        String originalSrcCode = """
                 // @jharmonizer:sort-off
                 class Outer{int b;int a;
                 %s
                 }
                 """.formatted(expectedFullyOffFragment);
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).contains(expectedFullyOffFragment);
-        assertThat(processedSourceCode).contains("static class Inner{int z;  int a;}");
-        assertThat(processedSourceCode).contains("class Outer {");
+        assertThat(processedSrcCode).contains(expectedFullyOffFragment);
+        assertThat(processedSrcCode).contains("static class Inner{int z;  int a;}");
+        assertThat(processedSrcCode).contains("class Outer {");
     }
 
     @Test
@@ -163,7 +163,7 @@ class OptOutSourceProcessorIntegrationTest {
                     int z;   int a;
                 }
                 """;
-        String originalSourceCode = """
+        String originalSrcCode = """
                 class Gamma {}
 
                 /* @jharmonizer:fully-off */
@@ -174,22 +174,22 @@ class OptOutSourceProcessorIntegrationTest {
                 class Delta {}
                 class Alpha {}
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).contains(ignoredFragment);
-        assertThat(processedSourceCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
+        assertThat(processedSrcCode).contains(ignoredFragment);
+        assertThat(processedSrcCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
     }
 
     @Test
     void processSources_topLevelTypeOptOutSortOff_keepTypeBodyOrderButFormatType() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 class Gamma {}
 
                 // @jharmonizer:sort-off
@@ -198,16 +198,16 @@ class OptOutSourceProcessorIntegrationTest {
                 class Delta {}
                 class Alpha {}
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
-        assertThat(processedSourceCode)
+        assertThat(processedSrcCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
+        assertThat(processedSrcCode)
                 .contains("class Beta {\n    int z;\n    int a;\n}")
                 .doesNotContain("class Beta {\n    int a;\n    int z;\n}");
     }
@@ -222,7 +222,7 @@ class OptOutSourceProcessorIntegrationTest {
                         int z;   int a;
                     }
                 """;
-        String originalSourceCode = """
+        String originalSrcCode = """
                 class Outer {
                     int b;
                     int a;
@@ -234,24 +234,22 @@ class OptOutSourceProcessorIntegrationTest {
                     }
                 }
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode).contains(ignoredFragment);
-        assertThat(processedSourceCode)
-                .containsSubsequence("int a;", "int b;")
-                .contains("java.util.List<String> values;");
+        assertThat(processedSrcCode).contains(ignoredFragment);
+        assertThat(processedSrcCode).containsSubsequence("int a;", "int b;").contains("java.util.List<String> values;");
     }
 
     @Test
     void processSources_nestedTypeOptOutSortOff_keepNestedMemberOrderAndFormatType() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 class Outer {
                     int b;
                     int a;
@@ -260,15 +258,15 @@ class OptOutSourceProcessorIntegrationTest {
                     static class Inner{int z;int a;}
                 }
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode)
+        assertThat(processedSrcCode)
                 .containsSubsequence("int a;", "int b;")
                 .contains("static class Inner {\n        int z;\n        int a;\n    }")
                 .doesNotContain("static class Inner {\n        int a;\n        int z;\n    }");
@@ -277,7 +275,7 @@ class OptOutSourceProcessorIntegrationTest {
     @Test
     void processSources_nestedTypeOptOutSortOff_moveNestedTypeWithinParentOrdering() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 class Outer {
                     int z;
 
@@ -287,15 +285,15 @@ class OptOutSourceProcessorIntegrationTest {
                     int a;
                 }
                 """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        sourceProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(processedSourceCode)
+        assertThat(processedSrcCode)
                 .containsSubsequence("static class Inner", "int a;", "int z;")
                 .contains("static class Inner {\n        int z;\n        int a;\n    }");
     }
@@ -303,7 +301,7 @@ class OptOutSourceProcessorIntegrationTest {
     @Test
     void processSources_nestedTypeOptOutOff_failFastReportsParentLevelRelocation() throws Exception {
         // Given
-        String originalSourceCode = """
+        String originalSrcCode = """
                 class Outer {
                     int a;
                     int b;
@@ -312,11 +310,11 @@ class OptOutSourceProcessorIntegrationTest {
                     static class Inner{int z;int a;}
                 }
                 """;
-        writeJavaFile("Sample.java", originalSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor(OPT_OUT_TEST_CONFIG);
+        writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When / Then
-        assertThatThrownBy(() -> sourceProcessor.processSources(
+        assertThatThrownBy(() -> srcProcessor.processSources(
                         temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(NotOrderedException.class)
                 .hasMessageContaining("Outer$Inner expected to relocate UP")

@@ -361,10 +361,10 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @NonNull
-    private Path copyDirectory(Path sourceDirectory, String targetDirectoryName) throws IOException {
+    private Path copyDirectory(Path srcDirectory, String targetDirectoryName) throws IOException {
         Path targetDirectory = temporaryDirectory.resolve(targetDirectoryName);
         Files.createDirectories(targetDirectory);
-        FileUtils.copyDirectory(sourceDirectory.toFile(), targetDirectory.toFile());
+        FileUtils.copyDirectory(srcDirectory.toFile(), targetDirectory.toFile());
         return targetDirectory;
     }
 

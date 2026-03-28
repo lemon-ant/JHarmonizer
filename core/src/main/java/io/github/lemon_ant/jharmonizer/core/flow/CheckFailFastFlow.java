@@ -12,7 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
@@ -42,16 +42,16 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @return the result
      */
     @Override
-    public @NonNull FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+    public @NonNull FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
 
         SortingAndSerializationResult sortingAndSerializationResult =
-                sortAndSerializeOrReuseOriginalSource(srcFile, parsedSpoonAstModel, "sorting checks");
+                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
         List<Pair<CtElement, Integer>> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
@@ -70,12 +70,12 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         }
 
         FormattingResult formattingResult = getFormatter()
-                .formatSource(
+                .formatSrc(
                         sortingAndSerializationResult.getSerializedSrcCode(),
                         srcFile.getPath(),
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                                 sortedSpoonAstModel.getOptOuts(),
-                                sortingAndSerializationResult.getSerializedSourceWithSkippedTypeRanges()));
+                                sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),

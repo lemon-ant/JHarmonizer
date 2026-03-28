@@ -32,9 +32,9 @@ public class SpoonTestCaseUtils {
     public static SpoonAstModel parseAstModelFromJavaFixtureResource(URL javaFixtureResource) {
         requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
 
-        String sourceCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
+        String srcCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
         return SpoonParser.parseJavaSrcFile(
-                createSrcFile(sourceCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
+                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
     }
 
     /**

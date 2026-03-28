@@ -1,15 +1,15 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSourceWithRelease21;
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,26 +25,26 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.params.provider.Arguments;
 
-abstract class AbstractSourceProcessorScenarioE2ETest {
+abstract class AbstractSrcProcessorScenarioE2ETest {
 
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
     private static final Pattern SCENARIO_PREFIX_PATTERN = Pattern.compile("^(\\d+)-.+$");
 
     protected final void processFixtureInputFileMatchesExpectedAndCompileAfter(
-            Path temporaryDirectory, Path scenarioDir, Path sourceFile) throws Exception {
+            Path temporaryDirectory, Path scenarioDir, Path srcFile) throws Exception {
         // Given
         Path fixtureScenario = getFixturesRoot().resolve(scenarioDir);
-        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(sourceFile);
-        Path expectedSourceFile = resolveExpected(fixtureScenario).resolve(sourceFile);
+        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(srcFile);
+        Path expectedSrcFile = resolveExpected(fixtureScenario).resolve(srcFile);
         String scenarioName = scenarioDir.toString();
-        String inputSourceCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
-        String expectedSourceCode = Files.readString(expectedSourceFile, StandardCharsets.UTF_8);
+        String inputSrcCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
+        String expectedSrcCode = Files.readString(expectedSrcFile, StandardCharsets.UTF_8);
 
         Path workingScenarioRoot =
                 temporaryDirectory.resolve(resolveWorkspaceDirectoryName()).resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
-        boolean unchangedFixture = inputSourceCode.equals(expectedSourceCode);
+        boolean unchangedFixture = inputSrcCode.equals(expectedSrcCode);
 
         Path compileBeforeOutput =
                 temporaryDirectory.resolve(resolveCompileBeforeDirectoryName()).resolve(scenarioName);
@@ -52,7 +52,7 @@ abstract class AbstractSourceProcessorScenarioE2ETest {
                 temporaryDirectory.resolve(resolveCompileAfterDirectoryName()).resolve(scenarioName);
 
         JavaCompileTestUtils.CompileResult compileBeforeResult =
-                compileJavaSourceWithRelease21(workingInputFile, compileBeforeOutput);
+                compileJavaSrcWithRelease21(workingInputFile, compileBeforeOutput);
         assertThat(compileBeforeResult.getExitCode())
                 .as(
                         "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
@@ -70,7 +70,7 @@ abstract class AbstractSourceProcessorScenarioE2ETest {
         assertFileProcessingIsDeterministic(fixtureScenario, workingInputFile);
 
         JavaCompileTestUtils.CompileResult compileAfterResult =
-                compileJavaSourceWithRelease21(workingInputFile, compileAfterOutput);
+                compileJavaSrcWithRelease21(workingInputFile, compileAfterOutput);
         assertThat(compileAfterResult.getExitCode())
                 .as(
                         "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
@@ -80,7 +80,7 @@ abstract class AbstractSourceProcessorScenarioE2ETest {
         assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
 
         String workingInputFileSrc = Files.readString(workingInputFile, StandardCharsets.UTF_8);
-        assertThat(workingInputFileSrc).isEqualTo(expectedSourceCode);
+        assertThat(workingInputFileSrc).isEqualTo(expectedSrcCode);
     }
 
     protected final void fixtureScenarioDirectoriesNumberingValidatedHaveUniqueSequentialNumbersWithoutGaps()
@@ -122,13 +122,12 @@ abstract class AbstractSourceProcessorScenarioE2ETest {
         Comparator<Path> fixtureExecutionOrder = Comparator.comparing(
                         this::resolveScenarioDirectoryName, Comparator.reverseOrder())
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
-        return SourceFilesHandler.findJavaFiles(
-                        getFixturesRoot(), List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
+        return SrcFilesHandler.findJavaFiles(getFixturesRoot(), List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
                 .sorted(fixtureExecutionOrder)
                 .map(fixtureInputFile -> {
                     Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
-                    Path sourceFile = fixtureInputFile.getFileName();
-                    return Arguments.of(scenarioDir, sourceFile);
+                    Path srcFile = fixtureInputFile.getFileName();
+                    return Arguments.of(scenarioDir, srcFile);
                 });
     }
 
@@ -204,22 +203,22 @@ abstract class AbstractSourceProcessorScenarioE2ETest {
                 .doesNotThrowAnyException();
     }
 
-    private void runProcessorForSingleFile(Path sourceFilePath, Optional<Path> scenarioConfigPath, FlowType flowType) {
-        SourceProcessor sourceProcessor = buildSourceProcessor(scenarioConfigPath);
-        sourceProcessor.processSources(
-                sourceFilePath.getParent(), List.of(sourceFilePath.getFileName().toString()), List.of(), flowType);
+    private void runProcessorForSingleFile(Path srcFilePath, Optional<Path> scenarioConfigPath, FlowType flowType) {
+        SrcProcessor srcProcessor = buildSrcProcessor(scenarioConfigPath);
+        srcProcessor.processSources(
+                srcFilePath.getParent(), List.of(srcFilePath.getFileName().toString()), List.of(), flowType);
     }
 
     @NonNull
-    private static SourceProcessor buildSourceProcessor(Optional<Path> scenarioConfigPath) {
+    private static SrcProcessor buildSrcProcessor(Optional<Path> scenarioConfigPath) {
         if (scenarioConfigPath.isEmpty()) {
-            return new SourceProcessor();
+            return new SrcProcessor();
         }
 
         FlexibleUnifiedConfig flexibleConfig =
                 JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
                         E2EFileUtils.toUrl(scenarioConfigPath.orElseThrow()));
-        return new SourceProcessor(flexibleConfig);
+        return new SrcProcessor(flexibleConfig);
     }
 
     @NonNull

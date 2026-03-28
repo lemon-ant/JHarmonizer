@@ -16,11 +16,11 @@ class JavaRunMainTestUtils {
 
     private static final String TEST_RUN_PREFIX = "test-run-";
 
-    static RunResult runJavaMainMethod(@NonNull Path sourceFilePath, @NonNull Path classesOutputDirectoryPath)
+    static RunResult runJavaMainMethod(@NonNull Path srcFilePath, @NonNull Path classesOutputDirectoryPath)
             throws IOException, InterruptedException {
-        E2EFileUtils.requireRegularFile(sourceFilePath, "Expected Java source file to run main method from, but got: ");
+        E2EFileUtils.requireRegularFile(srcFilePath, "Expected Java source file to run main method from, but got: ");
 
-        String className = resolveClassName(sourceFilePath);
+        String className = resolveClassName(srcFilePath);
         List<String> command = List.of("java", "-cp", classesOutputDirectoryPath.toString(), className);
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         String javaOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);

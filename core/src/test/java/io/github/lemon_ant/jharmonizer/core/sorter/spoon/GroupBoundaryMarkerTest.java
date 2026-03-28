@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils;
 import java.net.URL;
 import java.util.List;
 import lombok.NonNull;
@@ -39,13 +39,13 @@ class GroupBoundaryMarkerTest {
         GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
 
         // Then
-        assertThat(alphaFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
+        assertThat(alphaFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
                 .isEqualTo("Header fields");
-        assertThat(bravoFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
+        assertThat(bravoFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
-        assertThat(charlieMethodMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
-                .isEqualTo(SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
-        assertThat(deltaMethodMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
+        assertThat(charlieMethodMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
+                .isEqualTo(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
+        assertThat(deltaMethodMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
     }
 
@@ -63,7 +63,7 @@ class GroupBoundaryMarkerTest {
         GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
 
         // Then
-        assertThat(alphaFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
+        assertThat(alphaFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
     }
 

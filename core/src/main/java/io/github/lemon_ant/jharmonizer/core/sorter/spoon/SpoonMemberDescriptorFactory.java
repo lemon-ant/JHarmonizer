@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
@@ -61,7 +61,7 @@ class SpoonMemberDescriptorFactory {
      */
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
-        return streamExplicitSourceTypeMembers(type)
+        return streamExplicitSrcTypeMembers(type)
                 .collect(Collectors.toUnmodifiableMap(
                         Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }

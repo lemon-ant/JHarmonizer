@@ -13,9 +13,9 @@ import spoon.reflect.declaration.CtType;
 class JHarmonizerOptOutResolverTest {
 
     @Test
-    void parseJavaSourceResource_fileOptOutBeforePackage_resolveFileOptOutOff() {
+    void parseJavaSrcResource_fileOptOutBeforePackage_resolveFileOptOutOff() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 // @jharmonizer:fully-off
                 package demo;
 
@@ -23,16 +23,16 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
     }
 
     @Test
-    void parseJavaSourceResource_fileOptOutBetweenPackageAndImport_resolveFileSortOffOptOut() {
+    void parseJavaSrcResource_fileOptOutBetweenPackageAndImport_resolveFileSortOffOptOut() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 package demo;
 
                 /* @jharmonizer:sort-off */
@@ -42,16 +42,16 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
     }
 
     @Test
-    void parseJavaSourceResource_typeOptOutBeforeAnnotatedTopLevelType_resolveTypeOptOut() {
+    void parseJavaSrcResource_typeOptOutBeforeAnnotatedTopLevelType_resolveTypeOptOut() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 package demo;
 
                 // @jharmonizer:fully-off
@@ -60,7 +60,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst();
 
@@ -69,9 +69,9 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_typeOptOutBeforeNestedType_resolveNestedTypeOptOut() {
+    void parseJavaSrcResource_typeOptOutBeforeNestedType_resolveNestedTypeOptOut() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 package demo;
 
                 class Outer {
@@ -81,7 +81,7 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Outer.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Outer.java")));
         CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
         CtType<?> outerType = compilationUnit.getDeclaredTypes().getFirst();
         CtType<?> nestedType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
@@ -92,7 +92,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_packageInfoFullyOffBeforeJavadoc_resolveFileOptOutOff() {
+    void parseJavaSrcResource_packageInfoFullyOffBeforeJavadoc_resolveFileOptOutOff() {
         // Given
         String srcCode = """
                 // @jharmonizer:fully-off
@@ -112,7 +112,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_packageInfoFullyOffThenSortOff_resolveFileFullyOff() {
+    void parseJavaSrcResource_packageInfoFullyOffThenSortOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
                 // @jharmonizer:fully-off
@@ -133,7 +133,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_moduleInfoFullyOffThenSortOff_resolveFileFullyOff() {
+    void parseJavaSrcResource_moduleInfoFullyOffThenSortOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
                 // @jharmonizer:fully-off
@@ -152,7 +152,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_commentOnlyFullyOff_resolveFileFullyOff() {
+    void parseJavaSrcResource_commentOnlyFullyOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
                 // @jharmonizer:fully-off
@@ -168,7 +168,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_commentOnlyIndentedLineDirectiveFullyOff_resolveFileFullyOff() {
+    void parseJavaSrcResource_commentOnlyIndentedLineDirectiveFullyOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
                 //     @jharmonizer:fully-off
@@ -184,7 +184,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_blockDirectiveWithLeadingNewline_resolveFileSortOff() {
+    void parseJavaSrcResource_blockDirectiveWithLeadingNewline_resolveFileSortOff() {
         // Given
         String srcCode = """
                 package demo;
@@ -206,9 +206,9 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
+    void parseJavaSrcResource_memberOptOutBeforeField_ignoreInvalidOptOut() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 package demo;
 
                 class Sample {
@@ -218,16 +218,16 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
     }
 
     @Test
-    void parseJavaSourceResource_unsupportedOptOutToken_ignoreInvalidOptOut() {
+    void parseJavaSrcResource_unsupportedOptOutToken_ignoreInvalidOptOut() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 package demo;
 
                 // @jharmonizer:format-off
@@ -235,22 +235,22 @@ class JHarmonizerOptOutResolverTest {
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
     }
 
     @Test
-    void parseJavaSourceResource_mixedCaseOptOutToken_resolveIgnoringCase() {
+    void parseJavaSrcResource_mixedCaseOptOutToken_resolveIgnoringCase() {
         // Given
-        String sourceCode = """
+        String srcCode = """
                 // @JHarmonizer:SoRt-OfF
                 class Sample {}
                 """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(sourceCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
@@ -322,7 +322,7 @@ class JHarmonizerOptOutResolverTest {
     }
 
     @Test
-    void parseJavaSourceResource_legacyOffAlias_ignoreInvalidOptOut() {
+    void parseJavaSrcResource_legacyOffAlias_ignoreInvalidOptOut() {
         // Given
         String srcCode = """
                 // @jharmonizer:off

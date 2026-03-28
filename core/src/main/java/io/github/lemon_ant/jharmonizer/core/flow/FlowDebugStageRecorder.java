@@ -71,9 +71,7 @@ final class FlowDebugStageRecorder {
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     void recordSrcStage(
-            @NonNull Path fileName,
-            @NonNull FlowDebugStageRecorder.SrcFlowStage stage,
-            @NonNull String javaSourceText) {
+            @NonNull Path fileName, @NonNull FlowDebugStageRecorder.SrcFlowStage stage, @NonNull String javaSrcText) {
         if (!enabled) {
             return;
         }
@@ -88,7 +86,7 @@ final class FlowDebugStageRecorder {
         Path outputFile = flowOutputDirectory.resolve(outputFileName);
 
         try {
-            Files.writeString(outputFile, javaSourceText, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+            Files.writeString(outputFile, javaSrcText, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
             log.debug("Saved debug stage: {}", outputFile.toAbsolutePath());
         } catch (IOException ioException) {
             throw new UncheckedIOException("Failed to write debug stage file: " + outputFile, ioException);

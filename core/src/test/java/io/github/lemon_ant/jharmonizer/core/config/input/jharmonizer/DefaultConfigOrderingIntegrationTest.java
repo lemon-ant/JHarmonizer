@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.SourceProcessor;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URL;
@@ -24,33 +24,32 @@ class DefaultConfigOrderingIntegrationTest {
     @Test
     void applyEmbeddedDefaultConfig_sampleAllJava21FeaturesList_matchExpectedOrdering() throws Exception {
         // Given
-        String sampleSourceCode =
+        String sampleSrcCode =
                 TestCaseResourceUtils.readClasspathResourceAsString(Constants.SAMPLE_ALL_JAVA21_RESOURCE_URL);
-        Path javaFilePath = writeJavaFile(temporaryDirectory, Constants.SAMPLE_ALL_JAVA21_FILE_NAME, sampleSourceCode);
-        SourceProcessor sourceProcessor = new SourceProcessor();
+        Path javaFilePath = writeJavaFile(temporaryDirectory, Constants.SAMPLE_ALL_JAVA21_FILE_NAME, sampleSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        sourceProcessor.processSources(
+        srcProcessor.processSources(
                 temporaryDirectory, Constants.INCLUDE_ALL_JAVA_FILES, Constants.EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
-        String processedSourceCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
         int publicStaticMainMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PUBLIC_STATIC_MAIN_METHOD_FRAGMENT);
-        int publicConstructorIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PUBLIC_CONSTRUCTOR_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PUBLIC_STATIC_MAIN_METHOD_FRAGMENT);
+        int publicConstructorIndex = requireSrcFragmentIndex(processedSrcCode, Constants.PUBLIC_CONSTRUCTOR_FRAGMENT);
         int publicAssertionTestMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT);
         int publicEnhancedForLoopMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PUBLIC_ENHANCED_FOR_LOOP_METHOD_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PUBLIC_ENHANCED_FOR_LOOP_METHOD_FRAGMENT);
         int publicRecordPersonIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PUBLIC_RECORD_PERSON_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PUBLIC_RECORD_PERSON_FRAGMENT);
         int publicInterfaceDefaultMethodIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PUBLIC_INTERFACE_DEFAULT_METHOD_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PUBLIC_INTERFACE_DEFAULT_METHOD_FRAGMENT);
         int packagePrivateInnerClassIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PACKAGE_PRIVATE_INNER_CLASS_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PACKAGE_PRIVATE_INNER_CLASS_FRAGMENT);
         int packagePrivateStaticNestedClassIndex =
-                requireSourceFragmentIndex(processedSourceCode, Constants.PACKAGE_PRIVATE_STATIC_NESTED_CLASS_FRAGMENT);
+                requireSrcFragmentIndex(processedSrcCode, Constants.PACKAGE_PRIVATE_STATIC_NESTED_CLASS_FRAGMENT);
 
         assertThat(publicStaticMainMethodIndex)
                 .as("Default config should place public static methods before public constructors")
@@ -72,12 +71,12 @@ class DefaultConfigOrderingIntegrationTest {
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 
-    private static int requireSourceFragmentIndex(String sourceCode, String sourceFragment) {
-        int sourceFragmentIndex = sourceCode.indexOf(sourceFragment);
-        if (sourceFragmentIndex < 0) {
-            throw new IllegalStateException("Source fragment not found: " + sourceFragment);
+    private static int requireSrcFragmentIndex(String srcCode, String srcFragment) {
+        int srcFragmentIndex = srcCode.indexOf(srcFragment);
+        if (srcFragmentIndex < 0) {
+            throw new IllegalStateException("Source fragment not found: " + srcFragment);
         }
-        return sourceFragmentIndex;
+        return srcFragmentIndex;
     }
 
     private static final class Constants {
