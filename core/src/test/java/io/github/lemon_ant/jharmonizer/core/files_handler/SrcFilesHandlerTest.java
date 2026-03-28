@@ -78,14 +78,14 @@ class SrcFilesHandlerTest {
     @Test
     void overwrite_existingFile_replacesFileContent() throws IOException {
         // Given
-        Path srcFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SrcFile srcFile = new SrcFile("new content", srcFile);
+        Path srcPath = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
+        SrcFile srcFile = new SrcFile("new content", srcPath);
 
         // When
         SrcFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
 
         // Then
-        String newText = Files.readString(srcFile);
+        String newText = Files.readString(srcPath);
         assertThat(newText).isEqualTo("new content");
     }
 }
