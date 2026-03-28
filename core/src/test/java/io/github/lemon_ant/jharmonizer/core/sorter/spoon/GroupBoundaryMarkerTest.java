@@ -21,7 +21,7 @@ class GroupBoundaryMarkerTest {
     @Test
     void markGroupBoundaries_groupsContainMembers_writeMetadataOnlyToFirstMemberOfEachNonEmptyGroup() {
         // Given
-        CtType<?> parsedMainType = parseMainType();
+        CtType<?> parsedMainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
         CtTypeMember alphaFieldMember =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "alpha");
         CtTypeMember bravoFieldMember =
@@ -44,7 +44,7 @@ class GroupBoundaryMarkerTest {
         assertThat(bravoFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
         assertThat(charlieMethodMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
-                .isEqualTo("");
+                .isEqualTo(SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
         assertThat(deltaMethodMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
     }
@@ -52,7 +52,7 @@ class GroupBoundaryMarkerTest {
     @Test
     void markGroupBoundaries_groupIsEmpty_skipSeparatorMetadataEmission() {
         // Given
-        CtType<?> parsedMainType = parseMainType();
+        CtType<?> parsedMainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
         CtTypeMember alphaFieldMember =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "alpha");
         List<MemberGroupBlock> orderedBlocks = List.of(
@@ -65,11 +65,6 @@ class GroupBoundaryMarkerTest {
         // Then
         assertThat(alphaFieldMember.getMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
-    }
-
-    @NonNull
-    private static CtType<?> parseMainType() {
-        return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
     }
 
     @NonNull
