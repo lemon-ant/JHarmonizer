@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class SelfTypeClassLiteralLoggerFactorySample {
-
     private static final Object logger = SelfLoggerFactory.resolve(SelfTypeClassLiteralLoggerFactorySample.class);
 
     private static final String message = "ok";
