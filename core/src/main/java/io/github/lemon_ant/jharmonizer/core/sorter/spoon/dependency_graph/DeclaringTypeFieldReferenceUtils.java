@@ -55,7 +55,7 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .flatMap(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration()).stream())
+                .map(fieldAccess -> fieldAccess.getVariable().getDeclaration())
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -70,7 +70,7 @@ class DeclaringTypeFieldReferenceUtils {
     static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class)
-                .flatMap(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration()).stream())
+                .map(fieldAccess -> fieldAccess.getVariable().getDeclaration())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -84,7 +84,7 @@ class DeclaringTypeFieldReferenceUtils {
     static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
-                .flatMap(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration()).stream())
+                .map(fieldAccess -> fieldAccess.getVariable().getDeclaration())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
