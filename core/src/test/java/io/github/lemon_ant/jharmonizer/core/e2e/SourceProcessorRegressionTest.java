@@ -6,7 +6,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Optional;
 import lombok.NonNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,7 +27,6 @@ class SourceProcessorRegressionTest extends AbstractSourceProcessorScenarioE2ETe
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
-    @Disabled
     void processFixtureInputFile_matchesExpectedAndCompileAfter(Path scenarioDir, Path sourceFile) throws Exception {
         processFixtureInputFileMatchesExpectedAndCompileAfter(temporaryDirectory, scenarioDir, sourceFile);
     }
