@@ -80,7 +80,10 @@ final class InitializationOrderDependencyUtils {
 
         String typeQualifiedName = field.getType().getQualifiedName();
         boolean isPrimitiveOrString = field.getType().isPrimitive() || "java.lang.String".equals(typeQualifiedName);
-        return isPrimitiveOrString && defaultExpression.partiallyEvaluate() instanceof CtLiteral<?>;
+        return isPrimitiveOrString
+                && DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(defaultExpression)
+                        .map(foldedExpression -> foldedExpression instanceof CtLiteral<?>)
+                        .orElse(false);
     }
 
     /**
