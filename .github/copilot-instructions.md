@@ -124,6 +124,8 @@
 - Use explicit scenario folder names instead of generic names such as `example/`.
 - Prefer resource fixtures under `src/test/resources/test-cases/**` over large inline YAML or Java strings embedded directly in test classes.
 - Do not keep non-trivial multi-line textual fixtures such as YAML, JSON, XML, Java source, or long expected-output snippets inline in test code.
+- Do not write large fixture content as inline string literals and then persist it to temp files during test setup.
+- Store original, expected, and config fixture files under `src/test/resources/test-cases/**`, then copy or read them via test resource helpers.
 - Store those fixtures under `src/test/resources/test-cases/**` and load them through shared helpers such as `TestCaseResourceUtils`.
 - Only tiny one-off inline snippets are acceptable when extracting a file would hurt readability.
 - For formatter-focused fixtures under `src/test/resources/test-cases/**`, keep `input/` resources valid but intentionally not already formatted like `expected/`, so the scenario demonstrates a real formatter rewrite.

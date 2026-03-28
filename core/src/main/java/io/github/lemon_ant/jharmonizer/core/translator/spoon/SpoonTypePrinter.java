@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -147,25 +146,14 @@ final class SpoonTypePrinter {
         }
         boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter(member);
 
-        Optional<String> groupHeaderMetadata =
-                Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA)).map(Object::toString);
-        boolean hasMatchingLeadingHeaderComment = groupHeaderMetadata
-                .filter(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
-                .map(groupHeader -> hasMatchingLeadingComment(member, groupHeader))
-                .orElse(false);
-        groupHeaderMetadata.ifPresent(groupHeader -> {
-            if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
-                if (hasSeparatorAlreadyPrinted) {
-                    return;
-                }
+        String groupHeader = findGroupHeader(member);
+        if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
+            if (!hasSeparatorAlreadyPrinted) {
                 tokenWriter.writeln();
-                return;
             }
-            if (hasMatchingLeadingHeaderComment) {
-                return;
-            }
+        } else if (groupHeader != null && !hasMatchingLeadingComment(member, groupHeader)) {
             tokenWriter.writeCodeSnippet("// " + groupHeader).writeln();
-        });
+        }
 
         if (member instanceof CtType<?> typeMember) {
             printType(typeMember);
@@ -187,6 +175,15 @@ final class SpoonTypePrinter {
                         < member.getPosition().getLine())
                 .map(comment -> comment.getContent().trim())
                 .anyMatch(groupHeader::equals);
+    }
+
+    @Nullable
+    private static String findGroupHeader(CtTypeMember member) {
+        Object groupHeaderMetadata = member.getMetadata(GROUP_HEADER_METADATA);
+        if (groupHeaderMetadata == null) {
+            return null;
+        }
+        return groupHeaderMetadata.toString();
     }
 
     @SuppressWarnings("PMD.NullAssignment")
