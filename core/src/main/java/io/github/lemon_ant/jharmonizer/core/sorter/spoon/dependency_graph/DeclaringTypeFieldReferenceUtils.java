@@ -55,7 +55,7 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .map(fieldAccess -> fieldAccess.getVariable().getDeclaration())
+                .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -70,7 +70,7 @@ class DeclaringTypeFieldReferenceUtils {
     static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class)
-                .map(fieldAccess -> fieldAccess.getVariable().getDeclaration())
+                .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -84,7 +84,7 @@ class DeclaringTypeFieldReferenceUtils {
     static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
-                .map(fieldAccess -> fieldAccess.getVariable().getDeclaration())
+                .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -109,7 +109,8 @@ class DeclaringTypeFieldReferenceUtils {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
-                .filter(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration())
+                .filter(fieldAccess -> Optional.ofNullable(
+                                fieldAccess.getVariable().getDeclaration())
                         .map(field -> isFieldDeclaredInType(field, declaringType))
                         .orElse(false));
     }
