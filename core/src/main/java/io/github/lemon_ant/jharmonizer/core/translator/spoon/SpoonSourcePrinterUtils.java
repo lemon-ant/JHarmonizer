@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtField;
@@ -14,6 +15,7 @@ import spoon.reflect.declaration.CtTypeMember;
 public class SpoonSourcePrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
+    public static final String GROUP_SEPARATOR_NEW_LINE = "\n";
 
     /**
      * Detects the dominant line separator.
@@ -94,14 +96,30 @@ public class SpoonSourcePrinterUtils {
         // Has annotations on the member
         boolean hasAnnotations = !member.getAnnotations().isEmpty();
 
+        if (hasAnnotations) {
+            return true;
+        }
+        // Add the separator in any way if it's not field
+        boolean isNotField = !(member instanceof CtField);
+
+        if (!first && isNotField) {
+            return true;
+        }
+
         // Has comments above
         boolean hasCommentsAbove = member.getComments().stream()
                 .anyMatch(comment -> comment.getPosition().getEndLine()
                         < member.getPosition().getLine());
 
-        // Add the separator in any way if it's not field
-        boolean isNotField = !(member instanceof CtField);
+        if (hasCommentsAbove) {
+            return true;
+        }
 
-        return hasAnnotations || hasCommentsAbove || !first && isNotField;
+        Optional<String> groupHeaderMetadata =
+                Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA)).map(Object::toString);
+
+        return groupHeaderMetadata
+                .map(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
+                .orElse(false);
     }
 }

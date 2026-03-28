@@ -25,7 +25,8 @@ import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class SpoonSorterTopLevelTypesOrderingTest {
-    private static final String FIXTURES_RESOURCE_ROOT = "/test-cases/core/sorter/spoon/top-level-types-ordering/";
+    private static final String FIXTURES_RESOURCE_ROOT =
+            "/test-cases/core/sorter/spoon/top-level-types-ordering/valid/";
     private static final URL FIXTURES_RESOURCE_ROOT_URL =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE_ROOT);
 

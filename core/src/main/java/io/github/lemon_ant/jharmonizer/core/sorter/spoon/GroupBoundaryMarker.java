@@ -7,6 +7,7 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
+import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Default marker:
@@ -26,18 +27,20 @@ class GroupBoundaryMarker {
                 .map(memberGroupBlock -> Pair.of(
                         memberGroupBlock.getTypeMembers().getFirst(),
                         switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
-                            case UnifiedSeparator.NEW_LINE -> "";
+                            case UnifiedSeparator.NEW_LINE -> SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE;
                             case UnifiedSeparator.HEADER ->
                                 Optional.ofNullable(memberGroupBlock
                                                 .getCompiledMemberGroup()
                                                 .getName())
-                                        .orElse("");
+                                        .orElse(SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
                             case UnifiedSeparator.NONE -> null;
                         }))
                 .filter(firstMemberAndSeparatorText -> firstMemberAndSeparatorText.getValue() != null)
-                .forEach(firstMemberAndSeparatorText -> firstMemberAndSeparatorText
-                        .getKey()
-                        .putMetadata(
-                                SpoonSourcePrinterUtils.GROUP_HEADER_METADATA, firstMemberAndSeparatorText.getValue()));
+                .forEach(firstMemberAndSeparatorText -> writeGroupBoundaryMetadata(
+                        firstMemberAndSeparatorText.getKey(), firstMemberAndSeparatorText.getValue()));
+    }
+
+    private static void writeGroupBoundaryMetadata(CtTypeMember firstMember, String separatorText) {
+        firstMember.putMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA, separatorText);
     }
 }

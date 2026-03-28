@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.GROUP_HEADER_METADATA;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils.needsSeparatorBefore;
 
@@ -138,20 +139,32 @@ final class SpoonTypePrinter {
             boolean first,
             boolean previousElementNeedSeparatorAfter) {
         // TODO Check Orphaned comments
+
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
-        if (needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter) {
+        boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
+        if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();
         }
         boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter(member);
 
         Optional<String> groupHeaderMetadata =
                 Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA)).map(Object::toString);
+        boolean hasMatchingLeadingHeaderComment = groupHeaderMetadata
+                .filter(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
+                .map(groupHeader -> hasMatchingLeadingComment(member, groupHeader))
+                .orElse(false);
         groupHeaderMetadata.ifPresent(groupHeader -> {
-            if (!groupHeader.isEmpty()) {
-                tokenWriter.writeCodeSnippet("// " + groupHeader).writeln();
-            } else {
+            if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
+                if (hasSeparatorAlreadyPrinted) {
+                    return;
+                }
                 tokenWriter.writeln();
+                return;
             }
+            if (hasMatchingLeadingHeaderComment) {
+                return;
+            }
+            tokenWriter.writeCodeSnippet("// " + groupHeader).writeln();
         });
 
         if (member instanceof CtType<?> typeMember) {
@@ -166,6 +179,14 @@ final class SpoonTypePrinter {
                 .orElse(member.getPosition().getSourceEnd() + 1);
         printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
         return currentElementNeedsSeparatorAfter;
+    }
+
+    private static boolean hasMatchingLeadingComment(CtTypeMember member, String groupHeader) {
+        return member.getComments().stream()
+                .filter(comment -> comment.getPosition().getEndLine()
+                        < member.getPosition().getLine())
+                .map(comment -> comment.getContent().trim())
+                .anyMatch(groupHeader::equals);
     }
 
     @SuppressWarnings("PMD.NullAssignment")

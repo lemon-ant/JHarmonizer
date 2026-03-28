@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class SeparatorScenario {
+
     // Header fields
     int a = 1;
     int z = 2;
