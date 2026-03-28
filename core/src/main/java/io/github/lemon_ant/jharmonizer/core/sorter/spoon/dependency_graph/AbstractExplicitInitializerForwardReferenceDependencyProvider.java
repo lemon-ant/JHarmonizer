@@ -131,9 +131,15 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
             return true;
         }
 
-        CtExpression<?> foldedExpression = defaultExpression.partiallyEvaluate();
-        return isUnaryMinusZeroLiteral(foldedExpression)
-                || castLiteralExpression(foldedExpression)
+        Optional<CtExpression<?>> foldedExpression =
+                DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(defaultExpression);
+        if (foldedExpression.isEmpty()) {
+            return false;
+        }
+
+        CtExpression<?> evaluatedExpression = foldedExpression.get();
+        return isUnaryMinusZeroLiteral(evaluatedExpression)
+                || castLiteralExpression(evaluatedExpression)
                         .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
                         .orElse(false);
     }

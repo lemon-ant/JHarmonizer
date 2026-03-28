@@ -8,6 +8,7 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExecutableReferenceExpression;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -20,6 +21,7 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
+import spoon.support.SpoonClassNotFoundException;
 
 @UtilityClass
 class DeclaringTypeFieldReferenceUtils {
@@ -85,6 +87,21 @@ class DeclaringTypeFieldReferenceUtils {
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
                 .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * Attempts to partially evaluate an expression without failing on missing runtime classes.
+     *
+     * @param expression the expression to evaluate
+     * @return partially evaluated expression, or empty when Spoon cannot resolve required classes
+     */
+    @NonNull
+    static Optional<CtExpression<?>> findPartiallyEvaluatedExpression(@NonNull CtExpression<?> expression) {
+        try {
+            return Optional.of(expression.partiallyEvaluate());
+        } catch (SpoonClassNotFoundException ignored) {
+            return Optional.empty();
+        }
     }
 
     @NonNull
