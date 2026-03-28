@@ -14,8 +14,8 @@ import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
+import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.Map;
 import java.util.Optional;
@@ -47,16 +47,16 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected final SortingAndSerializationResult sortAndSerializeOrReuseOriginalSource(
+    protected final SortingAndSerializationResult sortAndSerializeOrReuseOriginalSrc(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull String skippedOperationDescription) {
         Optional<JHarmonizerOptOutMode> fileOptOutMode =
                 parsedSpoonAstModel.getOptOuts().getFileOptOutMode();
-        boolean reuseOriginalSource = fileOptOutMode
+        boolean reuseOriginalSrc = fileOptOutMode
                 .map(mode -> mode == JHarmonizerOptOutMode.FULLY_OFF || mode == JHarmonizerOptOutMode.SORTING_OFF)
                 .orElse(false);
-        if (reuseOriginalSource) {
+        if (reuseOriginalSrc) {
             JHarmonizerOptOutMode reuseMode = fileOptOutMode.orElseThrow();
             logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
             String originalSrcCode = srcFile.getSrcCode();
@@ -64,7 +64,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
                     new SerializationResult(
                             new SerializationStatistic(originalSrcCode.length(), 0),
-                            new SerializedSourceWithSkippedTypeRanges(
+                            new SerializedSrcWithSkippedTypeRanges(
                                     originalSrcCode,
                                     reuseMode == JHarmonizerOptOutMode.SORTING_OFF
                                             ? OptOutFormattingRangeResolver.resolveFullyOffTypeRanges(
@@ -74,7 +74,7 @@ abstract class AbstractOptOutFlow implements IFlow {
         }
 
         SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
-        SerializationResult serializationResult = SourceAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+        SerializationResult serializationResult = SrcAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
         return new SortingAndSerializationResult(sortingResult, serializationResult, false);
     }
 
@@ -87,22 +87,22 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the combined sorting and formatting pipeline result
      */
     @NonNull
-    protected final SortingSerializationAndFormattingResult sortSerializeAndFormatSource(
+    protected final SortingSerializationAndFormattingResult sortSerializeAndFormatSrc(
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
         SortingAndSerializationResult sortingAndSerializationResult =
-                sortAndSerializeOrReuseOriginalSource(srcFile, parsedSpoonAstModel, sortingDescription);
+                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, sortingDescription);
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
                         sortingAndSerializationResult.getSerializedSrcCode());
         FormattingResult formattingResult = getFormatter()
-                .formatSource(
+                .formatSrc(
                         sortingAndSerializationResult.getSerializedSrcCode(),
                         srcFile.getPath(),
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                                 parsedSpoonAstModel.getOptOuts(),
-                                sortingAndSerializationResult.getSerializedSourceWithSkippedTypeRanges()));
+                                sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
@@ -165,13 +165,13 @@ abstract class AbstractOptOutFlow implements IFlow {
         }
 
         @NonNull
-        SerializedSourceWithSkippedTypeRanges getSerializedSourceWithSkippedTypeRanges() {
-            return serializationResult.getSerializedSourceWithSkippedTypeRanges();
+        SerializedSrcWithSkippedTypeRanges getSerializedSrcWithSkippedTypeRanges() {
+            return serializationResult.getSerializedSrcWithSkippedTypeRanges();
         }
 
         @NonNull
         String getSerializedSrcCode() {
-            return getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode();
+            return getSerializedSrcWithSkippedTypeRanges().getSerializedSrcCode();
         }
     }
 

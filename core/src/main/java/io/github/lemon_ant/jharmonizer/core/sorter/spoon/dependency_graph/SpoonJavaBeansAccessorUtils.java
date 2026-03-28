@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static java.beans.Introspector.decapitalize;
 import static java.util.Objects.requireNonNull;
 
@@ -49,7 +49,7 @@ class SpoonJavaBeansAccessorUtils {
                 "Expected CtMethod to have a declaring type, but it is detached from the Spoon model. methodName="
                         + accessorMethod.getSimpleName());
 
-        return streamExplicitSourceTypeMembers(declaringType)
+        return streamExplicitSrcTypeMembers(declaringType)
                 .filter(typeMember -> typeMember instanceof CtMethod<?>)
                 .map(typeMember -> (CtMethod<?>) typeMember)
                 .filter(candidateMethod -> candidateMethod != accessorMethod)

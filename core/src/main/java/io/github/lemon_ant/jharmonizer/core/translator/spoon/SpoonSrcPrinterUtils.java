@@ -12,7 +12,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * and deciding whether a member group separator is needed before or after a given member.
  */
 @UtilityClass
-public class SpoonSourcePrinterUtils {
+public class SpoonSrcPrinterUtils {
 
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
     public static final String GROUP_SEPARATOR_NEW_LINE = "\n";
@@ -25,8 +25,8 @@ public class SpoonSourcePrinterUtils {
      */
     @NonNull
     @SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidReassigningLoopVariables"})
-    static String detectDominantLineSeparator(@NonNull String source) {
-        if (source.isEmpty()) {
+    static String detectDominantLineSeparator(@NonNull String src) {
+        if (src.isEmpty()) {
             return System.lineSeparator();
         }
 
@@ -34,12 +34,12 @@ public class SpoonSourcePrinterUtils {
         int lfCount = 0;
         int crCount = 0;
 
-        for (int index = 0; index < source.length(); index++) {
-            char currentChar = source.charAt(index);
+        for (int index = 0; index < src.length(); index++) {
+            char currentChar = src.charAt(index);
 
             if (currentChar == '\r') {
-                boolean hasNextChar = (index + 1) < source.length();
-                if (hasNextChar && source.charAt(index + 1) == '\n') {
+                boolean hasNextChar = (index + 1) < src.length();
+                if (hasNextChar && src.charAt(index + 1) == '\n') {
                     crlfCount++;
                     index++; // skip '\n' in CRLF
                 } else {

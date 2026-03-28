@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSourcePrinterUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
@@ -27,12 +27,12 @@ class GroupBoundaryMarker {
                 .map(memberGroupBlock -> Pair.of(
                         memberGroupBlock.getTypeMembers().getFirst(),
                         switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
-                            case UnifiedSeparator.NEW_LINE -> SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE;
+                            case UnifiedSeparator.NEW_LINE -> SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
                             case UnifiedSeparator.HEADER ->
                                 Optional.ofNullable(memberGroupBlock
                                                 .getCompiledMemberGroup()
                                                 .getName())
-                                        .orElse(SpoonSourcePrinterUtils.GROUP_SEPARATOR_NEW_LINE);
+                                        .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
                             case UnifiedSeparator.NONE -> null;
                         }))
                 .filter(firstMemberAndSeparatorText -> firstMemberAndSeparatorText.getValue() != null)
@@ -41,6 +41,6 @@ class GroupBoundaryMarker {
     }
 
     private static void writeGroupBoundaryMetadata(CtTypeMember firstMember, String separatorText) {
-        firstMember.putMetadata(SpoonSourcePrinterUtils.GROUP_HEADER_METADATA, separatorText);
+        firstMember.putMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA, separatorText);
     }
 }

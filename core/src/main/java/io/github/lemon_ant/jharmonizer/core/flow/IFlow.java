@@ -17,5 +17,5 @@ public interface IFlow {
      * @return the processing result for the source file
      */
     @NonNull
-    FlowProcessingResult processSource(@NonNull SrcFile srcFile);
+    FlowProcessingResult processSrc(@NonNull SrcFile srcFile);
 }

@@ -7,14 +7,14 @@ import lombok.Value;
 import spoon.reflect.declaration.CtType;
 
 @Value
-public class SerializedSourceWithSkippedTypeRanges {
+public class SerializedSrcWithSkippedTypeRanges {
     @NonNull
     String serializedSrcCode;
 
     @NonNull
     Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges;
 
-    public SerializedSourceWithSkippedTypeRanges(
+    public SerializedSrcWithSkippedTypeRanges(
             @NonNull String serializedSrcCode,
             @NonNull Map<@NonNull CtType<?>, @NonNull SrcCharacterRange> sortingSkippedTypeRanges) {
         this.serializedSrcCode = serializedSrcCode;

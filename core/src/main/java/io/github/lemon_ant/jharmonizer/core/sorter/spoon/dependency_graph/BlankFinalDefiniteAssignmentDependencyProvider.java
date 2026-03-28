@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSourceStart;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSrcStart;
 
 import java.util.Optional;
 import java.util.Set;
@@ -46,12 +46,13 @@ final class BlankFinalDefiniteAssignmentDependencyProvider implements MemberDepe
             return Set.of();
         }
 
-        int dependentSourceStart = requireSourceStart(dependentMember);
+        int dependentSrcStart = requireSrcStart(dependentMember);
 
         return blankFinalFieldsReadByDependentMember.stream()
-                .flatMap(blankFinalField -> InitializationOrderDependencyUtils.resolveProviderMembersForBlankFinalRead(
-                        dependentMember, blankFinalField, dependentSourceStart)
-                        .stream())
+                .flatMap(
+                        blankFinalField -> InitializationOrderDependencyUtils.resolveProviderMembersForBlankFinalRead(
+                                dependentMember, blankFinalField, dependentSrcStart)
+                                .stream())
                 .map(providerMember ->
                         new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());

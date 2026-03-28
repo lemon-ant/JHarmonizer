@@ -34,6 +34,6 @@ public class FileProcessingStatistic {
         return new FileProcessingStatistic(
                 flowProcessingResult.getPath(),
                 processingTime,
-                flowProcessingResult.getParsingStatistic().getOriginalSourceCodeLength());
+                flowProcessingResult.getParsingStatistic().getOriginalSrcCodeLength());
     }
 }

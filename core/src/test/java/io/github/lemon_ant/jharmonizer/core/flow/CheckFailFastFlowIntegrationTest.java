@@ -21,16 +21,16 @@ class CheckFailFastFlowIntegrationTest {
     void processSource_firstViolationDetected_stopsSequentialProcessing() {
         // Given
         CheckFailFastFlow flow = createFlow();
-        List<SrcFile> sourceFiles = List.of(
+        List<SrcFile> srcFiles = List.of(
                 createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java")),
                 createSrcFile("class CFormatted{int a;}", Path.of("C_Formatted.java")));
         AtomicInteger processedSources = new AtomicInteger();
 
         // When / Then
-        assertThatThrownBy(() -> sourceFiles.stream()
-                        .map(sourceFile -> {
+        assertThatThrownBy(() -> srcFiles.stream()
+                        .map(srcFile -> {
                             processedSources.incrementAndGet();
-                            return flow.processSource(sourceFile);
+                            return flow.processSrc(srcFile);
                         })
                         .toList())
                 .isInstanceOf(NotOrderedException.class)

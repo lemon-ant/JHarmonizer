@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireDeclaringType;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSourceStart;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSrcStart;
 
 import java.util.Optional;
 import java.util.Set;
@@ -92,17 +92,17 @@ final class InitializationOrderDependencyUtils {
      */
     @NonNull
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
-            @NonNull CtTypeMember dependentMember, @NonNull CtField<?> blankFinalField, int dependentSourceStart) {
+            @NonNull CtTypeMember dependentMember, @NonNull CtField<?> blankFinalField, int dependentSrcStart) {
 
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         boolean blankFinalFieldIsStatic = blankFinalField.getModifiers().contains(ModifierKind.STATIC);
 
-        return streamExplicitSourceTypeMembers(declaringType)
+        return streamExplicitSrcTypeMembers(declaringType)
                 .filter(typeMember -> typeMember != dependentMember)
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->
-                        new ProviderCandidate(candidateProviderMember, requireSourceStart(candidateProviderMember)))
-                .filter(candidate -> candidate.getSourceStart() < dependentSourceStart)
+                        new ProviderCandidate(candidateProviderMember, requireSrcStart(candidateProviderMember)))
+                .filter(candidate -> candidate.getSrcStart() < dependentSrcStart)
                 .map(ProviderCandidate::getProviderMember)
                 .filter(providerMember -> isFieldWrittenByMember(providerMember, blankFinalField))
                 .collect(Collectors.toUnmodifiableSet());
@@ -121,6 +121,6 @@ final class InitializationOrderDependencyUtils {
         @NonNull
         CtTypeMember providerMember;
 
-        int sourceStart;
+        int srcStart;
     }
 }

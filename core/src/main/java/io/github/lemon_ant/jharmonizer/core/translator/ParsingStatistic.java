@@ -7,7 +7,7 @@ import lombok.Value;
  */
 @Value
 public class ParsingStatistic {
-    long originalSourceCodeLength;
+    long originalSrcCodeLength;
     int parsedMembersCount;
     int parsedRootTypesCount;
     int parsedTypesTotalCount;

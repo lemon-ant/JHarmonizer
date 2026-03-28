@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class SourceFilesHandlerTest {
+class SrcFilesHandlerTest {
 
     @TempDir
     Path tempDir;
@@ -21,15 +21,15 @@ class SourceFilesHandlerTest {
     @Test
     void backup_existingFile_renamedWithBakExtension() throws IOException {
         // Given
-        Path sourceFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
+        Path srcFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
 
         // When
-        SourceFilesHandler.renameToBackup(sourceFile);
+        SrcFilesHandler.renameToBackup(srcFile);
 
         // Then
         Path expectedBackup = tempDir.resolve("Example.java.bak");
         assertThat(expectedBackup).exists();
-        assertThat(sourceFile).doesNotExist();
+        assertThat(srcFile).doesNotExist();
     }
 
     @Test
@@ -38,7 +38,7 @@ class SourceFilesHandlerTest {
         Path missingFile = tempDir.resolve("DoesNotExist.java");
 
         // When / Then
-        assertThatThrownBy(() -> SourceFilesHandler.renameToBackup(missingFile))
+        assertThatThrownBy(() -> SrcFilesHandler.renameToBackup(missingFile))
                 .isInstanceOf(UncheckedIOException.class)
                 .hasMessageContaining("does not exist");
     }
@@ -66,7 +66,7 @@ class SourceFilesHandlerTest {
         Path txtFile = Files.writeString(tempDir.resolve("notes.txt"), "not java");
 
         // When
-        List<Path> result = SourceFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
+        List<Path> result = SrcFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
                 .collect(Collectors.toList());
 
         // Then
@@ -78,14 +78,14 @@ class SourceFilesHandlerTest {
     @Test
     void overwrite_existingFile_replacesFileContent() throws IOException {
         // Given
-        Path sourceFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SrcFile srcFile = new SrcFile("new content", sourceFile);
+        Path srcFile = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
+        SrcFile srcFile = new SrcFile("new content", srcFile);
 
         // When
-        SourceFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
+        SrcFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
 
         // Then
-        String newText = Files.readString(sourceFile);
+        String newText = Files.readString(srcFile);
         assertThat(newText).isEqualTo("new content");
     }
 }

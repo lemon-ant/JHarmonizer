@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
@@ -114,7 +114,7 @@ public class SpoonTypeUtils {
     @NonNull
     private static Stream<CtElement> streamTypeAndNestedElements(CtType<?> ownerType) {
         Stream<CtElement> self = Stream.of(ownerType);
-        Stream<CtElement> membersAndNested = streamExplicitSourceTypeMembers(ownerType)
+        Stream<CtElement> membersAndNested = streamExplicitSrcTypeMembers(ownerType)
                 .flatMap(member -> {
                     if (member instanceof CtType<?> nestedType) {
                         // include the nested type declaration, then descend into its own members

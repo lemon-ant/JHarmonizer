@@ -66,7 +66,7 @@ class ComparatorUtils {
         Comparator<SortableTypeMember.OrderingKey> configuredComparator = orderingRules.stream()
                 .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSourceStart)
+                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart)
                         .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey));
 
         // Deterministic tie-breakers regardless of configured keys.
@@ -144,7 +144,7 @@ class ComparatorUtils {
     private static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparatorForOrderingRule(
             OrderingRule orderingRule) {
         return switch (orderingRule) {
-            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSourceStart);
+            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart);
             case ALPHA ->
                 Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
                         .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);

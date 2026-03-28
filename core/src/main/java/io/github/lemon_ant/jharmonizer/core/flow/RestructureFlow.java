@@ -4,14 +4,14 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.def
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.RESTRUCTURE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
@@ -43,16 +43,16 @@ public class RestructureFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+    public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization");
         }
 
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
-                sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting");
+                sortSerializeAndFormatSrc(srcFile, parsedSpoonAstModel, "sorting");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
         SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
@@ -61,10 +61,9 @@ public class RestructureFlow extends AbstractOptOutFlow {
                 !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
         if (hasChanges) {
             if (backupsEnabled) {
-                SourceFilesHandler.renameToBackup(srcFile.getPath());
+                SrcFilesHandler.renameToBackup(srcFile.getPath());
             }
-            SourceFilesHandler.overwrite(
-                    srcFile.getPath(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
+            SrcFilesHandler.overwrite(srcFile.getPath(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
 
         return FlowProcessingResult.builder()

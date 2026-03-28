@@ -4,7 +4,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSourceWithSkippedTypeRanges;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import java.util.Map;
 import java.util.function.Supplier;
 import lombok.NonNull;
@@ -41,12 +41,12 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        Supplier<SerializedSourceWithSkippedTypeRanges> serializedSrcCode = () -> {
+        Supplier<SerializedSrcWithSkippedTypeRanges> serializedSrcCode = () -> {
             if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
-                return new SerializedSourceWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
+                return new SerializedSrcWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
             }
 
-            SpoonCustomSourcePrinter printer = new SpoonCustomSourcePrinter(
+            SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
                     launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
             return printer.serializeCompilationUnit(compilationUnit);
         };

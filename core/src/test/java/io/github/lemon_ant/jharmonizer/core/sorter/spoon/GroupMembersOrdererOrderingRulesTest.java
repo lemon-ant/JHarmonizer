@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -38,7 +38,7 @@ import spoon.reflect.reference.CtTypeReference;
 class GroupMembersOrdererOrderingRulesTest {
 
     @Test
-    void orderMembersInsideGroups_orderingRulePreserve_keepOriginalSourceOrder() {
+    void orderMembersInsideGroups_orderingRulePreserve_keepOriginalSrcOrder() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "preserve", false, List.of(OrderingRule.PRESERVE));
@@ -78,7 +78,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_orderingRulePreserveWithEqualSourceStart_applyAlphaTieBreakerDeterministically() {
+    void orderMembersInsideGroups_orderingRulePreserveWithEqualSrcStart_applyAlphaTieBreakerDeterministically() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "preserve-equal-keys", false, List.of(OrderingRule.PRESERVE));
@@ -393,7 +393,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_orderingRuleAlphaWithEqualAlphaKey_applySourceStartTieBreaker() {
+    void orderMembersInsideGroups_orderingRuleAlphaWithEqualAlphaKey_applySrcStartTieBreaker() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "alpha-source-start-tie", false, List.of(OrderingRule.ALPHA));
@@ -464,13 +464,13 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @NonNull
-    private static CtTypeMember createFieldTypeMember(String fieldName, int sourceStart) {
+    private static CtTypeMember createFieldTypeMember(String fieldName, int srcStart) {
         CtField<?> fieldTypeMember = mock(CtField.class);
-        SourcePosition sourcePosition = mock(SourcePosition.class);
+        SourcePosition srcPosition = mock(SourcePosition.class);
         CtTypeReference<?> fieldTypeReference = mock(CtTypeReference.class);
-        when(sourcePosition.isValidPosition()).thenReturn(true);
-        when(sourcePosition.getSourceStart()).thenReturn(sourceStart);
-        when(fieldTypeMember.getPosition()).thenReturn(sourcePosition);
+        when(srcPosition.isValidPosition()).thenReturn(true);
+        when(srcPosition.getSourceStart()).thenReturn(srcStart);
+        when(fieldTypeMember.getPosition()).thenReturn(srcPosition);
         when(fieldTypeMember.getSimpleName()).thenReturn(fieldName);
         doReturn(fieldTypeReference).when(fieldTypeMember).getType();
         when(fieldTypeReference.getQualifiedName()).thenReturn("int");
@@ -486,7 +486,7 @@ class GroupMembersOrdererOrderingRulesTest {
                         FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL);
-        private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
+        private static final List<CtTypeMember> FIELD_INITIALIZER_TIE_FIXTURE_MEMBERS = streamExplicitSrcTypeMembers(
                         FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE)
                 .toList();
 
@@ -496,9 +496,8 @@ class GroupMembersOrdererOrderingRulesTest {
                 GroupMembersOrdererOrderingRulesTest.class.getResource(SOURCE_START_TIE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> SOURCE_START_TIE_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(SOURCE_START_TIE_FIXTURE_RESOURCE_URL);
-        private static final List<CtTypeMember> SOURCE_START_TIE_FIXTURE_MEMBERS = streamExplicitSourceTypeMembers(
-                        SOURCE_START_TIE_FIXTURE_MAIN_TYPE)
-                .toList();
+        private static final List<CtTypeMember> SOURCE_START_TIE_FIXTURE_MEMBERS =
+                streamExplicitSrcTypeMembers(SOURCE_START_TIE_FIXTURE_MAIN_TYPE).toList();
 
         private static final String LOCALE_FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleLocaleFixture.java";
@@ -507,7 +506,7 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final CtType<?> LOCALE_FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(LOCALE_FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> LOCALE_FIXTURE_MEMBERS =
-                streamExplicitSourceTypeMembers(LOCALE_FIXTURE_MAIN_TYPE).toList();
+                streamExplicitSrcTypeMembers(LOCALE_FIXTURE_MAIN_TYPE).toList();
 
         private static final String FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
@@ -516,7 +515,7 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> FIXTURE_MEMBERS =
-                streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
+                streamExplicitSrcTypeMembers(FIXTURE_MAIN_TYPE).toList();
 
         private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
                 EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);

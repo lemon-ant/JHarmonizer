@@ -17,10 +17,10 @@ class JavaCompileTestUtils {
     private static final int JAVA_RELEASE = 21;
     private static final String TEST_COMPILE_PREFIX = "test-compile-";
 
-    static CompileResult compileJavaSourceWithRelease21(@NonNull Path sourceFilePath, @NonNull Path outputDirectoryPath)
+    static CompileResult compileJavaSrcWithRelease21(@NonNull Path srcFilePath, @NonNull Path outputDirectoryPath)
             throws IOException, InterruptedException {
         ensureOutputDirectoryExists(outputDirectoryPath);
-        E2EFileUtils.requireRegularFile(sourceFilePath, "Expected Java source file to compile, but got: ");
+        E2EFileUtils.requireRegularFile(srcFilePath, "Expected Java source file to compile, but got: ");
 
         Path diagnosticsPath = outputDirectoryPath.resolve(TEST_COMPILE_PREFIX + "logs.txt");
 
@@ -32,7 +32,7 @@ class JavaCompileTestUtils {
                 StandardCharsets.UTF_8.name(),
                 "-d",
                 outputDirectoryPath.toString(),
-                sourceFilePath.toAbsolutePath().toString());
+                srcFilePath.toAbsolutePath().toString());
 
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         String javacOutput = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);

@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSourceTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,7 +28,7 @@ class GroupMembersOrdererSortableModelTest {
     private static final CtType<?> FIXTURE_MAIN_TYPE =
             SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_RESOURCE_URL);
     private static final List<CtTypeMember> FIXTURE_MEMBERS =
-            streamExplicitSourceTypeMembers(FIXTURE_MAIN_TYPE).toList();
+            streamExplicitSrcTypeMembers(FIXTURE_MAIN_TYPE).toList();
 
     @Test
     void convertTypeMembers2SortableTypeMembers_representativeChainPresent_cachedSortableMembersReused() {

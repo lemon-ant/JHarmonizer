@@ -55,7 +55,7 @@ public final class Formatter {
     }
 
     @NonNull
-    public FormattingResult formatSource(
+    public FormattingResult formatSrc(
             @NonNull String srcCode,
             @NonNull Path srcPath,
             @NonNull List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
@@ -63,9 +63,9 @@ public final class Formatter {
         TimedResult<String> formattingResult =
                 StopWatch.measure(() -> applyFormatting(srcCode, formattingSkippedRanges));
 
-        String formattedSource = formattingResult.getResult();
+        String formattedSrc = formattingResult.getResult();
         return new FormattingResult(
-                formattedSource, new FormattingStatistic(formattedSource.length(), formattingResult.getNanos()));
+                formattedSrc, new FormattingStatistic(formattedSrc.length(), formattingResult.getNanos()));
     }
 
     @NonNull
@@ -102,8 +102,8 @@ public final class Formatter {
      * Inverts excluded ranges into the complementary ranges that should be formatted.
      */
     @NonNull
-    private static List<Range<Integer>> invertExcludedRanges(int sourceLength, List<SrcCharacterRange> excludedRanges) {
-        Validate.isTrue(sourceLength >= 0, "Source length must be non-negative: %s", sourceLength);
+    private static List<Range<Integer>> invertExcludedRanges(int srcLength, List<SrcCharacterRange> excludedRanges) {
+        Validate.isTrue(srcLength >= 0, "Source length must be non-negative: %s", srcLength);
 
         List<SrcCharacterRange> normalizedRanges = excludedRanges.stream()
                 .sorted(comparingInt(SrcCharacterRange::getStartInclusive)
@@ -114,11 +114,11 @@ public final class Formatter {
 
         for (SrcCharacterRange excludedRange : normalizedRanges) {
             Validate.isTrue(
-                    excludedRange.getEndExclusive() <= sourceLength,
+                    excludedRange.getEndExclusive() <= srcLength,
                     "Excluded range [%s, %s) exceeds source length %s",
                     excludedRange.getStartInclusive(),
                     excludedRange.getEndExclusive(),
-                    sourceLength);
+                    srcLength);
             Validate.isTrue(
                     excludedRange.getStartInclusive() >= nextStart,
                     "Excluded ranges must be sorted and non-overlapping, but [%s, %s) overlaps before %s",
@@ -132,8 +132,8 @@ public final class Formatter {
             nextStart = excludedRange.getEndExclusive();
         }
 
-        if (nextStart < sourceLength) {
-            includedRanges.add(Range.closedOpen(nextStart, sourceLength));
+        if (nextStart < srcLength) {
+            includedRanges.add(Range.closedOpen(nextStart, srcLength));
         }
 
         return Collections.unmodifiableList(includedRanges);

@@ -23,7 +23,7 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @Slf4j
 @UtilityClass
-public final class SourceAstTranslator {
+public final class SrcAstTranslator {
 
     /**
      * Parses the source file.
@@ -54,18 +54,17 @@ public final class SourceAstTranslator {
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.debug("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<SerializedSourceWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
+        TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSrcCode().get());
-        SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
-                serializationTimedResult.getResult();
+        SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = serializationTimedResult.getResult();
 
         return new SerializationResult(
                 new SerializationStatistic(
-                        serializedSourceWithSkippedTypeRanges
+                        serializedSrcWithSkippedTypeRanges
                                 .getSerializedSrcCode()
                                 .length(),
                         serializationTimedResult.getNanos()),
-                serializedSourceWithSkippedTypeRanges);
+                serializedSrcWithSkippedTypeRanges);
     }
 
     @NonNull

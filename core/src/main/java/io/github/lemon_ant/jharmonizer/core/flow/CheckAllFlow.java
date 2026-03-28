@@ -12,7 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SourceAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
@@ -39,16 +39,16 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSource(@NonNull SrcFile srcFile) {
+    public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
 
         SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
-                sortSerializeAndFormatSource(srcFile, parsedSpoonAstModel, "sorting checks");
+                sortSerializeAndFormatSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
         SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();

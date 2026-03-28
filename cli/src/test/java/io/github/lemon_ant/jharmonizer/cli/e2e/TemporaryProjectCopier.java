@@ -13,9 +13,9 @@ import org.apache.commons.io.FileUtils;
 class TemporaryProjectCopier {
 
     static Path copyProject(@NonNull String resourceRoot, @NonNull Path targetDirectory) throws IOException {
-        Path sourceDirectory = locateOriginalTestResource(resourceRoot);
+        Path srcDirectory = locateOriginalTestResource(resourceRoot);
         Files.createDirectories(targetDirectory);
-        FileUtils.copyDirectory(sourceDirectory.toFile(), targetDirectory.toFile());
+        FileUtils.copyDirectory(srcDirectory.toFile(), targetDirectory.toFile());
         return targetDirectory;
     }
 

@@ -4,8 +4,8 @@ import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.lemon_ant.jharmonizer.core.files_handler.SourceFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
@@ -17,21 +17,21 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class SourceAstTranslatorTest {
+class SrcAstTranslatorTest {
 
-    SourceFilesHandler sourceFilesHandler;
+    SrcFilesHandler srcFilesHandler;
 
     @TempDir
     Path tempDir;
 
     @Test
-    void parseSourceFile_validJavaSrc_returnParsingResult() throws Exception {
+    void parseSrcFile_validJavaSrc_returnParsingResult() throws Exception {
         // Given
         Path file = Files.writeString(tempDir.resolve("TestClass.java"), "class TestClass { int value = 42; }");
         SrcFile srcFile = createSrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // When
-        ParsingResult result = SourceAstTranslator.parse(srcFile);
+        ParsingResult result = SrcAstTranslator.parse(srcFile);
 
         // Then
         assertThat(result).isNotNull();
@@ -45,16 +45,16 @@ class SourceAstTranslatorTest {
     @Test
     void serialize_validSpoonAstModel_returnSerializedCode() {
         // Given: simple source code
-        String source = "class Demo { void m() {} }";
-        SrcFile srcFile = createSrcFile(source, Path.of("Demo.java"));
-        SpoonAstModel model = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
+        String src = "class Demo { void m() {} }";
+        SrcFile srcFile = createSrcFile(src, Path.of("Demo.java"));
+        SpoonAstModel model = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
-        SerializationResult result = SourceAstTranslator.serialize(model);
+        SerializationResult result = SrcAstTranslator.serialize(model);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode())
+        assertThat(result.getSerializedSrcWithSkippedTypeRanges().getSerializedSrcCode())
                 .contains("class Demo");
         assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
         assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
@@ -72,22 +72,22 @@ class SourceAstTranslatorTest {
                 // @jharmonizer:fully-off
                 class Gamma{int y;  int x;}
                 """;
-        String sourceCode = """
+        String srcCode = """
                 class Alpha {}
 
                 %s
 
                 %s
                 """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
-        SrcFile srcFile = createSrcFile(sourceCode, Path.of("Sample.java"));
-        SpoonAstModel spoonAstModel = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
+        SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
+        SpoonAstModel spoonAstModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
-        SerializationResult result = SourceAstTranslator.serialize(spoonAstModel);
+        SerializationResult result = SrcAstTranslator.serialize(spoonAstModel);
         List<SrcCharacterRange> formattingSkippedRanges = OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
-                spoonAstModel.getOptOuts(), result.getSerializedSourceWithSkippedTypeRanges());
+                spoonAstModel.getOptOuts(), result.getSerializedSrcWithSkippedTypeRanges());
         String serializedSrcCode =
-                result.getSerializedSourceWithSkippedTypeRanges().getSerializedSrcCode();
+                result.getSerializedSrcWithSkippedTypeRanges().getSerializedSrcCode();
 
         // Then
         assertThat(serializedSrcCode).contains(sortOffFragment).contains(fullyOffFragment);
@@ -99,20 +99,18 @@ class SourceAstTranslatorTest {
     }
 
     @Test
-    void serializedSourceWithSkippedTypeRanges_mutableInputMap_returnsUnmodifiableMap() {
+    void serializedSrcWithSkippedTypeRanges_mutableInputMap_returnsUnmodifiableMap() {
         // Given
-        String sourceCode = "class Gamma {}";
-        SrcFile srcFile = createSrcFile(sourceCode, Path.of("Gamma.java"));
-        SpoonAstModel spoonAstModel = SourceAstTranslator.parse(srcFile).getSpoonAstModel();
-        SerializedSourceWithSkippedTypeRanges serializedSourceWithSkippedTypeRanges =
-                new SerializedSourceWithSkippedTypeRanges(
-                        sourceCode,
-                        new HashMap<>(Map.of(
-                                spoonAstModel.getMainType().orElseThrow(),
-                                new SrcCharacterRange(0, sourceCode.length()))));
+        String srcCode = "class Gamma {}";
+        SrcFile srcFile = createSrcFile(srcCode, Path.of("Gamma.java"));
+        SpoonAstModel spoonAstModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
+        SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = new SerializedSrcWithSkippedTypeRanges(
+                srcCode,
+                new HashMap<>(
+                        Map.of(spoonAstModel.getMainType().orElseThrow(), new SrcCharacterRange(0, srcCode.length()))));
 
         // When
-        Map<?, ?> sortingSkippedTypeRanges = serializedSourceWithSkippedTypeRanges.getSortingSkippedTypeRanges();
+        Map<?, ?> sortingSkippedTypeRanges = serializedSrcWithSkippedTypeRanges.getSortingSkippedTypeRanges();
 
         // Then
         assertThat(sortingSkippedTypeRanges).hasSize(1);

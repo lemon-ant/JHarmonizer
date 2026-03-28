@@ -125,9 +125,9 @@ class DeclaringTypeFieldReferenceUtils {
 
     private static boolean isProviderDeclaredBeforeDependentMember(
             CtTypeMember providerMember, CtTypeMember dependentMember) {
-        int dependentSourceStart = requireSourceStart(dependentMember);
-        int providerSourceStart = requireSourceStart(providerMember);
-        return providerSourceStart < dependentSourceStart;
+        int dependentSrcStart = requireSrcStart(dependentMember);
+        int providerSrcStart = requireSrcStart(providerMember);
+        return providerSrcStart < dependentSrcStart;
     }
 
     /**
@@ -135,7 +135,7 @@ class DeclaringTypeFieldReferenceUtils {
      * @param typeMember the type member
      * @return the result
      */
-    static int requireSourceStart(@NonNull CtTypeMember typeMember) {
+    static int requireSrcStart(@NonNull CtTypeMember typeMember) {
         SourcePosition memberPosition = typeMember.getPosition();
         if (memberPosition != null && memberPosition.isValidPosition()) {
             return memberPosition.getSourceStart();

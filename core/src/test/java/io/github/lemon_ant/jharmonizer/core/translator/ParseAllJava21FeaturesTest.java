@@ -21,12 +21,12 @@ class ParseAllJava21FeaturesTest {
     private static final Path SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH = Path.of("SampleAllJava21FeaturesList.java");
 
     @Test
-    void parseSourceFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
+    void parseSrcFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {
         // Given
         SrcFile srcFile = createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        ParsingResult parsingResult = SourceAstTranslator.parse(srcFile);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then
@@ -36,7 +36,7 @@ class ParseAllJava21FeaturesTest {
         assertThat(spoonAstModel.getMainType()).isNotNull();
         assertThat(spoonAstModel.getCompilationUnit()).isNotNull();
         assertThat(parsingStatistic).isNotNull();
-        assertThat(parsingStatistic.getOriginalSourceCodeLength())
+        assertThat(parsingStatistic.getOriginalSrcCodeLength())
                 .isCloseTo(ORIGINAL_SOURCE_CODE_LENGTH, withPercentage(10));
         assertThat(parsingStatistic.getParsedRootTypesCount()).isEqualTo(8);
         assertThat(parsingStatistic.getParsedTypesTotalCount()).isEqualTo(19);
@@ -45,19 +45,17 @@ class ParseAllJava21FeaturesTest {
     }
 
     @Test
-    void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSourceCode() {
+    void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSrcCode() {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
                 createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
 
         // When
-        SerializationResult serializationResult = SourceAstTranslator.serialize(spoonASTModel);
+        SerializationResult serializationResult = SrcAstTranslator.serialize(spoonASTModel);
 
         // Then
         assertThat(serializationResult).isNotNull();
-        assertThat(serializationResult
-                        .getSerializedSourceWithSkippedTypeRanges()
-                        .getSerializedSrcCode())
+        assertThat(serializationResult.getSerializedSrcWithSkippedTypeRanges().getSerializedSrcCode())
                 .contains("SampleAllJava21FeaturesList");
         assertThat(serializationResult.getSerializationStatistic()).isNotNull();
         SerializationStatistic serializationStatistic = serializationResult.getSerializationStatistic();

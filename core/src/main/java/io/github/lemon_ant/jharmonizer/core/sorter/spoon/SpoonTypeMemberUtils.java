@@ -80,7 +80,7 @@ public class SpoonTypeMemberUtils {
      * @param typeMember the type member
      * @return the result
      */
-    static int extractSourceStart(@NonNull CtTypeMember typeMember) {
+    static int extractSrcStart(@NonNull CtTypeMember typeMember) {
         if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
             return Integer.MAX_VALUE;
         }
@@ -128,7 +128,7 @@ public class SpoonTypeMemberUtils {
             }
             default -> {
                 // Defensive fallback for any unexpected Spoon CtTypeMember implementation.
-                return typeMember.getClass().getSimpleName() + ":" + extractSourceStart(typeMember);
+                return typeMember.getClass().getSimpleName() + ":" + extractSrcStart(typeMember);
             }
         }
     }
@@ -150,7 +150,7 @@ public class SpoonTypeMemberUtils {
      * @return the stream of explicit source type members
      */
     @NonNull
-    public static Stream<@NonNull CtTypeMember> streamExplicitSourceTypeMembers(@NonNull CtType<?> declaringType) {
+    public static Stream<@NonNull CtTypeMember> streamExplicitSrcTypeMembers(@NonNull CtType<?> declaringType) {
         return declaringType.getTypeMembers().stream()
                 .filter(typeMember -> typeMember.getPosition() != null
                         && typeMember.getPosition().isValidPosition())

@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaKey;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaSortingRank;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSourceStart;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSrcStart;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,7 +88,7 @@ class SortableTypeMember {
     @NonNull
     private static SortableTypeMember.OrderingKey deriveOrderingKey(CtTypeMember typeMember) {
         return new SortableTypeMember.OrderingKey(
-                extractSourceStart(typeMember),
+                extractSrcStart(typeMember),
                 deriveAlphaKey(typeMember),
                 deriveAlphaSortingRank(typeMember),
                 deriveVisibilityRank(typeMember));
@@ -115,7 +115,7 @@ class SortableTypeMember {
                     typeMember2OrderingKey.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
         }
 
-        int sourceStart;
+        int srcStart;
 
         @NonNull
         String alphaKey;
