@@ -19,7 +19,6 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
-import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.SpoonClassNotFoundException;
 
@@ -56,7 +55,7 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .flatMap(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration()).stream())
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -71,7 +70,7 @@ class DeclaringTypeFieldReferenceUtils {
     static Set<CtField<?>> findFieldsReadByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldRead.class)
-                .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .flatMap(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration()).stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -85,7 +84,7 @@ class DeclaringTypeFieldReferenceUtils {
     static Set<CtField<?>> findFieldsWrittenByMember(@NonNull CtTypeMember member, @NonNull CtElement memberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(member);
         return streamFieldAccessesInSameType(memberAstRoot, declaringType, CtFieldWrite.class)
-                .flatMap(fieldAccess -> resolveFieldDeclaration(fieldAccess).stream())
+                .flatMap(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration()).stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -110,20 +109,14 @@ class DeclaringTypeFieldReferenceUtils {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
-                .filter(fieldAccess -> resolveFieldDeclaration(fieldAccess)
-                        .map(field -> isDeclaredInType(field, declaringType))
+                .filter(fieldAccess -> Optional.ofNullable(fieldAccess.getVariable().getDeclaration())
+                        .map(field -> isFieldDeclaredInType(field, declaringType))
                         .orElse(false));
     }
 
-    @NonNull
-    private static Optional<CtField<?>> resolveFieldDeclaration(CtFieldAccess<?> fieldAccess) {
-        CtFieldReference<?> fieldReference = fieldAccess.getVariable();
-        return Optional.ofNullable(fieldReference.getDeclaration());
-    }
-
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isDeclaredInType(CtField<?> fieldDeclaration, CtType<?> declaringType) {
-        return fieldDeclaration.getDeclaringType() == declaringType;
+    private static boolean isFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
+        return field.getDeclaringType() == declaringType;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
