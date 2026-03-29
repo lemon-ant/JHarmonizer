@@ -12,6 +12,7 @@ import lombok.experimental.UtilityClass;
 public class MemberGroupRuleLineCompilerTestAccess {
 
     private static final String COMPILE_RULE_LINE_METHOD_NAME = "compileRuleLine";
+    private static final Method COMPILE_RULE_LINE_METHOD = resolveCompileRuleLineMethod();
 
     /**
      * Invokes the private production compiler entrypoint for a single rule line.
@@ -23,9 +24,8 @@ public class MemberGroupRuleLineCompilerTestAccess {
     @SuppressWarnings("unchecked")
     public static Predicate<MemberDescriptor> invokeCompileRuleLine(
             @NonNull UnifiedMemberGroupRuleLine unifiedMemberGroupRuleLine) {
-        Method compileRuleLineMethod = resolveCompileRuleLineMethod();
         try {
-            return (Predicate<MemberDescriptor>) compileRuleLineMethod.invoke(null, unifiedMemberGroupRuleLine);
+            return (Predicate<MemberDescriptor>) COMPILE_RULE_LINE_METHOD.invoke(null, unifiedMemberGroupRuleLine);
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(
                     "Cannot access %s via reflection".formatted(COMPILE_RULE_LINE_METHOD_NAME), e);

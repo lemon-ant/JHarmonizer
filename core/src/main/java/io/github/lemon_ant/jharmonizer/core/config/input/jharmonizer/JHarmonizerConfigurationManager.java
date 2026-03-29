@@ -34,9 +34,9 @@ public class JHarmonizerConfigurationManager {
      *
      * @param classpathResource the classpath resource to read
      * @return the unified configuration loaded from the resource
-     */
+    */
     @NonNull
-    static UnifiedConfig parseUnifiedConfigFromClasspathResource(@NonNull URL classpathResource) {
+    public static UnifiedConfig parseUnifiedConfigFromClasspathResource(@NonNull URL classpathResource) {
         JHarmonizerConfig loadedConfig = JHarmonizerConfigLoader.loadFromClasspathResource(classpathResource);
         return JHarmonizer2UnifiedConverter.convert2Unified(loadedConfig);
     }
