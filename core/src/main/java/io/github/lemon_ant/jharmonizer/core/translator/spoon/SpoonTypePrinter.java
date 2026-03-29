@@ -68,7 +68,22 @@ final class SpoonTypePrinter {
                     .writeln();
             return;
         }
-        printTypeMembers(type, typePosition, explicitTypeMembers);
+        int minMemberStart = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .min()
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute first member start from explicit type members"));
+        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
+        if (type instanceof CtEnum<?>) {
+            tokenWriter.writeln();
+        }
+        printTypeMembers(explicitTypeMembers);
+        int maxMemberEnd = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                .max()
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute last member end from explicit type members"));
+        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 
     /**
@@ -115,19 +130,7 @@ final class SpoonTypePrinter {
                 .toList();
     }
 
-    private void printTypeMembers(CtType<?> type, SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
-        int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .min()
-                .orElseThrow(() ->
-                        new IllegalStateException("Failed to compute first member start from explicit type members"));
-
-        boolean enumHeaderEndsWithSemicolon = hasEnumHeaderTrailingSemicolon(type, typePosition, explicitTypeMembers);
-        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
-        if (enumHeaderEndsWithSemicolon) {
-            tokenWriter.writeln();
-        }
-
+    private void printTypeMembers(List<CtTypeMember> explicitTypeMembers) {
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
         for (int memberIndex = 0; memberIndex < explicitTypeMembers.size(); memberIndex++) {
@@ -138,42 +141,6 @@ final class SpoonTypePrinter {
                     member, explicitTypeMembers, first, previousElementNeedSeparatorAfter, previousElementIsEnumValue);
             first = false;
         }
-
-        int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
-                .max()
-                .orElseThrow(() ->
-                        new IllegalStateException("Failed to compute last member end from explicit type members"));
-        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
-    }
-
-    private boolean hasEnumHeaderTrailingSemicolon(
-            CtType<?> type, SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
-        if (!(type instanceof CtEnum<?>)) {
-            return false;
-        }
-        int firstNonEnumMemberStart = explicitTypeMembers.stream()
-                .filter(typeMember -> !(typeMember instanceof CtEnumValue<?>))
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .min()
-                .orElse(-1);
-        if (firstNonEnumMemberStart < 0) {
-            return false;
-        }
-        return hasTrailingSemicolon(typePosition.getSourceStart(), firstNonEnumMemberStart - 1);
-    }
-
-    private boolean hasTrailingSemicolon(int start, int end) {
-        int startWithIndent = SrcCodeUtils.findIndentationStart(start, originalSrcCode);
-        String fragment = originalSrcCode.substring(startWithIndent, end + 1);
-        for (int index = fragment.length() - 1; index >= 0; index--) {
-            char candidateCharacter = fragment.charAt(index);
-            if (Character.isWhitespace(candidateCharacter)) {
-                continue;
-            }
-            return candidateCharacter == ';';
-        }
-        return false;
     }
 
     private boolean printTypeMember(
