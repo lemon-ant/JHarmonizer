@@ -195,7 +195,8 @@ final class SpoonTypePrinter {
 
         String groupHeader = findGroupHeader(member);
         if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
-            if (!hasSeparatorAlreadyPrinted) {
+            // Keep the first member compact with the type header; leading blank lines break regression fixtures.
+            if (!first && !hasSeparatorAlreadyPrinted) {
                 tokenWriter.writeln();
             }
         } else if (groupHeader != null && !hasMatchingLeadingComment(member, groupHeader)) {
