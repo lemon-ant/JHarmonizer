@@ -92,7 +92,8 @@ class AnnotationMatchingPredicatesTest {
                 .build();
 
         // When
-        Predicate<MemberDescriptor> compiledPredicate = MemberGroupRuleLineCompiler.compileRuleLine(unifiedRuleLine);
+        Predicate<MemberDescriptor> compiledPredicate =
+                MemberGroupRuleLineCompilerTestAccess.invokeCompileRuleLine(unifiedRuleLine);
 
         // Then
         MemberDescriptor annotatedDescriptor = MemberDescriptor.builder()
@@ -118,7 +119,8 @@ class AnnotationMatchingPredicatesTest {
                 .build();
 
         // When
-        Predicate<MemberDescriptor> compiledPredicate = MemberGroupRuleLineCompiler.compileRuleLine(unifiedRuleLine);
+        Predicate<MemberDescriptor> compiledPredicate =
+                MemberGroupRuleLineCompilerTestAccess.invokeCompileRuleLine(unifiedRuleLine);
 
         // Then
         MemberDescriptor annotatedDescriptor = MemberDescriptor.builder()
@@ -139,7 +141,8 @@ class AnnotationMatchingPredicatesTest {
                 .build();
 
         // When
-        Predicate<MemberDescriptor> compiledPredicate = MemberGroupRuleLineCompiler.compileRuleLine(unifiedRuleLine);
+        Predicate<MemberDescriptor> compiledPredicate =
+                MemberGroupRuleLineCompilerTestAccess.invokeCompileRuleLine(unifiedRuleLine);
 
         // Then
         MemberDescriptor descriptorWithTwoAnnotations = MemberDescriptor.builder()
