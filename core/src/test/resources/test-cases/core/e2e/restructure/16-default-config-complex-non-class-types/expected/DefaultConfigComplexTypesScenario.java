@@ -98,6 +98,7 @@ enum ZetaEnum {
     GAMMA,
     ALPHA,
     BETA;
+
     private static final String MARKER = "enum";
 
     private final int code;

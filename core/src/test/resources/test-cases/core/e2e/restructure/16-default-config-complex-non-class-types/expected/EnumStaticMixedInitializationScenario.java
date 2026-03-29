@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 public enum EnumStaticMixedInitializationScenario {
     SECOND("second"),
     FIRST("first");
+
     private final String label;
     private static final String aEnumSnapshot = FIRST.label + ":" + SECOND.label;
     private static final String bDependent = resolveDependent();
