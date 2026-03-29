@@ -1,4 +1,6 @@
-class FieldInitializerExplicitThisForwardReferenceMethodReferenceFixture {
+package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
+
+public class FieldInitializerExplicitThisForwardReferenceMethodReferenceFixture {
 
     private final int alpha = this.bravo;
 

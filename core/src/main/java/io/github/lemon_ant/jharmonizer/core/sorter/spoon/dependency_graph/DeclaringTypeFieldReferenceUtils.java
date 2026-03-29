@@ -92,10 +92,10 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     /**
-     * Attempts to partially evaluate an expression without failing on missing runtime classes.
+     * Attempts to partially evaluate an expression.
      *
      * @param expression the expression to evaluate
-     * @return partially evaluated expression, or empty when Spoon cannot resolve required classes
+     * @return partially evaluated expression, or empty when Spoon/runtime failures prevent safe folding
      */
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
@@ -104,9 +104,14 @@ class DeclaringTypeFieldReferenceUtils {
             return Optional.of(expression.partiallyEvaluate());
         } catch (RuntimeException exception) {
             logger.warn(
-                    "Failed to partially evaluate field initializer expression at {}. Falling back to raw expression.",
+                    "Failed to partially evaluate field initializer expression at {} ({}: {}). "
+                            + "Falling back to raw expression.",
                     expression.getPosition(),
-                    exception);
+                    exception.getClass().getSimpleName(),
+                    exception.getMessage());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Partial-evaluation failure stack trace.", exception);
+            }
             return Optional.empty();
         }
     }
