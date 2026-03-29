@@ -17,8 +17,6 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import spoon.reflect.cu.SourcePosition;
-import spoon.reflect.declaration.CtEnum;
-import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.TokenWriter;
@@ -47,13 +45,7 @@ final class SpoonTypePrinter {
      * @param type the type declaration to print
      */
     void printType(@NonNull CtType<?> type) {
-        printType(type, true);
-    }
-
-    private void printType(@NonNull CtType<?> type, boolean printLeadingNewLine) {
-        if (printLeadingNewLine) {
-            tokenWriter.writeln();
-        }
+        tokenWriter.writeln();
         if (sortingSkippedTypes.contains(type)) {
             printSkippedType(type);
             return;
@@ -68,22 +60,7 @@ final class SpoonTypePrinter {
                     .writeln();
             return;
         }
-        int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .min()
-                .orElseThrow(() ->
-                        new IllegalStateException("Failed to compute first member start from explicit type members"));
-        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
-        if (type instanceof CtEnum<?>) {
-            tokenWriter.writeln();
-        }
-        printTypeMembers(explicitTypeMembers);
-        int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
-                .max()
-                .orElseThrow(() ->
-                        new IllegalStateException("Failed to compute last member end from explicit type members"));
-        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
+        printTypeMembers(typePosition, explicitTypeMembers);
     }
 
     /**
@@ -130,30 +107,39 @@ final class SpoonTypePrinter {
                 .toList();
     }
 
-    private void printTypeMembers(List<CtTypeMember> explicitTypeMembers) {
+    private void printTypeMembers(SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
+        int minMemberStart = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .min()
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute first member start from explicit type members"));
+
+        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
+
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
-        for (int memberIndex = 0; memberIndex < explicitTypeMembers.size(); memberIndex++) {
-            CtTypeMember member = explicitTypeMembers.get(memberIndex);
-            boolean previousElementIsEnumValue =
-                    memberIndex > 0 && explicitTypeMembers.get(memberIndex - 1) instanceof CtEnumValue<?>;
-            previousElementNeedSeparatorAfter = printTypeMember(
-                    member, explicitTypeMembers, first, previousElementNeedSeparatorAfter, previousElementIsEnumValue);
+        for (CtTypeMember member : explicitTypeMembers) {
+            previousElementNeedSeparatorAfter =
+                    printTypeMember(member, explicitTypeMembers, first, previousElementNeedSeparatorAfter);
             first = false;
         }
+
+        int maxMemberEnd = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                .max()
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute last member end from explicit type members"));
+        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 
     private boolean printTypeMember(
             CtTypeMember member,
             List<CtTypeMember> explicitTypeMembers,
             boolean first,
-            boolean previousElementNeedSeparatorAfter,
-            boolean previousElementIsEnumValue) {
+            boolean previousElementNeedSeparatorAfter) {
         // TODO Check Orphaned comments
 
-        boolean currentElementIsNotEnumValue = !(member instanceof CtEnumValue<?>);
-        boolean needsSeparatorBeforeCurrentMember =
-                needsSeparatorBefore(member, first) || previousElementIsEnumValue && currentElementIsNotEnumValue;
+        boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();
@@ -162,8 +148,7 @@ final class SpoonTypePrinter {
 
         String groupHeader = findGroupHeader(member);
         if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
-            // Keep the first member compact with the type header; leading blank lines break regression fixtures.
-            if (!first && !hasSeparatorAlreadyPrinted) {
+            if (!hasSeparatorAlreadyPrinted && !first) {
                 tokenWriter.writeln();
             }
         } else if (groupHeader != null && !hasMatchingLeadingComment(member, groupHeader)) {
@@ -171,7 +156,7 @@ final class SpoonTypePrinter {
         }
 
         if (member instanceof CtType<?> typeMember) {
-            printType(typeMember, false);
+            printType(typeMember);
             return currentElementNeedsSeparatorAfter;
         }
 

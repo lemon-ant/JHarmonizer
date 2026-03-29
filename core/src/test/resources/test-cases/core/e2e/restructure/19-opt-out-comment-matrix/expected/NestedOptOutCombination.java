@@ -23,6 +23,7 @@ class Gamma {
 }
 
 public class NestedOptOutCombination {
+
     static class AlphaSortableInner {
         int aardvark;
         int beta;

@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class DefaultConfigComplexTypesScenario {
+
     private @interface PrivateAnnotation {
         String name();
     }
@@ -97,7 +98,6 @@ enum ZetaEnum {
     GAMMA,
     ALPHA,
     BETA;
-
     private static final String MARKER = "enum";
 
     private final int code;
