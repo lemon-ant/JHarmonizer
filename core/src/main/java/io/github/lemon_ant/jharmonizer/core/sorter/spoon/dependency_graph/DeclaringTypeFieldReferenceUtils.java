@@ -6,8 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtExpression;
@@ -24,9 +23,8 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 @UtilityClass
+@Slf4j
 class DeclaringTypeFieldReferenceUtils {
-
-    private static final Logger logger = LoggerFactory.getLogger(DeclaringTypeFieldReferenceUtils.class);
 
     /**
      * Performs the require declaring type.
@@ -103,14 +101,14 @@ class DeclaringTypeFieldReferenceUtils {
         try {
             return Optional.of(expression.partiallyEvaluate());
         } catch (RuntimeException exception) {
-            logger.warn(
+            log.warn(
                     "Failed to partially evaluate field initializer expression at {} ({}: {}). "
                             + "Falling back to raw expression.",
                     expression.getPosition(),
                     exception.getClass().getSimpleName(),
                     exception.getMessage());
-            if (logger.isDebugEnabled()) {
-                logger.debug("Partial-evaluation failure stack trace.", exception);
+            if (log.isDebugEnabled()) {
+                log.debug("Partial-evaluation failure stack trace.", exception);
             }
             return Optional.empty();
         }
