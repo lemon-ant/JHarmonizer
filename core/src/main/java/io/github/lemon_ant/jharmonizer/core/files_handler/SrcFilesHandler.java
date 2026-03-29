@@ -93,7 +93,7 @@ public class SrcFilesHandler {
      * Renames the source file to its backup variant with a {@code .bak} suffix.
      * If a backup already exists, it is replaced with the latest pre-overwrite source snapshot.
      *
-     * @param sourceFile the source file to back up
+     * @param srcFile the source file to back up
      */
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public static void renameToBackup(@NonNull Path srcFile) {
