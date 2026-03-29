@@ -9,6 +9,7 @@ import ch.qos.logback.core.read.ListAppender;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
+import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
@@ -256,6 +257,26 @@ class SrcProcessorTest {
         assertThat(backupFilePath).exists();
         assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
+    }
+
+    @Test
+    void processSources_secondRunWithBackupsEnabled_replacesExistingBackup() throws Exception {
+        // Given
+        String firstSrcCode = "package demo; public class BackupTwice {private int x;}";
+        String secondSrcCode = "package demo; public class BackupTwice {private int y;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupTwice.java", firstSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, true, null, null));
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        SrcFilesHandler.overwrite(javaFilePath, secondSrcCode);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+
+        // Then
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).exists();
+        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(secondSrcCode);
     }
 
     @Test

@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.files_handler;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.globpathfinder.GlobPathFinder;
 import io.github.lemon_ant.globpathfinder.PathQuery;
@@ -89,6 +91,7 @@ public class SrcFilesHandler {
     // TODO Hide in the Overwrite method
     /**
      * Renames the source file to its backup variant with a {@code .bak} suffix.
+     * If a backup already exists, it is replaced with the latest pre-overwrite source snapshot.
      *
      * @param sourceFile the source file to back up
      */
@@ -101,7 +104,7 @@ public class SrcFilesHandler {
 
         Path backupPath = srcFile.resolveSibling(srcFile.getFileName().toString() + ".bak");
         try {
-            Files.move(srcFile, backupPath);
+            Files.move(srcFile, backupPath, REPLACE_EXISTING);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

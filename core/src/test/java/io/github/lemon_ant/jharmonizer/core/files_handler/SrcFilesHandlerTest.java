@@ -33,6 +33,21 @@ class SrcFilesHandlerTest {
     }
 
     @Test
+    void backup_existingBackup_replacesBackupWithLatestSource() throws IOException {
+        // Given
+        Path srcFile = Files.writeString(tempDir.resolve("Example.java"), "class Latest {}");
+        Path backupFile = Files.writeString(tempDir.resolve("Example.java.bak"), "class OldBackup {}");
+
+        // When
+        SrcFilesHandler.renameToBackup(srcFile);
+
+        // Then
+        assertThat(backupFile).exists();
+        assertThat(Files.readString(backupFile)).isEqualTo("class Latest {}");
+        assertThat(srcFile).doesNotExist();
+    }
+
+    @Test
     void backup_nonExistingFile_throwsIOException() {
         // Given
         Path missingFile = tempDir.resolve("DoesNotExist.java");
