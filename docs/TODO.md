@@ -22,11 +22,12 @@ To keep planning explicit, this backlog is split into two categories:
 
 ## Planned future features (new product functionality)
 
-### 1. Compile group sorting once and precompute ordering rule values in `MemberDescriptor`
+### 1. Compile group sorting once and precompute ordering rule values in `MemberDescriptor` (performance-focused)
 
 #### Status
 - [ ] Not implemented (captured as a future improvement)
 - [ ] Revisit after: tool runs end-to-end + tests are green
+- [ ] Priority context: performance/scalability improvement for large source sets
 
 #### Background
 JHarmonizer already has a compiled layer for grouping/classification:
@@ -451,22 +452,18 @@ without redundant braces when syntax and semantics stay equivalent.
 
 ---
 
-### 9. Constants and enum ordering expansion (future version)
+### 9. Constants ordering expansion (future version)
 
 #### Status
-- [ ] Partially captured in existing backlog; expanded here for completeness
-
-#### Existing related item
-- Enum constants ordering is already tracked in **Section 3** and should not be duplicated.
+- [ ] Not implemented (explicitly deferred)
 
 #### Additional future scope
 - explicit ordering policies for regular constants groups beyond current defaults;
-- shared configurable policy layer so constants/enum ordering rules stay consistent.
+- shared configurable policy layer so constants ordering rules stay consistent.
 
 #### Implementation outline (when revisited)
-- [ ] Reuse Section 3 enum implementation as the baseline.
 - [ ] Add constants-group ordering options with stable tie-breakers.
-- [ ] Add consistency tests (constants vs enum constants).
+- [ ] Add deterministic ordering tests for constants-heavy classes.
 
 ---
 
@@ -525,7 +522,35 @@ Add dependency-graph analysis to detect members that can safely become static:
 
 ---
 
-### 12. Visibility minimization pass (future version)
+### 12. Package dependency cycle detector (future version)
+
+#### Status
+- [ ] Not implemented (explicitly deferred)
+
+#### Problem statement
+Packages inside one application/module should form a clean hierarchy.
+Cyclic package dependencies are a design smell and should be detected early.
+
+#### Proposed solution (next version)
+Add an analyzer that builds package-level dependency graph and reports cycles:
+- construct directed graph from inter-package type references;
+- detect strongly connected components (SCC);
+- report cycle chains with actionable refactoring hints.
+
+#### Safety requirements
+- support exclusions for generated code and known external bridge packages;
+- keep analysis deterministic and reproducible in CI;
+- provide configurable severity (warning/error) and fail-on-cycle mode.
+
+#### Implementation outline (when revisited)
+- [ ] Add package-graph extractor from existing AST/model pipeline.
+- [ ] Implement SCC detection and cycle reporting formatter.
+- [ ] Add config for include/exclude packages and severity mode.
+- [ ] Add fixtures with single-cycle and multi-cycle package graphs.
+
+---
+
+### 13. Visibility minimization pass (future version)
 
 #### Status
 - [ ] Not implemented (explicitly deferred)
@@ -554,7 +579,7 @@ Introduce a configurable pass that lowers visibility to the minimal safe level:
 
 ---
 
-### 13. Nullability interfaces / annotations enforcer (future version)
+### 14. Nullability interfaces / annotations enforcer (future version)
 
 #### Status
 - [ ] Not implemented (explicitly deferred)
@@ -582,7 +607,7 @@ and method parameters according to configured scope.
 
 ---
 
-### 14. Lombok policy enforcer and optimizer (future version)
+### 15. Lombok policy enforcer and optimizer (future version)
 
 #### Status
 - [ ] Not implemented (explicitly deferred)
