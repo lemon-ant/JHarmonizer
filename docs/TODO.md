@@ -8,22 +8,19 @@ when the pipeline is proven end-to-end.
 
 ---
 
-## 0. Must-have: allow opting out of harmonization per file/type
+## Backlog buckets
 
-Add a suppression mechanism to skip JHarmonizer processing for selected Java sources (or specific top-level types):
-- Skip sorting (member reordering)
-- Skip formatting (Palantir Java Format)
-- Skip “check” validations
+To keep planning explicit, this backlog is split into two categories:
 
-Rationale:
-Sometimes the formatter/printer behaves incorrectly for a specific class, or the file is intentionally maintained manually. The user must be able to mark such sources so the tool does not touch them on every run.
+1) **Technical debt / stabilization backlog**  
+   Items that improve correctness, safety, architecture, or maintainability of existing behavior.
 
-Acceptance idea:
-- Introduce a well-defined marker (e.g., a special comment or a dedicated suppress annotation with a stable token/code).
-- When the marker is present, the file/type is excluded from all harmonization steps (restructure + check + formatting).
-- The marker must be easy to search for across the codebase and safe to keep in VCS.
+2) **Planned future features (new product functionality)**  
+   Items that extend user-visible capabilities in upcoming versions.
 
 ---
+
+## Planned future features (new product functionality)
 
 ## 1. Compile group sorting once and precompute ordering rule values in `MemberDescriptor`
 
@@ -374,7 +371,247 @@ Related parked lazy-context fixture (separate backlog track):
 
 ---
 
-## 6. Blank-final nearest-provider edge cases still not covered by active E2E
+## 6. Adaptive static-import optimizer (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Why this is needed
+Large type-qualified calls and constants can reduce readability when repeated often,
+while excessive static imports can make source harder to scan.
+
+### Proposed solution (next version)
+Introduce an import optimizer that:
+- detects frequent static candidates (constants and static methods),
+- adds/removes static imports automatically,
+- keeps usage explicit for infrequent candidates,
+- enforces a configurable upper threshold for static import count per file.
+
+### Candidate scoring (initial direction)
+- frequency of usage in file;
+- qualified-name length savings (prefer long owner class names);
+- optional allow/deny patterns by package/type/member.
+
+### Safety requirements
+- never exceed configured static-import budget;
+- preserve deterministic output between runs;
+- avoid collisions/ambiguity when multiple static members share names.
+
+### Implementation outline (when revisited)
+- [ ] Add config model for static-import budget and scoring strategy.
+- [ ] Build per-file usage index for static members.
+- [ ] Add deterministic add/remove planner for static imports.
+- [ ] Add collision resolution rules and regression tests.
+
+---
+
+## 7. Annotation ordering policies (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+When declarations have many annotations, order quickly becomes inconsistent and noisy in diffs.
+
+### Proposed solution (next version)
+Add configurable annotation ordering modes:
+- `ALPHA` (alphabetical by normalized annotation name),
+- `LENGTH_ASC` / `LENGTH_DESC`,
+- combined policy (primary by length, secondary alphabetical tie-breaker).
+
+### Scope
+- types, methods, constructors, fields, parameters, record components.
+
+### Implementation outline (when revisited)
+- [ ] Add annotation-order strategy to config DSL.
+- [ ] Normalize names (simple vs qualified) before comparison.
+- [ ] Preserve relative order for exact ties to keep output stable.
+- [ ] Add fixture coverage for all supported declaration kinds.
+
+---
+
+## 8. Collapse single-value annotation array braces (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+For annotation attributes declared as arrays, Java allows omitting braces when only one value is passed.
+Keeping braces in single-value cases adds visual noise and creates avoidable diff churn.
+
+### Proposed solution (next version)
+Add an automatic rewrite that transforms single-element annotation array arguments into a concise form
+without redundant braces when syntax and semantics stay equivalent.
+
+### Implementation outline (when revisited)
+- [ ] Detect annotation array arguments with exactly one element.
+- [ ] Rewrite to brace-less single-value form where Java grammar permits it.
+- [ ] Skip cases where formatting/printing would become ambiguous.
+- [ ] Add round-trip fixtures to verify semantic equivalence and stable output.
+
+---
+
+## 9. Constants and enum ordering expansion (future version)
+
+### Status
+- [ ] Partially captured in existing backlog; expanded here for completeness
+
+### Existing related item
+- Enum constants ordering is already tracked in **Section 3** and should not be duplicated.
+
+### Additional future scope
+- explicit ordering policies for regular constants groups beyond current defaults;
+- shared configurable policy layer so constants/enum ordering rules stay consistent.
+
+### Implementation outline (when revisited)
+- [ ] Reuse Section 3 enum implementation as the baseline.
+- [ ] Add constants-group ordering options with stable tie-breakers.
+- [ ] Add consistency tests (constants vs enum constants).
+
+---
+
+## 10. Record-member ordering policies (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+Record components/fields can become inconsistently ordered across files and modules,
+but this area should be configurable separately from enum/constants ordering.
+
+### Proposed solution (next version)
+Add dedicated ordering strategies for record members:
+- alphabetical ordering;
+- declaration-preserving mode;
+- optional multi-key ordering with deterministic tie-breakers.
+
+### Safety requirements
+- preserve Java record semantics and generated member contracts;
+- keep deterministic output across repeated runs;
+- avoid rewriting that changes runtime behavior or binary compatibility unexpectedly.
+
+### Implementation outline (when revisited)
+- [ ] Add record-member ordering strategy options to config.
+- [ ] Implement stable comparator with clear tie-break hierarchy.
+- [ ] Add focused fixtures for records with multiple components.
+
+---
+
+## 11. Static-candidate conversion analyzer (instance -> static) (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+Some members are instance methods/fields but do not depend on instance state (or depend on very little),
+so they can be promoted to static for clarity and explicit dependencies.
+
+### Proposed solution (next version)
+Add dependency-graph analysis to detect members that can safely become static:
+- detect methods with no `this`/instance-field dependency;
+- detect fields that are instance-declared but semantically static candidates;
+- optionally support controlled refactor mode for near-static methods by extracting required instance data into parameters.
+
+### Safety requirements
+- preserve behavior (including override/inheritance constraints);
+- skip members where static conversion breaks API or framework contracts;
+- provide conservative mode by default.
+
+### Implementation outline (when revisited)
+- [ ] Build instance-dependency classifier on top of member dependency graph.
+- [ ] Add refactoring guardrails (override checks, reflective usage risk flags).
+- [ ] Add optional rewrite mode for parameterized utility extraction.
+- [ ] Add compile + behavior regression fixtures.
+
+---
+
+## 12. Visibility minimization pass (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+Projects often keep broader visibility than necessary (`public`/`protected`) for classes,
+constructors, methods, and fields that are only used in narrower scopes.
+
+### Proposed solution (next version)
+Introduce a configurable pass that lowers visibility to the minimal safe level:
+- classes / nested classes,
+- constructors,
+- methods,
+- fields.
+
+### Safety requirements
+- do not break external API/public contracts when project is a library;
+- honor framework entry points and reflection-based usage allowlists;
+- produce an explicit report of every reduced-visibility change.
+
+### Implementation outline (when revisited)
+- [ ] Add symbol-usage analysis across module boundaries.
+- [ ] Add configurable API boundary definitions.
+- [ ] Implement safe downgrade planner with dry-run mode.
+- [ ] Add regression tests for framework-specific entry points.
+
+---
+
+## 13. Nullability interfaces / annotations enforcer (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+Teams need consistent nullability annotation coverage,
+but manual enforcement is repetitive and drifts over time.
+
+### Proposed solution (next version)
+Add a nullability policy analyzer/fixer with configurable minimum scope:
+- `public` only, or
+- `public + package-private`, etc.
+
+The analyzer validates and auto-fixes missing/incorrect nullability annotations for fields, methods,
+and method parameters according to configured scope.
+
+### Safety requirements
+- honor existing repository conventions and exclusions;
+- avoid changing `Object` override signatures/behavior;
+- support warning-only mode before auto-fix mode.
+
+### Implementation outline (when revisited)
+- [ ] Add configurable nullability scope policy to DSL.
+- [ ] Implement nullability inference/validation + fix planner.
+
+---
+
+## 14. Lombok policy enforcer and optimizer (future version)
+
+### Status
+- [ ] Not implemented (explicitly deferred)
+
+### Problem statement
+When Lombok is available, projects often keep a mix of manual boilerplate and partial Lombok usage,
+which increases maintenance cost and style drift.
+
+### Proposed solution (next version)
+Add a dedicated Lombok analyzer/fixer:
+- detect Lombok availability and supported annotations per module;
+- replace eligible boilerplate with Lombok annotations;
+- remove redundant manual code and redundant Lombok annotations.
+
+### Safety requirements
+- preserve behavior and generated API contracts;
+- honor project-level exclusions and style constraints;
+- support warning-only mode before auto-fix mode.
+
+### Implementation outline (when revisited)
+- [ ] Detect Lombok availability and supported annotations per module.
+- [ ] Build rule set for safe boilerplate-to-Lombok migrations.
+- [ ] Add semantic-preservation tests for migrated classes.
+
+---
+
+## Technical debt / stabilization backlog
+
+## 1. Blank-final nearest-provider edge cases still not covered by active E2E
 
 ### Status
 - [ ] Not fully implemented in active E2E coverage
@@ -389,7 +626,7 @@ Related parked lazy-context fixture (separate backlog track):
 
 ---
 
-## 7. Spoon comment attachment gaps for non-type and comment-only units
+## 2. Spoon comment attachment gaps for non-type and comment-only units
 
 ### Status
 - [ ] Open investigation / upstream tracking not yet completed
@@ -411,3 +648,5 @@ Related parked lazy-context fixture (separate backlog track):
   - [ ] module declarations with leading file comments;
   - [ ] comment-only compilation units.
 - [ ] Re-evaluate and remove/limit raw-source fallback after upstream fix is available and verified.
+
+---
