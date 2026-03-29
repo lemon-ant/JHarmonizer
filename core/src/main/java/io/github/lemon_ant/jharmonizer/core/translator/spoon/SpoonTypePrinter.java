@@ -17,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.TokenWriter;
@@ -60,7 +61,22 @@ final class SpoonTypePrinter {
                     .writeln();
             return;
         }
-        printTypeMembers(typePosition, explicitTypeMembers);
+        int minMemberStart = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .min()
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute first member start from explicit type members"));
+        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
+        if (type instanceof CtEnum<?>) {
+            tokenWriter.writeln();
+        }
+        printTypeMembers(explicitTypeMembers);
+        int maxMemberEnd = explicitTypeMembers.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                .max()
+                .orElseThrow(() ->
+                        new IllegalStateException("Failed to compute last member end from explicit type members"));
+        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 
     /**
@@ -107,15 +123,7 @@ final class SpoonTypePrinter {
                 .toList();
     }
 
-    private void printTypeMembers(SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
-        int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .min()
-                .orElseThrow(() ->
-                        new IllegalStateException("Failed to compute first member start from explicit type members"));
-
-        printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
-
+    private void printTypeMembers(List<CtTypeMember> explicitTypeMembers) {
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
         for (CtTypeMember member : explicitTypeMembers) {
@@ -123,13 +131,6 @@ final class SpoonTypePrinter {
                     printTypeMember(member, explicitTypeMembers, first, previousElementNeedSeparatorAfter);
             first = false;
         }
-
-        int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
-                .max()
-                .orElseThrow(() ->
-                        new IllegalStateException("Failed to compute last member end from explicit type members"));
-        printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 
     private boolean printTypeMember(
