@@ -195,7 +195,7 @@ final class SpoonTypePrinter {
 
         String groupHeader = findGroupHeader(member);
         if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
-            if (!hasSeparatorAlreadyPrinted && !first) {
+            if (!hasSeparatorAlreadyPrinted) {
                 tokenWriter.writeln();
             }
         } else if (groupHeader != null && !hasMatchingLeadingComment(member, groupHeader)) {
