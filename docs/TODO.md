@@ -675,3 +675,34 @@ Add a dedicated Lombok analyzer/fixer:
 - [ ] Re-evaluate and remove/limit raw-source fallback after upstream fix is available and verified.
 
 ---
+
+### 3. Spoon partial evaluator NPE on method-reference expressions in no-classpath mode
+
+#### Status
+- [ ] Open investigation / upstream issue not yet created
+
+#### Verified current behavior
+- In no-classpath parsing, Spoon may throw `NullPointerException` from partial evaluation while inspecting
+  field-initializer expressions containing method references.
+- Reproduced with expression shape similar to:
+  `Map.of(WHOLE_CONFIG_KEY, WholeConfigDifferentiator::getByteBufferDifferentiator)`.
+
+#### Representative stack trace (captured)
+```text
+java.lang.NullPointerException: Cannot invoke "spoon.reflect.reference.CtTypeReference.getTypeDeclaration()"
+because the return value of "spoon.reflect.reference.CtFieldReference.getDeclaringType()" is null
+    at spoon.support.reflect.eval.VisitorPartialEvaluator.visitFieldAccess(VisitorPartialEvaluator.java:428)
+    at spoon.support.reflect.eval.VisitorPartialEvaluator.visitCtFieldRead(VisitorPartialEvaluator.java:397)
+    at spoon.support.reflect.eval.VisitorPartialEvaluator.visitCtInvocation(VisitorPartialEvaluator.java:529)
+```
+
+#### Temporary workaround in code
+- `DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(...)` treats partial-evaluation runtime
+  failures as non-foldable expressions, logs warning context, and returns `Optional.empty()`.
+
+#### Follow-up actions
+- [ ] Create upstream Spoon issue with a minimal reproducible sample based on method-reference field initializer.
+- [ ] Attach the captured stack trace and no-classpath context to the upstream report.
+- [ ] Revisit local fallback scope after upstream fix becomes available.
+
+---

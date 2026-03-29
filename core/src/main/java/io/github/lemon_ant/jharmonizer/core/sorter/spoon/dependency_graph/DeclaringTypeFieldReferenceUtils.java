@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtExpression;
@@ -20,9 +21,9 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.filter.TypeFilter;
-import spoon.support.SpoonClassNotFoundException;
 
 @UtilityClass
+@Slf4j
 class DeclaringTypeFieldReferenceUtils {
 
     /**
@@ -89,16 +90,26 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     /**
-     * Attempts to partially evaluate an expression without failing on missing runtime classes.
+     * Attempts to partially evaluate an expression.
      *
      * @param expression the expression to evaluate
-     * @return partially evaluated expression, or empty when Spoon cannot resolve required classes
+     * @return partially evaluated expression, or empty when Spoon/runtime failures prevent safe folding
      */
     @NonNull
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     static Optional<CtExpression<?>> findPartiallyEvaluatedExpression(@NonNull CtExpression<?> expression) {
         try {
             return Optional.of(expression.partiallyEvaluate());
-        } catch (SpoonClassNotFoundException ignored) {
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "Failed to partially evaluate field initializer expression at {} ({}: {}). "
+                            + "Falling back to raw expression.",
+                    expression.getPosition(),
+                    exception.getClass().getSimpleName(),
+                    exception.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("Partial-evaluation failure stack trace.", exception);
+            }
             return Optional.empty();
         }
     }
