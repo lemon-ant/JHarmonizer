@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtExpression;
@@ -20,10 +22,11 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.filter.TypeFilter;
-import spoon.support.SpoonClassNotFoundException;
 
 @UtilityClass
 class DeclaringTypeFieldReferenceUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(DeclaringTypeFieldReferenceUtils.class);
 
     /**
      * Performs the require declaring type.
@@ -95,10 +98,15 @@ class DeclaringTypeFieldReferenceUtils {
      * @return partially evaluated expression, or empty when Spoon cannot resolve required classes
      */
     @NonNull
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     static Optional<CtExpression<?>> findPartiallyEvaluatedExpression(@NonNull CtExpression<?> expression) {
         try {
             return Optional.of(expression.partiallyEvaluate());
-        } catch (SpoonClassNotFoundException ignored) {
+        } catch (RuntimeException exception) {
+            logger.warn(
+                    "Failed to partially evaluate field initializer expression at {}. Falling back to raw expression.",
+                    expression.getPosition(),
+                    exception);
             return Optional.empty();
         }
     }
