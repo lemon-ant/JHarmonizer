@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import static io.github.lemon_ant.jharmonizer.core.config.compiled.MemberGroupRuleLineCompiler.compileRuleLine;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess.PUBLIC;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.FIELD;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.EXACT;
@@ -92,8 +93,7 @@ class AnnotationMatchingPredicatesTest {
                 .build();
 
         // When
-        Predicate<MemberDescriptor> compiledPredicate =
-                MemberGroupRuleLineCompilerTestAccess.invokeCompileRuleLine(unifiedRuleLine);
+        Predicate<MemberDescriptor> compiledPredicate = compileRuleLine(unifiedRuleLine);
 
         // Then
         MemberDescriptor annotatedDescriptor = MemberDescriptor.builder()
@@ -119,8 +119,7 @@ class AnnotationMatchingPredicatesTest {
                 .build();
 
         // When
-        Predicate<MemberDescriptor> compiledPredicate =
-                MemberGroupRuleLineCompilerTestAccess.invokeCompileRuleLine(unifiedRuleLine);
+        Predicate<MemberDescriptor> compiledPredicate = compileRuleLine(unifiedRuleLine);
 
         // Then
         MemberDescriptor annotatedDescriptor = MemberDescriptor.builder()
@@ -141,8 +140,7 @@ class AnnotationMatchingPredicatesTest {
                 .build();
 
         // When
-        Predicate<MemberDescriptor> compiledPredicate =
-                MemberGroupRuleLineCompilerTestAccess.invokeCompileRuleLine(unifiedRuleLine);
+        Predicate<MemberDescriptor> compiledPredicate = compileRuleLine(unifiedRuleLine);
 
         // Then
         MemberDescriptor descriptorWithTwoAnnotations = MemberDescriptor.builder()
