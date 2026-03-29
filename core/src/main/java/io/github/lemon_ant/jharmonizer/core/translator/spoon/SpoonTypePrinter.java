@@ -17,6 +17,8 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtEnum;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.TokenWriter;
@@ -45,7 +47,13 @@ final class SpoonTypePrinter {
      * @param type the type declaration to print
      */
     void printType(@NonNull CtType<?> type) {
-        tokenWriter.writeln();
+        printType(type, true);
+    }
+
+    private void printType(@NonNull CtType<?> type, boolean printLeadingNewLine) {
+        if (printLeadingNewLine) {
+            tokenWriter.writeln();
+        }
         if (sortingSkippedTypes.contains(type)) {
             printSkippedType(type);
             return;
@@ -60,7 +68,7 @@ final class SpoonTypePrinter {
                     .writeln();
             return;
         }
-        printTypeMembers(typePosition, explicitTypeMembers);
+        printTypeMembers(type, typePosition, explicitTypeMembers);
     }
 
     /**
@@ -107,14 +115,19 @@ final class SpoonTypePrinter {
                 .toList();
     }
 
-    private void printTypeMembers(SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
+    private void printTypeMembers(CtType<?> type, SourcePosition typePosition, List<CtTypeMember> explicitTypeMembers) {
         int minMemberStart = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
                 .min()
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute first member start from explicit type members"));
 
+        boolean enumHeaderEndsWithSemicolon =
+                type instanceof CtEnum<?> && hasTrailingSemicolon(typePosition.getSourceStart(), minMemberStart - 1);
         printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
+        if (enumHeaderEndsWithSemicolon) {
+            tokenWriter.writeln();
+        }
 
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
@@ -132,6 +145,19 @@ final class SpoonTypePrinter {
         printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 
+    private boolean hasTrailingSemicolon(int start, int end) {
+        int startWithIndent = SrcCodeUtils.findIndentationStart(start, originalSrcCode);
+        String fragment = originalSrcCode.substring(startWithIndent, end + 1);
+        for (int index = fragment.length() - 1; index >= 0; index--) {
+            char candidateCharacter = fragment.charAt(index);
+            if (Character.isWhitespace(candidateCharacter)) {
+                continue;
+            }
+            return candidateCharacter == ';';
+        }
+        return false;
+    }
+
     private boolean printTypeMember(
             CtTypeMember member,
             List<CtTypeMember> explicitTypeMembers,
@@ -139,7 +165,12 @@ final class SpoonTypePrinter {
             boolean previousElementNeedSeparatorAfter) {
         // TODO Check Orphaned comments
 
-        boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
+        int currentMemberIndex = explicitTypeMembers.indexOf(member);
+        boolean previousElementIsEnumValue =
+                currentMemberIndex > 0 && explicitTypeMembers.get(currentMemberIndex - 1) instanceof CtEnumValue<?>;
+        boolean currentElementIsNotEnumValue = !(member instanceof CtEnumValue<?>);
+        boolean needsSeparatorBeforeCurrentMember =
+                needsSeparatorBefore(member, first) || previousElementIsEnumValue && currentElementIsNotEnumValue;
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();

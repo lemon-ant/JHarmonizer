@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class BaselineOrderingSample {
-
     int a = 1;
     int b = 2;
 
