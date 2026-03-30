@@ -36,4 +36,52 @@ class SpoonCustomSrcPrinterTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already been finalized");
     }
+
+    @Test
+    void serializeCompilationUnit_enumConstantsWithClassBodies_keepMembersOutsideConstantBody() {
+        // Given
+        String srcCode = """
+                enum Metric {
+                    FIRST {
+                        @Override
+                        long value() {
+                            return 1L;
+                        }
+                    },
+                    SECOND {
+                        @Override
+                        long value() {
+                            return 2L;
+                        }
+                    };
+
+                    private final long cached = 7L;
+
+                    abstract long value();
+
+                    long total() {
+                        return value() + cached;
+                    }
+                }
+                """;
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")));
+        SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
+                spoonAstModel.getCompilationUnit().getFactory().getEnvironment(),
+                srcCode,
+                spoonAstModel.getOptOuts().getSortingSkippedTypes());
+
+        // When
+        SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges =
+                printer.serializeCompilationUnit(spoonAstModel.getCompilationUnit());
+
+        // Then
+        String serializedSrc = serializedSrcWithSkippedTypeRanges.getSerializedSrcCode();
+        assertThat(serializedSrc).contains("};");
+        assertThat(serializedSrc).contains("private final long cached = 7L;");
+        assertThatCodeParses(serializedSrc);
+    }
+
+    private static void assertThatCodeParses(String srcCode) {
+        SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")));
+    }
 }

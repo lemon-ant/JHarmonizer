@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -115,6 +116,8 @@ final class SpoonTypePrinter {
     @NonNull
     private static List<CtTypeMember> findExplicitTypeMembers(CtType<?> type) {
         return type.getTypeMembers().stream()
+                .filter(typeMember -> Objects.equals(typeMember.getDeclaringType(), type))
+                .filter(typeMember -> Objects.equals(typeMember.getParent(), type))
                 // Spoon creates implicit constructors which don't exist in the source code
                 .filter(typeMember -> typeMember.getPosition().isValidPosition())
                 /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
