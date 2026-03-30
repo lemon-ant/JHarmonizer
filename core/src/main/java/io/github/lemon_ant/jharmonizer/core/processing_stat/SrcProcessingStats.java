@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
@@ -77,15 +78,6 @@ public class SrcProcessingStats {
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
         }
 
-        AggregatedProcessingStatistic(
-                long fileCount,
-                long totalSize,
-                long totalProcessingTimeNanos,
-                @Nullable FileProcessingStatistic smallestFile,
-                @Nullable FileProcessingStatistic largestFile) {
-            this(fileCount, totalSize, totalProcessingTimeNanos, smallestFile, largestFile, List.of());
-        }
-
         @Override
         public String toString() {
             return String.format(
@@ -114,7 +106,7 @@ public class SrcProcessingStats {
                             .orElse(""),
                     formatHmsMillisFromNanos(totalProcessingTimeNanos),
                     formatSecondsMicrosecondsFromNanos(calculateAverageProcessingTime()),
-                    filesWithUnexpectedErrors.isEmpty() ? "none" : filesWithUnexpectedErrors);
+                    formatUnexpectedErrorFilesForDisplay());
         }
 
         // Average time spent on processing a file
@@ -133,6 +125,17 @@ public class SrcProcessingStats {
          */
         long calculateAverageSize() {
             return fileCount > 0 ? totalSize / fileCount : 0;
+        }
+
+        @NonNull
+        private String formatUnexpectedErrorFilesForDisplay() {
+            if (filesWithUnexpectedErrors.isEmpty()) {
+                return "none";
+            }
+            return filesWithUnexpectedErrors.stream()
+                    .map(path -> abbreviatePathForDisplay(path, MAX_PATH_LENGTH))
+                    .sorted()
+                    .collect(Collectors.joining(", ", "[", "]"));
         }
     }
 

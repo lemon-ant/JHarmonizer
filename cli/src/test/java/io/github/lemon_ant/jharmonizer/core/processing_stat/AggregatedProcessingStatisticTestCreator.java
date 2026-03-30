@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -9,6 +10,6 @@ public class AggregatedProcessingStatisticTestCreator {
 
     @NonNull
     public static AggregatedProcessingStatistic createEmpty() {
-        return new AggregatedProcessingStatistic(0, 0, 0, null, null);
+        return new AggregatedProcessingStatistic(0, 0, 0, null, null, List.of());
     }
 }
