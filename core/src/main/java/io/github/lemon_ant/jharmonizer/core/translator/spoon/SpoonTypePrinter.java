@@ -138,7 +138,6 @@ final class SpoonTypePrinter {
             List<CtTypeMember> explicitTypeMembers,
             boolean first,
             boolean previousElementNeedSeparatorAfter) {
-
         // TODO Check Orphaned comments
 
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
