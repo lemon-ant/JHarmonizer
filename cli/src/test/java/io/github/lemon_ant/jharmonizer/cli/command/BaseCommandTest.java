@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,7 +10,7 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.AggregatedProcessingStatisticTestCreator;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -124,7 +123,7 @@ class BaseCommandTest {
                 mockConstruction(SrcProcessor.class, (mock, context) -> {
                     constructorArguments.set(context.arguments());
                     when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenReturn(mock(AggregatedProcessingStatistic.class));
+                            .thenReturn(AggregatedProcessingStatisticTestCreator.createEmpty());
                 })) {
             exitCode = cmd.execute("--base-dir", "src", "--no-backup");
         }
