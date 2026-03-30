@@ -121,6 +121,7 @@ final class SpoonTypePrinter {
                 // members that are declared directly in `type`, otherwise those nested members would be
                 // printed as if they were top-level members of `type`.
                 .filter(typeMember -> Objects.equals(typeMember.getDeclaringType(), type))
+                .filter(typeMember -> Objects.equals(typeMember.getParent(), type))
                 // Spoon creates implicit constructors which don't exist in the source code
                 .filter(typeMember -> typeMember.getPosition().isValidPosition())
                 /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
