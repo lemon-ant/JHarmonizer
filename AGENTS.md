@@ -67,6 +67,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Do not add a second unmodifiable wrapper or defensive copy when the collection already stays immutable upstream or never leaves the local method scope.
 - Non-obvious build/configuration workarounds (for example temporary dependency overrides for transitive vulnerabilities) must include a nearby comment that explains why the workaround exists, which upstream component requires it, and when it can be removed.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
+- When debugging uncovers a non-obvious runtime/framework edge case (for example parser/evaluator recursion traps), document the guard/workaround with a nearby code comment so future refactors do not remove it accidentally.
 
 ## Test conventions
 

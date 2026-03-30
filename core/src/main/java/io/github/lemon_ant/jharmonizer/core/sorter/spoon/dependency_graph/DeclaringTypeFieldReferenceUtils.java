@@ -14,6 +14,7 @@ import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtLambda;
+import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
@@ -98,15 +99,23 @@ class DeclaringTypeFieldReferenceUtils {
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     static Optional<CtExpression<?>> findPartiallyEvaluatedExpression(@NonNull CtExpression<?> expression) {
+        // Anonymous/new-class initializer trees can trigger unsafe/incorrect Spoon partial evaluation.
+        // Keep this explicit short-circuit so regression fixtures can preserve original initializer semantics.
+        if (!expression.getElements(new TypeFilter<>(CtNewClass.class)).isEmpty()) {
+            return Optional.empty();
+        }
+
         try {
             return Optional.of(expression.partiallyEvaluate());
         } catch (RuntimeException exception) {
-            log.warn(
-                    "Failed to partially evaluate field initializer expression at {} ({}: {}). "
-                            + "Falling back to raw expression.",
-                    expression.getPosition(),
-                    exception.getClass().getSimpleName(),
-                    exception.getMessage());
+            if (log.isWarnEnabled()) {
+                log.warn(
+                        "Failed to partially evaluate field initializer expression at {} ({}: {}). "
+                                + "Falling back to raw expression.",
+                        expression.getPosition(),
+                        exception.getClass().getSimpleName(),
+                        exception.getMessage());
+            }
             if (log.isDebugEnabled()) {
                 log.debug("Partial-evaluation failure stack trace.", exception);
             }
