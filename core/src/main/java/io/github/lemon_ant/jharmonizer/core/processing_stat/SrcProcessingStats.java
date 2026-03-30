@@ -62,7 +62,7 @@ public class SrcProcessingStats {
         @NonNull
         List<@NonNull Path> filesWithUnexpectedErrors;
 
-        public AggregatedProcessingStatistic(
+        AggregatedProcessingStatistic(
                 long fileCount,
                 long totalSize,
                 long totalProcessingTimeNanos,
@@ -77,7 +77,7 @@ public class SrcProcessingStats {
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
         }
 
-        public AggregatedProcessingStatistic(
+        AggregatedProcessingStatistic(
                 long fileCount,
                 long totalSize,
                 long totalProcessingTimeNanos,
