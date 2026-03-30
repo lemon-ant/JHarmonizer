@@ -138,6 +138,7 @@ final class SpoonTypePrinter {
             List<CtTypeMember> explicitTypeMembers,
             boolean first,
             boolean previousElementNeedSeparatorAfter) {
+
         // TODO Check Orphaned comments
 
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
@@ -163,7 +164,7 @@ final class SpoonTypePrinter {
 
         int nextElementStart = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .filter(start -> start > member.getPosition().getSourceEnd())
+                .filter(start -> start > member.getPosition().getSourceStart())
                 .min()
                 .orElse(member.getPosition().getSourceEnd() + 1);
         printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
