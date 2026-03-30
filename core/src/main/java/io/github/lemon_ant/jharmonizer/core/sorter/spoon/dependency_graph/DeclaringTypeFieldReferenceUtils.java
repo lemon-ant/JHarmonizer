@@ -99,6 +99,8 @@ class DeclaringTypeFieldReferenceUtils {
     @NonNull
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
     static Optional<CtExpression<?>> findPartiallyEvaluatedExpression(@NonNull CtExpression<?> expression) {
+        // Anonymous/new-class initializer trees can trigger unsafe/incorrect Spoon partial evaluation.
+        // Keep this explicit short-circuit so regression fixtures can preserve original initializer semantics.
         if (!expression.getElements(new TypeFilter<>(CtNewClass.class)).isEmpty()) {
             return Optional.empty();
         }
