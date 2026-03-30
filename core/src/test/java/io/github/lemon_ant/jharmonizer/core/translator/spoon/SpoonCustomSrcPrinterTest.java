@@ -78,6 +78,8 @@ class SpoonCustomSrcPrinterTest {
         String serializedSrc = serializedSrcWithSkippedTypeRanges.getSerializedSrcCode();
         assertThat(serializedSrc).contains("};");
         assertThat(serializedSrc).contains("private final long cached = 7L;");
+        assertThat(serializedSrc.indexOf("};"))
+                .isLessThan(serializedSrc.indexOf("private final long cached = 7L;"));
         assertThatCodeParses(serializedSrc);
     }
 
