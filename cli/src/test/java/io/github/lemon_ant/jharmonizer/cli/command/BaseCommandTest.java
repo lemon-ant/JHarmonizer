@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -123,7 +124,7 @@ class BaseCommandTest {
                 mockConstruction(SrcProcessor.class, (mock, context) -> {
                     constructorArguments.set(context.arguments());
                     when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenReturn(new AggregatedProcessingStatistic(0, 0, 0, null, null));
+                            .thenReturn(mock(AggregatedProcessingStatistic.class));
                 })) {
             exitCode = cmd.execute("--base-dir", "src", "--no-backup");
         }

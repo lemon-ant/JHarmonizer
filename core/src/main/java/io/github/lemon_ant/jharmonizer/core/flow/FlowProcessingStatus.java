@@ -7,7 +7,8 @@ import lombok.NonNull;
  * {@code REORDERED} means member order changed, {@code FORMATTED} means only formatting changed,
  * {@code CHECKED} means the file was verified and no changes were needed,
  * {@code SKIPPED} means the file was intentionally skipped due to a file-level opt-out directive,
- * and {@code UNCHANGED} means the file was left as-is in a non-checking flow.
+ * {@code UNCHANGED} means the file was left as-is in a non-checking flow,
+ * and {@code ERROR} means processing failed due to an unexpected internal runtime error.
  */
 public enum FlowProcessingStatus {
     REORDERED,
@@ -15,6 +16,7 @@ public enum FlowProcessingStatus {
     CHECKED,
     SKIPPED,
     UNCHANGED,
+    ERROR,
     ;
 
     /**
