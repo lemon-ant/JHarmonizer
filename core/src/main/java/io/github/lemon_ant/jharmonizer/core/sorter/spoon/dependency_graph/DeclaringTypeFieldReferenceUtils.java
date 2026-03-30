@@ -97,7 +97,7 @@ class DeclaringTypeFieldReferenceUtils {
      * @return partially evaluated expression, or empty when Spoon/runtime failures prevent safe folding
      */
     @NonNull
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
     static Optional<CtExpression<?>> findPartiallyEvaluatedExpression(@NonNull CtExpression<?> expression) {
         if (!expression.getElements(new TypeFilter<>(CtNewClass.class)).isEmpty()) {
             return Optional.empty();
@@ -106,17 +106,12 @@ class DeclaringTypeFieldReferenceUtils {
         try {
             return Optional.of(expression.partiallyEvaluate());
         } catch (RuntimeException exception) {
-            if (log.isWarnEnabled()) {
-                log.warn(
-                        "Failed to partially evaluate field initializer expression at {} ({}: {}). "
-                                + "Falling back to raw expression.",
-                        expression.getPosition(),
-                        exception.getClass().getSimpleName(),
-                        exception.getMessage());
-            }
-            if (log.isDebugEnabled()) {
-                log.debug("Partial-evaluation failure stack trace.", exception);
-            }
+            log.debug(
+                    "Failed to partially evaluate field initializer expression at {} ({}: {}). "
+                            + "Falling back to raw expression.",
+                    expression.getPosition(),
+                    exception.getClass().getSimpleName(),
+                    exception.getMessage());
             return Optional.empty();
         }
     }
