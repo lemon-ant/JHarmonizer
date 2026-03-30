@@ -10,8 +10,8 @@ import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
+import io.github.lemon_ant.jharmonizer.core.flow.SafeFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
@@ -86,13 +86,14 @@ public final class SrcProcessor {
                 excludeGlobs,
                 config.isBackupsEnabled());
 
-        IFlow flow =
+        IFlow baseFlow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
                     case RESTRUCTURE -> new RestructureFlow(formatter, config.isBackupsEnabled(), sorter);
                     case CHECK_ALL -> new CheckAllFlow(formatter, sorter);
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
                 };
+        IFlow flow = SafeFlow.wrap(baseFlow);
 
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
@@ -100,7 +101,6 @@ public final class SrcProcessor {
                 .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
                         flowProcessingResult.getPath(),
                         flowProcessingResult.getFlowProcessingStatus().name())))
-                .map(FileProcessingStatistic::convert)
                 .collect(SrcProcessingStats.statsCollector());
 
         log.info(aggregatedProcessingStatistic.toString());

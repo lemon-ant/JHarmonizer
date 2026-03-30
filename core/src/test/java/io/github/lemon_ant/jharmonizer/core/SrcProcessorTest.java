@@ -224,6 +224,34 @@ class SrcProcessorTest {
     }
 
     @Test
+    void processSources_unexpectedPerFileRuntimeError_logsErrorAndContinuesOtherFiles() throws Exception {
+        // Given
+        Path brokenJavaFilePath = writeJavaFile(
+                temporaryDirectory, "BrokenSample.java", "package demo; public class BrokenSample { void broken( }");
+        Path validJavaFilePath = writeJavaFile(
+                temporaryDirectory, "ValidSample.java", "package demo; public class ValidSample {private int x;}");
+        String brokenOriginalSrcCode = Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8);
+        String validOriginalSrcCode = Files.readString(validJavaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("JHarmonizer ERROR").contains("BrokenSample.java");
+        assertThat(logs).contains("Files with unexpected internal errors");
+        assertThat(Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8)).isEqualTo(brokenOriginalSrcCode);
+        assertThat(Files.readString(validJavaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(validOriginalSrcCode);
+    }
+
+    @Test
     void processSources_partialConfigFile_reordersUsingMergedDefaults() throws Exception {
         // Given
         Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES);

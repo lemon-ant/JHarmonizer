@@ -6,6 +6,12 @@ import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadable
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
@@ -29,7 +35,7 @@ public class SrcProcessingStats {
      * @return the result
      */
     @NonNull
-    public Collector<FileProcessingStatistic, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
+    public Collector<FlowProcessingResult, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
                 StatsContainer::accumulate,
@@ -53,6 +59,33 @@ public class SrcProcessingStats {
         @Nullable
         FileProcessingStatistic largestFile;
 
+        @NonNull
+        List<@NonNull Path> filesWithUnexpectedErrors;
+
+        public AggregatedProcessingStatistic(
+                long fileCount,
+                long totalSize,
+                long totalProcessingTimeNanos,
+                @Nullable FileProcessingStatistic smallestFile,
+                @Nullable FileProcessingStatistic largestFile,
+                @NonNull List<@NonNull Path> filesWithUnexpectedErrors) {
+            this.fileCount = fileCount;
+            this.totalSize = totalSize;
+            this.totalProcessingTimeNanos = totalProcessingTimeNanos;
+            this.smallestFile = smallestFile;
+            this.largestFile = largestFile;
+            this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
+        }
+
+        public AggregatedProcessingStatistic(
+                long fileCount,
+                long totalSize,
+                long totalProcessingTimeNanos,
+                @Nullable FileProcessingStatistic smallestFile,
+                @Nullable FileProcessingStatistic largestFile) {
+            this(fileCount, totalSize, totalProcessingTimeNanos, smallestFile, largestFile, List.of());
+        }
+
         @Override
         public String toString() {
             return String.format(
@@ -60,7 +93,8 @@ public class SrcProcessingStats {
                             + "Min size: %s %s%n"
                             + "Max size: %s %s%n"
                             + "Total processing time: %s%n"
-                            + "Average processing time: %s s/file",
+                            + "Average processing time: %s s/file%n"
+                            + "Files with unexpected internal errors: %s",
                     fileCount,
                     formatBytes(totalSize),
                     formatBytes(calculateAverageSize()),
@@ -79,7 +113,8 @@ public class SrcProcessingStats {
                             .map(path -> " (" + abbreviatePathForDisplay(path, MAX_PATH_LENGTH) + ")")
                             .orElse(""),
                     formatHmsMillisFromNanos(totalProcessingTimeNanos),
-                    formatSecondsMicrosecondsFromNanos(calculateAverageProcessingTime()));
+                    formatSecondsMicrosecondsFromNanos(calculateAverageProcessingTime()),
+                    filesWithUnexpectedErrors.isEmpty() ? "none" : filesWithUnexpectedErrors);
         }
 
         // Average time spent on processing a file
@@ -107,17 +142,22 @@ public class SrcProcessingStats {
         private final LongAdder count = new LongAdder();
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();
+        private final List<Path> unexpectedErrorPaths = Collections.synchronizedList(new ArrayList<>());
         private final LongAdder totalSize = new LongAdder();
         private final LongAdder totalTime = new LongAdder();
 
         /**
          * Performs the accumulate.
-         * @param stats the stats
+         * @param flowProcessingResult the result
          */
-        void accumulate(@NonNull FileProcessingStatistic stats) {
+        void accumulate(@NonNull FlowProcessingResult flowProcessingResult) {
+            FileProcessingStatistic stats = FileProcessingStatistic.convert(flowProcessingResult);
             count.increment();
             totalSize.add(stats.getSize());
             totalTime.add(stats.getProcessingTimeNanos());
+            if (flowProcessingResult.getFlowProcessingStatus() == FlowProcessingStatus.ERROR) {
+                unexpectedErrorPaths.add(flowProcessingResult.getPath());
+            }
 
             minSize.accumulateAndGet(
                     stats, (current, next) -> current == null || next.getSize() < current.getSize() ? next : current);
@@ -136,6 +176,7 @@ public class SrcProcessingStats {
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
             totalTime.add(other.totalTime.sum());
+            unexpectedErrorPaths.addAll(other.unexpectedErrorPaths);
 
             minSize.accumulateAndGet(
                     other.minSize.get(),
@@ -157,7 +198,12 @@ public class SrcProcessingStats {
         @NonNull
         AggregatedProcessingStatistic toAggregatedStats() {
             return new AggregatedProcessingStatistic(
-                    count.sum(), totalSize.sum(), totalTime.sum(), minSize.get(), maxSize.get());
+                    count.sum(),
+                    totalSize.sum(),
+                    totalTime.sum(),
+                    minSize.get(),
+                    maxSize.get(),
+                    Collections.unmodifiableList(unexpectedErrorPaths));
         }
     }
 }
