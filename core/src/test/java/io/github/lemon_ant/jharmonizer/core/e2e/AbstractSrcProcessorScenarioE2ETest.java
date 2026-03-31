@@ -203,8 +203,8 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     @NonNull
     private static SrcProcessor buildSrcProcessor(Path scenarioConfigPath) {
         if (scenarioConfigPath == null) {
-            return new SrcProcessor(
-                    disableProcessingStatisticsOutput(new FlexibleUnifiedConfig(null, null, null, null, null, null)));
+            return new SrcProcessor(disableProcessingStatisticsOutput(
+                    FlexibleUnifiedConfig.builder().build()));
         }
 
         FlexibleUnifiedConfig flexibleConfig =
@@ -215,13 +215,14 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     @NonNull
     private static FlexibleUnifiedConfig disableProcessingStatisticsOutput(FlexibleUnifiedConfig flexibleConfig) {
-        return new FlexibleUnifiedConfig(
-                flexibleConfig.getTopLevelTypesOrdering().orElse(null),
-                flexibleConfig.getFormatting().orElse(null),
-                flexibleConfig.getBackupsEnabled().orElse(null),
-                false,
-                flexibleConfig.getHeaderLine().orElse(null),
-                flexibleConfig.getRootMemberGroups().orElse(null));
+        FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder builder =
+                FlexibleUnifiedConfig.builder().printProcessingStatistics(false);
+        flexibleConfig.getTopLevelTypesOrdering().ifPresent(builder::topLevelTypesOrdering);
+        flexibleConfig.getFormatting().ifPresent(builder::formatting);
+        flexibleConfig.getBackupsEnabled().ifPresent(builder::backupsEnabled);
+        flexibleConfig.getHeaderLine().ifPresent(builder::headerLine);
+        flexibleConfig.getRootMemberGroups().ifPresent(builder::rootMemberGroups);
+        return builder.build();
     }
 
     @NonNull

@@ -15,6 +15,9 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -119,14 +122,15 @@ abstract class BaseCommand implements Callable<Integer> {
             log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
             return 1;
         }
-        CommandOptions commandOptions = new CommandOptions(
-                absoluteBaseDir,
-                Set.copyOf(includeGlobs),
-                Set.copyOf(excludeGlobs),
-                verbose,
-                effectiveConfigFilePath,
-                noBackup,
-                noStatistics);
+        CommandOptions commandOptions = CommandOptions.builder()
+                .baseDir(absoluteBaseDir)
+                .includeGlobs(Set.copyOf(includeGlobs))
+                .excludeGlobs(Set.copyOf(excludeGlobs))
+                .verbose(verbose)
+                .configFilePath(effectiveConfigFilePath)
+                .noBackup(noBackup)
+                .noStatistics(noStatistics)
+                .build();
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }
@@ -223,6 +227,8 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Builder(access = AccessLevel.PRIVATE)
     private static class CommandOptions {
         @NonNull
         Path baseDir;

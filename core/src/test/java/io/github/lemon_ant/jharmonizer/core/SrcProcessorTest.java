@@ -358,7 +358,8 @@ class SrcProcessorTest {
         // Given
         Path javaFilePath =
                 writeJavaFile(temporaryDirectory, "SummarySample.java", "package demo; public class SummarySample {}");
-        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, null, false, null, null));
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().printProcessingStatistics(false).build());
         Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
         Level initialLevel = logger.getLevel();
         logger.setLevel(Level.DEBUG);
