@@ -22,7 +22,6 @@ final class HumanReadableFormatsUtils {
     private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
 
     private static final DecimalFormat DECIMAL_0 = new DecimalFormat("#,##0", DECIMAL_FORMAT_SYMBOLS);
-
     private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
 
     /**
@@ -36,7 +35,6 @@ final class HumanReadableFormatsUtils {
         if (bytes < 0) {
             throw new IllegalArgumentException("Byte size must be non-negative, but was: " + bytes);
         }
-
         if (bytes < KIB) {
             return DECIMAL_0.format(bytes) + " B";
         }
