@@ -51,7 +51,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <!-- Keep the javac module opens while letting JaCoCo inject its late-bound test agent. -->
-                        <argLine>@{argLine} --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                        <argLine>@{argLine} ${mockito.agent.argLine}
+                        --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
                         --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
                         --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
                         --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED

@@ -33,6 +33,13 @@
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
+        <mockito.version>5.23.0</mockito.version>
+        <!--
+            Mockito's inline mock maker currently self-attaches a Byte Buddy agent by default, which emits JDK warnings
+            and will be blocked in a future JDK release. Preloading mockito-core as a javaagent keeps test output clean
+            and remains compatible when dynamic attach is disabled by default.
+        -->
+        <mockito.agent.argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</mockito.agent.argLine>
         <palantir-java-format.version>2.90.0</palantir-java-format.version>
         <pmd.version>7.23.0</pmd.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,7 +54,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-bom</artifactId>
-                <version>5.23.0</version>
+                <version>${mockito.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
