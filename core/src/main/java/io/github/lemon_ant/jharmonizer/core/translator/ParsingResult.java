@@ -7,7 +7,7 @@ import lombok.Value;
 
 /**
  * Result of parsing one Java source file into a Spoon AST model.
- * Bundles the parsed model with its associated timing and size statistics.
+ * Bundles the parsed model with its associated timing and source-length statistics.
  */
 @Value
 public class ParsingResult {

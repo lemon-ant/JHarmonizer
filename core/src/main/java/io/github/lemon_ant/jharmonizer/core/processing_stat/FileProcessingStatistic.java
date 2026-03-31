@@ -9,7 +9,7 @@ import lombok.Value;
 
 /**
  * Per-file processing statistics derived from a {@link FlowProcessingResult}.
- * Aggregates wall-clock processing time across all phases and records the original file size.
+ * Aggregates wall-clock processing time across all phases and records original file size in bytes.
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -34,6 +34,6 @@ public class FileProcessingStatistic {
         return new FileProcessingStatistic(
                 flowProcessingResult.getPath(),
                 processingTime,
-                flowProcessingResult.getParsingStatistic().getOriginalSrcCodeLength());
+                flowProcessingResult.getParsingStatistic().getOriginalSrcCodeSizeInBytes());
     }
 }

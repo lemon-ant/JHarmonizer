@@ -9,6 +9,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -80,6 +81,7 @@ public final class SrcAstTranslator {
 
         return new ParsingStatistic(
                 originalSrcCode.length(),
+                originalSrcCode.getBytes(StandardCharsets.UTF_8).length,
                 allTypesMembers.size(),
                 rootTypes.size(),
                 allDeclaredTypes.size(),

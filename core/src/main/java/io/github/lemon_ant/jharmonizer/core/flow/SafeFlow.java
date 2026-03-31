@@ -50,7 +50,7 @@ public final class SafeFlow implements IFlow {
                     .path(srcFile.getPath())
                     .relocations(List.of())
                     .diff("")
-                    .parsingStatistic(new ParsingStatistic(srcFile.getSrcCode().length(), 0, 0, 0, 0))
+                    .parsingStatistic(new ParsingStatistic(srcFile.getSrcCode().length(), 0, 0, 0, 0, 0))
                     .sortingStatistic(new SortingStatistic(0))
                     .serializationStatistic(new SerializationStatistic(0, 0))
                     .formattingStatistic(new FormattingStatistic(0, 0))
