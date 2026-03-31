@@ -15,7 +15,15 @@ class ProcessingStatisticsPrintServiceTest {
         Path brokenPath = Path.of("zeta", "Broken.java");
         Path failurePath = Path.of("alpha", "Failure.java");
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(
-                2, 6_500, 2_300_000_000L, null, null, List.of(brokenPath, failurePath));
+                2,
+                6_500,
+                2_300_000_000L,
+                1_100_000_000L,
+                700_000_000L,
+                500_000_000L,
+                null,
+                null,
+                List.of(brokenPath, failurePath));
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);
@@ -25,6 +33,9 @@ class ProcessingStatisticsPrintServiceTest {
                 .startsWith(System.lineSeparator())
                 .contains("JHarmonizer harmonization summary")
                 .contains("| Files processed")
+                .contains("| Parsing time (share)")
+                .contains("| Sorting time (share)")
+                .contains("| Formatting time (share)")
                 .contains("| Files with unexpected internal errors")
                 .contains("Unexpected internal error files:")
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
@@ -34,7 +45,8 @@ class ProcessingStatisticsPrintServiceTest {
     @Test
     void render_withoutUnexpectedErrors_printsNoneBullet() {
         // Given
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(0, 0, 0, null, null, List.of());
+        AggregatedProcessingStatistic stats =
+                new AggregatedProcessingStatistic(0, 0, 0, 0, 0, 0, null, null, List.of());
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);
@@ -53,8 +65,8 @@ class ProcessingStatisticsPrintServiceTest {
                 "nested",
                 "feature",
                 "InternalToolForVeryLongStatisticsOutputVerification.java");
-        AggregatedProcessingStatistic stats =
-                new AggregatedProcessingStatistic(1, 123_456, 1_234_567_890L, null, null, List.of(longPath));
+        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(
+                1, 123_456, 1_234_567_890L, 456_000_000L, 400_000_000L, 300_000_000L, null, null, List.of(longPath));
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);

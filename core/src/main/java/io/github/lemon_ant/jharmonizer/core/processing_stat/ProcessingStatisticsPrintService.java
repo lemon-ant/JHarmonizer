@@ -50,6 +50,16 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(
                 renderRow("Total processing time", formatHmsMillisFromNanos(stats.getTotalProcessingTimeNanos())));
         reportLines.add(renderRow(
+                "Parsing time (share)",
+                formatPhaseTimeAndPercent(stats.getTotalParsingTimeNanos(), stats.calculateParsingTimePercent())));
+        reportLines.add(renderRow(
+                "Sorting time (share)",
+                formatPhaseTimeAndPercent(stats.getTotalSortingTimeNanos(), stats.calculateSortingTimePercent())));
+        reportLines.add(renderRow(
+                "Formatting time (share)",
+                formatPhaseTimeAndPercent(
+                        stats.getTotalFormattingTimeNanos(), stats.calculateFormattingTimePercent())));
+        reportLines.add(renderRow(
                 "Average processing time",
                 formatSecondsMicrosecondsFromNanos(stats.calculateAverageProcessingTime()) + " s/file"));
         reportLines.add(
@@ -102,6 +112,12 @@ public class ProcessingStatisticsPrintService {
     @NonNull
     private static String renderSeparator(char separatorChar) {
         return String.valueOf(separatorChar).repeat(METRIC_WIDTH + VALUE_WIDTH + 7);
+    }
+
+    @NonNull
+    private static String formatPhaseTimeAndPercent(long phaseTimeNanos, double phasePercent) {
+        return formatSecondsMicrosecondsFromNanos(phaseTimeNanos) + " s (" + String.format("%.2f%%", phasePercent)
+                + ")";
     }
 
     @NonNull
