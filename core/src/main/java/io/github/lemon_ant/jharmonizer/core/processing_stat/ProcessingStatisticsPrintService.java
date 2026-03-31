@@ -65,7 +65,7 @@ public class ProcessingStatisticsPrintService {
                 reportLines.add("- " + abbreviatePathForDisplay(path, DETAIL_PATH_MAX_LENGTH));
             }
         }
-        return String.join(System.lineSeparator(), reportLines);
+        return String.join(System.lineSeparator(), reportLines) + System.lineSeparator();
     }
 
     @NonNull
