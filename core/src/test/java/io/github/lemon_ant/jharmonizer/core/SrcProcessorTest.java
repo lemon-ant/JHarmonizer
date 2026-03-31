@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -347,6 +348,37 @@ class SrcProcessorTest {
                 javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
         assertThat(backupFilePath).doesNotExist();
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
+    }
+
+    @Test
+    void processSources_processingStatisticsDisabled_logsDebugCompletionSummary() throws Exception {
+        // Given
+        Path javaFilePath =
+                writeJavaFile(temporaryDirectory, "SummarySample.java", "package demo; public class SummarySample {}");
+        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, null, false, null, null));
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
+        Level initialLevel = logger.getLevel();
+        logger.setLevel(Level.DEBUG);
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        } finally {
+            detachListAppender(listAppender);
+            logger.setLevel(initialLevel);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).contains("public class SummarySample");
+        assertThat(logs)
+                .contains("Processing completed (full statistics report disabled)")
+                .contains("flowType=RESTRUCTURE")
+                .contains("status=COMPLETED")
+                .contains("processedFiles=1")
+                .contains("unexpectedErrors=0");
     }
 
     @NonNull

@@ -38,6 +38,8 @@ public final class SrcProcessor {
 
     private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
     private static final int MAX_TOTAL_PATH_LENGTH = 100;
+    private static final String SUMMARY_STATUS_COMPLETED = "COMPLETED";
+    private static final String SUMMARY_STATUS_COMPLETED_WITH_ERRORS = "COMPLETED_WITH_ERRORS";
 
     private final CompiledConfig config;
     private final Formatter formatter;
@@ -109,9 +111,26 @@ public final class SrcProcessor {
         if (config.isPrintProcessingStatistics()) {
             log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
         } else {
+            logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
             logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
         }
         return aggregatedProcessingStatistic;
+    }
+
+    private static void logDebugProcessingCompletionSummary(
+            @NonNull AggregatedProcessingStatistic aggregatedStatistic, @NonNull FlowType flowType) {
+        String processingStatus =
+                aggregatedStatistic.getFilesWithUnexpectedErrors().isEmpty()
+                        ? SUMMARY_STATUS_COMPLETED
+                        : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
+        log.debug(
+                "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, totalProcessingTimeNanos={}, unexpectedErrors={}",
+                flowType,
+                processingStatus,
+                aggregatedStatistic.getFileCount(),
+                aggregatedStatistic.getTotalSize(),
+                aggregatedStatistic.getTotalProcessingTimeNanos(),
+                aggregatedStatistic.getFilesWithUnexpectedErrors().size());
     }
 
     private static void logFilesWithUnexpectedErrors(@NonNull AggregatedProcessingStatistic aggregatedStatistic) {
