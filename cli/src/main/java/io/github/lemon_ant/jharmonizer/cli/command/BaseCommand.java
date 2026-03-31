@@ -169,8 +169,15 @@ abstract class BaseCommand implements Callable<Integer> {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
                 : null;
-        FlexibleUnifiedConfig cliOverrideConfig = new FlexibleUnifiedConfig(
-                null, null, disableBackups ? false : null, disableStatisticsOutput ? false : null, null, null);
+        FlexibleUnifiedConfig cliOverrideConfig = (disableBackups || disableStatisticsOutput)
+                ? new FlexibleUnifiedConfig(
+                        null,
+                        null,
+                        disableBackups ? false : null,
+                        disableStatisticsOutput ? false : null,
+                        null,
+                        null)
+                : null;
         FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
         return new SrcProcessor(effectiveConfig);
     }
