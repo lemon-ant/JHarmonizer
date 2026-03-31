@@ -126,7 +126,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .doesNotContain("Harmonization result:")
+                .doesNotContain("JHarmonizer harmonization summary")
                 .doesNotContain("SLF4J(W)");
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
