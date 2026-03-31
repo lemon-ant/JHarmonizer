@@ -245,25 +245,6 @@ This keeps the failure type meaningful:
 For internal **test-only** utility classes, prefer Lombok for null checks:
 
 - Use `@NonNull` on non-private parameters instead of `Objects.requireNonNull(...)`.
-- Use `@UtilityClass` for pure utility classes.
-- Private helper method parameters must not use Lombok `@NonNull`; use `@Nullable` only when the helper intentionally accepts `null`.
-- If a private test helper returns a reference type, annotate the return contract explicitly with `@NonNull` or `@Nullable`.
-- Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
-
-Example:
-
-```java
-import lombok.UtilityClass;
-import lombok.NonNull;
-
-@UtilityClass
-final class SpoonTestCaseUtils {
-
-    static CtType<?> parseMainTypeFromJavaFixture(@NonNull java.net.URI javaFixtureResourceUri) {
-        ...
-    }
-}
-```
 
 ### Optional-returning helpers
 

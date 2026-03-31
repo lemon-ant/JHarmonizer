@@ -1,5 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -16,7 +19,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 // This test keeps only immutable constants plus @TempDir, and each scenario is processed in its own
 // subdirectory, so no mutable scenario state leaks between parameterized invocations.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SrcProcessorE2EFixtureTest extends AbstractSrcProcessorScenarioE2ETest {
+class SrcProcessorE2EFixtureTest
+        extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorE2EFixtureTest.StrictValidationState> {
 
     private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
@@ -71,6 +75,34 @@ class SrcProcessorE2EFixtureTest extends AbstractSrcProcessorScenarioE2ETest {
         return "SrcProcessorE2E-compile-after";
     }
 
+    @Override
+    @NonNull
+    protected StrictValidationState validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
+            throws Exception {
+        JavaCompileTestUtils.CompileResult compileBeforeResult =
+                compileJavaSrcWithRelease21(workingInputFile, compileBeforeOutput);
+        assertThat(compileBeforeResult.getExitCode())
+                .as(
+                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
+                        workingInputFile, compileBeforeResult.getOutput())
+                .isZero();
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
+        return StrictValidationState.INSTANCE;
+    }
+
+    @Override
+    protected void validateAfterProcessing(
+            Path workingInputFile, Path compileAfterOutput, StrictValidationState validationState) throws Exception {
+        JavaCompileTestUtils.CompileResult compileAfterResult =
+                compileJavaSrcWithRelease21(workingInputFile, compileAfterOutput);
+        assertThat(compileAfterResult.getExitCode())
+                .as(
+                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
+                        workingInputFile, compileAfterResult.getOutput())
+                .isZero();
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
+    }
+
     @NonNull
     private static Path resolveFixturesRoot() {
         try {
@@ -79,5 +111,9 @@ class SrcProcessorE2EFixtureTest extends AbstractSrcProcessorScenarioE2ETest {
             throw new IllegalArgumentException(
                     "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
         }
+    }
+
+    enum StrictValidationState {
+        INSTANCE
     }
 }

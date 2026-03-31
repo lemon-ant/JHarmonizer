@@ -24,6 +24,7 @@
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
+- For DTO/model/state-holder classes that primarily carry data, prefer immutable Lombok shapes such as `@Value` unless mutability is required.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.
@@ -184,6 +185,7 @@
 - For internal test-only utility classes, prefer Lombok for null checks.
 - Use `@NonNull` on non-private parameters instead of `Objects.requireNonNull(...)`.
 - Use `@UtilityClass` for pure utility classes.
+- For test DTO/model/state-holder classes that mainly carry data, prefer immutable Lombok (`@Value`) unless mutation is required for the scenario.
 - Private helper method parameters must not use Lombok `@NonNull`; use `@Nullable` only when the helper intentionally accepts `null`.
 - If a private test helper returns a reference type, annotate the return contract explicitly with `@NonNull` or `@Nullable`.
 - If a helper returns `Optional<T>`, treat that as part of the test logic.
