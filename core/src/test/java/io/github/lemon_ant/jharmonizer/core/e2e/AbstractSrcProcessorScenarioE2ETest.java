@@ -204,17 +204,17 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     private static SrcProcessor buildSrcProcessor(Path scenarioConfigPath) {
         if (scenarioConfigPath == null) {
             return new SrcProcessor(
-                    disableProcessingStatistics(new FlexibleUnifiedConfig(null, null, null, null, null, null)));
+                    disableProcessingStatisticsOutput(new FlexibleUnifiedConfig(null, null, null, null, null, null)));
         }
 
         FlexibleUnifiedConfig flexibleConfig =
                 JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
                         E2EFileUtils.toUrl(scenarioConfigPath));
-        return new SrcProcessor(disableProcessingStatistics(flexibleConfig));
+        return new SrcProcessor(disableProcessingStatisticsOutput(flexibleConfig));
     }
 
     @NonNull
-    private static FlexibleUnifiedConfig disableProcessingStatistics(@NonNull FlexibleUnifiedConfig flexibleConfig) {
+    private static FlexibleUnifiedConfig disableProcessingStatisticsOutput(FlexibleUnifiedConfig flexibleConfig) {
         return new FlexibleUnifiedConfig(
                 flexibleConfig.getTopLevelTypesOrdering().orElse(null),
                 flexibleConfig.getFormatting().orElse(null),
