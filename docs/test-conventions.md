@@ -245,22 +245,6 @@ This keeps the failure type meaningful:
 For internal **test-only** utility classes, prefer Lombok for null checks:
 
 - Use `@NonNull` on non-private parameters instead of `Objects.requireNonNull(...)`.
-- Use `@UtilityClass` for pure utility classes.
-
-Example:
-
-```java
-import lombok.UtilityClass;
-import lombok.NonNull;
-
-@UtilityClass
-final class SpoonTestCaseUtils {
-
-    static CtType<?> parseMainTypeFromJavaFixture(@NonNull java.net.URI javaFixtureResourceUri) {
-        ...
-    }
-}
-```
 
 ### Optional-returning helpers
 
