@@ -113,14 +113,20 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "restructure", "-i", "**/*.java");
+                ExternalCliProcessRunner.run(
+                        EXECUTABLE_JAR,
+                        projectDirectory,
+                        "restructure",
+                        "--no-statistics",
+                        "--include",
+                        "**/*.java");
 
         // Then
         assertCompleted(result);
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .contains("Harmonization result:")
+                .doesNotContain("JHarmonizer harmonization summary")
                 .doesNotContain("SLF4J(W)");
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
@@ -143,17 +149,18 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "restructure",
-                "-b",
+                "--no-statistics",
+                "--base-dir",
                 ".",
-                "-i",
+                "--include",
                 "src/main/java/**/*.java",
-                "-i",
+                "--include",
                 "src/test/java/**/*.java",
-                "-e",
+                "--exclude",
                 "**/internal/**",
-                "-e",
+                "--exclude",
                 "**/excluded/**",
-                "-e",
+                "--exclude",
                 "**/*Test.java");
 
         // Then
@@ -173,14 +180,28 @@ class JHarmonizerCliPackagedJarIT {
         // Given
         Path projectDirectory = copyBasicProject("project-already-harmonized");
         ExternalCliProcessResult initialResult = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "restructure",
+                "--no-statistics",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
         assertCompleted(initialResult);
         assertThat(initialResult.getExitCode()).as(initialResult.toString()).isZero();
         Path expectedProjectDirectory = copyDirectory(projectDirectory, "project-already-harmonized-expected");
 
         // When
         ExternalCliProcessResult secondResult = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "restructure",
+                "--no-statistics",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
 
         // Then
         assertCompleted(secondResult);
@@ -201,14 +222,21 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "check-all", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "check-all",
+                "--no-statistics",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
 
         // Then
         assertCompleted(result);
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .contains("Harmonization result:")
+                .doesNotContain("JHarmonizer harmonization summary")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
@@ -229,6 +257,7 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "check-all",
+                "--no-statistics",
                 "--base-dir",
                 ".",
                 "--include",
@@ -262,7 +291,14 @@ class JHarmonizerCliPackagedJarIT {
         // Given
         Path projectDirectory = copyBasicProject("project-check-clean");
         ExternalCliProcessResult restructureResult = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "restructure", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "restructure",
+                "--no-statistics",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
         assertCompleted(restructureResult);
         assertThat(restructureResult.getExitCode())
                 .as(restructureResult.toString())
@@ -271,7 +307,14 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "check-all", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "check-all",
+                "--no-statistics",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -296,7 +339,14 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "check-fast", "-b", ".", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "check-fast",
+                "--no-statistics",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -345,7 +395,14 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, workingDirectory, "check-all", "-b", "missing-directory", "-i", "**/*.java");
+                EXECUTABLE_JAR,
+                workingDirectory,
+                "check-all",
+                "--no-statistics",
+                "--base-dir",
+                "missing-directory",
+                "--include",
+                "**/*.java");
 
         // Then
         assertCompleted(result);
