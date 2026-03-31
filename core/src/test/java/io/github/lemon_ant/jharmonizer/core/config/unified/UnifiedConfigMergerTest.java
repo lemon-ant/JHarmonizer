@@ -228,7 +228,7 @@ class UnifiedConfigMergerTest {
         FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
 
         // Then
-        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
+        assertThat(mergedConfig.getRootMemberGroups()).contains(List.of());
     }
 
     @NonNull
