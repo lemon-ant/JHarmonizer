@@ -236,7 +236,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .doesNotContain("Harmonization result:")
+                .doesNotContain("JHarmonizer harmonization summary")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
