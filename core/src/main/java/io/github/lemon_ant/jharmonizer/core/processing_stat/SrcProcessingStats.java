@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
@@ -59,7 +61,8 @@ public class SrcProcessingStats {
         @NonNull
         List<@NonNull Path> filesWithUnexpectedErrors;
 
-        AggregatedProcessingStatistic(
+        @Builder(access = AccessLevel.PACKAGE)
+        private AggregatedProcessingStatistic(
                 long fileCount,
                 long totalSize,
                 long totalProcessingTimeNanos,
@@ -201,16 +204,17 @@ public class SrcProcessingStats {
          */
         @NonNull
         AggregatedProcessingStatistic toAggregatedStats() {
-            return new AggregatedProcessingStatistic(
-                    count.sum(),
-                    totalSize.sum(),
-                    totalTime.sum(),
-                    totalParsingTime.sum(),
-                    totalSortingTime.sum(),
-                    totalFormattingTime.sum(),
-                    minSize.get(),
-                    maxSize.get(),
-                    Collections.unmodifiableList(unexpectedErrorPaths));
+            return AggregatedProcessingStatistic.builder()
+                    .fileCount(count.sum())
+                    .totalSize(totalSize.sum())
+                    .totalProcessingTimeNanos(totalTime.sum())
+                    .totalParsingTimeNanos(totalParsingTime.sum())
+                    .totalSortingTimeNanos(totalSortingTime.sum())
+                    .totalFormattingTimeNanos(totalFormattingTime.sum())
+                    .smallestFile(minSize.get())
+                    .largestFile(maxSize.get())
+                    .filesWithUnexpectedErrors(Collections.unmodifiableList(unexpectedErrorPaths))
+                    .build();
         }
     }
 }

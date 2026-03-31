@@ -58,7 +58,7 @@ public class UnifiedConfig {
      * @param rootMemberGroups the root member groups
      */
     @Builder
-    public UnifiedConfig(
+    private UnifiedConfig(
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             @NonNull Boolean backupsEnabled,

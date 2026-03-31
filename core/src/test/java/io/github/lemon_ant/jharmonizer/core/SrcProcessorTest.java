@@ -277,7 +277,8 @@ class SrcProcessorTest {
         String unformattedSrcCode = "package demo; public class BackupEnabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSrcCode);
         String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, true, null, null, null));
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
         srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
@@ -296,7 +297,8 @@ class SrcProcessorTest {
         String firstSrcCode = "package demo; public class BackupTwice {private int x;}";
         String secondSrcCode = "package demo; public class BackupTwice {private int y;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupTwice.java", firstSrcCode);
-        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, true, null, null, null));
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
         srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
@@ -316,7 +318,8 @@ class SrcProcessorTest {
         String unformattedSrcCode = "package demo; public class BackupDisabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSrcCode);
         String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SrcProcessor srcProcessor = new SrcProcessor(new FlexibleUnifiedConfig(null, null, false, null, null, null));
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
 
         // When
         srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
@@ -335,8 +338,8 @@ class SrcProcessorTest {
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSrcCode);
         String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         FlexibleUnifiedConfig effectiveConfig = UnifiedConfigMerger.merge(
-                new FlexibleUnifiedConfig(null, null, true, null, null, null),
-                new FlexibleUnifiedConfig(null, null, false, null, null, null));
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build(),
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
         SrcProcessor srcProcessor = new SrcProcessor(effectiveConfig);
 
         // When
