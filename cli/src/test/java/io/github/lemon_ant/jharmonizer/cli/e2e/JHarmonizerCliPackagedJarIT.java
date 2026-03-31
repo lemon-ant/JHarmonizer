@@ -120,7 +120,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .contains("JHarmonizer harmonization summary")
+                .doesNotContain("JHarmonizer harmonization summary")
                 .doesNotContain("SLF4J(W)");
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
@@ -216,14 +216,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR,
-                projectDirectory,
-                "check-all",
-                "--no-statistics",
-                "--base-dir",
-                ".",
-                "--include",
-                "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "check-all", "--base-dir", ".", "--include", "**/*.java");
 
         // Then
         assertCompleted(result);
