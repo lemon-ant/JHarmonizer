@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,7 +23,7 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.params.provider.Arguments;
 
-abstract class AbstractSrcProcessorScenarioE2ETest {
+abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
@@ -50,18 +48,9 @@ abstract class AbstractSrcProcessorScenarioE2ETest {
                 temporaryDirectory.resolve(resolveCompileBeforeDirectoryName()).resolve(scenarioName);
         Path compileAfterOutput =
                 temporaryDirectory.resolve(resolveCompileAfterDirectoryName()).resolve(scenarioName);
+        ValidationStateT beforeValidationState = validateBeforeProcessing(workingInputFile, compileBeforeOutput);
 
-        JavaCompileTestUtils.CompileResult compileBeforeResult =
-                compileJavaSrcWithRelease21(workingInputFile, compileBeforeOutput);
-        assertThat(compileBeforeResult.getExitCode())
-                .as(
-                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile, compileBeforeResult.getOutput())
-                .isZero();
-
-        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
-
-        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
+        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture, beforeValidationState);
 
         // When
         runProcessorForSingleFile(workingInputFile, findScenarioConfigPath(fixtureScenario), FlowType.RESTRUCTURE);
@@ -69,15 +58,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest {
         // Then
         assertFileProcessingIsDeterministic(fixtureScenario, workingInputFile);
 
-        JavaCompileTestUtils.CompileResult compileAfterResult =
-                compileJavaSrcWithRelease21(workingInputFile, compileAfterOutput);
-        assertThat(compileAfterResult.getExitCode())
-                .as(
-                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile, compileAfterResult.getOutput())
-                .isZero();
-
-        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
+        validateAfterProcessing(workingInputFile, compileAfterOutput, beforeValidationState);
 
         String workingInputFileSrc = Files.readString(workingInputFile, StandardCharsets.UTF_8);
         assertThat(workingInputFileSrc).isEqualTo(expectedSrcCode);
@@ -147,6 +128,15 @@ abstract class AbstractSrcProcessorScenarioE2ETest {
     protected abstract String resolveCompileAfterDirectoryName();
 
     @NonNull
+    protected abstract ValidationStateT validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
+            throws Exception;
+
+    protected abstract void validateAfterProcessing(
+            Path workingInputFile, Path compileAfterOutput, ValidationStateT validationState) throws Exception;
+
+    protected abstract boolean shouldCheckFailFastThrowForChangedFixture(ValidationStateT validationState);
+
+    @NonNull
     private static Path resolveExpected(Path scenario) {
         return scenario.resolve(EXPECTED_DIRECTORY);
     }
@@ -161,31 +151,18 @@ abstract class AbstractSrcProcessorScenarioE2ETest {
         return fixtureInputFile.getParent().getParent().getFileName().toString();
     }
 
-    private static void assertMainMethodExecutionSucceedsWhenPresent(Path srcFile, Path compiledOutputDirectory)
-            throws IOException, InterruptedException {
-        if (!containsMainMethodDeclaration(srcFile)) {
+    private void assertFileIsNotProcessedYet(
+            Path fixtureScenario, Path workingInputFile, boolean unchangedFixture, ValidationStateT validationState) {
+        Optional<Path> scenarioConfigPath = findScenarioConfigPath(fixtureScenario);
+
+        if (unchangedFixture) {
+            assertThatCode(() ->
+                            runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
+                    .doesNotThrowAnyException();
             return;
         }
 
-        JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compiledOutputDirectory);
-        assertThat(runResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runResult.getClassName(), runResult.getOutput())
-                .isZero();
-    }
-
-    private static boolean containsMainMethodDeclaration(Path srcFile) {
-        try (Stream<String> lines = Files.lines(srcFile, StandardCharsets.UTF_8)) {
-            return lines.map(String::trim).anyMatch(line -> line.contains("public static void main("));
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to inspect source file for main method: " + srcFile, exception);
-        }
-    }
-
-    private void assertFileIsNotProcessedYet(Path fixtureScenario, Path workingInputFile, boolean unchangedFixture) {
-        Optional<Path> scenarioConfigPath = findScenarioConfigPath(fixtureScenario);
-        if (unchangedFixture) {
+        if (!shouldCheckFailFastThrowForChangedFixture(validationState)) {
             assertThatCode(() ->
                             runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
                     .doesNotThrowAnyException();
