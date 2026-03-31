@@ -28,12 +28,13 @@ public class Unified2CompiledModelCompiler {
         CompiledTopLevelTypesOrdering topLevelTypesOrdering =
                 TopLevelTypesOrderingCompiler.compileTopLevelTypesOrdering(unifiedConfig.getTopLevelTypesOrdering());
 
-        return new CompiledConfig(
-                memberGroups,
-                topLevelTypesOrdering,
-                unifiedConfig.getFormatting(),
-                unifiedConfig.isBackupsEnabled(),
-                unifiedConfig.isPrintProcessingStatistics(),
-                unifiedConfig.getHeaderLine());
+        return CompiledConfig.builder()
+                .rootMemberGroups(memberGroups)
+                .topLevelTypesOrdering(topLevelTypesOrdering)
+                .formatting(unifiedConfig.getFormatting())
+                .backupsEnabled(unifiedConfig.isBackupsEnabled())
+                .printProcessingStatistics(unifiedConfig.isPrintProcessingStatistics())
+                .headerLine(unifiedConfig.getHeaderLine())
+                .build();
     }
 }

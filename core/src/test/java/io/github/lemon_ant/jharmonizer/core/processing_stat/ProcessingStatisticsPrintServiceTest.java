@@ -14,16 +14,15 @@ class ProcessingStatisticsPrintServiceTest {
         // Given
         Path brokenPath = Path.of("zeta", "Broken.java");
         Path failurePath = Path.of("alpha", "Failure.java");
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(
-                2,
-                6_500,
-                2_300_000_000L,
-                1_100_000_000L,
-                700_000_000L,
-                500_000_000L,
-                null,
-                null,
-                List.of(brokenPath, failurePath));
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(2)
+                .totalSize(6_500)
+                .totalProcessingTimeNanos(2_300_000_000L)
+                .totalParsingTimeNanos(1_100_000_000L)
+                .totalSortingTimeNanos(700_000_000L)
+                .totalFormattingTimeNanos(500_000_000L)
+                .filesWithUnexpectedErrors(List.of(brokenPath, failurePath))
+                .build();
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);
@@ -45,8 +44,15 @@ class ProcessingStatisticsPrintServiceTest {
     @Test
     void render_withoutUnexpectedErrors_printsNoneBullet() {
         // Given
-        AggregatedProcessingStatistic stats =
-                new AggregatedProcessingStatistic(0, 0, 0, 0, 0, 0, null, null, List.of());
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(0)
+                .totalSize(0)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .filesWithUnexpectedErrors(List.of())
+                .build();
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);
@@ -65,8 +71,15 @@ class ProcessingStatisticsPrintServiceTest {
                 "nested",
                 "feature",
                 "InternalToolForVeryLongStatisticsOutputVerification.java");
-        AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(
-                1, 123_456, 1_234_567_890L, 456_000_000L, 400_000_000L, 300_000_000L, null, null, List.of(longPath));
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(1)
+                .totalSize(123_456)
+                .totalProcessingTimeNanos(1_234_567_890L)
+                .totalParsingTimeNanos(456_000_000L)
+                .totalSortingTimeNanos(400_000_000L)
+                .totalFormattingTimeNanos(300_000_000L)
+                .filesWithUnexpectedErrors(List.of(longPath))
+                .build();
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);

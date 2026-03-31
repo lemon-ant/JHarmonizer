@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Singular;
@@ -63,7 +64,8 @@ public class FlexibleUnifiedConfig {
      * @param headerLine the header line
      * @param rootMemberGroups the root member groups
      */
-    public FlexibleUnifiedConfig(
+    @Builder
+    private FlexibleUnifiedConfig(
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable UnifiedFormatting formatting,
             @Nullable Boolean backupsEnabled,

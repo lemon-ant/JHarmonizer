@@ -343,12 +343,12 @@ class OptOutSrcProcessorIntegrationTest {
                         UnifiedTypeKind.ANNOTATION))))
                 .orderingRules(List.of(UnifiedOrderingRule.ALPHA))
                 .build();
-        return new FlexibleUnifiedConfig(
-                topLevelTypesOrdering,
-                new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR),
-                false,
-                null,
-                new UnifiedHeaderLine('-', 0),
-                List.of(rootMemberGroup));
+        return FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(topLevelTypesOrdering)
+                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
+                .backupsEnabled(false)
+                .headerLine(new UnifiedHeaderLine('-', 0))
+                .rootMemberGroups(List.of(rootMemberGroup))
+                .build();
     }
 }

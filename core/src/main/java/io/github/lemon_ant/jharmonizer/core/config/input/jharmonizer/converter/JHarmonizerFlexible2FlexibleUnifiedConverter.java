@@ -30,13 +30,14 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 vendorConfig.getPrintProcessingStatistics().orElse(null);
         UnifiedHeaderLine headerLine = readHeaderLine(vendorConfig);
         List<UnifiedMemberGroup> rootMemberGroups = readRootMemberGroups(vendorConfig);
-        return new FlexibleUnifiedConfig(
-                topLevelTypesOrdering,
-                formatting,
-                backupsEnabled,
-                printProcessingStatistics,
-                headerLine,
-                rootMemberGroups);
+        return FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(topLevelTypesOrdering)
+                .formatting(formatting)
+                .backupsEnabled(backupsEnabled)
+                .printProcessingStatistics(printProcessingStatistics)
+                .headerLine(headerLine)
+                .rootMemberGroups(rootMemberGroups)
+                .build();
     }
 
     @Nullable

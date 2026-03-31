@@ -7,6 +7,8 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import java.util.List;
 import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -50,7 +52,8 @@ public class CompiledConfig {
      * @param printProcessingStatistics the print processing statistics flag
      * @param headerLine the header line
      */
-    CompiledConfig(
+    @Builder(access = AccessLevel.PACKAGE)
+    private CompiledConfig(
             @NonNull List<CompiledMemberGroup> rootMemberGroups,
             @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,

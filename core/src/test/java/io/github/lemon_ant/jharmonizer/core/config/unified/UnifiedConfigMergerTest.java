@@ -26,7 +26,7 @@ class UnifiedConfigMergerTest {
         UnifiedMemberGroup baselineFirstGroup = createGroup("Default Rule");
         UnifiedMemberGroup baselineSecondGroup = createGroup("Units");
         UnifiedConfig baselineConfig = createConfig(List.of(baselineFirstGroup, baselineSecondGroup));
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, null, null, null, null);
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder().build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -47,13 +47,10 @@ class UnifiedConfigMergerTest {
         UnifiedMemberGroup newUtilityGroup = createGroup("Utility");
         UnifiedMemberGroup replacementDefaultGroup = createGroup("Default Rule");
         UnifiedMemberGroup newAuditGroup = createGroup("Audit");
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
-                null,
-                null,
-                null,
-                null,
-                null,
-                List.of(replacementFallbackGroup, newUtilityGroup, replacementDefaultGroup, newAuditGroup));
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(
+                        List.of(replacementFallbackGroup, newUtilityGroup, replacementDefaultGroup, newAuditGroup))
+                .build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -76,8 +73,9 @@ class UnifiedConfigMergerTest {
         UnifiedMemberGroup baselineFallbackGroup = createGroup("Fallback");
         UnifiedConfig baselineConfig = createConfig(List.of(baselineNestedGroup, baselineFallbackGroup));
         UnifiedMemberGroup overlayNestedGroup = createGroup("Default Rule", List.of(createGroup("Overlay Methods")));
-        FlexibleUnifiedConfig overlayConfig =
-                new FlexibleUnifiedConfig(null, null, null, null, null, List.of(overlayNestedGroup));
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(overlayNestedGroup))
+                .build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -94,8 +92,9 @@ class UnifiedConfigMergerTest {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
         UnifiedMemberGroup unnamedOverlayGroup = createGroup(null);
-        FlexibleUnifiedConfig overlayConfig =
-                new FlexibleUnifiedConfig(null, null, null, null, null, List.of(unnamedOverlayGroup));
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(unnamedOverlayGroup))
+                .build();
 
         // When
         UnifiedConfig mergedConfig =
@@ -113,8 +112,9 @@ class UnifiedConfigMergerTest {
         UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
         UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
         UnifiedMemberGroup overlayNewUnnamedGroup = createGroup(null);
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
-                null, null, null, null, null, List.of(overlayReplacementNamedGroup, overlayNewUnnamedGroup));
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(overlayReplacementNamedGroup, overlayNewUnnamedGroup))
+                .build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(
@@ -135,7 +135,8 @@ class UnifiedConfigMergerTest {
         // Given
         UnifiedMemberGroup firstBaselineGroup = createGroup("Default Rule");
         UnifiedMemberGroup duplicateBaselineGroup = createGroup("Default Rule", List.of(createGroup("Duplicate")));
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, null, null, null, List.of());
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().rootMemberGroups(List.of()).build();
 
         // When / Then
         assertThatThrownBy(() -> UnifiedConfigMerger.merge(
@@ -147,9 +148,15 @@ class UnifiedConfigMergerTest {
     @Test
     void merge_flexibleOverlayProvided_overridesBackupsAndKeepsBaselineFields() {
         // Given
-        FlexibleUnifiedConfig baselineConfig = new FlexibleUnifiedConfig(
-                TOP_LEVEL_TYPES_ORDERING, FORMATTING, true, null, HEADER_LINE, List.of(createGroup("Default Rule")));
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(null, null, false, null, null, null);
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)
+                .formatting(FORMATTING)
+                .backupsEnabled(true)
+                .headerLine(HEADER_LINE)
+                .rootMemberGroups(List.of(createGroup("Default Rule")))
+                .build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
 
         // When
         FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -167,12 +174,14 @@ class UnifiedConfigMergerTest {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
         UnifiedMemberGroup baselineUnitsGroup = createGroup("Units");
-        FlexibleUnifiedConfig baselineConfig = new FlexibleUnifiedConfig(
-                null, null, null, null, null, List.of(baselineDefaultGroup, baselineUnitsGroup));
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(baselineDefaultGroup, baselineUnitsGroup))
+                .build();
         UnifiedMemberGroup replacementDefaultGroup = createGroup("Default Rule");
         UnifiedMemberGroup newAuditGroup = createGroup("Audit");
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
-                null, null, null, null, null, List.of(replacementDefaultGroup, newAuditGroup));
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(replacementDefaultGroup, newAuditGroup))
+                .build();
 
         // When
         FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -188,17 +197,14 @@ class UnifiedConfigMergerTest {
         UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
         UnifiedMemberGroup baselineUnnamedGroup = createGroup(null);
         UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
-        FlexibleUnifiedConfig baselineConfig = new FlexibleUnifiedConfig(
-                null,
-                null,
-                null,
-                null,
-                null,
-                List.of(baselineNamedGroup, baselineUnnamedGroup, baselineTrailingNamedGroup));
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(baselineNamedGroup, baselineUnnamedGroup, baselineTrailingNamedGroup))
+                .build();
         UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
         UnifiedMemberGroup overlayNewNamedGroup = createGroup("Audit");
-        FlexibleUnifiedConfig overlayConfig = new FlexibleUnifiedConfig(
-                null, null, null, null, null, List.of(overlayReplacementNamedGroup, overlayNewNamedGroup));
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(overlayReplacementNamedGroup, overlayNewNamedGroup))
+                .build();
 
         // When
         FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
