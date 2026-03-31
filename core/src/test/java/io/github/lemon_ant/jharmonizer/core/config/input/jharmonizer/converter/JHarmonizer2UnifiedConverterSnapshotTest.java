@@ -62,7 +62,7 @@ class JHarmonizer2UnifiedConverterSnapshotTest {
 
     @Test
     @Disabled("Click to (re)generate snapshot after intentional conversion/model changes")
-    void regenerateUnifiedConfigSnapshot_whenRun_overwritesSnapshotFile() throws Exception {
+    void regenerateSnapshot() throws Exception {
         // Given
         JHarmonizerConfig vendorConfig = DEFAULT_JHARMONIZER_CONFIG;
         assertThat(vendorConfig).as("Default vendor config must be loadable").isNotNull();

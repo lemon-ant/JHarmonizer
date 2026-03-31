@@ -171,12 +171,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 : null;
         FlexibleUnifiedConfig cliOverrideConfig = (disableBackups || disableStatisticsOutput)
                 ? new FlexibleUnifiedConfig(
-                        null,
-                        null,
-                        disableBackups ? false : null,
-                        disableStatisticsOutput ? false : null,
-                        null,
-                        null)
+                        null, null, disableBackups ? false : null, disableStatisticsOutput ? false : null, null, null)
                 : null;
         FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
         return new SrcProcessor(effectiveConfig);

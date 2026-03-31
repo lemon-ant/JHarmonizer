@@ -112,14 +112,8 @@ class JHarmonizerCliPackagedJarIT {
         Path projectDirectory = copyBasicProject("project-default-base-dir");
 
         // When
-        ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(
-                        EXECUTABLE_JAR,
-                        projectDirectory,
-                        "restructure",
-                        "--no-statistics",
-                        "--include",
-                        "**/*.java");
+        ExternalCliProcessResult result = ExternalCliProcessRunner.run(
+                EXECUTABLE_JAR, projectDirectory, "restructure", "--no-statistics", "--include", "**/*.java");
 
         // Then
         assertCompleted(result);

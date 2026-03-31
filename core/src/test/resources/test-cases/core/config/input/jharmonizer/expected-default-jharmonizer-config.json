@@ -4,6 +4,7 @@
     "formatterStyle" : "PALANTIR"
   },
   "backupsEnabled" : true,
+  "printProcessingStatistics" : true,
   "headerLine" : {
     "character" : "-",
     "leftPadding" : 3

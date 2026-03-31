@@ -123,5 +123,4 @@ public class JHarmonizerFlexibleConfig {
     public Optional<JHarmonizerTopLevelTypesOrdering> getTopLevelTypesOrdering() {
         return ofNullable(topLevelTypesOrdering);
     }
-
 }
