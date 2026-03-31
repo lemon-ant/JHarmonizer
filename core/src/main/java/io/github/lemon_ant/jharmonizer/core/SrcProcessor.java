@@ -13,6 +13,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.SafeFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -103,7 +104,7 @@ public final class SrcProcessor {
                         flowProcessingResult.getFlowProcessingStatus().name())))
                 .collect(SrcProcessingStats.statsCollector());
 
-        log.info(aggregatedProcessingStatistic.toString());
+        log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
         return aggregatedProcessingStatistic;
     }
 

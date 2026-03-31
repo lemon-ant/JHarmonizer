@@ -1,10 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatBytes;
-import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatHmsMillisFromNanos;
-import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatSecondsMicrosecondsFromNanos;
-import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus;
@@ -12,11 +7,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
@@ -78,37 +71,6 @@ public class SrcProcessingStats {
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
         }
 
-        @Override
-        public String toString() {
-            return String.format(
-                    "Harmonization result:%nFiles processed: %,d%n" + "Total size: %s%n" + "Average size: %s%n"
-                            + "Min size: %s %s%n"
-                            + "Max size: %s %s%n"
-                            + "Total processing time: %s%n"
-                            + "Average processing time: %s s/file%n"
-                            + "Files with unexpected internal errors: %s",
-                    fileCount,
-                    formatBytes(totalSize),
-                    formatBytes(calculateAverageSize()),
-                    formatBytes(Optional.ofNullable(smallestFile)
-                            .map(FileProcessingStatistic::getSize)
-                            .orElse(0L)),
-                    Optional.ofNullable(smallestFile)
-                            .map(FileProcessingStatistic::getPath)
-                            .map(path -> " (" + abbreviatePathForDisplay(path, MAX_PATH_LENGTH) + ")")
-                            .orElse(""),
-                    formatBytes(Optional.ofNullable(largestFile)
-                            .map(FileProcessingStatistic::getSize)
-                            .orElse(0L)),
-                    Optional.ofNullable(largestFile)
-                            .map(FileProcessingStatistic::getPath)
-                            .map(path -> " (" + abbreviatePathForDisplay(path, MAX_PATH_LENGTH) + ")")
-                            .orElse(""),
-                    formatHmsMillisFromNanos(totalProcessingTimeNanos),
-                    formatSecondsMicrosecondsFromNanos(calculateAverageProcessingTime()),
-                    formatUnexpectedErrorFilesForDisplay());
-        }
-
         // Average time spent on processing a file
         /**
          * Performs the calculate average processing time.
@@ -125,17 +87,6 @@ public class SrcProcessingStats {
          */
         long calculateAverageSize() {
             return fileCount > 0 ? totalSize / fileCount : 0;
-        }
-
-        @NonNull
-        private String formatUnexpectedErrorFilesForDisplay() {
-            if (filesWithUnexpectedErrors.isEmpty()) {
-                return "none";
-            }
-            return filesWithUnexpectedErrors.stream()
-                    .map(path -> abbreviatePathForDisplay(path, MAX_PATH_LENGTH))
-                    .sorted()
-                    .collect(Collectors.joining(", ", "[", "]"));
         }
     }
 
