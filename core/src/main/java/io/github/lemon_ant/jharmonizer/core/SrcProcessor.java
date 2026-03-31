@@ -122,7 +122,7 @@ public final class SrcProcessor {
                 .sorted(Comparator.comparing(Path::toString))
                 .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH))
                 .collect(Collectors.joining(", "));
-        log.warn("Files were not processed correctly: {}", failedFilesLog);
+        log.warn("Files encountered unexpected errors and were not processed correctly: {}", failedFilesLog);
     }
 
     @NonNull
