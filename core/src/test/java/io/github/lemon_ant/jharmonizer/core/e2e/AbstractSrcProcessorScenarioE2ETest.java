@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
+import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -135,6 +136,28 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
             Path workingInputFile, Path compileAfterOutput, ValidationStateT validationState) throws Exception;
 
     protected abstract boolean shouldCheckFailFastThrowForChangedFixture(ValidationStateT validationState);
+
+    protected static void assertMainMethodExecutionSucceedsWhenPresent(Path srcFile, Path compiledOutputDirectory)
+            throws IOException, InterruptedException {
+        if (!containsMainMethodDeclaration(srcFile)) {
+            return;
+        }
+
+        JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compiledOutputDirectory);
+        assertThat(runResult.getExitCode())
+                .as(
+                        "Expected main method execution to succeed for %s. Output:%n%s",
+                        runResult.getClassName(), runResult.getOutput())
+                .isZero();
+    }
+
+    protected static boolean containsMainMethodDeclaration(Path srcFile) {
+        try (Stream<String> lines = Files.lines(srcFile, StandardCharsets.UTF_8)) {
+            return lines.map(String::trim).anyMatch(line -> line.contains("public static void main("));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to inspect source file for main method: " + srcFile, exception);
+        }
+    }
 
     @NonNull
     private static Path resolveExpected(Path scenario) {

@@ -8,11 +8,8 @@ import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.Value;
 import org.junit.jupiter.api.Test;
@@ -151,14 +148,6 @@ class SrcProcessorRegressionTest
         assertThat(afterSnapshot.getMainExitCode())
                 .as("Expected processed source main method exit code to match original source: %s", srcFile)
                 .isEqualTo(beforeSnapshot.getMainExitCode());
-    }
-
-    private static boolean containsMainMethodDeclaration(Path srcFile) {
-        try (Stream<String> lines = Files.lines(srcFile, StandardCharsets.UTF_8)) {
-            return lines.map(String::trim).anyMatch(line -> line.contains("public static void main("));
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to inspect source file for main method: " + srcFile, exception);
-        }
     }
 
     @Value

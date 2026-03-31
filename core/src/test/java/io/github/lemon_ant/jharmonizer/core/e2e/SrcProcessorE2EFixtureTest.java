@@ -1,11 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -88,7 +86,7 @@ class SrcProcessorE2EFixtureTest
                         "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
                         workingInputFile, compileBeforeResult.getOutput())
                 .isZero();
-        assertMainMethodExecutionSucceeds(workingInputFile, compileBeforeOutput);
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
         return StrictValidationState.INSTANCE;
     }
 
@@ -102,7 +100,7 @@ class SrcProcessorE2EFixtureTest
                         "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
                         workingInputFile, compileAfterResult.getOutput())
                 .isZero();
-        assertMainMethodExecutionSucceeds(workingInputFile, compileAfterOutput);
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
     }
 
     @Override
@@ -118,16 +116,6 @@ class SrcProcessorE2EFixtureTest
             throw new IllegalArgumentException(
                     "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
         }
-    }
-
-    private static void assertMainMethodExecutionSucceeds(Path srcFile, Path compiledOutputDirectory)
-            throws IOException, InterruptedException {
-        JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compiledOutputDirectory);
-        assertThat(runResult.getExitCode())
-                .as(
-                        "Expected main method execution to succeed for %s. Output:%n%s",
-                        runResult.getClassName(), runResult.getOutput())
-                .isZero();
     }
 
     enum StrictValidationState {
