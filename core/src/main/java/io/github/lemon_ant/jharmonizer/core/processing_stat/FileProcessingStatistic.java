@@ -1,9 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,14 +32,8 @@ public class FileProcessingStatistic {
                 + flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos()
                 + flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
         return new FileProcessingStatistic(
-                flowProcessingResult.getPath(), processingTime, resolveFileSizeInBytes(flowProcessingResult.getPath()));
-    }
-
-    private static long resolveFileSizeInBytes(@NonNull Path srcPath) {
-        try {
-            return Files.size(srcPath);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException("Failed to resolve source file size in bytes: " + srcPath, ioException);
-        }
+                flowProcessingResult.getPath(),
+                processingTime,
+                flowProcessingResult.getParsingStatistic().getOriginalSrcCodeSizeInBytes());
     }
 }
