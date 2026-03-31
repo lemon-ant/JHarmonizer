@@ -22,6 +22,8 @@ public class ProcessingStatisticsPrintService {
 
     private static final int METRIC_WIDTH = 40;
     private static final int VALUE_WIDTH = 24;
+    private static final String ELLIPSIS = "...";
+    private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
     private static final int DETAIL_PATH_MAX_LENGTH = 120;
     private static final String HEADER = "JHarmonizer harmonization summary";
 
@@ -125,9 +127,9 @@ public class ProcessingStatisticsPrintService {
         if (value.length() <= maxWidth) {
             return value;
         }
-        if (maxWidth <= 3) {
+        if (maxWidth <= ELLIPSIS_LENGTH) {
             return value.substring(0, maxWidth);
         }
-        return value.substring(0, maxWidth - 3) + "...";
+        return value.substring(0, maxWidth - ELLIPSIS_LENGTH) + ELLIPSIS;
     }
 }

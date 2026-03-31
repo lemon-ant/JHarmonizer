@@ -16,6 +16,7 @@ import lombok.Value;
  * Flexible overlay for JHarmonizerConfig. All fields are optional.
  */
 @Value
+@SuppressWarnings("PMD.DataClass")
 @Getter(AccessLevel.NONE)
 public class JHarmonizerFlexibleConfig {
 
@@ -122,4 +123,5 @@ public class JHarmonizerFlexibleConfig {
     public Optional<JHarmonizerTopLevelTypesOrdering> getTopLevelTypesOrdering() {
         return ofNullable(topLevelTypesOrdering);
     }
+
 }
