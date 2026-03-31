@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatBytes;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatHmsMillisFromNanos;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatSecondsMicrosecondsFromNanos;
-import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatSourceLengthChars;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -45,11 +45,10 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(" " + HEADER);
         reportLines.add(renderSeparator('='));
         reportLines.add(renderRow("Files processed", String.format("%,d", stats.getFileCount())));
-        reportLines.add(renderRow("Total source length (chars)", formatSourceLengthChars(stats.getTotalSize())));
-        reportLines.add(
-                renderRow("Average source length (chars)", formatSourceLengthChars(stats.calculateAverageSize())));
-        reportLines.add(renderRow("Min source length (chars)", formatSize(stats.getSmallestFile())));
-        reportLines.add(renderRow("Max source length (chars)", formatSize(stats.getLargestFile())));
+        reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSize())));
+        reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
+        reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
+        reportLines.add(renderRow("Max size", formatSize(stats.getLargestFile())));
         reportLines.add(
                 renderRow("Total processing time", formatHmsMillisFromNanos(stats.getTotalProcessingTimeNanos())));
         reportLines.add(renderRow(
@@ -84,9 +83,9 @@ public class ProcessingStatisticsPrintService {
     @NonNull
     private static String formatSize(@Nullable FileProcessingStatistic fileProcessingStatistic) {
         if (fileProcessingStatistic == null) {
-            return formatSourceLengthChars(0L);
+            return formatBytes(0L);
         }
-        return formatSourceLengthChars(fileProcessingStatistic.getSize());
+        return formatBytes(fileProcessingStatistic.getSize());
     }
 
     private static void addSizeBoundaryPaths(
@@ -94,13 +93,13 @@ public class ProcessingStatisticsPrintService {
         if (stats.getSmallestFile() == null && stats.getLargestFile() == null) {
             return;
         }
-        reportLines.add("Source-length boundary files:");
+        reportLines.add("Size boundary files:");
         if (stats.getSmallestFile() != null) {
-            reportLines.add("- Min source-length file: "
+            reportLines.add("- Min size file: "
                     + abbreviatePathForDisplay(stats.getSmallestFile().getPath(), DETAIL_PATH_MAX_LENGTH));
         }
         if (stats.getLargestFile() != null) {
-            reportLines.add("- Max source-length file: "
+            reportLines.add("- Max size file: "
                     + abbreviatePathForDisplay(stats.getLargestFile().getPath(), DETAIL_PATH_MAX_LENGTH));
         }
     }

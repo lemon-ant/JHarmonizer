@@ -1,6 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -9,7 +12,7 @@ import lombok.Value;
 
 /**
  * Per-file processing statistics derived from a {@link FlowProcessingResult}.
- * Aggregates wall-clock processing time across all phases and records original source-length in chars.
+ * Aggregates wall-clock processing time across all phases and records original file size in bytes.
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -32,8 +35,14 @@ public class FileProcessingStatistic {
                 + flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos()
                 + flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
         return new FileProcessingStatistic(
-                flowProcessingResult.getPath(),
-                processingTime,
-                flowProcessingResult.getParsingStatistic().getOriginalSrcCodeLength());
+                flowProcessingResult.getPath(), processingTime, resolveFileSizeInBytes(flowProcessingResult.getPath()));
+    }
+
+    private static long resolveFileSizeInBytes(@NonNull Path srcPath) {
+        try {
+            return Files.size(srcPath);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to resolve source file size in bytes: " + srcPath, ioException);
+        }
     }
 }
