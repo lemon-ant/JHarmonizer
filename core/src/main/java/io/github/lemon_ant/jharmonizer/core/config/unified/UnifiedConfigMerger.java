@@ -73,14 +73,16 @@ public class UnifiedConfigMerger {
                         .orElse(overlayRootGroups))
                 .orElse(baseline.getRootMemberGroups().orElse(null));
 
-        return FlexibleUnifiedConfig.builder()
+        FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder configBuilder = FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
                 .formatting(formatting)
                 .backupsEnabled(backupsEnabled)
                 .printProcessingStatistics(printProcessingStatistics)
-                .headerLine(header)
-                .rootMemberGroups(root)
-                .build();
+                .headerLine(header);
+        if (root != null) {
+            configBuilder.rootMemberGroups(root);
+        }
+        return configBuilder.build();
     }
 
     @NonNull

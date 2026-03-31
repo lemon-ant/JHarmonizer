@@ -12,6 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -171,6 +172,46 @@ class BaseCommandTest {
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenThrow(new RuntimeException("Unexpected error"));
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void call_baseDirMissing_returnsExitCode1() {
+        // Given
+        Path missingDirectoryPath = Path.of("target/missing-base-dir-for-base-command-test");
+
+        // When
+        int exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
+
+        // Then
+        assertThat(Files.exists(missingDirectoryPath)).isFalse();
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void call_configFileMissing_returnsExitCode1() {
+        // Given
+        Path missingConfigPath = Path.of("target/missing-config-for-base-command-test.yml");
+
+        // When
+        int exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
+
+        // Then
+        assertThat(Files.exists(missingConfigPath)).isFalse();
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void call_processorThrowsRuntimeWithoutMessage_returnsExitCode1() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any())).thenThrow(new RuntimeException());
         })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
