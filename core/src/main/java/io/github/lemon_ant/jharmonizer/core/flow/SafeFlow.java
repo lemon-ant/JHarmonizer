@@ -35,7 +35,7 @@ public final class SafeFlow implements IFlow {
 
     @Override
     @NonNull
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
     public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         try {
             return delegate.processSrc(srcFile);

@@ -87,11 +87,6 @@ class SrcProcessorRegressionTest
         assertRelaxedCompileAndRunConsistency(beforeSnapshot, afterSnapshot, workingInputFile);
     }
 
-    @Override
-    protected boolean shouldCheckFailFastThrowForChangedFixture(CompileAndRunSnapshot validationState) {
-        return validationState.isCompiled();
-    }
-
     @NonNull
     private static Path resolveFixturesRoot() {
         try {
@@ -114,7 +109,7 @@ class SrcProcessorRegressionTest
             return CompileAndRunSnapshot.compileFailed();
         }
 
-        if (!containsMainMethodDeclaration(srcFile)) {
+        if (doesntContainMainMethodDeclaration(srcFile)) {
             return CompileAndRunSnapshot.compiledWithoutMain();
         }
 

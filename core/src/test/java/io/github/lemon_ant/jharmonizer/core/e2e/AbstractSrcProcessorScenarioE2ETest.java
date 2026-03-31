@@ -51,10 +51,11 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                 temporaryDirectory.resolve(resolveCompileAfterDirectoryName()).resolve(scenarioName);
         ValidationStateT beforeValidationState = validateBeforeProcessing(workingInputFile, compileBeforeOutput);
 
-        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture, beforeValidationState);
+        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
         // When
-        runProcessorForSingleFile(workingInputFile, findScenarioConfigPath(fixtureScenario), FlowType.RESTRUCTURE);
+        runProcessorForSingleFile(
+                workingInputFile, findScenarioConfigPath(fixtureScenario).orElse(null), FlowType.RESTRUCTURE);
 
         // Then
         assertFileProcessingIsDeterministic(fixtureScenario, workingInputFile);
@@ -100,7 +101,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     }
 
     @NonNull
-    protected final Stream<Arguments> fixtureInputFiles() throws IOException {
+    protected final Stream<Arguments> fixtureInputFiles() {
         Comparator<Path> fixtureExecutionOrder = Comparator.comparing(
                         this::resolveScenarioDirectoryName, Comparator.reverseOrder())
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
@@ -135,11 +136,9 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     protected abstract void validateAfterProcessing(
             Path workingInputFile, Path compileAfterOutput, ValidationStateT validationState) throws Exception;
 
-    protected abstract boolean shouldCheckFailFastThrowForChangedFixture(ValidationStateT validationState);
-
     protected static void assertMainMethodExecutionSucceedsWhenPresent(Path srcFile, Path compiledOutputDirectory)
             throws IOException, InterruptedException {
-        if (!containsMainMethodDeclaration(srcFile)) {
+        if (doesntContainMainMethodDeclaration(srcFile)) {
             return;
         }
 
@@ -151,9 +150,9 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                 .isZero();
     }
 
-    protected static boolean containsMainMethodDeclaration(Path srcFile) {
+    protected static boolean doesntContainMainMethodDeclaration(Path srcFile) {
         try (Stream<String> lines = Files.lines(srcFile, StandardCharsets.UTF_8)) {
-            return lines.map(String::trim).anyMatch(line -> line.contains("public static void main("));
+            return lines.map(String::trim).noneMatch(line -> line.contains("public static void main("));
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to inspect source file for main method: " + srcFile, exception);
         }
@@ -174,24 +173,14 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         return fixtureInputFile.getParent().getParent().getFileName().toString();
     }
 
-    private void assertFileIsNotProcessedYet(
-            Path fixtureScenario, Path workingInputFile, boolean unchangedFixture, ValidationStateT validationState) {
-        Optional<Path> scenarioConfigPath = findScenarioConfigPath(fixtureScenario);
-
+    private void assertFileIsNotProcessedYet(Path fixtureScenario, Path workingInputFile, boolean unchangedFixture) {
+        Path scenarioConfigPath = findScenarioConfigPath(fixtureScenario).orElse(null);
         if (unchangedFixture) {
             assertThatCode(() ->
                             runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
                     .doesNotThrowAnyException();
             return;
         }
-
-        if (!shouldCheckFailFastThrowForChangedFixture(validationState)) {
-            assertThatCode(() ->
-                            runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
-                    .doesNotThrowAnyException();
-            return;
-        }
-
         assertThatThrownBy(
                         () -> runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
                 .isInstanceOf(RuntimeException.class);
@@ -199,25 +188,27 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     private void assertFileProcessingIsDeterministic(Path fixtureScenario, Path workingInputFile) {
         assertThatCode(() -> runProcessorForSingleFile(
-                        workingInputFile, findScenarioConfigPath(fixtureScenario), FlowType.CHECK_FAIL_FAST))
+                        workingInputFile,
+                        findScenarioConfigPath(fixtureScenario).orElse(null),
+                        FlowType.CHECK_FAIL_FAST))
                 .doesNotThrowAnyException();
     }
 
-    private void runProcessorForSingleFile(Path srcFilePath, Optional<Path> scenarioConfigPath, FlowType flowType) {
+    private void runProcessorForSingleFile(Path srcFilePath, Path scenarioConfigPath, FlowType flowType) {
         SrcProcessor srcProcessor = buildSrcProcessor(scenarioConfigPath);
         srcProcessor.processSources(
                 srcFilePath.getParent(), List.of(srcFilePath.getFileName().toString()), List.of(), flowType);
     }
 
     @NonNull
-    private static SrcProcessor buildSrcProcessor(Optional<Path> scenarioConfigPath) {
-        if (scenarioConfigPath.isEmpty()) {
+    private static SrcProcessor buildSrcProcessor(Path scenarioConfigPath) {
+        if (scenarioConfigPath == null) {
             return new SrcProcessor();
         }
 
         FlexibleUnifiedConfig flexibleConfig =
                 JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
-                        E2EFileUtils.toUrl(scenarioConfigPath.orElseThrow()));
+                        E2EFileUtils.toUrl(scenarioConfigPath));
         return new SrcProcessor(flexibleConfig);
     }
 

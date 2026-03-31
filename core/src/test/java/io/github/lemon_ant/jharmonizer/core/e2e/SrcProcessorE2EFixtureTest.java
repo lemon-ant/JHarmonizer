@@ -103,11 +103,6 @@ class SrcProcessorE2EFixtureTest
         assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
     }
 
-    @Override
-    protected boolean shouldCheckFailFastThrowForChangedFixture(StrictValidationState validationState) {
-        return true;
-    }
-
     @NonNull
     private static Path resolveFixturesRoot() {
         try {
