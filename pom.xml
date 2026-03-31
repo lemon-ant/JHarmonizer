@@ -33,6 +33,8 @@
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
+        <!-- Default local repository base; can still be overridden via -Dmaven.repo.local. -->
+        <maven.repo.local>${settings.localRepository}</maven.repo.local>
         <mockito.version>5.23.0</mockito.version>
         <!--
             Mockito's inline mock maker currently self-attaches a Byte Buddy agent by default, which emits JDK warnings
