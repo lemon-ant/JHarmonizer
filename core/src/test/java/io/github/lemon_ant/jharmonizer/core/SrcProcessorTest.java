@@ -378,6 +378,7 @@ class SrcProcessorTest {
                 .contains("flowType=RESTRUCTURE")
                 .contains("status=COMPLETED")
                 .contains("processedFiles=1")
+                .contains("totalSizeChars=")
                 .contains("unexpectedErrors=0");
     }
 

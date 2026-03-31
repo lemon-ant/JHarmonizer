@@ -124,7 +124,7 @@ public final class SrcProcessor {
                         ? SUMMARY_STATUS_COMPLETED
                         : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
         log.debug(
-                "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, totalProcessingTimeNanos={}, unexpectedErrors={}",
+                "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeChars={}, totalProcessingTimeNanos={}, unexpectedErrors={}",
                 flowType,
                 processingStatus,
                 aggregatedStatistic.getFileCount(),
