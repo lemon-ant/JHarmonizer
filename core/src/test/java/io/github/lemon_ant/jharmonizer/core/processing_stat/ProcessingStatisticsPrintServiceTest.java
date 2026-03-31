@@ -32,6 +32,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .startsWith(System.lineSeparator())
                 .contains("JHarmonizer harmonization summary")
                 .contains("| Files processed")
+                .contains("| Total size")
                 .contains("| Parsing time (share)")
                 .contains("| Sorting time (share)")
                 .contains("| Formatting time (share)")
