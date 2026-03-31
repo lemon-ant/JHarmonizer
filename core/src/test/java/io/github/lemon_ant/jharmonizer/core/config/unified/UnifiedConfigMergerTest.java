@@ -218,6 +218,19 @@ class UnifiedConfigMergerTest {
                         baselineTrailingNamedGroup));
     }
 
+    @Test
+    void merge_flexibleRootGroupsMissingOnBothSides_keepsRootMemberGroupsEmpty() {
+        // Given
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder().build();
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder().build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
+    }
+
     @NonNull
     private static UnifiedConfig createConfig(List<UnifiedMemberGroup> rootMemberGroups) {
         return UnifiedConfig.builder()
