@@ -2,6 +2,7 @@ formatting:
   fix-imports: false
   formatter-style: PALANTIR
 backups-enabled: false
+print-processing-statistics: true
 header-line:
   character: "-"
   left-padding: 2

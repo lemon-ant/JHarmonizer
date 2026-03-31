@@ -7,6 +7,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -14,6 +16,7 @@ import lombok.Value;
  * Flexible overlay for JHarmonizerConfig. All fields are optional.
  */
 @Value
+@Getter(AccessLevel.NONE)
 public class JHarmonizerFlexibleConfig {
 
     @Nullable
@@ -21,6 +24,9 @@ public class JHarmonizerFlexibleConfig {
 
     @Nullable
     Boolean backupsEnabled;
+
+    @Nullable
+    Boolean printProcessingStatistics;
 
     @Nullable
     JHarmonizerHeaderLine headerLine;
@@ -37,6 +43,7 @@ public class JHarmonizerFlexibleConfig {
      * @param topLevelTypesOrdering the optional top-level types ordering override
      * @param formatting the optional formatting override
      * @param backupsEnabled the optional backups-enabled override
+     * @param printProcessingStatistics the optional print-processing-statistics override
      * @param headerLine the optional header-line override
      * @param memberGroups the optional member group overrides
      */
@@ -44,11 +51,13 @@ public class JHarmonizerFlexibleConfig {
             @Nullable @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable @JsonProperty("formatting") JHarmonizerFormatting formatting,
             @Nullable @JsonProperty("backups-enabled") Boolean backupsEnabled,
+            @Nullable @JsonProperty("print-processing-statistics") Boolean printProcessingStatistics,
             @Nullable @JsonProperty("header-line") JHarmonizerHeaderLine headerLine,
             @Nullable @JsonProperty("type-members-ordering") List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
+        this.printProcessingStatistics = printProcessingStatistics;
         this.headerLine = headerLine;
         this.memberGroups =
                 ofNullable(memberGroups).map(Collections::unmodifiableList).orElse(null);
@@ -60,7 +69,7 @@ public class JHarmonizerFlexibleConfig {
      * @return the optional formatting override
      */
     @NonNull
-    public Optional<JHarmonizerFormatting> getOptionalFormatting() {
+    public Optional<JHarmonizerFormatting> getFormatting() {
         return ofNullable(formatting);
     }
 
@@ -70,8 +79,18 @@ public class JHarmonizerFlexibleConfig {
      * @return the optional backups-enabled override
      */
     @NonNull
-    public Optional<Boolean> getOptionalBackupsEnabled() {
+    public Optional<Boolean> getBackupsEnabled() {
         return ofNullable(backupsEnabled);
+    }
+
+    /**
+     * Returns the optional print-processing-statistics override.
+     *
+     * @return the optional print-processing-statistics override
+     */
+    @NonNull
+    public Optional<Boolean> getPrintProcessingStatistics() {
+        return ofNullable(printProcessingStatistics);
     }
 
     /**
@@ -80,7 +99,7 @@ public class JHarmonizerFlexibleConfig {
      * @return the optional header-line override
      */
     @NonNull
-    public Optional<JHarmonizerHeaderLine> getOptionalHeaderLine() {
+    public Optional<JHarmonizerHeaderLine> getHeaderLine() {
         return ofNullable(headerLine);
     }
 
@@ -90,7 +109,7 @@ public class JHarmonizerFlexibleConfig {
      * @return the optional member group overrides
      */
     @NonNull
-    public Optional<List<JHarmonizerMemberGroup>> getOptionalMemberGroups() {
+    public Optional<List<JHarmonizerMemberGroup>> getMemberGroups() {
         return ofNullable(memberGroups);
     }
 
@@ -100,7 +119,7 @@ public class JHarmonizerFlexibleConfig {
      * @return the optional top-level types ordering override
      */
     @NonNull
-    public Optional<JHarmonizerTopLevelTypesOrdering> getOptionalTopLevelTypesOrdering() {
+    public Optional<JHarmonizerTopLevelTypesOrdering> getTopLevelTypesOrdering() {
         return ofNullable(topLevelTypesOrdering);
     }
 }

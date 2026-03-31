@@ -3,6 +3,7 @@ formatting:
   formatter-style: PALANTIR # NONE, AOSP, GOOGLE, PALANTIR
 
 backups-enabled: true
+print-processing-statistics: true
 
 header-line:
   character: '-'

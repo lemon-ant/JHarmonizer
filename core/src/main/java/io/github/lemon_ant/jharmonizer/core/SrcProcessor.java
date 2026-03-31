@@ -19,6 +19,8 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.A
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -104,8 +106,23 @@ public final class SrcProcessor {
                         flowProcessingResult.getFlowProcessingStatus().name())))
                 .collect(SrcProcessingStats.statsCollector());
 
-        log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
+        if (config.isPrintProcessingStatistics()) {
+            log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
+        } else {
+            logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
+        }
         return aggregatedProcessingStatistic;
+    }
+
+    private static void logFilesWithUnexpectedErrors(@NonNull AggregatedProcessingStatistic aggregatedStatistic) {
+        if (aggregatedStatistic.getFilesWithUnexpectedErrors().isEmpty()) {
+            return;
+        }
+        String failedFilesLog = aggregatedStatistic.getFilesWithUnexpectedErrors().stream()
+                .sorted(Comparator.comparing(Path::toString))
+                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH))
+                .collect(Collectors.joining(", "));
+        log.warn("Files encountered unexpected errors and were not processed correctly: {}", failedFilesLog);
     }
 
     @NonNull

@@ -45,6 +45,7 @@ class JHarmonizer2UnifiedConverterTest {
                 topLevel,
                 createFormatting(true, FormatterStyle.PALANTIR),
                 true,
+                true,
                 createHeaderLine('-', 5),
                 List.of(root));
 

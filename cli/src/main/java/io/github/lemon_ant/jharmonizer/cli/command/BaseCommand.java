@@ -77,6 +77,11 @@ abstract class BaseCommand implements Callable<Integer> {
             description = "Disable backup (.bak) file creation even when config enables backups.")
     private boolean noBackup;
 
+    @Option(
+            names = {"-S", "--no-statistics"},
+            description = "Disable final processing statistics report output.")
+    private boolean noStatistics;
+
     /**
      * Returns the processing flow implemented by the command.
      *
@@ -120,7 +125,8 @@ abstract class BaseCommand implements Callable<Integer> {
                 Set.copyOf(excludeGlobs),
                 verbose,
                 effectiveConfigFilePath,
-                noBackup);
+                noBackup,
+                noStatistics);
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
         }
@@ -141,7 +147,10 @@ abstract class BaseCommand implements Callable<Integer> {
                 commandOptions.getBaseDir(),
                 describeConfigSrc(commandOptions.getConfigFilePath()));
         try {
-            createSrcProcessor(commandOptions.getConfigFilePath(), commandOptions.isNoBackup())
+            createSrcProcessor(
+                            commandOptions.getConfigFilePath(),
+                            commandOptions.isNoBackup(),
+                            commandOptions.isNoStatistics())
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
@@ -155,13 +164,21 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     @NonNull
-    private static SrcProcessor createSrcProcessor(@Nullable Path configFilePath, boolean disableBackups) {
+    private static SrcProcessor createSrcProcessor(
+            @Nullable Path configFilePath, boolean disableBackups, boolean disableStatisticsOutput) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
                 : null;
-        FlexibleUnifiedConfig backupsOverrideConfig =
-                disableBackups ? new FlexibleUnifiedConfig(null, null, false, null, null) : null;
-        FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, backupsOverrideConfig);
+        FlexibleUnifiedConfig cliOverrideConfig = (disableBackups || disableStatisticsOutput)
+                ? new FlexibleUnifiedConfig(
+                        null,
+                        null,
+                        disableBackups ? false : null,
+                        disableStatisticsOutput ? false : null,
+                        null,
+                        null)
+                : null;
+        FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
         return new SrcProcessor(effectiveConfig);
     }
 
@@ -225,5 +242,7 @@ abstract class BaseCommand implements Callable<Integer> {
         Path configFilePath;
 
         boolean noBackup;
+
+        boolean noStatistics;
     }
 }

@@ -3,6 +3,7 @@ formatting:
   formatter-style: PALANTIR
 
 backups-enabled: false
+print-processing-statistics: true
 
 header-line:
   character: '-'

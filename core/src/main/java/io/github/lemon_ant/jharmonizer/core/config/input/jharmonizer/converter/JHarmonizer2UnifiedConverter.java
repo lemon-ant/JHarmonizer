@@ -37,6 +37,7 @@ public final class JHarmonizer2UnifiedConverter {
         UnifiedFormatterStyle style = vendor.getFormatting().getFormatterStyle().getUnifiedFormatterStyle();
 
         boolean backupsEnabled = vendor.isBackupsEnabled();
+        boolean printProcessingStatistics = vendor.isPrintProcessingStatistics();
 
         // 4) headerLine
         UnifiedHeaderLine header = new UnifiedHeaderLine(
@@ -50,6 +51,7 @@ public final class JHarmonizer2UnifiedConverter {
                 .topLevelTypesOrdering(top)
                 .formatting(new UnifiedFormatting(fixImports, style))
                 .backupsEnabled(backupsEnabled)
+                .printProcessingStatistics(printProcessingStatistics)
                 .headerLine(header)
                 .rootMemberGroups(root)
                 .build();

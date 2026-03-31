@@ -24,6 +24,8 @@ public class CompiledConfig {
 
     boolean backupsEnabled;
 
+    boolean printProcessingStatistics;
+
     /**
      * Header line descriptor (character + leftPadding).
      */
@@ -45,6 +47,7 @@ public class CompiledConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
+     * @param printProcessingStatistics the print processing statistics flag
      * @param headerLine the header line
      */
     CompiledConfig(
@@ -52,11 +55,13 @@ public class CompiledConfig {
             @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             boolean backupsEnabled,
+            boolean printProcessingStatistics,
             @NonNull UnifiedHeaderLine headerLine) {
         this.rootMemberGroups = unmodifiableList(rootMemberGroups);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
+        this.printProcessingStatistics = printProcessingStatistics;
         this.headerLine = headerLine;
     }
 

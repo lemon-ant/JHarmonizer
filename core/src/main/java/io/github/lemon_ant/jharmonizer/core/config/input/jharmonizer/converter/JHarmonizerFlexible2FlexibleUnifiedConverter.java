@@ -25,17 +25,24 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     public static FlexibleUnifiedConfig convert2FlexibleUnified(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
         UnifiedTopLevelTypesOrdering topLevelTypesOrdering = readTopLevelTypesOrdering(vendorConfig);
         UnifiedFormatting formatting = readFormatting(vendorConfig);
-        Boolean backupsEnabled = vendorConfig.getOptionalBackupsEnabled().orElse(null);
+        Boolean backupsEnabled = vendorConfig.getBackupsEnabled().orElse(null);
+        Boolean printProcessingStatistics =
+                vendorConfig.getPrintProcessingStatistics().orElse(null);
         UnifiedHeaderLine headerLine = readHeaderLine(vendorConfig);
         List<UnifiedMemberGroup> rootMemberGroups = readRootMemberGroups(vendorConfig);
         return new FlexibleUnifiedConfig(
-                topLevelTypesOrdering, formatting, backupsEnabled, headerLine, rootMemberGroups);
+                topLevelTypesOrdering,
+                formatting,
+                backupsEnabled,
+                printProcessingStatistics,
+                headerLine,
+                rootMemberGroups);
     }
 
     @Nullable
     private static UnifiedTopLevelTypesOrdering readTopLevelTypesOrdering(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
-                .getOptionalTopLevelTypesOrdering()
+                .getTopLevelTypesOrdering()
                 .map(TopLevelTypesOrderingMapper::map)
                 .orElse(null);
     }
@@ -43,7 +50,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     @Nullable
     private static UnifiedFormatting readFormatting(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
-                .getOptionalFormatting()
+                .getFormatting()
                 .map(JHarmonizerFlexible2FlexibleUnifiedConverter::mapFormatting)
                 .orElse(null);
     }
@@ -51,7 +58,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     @Nullable
     private static UnifiedHeaderLine readHeaderLine(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
-                .getOptionalHeaderLine()
+                .getHeaderLine()
                 .map(headerLine -> new UnifiedHeaderLine(headerLine.getCharacter(), headerLine.getLeftPadding()))
                 .orElse(null);
     }
@@ -59,7 +66,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     @Nullable
     private static List<UnifiedMemberGroup> readRootMemberGroups(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
-                .getOptionalMemberGroups()
+                .getMemberGroups()
                 .map(memberGroups ->
                         memberGroups.stream().map(MemberGroupMapper::map).toList())
                 .orElse(null);

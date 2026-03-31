@@ -33,6 +33,7 @@ public class Unified2CompiledModelCompiler {
                 topLevelTypesOrdering,
                 unifiedConfig.getFormatting(),
                 unifiedConfig.isBackupsEnabled(),
+                unifiedConfig.isPrintProcessingStatistics(),
                 unifiedConfig.getHeaderLine());
     }
 }

@@ -94,6 +94,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
                 .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
                 .backupsEnabled(false)
+                .printProcessingStatistics(true)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .topLevelTypesOrdering(createMinimalTopLevelTypesOrdering())
                 .rootMemberGroup(rootGroup)
