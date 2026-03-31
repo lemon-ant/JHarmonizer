@@ -89,7 +89,7 @@ public class SrcProcessingStats {
             return fileCount > 0 ? totalProcessingTimeNanos / fileCount : 0;
         }
 
-        // Average size of all files processed
+        // Average source-length of all files processed (in chars)
         /**
          * Performs the calculate average size.
          * @return the result

@@ -5,7 +5,7 @@ import lombok.Value;
 
 /**
  * Result of serializing a sorted Spoon AST back to Java source code.
- * Bundles the serialized source payload with the associated timing and size statistics.
+ * Bundles the serialized source payload with the associated timing and source-length statistics.
  */
 @Value
 public class SerializationResult {

@@ -33,6 +33,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .startsWith(System.lineSeparator())
                 .contains("JHarmonizer harmonization summary")
                 .contains("| Files processed")
+                .contains("| Total source length (chars)")
                 .contains("| Parsing time (share)")
                 .contains("| Sorting time (share)")
                 .contains("| Formatting time (share)")
@@ -74,7 +75,7 @@ class ProcessingStatisticsPrintServiceTest {
         // Then
         assertThat(report)
                 .contains("| Files with unexpected internal errors")
-                .contains("| Min size")
+                .contains("| Min source length (chars)")
                 .doesNotEndWith("=");
     }
 }

@@ -10,43 +10,27 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Internal utility methods for formatting byte sizes and durations into human-readable strings.
+ * Internal utility methods for formatting source-length and durations into human-readable strings.
  */
 @UtilityClass
 final class HumanReadableFormatsUtils {
-
-    private static final long KIB = 1024L;
-    private static final long MIB = KIB * 1024L;
-    private static final long GIB = MIB * 1024L;
 
     private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
 
     private static final DecimalFormat DECIMAL_0 = new DecimalFormat("#,##0", DECIMAL_FORMAT_SYMBOLS);
 
-    private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
-
     /**
-     * Formats the bytes.
-     * @param bytes the bytes
+     * Formats the source-length measured in UTF-16 char units.
+     * @param sourceLengthChars the source-length measured in chars
      * @return the result
      */
     @SuppressWarnings("PMD.UnsynchronizedStaticFormatter")
     @NonNull
-    static String formatBytes(long bytes) {
-        if (bytes < 0) {
-            throw new IllegalArgumentException("Byte size must be non-negative, but was: " + bytes);
+    static String formatSourceLengthChars(long sourceLengthChars) {
+        if (sourceLengthChars < 0) {
+            throw new IllegalArgumentException("Source-length must be non-negative, but was: " + sourceLengthChars);
         }
-
-        if (bytes < KIB) {
-            return DECIMAL_0.format(bytes) + " B";
-        }
-        if (bytes < MIB) {
-            return formatBinary(bytes, KIB, " KiB");
-        }
-        if (bytes < GIB) {
-            return formatBinary(bytes, MIB, " MiB");
-        }
-        return formatBinary(bytes, GIB, " GiB");
+        return DECIMAL_0.format(sourceLengthChars) + " chars";
     }
 
     /**
@@ -89,12 +73,5 @@ final class HumanReadableFormatsUtils {
         long secondsPart = totalSeconds % 60L;
 
         return String.format(Locale.ROOT, "%d:%02d:%02d.%03d", totalHours, minutesPart, secondsPart, millisecondsPart);
-    }
-
-    @NonNull
-    private static String formatBinary(long bytes, long unit, String suffix) {
-        double value = (double) bytes / (double) unit;
-        DecimalFormat decimalFormat = value < 10.0 ? DECIMAL_1 : DECIMAL_0;
-        return decimalFormat.format(value) + suffix;
     }
 }

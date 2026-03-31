@@ -9,7 +9,7 @@ import lombok.Value;
 
 /**
  * Per-file processing statistics derived from a {@link FlowProcessingResult}.
- * Aggregates wall-clock processing time across all phases and records the original file size.
+ * Aggregates wall-clock processing time across all phases and records original source-length in chars.
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

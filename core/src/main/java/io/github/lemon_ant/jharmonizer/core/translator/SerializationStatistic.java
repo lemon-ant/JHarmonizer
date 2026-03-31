@@ -4,7 +4,7 @@ import java.util.Objects;
 import lombok.Value;
 
 /**
- * Timing and size statistics collected during a single AST-to-source serialization pass.
+ * Timing and source-length statistics collected during a single AST-to-source serialization pass.
  */
 @Value
 public class SerializationStatistic {
