@@ -154,6 +154,9 @@ class SrcProcessorTest {
                         .mapToLong(String::length)
                         .sum());
         assertThat(aggregatedProcessingStatistic.getTotalProcessingTimeNanos()).isPositive();
+        assertThat(aggregatedProcessingStatistic.getTotalParsingTimeNanos()).isPositive();
+        assertThat(aggregatedProcessingStatistic.getTotalSortingTimeNanos()).isPositive();
+        assertThat(aggregatedProcessingStatistic.getTotalFormattingTimeNanos()).isPositive();
         assertThat(aggregatedProcessingStatistic.getSmallestFile())
                 .extracting(FileProcessingStatistic::getPath)
                 .isEqualTo(scenarioRoot.resolve("A_Checked.java"));

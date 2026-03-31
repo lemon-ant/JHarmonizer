@@ -46,6 +46,9 @@ public class SrcProcessingStats {
         long fileCount;
         long totalSize;
         long totalProcessingTimeNanos;
+        long totalParsingTimeNanos;
+        long totalSortingTimeNanos;
+        long totalFormattingTimeNanos;
 
         @Nullable
         FileProcessingStatistic smallestFile;
@@ -60,12 +63,18 @@ public class SrcProcessingStats {
                 long fileCount,
                 long totalSize,
                 long totalProcessingTimeNanos,
+                long totalParsingTimeNanos,
+                long totalSortingTimeNanos,
+                long totalFormattingTimeNanos,
                 @Nullable FileProcessingStatistic smallestFile,
                 @Nullable FileProcessingStatistic largestFile,
                 @NonNull List<@NonNull Path> filesWithUnexpectedErrors) {
             this.fileCount = fileCount;
             this.totalSize = totalSize;
             this.totalProcessingTimeNanos = totalProcessingTimeNanos;
+            this.totalParsingTimeNanos = totalParsingTimeNanos;
+            this.totalSortingTimeNanos = totalSortingTimeNanos;
+            this.totalFormattingTimeNanos = totalFormattingTimeNanos;
             this.smallestFile = smallestFile;
             this.largestFile = largestFile;
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
@@ -88,6 +97,37 @@ public class SrcProcessingStats {
         long calculateAverageSize() {
             return fileCount > 0 ? totalSize / fileCount : 0;
         }
+
+        /**
+         * Performs the calculate parsing time percentage.
+         * @return the result
+         */
+        double calculateParsingTimePercent() {
+            return calculatePhasePercent(totalParsingTimeNanos);
+        }
+
+        /**
+         * Performs the calculate sorting time percentage.
+         * @return the result
+         */
+        double calculateSortingTimePercent() {
+            return calculatePhasePercent(totalSortingTimeNanos);
+        }
+
+        /**
+         * Performs the calculate formatting time percentage.
+         * @return the result
+         */
+        double calculateFormattingTimePercent() {
+            return calculatePhasePercent(totalFormattingTimeNanos);
+        }
+
+        private double calculatePhasePercent(long phaseTotalNanos) {
+            if (totalProcessingTimeNanos <= 0) {
+                return 0D;
+            }
+            return (phaseTotalNanos * 100D) / totalProcessingTimeNanos;
+        }
     }
 
     // Statistics container for collector
@@ -99,6 +139,9 @@ public class SrcProcessingStats {
         private final List<Path> unexpectedErrorPaths = Collections.synchronizedList(new ArrayList<>());
         private final LongAdder totalSize = new LongAdder();
         private final LongAdder totalTime = new LongAdder();
+        private final LongAdder totalParsingTime = new LongAdder();
+        private final LongAdder totalSortingTime = new LongAdder();
+        private final LongAdder totalFormattingTime = new LongAdder();
 
         /**
          * Performs the accumulate.
@@ -109,6 +152,10 @@ public class SrcProcessingStats {
             count.increment();
             totalSize.add(stats.getSize());
             totalTime.add(stats.getProcessingTimeNanos());
+            totalParsingTime.add(flowProcessingResult.getParsingStatistic().getParsingTimeInNanos());
+            totalSortingTime.add(flowProcessingResult.getSortingStatistic().getSortingTimeInNanos());
+            totalFormattingTime.add(
+                    flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos());
             if (flowProcessingResult.getFlowProcessingStatus() == FlowProcessingStatus.ERROR) {
                 unexpectedErrorPaths.add(flowProcessingResult.getPath());
             }
@@ -130,6 +177,9 @@ public class SrcProcessingStats {
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
             totalTime.add(other.totalTime.sum());
+            totalParsingTime.add(other.totalParsingTime.sum());
+            totalSortingTime.add(other.totalSortingTime.sum());
+            totalFormattingTime.add(other.totalFormattingTime.sum());
             unexpectedErrorPaths.addAll(other.unexpectedErrorPaths);
 
             minSize.accumulateAndGet(
@@ -155,6 +205,9 @@ public class SrcProcessingStats {
                     count.sum(),
                     totalSize.sum(),
                     totalTime.sum(),
+                    totalParsingTime.sum(),
+                    totalSortingTime.sum(),
+                    totalFormattingTime.sum(),
                     minSize.get(),
                     maxSize.get(),
                     Collections.unmodifiableList(unexpectedErrorPaths));
