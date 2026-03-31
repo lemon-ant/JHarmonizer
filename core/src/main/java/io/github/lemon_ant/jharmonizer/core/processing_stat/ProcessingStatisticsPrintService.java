@@ -21,7 +21,8 @@ import lombok.experimental.UtilityClass;
 public class ProcessingStatisticsPrintService {
 
     private static final int METRIC_WIDTH = 40;
-    private static final int VALUE_WIDTH = 49;
+    private static final int VALUE_WIDTH = 24;
+    private static final int DETAIL_PATH_MAX_LENGTH = 120;
     private static final String HEADER = "JHarmonizer harmonization summary";
 
     /**
@@ -44,8 +45,8 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(renderRow("Files processed", String.format("%,d", stats.getFileCount())));
         reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSize())));
         reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
-        reportLines.add(renderRow("Min size", formatSizeWithPath(stats.getSmallestFile())));
-        reportLines.add(renderRow("Max size", formatSizeWithPath(stats.getLargestFile())));
+        reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
+        reportLines.add(renderRow("Max size", formatSize(stats.getLargestFile())));
         reportLines.add(
                 renderRow("Total processing time", formatHmsMillisFromNanos(stats.getTotalProcessingTimeNanos())));
         reportLines.add(renderRow(
@@ -54,29 +55,41 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(
                 renderRow("Files with unexpected internal errors", String.valueOf(sortedUnexpectedErrors.size())));
         reportLines.add(renderSeparator('-'));
-        reportLines.add("Unexpected internal error files:");
+        addSizeBoundaryPaths(reportLines, stats);
 
         if (sortedUnexpectedErrors.isEmpty()) {
-            reportLines.add("  - none");
+            reportLines.add("Unexpected internal error files: none");
         } else {
+            reportLines.add("Unexpected internal error files:");
             for (Path path : sortedUnexpectedErrors) {
-                reportLines.add("  - " + abbreviatePathForDisplay(path, AggregatedProcessingStatistic.MAX_PATH_LENGTH));
+                reportLines.add("- " + abbreviatePathForDisplay(path, DETAIL_PATH_MAX_LENGTH));
             }
         }
-
-        reportLines.add(renderSeparator('='));
         return String.join(System.lineSeparator(), reportLines);
     }
 
     @NonNull
-    private static String formatSizeWithPath(@Nullable FileProcessingStatistic fileProcessingStatistic) {
+    private static String formatSize(@Nullable FileProcessingStatistic fileProcessingStatistic) {
         if (fileProcessingStatistic == null) {
             return formatBytes(0L);
         }
-        return formatBytes(fileProcessingStatistic.getSize()) + " ("
-                + abbreviatePathForDisplay(
-                        fileProcessingStatistic.getPath(), AggregatedProcessingStatistic.MAX_PATH_LENGTH)
-                + ")";
+        return formatBytes(fileProcessingStatistic.getSize());
+    }
+
+    private static void addSizeBoundaryPaths(
+            @NonNull List<String> reportLines, @NonNull AggregatedProcessingStatistic stats) {
+        if (stats.getSmallestFile() == null && stats.getLargestFile() == null) {
+            return;
+        }
+        reportLines.add("Size boundary files:");
+        if (stats.getSmallestFile() != null) {
+            reportLines.add("- Min size file: "
+                    + abbreviatePathForDisplay(stats.getSmallestFile().getPath(), DETAIL_PATH_MAX_LENGTH));
+        }
+        if (stats.getLargestFile() != null) {
+            reportLines.add("- Max size file: "
+                    + abbreviatePathForDisplay(stats.getLargestFile().getPath(), DETAIL_PATH_MAX_LENGTH));
+        }
     }
 
     @NonNull

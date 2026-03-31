@@ -27,12 +27,8 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("| Files processed")
                 .contains("| Files with unexpected internal errors")
                 .contains("Unexpected internal error files:")
-                .contains("  - "
-                        + PathDisplayFormatUtil.abbreviatePathForDisplay(
-                                failurePath, AggregatedProcessingStatistic.MAX_PATH_LENGTH))
-                .contains("  - "
-                        + PathDisplayFormatUtil.abbreviatePathForDisplay(
-                                brokenPath, AggregatedProcessingStatistic.MAX_PATH_LENGTH));
+                .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
+                .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(brokenPath, 120));
     }
 
     @Test
@@ -44,7 +40,8 @@ class ProcessingStatisticsPrintServiceTest {
         String report = ProcessingStatisticsPrintService.render(stats);
 
         // Then
-        assertThat(report).contains("Unexpected internal error files:").contains("  - none");
+        assertThat(report).contains("Unexpected internal error files: none");
+        assertThat(report).doesNotContain("Unexpected internal error files:\n");
     }
 
     @Test
@@ -63,6 +60,9 @@ class ProcessingStatisticsPrintServiceTest {
         String report = ProcessingStatisticsPrintService.render(stats);
 
         // Then
-        assertThat(report).contains("| Files with unexpected internal errors");
+        assertThat(report)
+                .contains("| Files with unexpected internal errors")
+                .contains("| Min size")
+                .doesNotEndWith("=");
     }
 }
