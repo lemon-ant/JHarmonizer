@@ -12,13 +12,10 @@ class ProcessingStatisticsPrintServiceTest {
     @Test
     void render_containsPseudoTableAndMultilineUnexpectedErrorList() {
         // Given
+        Path brokenPath = Path.of("zeta", "Broken.java");
+        Path failurePath = Path.of("alpha", "Failure.java");
         AggregatedProcessingStatistic stats = new AggregatedProcessingStatistic(
-                2,
-                6_500,
-                2_300_000_000L,
-                null,
-                null,
-                List.of(Path.of("zeta/Broken.java"), Path.of("alpha/Failure.java")));
+                2, 6_500, 2_300_000_000L, null, null, List.of(brokenPath, failurePath));
 
         // When
         String report = ProcessingStatisticsPrintService.render(stats);
@@ -30,8 +27,12 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("| Files processed")
                 .contains("| Files with unexpected internal errors")
                 .contains("Unexpected internal error files:")
-                .contains("  - alpha/Failure.java")
-                .contains("  - zeta/Broken.java");
+                .contains("  - "
+                        + PathDisplayFormatUtil.abbreviatePathForDisplay(
+                                failurePath, AggregatedProcessingStatistic.MAX_PATH_LENGTH))
+                .contains("  - "
+                        + PathDisplayFormatUtil.abbreviatePathForDisplay(
+                                brokenPath, AggregatedProcessingStatistic.MAX_PATH_LENGTH));
     }
 
     @Test
@@ -44,5 +45,24 @@ class ProcessingStatisticsPrintServiceTest {
 
         // Then
         assertThat(report).contains("Unexpected internal error files:").contains("  - none");
+    }
+
+    @Test
+    void render_longValues_keepsPseudoTableHeaderAligned() {
+        // Given
+        Path longPath = Path.of(
+                "very-long-module-name",
+                "deeply",
+                "nested",
+                "feature",
+                "InternalToolForVeryLongStatisticsOutputVerification.java");
+        AggregatedProcessingStatistic stats =
+                new AggregatedProcessingStatistic(1, 123_456, 1_234_567_890L, null, null, List.of(longPath));
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report).contains("| Files with unexpected internal errors");
     }
 }

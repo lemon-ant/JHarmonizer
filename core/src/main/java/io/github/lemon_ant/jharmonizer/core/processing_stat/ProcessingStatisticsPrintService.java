@@ -20,7 +20,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ProcessingStatisticsPrintService {
 
-    private static final int METRIC_WIDTH = 32;
+    private static final int METRIC_WIDTH = 40;
     private static final int VALUE_WIDTH = 49;
     private static final String HEADER = "JHarmonizer harmonization summary";
 
@@ -31,7 +31,7 @@ public class ProcessingStatisticsPrintService {
      * @return formatted multiline report suitable for logs
      */
     @NonNull
-    public String render(@NonNull AggregatedProcessingStatistic stats) {
+    public static String render(@NonNull AggregatedProcessingStatistic stats) {
         List<Path> sortedUnexpectedErrors = stats.getFilesWithUnexpectedErrors().stream()
                 .sorted(Comparator.comparing(Path::toString))
                 .toList();
@@ -69,7 +69,7 @@ public class ProcessingStatisticsPrintService {
     }
 
     @NonNull
-    private String formatSizeWithPath(@Nullable FileProcessingStatistic fileProcessingStatistic) {
+    private static String formatSizeWithPath(@Nullable FileProcessingStatistic fileProcessingStatistic) {
         if (fileProcessingStatistic == null) {
             return formatBytes(0L);
         }
@@ -80,12 +80,25 @@ public class ProcessingStatisticsPrintService {
     }
 
     @NonNull
-    private String renderRow(@NonNull String metric, @NonNull String value) {
-        return String.format("| %-" + METRIC_WIDTH + "s | %-" + VALUE_WIDTH + "s |", metric, value);
+    private static String renderRow(@NonNull String metric, @NonNull String value) {
+        String metricCell = fitCell(metric, METRIC_WIDTH);
+        String valueCell = fitCell(value, VALUE_WIDTH);
+        return String.format("| %-" + METRIC_WIDTH + "s | %-" + VALUE_WIDTH + "s |", metricCell, valueCell);
     }
 
     @NonNull
-    private String renderSeparator(char separatorChar) {
+    private static String renderSeparator(char separatorChar) {
         return String.valueOf(separatorChar).repeat(METRIC_WIDTH + VALUE_WIDTH + 7);
+    }
+
+    @NonNull
+    private static String fitCell(@NonNull String value, int maxWidth) {
+        if (value.length() <= maxWidth) {
+            return value;
+        }
+        if (maxWidth <= 3) {
+            return value.substring(0, maxWidth);
+        }
+        return value.substring(0, maxWidth - 3) + "...";
     }
 }
