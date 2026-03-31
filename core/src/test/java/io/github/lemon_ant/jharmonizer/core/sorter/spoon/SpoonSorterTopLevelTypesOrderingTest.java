@@ -135,6 +135,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
                 .backupsEnabled(false)
+                .printProcessingStatistics(true)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .rootMemberGroup(rootMemberGroup)
                 .build();

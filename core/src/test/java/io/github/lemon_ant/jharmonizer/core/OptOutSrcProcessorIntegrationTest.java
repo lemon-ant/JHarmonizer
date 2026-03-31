@@ -347,6 +347,7 @@ class OptOutSrcProcessorIntegrationTest {
                 topLevelTypesOrdering,
                 new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR),
                 false,
+                null,
                 new UnifiedHeaderLine('-', 0),
                 List.of(rootMemberGroup));
     }

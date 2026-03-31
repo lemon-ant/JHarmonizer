@@ -20,6 +20,8 @@ public class JHarmonizerConfig {
 
     boolean backupsEnabled;
 
+    boolean printProcessingStatistics;
+
     @NonNull
     JHarmonizerHeaderLine headerLine;
 
@@ -35,6 +37,7 @@ public class JHarmonizerConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
+     * @param printProcessingStatistics the print processing statistics flag
      * @param headerLine the header line
      * @param memberGroups the member groups
      */
@@ -43,12 +46,14 @@ public class JHarmonizerConfig {
                     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
             @JsonProperty(value = "backups-enabled", required = true) boolean backupsEnabled,
+            @JsonProperty(value = "print-processing-statistics", required = true) boolean printProcessingStatistics,
             @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
                     List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
+        this.printProcessingStatistics = printProcessingStatistics;
         this.headerLine = headerLine;
         Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
         this.memberGroups = Collections.unmodifiableList(memberGroups);
@@ -61,6 +66,7 @@ public class JHarmonizerConfig {
         }
 
         return backupsEnabled == that.backupsEnabled
+                && printProcessingStatistics == that.printProcessingStatistics
                 && formatting.equals(that.formatting)
                 && headerLine.equals(that.headerLine)
                 && memberGroups.equals(that.memberGroups)
@@ -71,6 +77,7 @@ public class JHarmonizerConfig {
     public int hashCode() {
         int result = formatting.hashCode();
         result = 31 * result + Boolean.hashCode(backupsEnabled);
+        result = 31 * result + Boolean.hashCode(printProcessingStatistics);
         result = 31 * result + headerLine.hashCode();
         result = 31 * result + memberGroups.hashCode();
         result = 31 * result + topLevelTypesOrdering.hashCode();

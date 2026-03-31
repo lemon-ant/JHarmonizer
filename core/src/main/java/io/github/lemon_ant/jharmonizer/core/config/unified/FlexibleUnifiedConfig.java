@@ -32,6 +32,9 @@ public class FlexibleUnifiedConfig {
     @Nullable
     Boolean backupsEnabled;
 
+    @Nullable
+    Boolean printProcessingStatistics;
+
     /**
      * Optional override for header line.
      */
@@ -56,6 +59,7 @@ public class FlexibleUnifiedConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
+     * @param printProcessingStatistics the print processing statistics flag
      * @param headerLine the header line
      * @param rootMemberGroups the root member groups
      */
@@ -63,11 +67,13 @@ public class FlexibleUnifiedConfig {
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable UnifiedFormatting formatting,
             @Nullable Boolean backupsEnabled,
+            @Nullable Boolean printProcessingStatistics,
             @Nullable UnifiedHeaderLine headerLine,
             @Nullable @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
+        this.printProcessingStatistics = printProcessingStatistics;
         this.headerLine = headerLine;
         this.rootMemberGroups =
                 ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(null);
@@ -89,6 +95,15 @@ public class FlexibleUnifiedConfig {
     @NonNull
     public Optional<Boolean> getBackupsEnabled() {
         return ofNullable(backupsEnabled);
+    }
+
+    /**
+     * Returns the print processing statistics flag.
+     * @return the print processing statistics flag
+     */
+    @NonNull
+    public Optional<Boolean> getPrintProcessingStatistics() {
+        return ofNullable(printProcessingStatistics);
     }
 
     /**

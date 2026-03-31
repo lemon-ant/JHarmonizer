@@ -31,6 +31,8 @@ public class UnifiedConfigMerger {
         UnifiedFormatting formatting = overlay.getFormatting().orElse(baseline.getFormatting());
         UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
         Boolean backupsEnabled = overlay.getBackupsEnabled().orElse(baseline.isBackupsEnabled());
+        Boolean printProcessingStatistics =
+                overlay.getPrintProcessingStatistics().orElse(baseline.isPrintProcessingStatistics());
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
                 .map(overlayRootGroups -> mergeRootMemberGroups(baseline.getRootMemberGroups(), overlayRootGroups))
                 .orElse(baseline.getRootMemberGroups());
@@ -40,6 +42,7 @@ public class UnifiedConfigMerger {
                 .formatting(formatting)
                 .headerLine(header)
                 .backupsEnabled(backupsEnabled)
+                .printProcessingStatistics(printProcessingStatistics)
                 .rootMemberGroups(root)
                 .build();
     }
@@ -62,13 +65,15 @@ public class UnifiedConfigMerger {
                 overlay.getHeaderLine().orElse(baseline.getHeaderLine().orElse(null));
         Boolean backupsEnabled =
                 overlay.getBackupsEnabled().orElse(baseline.getBackupsEnabled().orElse(null));
+        Boolean printProcessingStatistics = overlay.getPrintProcessingStatistics()
+                .orElse(baseline.getPrintProcessingStatistics().orElse(null));
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
                 .map(overlayRootGroups -> baseline.getRootMemberGroups()
                         .map(baselineRootGroups -> mergeRootMemberGroups(baselineRootGroups, overlayRootGroups))
                         .orElse(overlayRootGroups))
                 .orElse(baseline.getRootMemberGroups().orElse(null));
 
-        return new FlexibleUnifiedConfig(top, formatting, backupsEnabled, header, root);
+        return new FlexibleUnifiedConfig(top, formatting, backupsEnabled, printProcessingStatistics, header, root);
     }
 
     @NonNull

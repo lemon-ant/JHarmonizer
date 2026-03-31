@@ -139,6 +139,32 @@ class BaseCommandTest {
     }
 
     @Test
+    void call_noStatisticsOptionInvoked_disablesStatisticsReportInSrcProcessor() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+        AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
+                mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    constructorArguments.set(context.arguments());
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenReturn(mock(AggregatedProcessingStatistic.class));
+                })) {
+            exitCode = cmd.execute("--base-dir", "src", "--no-statistics");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        assertThat(constructorArguments.get()).hasSize(1);
+        Object constructorConfig = constructorArguments.get().getFirst();
+        assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
+        FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
+        assertThat(flexibleConfig.getPrintProcessingStatistics()).contains(false);
+    }
+
+    @Test
     void call_processorThrowsRuntimeException_returnsExitCode1() {
         // When
         int exitCode;

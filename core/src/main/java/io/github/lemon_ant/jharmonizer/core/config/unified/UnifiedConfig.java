@@ -27,6 +27,8 @@ public class UnifiedConfig {
 
     boolean backupsEnabled;
 
+    boolean printProcessingStatistics;
+
     /**
      * Header line descriptor (character + leftPadding).
      */
@@ -51,6 +53,7 @@ public class UnifiedConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
+     * @param printProcessingStatistics the print processing statistics flag
      * @param headerLine the header line
      * @param rootMemberGroups the root member groups
      */
@@ -59,11 +62,13 @@ public class UnifiedConfig {
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             @NonNull Boolean backupsEnabled,
+            @NonNull Boolean printProcessingStatistics,
             @NonNull UnifiedHeaderLine headerLine,
             @NonNull @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
+        this.printProcessingStatistics = printProcessingStatistics;
         this.headerLine = headerLine;
         Validate.notEmpty(rootMemberGroups, "Root member groups cannot be empty");
         this.rootMemberGroups = Collections.unmodifiableList(rootMemberGroups);
