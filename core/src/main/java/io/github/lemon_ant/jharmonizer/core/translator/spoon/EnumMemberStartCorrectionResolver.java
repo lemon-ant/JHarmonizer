@@ -13,6 +13,15 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 final class EnumMemberStartCorrectionResolver {
 
+    /**
+     * Resolves corrected source-start positions for enum members whose Spoon-reported start is offset
+     * into a preceding lambda body. Only the first enum member (by source position) is examined; if its
+     * Spoon-reported start falls inside a lambda, the corrected position is returned in the map.
+     *
+     * @param srcCode             the full original source code of the compilation unit
+     * @param explicitTypeMembers the list of explicitly declared enum type members (must not be empty)
+     * @return a map from member to its corrected start index, or an empty map when no correction is needed
+     */
     @NonNull
     static Map<CtTypeMember, Integer> resolveCorrectedStarts(
             @NonNull String srcCode, @NonNull List<CtTypeMember> explicitTypeMembers) {
@@ -49,9 +58,9 @@ final class EnumMemberStartCorrectionResolver {
                 char previous = findPreviousNonWhitespace(chars, index - 1);
                 char next = findNextNonWhitespace(chars, index + 1);
                 if (Character.isLetterOrDigit(previous) && Character.isLetterOrDigit(next)) {
-                    patternBuilder.append("\\\\s+");
+                    patternBuilder.append("\\s+");
                 } else {
-                    patternBuilder.append("\\\\s*");
+                    patternBuilder.append("\\s*");
                 }
                 int nextIndex = index + 1;
                 while (nextIndex < chars.length && Character.isWhitespace(chars[nextIndex])) {
