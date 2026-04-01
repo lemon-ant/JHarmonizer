@@ -30,6 +30,7 @@ public final class Sorter {
      */
     @NonNull
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
+        log.debug("Sorting {}", spoonAstModel.getPath());
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
             spoonSorter.sortCompilationUnitRecursively(
                     spoonAstModel.getCompilationUnit(),
