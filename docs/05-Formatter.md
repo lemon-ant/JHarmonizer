@@ -75,7 +75,7 @@ package ${package};
 
 are not valid Java grammar before external resource/template processing, so formatter invocation fails for such files.
 
-When users keep template placeholders in sources, document and support these choices:
+When your sources contain template placeholders, you have two supported options:
 
 1. Put `// @jharmonizer:fully-off` on the first line to skip harmonization for that file.
-2. Keep processing enabled and accept warning/error output for that file on each run.
+2. Keep processing enabled. The formatter will fail for files containing placeholders, JHarmonizer will report an `ERROR` for each such file, and the rest of the pipeline will continue to run.
