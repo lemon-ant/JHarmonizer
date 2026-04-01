@@ -107,9 +107,7 @@ class MemberGroupCompiler {
                 Optional.ofNullable(unifiedGroup.getSeparator()).orElse(inheritedContext.getSeparator());
         List<UnifiedOrderingRule> orderingRules =
                 Optional.ofNullable(unifiedGroup.getOrderingRules()).orElse(inheritedContext.getOrderingRules());
-        List<UnifiedOrderingRule> normalizedOrderingRules =
-                orderingRules == null ? Collections.emptyList() : orderingRules;
-        return new GroupInheritanceContext(keepAccessorsTogether, separator, normalizedOrderingRules);
+        return new GroupInheritanceContext(keepAccessorsTogether, separator, orderingRules);
     }
 
     @Value
