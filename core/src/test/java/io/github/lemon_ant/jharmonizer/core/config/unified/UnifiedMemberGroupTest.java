@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class UnifiedMemberGroupTest {
@@ -12,7 +13,7 @@ class UnifiedMemberGroupTest {
         UnifiedMemberGroup unifiedMemberGroup = UnifiedMemberGroup.builder()
                 .selectorBlock(UnifiedMemberGroupSelectorBlock.builder().build())
                 .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.ALPHA)
+                .orderingRules(List.of(UnifiedOrderingRule.ALPHA))
                 .build();
 
         // Then

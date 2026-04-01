@@ -227,7 +227,7 @@
         "nameMatcher" : null
       } ]
     },
-    "separator" : "NONE",
+    "separator" : null,
     "orderingRules" : [ "ALPHA" ]
   }, {
     "groupName" : "DTO and Entities",
@@ -564,7 +564,7 @@
           }
         } ]
       },
-      "separator" : "NONE",
+      "separator" : null,
       "orderingRules" : [ "PRESERVE" ]
     } ],
     "selectorBlock" : {
@@ -652,7 +652,7 @@
         "nameMatcher" : null
       } ]
     },
-    "separator" : "NONE",
+    "separator" : null,
     "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
   }, {
     "groupName" : "Default Rule",
@@ -747,8 +747,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -760,8 +760,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Instance final fields",
         "keepAccessorsTogether" : null,
@@ -776,8 +776,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NEW_LINE",
-        "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -808,8 +808,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NONE",
-        "orderingRules" : [ "PRESERVE" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Instance initializers",
         "keepAccessorsTogether" : null,
@@ -830,8 +830,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NONE",
-        "orderingRules" : [ "PRESERVE" ]
+        "separator" : null,
+        "orderingRules" : null
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -865,8 +865,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
@@ -881,8 +881,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
@@ -897,8 +897,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -910,8 +910,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NONE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Protected",
         "keepAccessorsTogether" : null,
@@ -929,8 +929,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
@@ -945,8 +945,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
@@ -961,8 +961,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -974,8 +974,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NONE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Package-private",
         "keepAccessorsTogether" : null,
@@ -993,8 +993,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
@@ -1009,8 +1009,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
@@ -1025,8 +1025,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1038,8 +1038,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NONE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Private",
         "keepAccessorsTogether" : null,
@@ -1057,8 +1057,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
@@ -1073,8 +1073,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
@@ -1089,8 +1089,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NONE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1102,8 +1102,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NONE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1149,8 +1149,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
@@ -1177,8 +1177,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1190,8 +1190,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NEW_LINE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Protected",
         "keepAccessorsTogether" : null,
@@ -1215,8 +1215,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
@@ -1243,8 +1243,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1256,8 +1256,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NEW_LINE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Package-private",
         "keepAccessorsTogether" : null,
@@ -1281,8 +1281,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
@@ -1309,8 +1309,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1322,8 +1322,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NEW_LINE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       }, {
         "groupName" : "Private",
         "keepAccessorsTogether" : null,
@@ -1347,8 +1347,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
@@ -1375,8 +1375,8 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : "NEW_LINE",
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null,
+          "orderingRules" : null
         } ],
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1388,8 +1388,8 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "NEW_LINE",
-        "orderingRules" : [ "ALPHA" ]
+        "separator" : null,
+        "orderingRules" : null
       } ],
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1441,7 +1441,7 @@
         }
       } ]
     },
-    "separator" : "NONE",
+    "separator" : null,
     "orderingRules" : [ "PRESERVE" ]
   } ],
   "topLevelTypesOrdering" : {

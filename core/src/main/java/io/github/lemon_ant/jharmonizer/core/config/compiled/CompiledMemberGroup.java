@@ -11,7 +11,6 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
-import org.apache.commons.lang3.Validate;
 
 /**
  * Tree node with precompiled include/exclude blocks and children.
@@ -58,7 +57,6 @@ public class CompiledMemberGroup {
         this.selectorBlock = selectorBlock;
 
         this.separator = separator;
-        Validate.notEmpty(orderingRules, "Ordering rules collection cannot be empty");
         this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 

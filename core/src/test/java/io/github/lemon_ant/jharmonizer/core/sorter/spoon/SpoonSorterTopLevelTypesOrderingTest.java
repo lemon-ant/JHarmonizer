@@ -129,7 +129,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .groupName("Root")
                 .selectorBlock(UnifiedMemberGroupSelectorBlock.builder().build())
                 .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.PRESERVE)
+                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
                 .build();
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
                 .topLevelTypesOrdering(topLevelTypesOrdering)

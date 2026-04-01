@@ -110,10 +110,87 @@ class MemberGroupCompilerTest {
                 .containsExactly(OrderingRule.VISIBILITY_DESC, OrderingRule.ALPHA, OrderingRule.PRESERVE);
     }
 
+    @Test
+    void compileTopLevelGroups_separator_isInheritedAndCanBeOverridden() {
+        // Given
+        UnifiedMemberGroup inheritedChild = createGroup("InheritedChild", null, null, List.of(), null);
+        UnifiedMemberGroup overriddenChild = createGroup(
+                "OverriddenChild", null, UnifiedSeparator.HEADER, List.of(), List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup root = createGroup(
+                "Root",
+                null,
+                UnifiedSeparator.NEW_LINE,
+                List.of(inheritedChild, overriddenChild),
+                List.of(UnifiedOrderingRule.ALPHA));
+
+        // When
+        CompiledMemberGroup compiledRoot =
+                MemberGroupCompiler.compileTopLevelGroups(List.of(root)).getFirst();
+
+        // Then
+        CompiledMemberGroup compiledInheritedChild =
+                compiledRoot.getCompiledSubGroups().getFirst();
+        CompiledMemberGroup compiledOverriddenChild =
+                compiledRoot.getCompiledSubGroups().get(1);
+        assertThat(compiledRoot.getSeparator()).isEqualTo(UnifiedSeparator.NEW_LINE);
+        assertThat(compiledInheritedChild.getSeparator()).isEqualTo(UnifiedSeparator.NEW_LINE);
+        assertThat(compiledOverriddenChild.getSeparator()).isEqualTo(UnifiedSeparator.HEADER);
+    }
+
+    @Test
+    void compileTopLevelGroups_orderingRules_areInheritedAndCanBeOverridden() {
+        // Given
+        List<UnifiedOrderingRule> parentOrderingRules = List.of(UnifiedOrderingRule.ALPHA);
+        List<UnifiedOrderingRule> childOrderingRules = List.of(UnifiedOrderingRule.PRESERVE);
+        UnifiedMemberGroup inheritedChild = createGroup("InheritedChild", null, null, List.of(), null);
+        UnifiedMemberGroup overriddenChild = createGroup("OverriddenChild", null, null, List.of(), childOrderingRules);
+        UnifiedMemberGroup root = createGroup(
+                "Root", null, UnifiedSeparator.NONE, List.of(inheritedChild, overriddenChild), parentOrderingRules);
+
+        // When
+        CompiledMemberGroup compiledRoot =
+                MemberGroupCompiler.compileTopLevelGroups(List.of(root)).getFirst();
+
+        // Then
+        CompiledMemberGroup compiledInheritedChild =
+                compiledRoot.getCompiledSubGroups().getFirst();
+        CompiledMemberGroup compiledOverriddenChild =
+                compiledRoot.getCompiledSubGroups().get(1);
+        assertThat(compiledRoot.getOrderingRules()).containsExactly(OrderingRule.ALPHA);
+        assertThat(compiledInheritedChild.getOrderingRules()).containsExactly(OrderingRule.ALPHA);
+        assertThat(compiledOverriddenChild.getOrderingRules()).containsExactly(OrderingRule.PRESERVE);
+    }
+
+    @Test
+    void compileTopLevelGroups_orderingRules_emptyList_isAllowed() {
+        // Given
+        UnifiedMemberGroup child = createGroup("Child", null, null, List.of(), null);
+        UnifiedMemberGroup root = createGroup("Root", null, UnifiedSeparator.NONE, List.of(child), List.of());
+
+        // When
+        CompiledMemberGroup compiledRoot =
+                MemberGroupCompiler.compileTopLevelGroups(List.of(root)).getFirst();
+
+        // Then
+        CompiledMemberGroup compiledChild = compiledRoot.getCompiledSubGroups().getFirst();
+        assertThat(compiledRoot.getOrderingRules()).isEmpty();
+        assertThat(compiledChild.getOrderingRules()).isEmpty();
+    }
+
     @NonNull
     private static UnifiedMemberGroup createGroup(
             String groupName,
             Boolean keepAccessorsTogether,
+            List<UnifiedMemberGroup> memberSubGroups,
+            List<UnifiedOrderingRule> orderingRules) {
+        return createGroup(groupName, keepAccessorsTogether, UnifiedSeparator.NONE, memberSubGroups, orderingRules);
+    }
+
+    @NonNull
+    private static UnifiedMemberGroup createGroup(
+            String groupName,
+            Boolean keepAccessorsTogether,
+            UnifiedSeparator separator,
             List<UnifiedMemberGroup> memberSubGroups,
             List<UnifiedOrderingRule> orderingRules) {
         UnifiedMemberGroupSelectorBlock selectorBlock =
@@ -123,7 +200,7 @@ class MemberGroupCompilerTest {
                 .keepAccessorsTogether(keepAccessorsTogether)
                 .memberSubGroups(memberSubGroups)
                 .selectorBlock(selectorBlock)
-                .separator(UnifiedSeparator.NONE)
+                .separator(separator)
                 .orderingRules(orderingRules)
                 .build();
     }
