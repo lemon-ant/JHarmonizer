@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import java.util.Comparator;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -32,8 +32,11 @@ final class EnumMemberStartCorrectionResolver {
         int srcStart = firstMember.getPosition().getSourceStart();
         int srcEnd = firstMember.getPosition().getSourceEnd();
         String memberSourceFragment = srcCode.substring(srcStart, srcEnd + 1);
-        String firstLine = firstMember.toString().lines().findFirst().orElseThrow(
-                () -> new IllegalStateException("Failed to find first line for enum member"))
+        String firstLine = firstMember
+                .toString()
+                .lines()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Failed to find first line for enum member"))
                 .trim();
         if (firstLine.isEmpty()) {
             throw new IllegalStateException("First line for enum member is blank");

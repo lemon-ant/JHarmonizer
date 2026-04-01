@@ -29,6 +29,7 @@ public final class Sorter {
      * @return a SortingResult containing the sorted SpoonASTModel and statistics
      */
     @NonNull
+    @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         log.debug("Sorting {}", spoonAstModel.getPath());
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
