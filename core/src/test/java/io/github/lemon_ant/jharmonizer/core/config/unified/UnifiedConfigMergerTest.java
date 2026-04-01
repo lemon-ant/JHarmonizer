@@ -182,7 +182,7 @@ class UnifiedConfigMergerTest {
 
         // Then
         assertThat(mergedConfig.getBackupsEnabled()).contains(false);
-        assertThat(mergedConfig.getRootMemberGroups()).contains(List.of());
+        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
     }
 
     @Test

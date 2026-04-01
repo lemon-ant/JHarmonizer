@@ -20,12 +20,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class BaseCommandTest {
 
     private CommandLine commandLine;
+
+    @TempDir
+    Path temporaryDirectory;
 
     @BeforeEach
     void setUp() {
@@ -183,7 +187,7 @@ class BaseCommandTest {
     @Test
     void call_baseDirMissing_returnsExitCode1() {
         // Given
-        Path missingDirectoryPath = Path.of("target/missing-base-dir-for-base-command-test");
+        Path missingDirectoryPath = temporaryDirectory.resolve("missing-base-dir");
 
         // When
         int exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
@@ -196,7 +200,7 @@ class BaseCommandTest {
     @Test
     void call_configFileMissing_returnsExitCode1() {
         // Given
-        Path missingConfigPath = Path.of("target/missing-config-for-base-command-test.yml");
+        Path missingConfigPath = temporaryDirectory.resolve("missing-config.yml");
 
         // When
         int exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
