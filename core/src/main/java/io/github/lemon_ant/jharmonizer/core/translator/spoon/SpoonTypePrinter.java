@@ -41,6 +41,9 @@ final class SpoonTypePrinter {
     @NonNull
     private final TokenWriter tokenWriter;
 
+    @NonNull
+    private Map<CtTypeMember, Integer> correctedEnumMemberStarts = Collections.emptyMap();
+
     /**
      * Prints a type declaration using preserved source fragments and group-separator metadata.
      *
@@ -54,6 +57,9 @@ final class SpoonTypePrinter {
         }
         SourcePosition typePosition = type.getPosition();
         List<CtTypeMember> explicitTypeMembers = findExplicitTypeMembers(type);
+        correctedEnumMemberStarts = type instanceof CtEnum<?>
+                ? EnumMemberStartCorrectionResolver.resolveCorrectedStarts(originalSrcCode, explicitTypeMembers)
+                : Collections.emptyMap();
 
         if (explicitTypeMembers.isEmpty()) {
             // If no nested elements, then print the original source fragment entirely
@@ -63,7 +69,8 @@ final class SpoonTypePrinter {
             return;
         }
         int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .mapToInt(typeMember -> correctedEnumMemberStarts.getOrDefault(
+                        typeMember, typeMember.getPosition().getSourceStart()))
                 .min()
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute first member start from explicit type members"));
@@ -169,11 +176,17 @@ final class SpoonTypePrinter {
         }
 
         int nextElementStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .filter(start -> start > member.getPosition().getSourceStart())
+                .mapToInt(typeMember -> correctedEnumMemberStarts.getOrDefault(
+                        typeMember, typeMember.getPosition().getSourceStart()))
+                .filter(start -> start
+                        > correctedEnumMemberStarts.getOrDefault(
+                                member, member.getPosition().getSourceStart()))
                 .min()
                 .orElse(member.getPosition().getSourceEnd() + 1);
-        printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
+        printOriginalFragment(
+                correctedEnumMemberStarts.getOrDefault(
+                        member, member.getPosition().getSourceStart()),
+                nextElementStart - 1);
         return currentElementNeedsSeparatorAfter;
     }
 
