@@ -75,6 +75,18 @@ The following are intentionally unsupported and ignored with a warning:
 - `@jharmonizer:on`, `@jharmonizer:format-off`, `@jharmonizer:format-on`, and similar variants
 - directives inside method bodies or inside Javadoc
 
+## Maven/archetype template placeholders (`package ${package};`)
+
+Files that still contain template placeholders such as `package ${package};` are not valid Java source yet, so the
+Palantir formatter cannot parse them and will fail on those files.
+
+For template sources you have two supported options:
+
+1. Add `// @jharmonizer:fully-off` as the first line of that template file to skip harmonization for the whole file
+   (recommended when you want clean runs without formatter warnings/errors).
+2. Leave the file without opt-out and accept that each run can report a warning/error for that file because formatter
+   parsing fails on non-Java grammar placeholders.
+
 ## Build
 
 Default (local / IDE / CI that relies on project config):

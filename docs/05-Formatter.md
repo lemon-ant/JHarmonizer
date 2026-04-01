@@ -64,3 +64,18 @@ These parameters must be passed through the `Configuration` model and injected i
 ## Summary
 
 This wrapper is essential to finalize formatted, readable Java source code that adheres to a unified style. It should be executed only **after** AST transformation and serialization are complete.
+
+## Known limitation: template placeholders are not Java grammar
+
+Palantir formatter expects parseable Java compilation units. Template placeholders like:
+
+```java
+package ${package};
+```
+
+are not valid Java grammar before external resource/template processing, so formatter invocation fails for such files.
+
+When users keep template placeholders in sources, document and support these choices:
+
+1. Put `// @jharmonizer:fully-off` on the first line to skip harmonization for that file.
+2. Keep processing enabled and accept warning/error output for that file on each run.
