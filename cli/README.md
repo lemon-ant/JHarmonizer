@@ -109,7 +109,7 @@ All commands share the same set of options (inherited from `BaseCommand`):
 
 | Option | Short | Required | Description |
 |---|---|---|---|
-| `--base-dir` | `-b` | yes | Root directory to scan for Java source files |
+| `--base-dir` | `-b` | no | Root directory to scan for Java source files (default: current directory) |
 | `--include` | `-i` | no | Glob patterns for files to include; repeat the option or pass a comma-separated list |
 | `--exclude` | `-e` | no | Glob patterns for files to exclude; repeat the option or pass a comma-separated list |
 | `--verbose` | `-v` | no | Enable DEBUG-level logging |
