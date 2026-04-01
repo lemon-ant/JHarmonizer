@@ -109,10 +109,13 @@ All commands share the same set of options (inherited from `BaseCommand`):
 
 | Option | Short | Required | Description |
 |---|---|---|---|
-| `--base-dir` | `-b` | yes | Root directory to scan for Java source files |
+| `--base-dir` | `-b` | no | Root directory to scan for Java source files (default: current directory) |
 | `--include` | `-i` | no | Glob patterns for files to include; repeat the option or pass a comma-separated list |
 | `--exclude` | `-e` | no | Glob patterns for files to exclude; repeat the option or pass a comma-separated list |
 | `--verbose` | `-v` | no | Enable DEBUG-level logging |
+| `--config` | `-c` | no | Path to custom YAML configuration file merged over defaults |
+| `--no-backup` | `-B` | no | Disable `.bak` file creation even if enabled in config |
+| `--no-statistics` | `-S` | no | Disable final processing statistics output |
 
 Glob patterns follow the `java.nio.file.PathMatcher` `glob:` syntax,
 e.g. `**/*.java`, `**/generated/**`.
@@ -139,3 +142,70 @@ e.g. `**/*.java`, `**/generated/**`.
 
 Exit code `3` causes the step to fail, signalling that `restructure` needs to be
 run locally before pushing.
+
+## Logging configuration and startup overrides
+
+The CLI uses **SLF4J + Logback**:
+
+- API: `org.slf4j:slf4j-api`
+- Backend: `ch.qos.logback:logback-classic`
+- Default config file in this module: `cli/src/main/resources/logback.xml`
+
+By default, the root logger level is `INFO`.
+
+### 1) CLI switch: `--verbose` / `-v`
+
+For all functional commands (`restructure`, `check-all`, `check-fast`), passing
+`-v` (`--verbose`) raises the **root** log level to `DEBUG` at command start.
+This is the easiest way to get detailed diagnostics from the packaged JAR:
+
+```bash
+java -jar cli/target/jharmonizer-cli.jar check-fast \
+  -b src/main/java \
+  -i "**/*.java" \
+  -v
+```
+
+### 2) JVM startup key: `-Dlogback.configurationFile=...`
+
+Logback supports replacing the bundled logging config at startup using a JVM
+system property. This lets you override levels, appenders, and patterns without
+changing application code.
+
+Example custom config (`/tmp/jharmonizer-logback-debug.xml`):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <root level="DEBUG">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>
+```
+
+Run CLI with override:
+
+```bash
+java -Dlogback.configurationFile=/tmp/jharmonizer-logback-debug.xml \
+  -jar cli/target/jharmonizer-cli.jar check-all \
+  -b src/main/java \
+  -i "**/*.java"
+```
+
+### What is and is not supported now
+
+- ✅ Supported:
+  - `-v` / `--verbose` (built-in CLI option)
+  - `-Dlogback.configurationFile=...` (standard Logback startup override)
+- ⚠️ Not implemented in current bundled config:
+  - Dedicated env vars like `LOG_LEVEL=DEBUG`
+  - Dedicated JVM keys like `-Dapp.log.level=DEBUG`
+
+The latter can be added later by parameterizing `logback.xml` with custom
+properties, but the current file defines a fixed default root level (`INFO`),
+with `-v` as the built-in runtime switch.

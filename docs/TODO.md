@@ -634,6 +634,52 @@ Add a dedicated Lombok analyzer/fixer:
 
 ---
 
+### 16. Flexible logging-level controls for CLI, wrappers, and public API (future version)
+
+#### Status
+- [ ] Not implemented (captured as a future product improvement)
+- [ ] Current behavior:
+  - CLI supports `-v/--verbose` (raises root logging to `DEBUG`)
+  - startup override is possible via backend-specific Logback configuration replacement
+  - there is no unified JHarmonizer-level logging settings surface shared across CLI, wrappers, and API
+
+#### Problem statement
+Logging verbosity control is currently split between CLI flags and backend-specific startup wiring.
+Integrators need a first-class, documented product surface to control logging consistently for:
+- CLI invocations in CI and local tooling,
+- external wrappers (for example Maven/Gradle/IDE integrations),
+- public `SrcProcessor` API embedding.
+
+#### Proposed solution (next version)
+Introduce a normalized logging settings model and expose it consistently across entry points:
+- CLI:
+  - `--log-level=<TRACE|DEBUG|INFO|WARN|ERROR>`
+  - optional subsystem-scoped overrides (for example `--log-level.<subsystem>=<level>`)
+- wrappers/plugins:
+  - equivalent configuration keys mapped to the same normalized settings
+- public API:
+  - explicit logging options in bootstrap/config DTOs for processor creation
+
+#### Expected benefits
+- Consistent behavior regardless of launch path (CLI, wrapper, or direct API).
+- Less dependence on backend-specific configuration files for common verbosity scenarios.
+- Easier support/debug workflows with reproducible logging setup.
+
+#### Non-goals
+- Do not add runtime hot-reload/dynamic log reconfiguration in the first step.
+- Do not hard-couple product-level config to one backend implementation detail.
+
+#### Implementation outline (when revisited)
+- [ ] Define backend-agnostic logging settings model in shared/core config.
+- [ ] Add CLI options for global and subsystem-level logging overrides.
+- [ ] Add wrapper-side mapping to the same normalized model.
+- [ ] Add public `SrcProcessor` bootstrap/config API support.
+- [ ] Implement precedence rules (defaults < file < wrapper/API/CLI override).
+- [ ] Add tests for merging/precedence and deterministic output.
+- [ ] Document end-user recipes for CLI and embedding scenarios.
+
+---
+
 ## Technical debt / stabilization backlog
 
 ### 1. Blank-final nearest-provider edge cases still not covered by active E2E
