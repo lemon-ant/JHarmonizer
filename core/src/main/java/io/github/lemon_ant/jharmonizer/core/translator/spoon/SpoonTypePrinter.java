@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -54,7 +53,6 @@ final class SpoonTypePrinter {
         }
         SourcePosition typePosition = type.getPosition();
         List<CtTypeMember> explicitTypeMembers = findExplicitTypeMembers(type);
-
         if (explicitTypeMembers.isEmpty()) {
             // If no nested elements, then print the original source fragment entirely
             // TODO Check if we have comments before and after
@@ -62,8 +60,12 @@ final class SpoonTypePrinter {
                     .writeln();
             return;
         }
+        Map<CtTypeMember, Integer> correctedEnumMemberStarts = type instanceof CtEnum<?>
+                ? EnumMemberStartCorrectionResolver.resolveCorrectedStarts(originalSrcCode, explicitTypeMembers)
+                : Collections.emptyMap();
         int minMemberStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .mapToInt(typeMember -> correctedEnumMemberStarts.getOrDefault(
+                        typeMember, typeMember.getPosition().getSourceStart()))
                 .min()
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute first member start from explicit type members"));
@@ -71,7 +73,7 @@ final class SpoonTypePrinter {
         if (type instanceof CtEnum<?>) {
             tokenWriter.writeln();
         }
-        printTypeMembers(explicitTypeMembers);
+        printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts);
         int maxMemberEnd = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
                 .max()
@@ -116,12 +118,6 @@ final class SpoonTypePrinter {
     @NonNull
     private static List<CtTypeMember> findExplicitTypeMembers(CtType<?> type) {
         return type.getTypeMembers().stream()
-                // Spoon quirk: getTypeMembers() of a type may also include members whose declaring type
-                // is a nested/anonymous class (e.g., the anonymous classes of enum constants). We only want
-                // members that are declared directly in `type`, otherwise those nested members would be
-                // printed as if they were top-level members of `type`.
-                .filter(typeMember -> Objects.equals(typeMember.getDeclaringType(), type))
-                .filter(typeMember -> Objects.equals(typeMember.getParent(), type))
                 // Spoon creates implicit constructors which don't exist in the source code
                 .filter(typeMember -> typeMember.getPosition().isValidPosition())
                 /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
@@ -130,12 +126,13 @@ final class SpoonTypePrinter {
                 .toList();
     }
 
-    private void printTypeMembers(List<CtTypeMember> explicitTypeMembers) {
+    private void printTypeMembers(
+            List<CtTypeMember> explicitTypeMembers, Map<CtTypeMember, Integer> correctedEnumMemberStarts) {
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
         for (CtTypeMember member : explicitTypeMembers) {
-            previousElementNeedSeparatorAfter =
-                    printTypeMember(member, explicitTypeMembers, first, previousElementNeedSeparatorAfter);
+            previousElementNeedSeparatorAfter = printTypeMember(
+                    member, explicitTypeMembers, correctedEnumMemberStarts, first, previousElementNeedSeparatorAfter);
             first = false;
         }
     }
@@ -143,6 +140,7 @@ final class SpoonTypePrinter {
     private boolean printTypeMember(
             CtTypeMember member,
             List<CtTypeMember> explicitTypeMembers,
+            Map<CtTypeMember, Integer> correctedEnumMemberStarts,
             boolean first,
             boolean previousElementNeedSeparatorAfter) {
         // TODO Check Orphaned comments
@@ -169,11 +167,15 @@ final class SpoonTypePrinter {
         }
 
         int nextElementStart = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                .filter(start -> start > member.getPosition().getSourceStart())
+                .mapToInt(typeMember -> correctedEnumMemberStarts.getOrDefault(
+                        typeMember, typeMember.getPosition().getSourceStart()))
+                .filter(start -> start > member.getPosition().getSourceEnd())
                 .min()
                 .orElse(member.getPosition().getSourceEnd() + 1);
-        printOriginalFragment(member.getPosition().getSourceStart(), nextElementStart - 1);
+        printOriginalFragment(
+                correctedEnumMemberStarts.getOrDefault(
+                        member, member.getPosition().getSourceStart()),
+                nextElementStart - 1);
         return currentElementNeedsSeparatorAfter;
     }
 
