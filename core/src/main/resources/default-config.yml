@@ -199,13 +199,9 @@ type-members-ordering:
         includes: field
         groups:
           - name: Static fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: static
             groups:
               - name: Static final fields
-                separator: new-line
-                ordering-rules: [ visibility-desc, alpha ]
                 includes: final
                 groups:
                   - name: serialVersionUID
@@ -219,8 +215,6 @@ type-members-ordering:
                     includes: [ '~(?i)(log|.*logger)$' ]
 
           - name: Instance final fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: final
 
       - name: Initializers
@@ -229,13 +223,9 @@ type-members-ordering:
         includes: [ initializer ]
         groups:
           - name: Static initializers
-            separator: none
-            ordering-rules: preserve
             includes: [ static, initializer ]
 
           - name: Instance initializers
-            separator: none
-            ordering-rules: preserve
             includes: [ initializer ]
             excludes: static
 
@@ -248,83 +238,51 @@ type-members-ordering:
           - constructor
         groups:
           - name: Public
-            separator: none
-            ordering-rules: alpha
             includes: public
             groups:
               - name: Static methods
-                separator: none
-                ordering-rules: alpha
                 includes: [ method, static ]
 
               - name: Constructors
-                separator: none
-                ordering-rules: alpha
                 includes: constructor
 
               - name: Instance methods
-                separator: none
-                ordering-rules: alpha
                 includes: method
 
           - name: Protected
-            separator: none
-            ordering-rules: alpha
             includes: protected
             groups:
               - name: Static methods
-                separator: none
-                ordering-rules: alpha
                 includes: [ method, static ]
 
               - name: Constructors
-                separator: none
-                ordering-rules: alpha
                 includes: constructor
 
               - name: Instance methods
-                separator: none
-                ordering-rules: alpha
                 includes: method
 
           - name: Package-private
-            separator: none
-            ordering-rules: alpha
             includes: package-private
             groups:
               - name: Static methods
-                separator: none
-                ordering-rules: alpha
                 includes: [ method, static ]
 
               - name: Constructors
-                separator: none
-                ordering-rules: alpha
                 includes: constructor
 
               - name: Instance methods
-                separator: none
-                ordering-rules: alpha
                 includes: method
 
           - name: Private
-            separator: none
-            ordering-rules: alpha
             includes: private
             groups:
               - name: Static methods
-                separator: none
-                ordering-rules: alpha
                 includes: [ method, static ]
 
               - name: Constructors
-                separator: none
-                ordering-rules: alpha
                 includes: constructor
 
               - name: Instance methods
-                separator: none
-                ordering-rules: alpha
                 includes: method
 
       - name: Nested types
@@ -338,73 +296,49 @@ type-members-ordering:
           - class
         groups:
           - name: Public
-            separator: new-line
-            ordering-rules: alpha
             includes: public
             groups:
               - name: Annotations and Interfaces
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - annotation
                   - interface
               - name: Classes, Enums, and Records
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - class
                   - enum
                   - record
           - name: Protected
-            separator: new-line
-            ordering-rules: alpha
             includes: protected
             groups:
               - name: Annotations and Interfaces
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - annotation
                   - interface
               - name: Classes, Enums, and Records
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - class
                   - enum
                   - record
           - name: Package-private
-            separator: new-line
-            ordering-rules: alpha
             includes: package-private
             groups:
               - name: Annotations and Interfaces
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - annotation
                   - interface
               - name: Classes, Enums, and Records
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - class
                   - enum
                   - record
           - name: Private
-            separator: new-line
-            ordering-rules: alpha
             includes: private
             groups:
               - name: Annotations and Interfaces
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - annotation
                   - interface
               - name: Classes, Enums, and Records
-                separator: new-line
-                ordering-rules: alpha
                 includes:
                   - class
                   - enum

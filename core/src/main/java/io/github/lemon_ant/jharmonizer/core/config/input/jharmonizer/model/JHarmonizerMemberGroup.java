@@ -10,7 +10,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
@@ -46,10 +45,10 @@ public class JHarmonizerMemberGroup implements Serializable {
     @NonNull
     String name;
 
-    @NonNull
+    @Nullable
     JHarmonizerSeparator separator;
 
-    @NonNull
+    @Nullable
     List<JHarmonizerOrderingRule> orderingRules;
 
     @Builder
@@ -61,9 +60,7 @@ public class JHarmonizerMemberGroup implements Serializable {
                     Set<Set<String>> includes,
             @Nullable @JsonDeserialize(using = SelectorsDeserializer.class) @JsonProperty(value = "excludes")
                     Set<Set<String>> excludes,
-            @NonNull
-                    @JsonDeserialize(using = OrderingRulesDeserializer.class)
-                    @JsonProperty(value = "ordering-rules", required = true)
+            @Nullable @JsonDeserialize(using = OrderingRulesDeserializer.class) @JsonProperty(value = "ordering-rules")
                     List<JHarmonizerOrderingRule> orderingRules,
             @Nullable @JsonProperty(value = "separator") JHarmonizerSeparator separator,
             @Nullable @JsonProperty(value = "keepAccessorsTogether") Boolean keepAccessorsTogether,
@@ -75,41 +72,14 @@ public class JHarmonizerMemberGroup implements Serializable {
 
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
 
-        Validate.notEmpty(orderingRules, "ordering-rules cannot be empty");
-        this.orderingRules = Collections.unmodifiableList(orderingRules);
+        this.orderingRules =
+                ofNullable(orderingRules).map(Collections::unmodifiableList).orElse(null);
 
-        this.separator = ofNullable(separator).orElse(JHarmonizerSeparator.NONE);
+        this.separator = separator;
 
         this.keepAccessorsTogether = keepAccessorsTogether;
 
         this.memberSubGroups =
                 ofNullable(memberSubGroups).map(Collections::unmodifiableList).orElse(List.of());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof JHarmonizerMemberGroup that)) {
-            return false;
-        }
-
-        return Objects.equals(keepAccessorsTogether, that.keepAccessorsTogether)
-                && name.equals(that.name)
-                && includes.equals(that.includes)
-                && excludes.equals(that.excludes)
-                && orderingRules.equals(that.orderingRules)
-                && separator == that.separator
-                && memberSubGroups.equals(that.memberSubGroups);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + includes.hashCode();
-        result = 31 * result + excludes.hashCode();
-        result = 31 * result + orderingRules.hashCode();
-        result = 31 * result + separator.hashCode();
-        result = 31 * result + Objects.hashCode(keepAccessorsTogether);
-        result = 31 * result + memberSubGroups.hashCode();
-        return result;
     }
 }

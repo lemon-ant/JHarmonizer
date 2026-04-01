@@ -116,6 +116,17 @@ The merge is performed only for the **root member groups**, without recursive su
 
 This allows users to redefine only selected default root groups while keeping all untouched default groups and their original ordering.
 
+## Nested group inheritance semantics
+
+Inside a single `type-members-ordering` tree, nested groups inherit these options from their nearest parent when omitted:
+
+- `keepAccessorsTogether`
+- `separator`
+- `ordering-rules`
+
+If a child declares one of these options explicitly, that value overrides the inherited value for that child subtree.
+For `ordering-rules`, override is replace-based (the child list fully replaces inherited rules).
+
 ## Optional Configuration Sources Control
 
 For advanced usage, the configurator supports **optional control over which sources to include** when resolving the final configuration.

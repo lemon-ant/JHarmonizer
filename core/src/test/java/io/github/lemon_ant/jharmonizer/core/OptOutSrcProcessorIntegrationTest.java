@@ -331,7 +331,7 @@ class OptOutSrcProcessorIntegrationTest {
                 .groupName("Root")
                 .selectorBlock(UnifiedMemberGroupSelectorBlock.builder().build())
                 .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.ALPHA)
+                .orderingRules(List.of(UnifiedOrderingRule.ALPHA))
                 .build();
         UnifiedTopLevelTypesOrdering topLevelTypesOrdering = UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(false)

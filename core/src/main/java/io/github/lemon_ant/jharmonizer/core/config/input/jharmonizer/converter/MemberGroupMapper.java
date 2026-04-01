@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup.Un
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -33,16 +34,20 @@ final class MemberGroupMapper {
                 .forEach(selectorBlockBuilder::exclude);
         UnifiedMemberGroupSelectorBlock selectorBlock = selectorBlockBuilder.build();
 
-        List<UnifiedOrderingRule> orderingRules = srcMemberGroup.getOrderingRules().stream()
-                .map(JHarmonizerOrderingRule::getUnifiedOrderingRule)
-                .toList();
+        List<UnifiedOrderingRule> orderingRules = Optional.ofNullable(srcMemberGroup.getOrderingRules())
+                .map(rawRules -> rawRules.stream()
+                        .map(JHarmonizerOrderingRule::getUnifiedOrderingRule)
+                        .toList())
+                .orElse(null);
 
         UnifiedMemberGroupBuilder unifiedMemberGroupBuilder = UnifiedMemberGroup.builder()
                 .groupName(srcMemberGroup.getName())
                 .selectorBlock(selectorBlock)
                 .orderingRules(orderingRules)
                 .keepAccessorsTogether(srcMemberGroup.getKeepAccessorsTogether())
-                .separator(srcMemberGroup.getSeparator().getUnifiedSeparator());
+                .separator(Optional.ofNullable(srcMemberGroup.getSeparator())
+                        .map(separator -> separator.getUnifiedSeparator())
+                        .orElse(null));
 
         srcMemberGroup.getMemberSubGroups().stream()
                 .map(MemberGroupMapper::map)

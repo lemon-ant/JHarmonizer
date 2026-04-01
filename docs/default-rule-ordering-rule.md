@@ -19,6 +19,7 @@ Default Rule (fallback root group)
 │  └─ 2.2) Instance initializers — preserve/source order
 ├─ 3) Methods (including constructors)
 │  ├─ note: keepAccessorsTogether = ON (applied here; inherited by all subgroups)
+│  ├─ note: separator/order rules can also be inherited by subgroups when omitted
 │  ├─ 3.1) Public
 │  │  ├─ Static methods — sort: ALPHA
 │  │  ├─ Constructors — sort: ALPHA
@@ -103,6 +104,7 @@ When a member kind has no stable ALPHA key (e.g., initializer blocks), order is 
 ### Accessor co-location
 
 For the **Methods** subtree, `keepAccessorsTogether = ON` is applied at the group level so it is inherited by all nested method subgroups.
+The same inheritance mechanism applies to group `separator` and `ordering-rules` when nested groups omit them.
 
 ## Non-negotiable constraints
 

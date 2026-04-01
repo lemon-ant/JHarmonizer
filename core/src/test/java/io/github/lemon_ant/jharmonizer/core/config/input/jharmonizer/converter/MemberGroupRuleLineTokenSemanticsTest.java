@@ -38,7 +38,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
                 .groupName("StaticInitializers")
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.PRESERVE)
+                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
                 .build();
         CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
         MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
@@ -69,7 +69,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
                 .groupName("InstanceInitializers")
                 .selectorBlock(selectorBlock)
                 .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.PRESERVE)
+                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
                 .build();
         CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
         MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()

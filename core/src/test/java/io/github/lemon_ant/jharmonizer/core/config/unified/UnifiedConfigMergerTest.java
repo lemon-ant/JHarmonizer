@@ -271,7 +271,7 @@ class UnifiedConfigMergerTest {
                 .memberSubGroups(memberSubGroups)
                 .selectorBlock(SELECTOR_BLOCK)
                 .separator(UnifiedSeparator.NONE)
-                .orderingRule(UnifiedOrderingRule.ALPHA)
+                .orderingRules(List.of(UnifiedOrderingRule.ALPHA))
                 .build();
     }
 }

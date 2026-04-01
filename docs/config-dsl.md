@@ -140,6 +140,22 @@ Supported flags:
 
 * `keepAccessorsTogether`: Places getters/setters in the same group, even if named differently.
 
+### Group option inheritance (`type-members-ordering`)
+
+For nested member groups, the following options are inherited from the nearest parent that defines them:
+
+* `keepAccessorsTogether`
+* `separator`
+* `ordering-rules`
+
+Inheritance is resolved top-down in the group tree:
+
+* if a child omits an option, it inherits the parent's resolved value;
+* if a child defines an option explicitly, it overrides the inherited value for its subtree.
+
+For `ordering-rules`, an explicit child value fully replaces the inherited list.
+An empty `ordering-rules: []` is allowed and means “no explicit sort keys at this level”.
+
 ---
 
 ## 🔹 Example: Full Configuration
