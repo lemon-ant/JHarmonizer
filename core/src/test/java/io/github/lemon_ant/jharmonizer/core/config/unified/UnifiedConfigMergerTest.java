@@ -170,6 +170,22 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
+    void merge_flexibleConfigsWithoutRootGroupsProvided_keepsRootGroupsAbsent() {
+        // Given
+        FlexibleUnifiedConfig baselineConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getBackupsEnabled()).contains(false);
+        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
+    }
+
+    @Test
     void merge_flexibleRootGroupsProvided_mergesRootGroupsLikeStrictMerge() {
         // Given
         UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");

@@ -22,7 +22,7 @@
         <failsafeArgLine/>
         <jackson.version>2.21.2</jackson.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
-        <jacoco.minimum.line.coverage>0.75</jacoco.minimum.line.coverage>
+        <jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>

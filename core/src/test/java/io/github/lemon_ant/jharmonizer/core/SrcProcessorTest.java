@@ -7,9 +7,12 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
@@ -53,14 +56,6 @@ class SrcProcessorTest {
             package demo;
             public class Sample {}
             interface Alpha {}
-            """;
-    private static final String PARTIAL_TOP_LEVEL_TYPES_CONFIG = """
-            top-level-types-ordering:
-              main-type-first: false
-              type-groups:
-                - [ interface ]
-                - [ class ]
-              ordering-rules: [ alpha ]
             """;
 
     @TempDir
@@ -259,9 +254,16 @@ class SrcProcessorTest {
     void processSources_partialConfigFile_reordersUsingMergedDefaults() throws Exception {
         // Given
         Path javaFilePath = writeJavaFile(temporaryDirectory, "Sample.java", SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES);
-        Path customConfigFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
-        FlexibleUnifiedConfig externalConfig =
-                JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(customConfigFilePath);
+        UnifiedTopLevelTypesOrdering topLevelTypesOrdering = UnifiedTopLevelTypesOrdering.builder()
+                .mainTypeFirst(false)
+                .topLevelTypeSelectors(List.of(
+                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.INTERFACE)),
+                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.CLASS))))
+                .orderingRules(List.of(UnifiedOrderingRule.ALPHA))
+                .build();
+        FlexibleUnifiedConfig externalConfig = FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(topLevelTypesOrdering)
+                .build();
         SrcProcessor srcProcessor = new SrcProcessor(externalConfig);
 
         // When
@@ -390,11 +392,6 @@ class SrcProcessorTest {
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
-    }
-
-    @NonNull
-    private static Path writeConfigFile(Path configFilePath) throws Exception {
-        return Files.writeString(configFilePath, PARTIAL_TOP_LEVEL_TYPES_CONFIG, StandardCharsets.UTF_8);
     }
 
     @NonNull

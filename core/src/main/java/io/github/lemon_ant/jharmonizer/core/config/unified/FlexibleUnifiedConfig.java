@@ -10,7 +10,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Singular;
 import lombok.Value;
 
 /**
@@ -71,7 +70,7 @@ public class FlexibleUnifiedConfig {
             @Nullable Boolean backupsEnabled,
             @Nullable Boolean printProcessingStatistics,
             @Nullable UnifiedHeaderLine headerLine,
-            @Nullable @Singular List<UnifiedMemberGroup> rootMemberGroups) {
+            @Nullable List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
