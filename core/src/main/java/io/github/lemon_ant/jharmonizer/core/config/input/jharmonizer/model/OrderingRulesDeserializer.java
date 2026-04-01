@@ -25,7 +25,6 @@ class OrderingRulesDeserializer extends JsonDeserializer<List<JHarmonizerOrderin
      * @return the resulting list
      */
     @Override
-    @SuppressWarnings("PMD.CyclomaticComplexity")
     @NonNull
     public List<JHarmonizerOrderingRule> deserialize(@NonNull JsonParser p, @NonNull DeserializationContext ctxt)
             throws IOException {
@@ -48,10 +47,6 @@ class OrderingRulesDeserializer extends JsonDeserializer<List<JHarmonizerOrderin
             }
         } else {
             throw new IOException("Unsupported sorting entry: " + node);
-        }
-
-        if (result.isEmpty()) {
-            throw new IOException("UnifiedOrderingRule list cannot be empty");
         }
 
         return Collections.unmodifiableList(result);

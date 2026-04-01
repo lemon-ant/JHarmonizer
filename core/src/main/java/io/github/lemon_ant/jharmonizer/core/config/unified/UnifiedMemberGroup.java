@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import static java.util.Optional.ofNullable;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
@@ -65,6 +67,7 @@ public class UnifiedMemberGroup {
         this.memberSubGroups = memberSubGroups;
         this.selectorBlock = selectorBlock;
         this.separator = separator;
-        this.orderingRules = orderingRules == null ? null : Collections.unmodifiableList(orderingRules);
+        this.orderingRules =
+                ofNullable(orderingRules).map(Collections::unmodifiableList).orElse(null);
     }
 }
