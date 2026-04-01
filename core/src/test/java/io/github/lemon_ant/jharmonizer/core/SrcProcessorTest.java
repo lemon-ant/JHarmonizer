@@ -152,7 +152,8 @@ class SrcProcessorTest {
         assertThat(aggregatedProcessingStatistic.getTotalProcessingTimeNanos()).isPositive();
         assertThat(aggregatedProcessingStatistic.getTotalParsingTimeNanos()).isPositive();
         assertThat(aggregatedProcessingStatistic.getTotalSortingTimeNanos()).isPositive();
-        assertThat(aggregatedProcessingStatistic.getTotalSerializationTimeNanos()).isPositive();
+        assertThat(aggregatedProcessingStatistic.getTotalSerializationTimeNanos())
+                .isPositive();
         assertThat(aggregatedProcessingStatistic.getTotalFormattingTimeNanos()).isPositive();
         assertThat(aggregatedProcessingStatistic.getSmallestFile())
                 .extracting(FileProcessingStatistic::getPath)

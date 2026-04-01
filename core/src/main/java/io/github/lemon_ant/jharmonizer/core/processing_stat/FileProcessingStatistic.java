@@ -28,7 +28,8 @@ public class FileProcessingStatistic {
      */
     @NonNull
     public static FileProcessingStatistic convert(@NonNull FlowProcessingResult flowProcessingResult) {
-        long serializationTime = flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos();
+        long serializationTime =
+                flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos();
         long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()
                 + serializationTime
