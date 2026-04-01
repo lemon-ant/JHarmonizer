@@ -235,7 +235,7 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_flexibleRootGroupsMissingOnBothSides_keepsRootMemberGroupsEmpty() {
+    void merge_flexibleRootGroupsMissingOnBothSides_keepsRootMemberGroupsAbsent() {
         // Given
         FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder().build();
         FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder().build();
@@ -244,7 +244,7 @@ class UnifiedConfigMergerTest {
         FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
 
         // Then
-        assertThat(mergedConfig.getRootMemberGroups()).contains(List.of());
+        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
     }
 
     @NonNull
