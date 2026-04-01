@@ -20,6 +20,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalProcessingTimeNanos(2_300_000_000L)
                 .totalParsingTimeNanos(1_100_000_000L)
                 .totalSortingTimeNanos(700_000_000L)
+                .totalSerializationTimeNanos(200_000_000L)
                 .totalFormattingTimeNanos(500_000_000L)
                 .filesWithUnexpectedErrors(List.of(brokenPath, failurePath))
                 .build();
@@ -35,6 +36,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("| Total size")
                 .contains("| Parsing time (share)")
                 .contains("| Sorting time (share)")
+                .contains("| Serialization time (share)")
                 .contains("| Formatting time (share)")
                 .contains("| Files with unexpected internal errors")
                 .contains("Unexpected internal error files:")
@@ -51,6 +53,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalProcessingTimeNanos(0)
                 .totalParsingTimeNanos(0)
                 .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
                 .totalFormattingTimeNanos(0)
                 .filesWithUnexpectedErrors(List.of())
                 .build();
@@ -78,6 +81,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalProcessingTimeNanos(1_234_567_890L)
                 .totalParsingTimeNanos(456_000_000L)
                 .totalSortingTimeNanos(400_000_000L)
+                .totalSerializationTimeNanos(78_000_000L)
                 .totalFormattingTimeNanos(300_000_000L)
                 .filesWithUnexpectedErrors(List.of(longPath))
                 .build();
