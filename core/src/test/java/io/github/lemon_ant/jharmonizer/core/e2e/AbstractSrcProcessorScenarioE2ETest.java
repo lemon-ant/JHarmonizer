@@ -215,14 +215,14 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     @NonNull
     private static FlexibleUnifiedConfig disableProcessingStatisticsOutput(FlexibleUnifiedConfig flexibleConfig) {
-        FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder configBuilder =
-                FlexibleUnifiedConfig.builder().printProcessingStatistics(false);
-        flexibleConfig.getTopLevelTypesOrdering().ifPresent(configBuilder::topLevelTypesOrdering);
-        flexibleConfig.getFormatting().ifPresent(configBuilder::formatting);
-        flexibleConfig.getBackupsEnabled().ifPresent(configBuilder::backupsEnabled);
-        flexibleConfig.getHeaderLine().ifPresent(configBuilder::headerLine);
-        flexibleConfig.getRootMemberGroups().ifPresent(configBuilder::rootMemberGroups);
-        return configBuilder.build();
+        return FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(flexibleConfig.getTopLevelTypesOrdering().orElse(null))
+                .formatting(flexibleConfig.getFormatting().orElse(null))
+                .backupsEnabled(flexibleConfig.getBackupsEnabled().orElse(null))
+                .printProcessingStatistics(false)
+                .headerLine(flexibleConfig.getHeaderLine().orElse(null))
+                .rootMemberGroups(flexibleConfig.getRootMemberGroups().orElse(null))
+                .build();
     }
 
     @NonNull
