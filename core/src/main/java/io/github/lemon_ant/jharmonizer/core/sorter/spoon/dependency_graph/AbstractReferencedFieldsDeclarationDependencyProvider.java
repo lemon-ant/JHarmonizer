@@ -4,7 +4,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -27,13 +29,35 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
         Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentMember);
         return dependentAstRoot
                 .map(ctElement ->
-                        DeclaringTypeFieldReferenceUtils.findProviderFieldsRequiredByDependentMember(
+                        DeclaringTypeFieldReferenceUtils.findReferencedFieldAccessesDeclaredBeforeMember(
                                         dependentMember, ctElement)
                                 .stream()
-                                .map(providerMember -> new MemberDependencyArc(
-                                        providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                                .filter(this::isDeclarationDependencyRequired)
+                                .map(DeclaringTypeFieldReferenceUtils.ReferencedFieldAccess::getProviderField)
+                                .map(providerField -> new MemberDependencyArc(
+                                        providerField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                                 .collect(Collectors.toUnmodifiableSet()))
                 .orElseGet(Set::of);
+    }
+
+    /**
+     * Returns whether the referenced field access must stay ordered before the dependent member.
+     *
+     * @param referencedFieldAccess the referenced field access
+     * @return {@code true} when the access creates a declaration dependency; otherwise {@code false}
+     */
+    private boolean isDeclarationDependencyRequired(
+            @NonNull DeclaringTypeFieldReferenceUtils.ReferencedFieldAccess referencedFieldAccess) {
+        CtField<?> providerField = referencedFieldAccess.getProviderField();
+        if (!InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(providerField)) {
+            return true;
+        }
+
+        CtExpression<?> accessTarget = referencedFieldAccess.getFieldAccess().getTarget();
+
+        // Java allows qualified forward reads of compile-time constants, but same-type simple-name reads can become
+        // illegal forward references after reordering, so only implicit accesses must keep declaration dependencies.
+        return accessTarget == null || accessTarget.isImplicit();
     }
 
     /**
