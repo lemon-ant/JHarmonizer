@@ -21,6 +21,7 @@ public class MemberDependencyGraphBuilder {
             new EnumConstantInitializerDependencyProvider(),
             new BlankFinalDefiniteAssignmentDependencyProvider(),
             new FieldInitializerBackwardReferenceDependencyProvider(),
+            new ImplicitCompileTimeConstantOrderConstraintProvider(),
             new ExplicitThisInitializerFieldDependencyProvider(),
             new ExplicitDeclaringTypeInitializerFieldDependencyProvider(),
             new InitializerBlockDependencyProvider());

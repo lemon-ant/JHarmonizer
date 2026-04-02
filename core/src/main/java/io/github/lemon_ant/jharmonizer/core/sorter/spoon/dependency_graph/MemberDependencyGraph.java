@@ -59,6 +59,8 @@ Suggested micro-benchmark:
  * {@link MemberDependencyEdgeKind}:
  * <ul>
  *   <li>{@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} encodes a real declaration-order constraint.</li>
+ *   <li>{@link MemberDependencyEdgeKind#SOURCE_ORDER_CONSTRAINT} encodes a Java source-order constraint that must be
+ *       preserved during ordering, even though it is not treated as a general declaration dependency.</li>
  *   <li>{@link MemberDependencyEdgeKind#ACCESSOR_BUNDLE} encodes a keep-together constraint for accessors.</li>
  * </ul>
  *

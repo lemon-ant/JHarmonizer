@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class InitializerBlockStaticConstantExclusionSample {
-    static final int zConstant = 7;
     static int bProvider = Integer.parseInt("1");
 
     static {
@@ -10,6 +9,7 @@ public class InitializerBlockStaticConstantExclusionSample {
     }
 
     static int sink;
+    static final int zConstant = 7;
 
     public static void main(String[] args) {
         if (bProvider != 1 || zConstant != 7 || sink != 8) {

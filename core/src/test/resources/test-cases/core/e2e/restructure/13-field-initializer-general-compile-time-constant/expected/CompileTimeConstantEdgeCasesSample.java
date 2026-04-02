@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class CompileTimeConstantEdgeCasesSample {
-    static final int zCastConstant = (int) (1L + 2L);
     static final int bDependsOnCastConstant = CompileTimeConstantEdgeCasesSample.zCastConstant + 10;
-    static final String yConcatConstant = "ab" + "cd";
     static final String cDependsOnConcatConstant = CompileTimeConstantEdgeCasesSample.yConcatConstant + "!";
+    static final String yConcatConstant = "ab" + "cd";
+    static final int zCastConstant = (int) (1L + 2L);
 
     public static void main(String[] args) {
         if (bDependsOnCastConstant != 13

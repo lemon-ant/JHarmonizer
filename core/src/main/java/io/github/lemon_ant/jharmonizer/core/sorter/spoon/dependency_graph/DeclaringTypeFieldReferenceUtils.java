@@ -63,6 +63,24 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     /**
+     * Finds earlier same-type static compile-time constants that are referenced through implicit/simple-name access
+     * and therefore must keep their original source order for Java compilation.
+     */
+    @NonNull
+    static Set<CtField<?>> findImplicitCompileTimeConstantProvidersRequiredByDependentMember(
+            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+
+        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
+                .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
+                .filter(DeclaringTypeFieldReferenceUtils::isImplicitAccess)
+                .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
+                .filter(InitializationOrderDependencyUtils::isStaticCompileTimeConstantVariable)
+                .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
      * Finds the fields read by member.
      * @param member the member
      * @param memberAstRoot the member ast root
@@ -147,6 +165,11 @@ class DeclaringTypeFieldReferenceUtils {
         }
 
         return assignment.getAssigned() == fieldAccess;
+    }
+
+    private static boolean isImplicitAccess(CtFieldAccess<?> fieldAccess) {
+        CtExpression<?> target = fieldAccess.getTarget();
+        return target == null || target.isImplicit();
     }
 
     private static boolean isProviderDeclaredBeforeDependentMember(

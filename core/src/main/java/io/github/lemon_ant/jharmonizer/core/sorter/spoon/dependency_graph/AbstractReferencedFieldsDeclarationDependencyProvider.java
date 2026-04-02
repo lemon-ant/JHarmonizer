@@ -30,8 +30,9 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
                         DeclaringTypeFieldReferenceUtils.findProviderFieldsRequiredByDependentMember(
                                         dependentMember, ctElement)
                                 .stream()
-                                // Same-type simple-name reads of static final constants are still order-dependent:
-                                // moving the provider below the dependent can produce illegal forward references.
+                                .filter(providerMember ->
+                                        !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(
+                                                providerMember))
                                 .map(providerMember -> new MemberDependencyArc(
                                         providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                                 .collect(Collectors.toUnmodifiableSet()))

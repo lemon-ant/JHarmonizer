@@ -30,8 +30,8 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 class GroupMembersOrderer {
 
-    private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
-            EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+    private static final Set<MemberDependencyEdgeKind> ORDERING_CONSTRAINT_EDGE_KINDS = EnumSet.of(
+            MemberDependencyEdgeKind.DECLARATION_DEPENDENCY, MemberDependencyEdgeKind.SOURCE_ORDER_CONSTRAINT);
 
     private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
@@ -177,7 +177,7 @@ class GroupMembersOrderer {
             boolean keepAccessorsTogether,
             Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
         Set<CtTypeMember> declarationDependentsInGroup =
-                memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
+                memberDependencyGraph.findTransitiveDependents(typeMember, ORDERING_CONSTRAINT_EDGE_KINDS).stream()
                         .filter(groupMembers::contains)
                         .collect(Collectors.toUnmodifiableSet());
 
