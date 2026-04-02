@@ -101,7 +101,7 @@ class ProcessingStatisticsPrintServiceTest {
 
     @Test
     @ResourceLock(Resources.LOCALE)
-    void render_polishDefaultLocale_keepsRootFormattedCount() {
+    void render_polishLocaleSet_usesRootFormattedCount() {
         // Given
         Locale defaultLocale = Locale.getDefault();
         try {
