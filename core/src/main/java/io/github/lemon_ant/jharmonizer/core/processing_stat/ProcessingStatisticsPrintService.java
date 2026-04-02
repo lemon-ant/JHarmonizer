@@ -45,7 +45,7 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(renderSeparator('='));
         reportLines.add(" " + HEADER);
         reportLines.add(renderSeparator('='));
-        reportLines.add(renderRow("Files processed", String.format("%,d", stats.getFileCount())));
+        reportLines.add(renderRow("Files processed", String.format(Locale.ROOT, "%,d", stats.getFileCount())));
         reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSize())));
         reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
         reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
