@@ -71,18 +71,18 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantExcludedFromDependencies() {
+    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantIncludedForSimpleNameReference() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
 
         // When
         Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
-                Constants.COMPILE_TIME_CONSTANT_EXCLUSION_ALPHA_FIELD_MEMBER,
+                Constants.COMPILE_TIME_CONSTANT_EXCLUSION_FORMATTER_FIELD_MEMBER,
                 EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
 
         // Then
-        assertThat(directProviders).containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER);
+        assertThat(directProviders).containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_FORMAT_FIELD_MEMBER);
     }
 
     @Test
@@ -518,12 +518,13 @@ class MemberDependencyGraphBuilderTest {
                 FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS = buildTypeMember2NaturalGroup(
                         FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_FIXTURE_MAIN_TYPE,
                         MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER =
+        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_FORMAT_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "BRAVO");
-        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_ALPHA_FIELD_MEMBER =
+                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "ALTERNATE_FORMAT_WITHOUT_MILLIS");
+        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_FORMATTER_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "ALPHA");
+                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS,
+                        "ALTERNATE_FORMATTER_WITHOUT_MILLIS");
 
         private static final URL FIELD_INITIALIZER_INSTANCE_FINAL_LITERAL_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(

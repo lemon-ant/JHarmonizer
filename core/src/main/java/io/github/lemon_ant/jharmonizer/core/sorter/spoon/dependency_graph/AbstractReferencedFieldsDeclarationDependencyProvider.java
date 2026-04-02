@@ -30,9 +30,6 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
                         DeclaringTypeFieldReferenceUtils.findProviderFieldsRequiredByDependentMember(
                                         dependentMember, ctElement)
                                 .stream()
-                                .filter(providerMember ->
-                                        !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(
-                                                providerMember))
                                 .map(providerMember -> new MemberDependencyArc(
                                         providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                                 .collect(Collectors.toUnmodifiableSet()))

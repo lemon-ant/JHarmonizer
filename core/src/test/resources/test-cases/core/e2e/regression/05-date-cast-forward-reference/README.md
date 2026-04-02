@@ -1,22 +1,14 @@
 # 05-date-cast-forward-reference
 
-Regression fixture for field reordering that can introduce `illegal forward reference` in a NiFi-like
-`DateCastEvaluator` constants block.
+Minimal regression for `illegal forward reference` caused by reordering exactly two fields:
 
-## Problem shape
+- `ALTERNATE_FORMAT_WITHOUT_MILLIS` (compile-time constant string)
+- `ALTERNATE_FORMATTER_WITHOUT_MILLIS` (uses the constant in initializer)
 
-The class has static formatter fields that reference string format constants declared in the same type:
+## Input
 
-- `ALTERNATE_FORMATTER_WITHOUT_MILLIS` -> `ALTERNATE_FORMAT_WITHOUT_MILLIS`
-- `ALTERNATE_FORMATTER_WITH_MILLIS` -> `ALTERNATE_FORMAT_WITH_MILLIS`
-- `DATE_TO_STRING_FORMATTER` -> `DATE_TO_STRING_FORMAT`
+Current broken shape: formatter field is above the referenced string constant.
 
-If reorder moves formatter fields above those constants, Java compilation fails with
-`illegal forward reference`.
+## Expected
 
-## Regression expectation
-
-Input uses the provided `DateCastEvaluator` shape with the original broad import list.
-
-Expected output keeps the same overall grouping trend, cleans unused imports, and fixes local declaration order so
-referenced format strings stay above dependent formatter fields.
+Safe shape: string constant is declared before formatter field.
