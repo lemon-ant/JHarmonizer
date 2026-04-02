@@ -57,8 +57,23 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
+                .filter(fieldAccess -> {
+                    CtField<?> providerField =
+                            (CtField<?>) fieldAccess.getVariable().getDeclaration();
+                    if (!isProviderDeclaredBeforeDependentMember(providerField, dependentMember)) {
+                        return false;
+                    }
+
+                    CtExpression<?> target = fieldAccess.getTarget();
+                    boolean isImplicitAccess = target == null || target.isImplicit();
+
+                    // Java allows qualified forward reads of compile-time constants, but same-type simple-name reads
+                    // can become illegal forward references after reordering, so only implicit accesses must keep
+                    // declaration dependencies.
+                    return !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(providerField)
+                            || isImplicitAccess;
+                })
                 .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
-                .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
