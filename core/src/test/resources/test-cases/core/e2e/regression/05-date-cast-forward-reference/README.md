@@ -16,8 +16,7 @@ If reorder moves formatter fields above those constants, Java compilation fails 
 
 ## Regression expectation
 
-Input represents the currently observed reordered shape (formatters moved above their referenced `ALTERNATE_FORMAT_*`
-constants and causing forward-reference compile errors).
+Input uses the provided `DateCastEvaluator` shape with the original broad import list.
 
-Expected output keeps the same overall grouping trend but fixes local declaration order so referenced format strings
-stay above dependent formatter fields.
+Expected output keeps the same overall grouping trend, cleans unused imports, and fixes local declaration order so
+referenced format strings stay above dependent formatter fields.
