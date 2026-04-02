@@ -3,8 +3,10 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -26,13 +28,24 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
 
         Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentMember);
         return dependentAstRoot
-                .map(ctElement ->
-                        DeclaringTypeFieldReferenceUtils.findProviderFieldsRequiredByDependentMember(
-                                        dependentMember, ctElement)
-                                .stream()
-                                .map(providerMember -> new MemberDependencyArc(
-                                        providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                                .collect(Collectors.toUnmodifiableSet()))
+                .map(ctElement -> {
+                    Set<CtField<?>> providerFields =
+                            DeclaringTypeFieldReferenceUtils.findProviderFieldsRequiredByDependentMember(
+                                    dependentMember, ctElement);
+                    Set<CtField<?>> simpleNameConstantFields =
+                            DeclaringTypeFieldReferenceUtils.findSimpleNameReferencedCompileTimeConstantFields(
+                                    dependentMember, ctElement);
+
+                    return Stream.concat(
+                                    providerFields.stream()
+                                            .filter(providerMember ->
+                                                    !InitializationOrderDependencyUtils
+                                                            .isStaticCompileTimeConstantVariable(providerMember)),
+                                    simpleNameConstantFields.stream())
+                            .map(providerMember -> new MemberDependencyArc(
+                                    providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                            .collect(Collectors.toUnmodifiableSet());
+                })
                 .orElseGet(Set::of);
     }
 

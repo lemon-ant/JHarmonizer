@@ -58,27 +58,28 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .filter(fieldAccess -> {
-                    if (!(fieldAccess.getVariable().getDeclaration() instanceof CtField<?> referencedField)) {
-                        return false;
-                    }
-
-                    boolean isStaticCompileTimeConstant =
-                            InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(referencedField);
-                    boolean isExplicitDeclaringTypeAccess =
-                            fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess && !typeAccess.isImplicit();
-
-                    if (isStaticCompileTimeConstant && isExplicitDeclaringTypeAccess) {
-                        return false;
-                    }
-
-                    if (isProviderDeclaredBeforeDependentMember(referencedField, dependentMember)) {
-                        return true;
-                    }
-
-                    return isStaticCompileTimeConstant;
-                })
                 .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
+                .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * Finds compile-time constants referenced without explicit declaring-type qualification in the same type.
+     *
+     * @param dependentMember the dependent member
+     * @param dependentMemberAstRoot the dependent member ast root
+     * @return the matching compile-time constants referenced by simple name
+     */
+    @NonNull
+    static Set<CtField<?>> findSimpleNameReferencedCompileTimeConstantFields(
+            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+
+        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
+                .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
+                .filter(fieldAccess -> !isExplicitDeclaringTypeAccess(fieldAccess))
+                .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
+                .filter(InitializationOrderDependencyUtils::isStaticCompileTimeConstantVariable)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -174,6 +175,10 @@ class DeclaringTypeFieldReferenceUtils {
         int dependentSrcStart = requireSrcStart(dependentMember);
         int providerSrcStart = requireSrcStart(providerMember);
         return providerSrcStart < dependentSrcStart;
+    }
+
+    private static boolean isExplicitDeclaringTypeAccess(CtFieldAccess<?> fieldAccess) {
+        return fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess && !typeAccess.isImplicit();
     }
 
     /**
