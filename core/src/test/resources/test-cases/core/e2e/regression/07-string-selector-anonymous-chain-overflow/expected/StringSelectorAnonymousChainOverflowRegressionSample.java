@@ -1,5 +1,17 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
+/**
+ * Regression fixture for Spoon partial-evaluation recursion.
+ *
+ * <p>Failure signature observed without guard in
+ * io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils
+ *#findPartiallyEvaluatedExpression:
+ * java.lang.StackOverflowError from spoon.support.reflect.declaration.CtPackageImpl.getQualifiedName(...)
+ * while partially evaluating nested CtNewClass initializers.
+ *
+ * <p>Fix location: short-circuit on expression.getElements(new TypeFilter<>(CtNewClass.class)) before
+ * expression.partiallyEvaluate().
+ */
 public class StringSelectorAnonymousChainOverflowRegressionSample {
     private static final String expectedValue = "selected";
     private static final StringSelector selector = StringSelector.of((String) null, "", "selected");
