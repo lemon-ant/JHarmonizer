@@ -18,6 +18,7 @@ public class FileProcessingStatistic {
     Path path;
 
     long processingTimeNanos;
+    long serializationTimeNanos;
     long size;
 
     /**
@@ -27,13 +28,16 @@ public class FileProcessingStatistic {
      */
     @NonNull
     public static FileProcessingStatistic convert(@NonNull FlowProcessingResult flowProcessingResult) {
+        long serializationTime =
+                flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos();
         long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()
-                + flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos()
+                + serializationTime
                 + flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
         return new FileProcessingStatistic(
                 flowProcessingResult.getPath(),
                 processingTime,
+                serializationTime,
                 flowProcessingResult.getParsingStatistic().getOriginalSrcCodeSizeInBytes());
     }
 }

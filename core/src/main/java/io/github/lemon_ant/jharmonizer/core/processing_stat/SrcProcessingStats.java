@@ -50,6 +50,7 @@ public class SrcProcessingStats {
         long totalProcessingTimeNanos;
         long totalParsingTimeNanos;
         long totalSortingTimeNanos;
+        long totalSerializationTimeNanos;
         long totalFormattingTimeNanos;
 
         @Nullable
@@ -68,6 +69,7 @@ public class SrcProcessingStats {
                 long totalProcessingTimeNanos,
                 long totalParsingTimeNanos,
                 long totalSortingTimeNanos,
+                long totalSerializationTimeNanos,
                 long totalFormattingTimeNanos,
                 @Nullable FileProcessingStatistic smallestFile,
                 @Nullable FileProcessingStatistic largestFile,
@@ -77,6 +79,7 @@ public class SrcProcessingStats {
             this.totalProcessingTimeNanos = totalProcessingTimeNanos;
             this.totalParsingTimeNanos = totalParsingTimeNanos;
             this.totalSortingTimeNanos = totalSortingTimeNanos;
+            this.totalSerializationTimeNanos = totalSerializationTimeNanos;
             this.totalFormattingTimeNanos = totalFormattingTimeNanos;
             this.smallestFile = smallestFile;
             this.largestFile = largestFile;
@@ -94,32 +97,45 @@ public class SrcProcessingStats {
 
         // Average size of all files processed
         /**
-         * Performs the calculate average size.
-         * @return the result
+         * Calculates the average processed file size.
+         *
+         * @return the average size
          */
         long calculateAverageSize() {
             return fileCount > 0 ? totalSize / fileCount : 0;
         }
 
         /**
-         * Performs the calculate parsing time percentage.
-         * @return the result
+         * Calculates the parsing time percentage.
+         *
+         * @return the parsing time percentage
          */
         double calculateParsingTimePercent() {
             return calculatePhasePercent(totalParsingTimeNanos);
         }
 
         /**
-         * Performs the calculate sorting time percentage.
-         * @return the result
+         * Calculates the sorting time percentage.
+         *
+         * @return the sorting time percentage
          */
         double calculateSortingTimePercent() {
             return calculatePhasePercent(totalSortingTimeNanos);
         }
 
         /**
-         * Performs the calculate formatting time percentage.
-         * @return the result
+         * Calculates the serialization time percentage.
+         *
+         * @return the serialization time percentage
+         */
+        double calculateSerializationTimePercent() {
+            return calculatePhasePercent(totalSerializationTimeNanos);
+        }
+
+        /**
+         * Calculates the formatting time percentage.
+         *
+         * @return the formatting time percentage
          */
         double calculateFormattingTimePercent() {
             return calculatePhasePercent(totalFormattingTimeNanos);
@@ -144,6 +160,7 @@ public class SrcProcessingStats {
         private final LongAdder totalTime = new LongAdder();
         private final LongAdder totalParsingTime = new LongAdder();
         private final LongAdder totalSortingTime = new LongAdder();
+        private final LongAdder totalSerializationTime = new LongAdder();
         private final LongAdder totalFormattingTime = new LongAdder();
 
         /**
@@ -157,6 +174,7 @@ public class SrcProcessingStats {
             totalTime.add(stats.getProcessingTimeNanos());
             totalParsingTime.add(flowProcessingResult.getParsingStatistic().getParsingTimeInNanos());
             totalSortingTime.add(flowProcessingResult.getSortingStatistic().getSortingTimeInNanos());
+            totalSerializationTime.add(stats.getSerializationTimeNanos());
             totalFormattingTime.add(
                     flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos());
             if (flowProcessingResult.getFlowProcessingStatus() == FlowProcessingStatus.ERROR) {
@@ -182,6 +200,7 @@ public class SrcProcessingStats {
             totalTime.add(other.totalTime.sum());
             totalParsingTime.add(other.totalParsingTime.sum());
             totalSortingTime.add(other.totalSortingTime.sum());
+            totalSerializationTime.add(other.totalSerializationTime.sum());
             totalFormattingTime.add(other.totalFormattingTime.sum());
             unexpectedErrorPaths.addAll(other.unexpectedErrorPaths);
 
@@ -210,6 +229,7 @@ public class SrcProcessingStats {
                     .totalProcessingTimeNanos(totalTime.sum())
                     .totalParsingTimeNanos(totalParsingTime.sum())
                     .totalSortingTimeNanos(totalSortingTime.sum())
+                    .totalSerializationTimeNanos(totalSerializationTime.sum())
                     .totalFormattingTimeNanos(totalFormattingTime.sum())
                     .smallestFile(minSize.get())
                     .largestFile(maxSize.get())

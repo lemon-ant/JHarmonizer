@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -44,7 +45,7 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(renderSeparator('='));
         reportLines.add(" " + HEADER);
         reportLines.add(renderSeparator('='));
-        reportLines.add(renderRow("Files processed", String.format("%,d", stats.getFileCount())));
+        reportLines.add(renderRow("Files processed", String.format(Locale.ROOT, "%,d", stats.getFileCount())));
         reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSize())));
         reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
         reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
@@ -57,6 +58,10 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(renderRow(
                 "Sorting time (share)",
                 formatPhaseTimeAndPercent(stats.getTotalSortingTimeNanos(), stats.calculateSortingTimePercent())));
+        reportLines.add(renderRow(
+                "Serialization time (share)",
+                formatPhaseTimeAndPercent(
+                        stats.getTotalSerializationTimeNanos(), stats.calculateSerializationTimePercent())));
         reportLines.add(renderRow(
                 "Formatting time (share)",
                 formatPhaseTimeAndPercent(
@@ -118,8 +123,8 @@ public class ProcessingStatisticsPrintService {
 
     @NonNull
     private static String formatPhaseTimeAndPercent(long phaseTimeNanos, double phasePercent) {
-        return formatSecondsMicrosecondsFromNanos(phaseTimeNanos) + " s (" + String.format("%.2f%%", phasePercent)
-                + ")";
+        return formatSecondsMicrosecondsFromNanos(phaseTimeNanos) + " s ("
+                + String.format(Locale.ROOT, "%.2f%%", phasePercent) + ")";
     }
 
     @NonNull

@@ -5,7 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 class ProcessingStatisticsPrintServiceTest {
 
@@ -20,6 +23,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalProcessingTimeNanos(2_300_000_000L)
                 .totalParsingTimeNanos(1_100_000_000L)
                 .totalSortingTimeNanos(700_000_000L)
+                .totalSerializationTimeNanos(200_000_000L)
                 .totalFormattingTimeNanos(500_000_000L)
                 .filesWithUnexpectedErrors(List.of(brokenPath, failurePath))
                 .build();
@@ -35,11 +39,14 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("| Total size")
                 .contains("| Parsing time (share)")
                 .contains("| Sorting time (share)")
+                .contains("| Serialization time (share)")
                 .contains("| Formatting time (share)")
                 .contains("| Files with unexpected internal errors")
                 .contains("Unexpected internal error files:")
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(brokenPath, 120));
+        assertThat(report.indexOf("| Serialization time (share)"))
+                .isLessThan(report.indexOf("| Formatting time (share)"));
     }
 
     @Test
@@ -51,6 +58,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalProcessingTimeNanos(0)
                 .totalParsingTimeNanos(0)
                 .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
                 .totalFormattingTimeNanos(0)
                 .filesWithUnexpectedErrors(List.of())
                 .build();
@@ -78,6 +86,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalProcessingTimeNanos(1_234_567_890L)
                 .totalParsingTimeNanos(456_000_000L)
                 .totalSortingTimeNanos(400_000_000L)
+                .totalSerializationTimeNanos(78_000_000L)
                 .totalFormattingTimeNanos(300_000_000L)
                 .filesWithUnexpectedErrors(List.of(longPath))
                 .build();
@@ -90,5 +99,33 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("| Files with unexpected internal errors")
                 .contains("| Min size")
                 .doesNotEndWith("=");
+    }
+
+    @Test
+    @ResourceLock(Resources.LOCALE)
+    void render_polishLocaleSet_usesRootFormattedCount() {
+        // Given
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("pl-PL"));
+            AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                    .fileCount(1_234)
+                    .totalSize(0)
+                    .totalProcessingTimeNanos(0)
+                    .totalParsingTimeNanos(0)
+                    .totalSortingTimeNanos(0)
+                    .totalSerializationTimeNanos(0)
+                    .totalFormattingTimeNanos(0)
+                    .filesWithUnexpectedErrors(List.of())
+                    .build();
+
+            // When
+            String report = ProcessingStatisticsPrintService.render(stats);
+
+            // Then
+            assertThat(report).contains("1,234");
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 }
