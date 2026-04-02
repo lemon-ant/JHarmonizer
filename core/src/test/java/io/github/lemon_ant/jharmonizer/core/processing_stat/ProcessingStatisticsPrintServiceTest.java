@@ -32,6 +32,8 @@ class ProcessingStatisticsPrintServiceTest {
         String report = ProcessingStatisticsPrintService.render(stats);
 
         // Then
+        int serializationRowIndex = report.indexOf("| Serialization time (share)");
+        int formattingRowIndex = report.indexOf("| Formatting time (share)");
         assertThat(report)
                 .startsWith(System.lineSeparator())
                 .contains("JHarmonizer harmonization summary")
@@ -45,6 +47,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("Unexpected internal error files:")
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(brokenPath, 120));
+        assertThat(serializationRowIndex).isLessThan(formattingRowIndex);
     }
 
     @Test

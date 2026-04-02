@@ -97,40 +97,45 @@ public class SrcProcessingStats {
 
         // Average size of all files processed
         /**
-         * Performs the calculate average size.
-         * @return the result
+         * Calculates the average processed file size.
+         *
+         * @return the average size
          */
         long calculateAverageSize() {
             return fileCount > 0 ? totalSize / fileCount : 0;
         }
 
         /**
-         * Performs the calculate parsing time percentage.
-         * @return the result
+         * Calculates the parsing time percentage.
+         *
+         * @return the parsing time percentage
          */
         double calculateParsingTimePercent() {
             return calculatePhasePercent(totalParsingTimeNanos);
         }
 
         /**
-         * Performs the calculate sorting time percentage.
-         * @return the result
+         * Calculates the sorting time percentage.
+         *
+         * @return the sorting time percentage
          */
         double calculateSortingTimePercent() {
             return calculatePhasePercent(totalSortingTimeNanos);
         }
 
         /**
-         * Performs the calculate serialization time percentage.
-         * @return the result
+         * Calculates the serialization time percentage.
+         *
+         * @return the serialization time percentage
          */
         double calculateSerializationTimePercent() {
             return calculatePhasePercent(totalSerializationTimeNanos);
         }
 
         /**
-         * Performs the calculate formatting time percentage.
-         * @return the result
+         * Calculates the formatting time percentage.
+         *
+         * @return the formatting time percentage
          */
         double calculateFormattingTimePercent() {
             return calculatePhasePercent(totalFormattingTimeNanos);
