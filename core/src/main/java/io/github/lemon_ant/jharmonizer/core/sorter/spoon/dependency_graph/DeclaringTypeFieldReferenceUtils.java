@@ -68,7 +68,7 @@ class DeclaringTypeFieldReferenceUtils {
      *
      * @param dependentMember the initializer owner that reads the constant providers
      * @param dependentMemberAstRoot the initializer AST to scan for implicit field accesses
-     * @return the earlier compile-time constant providers whose source order must be preserved
+     * @return the earlier compile-time constant providers that still require provider-before-dependent ordering
      */
     @NonNull
     static Set<CtField<?>> findImplicitCompileTimeConstantProvidersRequiredByDependentMember(

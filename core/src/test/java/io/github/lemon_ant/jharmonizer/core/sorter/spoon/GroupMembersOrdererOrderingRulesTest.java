@@ -334,13 +334,13 @@ class GroupMembersOrdererOrderingRulesTest {
                 .findDirectDependents(setValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
         doReturn(Set.of(setValueMethodMember))
                 .when(dependencyGraph)
-                .findTransitiveDependents(middleMethodMember, Constants.ORDERING_CONSTRAINT_EDGE_KINDS);
+                .findTransitiveDependents(middleMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
         doReturn(Set.of())
                 .when(dependencyGraph)
-                .findTransitiveDependents(getValueMethodMember, Constants.ORDERING_CONSTRAINT_EDGE_KINDS);
+                .findTransitiveDependents(getValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
         doReturn(Set.of())
                 .when(dependencyGraph)
-                .findTransitiveDependents(setValueMethodMember, Constants.ORDERING_CONSTRAINT_EDGE_KINDS);
+                .findTransitiveDependents(setValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
 
         // When
         List<MemberGroupBlock> orderedBlocks =
@@ -558,10 +558,8 @@ class GroupMembersOrdererOrderingRulesTest {
 
         private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
                 EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
-        // Ordering must honor both real declaration dependencies and implicit compile-time-constant source-order
-        // constraints.
-        private static final Set<MemberDependencyEdgeKind> ORDERING_CONSTRAINT_EDGE_KINDS = EnumSet.of(
-                MemberDependencyEdgeKind.DECLARATION_DEPENDENCY, MemberDependencyEdgeKind.SOURCE_ORDER_CONSTRAINT);
+        private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
         private Constants() {}
     }

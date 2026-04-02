@@ -71,7 +71,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantExcludedFromDependencies() {
+    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_keepsDeclarationDependency() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
@@ -82,23 +82,10 @@ class MemberDependencyGraphBuilderTest {
                 EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
 
         // Then
-        assertThat(directProviders).containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER);
-    }
-
-    @Test
-    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_createsSourceOrderConstraint() {
-        // Given
-        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
-                Constants.FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
-
-        // When
-        Set<CtTypeMember> sourceOrderProviders = memberDependencyGraph.findDirectProviders(
-                Constants.COMPILE_TIME_CONSTANT_EXCLUSION_ALPHA_FIELD_MEMBER,
-                EnumSet.of(MemberDependencyEdgeKind.SOURCE_ORDER_CONSTRAINT));
-
-        // Then
-        assertThat(sourceOrderProviders)
-                .containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_CONSTANT_FIELD_MEMBER);
+        assertThat(directProviders)
+                .containsExactlyInAnyOrder(
+                        Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER,
+                        Constants.COMPILE_TIME_CONSTANT_EXCLUSION_CONSTANT_FIELD_MEMBER);
     }
 
     @Test
