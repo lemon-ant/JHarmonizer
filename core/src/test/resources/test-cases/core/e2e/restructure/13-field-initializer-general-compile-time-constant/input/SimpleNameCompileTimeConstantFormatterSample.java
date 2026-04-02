@@ -4,8 +4,8 @@ import java.time.format.DateTimeFormatter;
 
 public class SimpleNameCompileTimeConstantFormatterSample {
     static final String zPattern = "yyyy/MM/dd HH:mm:ss";
-    static final DateTimeFormatter aFormatter = DateTimeFormatter.ofPattern(zPattern);
     static final int cAnchor = Integer.parseInt("1");
+    static final DateTimeFormatter aFormatter = DateTimeFormatter.ofPattern(zPattern);
 
     public static void main(String[] args) {
         if (!"yyyy/MM/dd HH:mm:ss".equals(zPattern)

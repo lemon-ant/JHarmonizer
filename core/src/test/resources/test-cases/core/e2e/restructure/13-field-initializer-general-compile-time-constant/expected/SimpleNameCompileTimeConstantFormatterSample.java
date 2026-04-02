@@ -11,10 +11,9 @@ public class SimpleNameCompileTimeConstantFormatterSample {
         if (!"yyyy/MM/dd HH:mm:ss".equals(zPattern)
                 || !"2000/01/02 03:04:05".equals(aFormatter.format(java.time.LocalDateTime.of(2000, 1, 2, 3, 4, 5)))
                 || cAnchor != 1) {
-            throw new IllegalStateException(
-                    "Unexpected values: zPattern=" + zPattern + ", formatted="
-                            + aFormatter.format(java.time.LocalDateTime.of(2000, 1, 2, 3, 4, 5))
-                            + ", cAnchor=" + cAnchor);
+            throw new IllegalStateException("Unexpected values: zPattern=" + zPattern + ", formatted="
+                    + aFormatter.format(java.time.LocalDateTime.of(2000, 1, 2, 3, 4, 5))
+                    + ", cAnchor=" + cAnchor);
         }
     }
 }

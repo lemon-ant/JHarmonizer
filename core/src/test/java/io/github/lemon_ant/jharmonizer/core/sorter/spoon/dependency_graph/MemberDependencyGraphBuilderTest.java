@@ -71,7 +71,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_keepsDeclarationDependencies() {
+    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_includesConstantInDependencies() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
@@ -349,7 +349,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_initializerBlockReferencesCompileTimeConstant_keepsDeclarationDependencies() {
+    void buildDependencyGraph_initializerBlockReferencesCompileTimeConstant_includesConstantInDependencies() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.INITIALIZER_BLOCK_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
