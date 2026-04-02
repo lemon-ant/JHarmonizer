@@ -1,7 +1,15 @@
 # 08-file-change-ingestor-partial-eval-npe
 
-This regression fixture captures a Spoon partial-evaluation `NullPointerException` observed on a NiFi-style
-`FileChangeIngestor` source shape with static imports, method references, and map/field access chains.
+This is a **minimal** regression fixture for a Spoon partial-evaluation `NullPointerException` seen in NiFi-style
+`FileChangeIngestor` code.
+
+## Why this fixture is intentionally small
+
+The previous version used a full production-like class and was too large/noisy.
+This reduced fixture keeps only the expression shape needed to trigger the same failure mode:
+
+- static imported external constants (`NOTIFIER_INGESTORS_KEY`, `WHOLE_CONFIG_KEY`)
+- `Map.of(...)` field initializer using method reference (`WholeConfigDifferentiator::getByteBufferDifferentiator`)
 
 ## Observed failure
 
@@ -11,19 +19,12 @@ This regression fixture captures a Spoon partial-evaluation `NullPointerExceptio
 - Key frame:
   - `spoon.support.reflect.eval.VisitorPartialEvaluator.visitFieldAccess(...)`
 
-## Why this matters
-
-This failure happens during `expression.partiallyEvaluate()` while dependency graph code inspects field initializers.
-Without guarding, this can fail processing flow on valid source inputs.
-
 ## JHarmonizer handling
 
-The same resilience path is used as for other Spoon partial-evaluation failures:
+This is handled in:
 
 - `io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils`
-- method: `findPartiallyEvaluatedExpression(...)`
+- `findPartiallyEvaluatedExpression(...)`
 
-Runtime exceptions from `partiallyEvaluate()` are caught and escaped, and the logic falls back to raw-expression
-behavior (treated as not partially evaluated).
-
-This fixture exists to keep that regression path covered in e2e.
+When partial evaluation throws runtime exceptions (including this NPE case), the logic falls back to
+"not partially evaluated" behavior (raw expression path), so pipeline processing continues.
