@@ -65,6 +65,10 @@ class DeclaringTypeFieldReferenceUtils {
     /**
      * Finds earlier same-type static compile-time constants that are referenced through implicit/simple-name access
      * and therefore must keep their original source order for Java compilation.
+     *
+     * @param dependentMember the initializer owner that reads the constant providers
+     * @param dependentMemberAstRoot the initializer AST to scan for implicit field accesses
+     * @return the earlier compile-time constant providers whose source order must be preserved
      */
     @NonNull
     static Set<CtField<?>> findImplicitCompileTimeConstantProvidersRequiredByDependentMember(
@@ -73,9 +77,8 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .filter(DeclaringTypeFieldReferenceUtils::isImplicitAccess)
+                .filter(DeclaringTypeFieldReferenceUtils::isImplicitCompileTimeConstantProviderFieldAccess)
                 .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
-                .filter(InitializationOrderDependencyUtils::isStaticCompileTimeConstantVariable)
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -170,6 +173,15 @@ class DeclaringTypeFieldReferenceUtils {
     private static boolean isImplicitAccess(CtFieldAccess<?> fieldAccess) {
         CtExpression<?> target = fieldAccess.getTarget();
         return target == null || target.isImplicit();
+    }
+
+    private static boolean isImplicitCompileTimeConstantProviderFieldAccess(CtFieldAccess<?> fieldAccess) {
+        if (!isImplicitAccess(fieldAccess)) {
+            return false;
+        }
+
+        CtField<?> providerField = (CtField<?>) fieldAccess.getVariable().getDeclaration();
+        return InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(providerField);
     }
 
     private static boolean isProviderDeclaredBeforeDependentMember(

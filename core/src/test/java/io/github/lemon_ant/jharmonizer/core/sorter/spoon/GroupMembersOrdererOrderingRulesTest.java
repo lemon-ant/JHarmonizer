@@ -558,6 +558,8 @@ class GroupMembersOrdererOrderingRulesTest {
 
         private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
                 EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+        // Ordering must honor both real declaration dependencies and implicit compile-time-constant source-order
+        // constraints.
         private static final Set<MemberDependencyEdgeKind> ORDERING_CONSTRAINT_EDGE_KINDS = EnumSet.of(
                 MemberDependencyEdgeKind.DECLARATION_DEPENDENCY, MemberDependencyEdgeKind.SOURCE_ORDER_CONSTRAINT);
 
