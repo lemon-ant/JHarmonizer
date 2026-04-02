@@ -71,7 +71,7 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantIncludedInDependencies() {
+    void buildDependencyGraph_fieldInitializerReferencesCompileTimeConstant_constantExcludedFromDependencies() {
         // Given
         MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
                 Constants.FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS);
@@ -82,10 +82,7 @@ class MemberDependencyGraphBuilderTest {
                 EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
 
         // Then
-        assertThat(directProviders)
-                .containsExactlyInAnyOrder(
-                        Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER,
-                        Constants.COMPILE_TIME_CONSTANT_EXCLUSION_CONSTANT_FIELD_MEMBER);
+        assertThat(directProviders).containsExactly(Constants.COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER);
     }
 
     @Test
@@ -524,9 +521,6 @@ class MemberDependencyGraphBuilderTest {
         private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_BRAVO_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "BRAVO");
-        private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_CONSTANT_FIELD_MEMBER =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
-                        FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "CONSTANT");
         private static final CtTypeMember COMPILE_TIME_CONSTANT_EXCLUSION_ALPHA_FIELD_MEMBER =
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(
                         FIELD_INITIALIZER_COMPILE_TIME_CONSTANT_EXCLUSION_MEMBERS, "ALPHA");

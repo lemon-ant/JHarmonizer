@@ -16,7 +16,6 @@ import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtOperatorAssignment;
-import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
@@ -58,17 +57,6 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .filter(fieldAccess -> {
-                    if (!(fieldAccess.getVariable().getDeclaration() instanceof CtField<?> referencedField)) {
-                        return true;
-                    }
-
-                    if (!InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(referencedField)) {
-                        return true;
-                    }
-
-                    return !(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess && !typeAccess.isImplicit());
-                })
                 .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
                 .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
