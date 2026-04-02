@@ -1,4 +1,4 @@
-# 06-enum-lambda-body-member-boundary
+# 02-enum-lambda-body-member-boundary
 
 This regression fixture documents a Spoon source-position bug found for enum declarations in a specific shape.
 

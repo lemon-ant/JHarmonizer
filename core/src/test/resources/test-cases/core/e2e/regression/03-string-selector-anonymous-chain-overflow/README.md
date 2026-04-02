@@ -1,4 +1,4 @@
-# 07-string-selector-anonymous-chain-overflow
+# 03-string-selector-anonymous-chain-overflow
 
 This fixture documents and reproduces the anonymous-class initializer shape that previously triggered
 unsafe Spoon partial evaluation recursion.

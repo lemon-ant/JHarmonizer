@@ -1,4 +1,4 @@
-# 08-file-change-ingestor-partial-eval-npe
+# 04-file-change-ingestor-partial-eval-npe
 
 This is a **minimal** regression fixture for a Spoon partial-evaluation `NullPointerException` seen in NiFi-style
 `FileChangeIngestor` code.
