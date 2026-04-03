@@ -115,13 +115,12 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
+    @SuppressWarnings("PMD.GuardLogStatement")
     protected final FormattingResult formatSrcWithoutSorting(@NonNull SrcFile srcFile, @NonNull String failureMessage) {
-        if (LOG.isWarnEnabled()) {
-            LOG.warn(
-                    "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
-                    srcFile.getPath(),
-                    failureMessage);
-        }
+        LOG.warn(
+                "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
+                srcFile.getPath(),
+                failureMessage);
         FormattingResult formattingResult =
                 getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
         getDebugStageRecorder()
