@@ -10,8 +10,7 @@ import picocli.CommandLine.Command;
  */
 @Command(
         name = "check-fast",
-        description =
-                "Checks Java source files and stops at the first one that requires reordering (fail-fast mode).",
+        description = "Checks Java source files and stops at the first one that requires reordering (fail-fast mode).",
         mixinStandardHelpOptions = true)
 final class CheckFastCommand extends BaseCommand {
 

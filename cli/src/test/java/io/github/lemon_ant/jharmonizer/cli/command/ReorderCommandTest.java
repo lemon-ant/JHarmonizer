@@ -62,10 +62,7 @@ class ReorderCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Path.of("src/main/java").toAbsolutePath().normalize()),
-                        any(),
-                        any(),
-                        eq(FlowType.REORDER));
+                        eq(Path.of("src/main/java").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
     }
 
     @Test

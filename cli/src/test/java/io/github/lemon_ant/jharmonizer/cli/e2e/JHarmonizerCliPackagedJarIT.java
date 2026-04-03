@@ -169,8 +169,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void reorderCommand_alreadyHarmonizedInputProvided_leaveFilesUnchanged()
-            throws IOException, InterruptedException {
+    void reorderCommand_alreadyHarmonizedInputProvided_leaveFilesUnchanged() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-already-harmonized");
         ExternalCliProcessResult initialResult = ExternalCliProcessRunner.run(
@@ -287,9 +286,7 @@ class JHarmonizerCliPackagedJarIT {
                 "--include",
                 "**/*.java");
         assertCompleted(reorderResult);
-        assertThat(reorderResult.getExitCode())
-                .as(reorderResult.toString())
-                .isZero();
+        assertThat(reorderResult.getExitCode()).as(reorderResult.toString()).isZero();
         Path expectedProjectDirectory = copyDirectory(projectDirectory, "project-check-clean-expected");
 
         // When
@@ -357,8 +354,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void reorderCommand_invalidOptionProvided_returnInvalidUsageExitCode()
-            throws IOException, InterruptedException {
+    void reorderCommand_invalidOptionProvided_returnInvalidUsageExitCode() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-invalid-option");
 
