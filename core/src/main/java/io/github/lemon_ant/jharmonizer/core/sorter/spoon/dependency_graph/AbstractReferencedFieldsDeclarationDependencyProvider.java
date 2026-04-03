@@ -1,10 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.ReferencedFieldAccess;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
-import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
@@ -32,8 +32,8 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
                         DeclaringTypeFieldReferenceUtils.findReferencedFieldAccessesDeclaredBeforeMember(
                                         dependentMember, ctElement)
                                 .stream()
-                                .filter(this::isDeclarationDependencyRequired)
-                                .map(DeclaringTypeFieldReferenceUtils.ReferencedFieldAccess::getProviderField)
+                                .filter(this::isNonConstantFieldAccessOrImplicitConstantAccess)
+                                .map(ReferencedFieldAccess::getProviderField)
                                 .map(providerField -> new MemberDependencyArc(
                                         providerField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                                 .collect(Collectors.toUnmodifiableSet()))
@@ -41,23 +41,33 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     }
 
     /**
-     * Returns whether the referenced field access must stay ordered before the dependent member.
+     * Returns whether the access is either a non-constant field access or an implicit compile-time-constant access.
      *
      * @param referencedFieldAccess the referenced field access
-     * @return {@code true} when the access creates a declaration dependency; otherwise {@code false}
+     * @return {@code true} when the access matches the allowed declaration-dependency shapes; otherwise {@code false}
      */
-    private boolean isDeclarationDependencyRequired(
-            @NonNull DeclaringTypeFieldReferenceUtils.ReferencedFieldAccess referencedFieldAccess) {
+    private boolean isNonConstantFieldAccessOrImplicitConstantAccess(
+            @NonNull ReferencedFieldAccess referencedFieldAccess) {
+        return !isStaticCompileTimeConstantProviderField(referencedFieldAccess)
+                || isImplicitFieldAccess(referencedFieldAccess);
+    }
+
+    private boolean isStaticCompileTimeConstantProviderField(@NonNull ReferencedFieldAccess referencedFieldAccess) {
         CtField<?> providerField = referencedFieldAccess.getProviderField();
-        if (!InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(providerField)) {
-            return true;
-        }
+        return InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(providerField);
+    }
 
-        CtExpression<?> accessTarget = referencedFieldAccess.getFieldAccess().getTarget();
-
+    /**
+     * Returns whether the field access is implicit/simple-name.
+     *
+     * @param referencedFieldAccess the referenced field access
+     * @return {@code true} for implicit/simple-name accesses; otherwise {@code false}
+     */
+    private boolean isImplicitFieldAccess(@NonNull ReferencedFieldAccess referencedFieldAccess) {
         // Java allows qualified forward reads of compile-time constants, but same-type simple-name reads can become
         // illegal forward references after reordering, so only implicit accesses must keep declaration dependencies.
-        return accessTarget == null || accessTarget.isImplicit();
+        return referencedFieldAccess.getFieldAccess().getTarget() == null
+                || referencedFieldAccess.getFieldAccess().getTarget().isImplicit();
     }
 
     /**
