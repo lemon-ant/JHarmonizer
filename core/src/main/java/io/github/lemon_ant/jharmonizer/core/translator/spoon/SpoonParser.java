@@ -5,6 +5,7 @@ import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
+import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import java.util.Map;
 import java.util.function.Supplier;
 import lombok.NonNull;
@@ -36,8 +37,13 @@ public class SpoonParser {
     }
 
     @NonNull
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
-        launcher.buildModel();
+        try {
+            launcher.buildModel();
+        } catch (RuntimeException exception) {
+            throw new SpoonModelBuildException(srcFile.getPath(), describeModelBuildFailure(exception), exception);
+        }
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
@@ -60,6 +66,16 @@ public class SpoonParser {
                 .build();
     }
 
+    @NonNull
+    private static String describeModelBuildFailure(@NonNull RuntimeException exception) {
+        String exceptionType = exception.getClass().getSimpleName();
+        String exceptionMessage = exception.getMessage();
+        if (exceptionMessage == null || exceptionMessage.isBlank()) {
+            return exceptionType;
+        }
+        return exceptionType + ": " + exceptionMessage;
+    }
+
     /**
      * The Launcher is not a thread-safe and must be initialized for each thread
      *
@@ -73,6 +89,7 @@ public class SpoonParser {
         launcher.getEnvironment().setPreviewFeaturesEnabled(false);
         launcher.getEnvironment().setNoClasspath(true);
         launcher.getEnvironment().setAutoImports(true);
+        launcher.getEnvironment().setLevel("ERROR");
         return launcher;
     }
 
