@@ -129,6 +129,33 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
+    void orderMembersInsideGroups_simpleNameCompileTimeConstantDependency_keepsProviderBeforeDependent() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "implicit-constant-source-order", false, List.of(OrderingRule.ALPHA));
+        CtTypeMember patternFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MEMBERS, "zPattern");
+        CtTypeMember formatterFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MEMBERS, "aFormatter");
+        CtTypeMember anchorFieldMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MEMBERS, "cAnchor");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup, List.of(patternFieldMember, formatterFieldMember, anchorFieldMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                patternFieldMember, compiledMemberGroup,
+                formatterFieldMember, compiledMemberGroup,
+                anchorFieldMember, compiledMemberGroup));
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(patternFieldMember, formatterFieldMember, anchorFieldMember);
+    }
+
+    @Test
     void orderMembersInsideGroups_orderingRuleAlphaWithOverloads_orderDeterministically() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
@@ -507,6 +534,18 @@ class GroupMembersOrdererOrderingRulesTest {
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(LOCALE_FIXTURE_RESOURCE_URL);
         private static final List<CtTypeMember> LOCALE_FIXTURE_MEMBERS =
                 streamExplicitSrcTypeMembers(LOCALE_FIXTURE_MAIN_TYPE).toList();
+
+        private static final String IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_CLASSPATH_RESOURCE =
+                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleImplicitConstantSourceOrderFixture.java";
+        private static final URL IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_RESOURCE_URL =
+                GroupMembersOrdererOrderingRulesTest.class.getResource(
+                        IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_CLASSPATH_RESOURCE);
+        private static final CtType<?> IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_RESOURCE_URL);
+        private static final List<CtTypeMember> IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MEMBERS =
+                streamExplicitSrcTypeMembers(IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MAIN_TYPE)
+                        .toList();
 
         private static final String FIXTURE_CLASSPATH_RESOURCE =
                 "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";

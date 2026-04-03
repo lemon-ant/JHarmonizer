@@ -41,7 +41,7 @@ java.lang.NullPointerException: Cannot invoke "spoon.reflect.reference.CtTypeRef
         at io.github.lemon_ant.jharmonizer.core.sorter.Sorter.sort(Sorter.java:35)
         at io.github.lemon_ant.jharmonizer.core.flow.AbstractOptOutFlow.sortAndSerializeOrReuseOriginalSrc(AbstractOptOutFlow.java:76)
         at io.github.lemon_ant.jharmonizer.core.flow.AbstractOptOutFlow.sortSerializeAndFormatSrc(AbstractOptOutFlow.java:93)
-        at io.github.lemon_ant.jharmonizer.core.flow.RestructureFlow.processSrc(RestructureFlow.java:55)
+        at io.github.lemon_ant.jharmonizer.core.flow.ReorderFlow.processSrc(ReorderFlow.java:55)
         at io.github.lemon_ant.jharmonizer.core.flow.SafeFlow.processSrc(SafeFlow.java:36)
         at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
         at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)

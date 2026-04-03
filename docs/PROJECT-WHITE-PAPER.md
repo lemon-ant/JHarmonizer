@@ -1,4 +1,4 @@
-# 📄 Java Code ReStructor - Project White Paper
+# 📄 Java Code Reorderer - Project White Paper
 
 ## 🎯 Project Goal
 

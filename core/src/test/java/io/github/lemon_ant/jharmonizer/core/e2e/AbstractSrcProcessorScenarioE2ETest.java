@@ -55,7 +55,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
         // When
         runProcessorForSingleFile(
-                workingInputFile, findScenarioConfigPath(fixtureScenario).orElse(null), FlowType.RESTRUCTURE);
+                workingInputFile, findScenarioConfigPath(fixtureScenario).orElse(null), FlowType.REORDER);
 
         // Then
         assertFileProcessingIsDeterministic(fixtureScenario, workingInputFile);

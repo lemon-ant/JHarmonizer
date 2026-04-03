@@ -3,7 +3,7 @@
 ## Purpose
 
 This Maven plugin is designed to integrate the **JHarmonizer** utility into Java projects as a build phase tool.
-It enables automated restructuring or structure validation of Java source files directly from Maven, with flexible
+It enables automated reordering or structure validation of Java source files directly from Maven, with flexible
 configuration and execution modes.
 
 ## Features
@@ -18,13 +18,13 @@ configuration and execution modes.
 ## Plugin Goals
 
 - `jharmonizer:check` — validates whether files are already properly structured.
-- `jharmonizer:restructure` — restructures Java source files according to the defined sorting and formatting logic.
+- `jharmonizer:reorder` — reorders Java source files according to the defined sorting and formatting logic.
 
 ## Configuration Options
 
 | Parameter            | Type      | Description                                                        |
 |----------------------|-----------|--------------------------------------------------------------------|
-| `mode`               | `String`  | Either `check` or `restructure`.                                   |
+| `mode`               | `String`  | Either `check` or `reorder`.                                   |
 | `includeTestSources` | `boolean` | Whether to include `src/test/java` in addition to `src/main/java`. |
 | `severityLevel`      | `String`  | `fail-fast`, `collect-and-fail`, or `warn-only` for check mode.    |
 | `configFiles`        | `List`    | Optional paths to config files to override defaults.               |

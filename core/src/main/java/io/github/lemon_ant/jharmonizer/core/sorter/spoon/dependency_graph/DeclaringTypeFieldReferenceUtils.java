@@ -4,7 +4,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAssignment;
@@ -48,17 +51,19 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     /**
-     * Finds fields declared in the same type that act as provider-members for a dependent initialization member.
+     * Finds same-type field accesses that target fields declared above the dependent member in source order.
      */
     @NonNull
-    static Set<CtField<?>> findProviderFieldsRequiredByDependentMember(
+    static Set<ReferencedFieldAccess> findReferencedFieldAccessesDeclaredBeforeMember(
             @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .map(fieldAccess -> (CtField<?>) fieldAccess.getVariable().getDeclaration())
-                .filter(providerField -> isProviderDeclaredBeforeDependentMember(providerField, dependentMember))
+                .map(fieldAccess -> new ReferencedFieldAccess(
+                        (CtField<?>) fieldAccess.getVariable().getDeclaration(), fieldAccess))
+                .filter(referencedFieldAccess -> isProviderDeclaredBeforeDependentMember(
+                        referencedFieldAccess.getProviderField(), dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -199,5 +204,15 @@ class DeclaringTypeFieldReferenceUtils {
         }
 
         return false;
+    }
+
+    @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    static class ReferencedFieldAccess {
+        @NonNull
+        CtField<?> providerField;
+
+        @NonNull
+        CtFieldAccess<?> fieldAccess;
     }
 }
