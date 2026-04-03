@@ -40,7 +40,7 @@ String reorder(String inputJavaCode, OverridingConfiguration configuration, Path
 
 ### 2. Process a single Java file
 ```java
-FileProcessingStatisitic reorder(Path inputFilePath, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
+FileProcessingStatistic reorder(Path inputFilePath, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
 ```
 - Reads file content, processes it, and overwrites or replaces the original file
 - **Output**: Processing statistic: processing time, size before and after transformation, error count, etc.
@@ -88,7 +88,7 @@ All configuration parameters were omitted for simplicity.
 
 - `void check(Path directory)`
   - Recursively checks all `.java` files in a directory.
-  - If any file differs from its reordered version, throws `CodeNotReorderedException`.
+  - If any file differs from its reordered version, throws a check-flow validation exception (`NotOrderedException` or `NotFormattedException`).
 
 - `void check(Path file)`
   - Checks a single file.
@@ -98,10 +98,13 @@ All configuration parameters were omitted for simplicity.
 
 ### Exception Behavior:
 
-If reordering changes the code, a `CodeNotReorderedException` is thrown.  
-The exception should contain:
+If reordering changes the code, the check flow throws one of these exceptions:
+- `NotOrderedException` — member relocation(s) were detected.
+- `NotFormattedException` — ordering may be valid, but formatting output still differs.
+
+Typical exception payload includes:
 - Path or origin description
-- Unified diff for diagnostics
+- Either relocation details (for ordering violations) or a unified diff (for formatting-only violations)
 
 
 ## Additional Note: Compilation Validation Step
