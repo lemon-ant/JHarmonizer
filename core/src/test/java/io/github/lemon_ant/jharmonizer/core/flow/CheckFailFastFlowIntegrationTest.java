@@ -9,6 +9,9 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,6 +43,36 @@ class CheckFailFastFlowIntegrationTest {
         assertThat(processedSources).hasValue(1);
     }
 
+    @Test
+    void processSourceWithFormattingOnlyFallback_formattingChanges_throwsNotFormattedException() throws Exception {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile srcFile = createSrcFile("class Sample{int x;}", Path.of("Sample.java"));
+        SpoonModelBuildException modelBuildException =
+                new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
+
+        // When / Then
+        assertThatThrownBy(() -> invokeFormattingOnlyFallback(flow, srcFile, modelBuildException))
+                .isInstanceOf(NotFormattedException.class)
+                .hasMessageContaining("Sample.java");
+    }
+
+    @Test
+    void processSourceWithFormattingOnlyFallback_noFormattingChanges_returnsCheckedResult() throws Exception {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile srcFile = createSrcFile("class Sample {\n    int x;\n}\n", Path.of("Sample.java"));
+        SpoonModelBuildException modelBuildException =
+                new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
+
+        // When
+        FlowProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+
+        // Then
+        assertThat(result.getFlowProcessingStatus()).isEqualTo(FlowProcessingStatus.CHECKED);
+        assertThat(result.getSortingStatistic().getSortingTimeInNanos()).isZero();
+    }
+
     @NonNull
     private static CheckFailFastFlow createFlow() {
         CompiledConfig compiledConfig = ConfigurationManager.loadDefaultConfig();
@@ -48,5 +81,24 @@ class CheckFailFastFlowIntegrationTest {
                 compiledConfig.getFormatting().isFixImports());
         Sorter sorter = new Sorter(compiledConfig);
         return new CheckFailFastFlow(formatter, sorter);
+    }
+
+    @NonNull
+    private static FlowProcessingResult invokeFormattingOnlyFallback(
+            @NonNull CheckFailFastFlow flow,
+            @NonNull SrcFile srcFile,
+            @NonNull SpoonModelBuildException modelBuildException)
+            throws Exception {
+        Method method = CheckFailFastFlow.class.getDeclaredMethod(
+                "processSrcWithFormattingOnlyFallback", SrcFile.class, SpoonModelBuildException.class);
+        method.setAccessible(true);
+        try {
+            return (FlowProcessingResult) method.invoke(flow, srcFile, modelBuildException);
+        } catch (InvocationTargetException exception) {
+            if (exception.getCause() instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw exception;
+        }
     }
 }

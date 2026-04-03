@@ -8,9 +8,13 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
+import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
+import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
@@ -45,7 +49,12 @@ public class ReorderFlow extends AbstractOptOutFlow {
     @Override
     public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
+        ParsingResult parsingResult;
+        try {
+            parsingResult = SrcAstTranslator.parse(srcFile);
+        } catch (SpoonModelBuildException exception) {
+            return processSrcWithFormattingOnlyFallback(srcFile, exception);
+        }
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization");
@@ -82,6 +91,30 @@ public class ReorderFlow extends AbstractOptOutFlow {
                                         sortedSpoonAstModel.getCompilationUnit()),
                         hasChanges,
                         false))
+                .build();
+    }
+
+    @NonNull
+    private FlowProcessingResult processSrcWithFormattingOnlyFallback(
+            @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
+        FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
+        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
+        if (hasChanges) {
+            if (backupsEnabled) {
+                SrcFilesHandler.renameToBackup(srcFile.getPath());
+            }
+            SrcFilesHandler.overwrite(srcFile.getPath(), formattingResult.getFormattedSrcCode());
+        }
+        return FlowProcessingResult.builder()
+                .path(srcFile.getPath())
+                .relocations(null)
+                .diff(null)
+                .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
+                .sortingStatistic(new SortingStatistic(0))
+                .serializationStatistic(
+                        new SerializationStatistic(srcFile.getSrcCode().length(), 0))
+                .formattingStatistic(formattingResult.getFormattingStatistic())
+                .flowProcessingStatus(defineFlowProcessingStatus(false, hasChanges, false))
                 .build();
     }
 }

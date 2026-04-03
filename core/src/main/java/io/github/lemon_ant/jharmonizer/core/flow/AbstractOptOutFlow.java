@@ -12,11 +12,14 @@ import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
+import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -109,6 +112,29 @@ abstract class AbstractOptOutFlow implements IFlow {
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
                         formattingResult.getFormattedSrcCode());
         return new SortingSerializationAndFormattingResult(sortingAndSerializationResult, formattingResult);
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.GuardLogStatement")
+    protected final FormattingResult formatSrcWithoutSorting(@NonNull SrcFile srcFile, @NonNull String failureMessage) {
+        LOG.warn(
+                "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
+                srcFile.getPath(),
+                failureMessage);
+        FormattingResult formattingResult =
+                getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormattedSrcCode());
+        return formattingResult;
+    }
+
+    @NonNull
+    protected static ParsingStatistic buildSyntheticParsingStatistic(@NonNull SrcFile srcFile) {
+        String srcCode = srcFile.getSrcCode();
+        return new ParsingStatistic(srcCode.length(), srcCode.getBytes(StandardCharsets.UTF_8).length, 0, 0, 0, 0);
     }
 
     @NonNull
