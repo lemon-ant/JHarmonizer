@@ -338,7 +338,7 @@ Current dependency handling covers direct declaration dependencies and several l
 As a result, sorter can produce an order that is syntactically valid but semantically different at runtime.
 
 #### What to implement (plan)
-1. Re-enable this scenario as an active `.java` E2E fixture and confirm it fails reproducibly in `RESTRUCTURE + CHECK` flow.
+1. Re-enable this scenario as an active `.java` E2E fixture and confirm it fails reproducibly in `REORDER + CHECK` flow.
 2. Extend dependency extraction for field initializers to model explicit declaring-type static reads inside instance initializers used by static field initialization chains.
 3. Add conservative ordering constraints so members participating in such chains are not moved across unsafe boundaries.
 4. Re-run full E2E + compile + runtime assertions; then keep scenario active as regression guard.
@@ -352,23 +352,23 @@ As a result, sorter can produce an order that is syntactically valid but semanti
 #### Very short note on temporary parking mechanism
 Current fixture is parked via escaped extension only as a temporary unblock step.
 Parked fixture files (excluded from automatic E2E sweep):
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/input/FQ01OuterThisAnonInitEscapedSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/10-field-initializer-explicit-type-forward-chain/expected/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/input/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/expected/ExplicitTypeInstanceReferrerForwardReferenceEscapedKnownIssueSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/input/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/expected/F01StaticNewInstanceTypeFieldInt0EscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/input/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/expected/F02StaticNewInstanceTypeFieldBoolEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/input/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/expected/F03StaticNewInstanceTypeFieldNullEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/input/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/expected/F04StaticNewInstanceTypeFieldLongChainEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/input/FQ01OuterThisAnonInitEscapedSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/10-field-initializer-explicit-type-forward-chain/expected/FQ01OuterThisAnonInitEscapedSample.~java`
 Long-term target: remove parking, keep the case active, and make the pipeline pass.
 
 Related parked lazy-context fixture (separate backlog track):
-- `core/src/test/resources/test-cases/core/e2e/restructure/11-lazy-initializer-contexts/input/LazyMethodReferenceContextEscapedPendingImplementationSample.~java`
-- `core/src/test/resources/test-cases/core/e2e/restructure/11-lazy-initializer-contexts/expected/LazyMethodReferenceContextEscapedPendingImplementationSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/11-lazy-initializer-contexts/input/LazyMethodReferenceContextEscapedPendingImplementationSample.~java`
+- `core/src/test/resources/test-cases/core/e2e/reorder/11-lazy-initializer-contexts/expected/LazyMethodReferenceContextEscapedPendingImplementationSample.~java`
 
 ---
 

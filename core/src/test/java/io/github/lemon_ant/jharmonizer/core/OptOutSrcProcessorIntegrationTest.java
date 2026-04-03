@@ -43,7 +43,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
@@ -77,7 +77,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
@@ -96,7 +96,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -118,7 +118,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -145,7 +145,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -178,7 +178,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -202,7 +202,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -238,7 +238,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -262,7 +262,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -289,7 +289,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then

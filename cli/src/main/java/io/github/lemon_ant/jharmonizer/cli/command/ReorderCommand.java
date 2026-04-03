@@ -5,19 +5,19 @@ import lombok.NonNull;
 import picocli.CommandLine.Command;
 
 /**
- * CLI command that restructures Java source files in-place
+ * CLI command that reorders Java source files in-place
  * according to the configured member-ordering and formatting rules.
  */
 @Command(
-        name = "restructure",
-        description = "Restructures Java source files according to the configured ordering rules.",
+        name = "reorder",
+        description = "Reorders Java source files according to the configured ordering rules.",
         mixinStandardHelpOptions = true)
-final class RestructureCommand extends BaseCommand {
+final class ReorderCommand extends BaseCommand {
 
     /**
-     * Creates a new {@code restructure} command.
+     * Creates a new {@code reorder} command.
      */
-    RestructureCommand() {
+    ReorderCommand() {
         // Required by Picocli (command instantiation).
     }
 
@@ -29,6 +29,6 @@ final class RestructureCommand extends BaseCommand {
     @Override
     @NonNull
     protected FlowType getFlowType() {
-        return FlowType.RESTRUCTURE;
+        return FlowType.REORDER;
     }
 }

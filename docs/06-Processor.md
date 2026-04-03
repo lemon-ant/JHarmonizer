@@ -13,7 +13,7 @@ then manages the full transformation pipeline:
 
 The Processor supports two distinct execution flows:
 
-### 1. Restructure Flow
+### 1. Reorder Flow
 - Full processing pipeline: config → parse → sort → serialize → format
 - Produces a new source code
 - Optionally writes to file(s)
@@ -22,7 +22,7 @@ The Processor supports two distinct execution flows:
 ### 2. Check Flow
 - Same pipeline as above, but only in memory
 - Compares input and output
-- Throws if restructuring would alter content
+- Throws if reordering would alter content
 - Used for CI/linting
 
 
@@ -30,7 +30,7 @@ The Processor supports two distinct execution flows:
 
 ### 1. Process a single Java source code string
 ```java
-String restructure(String inputJavaCode, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
+String reorder(String inputJavaCode, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
 ```
 - **Input**:
   - Java source code string
@@ -40,14 +40,14 @@ String restructure(String inputJavaCode, OverridingConfiguration configuration, 
 
 ### 2. Process a single Java file
 ```java
-FileProcessingStatisitic restructure(Path inputFilePath, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
+FileProcessingStatisitic reorder(Path inputFilePath, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
 ```
 - Reads file content, processes it, and overwrites or replaces the original file
 - **Output**: Processing statistic: processing time, size before and after transformation, error count, etc.
 
 ### 3. Process a directory of Java files (recursively, in parallel)
 ```java
-ProcessingReport restructure(Path inputDirectory, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
+ProcessingReport reorder(Path inputDirectory, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
 ```
 - Recursively processes `.java` files in the directory
 - Executes processing in parallel threads
@@ -75,9 +75,9 @@ ProcessingReport restructure(Path inputDirectory, OverridingConfiguration config
 
 ## Check Mode (Validation Without Rewrite)
 
-In addition to full restructuring, the Processor also provides a **`check` mode**.  
+In addition to full reordering, the Processor also provides a **`check` mode**.  
 This flow performs the same pipeline (configuration → parsing → sorting → serialization → formatting) but **only in memory** and does **not write any changes**.  
-It compares the original input with the result and throws an exception if restructuring would make changes.
+It compares the original input with the result and throws an exception if reordering would make changes.
 
 ### Purpose:
 Used in CI or quality gates to validate whether code is already correctly structured.
@@ -88,7 +88,7 @@ All configuration parameters were omitted for simplicity.
 
 - `void check(Path directory)`
   - Recursively checks all `.java` files in a directory.
-  - If any file differs from its restructured version, throws `CodeNotRestructuredException`.
+  - If any file differs from its reordered version, throws `CodeNotReorderedException`.
 
 - `void check(Path file)`
   - Checks a single file.
@@ -98,7 +98,7 @@ All configuration parameters were omitted for simplicity.
 
 ### Exception Behavior:
 
-If restructuring changes the code, a `CodeNotRestructuredException` is thrown.  
+If reordering changes the code, a `CodeNotReorderedException` is thrown.  
 The exception should contain:
 - Path or origin description
 - Unified diff for diagnostics
@@ -110,9 +110,9 @@ In certain cases, if the selected AST parser fails to clearly identify invalid J
 syntactical or structural corruption), it may be necessary to integrate a lightweight and embeddable Java compiler into
 the processing pipeline. 
 
-The idea is to pre-validate each file by attempting to compile it before parsing and restructuring. This compilation
+The idea is to pre-validate each file by attempting to compile it before parsing and reordering. This compilation
 phase can serve as a safeguard to ensure that the file is valid Java code. If the compiler fails with a meaningful 
-error message, it can prevent the restructuring pipeline from executing on a broken file and help log or report the 
+error message, it can prevent the reordering pipeline from executing on a broken file and help log or report the 
 cause of failure.
 
 This step may be performed in parallel or as a pre-processing phase before invoking the AST parser. The need for this 
@@ -120,9 +120,9 @@ step will depend on the behavior of the selected parser and should be evaluated 
 
 ## Backup Handling Before File Overwrite
 
-To prevent accidental data loss when overwriting files during restructuring, especially in environments where no version control is used, implement an optional backup mechanism.
+To prevent accidental data loss when overwriting files during reordering, especially in environments where no version control is used, implement an optional backup mechanism.
 
 - **Condition**: A backup file should be created **only if** the output differs from the original input (i.e. the file is modified).
 - **Backup naming convention**: Append a `.bak` or `.backup` extension to the original filename (e.g. `MyClass.java.bak`).
 - **Activation**: This feature should be configurable via `Configuration`, e.g. a flag like `createFileBackup = true`.
-- **Rationale**: Enables safe recovery if something goes wrong during restructuring, or if a user prefers to manually inspect changes.
+- **Rationale**: Enables safe recovery if something goes wrong during reordering, or if a user prefers to manually inspect changes.

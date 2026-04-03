@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SrcProcessorE2EFixtureTest
         extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorE2EFixtureTest.StrictValidationState> {
 
-    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/restructure/";
+    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/reorder/";
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
 

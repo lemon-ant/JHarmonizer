@@ -6,7 +6,7 @@ import lombok.NonNull;
 /**
  * Contract for a single-file processing flow.
  * Each implementation encapsulates a distinct processing strategy
- * (check-all, check-fail-fast, restructure).
+ * (check-all, check-fail-fast, reorder).
  */
 @FunctionalInterface
 public interface IFlow {
