@@ -25,6 +25,7 @@
 - Prefer explicit Java types over `var`.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode` when it matches the surrounding style.
 - For DTO/model/state-holder classes that primarily carry data, prefer immutable Lombok shapes such as `@Value` unless mutability is required.
+- When a simple data-carrier class only needs a narrower constructor than Lombok's default, keep `@Value` and add the constructor visibility override instead of decomposing `@Value` into separate Lombok annotations.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
   - Prefer package-private over `public` when access outside the package is not required.

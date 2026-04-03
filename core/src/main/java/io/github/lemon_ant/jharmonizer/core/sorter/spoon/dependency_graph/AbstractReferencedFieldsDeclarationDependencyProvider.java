@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -32,7 +31,9 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
                         DeclaringTypeFieldReferenceUtils.findReferencedFieldAccessesDeclaredBeforeMember(
                                         dependentMember, ctElement)
                                 .stream()
-                                .filter(this::isNonConstantFieldAccessOrImplicitConstantAccess)
+                                .filter(
+                                        AbstractReferencedFieldsDeclarationDependencyProvider
+                                                ::isNonConstantFieldAccessOrImplicitConstantAccess)
                                 .map(ReferencedFieldAccess::getProviderField)
                                 .map(providerField -> new MemberDependencyArc(
                                         providerField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
@@ -46,15 +47,11 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
      * @param referencedFieldAccess the referenced field access
      * @return {@code true} when the access matches the allowed declaration-dependency shapes; otherwise {@code false}
      */
-    private boolean isNonConstantFieldAccessOrImplicitConstantAccess(
+    private static boolean isNonConstantFieldAccessOrImplicitConstantAccess(
             @NonNull ReferencedFieldAccess referencedFieldAccess) {
-        return !isStaticCompileTimeConstantProviderField(referencedFieldAccess)
+        return !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(
+                        referencedFieldAccess.getProviderField())
                 || isImplicitFieldAccess(referencedFieldAccess);
-    }
-
-    private boolean isStaticCompileTimeConstantProviderField(@NonNull ReferencedFieldAccess referencedFieldAccess) {
-        CtField<?> providerField = referencedFieldAccess.getProviderField();
-        return InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(providerField);
     }
 
     /**
@@ -63,7 +60,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
      * @param referencedFieldAccess the referenced field access
      * @return {@code true} for implicit/simple-name accesses; otherwise {@code false}
      */
-    private boolean isImplicitFieldAccess(@NonNull ReferencedFieldAccess referencedFieldAccess) {
+    private static boolean isImplicitFieldAccess(@NonNull ReferencedFieldAccess referencedFieldAccess) {
         // Java allows qualified forward reads of compile-time constants, but same-type simple-name reads can become
         // illegal forward references after reordering, so only implicit accesses must keep declaration dependencies.
         return referencedFieldAccess.getFieldAccess().getTarget() == null

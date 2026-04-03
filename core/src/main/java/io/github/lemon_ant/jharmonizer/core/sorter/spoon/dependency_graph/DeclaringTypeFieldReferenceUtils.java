@@ -6,10 +6,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.ToString;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAssignment;
@@ -62,7 +60,7 @@ class DeclaringTypeFieldReferenceUtils {
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .map(fieldAccess -> ReferencedFieldAccess.of(
+                .map(fieldAccess -> new ReferencedFieldAccess(
                         (CtField<?>) fieldAccess.getVariable().getDeclaration(), fieldAccess))
                 .filter(referencedFieldAccess -> isProviderDeclaredBeforeDependentMember(
                         referencedFieldAccess.getProviderField(), dependentMember))
@@ -208,20 +206,13 @@ class DeclaringTypeFieldReferenceUtils {
         return false;
     }
 
-    @Getter
-    @EqualsAndHashCode
-    @ToString
+    @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class ReferencedFieldAccess {
         @NonNull
-        private final CtField<?> providerField;
+        CtField<?> providerField;
 
         @NonNull
-        private final CtFieldAccess<?> fieldAccess;
-
-        private static ReferencedFieldAccess of(
-                @NonNull CtField<?> providerField, @NonNull CtFieldAccess<?> fieldAccess) {
-            return new ReferencedFieldAccess(providerField, fieldAccess);
-        }
+        CtFieldAccess<?> fieldAccess;
     }
 }
