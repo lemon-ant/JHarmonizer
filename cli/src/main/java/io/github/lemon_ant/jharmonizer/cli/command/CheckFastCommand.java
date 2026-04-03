@@ -6,12 +6,11 @@ import picocli.CommandLine.Command;
 
 /**
  * CLI command that checks Java source files in fail-fast mode,
- * stopping at the first file that requires restructuring and returning a distinct exit code.
+ * stopping at the first file that requires reordering and returning a distinct exit code.
  */
 @Command(
         name = "check-fast",
-        description =
-                "Checks Java source files and stops at the first one that requires restructuring (fail-fast mode).",
+        description = "Checks Java source files and stops at the first one that requires reordering (fail-fast mode).",
         mixinStandardHelpOptions = true)
 final class CheckFastCommand extends BaseCommand {
 

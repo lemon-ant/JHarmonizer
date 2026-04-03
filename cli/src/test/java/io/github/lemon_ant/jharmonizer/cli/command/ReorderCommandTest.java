@@ -21,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
-class RestructureCommandTest {
+class ReorderCommandTest {
 
     private CommandLine commandLine;
 
@@ -44,11 +44,11 @@ class RestructureCommandTest {
 
     @BeforeEach
     void setUp() {
-        commandLine = new CommandLine(new RestructureCommand());
+        commandLine = new CommandLine(new ReorderCommand());
     }
 
     @Test
-    void restructureCommand_invoked_usesRestructureFlow() {
+    void reorderCommand_invoked_usesReorderFlow() {
         // When
         int exitCode;
         SrcProcessor constructedProcessor;
@@ -62,14 +62,11 @@ class RestructureCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Path.of("src/main/java").toAbsolutePath().normalize()),
-                        any(),
-                        any(),
-                        eq(FlowType.RESTRUCTURE));
+                        eq(Path.of("src/main/java").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
     }
 
     @Test
-    void restructureCommand_helpUsage_describeOptionAliasesAndCollectionFormats() {
+    void reorderCommand_helpUsage_describeOptionAliasesAndCollectionFormats() {
         // Given
         StringWriter usage = new StringWriter();
 
@@ -89,7 +86,7 @@ class RestructureCommandTest {
     }
 
     @Test
-    void restructureCommand_configOptionSupportsPartialConfig_reordersUsingMergedDefaults() throws Exception {
+    void reorderCommand_configOptionSupportsPartialConfig_reordersUsingMergedDefaults() throws Exception {
         // Given
         Path javaFilePath = Files.writeString(
                 temporaryDirectory.resolve("Sample.java"),
@@ -108,7 +105,7 @@ class RestructureCommandTest {
     }
 
     @Test
-    void restructureCommand_processorThrowsRuntimeException_returnsExitCode1() {
+    void reorderCommand_processorThrowsRuntimeException_returnsExitCode1() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {

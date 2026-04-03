@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.RESTRUCTURE;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
@@ -23,7 +23,7 @@ import lombok.NonNull;
  * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
  * Optionally renames the original file to a backup before overwriting it.
  */
-public class RestructureFlow extends AbstractOptOutFlow {
+public class ReorderFlow extends AbstractOptOutFlow {
 
     private final boolean backupsEnabled;
 
@@ -34,8 +34,8 @@ public class RestructureFlow extends AbstractOptOutFlow {
      * @param backupsEnabled whether rewritten files should keep a backup copy
      * @param sorter the sorter used to reorder members
      */
-    public RestructureFlow(@NonNull Formatter formatter, boolean backupsEnabled, @NonNull Sorter sorter) {
-        super(formatter, sorter, RESTRUCTURE);
+    public ReorderFlow(@NonNull Formatter formatter, boolean backupsEnabled, @NonNull Sorter sorter) {
+        super(formatter, sorter, REORDER);
         this.backupsEnabled = backupsEnabled;
     }
 

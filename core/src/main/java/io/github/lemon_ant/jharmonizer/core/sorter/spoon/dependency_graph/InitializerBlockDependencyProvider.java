@@ -14,13 +14,13 @@ import spoon.reflect.declaration.CtTypeMember;
 final class InitializerBlockDependencyProvider extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
     /**
-     * Resolves the dependent ast root.
+     * Resolves the initializer-block initialization AST that should be scanned for field references.
      * @param dependentMember the dependent member
-     * @return the dependent ast root
+     * @return the initializer-block body when the member is an initializer block
      */
     @NonNull
     @Override
-    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
+    protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
         if (!(dependentMember instanceof CtAnonymousExecutable dependentInitializerBlock)) {
             return Optional.empty();
         }

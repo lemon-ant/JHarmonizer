@@ -73,14 +73,14 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getStdout())
                 .as(result.toString())
                 .contains("Usage: jharmonizer")
-                .contains("restructure")
+                .contains("reorder")
                 .contains("check-all")
                 .contains("check-fast");
         assertThat(result.getStderr()).as(result.toString()).isBlank();
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"restructure", "check-all", "check-fast"})
+    @ValueSource(strings = {"reorder", "check-all", "check-fast"})
     void helpCommand_subcommandHelpRequested_printUsageInformation(String command)
             throws IOException, InterruptedException {
         // Given
@@ -107,13 +107,13 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_baseDirOmitted_useCurrentWorkingDirectory() throws IOException, InterruptedException {
+    void reorderCommand_baseDirOmitted_useCurrentWorkingDirectory() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-default-base-dir");
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "restructure", "--no-statistics", "--include", "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "reorder", "--no-statistics", "--include", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -133,16 +133,16 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_multipleIncludesAndExcludesProvided_modifyOnlySelectedFiles()
+    void reorderCommand_multipleIncludesAndExcludesProvided_modifyOnlySelectedFiles()
             throws IOException, InterruptedException {
         // Given
-        Path projectDirectory = copyBasicProject("project-filtered-restructure");
+        Path projectDirectory = copyBasicProject("project-filtered-reorder");
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
                 EXECUTABLE_JAR,
                 projectDirectory,
-                "restructure",
+                "reorder",
                 "--no-statistics",
                 "--base-dir",
                 ".",
@@ -169,14 +169,13 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_alreadyHarmonizedInputProvided_leaveFilesUnchanged()
-            throws IOException, InterruptedException {
+    void reorderCommand_alreadyHarmonizedInputProvided_leaveFilesUnchanged() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-already-harmonized");
         ExternalCliProcessResult initialResult = ExternalCliProcessRunner.run(
                 EXECUTABLE_JAR,
                 projectDirectory,
-                "restructure",
+                "reorder",
                 "--no-statistics",
                 "--base-dir",
                 ".",
@@ -190,7 +189,7 @@ class JHarmonizerCliPackagedJarIT {
         ExternalCliProcessResult secondResult = ExternalCliProcessRunner.run(
                 EXECUTABLE_JAR,
                 projectDirectory,
-                "restructure",
+                "reorder",
                 "--no-statistics",
                 "--base-dir",
                 ".",
@@ -274,22 +273,20 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_afterRestructureExecuted_reportCleanState() throws IOException, InterruptedException {
+    void checkCommand_afterReorderExecuted_reportCleanState() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-clean");
-        ExternalCliProcessResult restructureResult = ExternalCliProcessRunner.run(
+        ExternalCliProcessResult reorderResult = ExternalCliProcessRunner.run(
                 EXECUTABLE_JAR,
                 projectDirectory,
-                "restructure",
+                "reorder",
                 "--no-statistics",
                 "--base-dir",
                 ".",
                 "--include",
                 "**/*.java");
-        assertCompleted(restructureResult);
-        assertThat(restructureResult.getExitCode())
-                .as(restructureResult.toString())
-                .isZero();
+        assertCompleted(reorderResult);
+        assertThat(reorderResult.getExitCode()).as(reorderResult.toString()).isZero();
         Path expectedProjectDirectory = copyDirectory(projectDirectory, "project-check-clean-expected");
 
         // When
@@ -357,14 +354,13 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void restructureCommand_invalidOptionProvided_returnInvalidUsageExitCode()
-            throws IOException, InterruptedException {
+    void reorderCommand_invalidOptionProvided_returnInvalidUsageExitCode() throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-invalid-option");
 
         // When
         ExternalCliProcessResult result =
-                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "restructure", "--unknown-option");
+                ExternalCliProcessRunner.run(EXECUTABLE_JAR, projectDirectory, "reorder", "--unknown-option");
 
         // Then
         assertCompleted(result);
@@ -372,7 +368,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("Unknown option: '--unknown-option'")
-                .contains("Usage: jharmonizer restructure");
+                .contains("Usage: jharmonizer reorder");
     }
 
     @Test

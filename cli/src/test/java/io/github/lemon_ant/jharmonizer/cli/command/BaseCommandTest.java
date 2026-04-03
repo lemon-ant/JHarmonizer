@@ -50,8 +50,7 @@ class BaseCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
-                .processSources(
-                        eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.RESTRUCTURE));
+                .processSources(eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
     }
 
     @Test
@@ -68,7 +67,7 @@ class BaseCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
-                .processSources(any(Path.class), eq(Set.of("**/*.java")), any(), eq(FlowType.RESTRUCTURE));
+                .processSources(any(Path.class), eq(Set.of("**/*.java")), any(), eq(FlowType.REORDER));
     }
 
     @Test
@@ -102,7 +101,7 @@ class BaseCommandTest {
                                 "src/test/java/**/*.java",
                                 "src/integrationTest/java/**/*.java")),
                         eq(Set.of("**/internal/**", "**/excluded/**", "**/*Test.java")),
-                        eq(FlowType.RESTRUCTURE));
+                        eq(FlowType.REORDER));
     }
 
     @Test
@@ -229,7 +228,7 @@ class BaseCommandTest {
         @Override
         @NonNull
         protected FlowType getFlowType() {
-            return FlowType.RESTRUCTURE;
+            return FlowType.REORDER;
         }
     }
 }

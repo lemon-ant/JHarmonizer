@@ -33,7 +33,7 @@ The suite validates:
 
 - `java -jar cli/target/jharmonizer-cli.jar`
 - root help and subcommand help output
-- all real commands: `restructure`, `check-all`, and `check-fast`
+- all real commands: `reorder`, `check-all`, and `check-fast`
 - repeated `--include` / `--exclude` combinations
 - exit codes, stdout/stderr, and filesystem side effects
 - negative scenarios such as invalid options and invalid base directories
@@ -53,21 +53,21 @@ java -jar jharmonizer-cli.jar --help
 Print help for a specific command:
 
 ```bash
-java -jar jharmonizer-cli.jar restructure --help
+java -jar jharmonizer-cli.jar reorder --help
 ```
 
 ## Commands
 
-### `restructure`
+### `reorder`
 
 Rewrites Java source files in `--base-dir` so their member order matches
 JHarmonizer's ordering rules. Files that are already correct are left untouched.
 
 ```bash
-java -jar jharmonizer-cli.jar restructure \
+java -jar jharmonizer-cli.jar reorder \
   --base-dir src/main/java
 
-java -jar jharmonizer-cli.jar restructure \
+java -jar jharmonizer-cli.jar reorder \
   -b src/main/java \
   -i "**/*.java" \
   -e "**/generated/**"
@@ -76,7 +76,7 @@ java -jar jharmonizer-cli.jar restructure \
 ### `check-all`
 
 Scans **all** files under `--base-dir` and logs every file that would be changed
-by a restructure. Always exits `0` when processing completes without errors — use
+by a reorder. Always exits `0` when processing completes without errors — use
 the log output to see which files need attention.
 
 ```bash
@@ -90,7 +90,7 @@ java -jar jharmonizer-cli.jar check-all \
 
 ### `check-fast`
 
-Like `check-all`, but stops at the **first** file that requires restructuring and
+Like `check-all`, but stops at the **first** file that requires reordering and
 exits immediately with code `3`. Useful in CI pipelines where failing fast is
 preferred.
 
@@ -127,7 +127,7 @@ e.g. `**/*.java`, `**/generated/**`.
 | `0` | Processing completed successfully |
 | `1` | Processing error (I/O problem, unexpected exception) |
 | `2` | Invalid CLI arguments (picocli default) |
-| `3` | `check-fast` only — at least one file requires restructuring |
+| `3` | `check-fast` only — at least one file requires reordering |
 
 ## Typical CI usage
 
@@ -140,7 +140,7 @@ e.g. `**/*.java`, `**/generated/**`.
       -i "**/*.java"
 ```
 
-Exit code `3` causes the step to fail, signalling that `restructure` needs to be
+Exit code `3` causes the step to fail, signalling that `reorder` needs to be
 run locally before pushing.
 
 ## Logging configuration and startup overrides
@@ -155,7 +155,7 @@ By default, the root logger level is `INFO`.
 
 ### 1) CLI switch: `--verbose` / `-v`
 
-For all functional commands (`restructure`, `check-all`, `check-fast`), passing
+For all functional commands (`reorder`, `check-all`, `check-fast`), passing
 `-v` (`--verbose`) raises the **root** log level to `DEBUG` at command start.
 This is the easiest way to get detailed diagnostics from the packaged JAR:
 
