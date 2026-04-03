@@ -17,13 +17,13 @@ final class FieldInitializerBackwardReferenceDependencyProvider
         extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
     /**
-     * Resolves the dependent ast root.
+     * Resolves the field initialization AST that should be scanned for field references.
      * @param dependentMember the dependent member
-     * @return the dependent ast root
+     * @return the field initializer expression when the member is a field
      */
     @NonNull
     @Override
-    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
+    protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Optional.empty();
         }

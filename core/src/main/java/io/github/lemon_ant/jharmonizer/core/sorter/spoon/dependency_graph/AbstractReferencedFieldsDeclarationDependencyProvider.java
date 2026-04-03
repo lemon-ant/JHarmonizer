@@ -24,8 +24,8 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
 
-        Optional<CtElement> dependentAstRoot = resolveDependentAstRoot(dependentMember);
-        return dependentAstRoot
+        Optional<CtElement> dependentInitializationAst = resolveDependentInitializationAst(dependentMember);
+        return dependentInitializationAst
                 .map(ctElement ->
                         DeclaringTypeFieldReferenceUtils.findProviderFieldsRequiredByDependentMember(
                                         dependentMember, ctElement)
@@ -40,10 +40,12 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     }
 
     /**
-     * Returns the AST root that should be scanned for order-dependent field references.
+     * Resolves the dependent member initialization AST that should be scanned for order-dependent field references.
      *
-     * <p>If the member is not supported, implementations must return {@link Optional#empty()}.
+     * <p>Examples include a field or enum-value default expression and an initializer-block body.
+     * If the member has no initialization AST or is not supported, implementations must return
+     * {@link Optional#empty()}.
      */
     @NonNull
-    protected abstract Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember);
+    protected abstract Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember);
 }
