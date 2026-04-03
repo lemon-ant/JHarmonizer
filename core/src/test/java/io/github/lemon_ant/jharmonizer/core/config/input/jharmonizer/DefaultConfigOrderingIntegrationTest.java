@@ -31,7 +31,7 @@ class DefaultConfigOrderingIntegrationTest {
 
         // When
         srcProcessor.processSources(
-                temporaryDirectory, Constants.INCLUDE_ALL_JAVA_FILES, Constants.EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+                temporaryDirectory, Constants.INCLUDE_ALL_JAVA_FILES, Constants.EXCLUDE_NO_FILES, FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then

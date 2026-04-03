@@ -3,7 +3,7 @@
 ## Overview
 
 Testing the core logic of JHarmonizer can be done in parallel with the development of other components. This includes
-both the sorter (restructuring logic) and the diff-reporter component.
+both the sorter (reordering logic) and the diff-reporter component.
 
 ## Test Coverage Goals
 
@@ -21,13 +21,13 @@ both the sorter (restructuring logic) and the diff-reporter component.
   - Structural syntax issues.
 
 Tests should validate:
-- Successful restructuring for valid cases.
+- Successful reordering for valid cases.
 - Proper exception handling for invalid files.
 - Consistent output according to defined sorting rules.
 
 ### Testing Without Fully Working Parser
 
-Although the actual restructuring depends on a working parser, the following can be developed **in parallel**:
+Although the actual reordering depends on a working parser, the following can be developed **in parallel**:
 - Construction of test cases.
 - A test runner to process test files and compare results.
 - Expected results prepared as `.expected.java` files for comparison.
@@ -37,7 +37,7 @@ Stub/mock implementations of the parser can be used to simulate flow during earl
 ##  DiffReporter Testing
 
 The `DiffReporter` can and **should** be tested independently:
-- Input: `originalCode.java` and `restructuredCode.java`
+- Input: `originalCode.java` and `reorderedCode.java`
 - Output: Boolean match and human-readable diff.
 
 Unit tests should cover:

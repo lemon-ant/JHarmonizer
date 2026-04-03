@@ -62,7 +62,7 @@ class SrcProcessorTest {
     Path temporaryDirectory;
 
     @Test
-    void processSources_singleJavaFile_restructureFlowRewritesFile() throws Exception {
+    void processSources_singleJavaFile_reorderFlowRewritesFile() throws Exception {
         // Given
         String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
@@ -70,7 +70,7 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -89,7 +89,7 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        srcProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.REORDER);
         String includedProcessedSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
         String excludedProcessedSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
 
@@ -103,12 +103,12 @@ class SrcProcessorTest {
     }
 
     @Test
-    void processSources_alreadyRestructuredFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
+    void processSources_alreadyReorderedFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
         // Given
         String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor();
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // When / Then
         assertThatCode(() -> srcProcessor.processSources(
@@ -178,8 +178,7 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
         }
@@ -211,8 +210,7 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
         }
@@ -238,8 +236,7 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
         }
@@ -269,7 +266,7 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor(externalConfig);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
@@ -277,7 +274,7 @@ class SrcProcessorTest {
     }
 
     @Test
-    void processSources_restructureWithBackupsEnabled_createsBackupNextToSrc() throws Exception {
+    void processSources_reorderWithBackupsEnabled_createsBackupNextToSrc() throws Exception {
         // Given
         String unformattedSrcCode = "package demo; public class BackupEnabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSrcCode);
@@ -286,7 +283,7 @@ class SrcProcessorTest {
                 FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -306,9 +303,9 @@ class SrcProcessorTest {
                 FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         SrcFilesHandler.overwrite(javaFilePath, secondSrcCode);
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -318,7 +315,7 @@ class SrcProcessorTest {
     }
 
     @Test
-    void processSources_restructureWithBackupsDisabled_doesNotCreateBackup() throws Exception {
+    void processSources_reorderWithBackupsDisabled_doesNotCreateBackup() throws Exception {
         // Given
         String unformattedSrcCode = "package demo; public class BackupDisabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSrcCode);
@@ -327,7 +324,7 @@ class SrcProcessorTest {
                 FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -337,7 +334,7 @@ class SrcProcessorTest {
     }
 
     @Test
-    void processSources_restructureWithNoBackupOverride_doesNotCreateBackup() throws Exception {
+    void processSources_reorderWithNoBackupOverride_doesNotCreateBackup() throws Exception {
         // Given
         String unformattedSrcCode = "package demo; public class BackupOverrideDisabled {private int x;}";
         Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSrcCode);
@@ -348,7 +345,7 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor(effectiveConfig);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -371,8 +368,7 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.RESTRUCTURE);
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
             logger.setLevel(initialLevel);
@@ -383,7 +379,7 @@ class SrcProcessorTest {
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).contains("public class SummarySample");
         assertThat(logs)
                 .contains("Processing completed (full statistics report disabled)")
-                .contains("flowType=RESTRUCTURE")
+                .contains("flowType=REORDER")
                 .contains("status=COMPLETED")
                 .contains("processedFiles=1")
                 .contains("totalSizeBytes=")

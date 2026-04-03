@@ -11,7 +11,7 @@ of a **Gradle plugin** as an **optional contribution**, outside the primary scop
 The Gradle plugin would mirror the functionality provided by the Maven plugin. It would allow Java projects using
 Gradle to integrate the JHarmonizer tool directly into their build pipeline, enabling:
 
-- Automatic restructuring (`restructure`) of Java source code during the build process.
+- Automatic reordering (`reorder`) of Java source code during the build process.
 - Validation (`check`) of formatting consistency to prevent unformatted code from passing through CI/CD pipelines.
 - Custom configuration passed through Gradle's extension and plugin DSL.
 
@@ -25,7 +25,7 @@ and integration testing.
 
 ## Key Requirements
 
-- Provide Gradle DSL extension for configuration options (e.g. included paths, check/restructure mode, severity settings).
+- Provide Gradle DSL extension for configuration options (e.g. included paths, check/reorder mode, severity settings).
 - Hook into appropriate Gradle build lifecycle phases (e.g. `compileJava` or earlier).
 - Output diagnostics and reformatted code, or fail builds based on configurable thresholds.
 

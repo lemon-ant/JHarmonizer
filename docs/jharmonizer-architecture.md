@@ -3,7 +3,7 @@
 JHarmonizer must implement an efficient and extensible internal architecture for processing `.java` files.
 The tool supports three primary workflows:
 
-1. **Restructure** — reorganize code and write changes to disk.
+1. **Reorder** — reorganize code and write changes to disk.
 2. **Check (fail-fast)** — validate structure, stop on the first mismatch.
 3. **Check (collect)** — validate all files, collect mismatches and statistics.
 

@@ -5,11 +5,11 @@ import lombok.NonNull;
 import picocli.CommandLine.Command;
 
 /**
- * CLI command that checks all Java source files and reports which ones require restructuring.
+ * CLI command that checks all Java source files and reports which ones require reordering.
  */
 @Command(
         name = "check-all",
-        description = "Checks all Java source files and reports which ones require restructuring.",
+        description = "Checks all Java source files and reports which ones require reordering.",
         mixinStandardHelpOptions = true)
 final class CheckAllCommand extends BaseCommand {
 

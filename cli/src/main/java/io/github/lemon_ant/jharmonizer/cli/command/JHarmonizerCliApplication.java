@@ -12,7 +12,7 @@ import picocli.CommandLine.Command;
         name = "jharmonizer",
         description = "JHarmonizer: harmonize Java source file structure.",
         mixinStandardHelpOptions = true,
-        subcommands = {RestructureCommand.class, CheckAllCommand.class, CheckFastCommand.class})
+        subcommands = {ReorderCommand.class, CheckAllCommand.class, CheckFastCommand.class})
 public final class JHarmonizerCliApplication {
 
     private JHarmonizerCliApplication() {}
