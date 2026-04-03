@@ -680,6 +680,54 @@ Introduce a normalized logging settings model and expose it consistently across 
 
 ---
 
+### 17. Git-aware changed-files processing mode (future version)
+
+#### Status
+- [ ] Not implemented (captured as a future performance-focused feature)
+- [ ] Current behavior: processing scopes are filesystem/path driven, not VCS-diff driven
+
+#### Problem statement
+For large repositories, reprocessing the full source tree on every run is expensive.
+In common CI and pre-commit workflows we usually need to process only files that actually changed in Git,
+for example relative to:
+- working tree vs index,
+- current branch vs merge-base with target branch,
+- last successful push/tag/commit baseline.
+
+#### Proposed solution (next version)
+Introduce an optional Git-aware file discovery mode that limits sorting/checking/formatting to changed files only.
+
+Initial capability set:
+- detect changed files from configurable Git comparison baselines;
+- filter candidates to supported source file types;
+- pass only changed files into existing processing flows.
+
+#### Open design research (required before implementation)
+- Evaluate practices used by similar formatting/linting utilities for incremental processing.
+- Compare baseline strategies and failure modes:
+  - `HEAD` vs working tree,
+  - merge-base against target branch,
+  - “since last push” style heuristics.
+- Define deterministic fallback behavior when Git metadata is unavailable (archive, shallow checkout, detached environments).
+
+#### Safety requirements
+- Never silently skip changed source files because of baseline ambiguity.
+- Keep deterministic behavior between local runs and CI for the same baseline.
+- Provide an explicit opt-out/full-scan mode for reproducibility and troubleshooting.
+
+#### Implementation outline (when revisited)
+- [ ] Add a VCS scope config/CLI option (`full-scan` vs `changed-only`).
+- [ ] Implement baseline resolver (working tree, merge-base, explicit commit/tag).
+- [ ] Add changed-file collector with path normalization and include/exclude support.
+- [ ] Integrate collector output with current `SrcFilesHandler`/flow entry points.
+- [ ] Add tests for:
+  - [ ] local modified/untracked/staged file scenarios;
+  - [ ] branch-diff scenario using merge-base;
+  - [ ] no-Git metadata fallback behavior;
+  - [ ] deterministic selection order and diagnostics output.
+
+---
+
 ## Technical debt / stabilization backlog
 
 ### 1. Blank-final nearest-provider edge cases still not covered by active E2E
