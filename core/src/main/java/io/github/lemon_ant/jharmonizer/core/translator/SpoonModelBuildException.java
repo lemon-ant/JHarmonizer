@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
+import java.io.Serial;
 import java.nio.file.Path;
 import lombok.Getter;
 import lombok.NonNull;
@@ -9,6 +10,7 @@ import lombok.NonNull;
  */
 @Getter
 public class SpoonModelBuildException extends RuntimeException {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @NonNull

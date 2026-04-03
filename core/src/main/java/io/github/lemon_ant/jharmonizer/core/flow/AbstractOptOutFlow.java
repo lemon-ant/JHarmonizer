@@ -122,7 +122,14 @@ abstract class AbstractOptOutFlow implements IFlow {
                     srcFile.getPath(),
                     failureMessage);
         }
-        return getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
+        FormattingResult formattingResult =
+                getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormattedSrcCode());
+        return formattingResult;
     }
 
     @NonNull
