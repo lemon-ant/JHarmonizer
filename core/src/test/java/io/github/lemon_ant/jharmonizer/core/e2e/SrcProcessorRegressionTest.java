@@ -99,24 +99,32 @@ class SrcProcessorRegressionTest
 
     @NonNull
     private static CompileAndRunSnapshot captureCompileAndRunSnapshot(Path srcFile, Path compileOutputDirectory) {
+        logCompileAttemptStarted(srcFile, compileOutputDirectory);
         JavaCompileTestUtils.CompileResult compileResult;
         try {
             compileResult = compileJavaSrcWithRelease21(srcFile, compileOutputDirectory);
         } catch (IOException | InterruptedException exception) {
+            logCompileAttemptFailed(srcFile, exception);
             return CompileAndRunSnapshot.compileFailed();
         }
         if (compileResult.getExitCode() != 0) {
+            logCompileAttemptFinished(srcFile, compileResult.getExitCode());
             return CompileAndRunSnapshot.compileFailed();
         }
+        logCompileAttemptFinished(srcFile, compileResult.getExitCode());
 
         if (doesntContainMainMethodDeclaration(srcFile)) {
+            logRunAttemptSkipped(srcFile);
             return CompileAndRunSnapshot.compiledWithoutMain();
         }
 
+        logRunAttemptStarted(srcFile, compileOutputDirectory);
         try {
             JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compileOutputDirectory);
+            logRunAttemptFinished(srcFile, runResult.getExitCode());
             return CompileAndRunSnapshot.compiledWithMain(runResult.getExitCode());
         } catch (IOException | InterruptedException exception) {
+            logRunAttemptFailed(srcFile, exception);
             return CompileAndRunSnapshot.compiledWithMainExecutionFailed();
         }
     }
@@ -143,6 +151,39 @@ class SrcProcessorRegressionTest
         assertThat(afterSnapshot.getMainExitCode())
                 .as("Expected processed source main method exit code to match original source: %s", srcFile)
                 .isEqualTo(beforeSnapshot.getMainExitCode());
+    }
+
+    private static void logCompileAttemptStarted(Path srcFile, Path compileOutputDirectory) {
+        System.out.printf(
+                "E2E compile attempt started: srcFile=%s, outputDir=%s%n", srcFile, compileOutputDirectory);
+    }
+
+    private static void logCompileAttemptFinished(Path srcFile, int exitCode) {
+        System.out.printf("E2E compile attempt finished: srcFile=%s, exitCode=%d%n", srcFile, exitCode);
+    }
+
+    private static void logCompileAttemptFailed(Path srcFile, Exception exception) {
+        System.out.printf(
+                "E2E compile attempt failed with exception: srcFile=%s, message=%s%n",
+                srcFile, exception.getMessage());
+    }
+
+    private static void logRunAttemptSkipped(Path srcFile) {
+        System.out.printf("E2E run attempt skipped (main method not found): srcFile=%s%n", srcFile);
+    }
+
+    private static void logRunAttemptStarted(Path srcFile, Path compileOutputDirectory) {
+        System.out.printf("E2E run attempt started: srcFile=%s, outputDir=%s%n", srcFile, compileOutputDirectory);
+    }
+
+    private static void logRunAttemptFinished(Path srcFile, int exitCode) {
+        System.out.printf("E2E run attempt finished: srcFile=%s, exitCode=%d%n", srcFile, exitCode);
+    }
+
+    private static void logRunAttemptFailed(Path srcFile, Exception exception) {
+        System.out.printf(
+                "E2E run attempt failed with exception: srcFile=%s, message=%s%n",
+                srcFile, exception.getMessage());
     }
 
     @Value
