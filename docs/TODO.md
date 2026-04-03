@@ -684,7 +684,7 @@ Introduce a normalized logging settings model and expose it consistently across 
 
 #### Status
 - [ ] Not implemented (captured as a future performance-focused feature)
-- [ ] Current behavior: processing scopes are filesystem/path driven, not VCS-diff driven
+- [ ] Current behavior: processing scopes are filesystem/path-driven, not VCS-diff-driven
 
 #### Problem statement
 For large repositories, reprocessing the full source tree on every run is expensive.
