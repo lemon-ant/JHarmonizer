@@ -40,7 +40,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     }
 
     /**
-     * Resolves the dependent member initialization AST that should be scanned for order-dependent field references.
+     * Resolves the dependent member's initialization AST that should be scanned for order-dependent field references.
      *
      * <p>Examples include a field or enum-value default expression and an initializer-block body.
      * If the member has no initialization AST or is not supported, implementations must return
