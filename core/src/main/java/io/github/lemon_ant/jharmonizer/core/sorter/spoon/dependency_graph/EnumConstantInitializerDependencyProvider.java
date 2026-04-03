@@ -16,13 +16,13 @@ import spoon.reflect.declaration.CtTypeMember;
 final class EnumConstantInitializerDependencyProvider extends AbstractReferencedFieldsDeclarationDependencyProvider {
 
     /**
-     * Resolves the dependent ast root.
+     * Resolves the enum-value initialization AST that should be scanned for field references.
      * @param dependentMember the dependent member
-     * @return the dependent ast root
+     * @return the enum-value initializer expression when the member is an enum value
      */
     @NonNull
     @Override
-    protected Optional<CtElement> resolveDependentAstRoot(@NonNull CtTypeMember dependentMember) {
+    protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
         if (!(dependentMember instanceof CtEnumValue<?> dependentEnumValue)) {
             return Optional.empty();
         }
