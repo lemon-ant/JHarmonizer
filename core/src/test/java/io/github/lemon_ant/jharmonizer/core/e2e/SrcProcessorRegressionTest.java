@@ -12,12 +12,14 @@ import java.nio.file.Path;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SrcProcessorRegressionTest
         extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorRegressionTest.CompileAndRunSnapshot> {
@@ -154,36 +156,31 @@ class SrcProcessorRegressionTest
     }
 
     private static void logCompileAttemptStarted(Path srcFile, Path compileOutputDirectory) {
-        System.out.printf(
-                "E2E compile attempt started: srcFile=%s, outputDir=%s%n", srcFile, compileOutputDirectory);
+        log.info("E2E compile attempt started: srcFile={}, outputDir={}", srcFile, compileOutputDirectory);
     }
 
     private static void logCompileAttemptFinished(Path srcFile, int exitCode) {
-        System.out.printf("E2E compile attempt finished: srcFile=%s, exitCode=%d%n", srcFile, exitCode);
+        log.info("E2E compile attempt finished: srcFile={}, exitCode={}", srcFile, exitCode);
     }
 
     private static void logCompileAttemptFailed(Path srcFile, Exception exception) {
-        System.out.printf(
-                "E2E compile attempt failed with exception: srcFile=%s, message=%s%n",
-                srcFile, exception.getMessage());
+        log.warn("E2E compile attempt failed with exception: srcFile={}", srcFile, exception);
     }
 
     private static void logRunAttemptSkipped(Path srcFile) {
-        System.out.printf("E2E run attempt skipped (main method not found): srcFile=%s%n", srcFile);
+        log.info("E2E run attempt skipped (main method not found): srcFile={}", srcFile);
     }
 
     private static void logRunAttemptStarted(Path srcFile, Path compileOutputDirectory) {
-        System.out.printf("E2E run attempt started: srcFile=%s, outputDir=%s%n", srcFile, compileOutputDirectory);
+        log.info("E2E run attempt started: srcFile={}, outputDir={}", srcFile, compileOutputDirectory);
     }
 
     private static void logRunAttemptFinished(Path srcFile, int exitCode) {
-        System.out.printf("E2E run attempt finished: srcFile=%s, exitCode=%d%n", srcFile, exitCode);
+        log.info("E2E run attempt finished: srcFile={}, exitCode={}", srcFile, exitCode);
     }
 
     private static void logRunAttemptFailed(Path srcFile, Exception exception) {
-        System.out.printf(
-                "E2E run attempt failed with exception: srcFile=%s, message=%s%n",
-                srcFile, exception.getMessage());
+        log.warn("E2E run attempt failed with exception: srcFile={}", srcFile, exception);
     }
 
     @Value
