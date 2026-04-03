@@ -12,12 +12,14 @@ import java.nio.file.Path;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SrcProcessorRegressionTest
         extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorRegressionTest.CompileAndRunSnapshot> {
@@ -99,24 +101,32 @@ class SrcProcessorRegressionTest
 
     @NonNull
     private static CompileAndRunSnapshot captureCompileAndRunSnapshot(Path srcFile, Path compileOutputDirectory) {
+        log.info("E2E compile attempt started: srcFile={}, outputDir={}", srcFile, compileOutputDirectory);
         JavaCompileTestUtils.CompileResult compileResult;
         try {
             compileResult = compileJavaSrcWithRelease21(srcFile, compileOutputDirectory);
         } catch (IOException | InterruptedException exception) {
+            log.warn("E2E compile attempt failed with exception: srcFile={}", srcFile, exception);
             return CompileAndRunSnapshot.compileFailed();
         }
         if (compileResult.getExitCode() != 0) {
+            log.info("E2E compile attempt finished: srcFile={}, exitCode={}", srcFile, compileResult.getExitCode());
             return CompileAndRunSnapshot.compileFailed();
         }
+        log.info("E2E compile attempt finished: srcFile={}, exitCode={}", srcFile, compileResult.getExitCode());
 
         if (doesntContainMainMethodDeclaration(srcFile)) {
+            log.info("E2E run attempt skipped (main method not found): srcFile={}", srcFile);
             return CompileAndRunSnapshot.compiledWithoutMain();
         }
 
+        log.info("E2E run attempt started: srcFile={}, outputDir={}", srcFile, compileOutputDirectory);
         try {
             JavaRunMainTestUtils.RunResult runResult = runJavaMainMethod(srcFile, compileOutputDirectory);
+            log.info("E2E run attempt finished: srcFile={}, exitCode={}", srcFile, runResult.getExitCode());
             return CompileAndRunSnapshot.compiledWithMain(runResult.getExitCode());
         } catch (IOException | InterruptedException exception) {
+            log.warn("E2E run attempt failed with exception: srcFile={}", srcFile, exception);
             return CompileAndRunSnapshot.compiledWithMainExecutionFailed();
         }
     }
