@@ -240,8 +240,9 @@ class GroupMembersOrderer {
             dependentSortablesByProvider.put(sortableTypeMember, new HashSet<>());
         });
 
-        sortableTypeMembers.forEach(providerSortable -> providerSortable.getOrderingDependentsInGroup().forEach(
-                dependentMember -> registerDependentSortable(
+        sortableTypeMembers.forEach(providerSortable -> providerSortable
+                .getOrderingDependentsInGroup()
+                .forEach(dependentMember -> registerDependentSortable(
                         providerSortable,
                         dependentMember,
                         sortableTypeMemberByMember,
@@ -260,7 +261,8 @@ class GroupMembersOrderer {
             orderedSortableTypeMembers.add(nextSortableTypeMember);
 
             dependentSortablesByProvider.get(nextSortableTypeMember).forEach(dependentSortable -> {
-                int remainingProvidersCount = remainingProvidersCountByMember.merge(dependentSortable, -1, Integer::sum);
+                int remainingProvidersCount =
+                        remainingProvidersCountByMember.merge(dependentSortable, -1, Integer::sum);
                 if (remainingProvidersCount == 0) {
                     eligibleMembersQueue.add(dependentSortable);
                 }
@@ -268,8 +270,8 @@ class GroupMembersOrderer {
         }
 
         if (orderedSortableTypeMembers.size() != sortableTypeMembers.size()) {
-            throw new IllegalStateException(composeUnschedulableMembersMessage(
-                    sortableTypeMembers, remainingProvidersCountByMember));
+            throw new IllegalStateException(
+                    composeUnschedulableMembersMessage(sortableTypeMembers, remainingProvidersCountByMember));
         }
 
         return orderedSortableTypeMembers;
