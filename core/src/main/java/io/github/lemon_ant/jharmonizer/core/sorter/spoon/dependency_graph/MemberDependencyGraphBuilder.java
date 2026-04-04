@@ -40,7 +40,7 @@ public class MemberDependencyGraphBuilder {
         // typeMember2NaturalMemberGroup is expected to contain only explicit source members.
         typeMember2NaturalMemberGroup.keySet().stream()
                 .sorted(Comparator.comparingInt(MemberDependencyGraphBuilder::extractSourceStart)
-                        .thenComparing(MemberDependencyGraphBuilder::deriveStableSortKey))
+                        .thenComparing(MemberDependencyGraphBuilder::extractTiebreakerKey))
                 .forEach(dependentMember -> {
                     CompiledMemberGroup dependentNaturalGroup =
                             resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
@@ -60,6 +60,7 @@ public class MemberDependencyGraphBuilder {
     }
 
     private static int extractSourceStart(CtTypeMember typeMember) {
+        // Members without a valid source position are still sortable; place them after real source members.
         if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
             return Integer.MAX_VALUE;
         }
@@ -67,7 +68,8 @@ public class MemberDependencyGraphBuilder {
     }
 
     @NonNull
-    private static String deriveStableSortKey(CtTypeMember typeMember) {
+    private static String extractTiebreakerKey(CtTypeMember typeMember) {
+        // Short representation provides a deterministic secondary order when members share the same source start.
         return String.valueOf(typeMember.getShortRepresentation());
     }
 
