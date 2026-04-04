@@ -7,9 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,16 +62,8 @@ class SpoonMemberDescriptorFactory {
     @NonNull
     Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
         return streamExplicitSrcTypeMembers(type)
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toMap(
-                                Function.identity(),
-                                SpoonMemberDescriptorFactory::describeMember,
-                                (existingDescriptor, newDescriptor) -> {
-                                    throw new IllegalStateException(
-                                            "Unexpected duplicate CtTypeMember while describing members.");
-                                },
-                                LinkedHashMap::new),
-                        Collections::unmodifiableMap));
+                .collect(Collectors.toUnmodifiableMap(
+                        Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
 
     /**

@@ -1,12 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static java.util.stream.Collectors.toUnmodifiableMap;
+
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
@@ -31,16 +30,8 @@ class NaturalMemberGroupResolver {
             @NonNull Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> typeMember2Descriptor) {
 
         return typeMember2Descriptor.entrySet().stream()
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                entry -> resolveSingleMemberGroup(rootMemberGroup, entry.getValue()),
-                                (existingGroup, newGroup) -> {
-                                    throw new IllegalStateException(
-                                            "Unexpected duplicate CtTypeMember while resolving natural groups.");
-                                },
-                                LinkedHashMap::new),
-                        Collections::unmodifiableMap));
+                .collect(toUnmodifiableMap(
+                        Map.Entry::getKey, entry -> resolveSingleMemberGroup(rootMemberGroup, entry.getValue())));
     }
 
     @NonNull

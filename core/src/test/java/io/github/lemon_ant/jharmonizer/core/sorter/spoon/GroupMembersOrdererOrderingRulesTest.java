@@ -454,7 +454,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_uriDependencyChainAlpha_produceStableOrder() {
+    void orderMembersInsideGroups_uriDependencyChainShuffled_chooseEligibleMembersByComparator() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "alpha-uri-chain", false, List.of(OrderingRule.ALPHA));
@@ -471,11 +471,11 @@ class GroupMembersOrdererOrderingRulesTest {
         MemberGroupBlock inputBlock = new MemberGroupBlock(
                 compiledMemberGroup,
                 List.of(
-                        httpLocalhostUriFieldMember,
-                        parameterNameFieldMember,
-                        resourcesPathSegmentFieldMember,
+                        httpLocalhostQueryUriFieldMember,
                         httpLocalhostResourcesUriFieldMember,
-                        httpLocalhostQueryUriFieldMember));
+                        resourcesPathSegmentFieldMember,
+                        parameterNameFieldMember,
+                        httpLocalhostUriFieldMember));
         MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
                 httpLocalhostUriFieldMember, compiledMemberGroup,
                 parameterNameFieldMember, compiledMemberGroup,

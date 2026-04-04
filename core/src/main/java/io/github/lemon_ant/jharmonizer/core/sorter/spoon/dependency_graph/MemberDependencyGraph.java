@@ -5,8 +5,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -76,8 +75,8 @@ public final class MemberDependencyGraph {
     private static final Set<MemberDependencyEdgeKind> ALL_EDGE_KINDS = EnumSet.allOf(MemberDependencyEdgeKind.class);
     private static final int ONE = 1;
 
-    private final Map<CtTypeMember, Set<MemberDependencyArc>> outgoingEdgesByProvider = new LinkedHashMap<>();
-    private final Map<CtTypeMember, Set<MemberDependencyArc>> incomingEdgesByDependent = new LinkedHashMap<>();
+    private final Map<CtTypeMember, Set<MemberDependencyArc>> outgoingEdgesByProvider = new HashMap<>();
+    private final Map<CtTypeMember, Set<MemberDependencyArc>> incomingEdgesByDependent = new HashMap<>();
 
     private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveDependentsCacheByProvider =
             new HashMap<>();
@@ -89,7 +88,7 @@ public final class MemberDependencyGraph {
             CtTypeMember startMember,
             Set<MemberDependencyEdgeKind> allowedEdgeKinds,
             Map<CtTypeMember, Set<MemberDependencyArc>> adjacency) {
-        Set<CtTypeMember> visitedMembers = new LinkedHashSet<>();
+        Set<CtTypeMember> visitedMembers = new HashSet<>();
         Deque<CtTypeMember> processingQueue = new ArrayDeque<>();
 
         processingQueue.add(startMember);
@@ -144,10 +143,7 @@ public final class MemberDependencyGraph {
             }
         }
 
-        return dependencyEdgeStream
-                .map(MemberDependencyArc::getAdjacentMember)
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toCollection(LinkedHashSet::new), Collections::unmodifiableSet));
+        return dependencyEdgeStream.map(MemberDependencyArc::getAdjacentMember).collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -161,10 +157,10 @@ public final class MemberDependencyGraph {
             @NonNull CtTypeMember dependentMember,
             @NonNull MemberDependencyEdgeKind edgeKind) {
         outgoingEdgesByProvider
-                .computeIfAbsent(providerMember, ignored -> new LinkedHashSet<>())
+                .computeIfAbsent(providerMember, ignored -> new HashSet<>())
                 .add(new MemberDependencyArc(dependentMember, edgeKind));
         incomingEdgesByDependent
-                .computeIfAbsent(dependentMember, ignored -> new LinkedHashSet<>())
+                .computeIfAbsent(dependentMember, ignored -> new HashSet<>())
                 .add(new MemberDependencyArc(providerMember, edgeKind));
 
         invalidateTransitiveCaches();
