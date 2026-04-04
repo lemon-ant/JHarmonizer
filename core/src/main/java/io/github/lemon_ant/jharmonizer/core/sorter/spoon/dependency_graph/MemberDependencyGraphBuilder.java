@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,22 +38,37 @@ public class MemberDependencyGraphBuilder {
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
 
         // typeMember2NaturalMemberGroup is expected to contain only explicit source members.
-        typeMember2NaturalMemberGroup.keySet().forEach(dependentMember -> {
-            CompiledMemberGroup dependentNaturalGroup =
-                    resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
+        typeMember2NaturalMemberGroup.keySet().stream()
+                .sorted(Comparator.comparingInt(MemberDependencyGraphBuilder::extractSourceStart)
+                        .thenComparing(MemberDependencyGraphBuilder::deriveStableMemberKey))
+                .forEach(dependentMember -> {
+                    CompiledMemberGroup dependentNaturalGroup =
+                            resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
-            boolean keepAccessorsTogether = dependentNaturalGroup.isKeepAccessorsTogether();
+                    boolean keepAccessorsTogether = dependentNaturalGroup.isKeepAccessorsTogether();
 
-            memberDependencyProviders.stream()
-                    .flatMap(memberDependencyProvider ->
-                            memberDependencyProvider
-                                    .findDirectProviderEdges(dependentMember, keepAccessorsTogether)
-                                    .stream())
-                    .forEach(providerEdge -> memberDependencyGraph.addEdge(
-                            providerEdge.getAdjacentMember(), dependentMember, providerEdge.getEdgeKind()));
-        });
+                    memberDependencyProviders.stream()
+                            .flatMap(memberDependencyProvider ->
+                                    memberDependencyProvider
+                                            .findDirectProviderEdges(dependentMember, keepAccessorsTogether)
+                                            .stream())
+                            .forEach(providerEdge -> memberDependencyGraph.addEdge(
+                                    providerEdge.getAdjacentMember(), dependentMember, providerEdge.getEdgeKind()));
+                });
 
         return memberDependencyGraph;
+    }
+
+    private static int extractSourceStart(CtTypeMember typeMember) {
+        if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
+            return Integer.MAX_VALUE;
+        }
+        return typeMember.getPosition().getSourceStart();
+    }
+
+    @NonNull
+    private static String deriveStableMemberKey(CtTypeMember typeMember) {
+        return String.valueOf(typeMember.getShortRepresentation());
     }
 
     @NonNull

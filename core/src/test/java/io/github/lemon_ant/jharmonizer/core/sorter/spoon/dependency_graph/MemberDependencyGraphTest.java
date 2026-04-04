@@ -175,4 +175,26 @@ class MemberDependencyGraphTest {
         assertThatThrownBy(() -> transitiveDependents.add(ALPHA_FIELD_MEMBER))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
+
+    @Test
+    void findTransitiveDependents_multipleBranchesAddedInEncounterOrder_preserveEncounterOrder() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
+        memberDependencyGraph.addEdge(
+                ALPHA_FIELD_MEMBER, DELTA_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(
+                BRAVO_FIELD_MEMBER, ECHO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        memberDependencyGraph.addEdge(
+                ALPHA_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+
+        // When
+        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(
+                ALPHA_FIELD_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(transitiveDependents)
+                .containsExactly(DELTA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, CHARLIE_FIELD_MEMBER, ECHO_FIELD_MEMBER);
+    }
 }

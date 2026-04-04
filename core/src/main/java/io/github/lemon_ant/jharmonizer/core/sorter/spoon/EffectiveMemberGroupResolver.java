@@ -2,6 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,14 +37,18 @@ class EffectiveMemberGroupResolver {
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> typeMember2NaturalMemberGroup,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
         return typeMember2NaturalMemberGroup.keySet().stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        providerMember -> providerMember,
-                        providerMember -> resolveEffectiveGroupForProvider(
-                                providerMember, typeMember2NaturalMemberGroup, memberDependencyGraph),
-                        (existingGroup, newGroup) -> {
-                            throw new IllegalStateException("Unexpected duplicate CtTypeMember key while building "
-                                    + "effective group mapping. This indicates a bug in the collector setup.");
-                        }));
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(
+                                providerMember -> providerMember,
+                                providerMember -> resolveEffectiveGroupForProvider(
+                                        providerMember, typeMember2NaturalMemberGroup, memberDependencyGraph),
+                                (existingGroup, newGroup) -> {
+                                    throw new IllegalStateException(
+                                            "Unexpected duplicate CtTypeMember key while building "
+                                                    + "effective group mapping. This indicates a bug in the collector setup.");
+                                },
+                                LinkedHashMap::new),
+                        Collections::unmodifiableMap));
     }
 
     @NonNull
