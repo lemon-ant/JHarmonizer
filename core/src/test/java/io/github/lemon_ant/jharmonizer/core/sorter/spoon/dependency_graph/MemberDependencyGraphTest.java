@@ -177,7 +177,7 @@ class MemberDependencyGraphTest {
     }
 
     @Test
-    void findTransitiveDependents_multipleBranchesAddedInEncounterOrder_preserveEncounterOrder() {
+    void findTransitiveDependents_multipleBranches_preserveEncounterOrder() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
         memberDependencyGraph.addEdge(

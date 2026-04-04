@@ -40,7 +40,7 @@ public class MemberDependencyGraphBuilder {
         // typeMember2NaturalMemberGroup is expected to contain only explicit source members.
         typeMember2NaturalMemberGroup.keySet().stream()
                 .sorted(Comparator.comparingInt(MemberDependencyGraphBuilder::extractSourceStart)
-                        .thenComparing(MemberDependencyGraphBuilder::deriveStableMemberKey))
+                        .thenComparing(MemberDependencyGraphBuilder::deriveStableSortKey))
                 .forEach(dependentMember -> {
                     CompiledMemberGroup dependentNaturalGroup =
                             resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
@@ -67,7 +67,7 @@ public class MemberDependencyGraphBuilder {
     }
 
     @NonNull
-    private static String deriveStableMemberKey(CtTypeMember typeMember) {
+    private static String deriveStableSortKey(CtTypeMember typeMember) {
         return String.valueOf(typeMember.getShortRepresentation());
     }
 
