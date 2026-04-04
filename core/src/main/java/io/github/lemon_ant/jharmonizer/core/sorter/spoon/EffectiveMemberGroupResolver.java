@@ -38,11 +38,7 @@ class EffectiveMemberGroupResolver {
                 .collect(Collectors.toUnmodifiableMap(
                         providerMember -> providerMember,
                         providerMember -> resolveEffectiveGroupForProvider(
-                                providerMember, typeMember2NaturalMemberGroup, memberDependencyGraph),
-                        (existingGroup, newGroup) -> {
-                            throw new IllegalStateException("Unexpected duplicate CtTypeMember key while building "
-                                    + "effective group mapping. This indicates a bug in the collector setup.");
-                        }));
+                                providerMember, typeMember2NaturalMemberGroup, memberDependencyGraph)));
     }
 
     @NonNull

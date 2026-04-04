@@ -306,7 +306,8 @@ class GroupMembersOrderer {
 
         return "Detected declaration dependencies that cannot be scheduled deterministically within the member group. "
                 + "The pairwise comparator is intentionally not used for this choice because partial-order constraints "
-                + "can make such a comparator non-transitive. Unresolved members: " + unresolvedMembers;
+                + "can make such a comparator non-transitive. Check for circular dependencies or unexpected dependency "
+                + "relationships between these members: " + unresolvedMembers;
     }
 
     @NonNull
