@@ -87,7 +87,7 @@ class ConstrainedSuperNodeSorter {
         SortableTypeMember[] members = sortableTypeMembers.toArray(SortableTypeMember[]::new);
 
         // Step 1: Build index mapping from CtTypeMember → array position.
-        Map<CtTypeMember, Integer> ctMemberToIndex = buildCtMemberToIndexMap(members);
+        Map<CtTypeMember, Integer> typeMemberToIndex = buildTypeMemberToIndexMap(members);
 
         // Step 2: Group members into super-nodes by shared representative instance.
         SuperNodeLayout layout = buildSuperNodeLayout(members);
@@ -100,7 +100,7 @@ class ConstrainedSuperNodeSorter {
         }
 
         // Step 4: Sort members within each super-node (insertion sort + fallback topo-sort).
-        sortIntraSuperNodeMembers(layout, members, orderingKeyComparator, ctMemberToIndex);
+        sortIntraSuperNodeMembers(layout, members, orderingKeyComparator, typeMemberToIndex);
 
         // Step 5: Compute representative ordering keys for inter-super-node comparison.
         SortableTypeMember.OrderingKey[] snRepresentativeKey =
@@ -108,7 +108,7 @@ class ConstrainedSuperNodeSorter {
 
         // Step 6: Build the super-node dependency graph.
         SuperNodeGraph graph = buildSuperNodeDependencyGraph(
-                members, ctMemberToIndex, layout.memberToSuperNode, layout.superNodeCount);
+                members, typeMemberToIndex, layout.memberToSuperNode, layout.superNodeCount);
 
         // Step 7: Split super-nodes into free (no edges) and constrained partitions.
         FreeConstrainedPartition partition =
@@ -138,12 +138,12 @@ class ConstrainedSuperNodeSorter {
      */
     @SuppressWarnings("PMD.UseConcurrentHashMap")
     @NonNull
-    private static Map<CtTypeMember, Integer> buildCtMemberToIndexMap(SortableTypeMember[] members) {
-        Map<CtTypeMember, Integer> ctMemberToIndex = new HashMap<>(members.length * 2);
+    private static Map<CtTypeMember, Integer> buildTypeMemberToIndexMap(SortableTypeMember[] members) {
+        Map<CtTypeMember, Integer> typeMemberToIndex = new HashMap<>(members.length * 2);
         for (int memberIdx = 0; memberIdx < members.length; memberIdx++) {
-            ctMemberToIndex.put(members[memberIdx].getTypeMember(), memberIdx);
+            typeMemberToIndex.put(members[memberIdx].getTypeMember(), memberIdx);
         }
-        return ctMemberToIndex;
+        return typeMemberToIndex;
     }
 
     // ------------------------------------------------------------------ //
@@ -239,13 +239,13 @@ class ConstrainedSuperNodeSorter {
      * @param layout super-node layout
      * @param members the member array
      * @param comparator ordering key comparator
-     * @param ctMemberToIndex index mapping
+     * @param typeMemberToIndex index mapping
      */
     private static void sortIntraSuperNodeMembers(
             SuperNodeLayout layout,
             SortableTypeMember[] members,
             Comparator<SortableTypeMember.OrderingKey> comparator,
-            Map<CtTypeMember, Integer> ctMemberToIndex) {
+            Map<CtTypeMember, Integer> typeMemberToIndex) {
         for (int superNodeIdx = 0; superNodeIdx < layout.superNodeCount; superNodeIdx++) {
             if (layout.snLength[superNodeIdx] > ONE) {
                 sortSingleSuperNodeMembers(
@@ -254,7 +254,7 @@ class ConstrainedSuperNodeSorter {
                         layout.snLength[superNodeIdx],
                         members,
                         comparator,
-                        ctMemberToIndex,
+                        typeMemberToIndex,
                         layout.memberToSuperNode);
             }
         }
@@ -270,12 +270,12 @@ class ConstrainedSuperNodeSorter {
             int length,
             SortableTypeMember[] members,
             Comparator<SortableTypeMember.OrderingKey> comparator,
-            Map<CtTypeMember, Integer> ctMemberToIndex,
+            Map<CtTypeMember, Integer> typeMemberToIndex,
             int[] memberToSuperNode) {
         insertionSortMemberIndices(snMembers, offset, length, members, comparator);
 
-        if (hasInternalDependencyViolation(snMembers, offset, length, members, ctMemberToIndex, memberToSuperNode)) {
-            topoSortMemberIndices(snMembers, offset, length, members, comparator, ctMemberToIndex, memberToSuperNode);
+        if (hasInternalDependencyViolation(snMembers, offset, length, members, typeMemberToIndex, memberToSuperNode)) {
+            topoSortMemberIndices(snMembers, offset, length, members, comparator, typeMemberToIndex, memberToSuperNode);
         }
     }
 
@@ -313,7 +313,7 @@ class ConstrainedSuperNodeSorter {
      * and increments the dependent super-node's in-degree.</p>
      *
      * @param members the member array
-     * @param ctMemberToIndex index mapping
+     * @param typeMemberToIndex index mapping
      * @param memberToSuperNode per-member super-node assignment
      * @param superNodeCount total number of super-nodes
      * @return the super-node graph (adjacency lists + in-degrees + outgoing flags)
@@ -322,7 +322,7 @@ class ConstrainedSuperNodeSorter {
     @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.AvoidInstantiatingObjectsInLoops"})
     private static SuperNodeGraph buildSuperNodeDependencyGraph(
             SortableTypeMember[] members,
-            Map<CtTypeMember, Integer> ctMemberToIndex,
+            Map<CtTypeMember, Integer> typeMemberToIndex,
             int[] memberToSuperNode,
             int superNodeCount) {
         IntBag[] snDependents = new IntBag[superNodeCount];
@@ -337,7 +337,7 @@ class ConstrainedSuperNodeSorter {
 
             int providerSuperNode = memberToSuperNode[memberIdx];
             for (CtTypeMember dependentCtMember : dependentsInGroup) {
-                Integer dependentMemberIdx = ctMemberToIndex.get(dependentCtMember);
+                Integer dependentMemberIdx = typeMemberToIndex.get(dependentCtMember);
                 if (dependentMemberIdx == null) {
                     continue;
                 }
@@ -576,14 +576,14 @@ class ConstrainedSuperNodeSorter {
             int offset,
             int length,
             SortableTypeMember[] members,
-            Map<CtTypeMember, Integer> ctMemberToIndex,
+            Map<CtTypeMember, Integer> typeMemberToIndex,
             int[] memberToSuperNode) {
         int superNodeId = memberToSuperNode[snMembers[offset]];
 
         for (int i = 0; i < length; i++) {
             int memberIdx = snMembers[offset + i];
             for (CtTypeMember dependent : members[memberIdx].getOrderingDependentsInGroup()) {
-                Integer depIdx = ctMemberToIndex.get(dependent);
+                Integer depIdx = typeMemberToIndex.get(dependent);
                 if (depIdx == null || memberToSuperNode[depIdx] != superNodeId) {
                     continue;
                 }
@@ -618,7 +618,7 @@ class ConstrainedSuperNodeSorter {
             int length,
             SortableTypeMember[] members,
             Comparator<SortableTypeMember.OrderingKey> comparator,
-            Map<CtTypeMember, Integer> ctMemberToIndex,
+            Map<CtTypeMember, Integer> typeMemberToIndex,
             int[] memberToSuperNode) {
         int superNodeId = memberToSuperNode[snMembers[offset]];
 
@@ -633,7 +633,7 @@ class ConstrainedSuperNodeSorter {
         for (int localIdx = 0; localIdx < length; localIdx++) {
             int memberIdx = snMembers[offset + localIdx];
             for (CtTypeMember dependent : members[memberIdx].getOrderingDependentsInGroup()) {
-                Integer depGlobalIdx = ctMemberToIndex.get(dependent);
+                Integer depGlobalIdx = typeMemberToIndex.get(dependent);
                 if (depGlobalIdx == null || memberToSuperNode[depGlobalIdx] != superNodeId) {
                     continue;
                 }
@@ -673,7 +673,7 @@ class ConstrainedSuperNodeSorter {
             // Decrement in-degrees for dependents of the just-processed member.
             int memberIdx = snMembers[offset + bestLocal];
             for (CtTypeMember dependent : members[memberIdx].getOrderingDependentsInGroup()) {
-                Integer depGlobalIdx = ctMemberToIndex.get(dependent);
+                Integer depGlobalIdx = typeMemberToIndex.get(dependent);
                 if (depGlobalIdx == null || memberToSuperNode[depGlobalIdx] != superNodeId) {
                     continue;
                 }
