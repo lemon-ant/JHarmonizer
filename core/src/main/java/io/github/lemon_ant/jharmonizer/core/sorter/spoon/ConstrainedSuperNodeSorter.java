@@ -694,7 +694,7 @@ class ConstrainedSuperNodeSorter {
     /**
      * Merge-sorts free super-node indices by their representative ordering key.
      */
-    static void mergeSortByRepresentativeKey(
+    private static void mergeSortByRepresentativeKey(
             int[] indices,
             int from,
             int to,
@@ -757,7 +757,7 @@ class ConstrainedSuperNodeSorter {
      * @return the diagnostic message
      */
     @NonNull
-    static String composeUnschedulableSuperNodesMessage(
+    private static String composeUnschedulableSuperNodesMessage(
             int[] snInDegree, boolean[] isFree, SuperNodeLayout layout, SortableTypeMember[] members) {
         List<String> unresolvedMemberNames = new ArrayList<>();
         for (int superNodeIdx = 0; superNodeIdx < snInDegree.length; superNodeIdx++) {
@@ -784,7 +784,7 @@ class ConstrainedSuperNodeSorter {
     // ------------------------------------------------------------------ //
 
     /** Flat-array layout of super-node membership data. */
-    static final class SuperNodeLayout {
+    private static final class SuperNodeLayout {
 
         final Map<SortableTypeMember, Integer> representativeToSuperNode;
         final int[] memberToSuperNode;
@@ -810,7 +810,7 @@ class ConstrainedSuperNodeSorter {
     }
 
     /** Directed dependency graph between super-nodes. */
-    static final class SuperNodeGraph {
+    private static final class SuperNodeGraph {
 
         final IntBag[] snDependents;
         final int[] snInDegree;
@@ -824,7 +824,7 @@ class ConstrainedSuperNodeSorter {
     }
 
     /** Result of splitting super-nodes into free and constrained partitions. */
-    static final class FreeConstrainedPartition {
+    private static final class FreeConstrainedPartition {
 
         final int[] freeSuperNodes;
         final int freeCount;
@@ -845,7 +845,7 @@ class ConstrainedSuperNodeSorter {
 
     /** Boxing-free min-heap for super-node indices, ordered by representative ordering key. */
     @SuppressWarnings("PMD.ArrayIsStoredDirectly")
-    static final class IntHeap {
+    private static final class IntHeap {
 
         private final int[] data;
         private final SortableTypeMember.OrderingKey[] keys; // intentional: keys array is owned by the caller
@@ -920,7 +920,7 @@ class ConstrainedSuperNodeSorter {
     // ------------------------------------------------------------------ //
 
     /** Growable int list with linear-scan contains, used for super-node adjacency dedup. */
-    static final class IntBag {
+    private static final class IntBag {
 
         private int[] data;
         private int count;
