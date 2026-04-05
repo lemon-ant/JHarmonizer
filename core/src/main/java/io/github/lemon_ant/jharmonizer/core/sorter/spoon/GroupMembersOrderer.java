@@ -274,9 +274,9 @@ class GroupMembersOrderer {
         }
 
         // --- Build super-nodes by grouping members with the same representative instance ---
-        // IdentityHashMap is required here: members must be grouped by representative object identity,
-        // not by value equality, because the representative contract is based on instance sharing.
         @SuppressWarnings("PMD.UseConcurrentHashMap")
+        // IdentityHashMap is required: grouping uses representative object identity (instance sharing),
+        // not value equality.
         Map<SortableTypeMember, Integer> representativeToSuperNode = new IdentityHashMap<>();
         int[] memberToSuperNode = new int[memberCount];
         int superNodeCount = 0;
@@ -743,11 +743,13 @@ class GroupMembersOrderer {
     }
 
     /** Boxing-free min-heap for super-node indices, ordered by representative ordering key. */
-    @SuppressWarnings("PMD.ArrayIsStoredDirectly")
     private static final class IntHeap {
 
         private final int[] data;
+
+        @SuppressWarnings("PMD.ArrayIsStoredDirectly") // intentional: keys array is owned by the caller
         private final SortableTypeMember.OrderingKey[] keys;
+
         private final Comparator<SortableTypeMember.OrderingKey> comparator;
         private int size;
 
