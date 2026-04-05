@@ -111,3 +111,38 @@ MAVEN_ARGS=--settings\ .mvn/settings-codex.xml
 ```
 
 So local environments keep using `.mvn/settings.xml`, while Codex overrides settings through `MAVEN_ARGS` only.
+
+## Sorting performance benchmark (JMH)
+
+To measure **only sorting performance** (without parsing/serialization/formatting in measured time), use the
+`benchmark-sort` Maven profile in `core`.
+
+The benchmark:
+
+- uses fixtures from `src/test/resources/test-cases/core/e2e/reorder/**/input/*.java`
+  and `src/test/resources/test-cases/core/e2e/regression/**/input/*.java`;
+- parses fixtures once during JMH setup;
+- clones AST models and runs only `SpoonSorter.sortCompilationUnitRecursively(...)` in benchmarked operations.
+
+Run with defaults (4 threads, batch size 1000, warmup 2, measure 5):
+
+```bash
+mvn -pl core -Pbenchmark-sort -Dskip-quality-gates -DskipTests test-compile exec:java
+```
+
+Run with custom parameters (example: 4 threads, batch 200, warmup 1, measure 2):
+
+```bash
+mvn -pl core -Pbenchmark-sort \
+  -Dskip-quality-gates -DskipTests \
+  -Dbenchmark.threads=4 \
+  -Dbenchmark.measurementBatchSize=200 \
+  -Dbenchmark.warmupIterations=1 \
+  -Dbenchmark.iterations=2 \
+  test-compile exec:java
+```
+
+Output:
+
+- console summary from JMH;
+- machine-readable JSON results at `core/target/sorting-benchmark.json`.
