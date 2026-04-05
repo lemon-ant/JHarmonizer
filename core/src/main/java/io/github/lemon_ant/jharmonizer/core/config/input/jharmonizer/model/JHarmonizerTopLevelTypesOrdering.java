@@ -50,6 +50,7 @@ public class JHarmonizerTopLevelTypesOrdering {
         this.orderingRules = Collections.unmodifiableList(orderingRules);
     }
 
+    @SuppressWarnings("PMD.UseEnumCollections")
     private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
         Set<JHarmonizerTypeKind> encounteredTypeKinds = new HashSet<>();
         typeGroups.stream()

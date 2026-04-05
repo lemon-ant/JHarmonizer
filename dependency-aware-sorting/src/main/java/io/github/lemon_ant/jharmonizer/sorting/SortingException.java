@@ -7,6 +7,8 @@ package io.github.lemon_ant.jharmonizer.sorting;
  */
 public class SortingException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     public SortingException(String message) {
         super(message);
     }

@@ -1,9 +1,8 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import java.util.Comparator;
 import lombok.NonNull;
 import lombok.Value;
-
-import java.util.Comparator;
 
 /**
  * A sortable container identified by an {@link OrderingKey}.
@@ -33,8 +32,11 @@ public class SortableTypeMember {
      */
     @Value
     public static class OrderingKey {
-        @NonNull String name;
-        @NonNull Numeration numeration;
+        @NonNull
+        String name;
+
+        @NonNull
+        Numeration numeration;
 
         public OrderingKey(String name, @NonNull Numeration numeration) {
             if (name == null || name.isBlank()) {
@@ -49,11 +51,12 @@ public class SortableTypeMember {
      * Default comparator: {@code STATIC} members first (by name), then {@code DYNAMIC}
      * members (by name).
      */
-    public static final Comparator<SortableTypeMember> DEFAULT_ORDER =
-            Comparator.comparing((SortableTypeMember m) -> m.getOrderingKey().getNumeration())
-                      .thenComparing(m -> m.getOrderingKey().getName());
+    public static final Comparator<SortableTypeMember> DEFAULT_ORDER = Comparator.comparing(
+                    (SortableTypeMember m) -> m.getOrderingKey().getNumeration())
+            .thenComparing(m -> m.getOrderingKey().getName());
 
-    @NonNull OrderingKey orderingKey;
+    @NonNull
+    OrderingKey orderingKey;
 
     public static SortableTypeMember staticMember(String name) {
         return new SortableTypeMember(new OrderingKey(name, Numeration.STATIC));

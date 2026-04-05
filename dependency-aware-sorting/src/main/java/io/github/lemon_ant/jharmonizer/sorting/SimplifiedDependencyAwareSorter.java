@@ -1,8 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.*;
+import lombok.experimental.UtilityClass;
 
 /**
  * A simplified, high-performance variant of {@link DependencyAwareSorter} designed for inputs where
@@ -44,6 +43,14 @@ import java.util.*;
  * <p>Time complexity: <em>O(n log n + E)</em> · Space: <em>O(n + E)</em>.</p>
  */
 @UtilityClass
+@SuppressWarnings({
+    "PMD.GodClass",
+    "PMD.TooManyMethods",
+    "PMD.CouplingBetweenObjects",
+    "PMD.CyclomaticComplexity",
+    "PMD.UseVarargs",
+    "PMD.AssignmentInOperand"
+})
 public class SimplifiedDependencyAwareSorter {
 
     // ------------------------------------------------------------------ //
@@ -73,10 +80,11 @@ public class SimplifiedDependencyAwareSorter {
      * @return a new, unmodifiable list of the same items in the computed order
      * @throws SortingException if the input is invalid or violates simplified preconditions
      */
-    public static <TSortableItem> List<TSortableItem> sort(Collection<TSortableItem> items,
-                                                 Groups<TSortableItem> groups,
-                                                 Dependencies<TSortableItem> dependencies,
-                                                 Comparator<TSortableItem> comparator) {
+    public static <TSortableItem> List<TSortableItem> sort(
+            Collection<TSortableItem> items,
+            Groups<TSortableItem> groups,
+            Dependencies<TSortableItem> dependencies,
+            Comparator<TSortableItem> comparator) {
         if (items.isEmpty()) {
             return List.of();
         }
@@ -90,15 +98,13 @@ public class SimplifiedDependencyAwareSorter {
             return Collections.unmodifiableList(itemList);
         }
 
-        SuperNodes<TSortableItem> superNodes = buildSuperNodes(
-                itemList, itemToIndex, groups, comparator);
+        SuperNodes<TSortableItem> superNodes = buildSuperNodes(itemList, itemToIndex, groups, comparator);
 
         int[] inDegree = new int[superNodes.count];
-        SortingUtils.IntBag[] adjacencyLists = buildDependencyGraph(
-                itemToIndex, superNodes, dependencies, inDegree);
+        SortingUtils.IntBag[] adjacencyLists = buildDependencyGraph(itemToIndex, superNodes, dependencies, inDegree);
 
-        List<TSortableItem> result = topologicalSortAndExpand(
-                superNodes, inDegree, adjacencyLists, itemList, comparator);
+        List<TSortableItem> result =
+                topologicalSortAndExpand(superNodes, inDegree, adjacencyLists, itemList, comparator);
         return Collections.unmodifiableList(result);
     }
 
@@ -124,8 +130,8 @@ public class SimplifiedDependencyAwareSorter {
         Arrays.fill(itemToSuperNode, SortingUtils.UNASSIGNED);
 
         int[] memberIndices = new int[itemCount];
-        int[] nodeOffset    = new int[itemCount];
-        int[] nodeLength    = new int[itemCount];
+        int[] nodeOffset = new int[itemCount];
+        int[] nodeLength = new int[itemCount];
         // Safe unchecked cast: the array is only used internally; all reads go through
         // TSortableItem-typed fields/variables, and the array is never exposed outside this class.
         // This is the standard pattern used by java.util.ArrayList and java.util.HashMap.
@@ -143,8 +149,7 @@ public class SimplifiedDependencyAwareSorter {
 
             nodeOffset[superNodeCount] = dataPosition;
             nodeLength[superNodeCount] = groupItems.size();
-            resolveGroupMembers(groupItems, itemToIndex, itemToSuperNode,
-                    superNodeCount, memberIndices, dataPosition);
+            resolveGroupMembers(groupItems, itemToIndex, itemToSuperNode, superNodeCount, memberIndices, dataPosition);
 
             insertionSortRange(memberIndices, dataPosition, groupItems.size(), items, comparator);
             nodeKeys[superNodeCount] = items.get(memberIndices[dataPosition]);
@@ -166,8 +171,8 @@ public class SimplifiedDependencyAwareSorter {
             }
         }
 
-        return new SuperNodes<>(itemToSuperNode, memberIndices, nodeOffset, nodeLength,
-                nodeKeys, superNodeCount, firstSingletonIndex);
+        return new SuperNodes<>(
+                itemToSuperNode, memberIndices, nodeOffset, nodeLength, nodeKeys, superNodeCount, firstSingletonIndex);
     }
 
     /**
@@ -202,6 +207,9 @@ public class SimplifiedDependencyAwareSorter {
      * {@link SortingUtils.IntBag#contains(int)} (linear scan on small adjacency lists)
      * instead of {@code HashSet<Long>}, avoiding Long boxing.
      */
+    // Null return is intentional: avoids allocating an empty IntBag[] when there are no edges,
+    // and callers already null-check adjacencyLists in the hot path.
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
     private static <TSortableItem> SortingUtils.IntBag[] buildDependencyGraph(
             Map<TSortableItem, Integer> itemToIndex,
             SuperNodes<TSortableItem> superNodes,
@@ -217,17 +225,14 @@ public class SimplifiedDependencyAwareSorter {
         SortingUtils.IntBag[] adjacencyLists = new SortingUtils.IntBag[superNodes.count];
 
         for (Dependencies.Dependency<TSortableItem> edge : edges) {
-            SortingUtils.ResolvedEdge<TSortableItem> resolved = SortingUtils.resolveDependencyEdge(
-                    edge, itemToIndex);
+            SortingUtils.ResolvedEdge<TSortableItem> resolved = SortingUtils.resolveDependencyEdge(edge, itemToIndex);
 
             int providerSuperNode = itemToSuperNode[resolved.getProviderIndex()];
             int dependentSuperNode = itemToSuperNode[resolved.getDependentIndex()];
 
             // Simplified constraint: grouped items cannot participate in dependencies
-            validateNotGroupedMember(providerSuperNode, firstSingletonIndex,
-                    resolved.getProvider(), "provider");
-            validateNotGroupedMember(dependentSuperNode, firstSingletonIndex,
-                    resolved.getDependent(), "dependent");
+            validateNotGroupedMember(providerSuperNode, firstSingletonIndex, resolved.getProvider(), "provider");
+            validateNotGroupedMember(dependentSuperNode, firstSingletonIndex, resolved.getDependent(), "dependent");
 
             // Deduplicate using IntBag linear scan (avoids HashSet<Long> boxing)
             addEdgeIfAbsent(adjacencyLists, providerSuperNode, dependentSuperNode, inDegree);
@@ -244,12 +249,10 @@ public class SimplifiedDependencyAwareSorter {
      * @param member              the endpoint item (for error messages)
      * @param role                either "provider" or "dependent" (for error messages)
      */
-    private static void validateNotGroupedMember(int superNodeIndex, int firstSingletonIndex,
-                                                 Object member, String role) {
+    private static void validateNotGroupedMember(
+            int superNodeIndex, int firstSingletonIndex, Object member, String role) {
         if (superNodeIndex < firstSingletonIndex) {
-            throw new SortingException(
-                    "Grouped member \"" + member
-                    + "\" cannot be a dependency " + role);
+            throw new SortingException("Grouped member \"" + member + "\" cannot be a dependency " + role);
         }
     }
 
@@ -257,8 +260,8 @@ public class SimplifiedDependencyAwareSorter {
      * Adds a directed edge from {@code fromNode} to {@code toNode} if it doesn't already exist.
      * Lazily allocates the adjacency bag for {@code fromNode}.
      */
-    private static void addEdgeIfAbsent(SortingUtils.IntBag[] adjacencyLists,
-                                        int fromNode, int toNode, int[] inDegree) {
+    private static void addEdgeIfAbsent(
+            SortingUtils.IntBag[] adjacencyLists, int fromNode, int toNode, int[] inDegree) {
         SortingUtils.IntBag bag = adjacencyLists[fromNode];
         if (bag == null) {
             bag = new SortingUtils.IntBag();
@@ -282,6 +285,7 @@ public class SimplifiedDependencyAwareSorter {
      * a boxing-free merge sort.  <b>Constrained</b> super-nodes go through the {@link IntHeap}
      * (also boxing-free).  The two sorted streams are merged during expansion.</p>
      */
+    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.NPathComplexity"})
     private static <TSortableItem> List<TSortableItem> topologicalSortAndExpand(
             SuperNodes<TSortableItem> superNodes,
             int[] inDegree,
@@ -301,8 +305,7 @@ public class SimplifiedDependencyAwareSorter {
 
         int[] freeNodes = new int[freeCount];
         int constrainedCount = superNodeCount - freeCount;
-        IntHeap<TSortableItem> constrainedQueue = new IntHeap<>(
-                Math.max(constrainedCount, 1), nodeKeys, comparator);
+        IntHeap<TSortableItem> constrainedQueue = new IntHeap<>(Math.max(constrainedCount, 1), nodeKeys, comparator);
 
         int freeWriteIndex = 0;
         for (int i = 0; i < superNodeCount; i++) {
@@ -325,8 +328,7 @@ public class SimplifiedDependencyAwareSorter {
         // Phase 1: merge free stream with constrained stream
         while (freeReadIndex < freeCount && !constrainedQueue.isEmpty()) {
             int currentNode;
-            if (comparator.compare(nodeKeys[freeNodes[freeReadIndex]],
-                    nodeKeys[constrainedQueue.peek()]) <= 0) {
+            if (comparator.compare(nodeKeys[freeNodes[freeReadIndex]], nodeKeys[constrainedQueue.peek()]) <= 0) {
                 currentNode = freeNodes[freeReadIndex++];
             } else {
                 currentNode = constrainedQueue.poll();
@@ -356,10 +358,11 @@ public class SimplifiedDependencyAwareSorter {
     }
 
     /** Appends all member items of a super-node to the result list. */
-    private static <TSortableItem> void expandNode(int nodeIndex,
-                                                   SuperNodes<TSortableItem> superNodes,
-                                                   List<TSortableItem> items,
-                                                   List<TSortableItem> result) {
+    private static <TSortableItem> void expandNode(
+            int nodeIndex,
+            SuperNodes<TSortableItem> superNodes,
+            List<TSortableItem> items,
+            List<TSortableItem> result) {
         int start = superNodes.nodeOffset[nodeIndex];
         int memberCount = superNodes.nodeLength[nodeIndex];
         for (int i = start; i < start + memberCount; i++) {
@@ -369,8 +372,10 @@ public class SimplifiedDependencyAwareSorter {
 
     /** Decrements in-degrees of neighbors and adds newly freed nodes to the heap. */
     private static <TSortableItem> void advanceNeighbors(
-            SortingUtils.IntBag[] adjacencyLists, int nodeIndex,
-            int[] inDegree, IntHeap<TSortableItem> constrainedQueue) {
+            SortingUtils.IntBag[] adjacencyLists,
+            int nodeIndex,
+            int[] inDegree,
+            IntHeap<TSortableItem> constrainedQueue) {
         if (adjacencyLists == null) return;
         SortingUtils.IntBag neighbors = adjacencyLists[nodeIndex];
         if (neighbors == null) return;
@@ -390,16 +395,14 @@ public class SimplifiedDependencyAwareSorter {
      * Insertion sort for a small range within {@code data[offset .. offset+length-1]}.
      * Used for intra-group ordering where groups are typically small.
      */
+    @SuppressWarnings("PMD.AvoidArrayLoops")
     private static <TSortableItem> void insertionSortRange(
-            int[] data, int offset, int length,
-            List<TSortableItem> items,
-            Comparator<TSortableItem> comparator) {
+            int[] data, int offset, int length, List<TSortableItem> items, Comparator<TSortableItem> comparator) {
         for (int i = 1; i < length; i++) {
             int insertedIndex = data[offset + i];
             TSortableItem insertedItem = items.get(insertedIndex);
             int j = i - 1;
-            while (j >= 0
-                    && comparator.compare(items.get(data[offset + j]), insertedItem) > 0) {
+            while (j >= 0 && comparator.compare(items.get(data[offset + j]), insertedItem) > 0) {
                 data[offset + j + 1] = data[offset + j];
                 j--;
             }
@@ -411,19 +414,22 @@ public class SimplifiedDependencyAwareSorter {
      * Sorts {@code array[0..length)} by comparing {@code keys[array[i]]} using the comparator.
      * Uses merge sort with insertion-sort base case.  No {@code Integer} boxing.
      */
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     private static <TSortableItem> void sortIndicesByKey(
-            int[] array, int length,
-            TSortableItem[] keys,
-            Comparator<TSortableItem> comparator) {
+            int[] array, int length, TSortableItem[] keys, Comparator<TSortableItem> comparator) {
         if (length <= 1) return;
         int[] workspace = new int[length];
         mergeSortByKey(array, workspace, 0, length, keys, comparator);
     }
 
+    @SuppressWarnings({
+        "PMD.AvoidArrayLoops",
+        "PMD.AvoidLiteralsInIfCondition",
+        "PMD.OneDeclarationPerLine",
+        "PMD.CognitiveComplexity"
+    })
     private static <TSortableItem> void mergeSortByKey(
-            int[] array, int[] workspace, int lo, int hi,
-            TSortableItem[] keys,
-            Comparator<TSortableItem> comparator) {
+            int[] array, int[] workspace, int lo, int hi, TSortableItem[] keys, Comparator<TSortableItem> comparator) {
         int length = hi - lo;
         if (length <= 16) {
             // Insertion sort for small ranges
@@ -489,9 +495,15 @@ public class SimplifiedDependencyAwareSorter {
         /** Index of the first singleton (non-group) super-node. */
         final int firstSingletonIndex;
 
-        SuperNodes(int[] itemToSuperNode, int[] memberIndices, int[] nodeOffset,
-                   int[] nodeLength, TSortableItem[] nodeKeys,
-                   int count, int firstSingletonIndex) {
+        @SuppressWarnings("PMD.ArrayIsStoredDirectly")
+        SuperNodes(
+                int[] itemToSuperNode,
+                int[] memberIndices,
+                int[] nodeOffset,
+                int[] nodeLength,
+                TSortableItem[] nodeKeys,
+                int count,
+                int firstSingletonIndex) {
             this.itemToSuperNode = itemToSuperNode;
             this.memberIndices = memberIndices;
             this.nodeOffset = nodeOffset;
@@ -515,8 +527,7 @@ public class SimplifiedDependencyAwareSorter {
         private final TSortableItem[] keys;
         private final Comparator<TSortableItem> comparator;
 
-        private IntHeap(int capacity, TSortableItem[] keys,
-                        Comparator<TSortableItem> comparator) {
+        private IntHeap(int capacity, TSortableItem[] keys, Comparator<TSortableItem> comparator) {
             this.heap = new int[capacity];
             this.keys = keys;
             this.comparator = comparator;
@@ -542,6 +553,7 @@ public class SimplifiedDependencyAwareSorter {
             return size == 0;
         }
 
+        @SuppressWarnings("PMD.AvoidReassigningParameters")
         private void siftUp(int index) {
             int value = heap[index];
             TSortableItem valueKey = keys[value];
@@ -554,6 +566,7 @@ public class SimplifiedDependencyAwareSorter {
             heap[index] = value;
         }
 
+        @SuppressWarnings("PMD.AvoidReassigningParameters")
         private void siftDown(int index) {
             int value = heap[index];
             TSortableItem valueKey = keys[value];
@@ -561,8 +574,7 @@ public class SimplifiedDependencyAwareSorter {
             while (index < half) {
                 int child = (index << 1) + 1;
                 int right = child + 1;
-                if (right < size
-                        && comparator.compare(keys[heap[right]], keys[heap[child]]) < 0) {
+                if (right < size && comparator.compare(keys[heap[right]], keys[heap[child]]) < 0) {
                     child = right;
                 }
                 if (comparator.compare(valueKey, keys[heap[child]]) <= 0) break;

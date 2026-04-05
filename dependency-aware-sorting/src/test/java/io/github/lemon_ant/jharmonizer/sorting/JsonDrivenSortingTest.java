@@ -1,12 +1,9 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Value;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -17,8 +14,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import lombok.Value;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * JSON-driven integration tests for {@link DependencyAwareSorter} and
@@ -83,7 +82,7 @@ class JsonDrivenSortingTest {
 
             boolean hasOverlap = dependencies.getEdges().stream()
                     .anyMatch(d -> groupedNames.contains(d.getProvider().getName())
-                                || groupedNames.contains(d.getDependent().getName()));
+                            || groupedNames.contains(d.getDependent().getName()));
 
             return !hasOverlap;
         }
@@ -121,7 +120,7 @@ class JsonDrivenSortingTest {
     private static TestCase parseCase(Path dir) throws IOException {
         String caseName = dir.getFileName().toString();
 
-        JsonNode input    = MAPPER.readTree(dir.resolve("input.json").toFile());
+        JsonNode input = MAPPER.readTree(dir.resolve("input.json").toFile());
         JsonNode expected = MAPPER.readTree(dir.resolve("expected.json").toFile());
 
         // Parse items — preserve declared order/content in the list, and build a
@@ -129,31 +128,29 @@ class JsonDrivenSortingTest {
         // Each item must be an object: {"name": "...", "numeration": "STATIC|DYNAMIC"}
         List<SortableTypeMember> items = new ArrayList<>();
         Map<String, SortableTypeMember> itemMap = new LinkedHashMap<>();
-        StreamSupport.stream(input.get("items").spliterator(), false)
-                .forEach(itemNode -> {
-                    String name = itemNode.get("name").asText();
-                    SortableTypeMember.Numeration numeration =
-                            SortableTypeMember.Numeration.valueOf(itemNode.get("numeration").asText());
-                    SortableTypeMember member = numeration == SortableTypeMember.Numeration.STATIC
-                            ? SortableTypeMember.staticMember(name)
-                            : SortableTypeMember.dynamicMember(name);
-                    items.add(member);
-                    SortableTypeMember previous = itemMap.putIfAbsent(name, member);
-                    if (previous != null) {
-                        throw new IllegalArgumentException(
-                                "Duplicate item name '" + name + "' in " + dir.resolve("input.json"));
-                    }
-                });
+        StreamSupport.stream(input.get("items").spliterator(), false).forEach(itemNode -> {
+            String name = itemNode.get("name").asText();
+            SortableTypeMember.Numeration numeration = SortableTypeMember.Numeration.valueOf(
+                    itemNode.get("numeration").asText());
+            SortableTypeMember member = numeration == SortableTypeMember.Numeration.STATIC
+                    ? SortableTypeMember.staticMember(name)
+                    : SortableTypeMember.dynamicMember(name);
+            items.add(member);
+            SortableTypeMember previous = itemMap.putIfAbsent(name, member);
+            if (previous != null) {
+                throw new IllegalArgumentException(
+                        "Duplicate item name '" + name + "' in " + dir.resolve("input.json"));
+            }
+        });
 
         // Parse groups (JSON key is still "clusters" for backward compat with test data)
         List<Group<SortableTypeMember>> groups = new ArrayList<>();
         JsonNode groupsNode = input.get("clusters");
         if (groupsNode != null && groupsNode.isArray()) {
             StreamSupport.stream(groupsNode.spliterator(), false)
-                    .map(groupNode -> new Group<>(
-                            StreamSupport.stream(groupNode.spliterator(), false)
-                                    .map(n -> requireMember(itemMap, n.asText(), dir))
-                                    .toList()))
+                    .map(groupNode -> new Group<>(StreamSupport.stream(groupNode.spliterator(), false)
+                            .map(n -> requireMember(itemMap, n.asText(), dir))
+                            .toList()))
                     .forEach(groups::add);
         }
 
@@ -173,25 +170,17 @@ class JsonDrivenSortingTest {
                 .map(JsonNode::asText)
                 .toList();
 
-        String description = input.has("description")
-                ? input.get("description").asText() : caseName;
+        String description = input.has("description") ? input.get("description").asText() : caseName;
 
         return new TestCase(
-                caseName,
-                items,
-                new Groups<>(groups),
-                new Dependencies<>(edges),
-                expectedNames,
-                description);
+                caseName, items, new Groups<>(groups), new Dependencies<>(edges), expectedNames, description);
     }
 
-    private static SortableTypeMember requireMember(
-            Map<String, SortableTypeMember> itemMap, String name, Path dir) {
+    private static SortableTypeMember requireMember(Map<String, SortableTypeMember> itemMap, String name, Path dir) {
         SortableTypeMember member = itemMap.get(name);
         if (member == null) {
-            throw new IllegalArgumentException(
-                    "Unknown item name '" + name + "' referenced in " + dir.resolve("input.json")
-                    + ". Check that the name is listed in the 'items' array.");
+            throw new IllegalArgumentException("Unknown item name '" + name + "' referenced in "
+                    + dir.resolve("input.json") + ". Check that the name is listed in the 'items' array.");
         }
         return member;
     }
@@ -206,16 +195,13 @@ class JsonDrivenSortingTest {
     void jsonCase(TestCase tc) {
         printCase(tc);
 
-        List<SortableTypeMember> result =
-                DependencyAwareSorter.sort(tc.getItems(), tc.getGroups(), tc.getDependencies(),
-                        SortableTypeMember.DEFAULT_ORDER);
+        List<SortableTypeMember> result = DependencyAwareSorter.sort(
+                tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
         List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
 
         System.out.println("  Actual      : " + actual);
 
-        assertThat(actual)
-                .as("Mismatch in case '%s'", tc.getName())
-                .isEqualTo(tc.getExpected());
+        assertThat(actual).as("Mismatch in case '%s'", tc.getName()).isEqualTo(tc.getExpected());
     }
 
     @ParameterizedTest(name = "[{index}] {0}")
@@ -224,26 +210,32 @@ class JsonDrivenSortingTest {
     void jsonCaseSimplified(TestCase tc) {
         printCase(tc);
 
-        List<SortableTypeMember> result =
-                SimplifiedDependencyAwareSorter.sort(tc.getItems(), tc.getGroups(), tc.getDependencies(),
-                        SortableTypeMember.DEFAULT_ORDER);
+        List<SortableTypeMember> result = SimplifiedDependencyAwareSorter.sort(
+                tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
         List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
 
         System.out.println("  Actual (simplified): " + actual);
 
-        assertThat(actual)
-                .as("Mismatch in simplified case '%s'", tc.getName())
-                .isEqualTo(tc.getExpected());
+        assertThat(actual).as("Mismatch in simplified case '%s'", tc.getName()).isEqualTo(tc.getExpected());
     }
 
     private static void printCase(TestCase tc) {
         System.out.printf("%n=== %s ===%n%s%n", tc.getName(), tc.getDescription());
-        System.out.println("  Input items : " + tc.getItems().stream()
-                .map(m -> m.getName() + ":" + m.getOrderingKey().getNumeration()).toList());
-        System.out.println("  Groups      : " + tc.getGroups().getGroups().stream()
-                .map(g -> g.getItems().stream().map(SortableTypeMember::getName).toList()).toList());
-        System.out.println("  Dependencies: " + tc.getDependencies().getEdges().stream()
-                .map(d -> d.getProvider().getName() + "->" + d.getDependent().getName()).toList());
+        System.out.println("  Input items : "
+                + tc.getItems().stream()
+                        .map(m -> m.getName() + ":" + m.getOrderingKey().getNumeration())
+                        .toList());
+        System.out.println("  Groups      : "
+                + tc.getGroups().getGroups().stream()
+                        .map(g -> g.getItems().stream()
+                                .map(SortableTypeMember::getName)
+                                .toList())
+                        .toList());
+        System.out.println("  Dependencies: "
+                + tc.getDependencies().getEdges().stream()
+                        .map(d -> d.getProvider().getName() + "->"
+                                + d.getDependent().getName())
+                        .toList());
         System.out.println("  Expected    : " + tc.getExpected());
     }
 }

@@ -1,10 +1,9 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.*;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link DependencyAwareSorter}.
@@ -19,20 +18,20 @@ class DependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
     // --------------------------------------------------------- sort impl --- //
 
     @Override
-    List<SortableTypeMember> sort(List<SortableTypeMember> members,
-                                  Groups<SortableTypeMember> groups,
-                                  Dependencies<SortableTypeMember> dependencies) {
-        return DependencyAwareSorter.sort(members, groups, dependencies,
-                SortableTypeMember.DEFAULT_ORDER);
+    List<SortableTypeMember> sort(
+            List<SortableTypeMember> members,
+            Groups<SortableTypeMember> groups,
+            Dependencies<SortableTypeMember> dependencies) {
+        return DependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER);
     }
 
     @Override
-    List<SortableTypeMember> sort(List<SortableTypeMember> members,
-                                  Groups<SortableTypeMember> groups,
-                                  Dependencies<SortableTypeMember> dependencies,
-                                  Comparator<SortableTypeMember> comparator) {
-        return DependencyAwareSorter.sort(members, groups, dependencies,
-                comparator);
+    List<SortableTypeMember> sort(
+            List<SortableTypeMember> members,
+            Groups<SortableTypeMember> groups,
+            Dependencies<SortableTypeMember> dependencies,
+            Comparator<SortableTypeMember> comparator) {
+        return DependencyAwareSorter.sort(members, groups, dependencies, comparator);
     }
 
     // --- scenarios specific to the general algorithm (group + dep overlap) --- //
@@ -41,7 +40,7 @@ class DependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
     void dependenciesBetweenGroups() {
         var result = DependencyAwareSorter.sort(
                 staticItems("delta", "echo", "alpha", "beta"),
-                grouping(new String[]{"delta", "echo"}, new String[]{"alpha", "beta"}),
+                grouping(new String[] {"delta", "echo"}, new String[] {"alpha", "beta"}),
                 deps("delta", "beta"),
                 SortableTypeMember.DEFAULT_ORDER);
 
@@ -54,22 +53,22 @@ class DependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
 
     @Test
     void intraGroupDependencyConflictingWithOrderThrows() {
-        assertThatThrownBy(() ->
-                DependencyAwareSorter.sort(
+        assertThatThrownBy(() -> DependencyAwareSorter.sort(
                         staticItems("alpha", "beta"),
-                        grouping(new String[]{"alpha", "beta"}),
+                        grouping(new String[] {"alpha", "beta"}),
                         deps("beta", "alpha"),
                         SortableTypeMember.DEFAULT_ORDER))
                 .isInstanceOf(SortingException.class)
-                .message().containsIgnoringCase("group");
+                .message()
+                .containsIgnoringCase("group");
     }
 
     @Test
     void intraGroupDependencyCompatibleWithOrderIsAccepted() {
-        assertThatNoException().isThrownBy(() ->
-                DependencyAwareSorter.sort(
+        assertThatNoException()
+                .isThrownBy(() -> DependencyAwareSorter.sort(
                         staticItems("alpha", "beta"),
-                        grouping(new String[]{"alpha", "beta"}),
+                        grouping(new String[] {"alpha", "beta"}),
                         deps("alpha", "beta"),
                         SortableTypeMember.DEFAULT_ORDER));
     }

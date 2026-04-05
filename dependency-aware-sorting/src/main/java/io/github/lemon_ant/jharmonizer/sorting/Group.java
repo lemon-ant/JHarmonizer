@@ -1,8 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.Value;
 
 /**
  * An indivisible group of items that must appear together as a contiguous block in the

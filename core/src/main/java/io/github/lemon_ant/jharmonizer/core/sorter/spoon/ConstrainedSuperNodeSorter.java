@@ -757,6 +757,7 @@ class ConstrainedSuperNodeSorter {
      * @return the diagnostic message
      */
     @NonNull
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
     private static String composeUnschedulableSuperNodesMessage(
             int[] snInDegree, boolean[] isFree, SuperNodeLayout layout, SortableTypeMember[] members) {
         List<String> unresolvedMemberNames = new ArrayList<>();

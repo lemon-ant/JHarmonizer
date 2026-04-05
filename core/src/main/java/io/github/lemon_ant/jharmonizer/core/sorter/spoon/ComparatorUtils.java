@@ -34,6 +34,7 @@ class ComparatorUtils {
      * @return the comparator for sortable members
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildGroupSelectionComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
@@ -76,6 +77,7 @@ class ComparatorUtils {
         return configuredComparator;
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember leftSortable,
             SortableTypeMember rightSortable,

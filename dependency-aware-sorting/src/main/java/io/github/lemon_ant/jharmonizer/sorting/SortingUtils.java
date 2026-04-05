@@ -1,12 +1,11 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.Value;
-import lombok.experimental.UtilityClass;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Value;
+import lombok.experimental.UtilityClass;
 
 /**
  * Shared utilities used by both {@link DependencyAwareSorter} and
@@ -33,8 +32,8 @@ class SortingUtils {
      * @return an item-to-index map
      * @throws SortingException if two items are equal (duplicates)
      */
-    static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(
-            List<TSortableItem> items) {
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(List<TSortableItem> items) {
         Map<TSortableItem, Integer> itemToIndex = new HashMap<>(items.size() * 2);
         for (int i = 0; i < items.size(); i++) {
             TSortableItem item = items.get(i);
@@ -58,13 +57,10 @@ class SortingUtils {
      * @return the item index
      * @throws SortingException if the item is not found in the index
      */
-    static <TSortableItem> int resolveGroupMemberIndex(
-            Map<TSortableItem, Integer> itemToIndex,
-            TSortableItem member) {
+    static <TSortableItem> int resolveGroupMemberIndex(Map<TSortableItem, Integer> itemToIndex, TSortableItem member) {
         Integer index = itemToIndex.get(member);
         if (index == null) {
-            throw new SortingException(
-                    "Group references unknown member: \"" + member + "\"");
+            throw new SortingException("Group references unknown member: \"" + member + "\"");
         }
         return index;
     }
@@ -79,8 +75,7 @@ class SortingUtils {
      */
     static void validateNotAlreadyGrouped(int currentSuperNode, Object member) {
         if (currentSuperNode != UNASSIGNED) {
-            throw new SortingException(
-                    "Member \"" + member + "\" appears in more than one group");
+            throw new SortingException("Member \"" + member + "\" appears in more than one group");
         }
     }
 
@@ -113,26 +108,22 @@ class SortingUtils {
      * @throws SortingException if the provider or dependent is unknown, or it is a self-dependency
      */
     static <TSortableItem> ResolvedEdge<TSortableItem> resolveDependencyEdge(
-            Dependencies.Dependency<TSortableItem> edge,
-            Map<TSortableItem, Integer> itemToIndex) {
+            Dependencies.Dependency<TSortableItem> edge, Map<TSortableItem, Integer> itemToIndex) {
         TSortableItem provider = edge.getProvider();
         TSortableItem dependent = edge.getDependent();
 
         Integer providerIndex = itemToIndex.get(provider);
         if (providerIndex == null) {
-            throw new SortingException(
-                    "Dependency references unknown provider: \"" + provider + "\"");
+            throw new SortingException("Dependency references unknown provider: \"" + provider + "\"");
         }
 
         Integer dependentIndex = itemToIndex.get(dependent);
         if (dependentIndex == null) {
-            throw new SortingException(
-                    "Dependency references unknown dependent: \"" + dependent + "\"");
+            throw new SortingException("Dependency references unknown dependent: \"" + dependent + "\"");
         }
 
         if (providerIndex.equals(dependentIndex)) {
-            throw new SortingException(
-                    "Self-dependency on \"" + provider + "\" is not allowed");
+            throw new SortingException("Self-dependency on \"" + provider + "\" is not allowed");
         }
 
         return new ResolvedEdge<>(providerIndex, dependentIndex, provider, dependent);
@@ -146,6 +137,7 @@ class SortingUtils {
      * A compact, resizable collection of primitive {@code int} values.
      * Used for adjacency lists to avoid {@code Integer} boxing overhead.
      */
+    @SuppressWarnings("PMD.AssignmentInOperand")
     static final class IntBag {
         int[] data = new int[4];
         int size;

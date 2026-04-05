@@ -1,8 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.Value;
 
 /**
  * Describes which items form groups (groups that must stay together as an indivisible block).
@@ -13,6 +12,7 @@ import java.util.List;
  * @param <TSortableItem> the type of items
  */
 @Value
+@SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName")
 public class Groups<TSortableItem> {
 
     List<Group<TSortableItem>> groups;
