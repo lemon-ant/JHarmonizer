@@ -1,0 +1,40 @@
+{
+  "description": "Three independent providers (charlie, delta, echo) all must precede the single dependent (alpha). bravo is unconstrained. Providers output in lex order before alpha.",
+  "items": [
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "echo",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [],
+  "dependencies": [
+    {
+      "provider": "charlie",
+      "dependent": "alpha"
+    },
+    {
+      "provider": "delta",
+      "dependent": "alpha"
+    },
+    {
+      "provider": "echo",
+      "dependent": "alpha"
+    }
+  ]
+}

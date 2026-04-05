@@ -1,0 +1,28 @@
+{
+  "description": "Single dependency zebra->apple forces zebra before apple despite reverse alphabetical order. Natural order would be apple<bravo<charlie<zebra; dependency lifts zebra above apple.",
+  "items": [
+    {
+      "name": "apple",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "zebra",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [],
+  "dependencies": [
+    {
+      "provider": "zebra",
+      "dependent": "apple"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "description": "One cluster {zebra, bravo} plus three singletons. Cluster key='bravo'.",
+  "items": [
+    {
+      "name": "zebra",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "mango",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "king",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [
+    [
+      "zebra",
+      "bravo"
+    ]
+  ],
+  "dependencies": []
+}

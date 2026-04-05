@@ -1,0 +1,19 @@
+{
+  "description": "Cluster-singleton-cluster chain: Cluster2={kiwi,lemon}->cherry->Cluster1={apple,banana}->mango(free). The middle link is a singleton (cherry), unlike 08-clusters-dep-chain where all links are clusters. Lex tie-break: Cluster2(key=kiwi) < mango, so Cluster2 first.",
+  "items": [
+    {"name": "mango",  "numeration": "STATIC"},
+    {"name": "apple",  "numeration": "STATIC"},
+    {"name": "lemon",  "numeration": "STATIC"},
+    {"name": "cherry", "numeration": "STATIC"},
+    {"name": "banana", "numeration": "STATIC"},
+    {"name": "kiwi",   "numeration": "STATIC"}
+  ],
+  "clusters": [
+    ["apple", "banana"],
+    ["lemon", "kiwi"]
+  ],
+  "dependencies": [
+    {"provider": "lemon",  "dependent": "cherry"},
+    {"provider": "cherry", "dependent": "apple"}
+  ]
+}
