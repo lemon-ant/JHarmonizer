@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import lombok.NonNull;
+
 /**
  * Thrown when the input to {@link DependencyAwareSorter} is invalid — e.g. duplicate items,
  * an item in multiple groups, an intra-group dependency that conflicts with comparator
@@ -9,7 +11,7 @@ public class SortingException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public SortingException(String message) {
+    public SortingException(@NonNull String message) {
         super(message);
     }
 }

@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
 import java.util.List;
+import lombok.NonNull;
 import lombok.Value;
 
 /**
@@ -20,14 +21,16 @@ public class Groups<TSortableItem> {
     private static final Groups<?> EMPTY_INSTANCE = new Groups<>(List.of());
 
     /** Returns an empty grouping (no groups — every item is its own singleton block). */
+    @NonNull
     @SuppressWarnings("unchecked")
     public static <TSortableItem> Groups<TSortableItem> empty() {
         return (Groups<TSortableItem>) EMPTY_INSTANCE;
     }
 
     /** Convenience factory: each vararg is one {@link Group}. */
+    @NonNull
     @SafeVarargs
-    public static <TSortableItem> Groups<TSortableItem> of(Group<TSortableItem>... groups) {
+    public static <TSortableItem> Groups<TSortableItem> of(@NonNull Group<TSortableItem>... groups) {
         return new Groups<>(List.of(groups));
     }
 }

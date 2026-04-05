@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
 import java.util.*;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -34,7 +35,9 @@ import lombok.experimental.UtilityClass;
  * <p>Time complexity: <em>O(n log n + E)</em> · Space: <em>O(n + E)</em>.</p>
  */
 @UtilityClass
-@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.AssignmentInOperand", "PMD.LooseCoupling"})
+// CouplingBetweenObjects: the algorithm inherently requires many parameter types; splitting
+// them into artificial wrappers would hurt readability without reducing real coupling.
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class DependencyAwareSorter {
 
     // ------------------------------------------------------------------ //
@@ -64,11 +67,12 @@ public class DependencyAwareSorter {
      * @return a new, unmodifiable list of the same items in the computed order
      * @throws SortingException if the input is invalid (see class javadoc)
      */
+    @NonNull
     public static <TSortableItem> List<TSortableItem> sort(
-            Collection<TSortableItem> items,
-            Groups<TSortableItem> groups,
-            Dependencies<TSortableItem> dependencies,
-            Comparator<TSortableItem> comparator) {
+            @NonNull Collection<TSortableItem> items,
+            @NonNull Groups<TSortableItem> groups,
+            @NonNull Dependencies<TSortableItem> dependencies,
+            @NonNull Comparator<TSortableItem> comparator) {
         if (items.isEmpty()) {
             return List.of();
         }
@@ -231,7 +235,7 @@ public class DependencyAwareSorter {
             List<TSortableItem> superNodeKeys,
             List<TSortableItem> items,
             Comparator<TSortableItem> comparator) {
-        PriorityQueue<Integer> readyQueue = new PriorityQueue<>(Comparator.comparing(superNodeKeys::get, comparator));
+        Queue<Integer> readyQueue = new PriorityQueue<>(Comparator.comparing(superNodeKeys::get, comparator));
 
         for (int i = 0; i < superNodeCount; i++) {
             if (inDegree[i] == 0) {
@@ -267,11 +271,11 @@ public class DependencyAwareSorter {
     }
 
     /** Decrements in-degrees of neighbors and enqueues any that become ready. */
-    private static void advanceNeighbors(
-            SortingUtils.IntBag neighbors, int[] inDegree, PriorityQueue<Integer> readyQueue) {
+    private static void advanceNeighbors(SortingUtils.IntBag neighbors, int[] inDegree, Queue<Integer> readyQueue) {
         for (int i = 0; i < neighbors.size; i++) {
             int neighbor = neighbors.data[i];
-            if (--inDegree[neighbor] == 0) {
+            inDegree[neighbor]--;
+            if (inDegree[neighbor] == 0) {
                 readyQueue.add(neighbor);
             }
         }

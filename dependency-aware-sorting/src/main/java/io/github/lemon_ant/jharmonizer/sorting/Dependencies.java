@@ -22,6 +22,7 @@ public class Dependencies<TSortableItem> {
     private static final Dependencies<?> EMPTY_INSTANCE = new Dependencies<>(List.of());
 
     /** Returns an empty dependency set (no ordering constraints). */
+    @NonNull
     @SuppressWarnings("unchecked")
     public static <TSortableItem> Dependencies<TSortableItem> empty() {
         return (Dependencies<TSortableItem>) EMPTY_INSTANCE;
@@ -50,8 +51,9 @@ public class Dependencies<TSortableItem> {
      * Dependencies.of(a, b)   // => a -> b
      * }</pre>
      */
+    @NonNull
     @SafeVarargs
-    public static <TSortableItem> Dependencies<TSortableItem> of(TSortableItem... pairs) {
+    public static <TSortableItem> Dependencies<TSortableItem> of(@NonNull TSortableItem... pairs) {
         if (pairs.length % 2 != 0) {
             throw new IllegalArgumentException("pairs length must be even");
         }

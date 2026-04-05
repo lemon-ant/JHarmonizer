@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
@@ -32,8 +33,9 @@ class SortingUtils {
      * @return an item-to-index map
      * @throws SortingException if two items are equal (duplicates)
      */
+    @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
-    static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(List<TSortableItem> items) {
+    static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(@NonNull List<TSortableItem> items) {
         Map<TSortableItem, Integer> itemToIndex = new HashMap<>(items.size() * 2);
         for (int i = 0; i < items.size(); i++) {
             TSortableItem item = items.get(i);
@@ -57,7 +59,8 @@ class SortingUtils {
      * @return the item index
      * @throws SortingException if the item is not found in the index
      */
-    static <TSortableItem> int resolveGroupMemberIndex(Map<TSortableItem, Integer> itemToIndex, TSortableItem member) {
+    static <TSortableItem> int resolveGroupMemberIndex(
+            @NonNull Map<TSortableItem, Integer> itemToIndex, @NonNull TSortableItem member) {
         Integer index = itemToIndex.get(member);
         if (index == null) {
             throw new SortingException("Group references unknown member: \"" + member + "\"");
@@ -73,7 +76,7 @@ class SortingUtils {
      * @param member           the member item (for error messages)
      * @throws SortingException if the item already belongs to a group
      */
-    static void validateNotAlreadyGrouped(int currentSuperNode, Object member) {
+    static void validateNotAlreadyGrouped(int currentSuperNode, @NonNull Object member) {
         if (currentSuperNode != UNASSIGNED) {
             throw new SortingException("Member \"" + member + "\" appears in more than one group");
         }
@@ -107,8 +110,9 @@ class SortingUtils {
      * @return a {@link ResolvedEdge} with validated item indices and original items
      * @throws SortingException if the provider or dependent is unknown, or it is a self-dependency
      */
+    @NonNull
     static <TSortableItem> ResolvedEdge<TSortableItem> resolveDependencyEdge(
-            Dependencies.Dependency<TSortableItem> edge, Map<TSortableItem, Integer> itemToIndex) {
+            @NonNull Dependencies.Dependency<TSortableItem> edge, @NonNull Map<TSortableItem, Integer> itemToIndex) {
         TSortableItem provider = edge.getProvider();
         TSortableItem dependent = edge.getDependent();
 
@@ -137,7 +141,6 @@ class SortingUtils {
      * A compact, resizable collection of primitive {@code int} values.
      * Used for adjacency lists to avoid {@code Integer} boxing overhead.
      */
-    @SuppressWarnings("PMD.AssignmentInOperand")
     static final class IntBag {
         int[] data = new int[4];
         int size;
@@ -146,7 +149,8 @@ class SortingUtils {
             if (size == data.length) {
                 data = Arrays.copyOf(data, size * 2);
             }
-            data[size++] = value;
+            data[size] = value;
+            size++;
         }
 
         /** Linear scan — efficient for the typically small adjacency lists in sorting graphs. */
