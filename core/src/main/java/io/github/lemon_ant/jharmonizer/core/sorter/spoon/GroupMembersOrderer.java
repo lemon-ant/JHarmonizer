@@ -6,7 +6,6 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,6 +26,9 @@ import spoon.reflect.declaration.CtTypeMember;
 /**
  * Orders type members inside each {@link MemberGroupBlock} according to the group's configured ordering rules,
  * respecting declaration dependencies and optional accessor-pair bundling.
+ *
+ * <p>This class builds {@link SortableTypeMember} wrappers, resolves representative relationships and
+ * accessor bundles, then delegates the actual constrained sorting to {@link ConstrainedSuperNodeSorter}.</p>
  */
 @UtilityClass
 class GroupMembersOrderer {
@@ -216,100 +217,22 @@ class GroupMembersOrderer {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    /**
+     * Sorts sortable type members respecting dependency constraints and representative grouping.
+     *
+     * <p>Delegates to {@link ConstrainedSuperNodeSorter#sort} which encapsulates the super-node
+     * construction, dependency graph building, free/constrained partitioning, topological sort, and
+     * the final merge-expand phase.</p>
+     *
+     * @param sortableTypeMembers the members to sort
+     * @param orderingKeyComparator the ordering key comparator
+     * @return the sorted list of members
+     */
     @NonNull
     private static List<@NonNull SortableTypeMember> orderSortableTypeMembers(
             List<SortableTypeMember> sortableTypeMembers,
             Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        if (sortableTypeMembers.size() <= ONE) {
-            return sortableTypeMembers;
-        }
-
-        // A pairwise comparator that mixes dependency constraints with normal ordering rules can become
-        // non-transitive. Instead, choose the next member only from the currently eligible vertices.
-        Comparator<SortableTypeMember> selectionComparator =
-                ComparatorUtils.buildGroupSelectionComparator(orderingKeyComparator);
-        Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = sortableTypeMembers.stream()
-                .collect(Collectors.toUnmodifiableMap(SortableTypeMember::getTypeMember, Function.identity()));
-
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<SortableTypeMember, Integer> remainingProvidersCountByMember = new HashMap<>();
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<SortableTypeMember, Set<SortableTypeMember>> dependentSortablesByProvider = new HashMap<>();
-        sortableTypeMembers.forEach(sortableTypeMember -> {
-            remainingProvidersCountByMember.put(sortableTypeMember, 0);
-            dependentSortablesByProvider.put(sortableTypeMember, new HashSet<>());
-        });
-
-        sortableTypeMembers.forEach(providerSortable -> providerSortable
-                .getOrderingDependentsInGroup()
-                .forEach(dependentMember -> registerDependentSortable(
-                        providerSortable,
-                        dependentMember,
-                        sortableTypeMemberByMember,
-                        remainingProvidersCountByMember,
-                        dependentSortablesByProvider)));
-
-        PriorityQueue<SortableTypeMember> eligibleMembersQueue = new PriorityQueue<>(selectionComparator);
-        remainingProvidersCountByMember.entrySet().stream()
-                .filter(entry -> entry.getValue() == 0)
-                .map(Map.Entry::getKey)
-                .forEach(eligibleMembersQueue::add);
-
-        List<SortableTypeMember> orderedSortableTypeMembers = new ArrayList<>(sortableTypeMembers.size());
-        while (!eligibleMembersQueue.isEmpty()) {
-            SortableTypeMember nextSortableTypeMember = eligibleMembersQueue.remove();
-            orderedSortableTypeMembers.add(nextSortableTypeMember);
-
-            dependentSortablesByProvider.get(nextSortableTypeMember).forEach(dependentSortable -> {
-                int remainingProvidersCount =
-                        remainingProvidersCountByMember.merge(dependentSortable, -1, Integer::sum);
-                if (remainingProvidersCount == 0) {
-                    eligibleMembersQueue.add(dependentSortable);
-                }
-            });
-        }
-
-        if (orderedSortableTypeMembers.size() != sortableTypeMembers.size()) {
-            throw new IllegalStateException(
-                    composeUnschedulableMembersMessage(sortableTypeMembers, remainingProvidersCountByMember));
-        }
-
-        return orderedSortableTypeMembers;
-    }
-
-    private static void registerDependentSortable(
-            SortableTypeMember providerSortable,
-            CtTypeMember dependentMember,
-            Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember,
-            Map<SortableTypeMember, Integer> remainingProvidersCountByMember,
-            Map<SortableTypeMember, Set<SortableTypeMember>> dependentSortablesByProvider) {
-        SortableTypeMember dependentSortable = sortableTypeMemberByMember.get(dependentMember);
-        if (dependentSortable == null) {
-            return;
-        }
-
-        Set<SortableTypeMember> providerDependents = dependentSortablesByProvider.get(providerSortable);
-        if (!providerDependents.add(dependentSortable)) {
-            return;
-        }
-
-        remainingProvidersCountByMember.merge(dependentSortable, ONE, Integer::sum);
-    }
-
-    @NonNull
-    private static String composeUnschedulableMembersMessage(
-            List<SortableTypeMember> sortableTypeMembers,
-            Map<SortableTypeMember, Integer> remainingProvidersCountByMember) {
-        String unresolvedMembers = sortableTypeMembers.stream()
-                .filter(sortableTypeMember -> remainingProvidersCountByMember.getOrDefault(sortableTypeMember, 0) > 0)
-                .map(sortableTypeMember -> SpoonTypeMemberUtils.deriveAlphaKey(sortableTypeMember.getTypeMember()))
-                .sorted()
-                .collect(Collectors.joining(", "));
-
-        return "Detected declaration dependencies that cannot be scheduled deterministically within the member group. "
-                + "The pairwise comparator is intentionally not used for this choice because partial-order constraints "
-                + "can make such a comparator non-transitive. Check for circular dependencies or unexpected dependency "
-                + "relationships between these members: " + unresolvedMembers;
+        return ConstrainedSuperNodeSorter.sort(sortableTypeMembers, orderingKeyComparator);
     }
 
     @NonNull
