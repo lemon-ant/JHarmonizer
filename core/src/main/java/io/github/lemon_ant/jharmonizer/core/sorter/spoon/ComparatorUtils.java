@@ -27,24 +27,18 @@ class ComparatorUtils {
         return Comparator.comparing(orderingKeyProvider, orderingKeyComparator);
     }
 
-    // Intentional identity check: the compared CtTypeMember objects come from the same Spoon model instance.
     /**
-     * Builds the comparator used to order grouped type members.
+     * Builds the comparator used to choose the next eligible grouped type member.
      *
      * @param orderingKeyComparator the comparator for member ordering keys
      * @return the comparator for sortable members
      */
     @NonNull
-    static Comparator<SortableTypeMember> buildGroupComparator(
+    static Comparator<SortableTypeMember> buildGroupSelectionComparator(
             @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         return (leftSortable, rightSortable) -> {
             if (leftSortable == rightSortable) {
                 return 0;
-            }
-
-            int declarationDependencyComparison = compareByDeclarationDependency(leftSortable, rightSortable);
-            if (declarationDependencyComparison != 0) {
-                return declarationDependencyComparison;
             }
 
             int representativeComparison = compareByRepresentatives(leftSortable, rightSortable, orderingKeyComparator);
@@ -80,31 +74,6 @@ class ComparatorUtils {
         }
 
         return configuredComparator;
-    }
-
-    private static int compareByDeclarationDependency(
-            SortableTypeMember leftSortable, SortableTypeMember rightSortable) {
-        CtTypeMember leftMember = leftSortable.getTypeMember();
-        CtTypeMember rightMember = rightSortable.getTypeMember();
-
-        boolean leftMustBeBeforeRight =
-                leftSortable.getOrderingDependentsInGroup().contains(rightMember);
-
-        boolean rightMustBeBeforeLeft =
-                rightSortable.getOrderingDependentsInGroup().contains(leftMember);
-
-        if (leftMustBeBeforeRight && !rightMustBeBeforeLeft) {
-            return -1;
-        }
-        if (rightMustBeBeforeLeft && !leftMustBeBeforeRight) {
-            return 1;
-        }
-
-        if (leftMustBeBeforeRight) {
-            throw new IllegalStateException(composeCyclicDeclarationDependencyMessage(leftSortable, rightSortable));
-        }
-
-        return 0;
     }
 
     private static int compareByRepresentatives(
@@ -153,17 +122,6 @@ class ComparatorUtils {
                         .reversed();
             case VISIBILITY_DESC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
         };
-    }
-
-    @NonNull
-    private static String composeCyclicDeclarationDependencyMessage(
-            SortableTypeMember leftSortable, SortableTypeMember rightSortable) {
-        return "Detected a cyclic DECLARATION_DEPENDENCY ordering inside a member group. "
-                + "Both members are mutually reachable via declaration dependency edges, so a strict provider-before-dependent "
-                + "order cannot be derived for this pair.\n"
-                + "Left:  " + leftSortable + "\n"
-                + "Right: " + rightSortable + "\n"
-                + "Hint: validate and report cycles in MemberDependencyGraph (or in a dedicated validator) before ordering.";
     }
 
     @NonNull

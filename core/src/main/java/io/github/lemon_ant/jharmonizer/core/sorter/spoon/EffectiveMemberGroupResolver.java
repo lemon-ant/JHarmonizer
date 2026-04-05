@@ -34,15 +34,14 @@ class EffectiveMemberGroupResolver {
     Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> resolveEffectiveGroups(
             @NonNull Map<@NonNull CtTypeMember, @NonNull CompiledMemberGroup> typeMember2NaturalMemberGroup,
             @NonNull MemberDependencyGraph memberDependencyGraph) {
+        // keySet() already guarantees unique CtTypeMember keys, so an explicit duplicate-key merge function here
+        // would be dead code. If this input ever stops being a one-entry-per-member map, that contract break
+        // should be fixed at the producer instead of being silently masked inside this collector.
         return typeMember2NaturalMemberGroup.keySet().stream()
                 .collect(Collectors.toUnmodifiableMap(
                         providerMember -> providerMember,
                         providerMember -> resolveEffectiveGroupForProvider(
-                                providerMember, typeMember2NaturalMemberGroup, memberDependencyGraph),
-                        (existingGroup, newGroup) -> {
-                            throw new IllegalStateException("Unexpected duplicate CtTypeMember key while building "
-                                    + "effective group mapping. This indicates a bug in the collector setup.");
-                        }));
+                                providerMember, typeMember2NaturalMemberGroup, memberDependencyGraph)));
     }
 
     @NonNull
