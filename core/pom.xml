@@ -170,7 +170,11 @@
                                 <argument>-i</argument>
                                 <argument>${benchmark.iterations}</argument>
                                 <argument>-f</argument>
-                                <argument>${benchmark.forks}</argument>
+                                <argument>1</argument>
+                                <argument>-jvmArgsAppend</argument>
+                                <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>-jvmArgsAppend</argument>
+                                <argument>--add-opens=java.base/java.util=ALL-UNNAMED</argument>
                                 <argument>-t</argument>
                                 <argument>${benchmark.threads}</argument>
                                 <argument>-p</argument>
