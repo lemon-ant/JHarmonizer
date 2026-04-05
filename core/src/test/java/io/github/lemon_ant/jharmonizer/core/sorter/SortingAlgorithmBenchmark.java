@@ -8,13 +8,14 @@ import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.Value;
@@ -93,8 +94,8 @@ public class SortingAlgorithmBenchmark {
             CompiledConfig compiledConfig = ConfigurationManager.loadDefaultConfig();
             spoonSorter = new SpoonSorter(compiledConfig);
             List<Path> fixtureRoots = List.of(
-                    requireClasspathDirectoryPath(E2E_REORDER_FIXTURES_ROOT),
-                    requireClasspathDirectoryPath(E2E_REGRESSION_FIXTURES_ROOT));
+                    resolveClasspathDirectoryPath(E2E_REORDER_FIXTURES_ROOT),
+                    resolveClasspathDirectoryPath(E2E_REGRESSION_FIXTURES_ROOT));
             baseFixtures = fixtureRoots.stream()
                     .flatMap(SortingAlgorithmBenchmark::loadFixturesFromRoot)
                     .toList();
@@ -103,13 +104,12 @@ public class SortingAlgorithmBenchmark {
 
         @Setup(Level.Iteration)
         public void prepareIterationBatch() {
-            if (measurementBatchSize <= 1) {
-                iterationFixtures = baseFixtures;
+            if (measurementBatchSize <= baseFixtures.size()) {
+                iterationFixtures = baseFixtures.subList(0, measurementBatchSize);
                 return;
             }
-            iterationFixtures = Stream.generate(() -> baseFixtures)
-                    .limit(measurementBatchSize)
-                    .flatMap(Collection::stream)
+            iterationFixtures = IntStream.range(0, measurementBatchSize)
+                    .mapToObj(i -> baseFixtures.get(i % baseFixtures.size()))
                     .toList();
         }
     }
@@ -124,10 +124,16 @@ public class SortingAlgorithmBenchmark {
     }
 
     @NonNull
-    private static Path requireClasspathDirectoryPath(@NonNull String classpathDirectoryPath) {
+    private static Path resolveClasspathDirectoryPath(@NonNull String classpathDirectoryPath) {
+        URL directoryUrl = TestCaseResourceUtils.requireClasspathDirectoryUrl(classpathDirectoryPath);
+        if (!"file".equals(directoryUrl.getProtocol())) {
+            throw new UnsupportedOperationException(
+                    "Benchmark fixture scanning requires a file: classpath URL, but got: "
+                            + directoryUrl
+                            + ". Run this benchmark from an unpackaged Maven test-classes directory.");
+        }
         try {
-            return Path.of(TestCaseResourceUtils.requireClasspathDirectoryUrl(classpathDirectoryPath)
-                    .toURI());
+            return Path.of(directoryUrl.toURI());
         } catch (URISyntaxException exception) {
             throw new IllegalArgumentException(
                     "Failed to convert classpath URL to URI: " + classpathDirectoryPath, exception);

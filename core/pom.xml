@@ -143,10 +143,10 @@
             <id>benchmark-sort</id>
             <properties>
                 <benchmark.forks>0</benchmark.forks>
-                <benchmark.iterations>5</benchmark.iterations>
+                <benchmark.iterations>10</benchmark.iterations>
                 <benchmark.measurementBatchSize>1000</benchmark.measurementBatchSize>
                 <benchmark.threads>4</benchmark.threads>
-                <benchmark.warmupIterations>2</benchmark.warmupIterations>
+                <benchmark.warmupIterations>5</benchmark.warmupIterations>
             </properties>
             <build>
                 <plugins>
@@ -170,7 +170,7 @@
                                 <argument>-i</argument>
                                 <argument>${benchmark.iterations}</argument>
                                 <argument>-f</argument>
-                                <argument>1</argument>
+                                <argument>${benchmark.forks}</argument>
                                 <argument>-jvmArgsAppend</argument>
                                 <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
                                 <argument>-jvmArgsAppend</argument>
@@ -182,7 +182,7 @@
                                 <argument>-rf</argument>
                                 <argument>json</argument>
                                 <argument>-rff</argument>
-                                <argument>${project.build.directory}/sorting-benchmark.json</argument>
+                                <argument>${project.basedir}/sorting-benchmark.json</argument>
                             </arguments>
                         </configuration>
                     </plugin>
