@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.NonNull;
+import lombok.Value;
 
 /**
  * Describes which items form groups (groups that must stay together as an indivisible block).
@@ -13,6 +13,7 @@ import java.util.List;
  * @param <TSortableItem> the type of items
  */
 @Value
+@SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName")
 public class Groups<TSortableItem> {
 
     List<Group<TSortableItem>> groups;
@@ -20,14 +21,16 @@ public class Groups<TSortableItem> {
     private static final Groups<?> EMPTY_INSTANCE = new Groups<>(List.of());
 
     /** Returns an empty grouping (no groups — every item is its own singleton block). */
+    @NonNull
     @SuppressWarnings("unchecked")
     public static <TSortableItem> Groups<TSortableItem> empty() {
         return (Groups<TSortableItem>) EMPTY_INSTANCE;
     }
 
     /** Convenience factory: each vararg is one {@link Group}. */
+    @NonNull
     @SafeVarargs
-    public static <TSortableItem> Groups<TSortableItem> of(Group<TSortableItem>... groups) {
+    public static <TSortableItem> Groups<TSortableItem> of(@NonNull Group<TSortableItem>... groups) {
         return new Groups<>(List.of(groups));
     }
 }

@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.NonNull;
+import lombok.Value;
 
 /**
  * An indivisible group of items that must appear together as a contiguous block in the
@@ -18,8 +18,9 @@ public class Group<TSortableItem> {
     List<TSortableItem> items;
 
     /** Convenience factory: creates a group from the given items. */
+    @NonNull
     @SafeVarargs
-    public static <TSortableItem> Group<TSortableItem> of(TSortableItem... items) {
+    public static <TSortableItem> Group<TSortableItem> of(@NonNull TSortableItem... items) {
         return new Group<>(List.of(items));
     }
 }

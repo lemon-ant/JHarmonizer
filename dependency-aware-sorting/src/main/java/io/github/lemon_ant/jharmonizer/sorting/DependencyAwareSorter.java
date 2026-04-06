@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.*;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility class that sorts a collection of items while respecting two kinds of constraints:
@@ -35,6 +35,7 @@ import java.util.*;
  * <p>Time complexity: <em>O(n log n + E)</em> · Space: <em>O(n + E)</em>.</p>
  */
 @UtilityClass
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class DependencyAwareSorter {
 
     // ------------------------------------------------------------------ //
@@ -64,36 +65,37 @@ public class DependencyAwareSorter {
      * @return a new, unmodifiable list of the same items in the computed order
      * @throws SortingException if the input is invalid (see class javadoc)
      */
-    public static <TSortableItem> List<TSortableItem> sort(Collection<TSortableItem> items,
-                                                           Groups<TSortableItem> groups,
-                                                           Dependencies<TSortableItem> dependencies,
-                                                           Comparator<TSortableItem> comparator) {
+    @NonNull
+    public static <TSortableItem> List<TSortableItem> sort(
+            @NonNull Collection<TSortableItem> items,
+            @NonNull Groups<TSortableItem> groups,
+            @NonNull Dependencies<TSortableItem> dependencies,
+            @NonNull Comparator<TSortableItem> comparator) {
         if (items.isEmpty()) {
             return List.of();
         }
         List<TSortableItem> itemList = new ArrayList<>(items);
 
-        Map<TSortableItem, Integer> itemToIndex = SortingUtils.buildItemIndex(itemList);
+        Map<TSortableItem, Integer> itemToIndex = CommonSortingUtils.buildItemIndex(itemList);
 
         int[] superNodeOf = new int[itemList.size()];
-        Arrays.fill(superNodeOf, SortingUtils.UNASSIGNED);
+        Arrays.fill(superNodeOf, CommonSortingUtils.UNASSIGNED);
         List<List<Integer>> superNodeMembers = new ArrayList<>();
         List<TSortableItem> superNodeKeys = new ArrayList<>();
-        createGroupSuperNodes(itemList, itemToIndex, groups, comparator,
-                superNodeOf, superNodeMembers, superNodeKeys);
+        createGroupSuperNodes(itemList, itemToIndex, groups, comparator, superNodeOf, superNodeMembers, superNodeKeys);
         createSingletonSuperNodes(itemList, superNodeOf, superNodeMembers, superNodeKeys);
 
         int superNodeCount = superNodeMembers.size();
         int[] inDegree = new int[superNodeCount];
-        SortingUtils.IntBag[] adjacencyLists = new SortingUtils.IntBag[superNodeCount];
+        CommonSortingUtils.IntBag[] adjacencyLists = new CommonSortingUtils.IntBag[superNodeCount];
         for (int i = 0; i < superNodeCount; i++) {
-            adjacencyLists[i] = new SortingUtils.IntBag();
+            adjacencyLists[i] = new CommonSortingUtils.IntBag();
         }
-        buildDependencyGraph(itemList, itemToIndex, superNodeOf, superNodeCount,
-                dependencies, inDegree, adjacencyLists, comparator);
+        buildDependencyGraph(
+                itemList, itemToIndex, superNodeOf, superNodeCount, dependencies, inDegree, adjacencyLists, comparator);
 
-        List<TSortableItem> result = topologicalSortAndExpand(superNodeCount, inDegree,
-                adjacencyLists, superNodeMembers, superNodeKeys, itemList, comparator);
+        List<TSortableItem> result = topologicalSortAndExpand(
+                superNodeCount, inDegree, adjacencyLists, superNodeMembers, superNodeKeys, itemList, comparator);
         return Collections.unmodifiableList(result);
     }
 
@@ -118,8 +120,7 @@ public class DependencyAwareSorter {
                 continue;
             }
             int superNodeIndex = superNodeMembers.size();
-            List<Integer> memberIndices = resolveGroupMemberIndices(
-                    group, itemToIndex, superNodeOf, superNodeIndex);
+            List<Integer> memberIndices = resolveGroupMemberIndices(group, itemToIndex, superNodeOf, superNodeIndex);
             sortIndicesByComparator(memberIndices, items, comparator);
             superNodeMembers.add(memberIndices);
             superNodeKeys.add(items.get(memberIndices.get(0)));
@@ -133,8 +134,8 @@ public class DependencyAwareSorter {
             int superNodeIndex) {
         List<Integer> indices = new ArrayList<>(group.getItems().size());
         for (TSortableItem item : group.getItems()) {
-            int itemIndex = SortingUtils.resolveGroupMemberIndex(itemToIndex, item);
-            SortingUtils.validateNotAlreadyGrouped(superNodeOf[itemIndex], item);
+            int itemIndex = CommonSortingUtils.resolveGroupMemberIndex(itemToIndex, item);
+            CommonSortingUtils.validateNotAlreadyGrouped(superNodeOf[itemIndex], item);
             superNodeOf[itemIndex] = superNodeIndex;
             indices.add(itemIndex);
         }
@@ -154,7 +155,7 @@ public class DependencyAwareSorter {
             List<List<Integer>> superNodeMembers,
             List<TSortableItem> superNodeKeys) {
         for (int i = 0; i < items.size(); i++) {
-            if (superNodeOf[i] == SortingUtils.UNASSIGNED) {
+            if (superNodeOf[i] == CommonSortingUtils.UNASSIGNED) {
                 superNodeOf[i] = superNodeMembers.size();
                 superNodeMembers.add(List.of(i));
                 superNodeKeys.add(items.get(i));
@@ -178,13 +179,13 @@ public class DependencyAwareSorter {
             int superNodeCount,
             Dependencies<TSortableItem> dependencies,
             int[] inDegree,
-            SortingUtils.IntBag[] adjacencyLists,
+            CommonSortingUtils.IntBag[] adjacencyLists,
             Comparator<TSortableItem> comparator) {
         Set<Long> seenEdges = new HashSet<>();
 
         for (Dependencies.Dependency<TSortableItem> edge : dependencies.getEdges()) {
-            SortingUtils.ResolvedEdge<TSortableItem> resolved = SortingUtils.resolveDependencyEdge(
-                    edge, itemToIndex);
+            CommonSortingUtils.ResolvedEdge<TSortableItem> resolved =
+                    CommonSortingUtils.resolveDependencyEdge(edge, itemToIndex);
 
             int providerSuperNode = superNodeOf[resolved.getProviderIndex()];
             int dependentSuperNode = superNodeOf[resolved.getDependentIndex()];
@@ -208,12 +209,10 @@ public class DependencyAwareSorter {
      */
     private static <TSortableItem> void validateIntraGroupDependency(
             List<TSortableItem> items,
-            SortingUtils.ResolvedEdge<TSortableItem> resolved,
+            CommonSortingUtils.ResolvedEdge<TSortableItem> resolved,
             Comparator<TSortableItem> comparator) {
-        if (comparator.compare(items.get(resolved.getProviderIndex()),
-                items.get(resolved.getDependentIndex())) >= 0) {
-            throw new SortingException(
-                    "Intra-group dependency \"" + resolved.getProvider() + "\" → \""
+        if (comparator.compare(items.get(resolved.getProviderIndex()), items.get(resolved.getDependentIndex())) >= 0) {
+            throw new SortingException("Intra-group dependency \"" + resolved.getProvider() + "\" → \""
                     + resolved.getDependent()
                     + "\" conflicts with required intra-group ordering");
         }
@@ -230,13 +229,12 @@ public class DependencyAwareSorter {
     private static <TSortableItem> List<TSortableItem> topologicalSortAndExpand(
             int superNodeCount,
             int[] inDegree,
-            SortingUtils.IntBag[] adjacencyLists,
+            CommonSortingUtils.IntBag[] adjacencyLists,
             List<List<Integer>> superNodeMembers,
             List<TSortableItem> superNodeKeys,
             List<TSortableItem> items,
             Comparator<TSortableItem> comparator) {
-        PriorityQueue<Integer> readyQueue = new PriorityQueue<>(
-                Comparator.comparing(superNodeKeys::get, comparator));
+        Queue<Integer> readyQueue = new PriorityQueue<>(Comparator.comparing(superNodeKeys::get, comparator));
 
         for (int i = 0; i < superNodeCount; i++) {
             if (inDegree[i] == 0) {
@@ -273,12 +271,11 @@ public class DependencyAwareSorter {
 
     /** Decrements in-degrees of neighbors and enqueues any that become ready. */
     private static void advanceNeighbors(
-            SortingUtils.IntBag neighbors,
-            int[] inDegree,
-            PriorityQueue<Integer> readyQueue) {
+            CommonSortingUtils.IntBag neighbors, int[] inDegree, Queue<Integer> readyQueue) {
         for (int i = 0; i < neighbors.size; i++) {
             int neighbor = neighbors.data[i];
-            if (--inDegree[neighbor] == 0) {
+            inDegree[neighbor]--;
+            if (inDegree[neighbor] == 0) {
                 readyQueue.add(neighbor);
             }
         }
@@ -290,9 +287,7 @@ public class DependencyAwareSorter {
 
     /** Sorts {@code indices} in-place by the comparator order of the items they reference. */
     private static <TSortableItem> void sortIndicesByComparator(
-            List<Integer> indices,
-            List<TSortableItem> items,
-            Comparator<TSortableItem> comparator) {
+            List<Integer> indices, List<TSortableItem> items, Comparator<TSortableItem> comparator) {
         indices.sort(Comparator.comparing(items::get, comparator));
     }
 }

@@ -1,14 +1,13 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import lombok.Value;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.*;
+import lombok.Value;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the generic sorting API using plain {@link String} and {@link Integer} items
@@ -33,26 +32,22 @@ class GenericSortingTest {
 
         @Test
         void emptyInput() {
-            List<String> result = DependencyAwareSorter.sort(
-                    List.of(), Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
+            List<String> result =
+                    DependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
             assertThat(result).isEmpty();
         }
 
         @Test
         void plainAlphabeticalSort() {
             List<String> result = DependencyAwareSorter.sort(
-                    List.of("cherry", "apple", "banana"),
-                    Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
+                    List.of("cherry", "apple", "banana"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
             assertThat(result).containsExactly("apple", "banana", "cherry");
         }
 
         @Test
         void singleItem() {
-            List<String> result = DependencyAwareSorter.sort(
-                    List.of("solo"), Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
+            List<String> result =
+                    DependencyAwareSorter.sort(List.of("solo"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
             assertThat(result).containsExactly("solo");
         }
 
@@ -90,31 +85,28 @@ class GenericSortingTest {
         @Test
         void cycleThrows() {
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
-                    List.of("a", "b", "c"),
-                    Groups.empty(),
-                    Dependencies.of("a", "b", "b", "c", "c", "a"),
-                    NATURAL_ORDER))
+                            List.of("a", "b", "c"),
+                            Groups.empty(),
+                            Dependencies.of("a", "b", "b", "c", "c", "a"),
+                            NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
-                    .message().containsIgnoringCase("cycle");
+                    .message()
+                    .containsIgnoringCase("cycle");
         }
 
         @Test
         void selfDependencyThrows() {
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
-                    List.of("a", "b"),
-                    Groups.empty(),
-                    Dependencies.of("a", "a"),
-                    NATURAL_ORDER))
+                            List.of("a", "b"), Groups.empty(), Dependencies.of("a", "a"), NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
-                    .message().containsIgnoringCase("self");
+                    .message()
+                    .containsIgnoringCase("self");
         }
 
         @Test
         void duplicateIdentityThrows() {
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
-                    List.of("apple", "banana", "apple"),
-                    Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER))
+                            List.of("apple", "banana", "apple"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
                     .hasMessageContaining("apple");
         }
@@ -122,10 +114,10 @@ class GenericSortingTest {
         @Test
         void memberInTwoGroupsThrows() {
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
-                    List.of("a", "b", "c"),
-                    new Groups<>(List.of(Group.of("a", "b"), Group.of("b", "c"))),
-                    Dependencies.empty(),
-                    NATURAL_ORDER))
+                            List.of("a", "b", "c"),
+                            new Groups<>(List.of(Group.of("a", "b"), Group.of("b", "c"))),
+                            Dependencies.empty(),
+                            NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
                     .hasMessageContaining("b");
         }
@@ -134,7 +126,8 @@ class GenericSortingTest {
         void customComparatorReversesOrder() {
             List<String> result = DependencyAwareSorter.sort(
                     List.of("alpha", "beta", "charlie"),
-                    Groups.empty(), Dependencies.empty(),
+                    Groups.empty(),
+                    Dependencies.empty(),
                     Comparator.<String>naturalOrder().reversed());
             assertThat(result).containsExactly("charlie", "beta", "alpha");
         }
@@ -143,9 +136,7 @@ class GenericSortingTest {
         void groupWithDependency() {
             List<String> result = DependencyAwareSorter.sort(
                     List.of("delta", "echo", "alpha", "beta"),
-                    new Groups<>(List.of(
-                            Group.of("delta", "echo"),
-                            Group.of("alpha", "beta"))),
+                    new Groups<>(List.of(Group.of("delta", "echo"), Group.of("alpha", "beta"))),
                     Dependencies.of("delta", "beta"),
                     NATURAL_ORDER);
             // Group {delta, echo} must come before group {alpha, beta}
@@ -155,11 +146,9 @@ class GenericSortingTest {
 
         @Test
         void resultIsUnmodifiable() {
-            List<String> result = DependencyAwareSorter.sort(
-                    List.of("b", "a"), Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
-            assertThatThrownBy(() -> result.add("x"))
-                    .isInstanceOf(UnsupportedOperationException.class);
+            List<String> result =
+                    DependencyAwareSorter.sort(List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+            assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
         }
 
         @Test
@@ -168,8 +157,7 @@ class GenericSortingTest {
             Groups<String> g = new Groups<>(List.of(Group.of("fig", "date")));
             Dependencies<String> d = Dependencies.of("cherry", "apple");
 
-            List<String> expected = DependencyAwareSorter.sort(
-                    base, g, d, NATURAL_ORDER);
+            List<String> expected = DependencyAwareSorter.sort(base, g, d, NATURAL_ORDER);
 
             Random rng = new Random(42);
             for (int run = 0; run < 20; run++) {
@@ -192,17 +180,14 @@ class GenericSortingTest {
         @Test
         void emptyInput() {
             List<String> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of(), Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
+                    List.of(), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
             assertThat(result).isEmpty();
         }
 
         @Test
         void plainAlphabeticalSort() {
             List<String> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of("cherry", "apple", "banana"),
-                    Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
+                    List.of("cherry", "apple", "banana"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
             assertThat(result).containsExactly("apple", "banana", "cherry");
         }
 
@@ -240,10 +225,10 @@ class GenericSortingTest {
         @Test
         void groupMemberInDepThrows() {
             assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                    List.of("alpha", "beta", "gamma"),
-                    new Groups<>(List.of(Group.of("alpha", "beta"))),
-                    Dependencies.of("alpha", "gamma"),
-                    NATURAL_ORDER))
+                            List.of("alpha", "beta", "gamma"),
+                            new Groups<>(List.of(Group.of("alpha", "beta"))),
+                            Dependencies.of("alpha", "gamma"),
+                            NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
                     .hasMessageContaining("alpha");
         }
@@ -251,10 +236,8 @@ class GenericSortingTest {
         @Test
         void resultIsUnmodifiable() {
             List<String> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of("b", "a"), Groups.empty(), Dependencies.empty(),
-                    NATURAL_ORDER);
-            assertThatThrownBy(() -> result.add("x"))
-                    .isInstanceOf(UnsupportedOperationException.class);
+                    List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+            assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -270,18 +253,14 @@ class GenericSortingTest {
         @Test
         void dependencyAwareSorterWithIntegers() {
             List<Integer> result = DependencyAwareSorter.sort(
-                    List.of(3, 1, 4, 1_000, 5, 9),
-                    Groups.empty(), Dependencies.empty(),
-                    INT_ORDER);
+                    List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
             assertThat(result).containsExactly(1, 3, 4, 5, 9, 1_000);
         }
 
         @Test
         void simplifiedSorterWithIntegers() {
             List<Integer> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of(3, 1, 4, 1_000, 5, 9),
-                    Groups.empty(), Dependencies.empty(),
-                    INT_ORDER);
+                    List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
             assertThat(result).containsExactly(1, 3, 4, 5, 9, 1_000);
         }
 
@@ -299,38 +278,29 @@ class GenericSortingTest {
 
         @Test
         void integerDependencies() {
-            List<Integer> result = DependencyAwareSorter.sort(
-                    List.of(1, 2, 3),
-                    Groups.empty(),
-                    Dependencies.of(3, 1),
-                    INT_ORDER);
+            List<Integer> result =
+                    DependencyAwareSorter.sort(List.of(1, 2, 3), Groups.empty(), Dependencies.of(3, 1), INT_ORDER);
             assertThat(result.indexOf(3)).isLessThan(result.indexOf(1));
         }
 
         @Test
         void integerLargeInput() {
             int total = 500;
-            List<Integer> items = IntStream.range(0, total)
-                    .boxed()
-                    .collect(Collectors.toList());
+            List<Integer> items = IntStream.range(0, total).boxed().collect(Collectors.toList());
 
             // Create some dependencies: 499→498, 498→497, ..., 401→400
             List<Dependencies.Dependency<Integer>> depList = IntStream.range(401, 500)
                     .mapToObj(i -> new Dependencies.Dependency<>(i, i - 1))
                     .toList();
 
-            List<Integer> result = DependencyAwareSorter.sort(
-                    items,
-                    Groups.empty(),
-                    new Dependencies<>(depList),
-                    INT_ORDER);
+            List<Integer> result =
+                    DependencyAwareSorter.sort(items, Groups.empty(), new Dependencies<>(depList), INT_ORDER);
 
             assertThat(result).hasSize(total);
             // Verify dependency ordering
-            depList.forEach(dep ->
-                    assertThat(result.indexOf(dep.getProvider()))
-                            .as("%d must precede %d", dep.getProvider(), dep.getDependent())
-                            .isLessThan(result.indexOf(dep.getDependent())));
+            depList.forEach(dep -> assertThat(result.indexOf(dep.getProvider()))
+                    .as("%d must precede %d", dep.getProvider(), dep.getDependent())
+                    .isLessThan(result.indexOf(dep.getDependent())));
         }
     }
 

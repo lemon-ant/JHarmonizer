@@ -1,13 +1,16 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import java.io.Serial;
+import lombok.experimental.StandardException;
+
 /**
  * Thrown when the input to {@link DependencyAwareSorter} is invalid — e.g. duplicate items,
  * an item in multiple groups, an intra-group dependency that conflicts with comparator
  * ordering, or a cycle in the dependency graph.
  */
+@StandardException
 public class SortingException extends RuntimeException {
 
-    public SortingException(String message) {
-        super(message);
-    }
+    @Serial
+    private static final long serialVersionUID = 1L;
 }

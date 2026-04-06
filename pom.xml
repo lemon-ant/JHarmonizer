@@ -11,6 +11,7 @@
     <name>JHarmonizer Parent</name>
 
     <modules>
+        <module>dependency-aware-sorting</module>
         <module>core</module>
         <module>cli</module>
     </modules>

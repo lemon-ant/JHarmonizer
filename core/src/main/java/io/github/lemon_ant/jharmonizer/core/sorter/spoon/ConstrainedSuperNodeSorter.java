@@ -8,7 +8,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
@@ -740,43 +739,6 @@ class ConstrainedSuperNodeSorter {
         bufferIdx += mid - leftIdx;
         System.arraycopy(source, rightIdx, buffer, bufferIdx, to - rightIdx);
         System.arraycopy(buffer, 0, source, from, to - from);
-    }
-
-    // ------------------------------------------------------------------ //
-    //  Error message                                                      //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Composes a diagnostic message listing unschedulable super-node members (those with non-zero in-degree
-     * after topological sort has stalled).
-     *
-     * @param snInDegree per-super-node in-degree array (post-topo-sort)
-     * @param isFree per-super-node free flag
-     * @param layout super-node layout
-     * @param members the member array
-     * @return the diagnostic message
-     */
-    @NonNull
-    private static String composeUnschedulableSuperNodesMessage(
-            int[] snInDegree, boolean[] isFree, SuperNodeLayout layout, SortableTypeMember[] members) {
-        List<String> unresolvedMemberNames = new ArrayList<>();
-        for (int superNodeIdx = 0; superNodeIdx < snInDegree.length; superNodeIdx++) {
-            if (!isFree[superNodeIdx] && snInDegree[superNodeIdx] > 0) {
-                int offset = layout.snOffset[superNodeIdx];
-                int length = layout.snLength[superNodeIdx];
-                for (int j = 0; j < length; j++) {
-                    unresolvedMemberNames.add(
-                            SpoonTypeMemberUtils.deriveAlphaKey(members[layout.snMembers[offset + j]].getTypeMember()));
-                }
-            }
-        }
-
-        String unresolvedMembers = unresolvedMemberNames.stream().sorted().collect(Collectors.joining(", "));
-
-        return "Detected declaration dependencies that cannot be scheduled deterministically within the member group. "
-                + "The pairwise comparator is intentionally not used for this choice because partial-order constraints "
-                + "can make such a comparator non-transitive. Check for circular dependencies or unexpected dependency "
-                + "relationships between these members: " + unresolvedMembers;
     }
 
     // ------------------------------------------------------------------ //
