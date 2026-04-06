@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.sorting;
 
 import java.util.*;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -18,7 +19,7 @@ import lombok.experimental.UtilityClass;
  * </ul>
  */
 @UtilityClass
-class SimplifiedSortingInternals {
+class SimplifiedSortingUtils {
 
     /** Threshold below which merge sort falls back to insertion sort. */
     static final int INSERTION_SORT_THRESHOLD = 16;
@@ -156,39 +157,22 @@ class SimplifiedSortingInternals {
      *
      * @param <TSortableItem> the item type (used for the keys array)
      */
-    static final class SuperNodes<TSortableItem> {
+    @Value
+    static class SuperNodes<TSortableItem> {
         /** Item index → super-node index. */
-        final int[] itemToSuperNode;
+        int[] itemToSuperNode;
         /** Flat item-index storage, grouped by super-node. */
-        final int[] memberIndices;
+        int[] memberIndices;
         /** Per-super-node start position in {@code memberIndices}. */
-        final int[] nodeOffset;
+        int[] nodeOffset;
         /** Per-super-node item count. */
-        final int[] nodeLength;
+        int[] nodeLength;
         /** Per-super-node comparator-minimum item (tie-break key). */
-        final TSortableItem[] nodeKeys;
+        TSortableItem[] nodeKeys;
         /** Total number of super-nodes. */
-        final int count;
+        int count;
         /** Index of the first singleton (non-group) super-node. */
-        final int firstSingletonIndex;
-
-        @SuppressWarnings("PMD.ArrayIsStoredDirectly")
-        SuperNodes(
-                int[] itemToSuperNode,
-                int[] memberIndices,
-                int[] nodeOffset,
-                int[] nodeLength,
-                TSortableItem[] nodeKeys,
-                int count,
-                int firstSingletonIndex) {
-            this.itemToSuperNode = itemToSuperNode;
-            this.memberIndices = memberIndices;
-            this.nodeOffset = nodeOffset;
-            this.nodeLength = nodeLength;
-            this.nodeKeys = nodeKeys;
-            this.count = count;
-            this.firstSingletonIndex = firstSingletonIndex;
-        }
+        int firstSingletonIndex;
     }
 
     /**

@@ -16,7 +16,7 @@ import lombok.experimental.UtilityClass;
  * and low-level data structures that are identical across both algorithms.</p>
  */
 @UtilityClass
-class SortingUtils {
+class CommonSortingUtils {
 
     /** Sentinel value indicating an item has not been assigned to any super-node yet. */
     static final int UNASSIGNED = -1;
