@@ -35,8 +35,6 @@ import lombok.experimental.UtilityClass;
  * <p>Time complexity: <em>O(n log n + E)</em> · Space: <em>O(n + E)</em>.</p>
  */
 @UtilityClass
-// CouplingBetweenObjects: the algorithm inherently requires many parameter types; splitting
-// them into artificial wrappers would hurt readability without reducing real coupling.
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public class DependencyAwareSorter {
 

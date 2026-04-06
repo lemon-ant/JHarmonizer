@@ -44,10 +44,6 @@ import lombok.experimental.UtilityClass;
  * <p>Time complexity: <em>O(n log n + E)</em> · Space: <em>O(n + E)</em>.</p>
  */
 @UtilityClass
-// CouplingBetweenObjects: the algorithm inherently requires many parameter types.
-// GodClass / TooManyMethods: already decomposed into SimplifiedSortingUtils; the
-// remaining methods are tightly coupled algorithm steps that cannot be meaningfully
-// separated further.
 @SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.GodClass", "PMD.TooManyMethods"})
 public class SimplifiedDependencyAwareSorter {
 
@@ -211,8 +207,6 @@ public class SimplifiedDependencyAwareSorter {
      * {@link CommonSortingUtils.IntBag#contains(int)} (linear scan on small adjacency lists)
      * instead of {@code HashSet<Long>}, avoiding Long boxing.
      */
-    // Null return is intentional: avoids allocating an empty IntBag[] when there are no edges,
-    // and callers already null-check adjacencyLists in the hot path.
     @SuppressWarnings({"PMD.ReturnEmptyCollectionRatherThanNull", "PMD.UseVarargs"})
     private static <TSortableItem> CommonSortingUtils.IntBag[] buildDependencyGraph(
             Map<TSortableItem, Integer> itemToIndex,

@@ -41,8 +41,6 @@ class SimplifiedSortingUtils {
      * @param items      the item list for key lookup
      * @param comparator the ordering comparator
      */
-    // AvoidArrayLoops: this IS an insertion sort, not a simple array copy — System.arraycopy
-    // does not apply because elements are shifted conditionally based on comparator ordering.
     @SuppressWarnings("PMD.AvoidArrayLoops")
     static <TSortableItem> void insertionSortRange(
             @NonNull int[] data,
