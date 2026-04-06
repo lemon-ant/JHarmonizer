@@ -40,76 +40,93 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
     // --- simplified constraint validations --- //
 
     @Test
-    void groupMemberAsProviderThrows() {
+    void sort_groupMemberIsProvider_throwsSortingException() {
+        // Given
+        var members = staticItems("alpha", "beta", "gamma");
+        var groups = grouping(new String[] {"alpha", "beta"});
+        var dependencies = deps("alpha", "gamma");
+
+        // When / Then
         assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        staticItems("alpha", "beta", "gamma"),
-                        grouping(new String[] {"alpha", "beta"}),
-                        deps("alpha", "gamma"),
-                        SortableTypeMember.DEFAULT_ORDER))
+                        members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER))
                 .isInstanceOf(SortingException.class)
                 .hasMessageContaining("alpha")
                 .hasMessageContaining("provider");
     }
 
     @Test
-    void groupMemberAsDependentThrows() {
+    void sort_groupMemberIsDependent_throwsSortingException() {
+        // Given
+        var members = staticItems("alpha", "beta", "gamma");
+        var groups = grouping(new String[] {"alpha", "beta"});
+        var dependencies = deps("gamma", "alpha");
+
+        // When / Then
         assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        staticItems("alpha", "beta", "gamma"),
-                        grouping(new String[] {"alpha", "beta"}),
-                        deps("gamma", "alpha"),
-                        SortableTypeMember.DEFAULT_ORDER))
+                        members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER))
                 .isInstanceOf(SortingException.class)
                 .hasMessageContaining("alpha")
                 .hasMessageContaining("dependent");
     }
 
     @Test
-    void groupSizeOfFourIsAccepted() {
-        var result = SimplifiedDependencyAwareSorter.sort(
-                staticItems("delta", "charlie", "bravo", "alpha", "echo"),
-                grouping(new String[] {"delta", "charlie", "bravo", "alpha"}),
-                Dependencies.empty(),
-                SortableTypeMember.DEFAULT_ORDER);
+    void sort_groupSizeOfFour_returnsMembersGroupedAndSorted() {
+        // Given
+        var members = staticItems("delta", "charlie", "bravo", "alpha", "echo");
+        var groups = grouping(new String[] {"delta", "charlie", "bravo", "alpha"});
 
+        // When
+        var result = SimplifiedDependencyAwareSorter.sort(
+                members, groups, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER);
+
+        // Then
         assertThat(names(result)).containsExactly("alpha", "bravo", "charlie", "delta", "echo");
     }
 
     @Test
-    void largeGroupIsAccepted() {
-        var result = SimplifiedDependencyAwareSorter.sort(
-                staticItems("a", "b", "c", "d", "e"),
-                grouping(new String[] {"a", "b", "c", "d", "e"}),
-                Dependencies.empty(),
-                SortableTypeMember.DEFAULT_ORDER);
+    void sort_largeGroup_returnsMembersGroupedAndSorted() {
+        // Given
+        var members = staticItems("a", "b", "c", "d", "e");
+        var groups = grouping(new String[] {"a", "b", "c", "d", "e"});
 
+        // When
+        var result = SimplifiedDependencyAwareSorter.sort(
+                members, groups, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER);
+
+        // Then
         assertThat(names(result)).containsExactly("a", "b", "c", "d", "e");
     }
 
     @Test
-    void groupsAndDepsOnDifferentMembersAccepted() {
-        // Groups on {alpha, beta}, deps on gamma → delta (no overlap)
-        var result = SimplifiedDependencyAwareSorter.sort(
-                staticItems("delta", "gamma", "beta", "alpha"),
-                grouping(new String[] {"alpha", "beta"}),
-                deps("gamma", "delta"),
-                SortableTypeMember.DEFAULT_ORDER);
+    void sort_groupsAndDepsOnDisjointMembers_noExceptionAndBothConstraintsHonoured() {
+        // Given
+        var members = staticItems("delta", "gamma", "beta", "alpha");
+        var groups = grouping(new String[] {"alpha", "beta"});
+        var dependencies = deps("gamma", "delta");
 
-        List<String> resultNames = names(result);
-        // alpha, beta are grouped (in comparator order); gamma before delta
+        // When
+        var result =
+                SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER);
+
+        // Then
+        var resultNames = names(result);
         assertThat(resultNames.indexOf("alpha")).isLessThan(resultNames.indexOf("beta"));
         assertThat(resultNames.indexOf("gamma")).isLessThan(resultNames.indexOf("delta"));
     }
 
     @Test
-    void multipleGroupsWithDepsOnSingletons() {
-        var result = SimplifiedDependencyAwareSorter.sort(
-                staticItems("f", "e", "d", "c", "b", "a"),
-                grouping(new String[] {"a", "b"}, new String[] {"e", "f"}),
-                deps("d", "c"),
-                SortableTypeMember.DEFAULT_ORDER);
+    void sort_multipleGroupsWithDepsOnSingletons_allConstraintsHonoured() {
+        // Given
+        var members = staticItems("f", "e", "d", "c", "b", "a");
+        var groups = grouping(new String[] {"a", "b"}, new String[] {"e", "f"});
+        var dependencies = deps("d", "c");
 
-        List<String> resultNames = names(result);
-        // Groups {a,b} and {e,f} are independent; d before c
+        // When
+        var result =
+                SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER);
+
+        // Then
+        var resultNames = names(result);
         assertThat(resultNames.indexOf("a")).isLessThan(resultNames.indexOf("b"));
         assertThat(resultNames.indexOf("e")).isLessThan(resultNames.indexOf("f"));
         assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("c"));

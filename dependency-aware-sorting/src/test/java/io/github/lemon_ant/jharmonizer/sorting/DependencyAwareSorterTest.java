@@ -37,14 +37,17 @@ class DependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
     // --- scenarios specific to the general algorithm (group + dep overlap) --- //
 
     @Test
-    void dependenciesBetweenGroups() {
-        var result = DependencyAwareSorter.sort(
-                staticItems("delta", "echo", "alpha", "beta"),
-                grouping(new String[] {"delta", "echo"}, new String[] {"alpha", "beta"}),
-                deps("delta", "beta"),
-                SortableTypeMember.DEFAULT_ORDER);
+    void sort_dependencyBetweenGroups_groupOrderRespectedAlongWithDep() {
+        // Given
+        var members = staticItems("delta", "echo", "alpha", "beta");
+        var groups = grouping(new String[] {"delta", "echo"}, new String[] {"alpha", "beta"});
 
-        List<String> resultNames = names(result);
+        // When
+        var result =
+                DependencyAwareSorter.sort(members, groups, deps("delta", "beta"), SortableTypeMember.DEFAULT_ORDER);
+
+        // Then
+        var resultNames = names(result);
         assertThat(resultNames.indexOf("delta")).isLessThan(resultNames.indexOf("alpha"));
         assertThat(resultNames.indexOf("echo")).isLessThan(resultNames.indexOf("beta"));
         assertThat(resultNames.indexOf("delta")).isLessThan(resultNames.indexOf("echo"));
@@ -52,7 +55,8 @@ class DependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
     }
 
     @Test
-    void intraGroupDependencyConflictingWithOrderThrows() {
+    void sort_intraGroupDepConflictsWithGroupOrder_throwsSortingException() {
+        // When / Then
         assertThatThrownBy(() -> DependencyAwareSorter.sort(
                         staticItems("alpha", "beta"),
                         grouping(new String[] {"alpha", "beta"}),
@@ -64,7 +68,8 @@ class DependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
     }
 
     @Test
-    void intraGroupDependencyCompatibleWithOrderIsAccepted() {
+    void sort_intraGroupDepCompatibleWithGroupOrder_noExceptionThrown() {
+        // When / Then
         assertThatNoException()
                 .isThrownBy(() -> DependencyAwareSorter.sort(
                         staticItems("alpha", "beta"),

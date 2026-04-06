@@ -192,30 +192,34 @@ class JsonDrivenSortingTest {
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("loadCases")
     @DisplayName("JSON-driven case — DependencyAwareSorter")
-    void jsonCase(TestCase tc) {
+    void dependencyAwareSorter_jsonDrivenCase_returnsExpectedOrder(TestCase tc) {
+        // Given
         printCase(tc);
 
+        // When
         List<SortableTypeMember> result = DependencyAwareSorter.sort(
                 tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
         List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
 
+        // Then
         System.out.println("  Actual      : " + actual);
-
         assertThat(actual).as("Mismatch in case '%s'", tc.getName()).isEqualTo(tc.getExpected());
     }
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("loadSimplifiedCompatibleCases")
     @DisplayName("JSON-driven case — SimplifiedDependencyAwareSorter")
-    void jsonCaseSimplified(TestCase tc) {
+    void simplifiedDependencyAwareSorter_jsonDrivenCompatibleCase_returnsExpectedOrder(TestCase tc) {
+        // Given
         printCase(tc);
 
+        // When
         List<SortableTypeMember> result = SimplifiedDependencyAwareSorter.sort(
                 tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
         List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
 
+        // Then
         System.out.println("  Actual (simplified): " + actual);
-
         assertThat(actual).as("Mismatch in simplified case '%s'", tc.getName()).isEqualTo(tc.getExpected());
     }
 

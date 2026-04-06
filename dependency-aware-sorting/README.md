@@ -24,21 +24,27 @@ all-args constructor, getters, `equals`, `hashCode`, and `toString` generated at
 | `SortableTypeMember` | `@Value` — sortable container holding an `OrderingKey` (`getOrderingKey()`, `getName()`) |
 | `SortableTypeMember.OrderingKey` | `@Value` — composite sort key: `String name` + `Numeration` enum (`STATIC`/`DYNAMIC`) |
 | `SortableTypeMember.Numeration` | Enum — `STATIC` or `DYNAMIC`; controls the default ordering tier |
-| `Cluster` | `@Value` — an indivisible group holding `List<SortableTypeMember>` (`getItems()`) |
-| `Clustering` | `@Value` — holds `List<Cluster>` (`getClusters()`); factory: `Clustering.of(Cluster...)` |
+| `Group` | `@Value` — an indivisible group holding `List<SortableTypeMember>` (`getItems()`) |
+| `Groups` | `@Value` — holds `List<Group>` (`getGroups()`); factory: `Groups.of(Group...)` |
 | `Dependencies` | `@Value` — holds `List<Dependency>` (`getEdges()`) |
 | `Dependencies.Dependency` | `@Value` — a single `provider → dependent` ordering edge |
-| `ConstrainedSorter` | Lombok `@UtilityClass` — static API, stateless and thread-safe |
-| `SortingException` | Thrown on invalid input (cycle, duplicate name, member in two clusters, …) |
+| `DependencyAwareSorter` | Lombok `@UtilityClass` — general algorithm, supports group+dependency overlap |
+| `SimplifiedDependencyAwareSorter` | Lombok `@UtilityClass` — optimised variant requiring groups and dependencies to be mutually exclusive |
+| `SortingException` | Thrown on invalid input (cycle, duplicate name, member in two groups, …) |
 
 ### Public API
 
 ```java
 // Default comparator (STATIC first by name, then DYNAMIC by name)
-List<SortableTypeMember> result = ConstrainedSorter.sort(members, clustering, dependencies);
+List<SortableTypeMember> result = DependencyAwareSorter.sort(members, groups, dependencies,
+        SortableTypeMember.DEFAULT_ORDER);
+
+// Simplified variant (groups and dependencies must not overlap)
+List<SortableTypeMember> result = SimplifiedDependencyAwareSorter.sort(members, groups, dependencies,
+        SortableTypeMember.DEFAULT_ORDER);
 
 // Custom comparator overload
-List<SortableTypeMember> result = ConstrainedSorter.sort(members, clustering, dependencies,
+List<SortableTypeMember> result = DependencyAwareSorter.sort(members, groups, dependencies,
         Comparator.comparing(m -> m.getOrderingKey().getName()));
 ```
 
@@ -145,25 +151,18 @@ Input members
 mvn test
 ```
 
-All tests are in `src/test/java/com/antonlem/sorting/` and cover:
+All tests are in `src/test/java/io/github/lemon_ant/jharmonizer/sorting/` and cover:
 
-**`ConstrainedSorterTest`** (28 unit tests):
-- Plain sort with `DEFAULT_ORDER` (STATIC before DYNAMIC, each group by name)
+**`AbstractDependencyAwareSortingTest`** (shared base, exercised via `DependencyAwareSorterTest` and `SimplifiedDependencyAwareSorterTest`):
+- Plain sorting with `DEFAULT_ORDER` (STATIC before DYNAMIC, each group by name)
 - Custom comparator overload
-- One cluster + singletons
-- Multiple clusters
-- Dependencies without clusters
-- Dependencies between clusters
-- Transitive dependencies
-- Diamond dependencies
-- Cycle → `SortingException`
-- Member in two clusters → `SortingException`
-- Duplicate names → `SortingException`
-- Intra-cluster dependency conflict → `SortingException`
-- Determinism (same output for any input permutation)
-- Large-input sanity test (2 000 members)
+- Group handling, including single and multiple groups
+- Dependency ordering, including transitive and diamond-shaped graphs
+- Error cases such as cycles, duplicate names, invalid group membership
+- Determinism checks across input permutations
+- Large-input sanity/performance-oriented scenarios
 
-**`JsonDrivenSortingTest`** (21 integration tests from JSON files):
+**`JsonDrivenSortingTest`** (integration tests from JSON files, count grows as cases are added):
 
 Each test case lives in `src/test/resources/cases/<name>/` with two files:
 

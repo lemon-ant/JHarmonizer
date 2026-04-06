@@ -1,8 +1,13 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.Value;
@@ -17,73 +22,83 @@ import org.junit.jupiter.api.Test;
  */
 class GenericSortingTest {
 
-    // ------------------------------------------------------------------ //
-    // Helper constants for String-based tests                             //
-    // ------------------------------------------------------------------ //
-
     private static final Comparator<String> NATURAL_ORDER = Comparator.naturalOrder();
-
-    // ------------------------------------------------------------------ //
-    // Tests using String items — DependencyAwareSorter                    //
-    // ------------------------------------------------------------------ //
 
     @Nested
     class DependencyAwareSorterStringTests {
 
         @Test
-        void emptyInput() {
+        void sort_emptyInput_returnsEmptyList() {
+            // When
             List<String> result =
                     DependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).isEmpty();
         }
 
         @Test
-        void plainAlphabeticalSort() {
+        void sort_noGroupsOrDependencies_returnsNaturalOrder() {
+            // When
             List<String> result = DependencyAwareSorter.sort(
                     List.of("cherry", "apple", "banana"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).containsExactly("apple", "banana", "cherry");
         }
 
         @Test
-        void singleItem() {
+        void sort_singleItem_returnsSameItem() {
+            // When
             List<String> result =
                     DependencyAwareSorter.sort(List.of("solo"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).containsExactly("solo");
         }
 
         @Test
-        void groupKeepsItemsTogether() {
-            List<String> result = DependencyAwareSorter.sort(
-                    List.of("zebra", "bravo", "alpha", "mango"),
-                    new Groups<>(List.of(Group.of("zebra", "bravo"))),
-                    Dependencies.empty(),
-                    NATURAL_ORDER);
-            // Group {bravo, zebra} together, alpha before group key (bravo), mango after
+        void sort_oneGroup_itemsKeptTogether() {
+            // Given
+            var items = List.of("zebra", "bravo", "alpha", "mango");
+            var groups = new Groups<>(List.of(Group.of("zebra", "bravo")));
+
+            // When
+            List<String> result = DependencyAwareSorter.sort(items, groups, Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).containsExactly("alpha", "bravo", "zebra", "mango");
         }
 
         @Test
-        void dependencyForcesOrder() {
+        void sort_dependencyReversesNaturalOrder_providerBeforeDependent() {
+            // Given
+            var items = List.of("alpha", "bravo", "charlie");
+
+            // When
             List<String> result = DependencyAwareSorter.sort(
-                    List.of("alpha", "bravo", "charlie"),
-                    Groups.empty(),
-                    Dependencies.of("charlie", "alpha"),
-                    NATURAL_ORDER);
+                    items, Groups.empty(), Dependencies.of("charlie", "alpha"), NATURAL_ORDER);
+
+            // Then
             assertThat(result.indexOf("charlie")).isLessThan(result.indexOf("alpha"));
         }
 
         @Test
-        void transitiveDependencies() {
+        void sort_transitiveChain_respectsFullOrdering() {
+            // When
             List<String> result = DependencyAwareSorter.sort(
                     List.of("a", "b", "c", "d"),
                     Groups.empty(),
                     Dependencies.of("d", "c", "c", "b", "b", "a"),
                     NATURAL_ORDER);
+
+            // Then
             assertThat(result).containsExactly("d", "c", "b", "a");
         }
 
         @Test
-        void cycleThrows() {
+        void sort_cyclicDependency_throwsSortingException() {
+            // When / Then
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
                             List.of("a", "b", "c"),
                             Groups.empty(),
@@ -95,7 +110,8 @@ class GenericSortingTest {
         }
 
         @Test
-        void selfDependencyThrows() {
+        void sort_selfDependency_throwsSortingException() {
+            // When / Then
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
                             List.of("a", "b"), Groups.empty(), Dependencies.of("a", "a"), NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
@@ -104,7 +120,8 @@ class GenericSortingTest {
         }
 
         @Test
-        void duplicateIdentityThrows() {
+        void sort_duplicateItem_throwsSortingException() {
+            // When / Then
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
                             List.of("apple", "banana", "apple"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER))
                     .isInstanceOf(SortingException.class)
@@ -112,7 +129,8 @@ class GenericSortingTest {
         }
 
         @Test
-        void memberInTwoGroupsThrows() {
+        void sort_memberInTwoGroups_throwsSortingException() {
+            // When / Then
             assertThatThrownBy(() -> DependencyAwareSorter.sort(
                             List.of("a", "b", "c"),
                             new Groups<>(List.of(Group.of("a", "b"), Group.of("b", "c"))),
@@ -123,46 +141,58 @@ class GenericSortingTest {
         }
 
         @Test
-        void customComparatorReversesOrder() {
+        void sort_reversedComparator_returnsReverseOrder() {
+            // When
             List<String> result = DependencyAwareSorter.sort(
                     List.of("alpha", "beta", "charlie"),
                     Groups.empty(),
                     Dependencies.empty(),
                     Comparator.<String>naturalOrder().reversed());
+
+            // Then
             assertThat(result).containsExactly("charlie", "beta", "alpha");
         }
 
         @Test
-        void groupWithDependency() {
-            List<String> result = DependencyAwareSorter.sort(
-                    List.of("delta", "echo", "alpha", "beta"),
-                    new Groups<>(List.of(Group.of("delta", "echo"), Group.of("alpha", "beta"))),
-                    Dependencies.of("delta", "beta"),
-                    NATURAL_ORDER);
-            // Group {delta, echo} must come before group {alpha, beta}
+        void sort_groupWithCrossGroupDependency_groupOrderRespected() {
+            // Given
+            var items = List.of("delta", "echo", "alpha", "beta");
+            var groups = new Groups<>(List.of(Group.of("delta", "echo"), Group.of("alpha", "beta")));
+
+            // When
+            List<String> result =
+                    DependencyAwareSorter.sort(items, groups, Dependencies.of("delta", "beta"), NATURAL_ORDER);
+
+            // Then
             assertThat(result.indexOf("delta")).isLessThan(result.indexOf("alpha"));
             assertThat(result.indexOf("echo")).isLessThan(result.indexOf("beta"));
         }
 
         @Test
-        void resultIsUnmodifiable() {
+        void sort_validInput_resultIsUnmodifiable() {
+            // When
             List<String> result =
                     DependencyAwareSorter.sort(List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
         }
 
         @Test
-        void determinismShuffledInput() {
-            List<String> base = List.of("fig", "cherry", "apple", "elderberry", "banana", "date");
-            Groups<String> g = new Groups<>(List.of(Group.of("fig", "date")));
-            Dependencies<String> d = Dependencies.of("cherry", "apple");
+        void sort_shuffledInput_producesDeterministicResult() {
+            // Given
+            var base = List.of("fig", "cherry", "apple", "elderberry", "banana", "date");
+            var g = new Groups<>(List.of(Group.of("fig", "date")));
+            var d = Dependencies.of("cherry", "apple");
+            var expected = DependencyAwareSorter.sort(base, g, d, NATURAL_ORDER);
+            var rng = new Random(42);
 
-            List<String> expected = DependencyAwareSorter.sort(base, g, d, NATURAL_ORDER);
-
-            Random rng = new Random(42);
             for (int run = 0; run < 20; run++) {
-                List<String> shuffled = new ArrayList<>(base);
+                // When
+                var shuffled = new ArrayList<>(base);
                 Collections.shuffle(shuffled, rng);
+
+                // Then
                 assertThat(DependencyAwareSorter.sort(shuffled, g, d, NATURAL_ORDER))
                         .as("run %d: result must be deterministic", run)
                         .isEqualTo(expected);
@@ -170,60 +200,74 @@ class GenericSortingTest {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    // Tests using String items — SimplifiedDependencyAwareSorter          //
-    // ------------------------------------------------------------------ //
-
     @Nested
     class SimplifiedSorterStringTests {
 
         @Test
-        void emptyInput() {
+        void sort_emptyInput_returnsEmptyList() {
+            // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
                     List.of(), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).isEmpty();
         }
 
         @Test
-        void plainAlphabeticalSort() {
+        void sort_noGroupsOrDependencies_returnsNaturalOrder() {
+            // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
                     List.of("cherry", "apple", "banana"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).containsExactly("apple", "banana", "cherry");
         }
 
         @Test
-        void groupKeepsItemsTogether() {
-            List<String> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of("zebra", "bravo", "alpha", "mango"),
-                    new Groups<>(List.of(Group.of("zebra", "bravo"))),
-                    Dependencies.empty(),
-                    NATURAL_ORDER);
+        void sort_oneGroup_itemsKeptTogether() {
+            // Given
+            var items = List.of("zebra", "bravo", "alpha", "mango");
+            var groups = new Groups<>(List.of(Group.of("zebra", "bravo")));
+
+            // When
+            List<String> result =
+                    SimplifiedDependencyAwareSorter.sort(items, groups, Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThat(result).containsExactly("alpha", "bravo", "zebra", "mango");
         }
 
         @Test
-        void dependencyOnSingletons() {
+        void sort_dependencyOnSingletons_providerBeforeDependent() {
+            // Given
+            var items = List.of("alpha", "bravo", "charlie");
+
+            // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of("alpha", "bravo", "charlie"),
-                    Groups.empty(),
-                    Dependencies.of("charlie", "alpha"),
-                    NATURAL_ORDER);
+                    items, Groups.empty(), Dependencies.of("charlie", "alpha"), NATURAL_ORDER);
+
+            // Then
             assertThat(result.indexOf("charlie")).isLessThan(result.indexOf("alpha"));
         }
 
         @Test
-        void groupsAndDepsOnDifferentItems() {
+        void sort_groupsAndDepsOnDisjointMembers_bothConstraintsHonoured() {
+            // Given
+            var items = List.of("delta", "gamma", "beta", "alpha");
+            var groups = new Groups<>(List.of(Group.of("alpha", "beta")));
+
+            // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of("delta", "gamma", "beta", "alpha"),
-                    new Groups<>(List.of(Group.of("alpha", "beta"))),
-                    Dependencies.of("gamma", "delta"),
-                    NATURAL_ORDER);
+                    items, groups, Dependencies.of("gamma", "delta"), NATURAL_ORDER);
+
+            // Then
             assertThat(result.indexOf("alpha")).isLessThan(result.indexOf("beta"));
             assertThat(result.indexOf("gamma")).isLessThan(result.indexOf("delta"));
         }
 
         @Test
-        void groupMemberInDepThrows() {
+        void sort_groupMemberInDependency_throwsSortingException() {
+            // When / Then
             assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
                             List.of("alpha", "beta", "gamma"),
                             new Groups<>(List.of(Group.of("alpha", "beta"))),
@@ -234,16 +278,15 @@ class GenericSortingTest {
         }
 
         @Test
-        void resultIsUnmodifiable() {
+        void sort_validInput_resultIsUnmodifiable() {
+            // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
                     List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
             assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
         }
     }
-
-    // ------------------------------------------------------------------ //
-    // Tests using Integer items — both sorters                            //
-    // ------------------------------------------------------------------ //
 
     @Nested
     class IntegerItemTests {
@@ -251,62 +294,69 @@ class GenericSortingTest {
         private static final Comparator<Integer> INT_ORDER = Comparator.naturalOrder();
 
         @Test
-        void dependencyAwareSorterWithIntegers() {
+        void sort_integerItems_returnsNaturalOrder() {
+            // When
             List<Integer> result = DependencyAwareSorter.sort(
                     List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
+
+            // Then
             assertThat(result).containsExactly(1, 3, 4, 5, 9, 1_000);
         }
 
         @Test
-        void simplifiedSorterWithIntegers() {
+        void sort_simplifiedIntegerItems_returnsNaturalOrder() {
+            // When
             List<Integer> result = SimplifiedDependencyAwareSorter.sort(
                     List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
+
+            // Then
             assertThat(result).containsExactly(1, 3, 4, 5, 9, 1_000);
         }
 
         @Test
-        void integerGroups() {
-            List<Integer> result = DependencyAwareSorter.sort(
-                    List.of(50, 30, 10, 20, 40),
-                    new Groups<>(List.of(Group.of(50, 30))),
-                    Dependencies.empty(),
-                    INT_ORDER);
-            // Group {30, 50} together, key = 30
+        void sort_integerGroup_membersKeptTogether() {
+            // Given
+            var items = List.of(50, 30, 10, 20, 40);
+            var groups = new Groups<>(List.of(Group.of(50, 30)));
+
+            // When
+            List<Integer> result = DependencyAwareSorter.sort(items, groups, Dependencies.empty(), INT_ORDER);
+
+            // Then
             assertThat(result.indexOf(30)).isLessThan(result.indexOf(50));
             assertThat(Math.abs(result.indexOf(30) - result.indexOf(50))).isEqualTo(1);
         }
 
         @Test
-        void integerDependencies() {
+        void sort_integerDependency_providerBeforeDependent() {
+            // When
             List<Integer> result =
                     DependencyAwareSorter.sort(List.of(1, 2, 3), Groups.empty(), Dependencies.of(3, 1), INT_ORDER);
+
+            // Then
             assertThat(result.indexOf(3)).isLessThan(result.indexOf(1));
         }
 
         @Test
-        void integerLargeInput() {
+        void sort_fiveHundredIntegerItems_allDepsRespected() {
+            // Given
             int total = 500;
-            List<Integer> items = IntStream.range(0, total).boxed().collect(Collectors.toList());
-
-            // Create some dependencies: 499→498, 498→497, ..., 401→400
-            List<Dependencies.Dependency<Integer>> depList = IntStream.range(401, 500)
+            var items = IntStream.range(0, total).boxed().collect(Collectors.toList());
+            var depList = IntStream.range(401, 500)
                     .mapToObj(i -> new Dependencies.Dependency<>(i, i - 1))
                     .toList();
 
+            // When
             List<Integer> result =
                     DependencyAwareSorter.sort(items, Groups.empty(), new Dependencies<>(depList), INT_ORDER);
 
+            // Then
             assertThat(result).hasSize(total);
-            // Verify dependency ordering
             depList.forEach(dep -> assertThat(result.indexOf(dep.getProvider()))
                     .as("%d must precede %d", dep.getProvider(), dep.getDependent())
                     .isLessThan(result.indexOf(dep.getDependent())));
         }
     }
-
-    // ------------------------------------------------------------------ //
-    // Tests using custom record type                                      //
-    // ------------------------------------------------------------------ //
 
     @Nested
     class CustomRecordTests {
@@ -321,41 +371,42 @@ class GenericSortingTest {
                 Comparator.comparingInt(Task::getPriority).thenComparing(Task::getId);
 
         @Test
-        void dependencyAwareSorterWithCustomRecord() {
-            Task a = new Task("deploy", 3);
-            Task b = new Task("build", 1);
-            Task c = new Task("test", 2);
-            Task d = new Task("lint", 1);
+        void sort_customTypeWithDependency_depConstraintRespected() {
+            // Given
+            var deploy = new Task("deploy", 3);
+            var build = new Task("build", 1);
+            var test = new Task("test", 2);
+            var lint = new Task("lint", 1);
 
+            // When
             List<Task> result = DependencyAwareSorter.sort(
-                    List.of(a, b, c, d),
+                    List.of(deploy, build, test, lint),
                     Groups.empty(),
-                    Dependencies.of(b, c, c, a), // build → test → deploy
+                    Dependencies.of(build, test, test, deploy),
                     BY_PRIORITY_THEN_ID);
 
-            assertThat(result.indexOf(b)).isLessThan(result.indexOf(c));
-            assertThat(result.indexOf(c)).isLessThan(result.indexOf(a));
+            // Then
+            assertThat(result.indexOf(build)).isLessThan(result.indexOf(test));
+            assertThat(result.indexOf(test)).isLessThan(result.indexOf(deploy));
         }
 
         @Test
-        void simplifiedSorterWithCustomRecord() {
-            Task a = new Task("deploy", 3);
-            Task b = new Task("build", 1);
-            Task c = new Task("test", 2);
-            Task d = new Task("lint", 1);
+        void sort_customTypeWithGroupAndDep_bothConstraintsHonoured() {
+            // Given
+            var deploy = new Task("deploy", 3);
+            var build = new Task("build", 1);
+            var test = new Task("test", 2);
+            var lint = new Task("lint", 1);
+            var groups = new Groups<>(List.of(Group.of(build, lint)));
 
-            // Group {build, lint} (both priority 1), dep: test → deploy
+            // When
             List<Task> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of(a, b, c, d),
-                    new Groups<>(List.of(Group.of(b, d))),
-                    Dependencies.of(c, a), // test → deploy (no overlap with group)
-                    BY_PRIORITY_THEN_ID);
+                    List.of(deploy, build, test, lint), groups, Dependencies.of(test, deploy), BY_PRIORITY_THEN_ID);
 
-            // Group {build, lint} must be together in priority order
-            assertThat(result.indexOf(b)).isLessThan(result.indexOf(d));
-            assertThat(Math.abs(result.indexOf(b) - result.indexOf(d))).isEqualTo(1);
-            // test before deploy
-            assertThat(result.indexOf(c)).isLessThan(result.indexOf(a));
+            // Then
+            assertThat(result.indexOf(build)).isLessThan(result.indexOf(lint));
+            assertThat(Math.abs(result.indexOf(build) - result.indexOf(lint))).isEqualTo(1);
+            assertThat(result.indexOf(test)).isLessThan(result.indexOf(deploy));
         }
     }
 }
