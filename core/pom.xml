@@ -46,6 +46,11 @@
             <version>11.2.1</version>
         </dependency>
         <dependency>
+            <groupId>io.github.lemon_ant.jharmonizer</groupId>
+            <artifactId>dependency-aware-sorting</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
             <version>${jmh.version}</version>

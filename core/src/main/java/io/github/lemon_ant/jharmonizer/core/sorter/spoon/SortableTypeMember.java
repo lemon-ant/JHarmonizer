@@ -7,10 +7,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -18,11 +15,11 @@ import lombok.Value;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
- * A sortable wrapper around a Spoon {@code CtTypeMember} that caches the ordering key,
- * the representative member for accessor-pair bundling, and the set of declaration dependents
- * within the same member group.
+ * A sortable wrapper around a Spoon {@code CtTypeMember} that caches the ordering key
+ * used to compare and sort members within a member group.
  */
 @Value
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class SortableTypeMember {
 
     @NonNull
@@ -31,58 +28,9 @@ class SortableTypeMember {
     @NonNull
     OrderingKey orderingKey;
 
-    @NonNull
-    SortableTypeMember representativeTypeMember;
-
-    @NonNull
-    Set<@NonNull CtTypeMember> orderingDependentsInGroup;
-
-    /**
-     * Creates a new SortableTypeMember.
-     * @param typeMember the type member
-     * @param representativeTypeMember the representative type member
-     * @param orderingDependentsInGroup the ordering dependents in group
-     * @param orderingKeyProvider the ordering key provider
-     */
-    SortableTypeMember(
-            @NonNull CtTypeMember typeMember,
-            @Nullable SortableTypeMember representativeTypeMember,
-            @NonNull Set<@NonNull CtTypeMember> orderingDependentsInGroup,
-            Function<CtTypeMember, OrderingKey> orderingKeyProvider) {
-        this.typeMember = typeMember;
-        this.representativeTypeMember = representativeTypeMember == null ? this : representativeTypeMember;
-        this.orderingDependentsInGroup = orderingDependentsInGroup;
-        this.orderingKey = orderingKeyProvider.apply(typeMember);
-    }
-
     @Override
     public String toString() {
-        return "member=" + describeTypeMember(typeMember)
-                + ", orderingKey=" + orderingKey
-                + ", representative=" + describeTypeMember(representativeTypeMember.getTypeMember())
-                + ", orderingDependentsInGroupCount=" + orderingDependentsInGroup.size();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof SortableTypeMember otherSortableTypeMember)) {
-            return false;
-        }
-        return Objects.equals(typeMember, otherSortableTypeMember.typeMember)
-                && Objects.equals(orderingKey, otherSortableTypeMember.orderingKey)
-                && Objects.equals(
-                        representativeTypeMember.getTypeMember(),
-                        otherSortableTypeMember.representativeTypeMember.getTypeMember())
-                && Objects.equals(orderingDependentsInGroup, otherSortableTypeMember.orderingDependentsInGroup);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(
-                typeMember, orderingKey, representativeTypeMember.getTypeMember(), orderingDependentsInGroup);
+        return "member=" + describeTypeMember(typeMember) + ", orderingKey=" + orderingKey;
     }
 
     @NonNull
@@ -99,13 +47,17 @@ class SortableTypeMember {
         return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
     }
 
+    /**
+     * An immutable key used to compare {@link SortableTypeMember} instances.
+     */
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class OrderingKey {
 
         /**
-         * Returns the ordering key provider.
-         * @return the ordering key provider
+         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
+         *
+         * @return the ordering key provider function
          */
         @NonNull
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
