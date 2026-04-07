@@ -60,26 +60,8 @@ class SrcProcessorRegressionTest
 
     @Override
     @NonNull
-    protected String resolveWorkspaceDirectoryName() {
-        return "SrcProcessorRegressionE2E-working-dir";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileBeforeDirectoryName() {
-        return "SrcProcessorRegressionE2E-compile-before";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileAfterDirectoryName() {
-        return "SrcProcessorRegressionE2E-compile-after";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileExpectedDirectoryName() {
-        return "SrcProcessorRegressionE2E-compile-expected";
+    protected String resolveDirectoryNamePrefix() {
+        return "SrcProcessorRegressionE2E";
     }
 
     @Override

@@ -59,26 +59,8 @@ class SrcProcessorE2EFixtureTest
 
     @Override
     @NonNull
-    protected String resolveWorkspaceDirectoryName() {
-        return "SrcProcessorE2E-working-dir";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileBeforeDirectoryName() {
-        return "SrcProcessorE2E-compile-before";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileAfterDirectoryName() {
-        return "SrcProcessorE2E-compile-after";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileExpectedDirectoryName() {
-        return "SrcProcessorE2E-compile-expected";
+    protected String resolveDirectoryNamePrefix() {
+        return "SrcProcessorE2E";
     }
 
     @Override
