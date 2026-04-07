@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -18,7 +19,6 @@ public class MemberDependencyGraphBuilder {
 
     private static final Collection<@NonNull MemberDependencyProvider> memberDependencyProviders = List.of(
             new AccessorPairDependencyProvider(),
-            new EnumConstantInitializerDependencyProvider(),
             new BlankFinalDefiniteAssignmentDependencyProvider(),
             new FieldInitializerBackwardReferenceDependencyProvider(),
             new ExplicitThisInitializerFieldDependencyProvider(),
@@ -38,6 +38,11 @@ public class MemberDependencyGraphBuilder {
 
         // typeMember2NaturalMemberGroup is expected to contain only explicit source members.
         typeMember2NaturalMemberGroup.keySet().forEach(dependentMember -> {
+            // Enum constants are printed as-is at the beginning of their type and are never reordered.
+            if (dependentMember instanceof CtEnumValue<?>) {
+                return;
+            }
+
             CompiledMemberGroup dependentNaturalGroup =
                     resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
@@ -48,6 +53,7 @@ public class MemberDependencyGraphBuilder {
                             memberDependencyProvider
                                     .findDirectProviderEdges(dependentMember, keepAccessorsTogether)
                                     .stream())
+                    .filter(providerEdge -> !(providerEdge.getAdjacentMember() instanceof CtEnumValue<?>))
                     .forEach(providerEdge -> memberDependencyGraph.addEdge(
                             providerEdge.getAdjacentMember(), dependentMember, providerEdge.getEdgeKind()));
         });
