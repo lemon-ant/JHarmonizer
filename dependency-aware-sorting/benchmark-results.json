@@ -1,0 +1,500 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.original_5000_withConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 8354.856617239857,
+            "scoreError" : 346.5650691790136,
+            "scoreConfidence" : [
+                8008.2915480608435,
+                8701.421686418871
+            ],
+            "scorePercentiles" : {
+                "0.0" : 7993.925075565541,
+                "50.0" : 8414.117404565683,
+                "90.0" : 8662.098210467873,
+                "95.0" : 8666.165992642284,
+                "99.0" : 8666.165992642284,
+                "99.9" : 8666.165992642284,
+                "99.99" : 8666.165992642284,
+                "99.999" : 8666.165992642284,
+                "99.9999" : 8666.165992642284,
+                "100.0" : 8666.165992642284
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    7993.925075565541,
+                    8041.862811345228,
+                    8493.864026556177,
+                    8287.474109464318,
+                    8166.548714869682,
+                    8408.72773898305,
+                    8445.002461925804,
+                    8419.507070148315,
+                    8666.165992642284,
+                    8625.488170898177
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.original_500_withConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 675.2717201877402,
+            "scoreError" : 44.21416998392514,
+            "scoreConfidence" : [
+                631.0575502038151,
+                719.4858901716653
+            ],
+            "scorePercentiles" : {
+                "0.0" : 603.1348923053445,
+                "50.0" : 680.9813795938633,
+                "90.0" : 708.2888732831204,
+                "95.0" : 709.262089576584,
+                "99.0" : 709.262089576584,
+                "99.9" : 709.262089576584,
+                "99.99" : 709.262089576584,
+                "99.999" : 709.262089576584,
+                "99.9999" : 709.262089576584,
+                "100.0" : 709.262089576584
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    603.1348923053445,
+                    699.529926641948,
+                    692.2177646024707,
+                    685.6935711576875,
+                    709.262089576584,
+                    676.832922508092,
+                    670.5685223266266,
+                    668.9428571827835,
+                    661.404818896231,
+                    685.1298366796345
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.original_50_noConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 52.43897414853838,
+            "scoreError" : 1.3586770662916403,
+            "scoreConfidence" : [
+                51.08029708224674,
+                53.79765121483002
+            ],
+            "scorePercentiles" : {
+                "0.0" : 50.962914739286475,
+                "50.0" : 52.39125155556108,
+                "90.0" : 53.75860527331698,
+                "95.0" : 53.780536131566926,
+                "99.0" : 53.780536131566926,
+                "99.9" : 53.780536131566926,
+                "99.99" : 53.780536131566926,
+                "99.999" : 53.780536131566926,
+                "99.9999" : 53.780536131566926,
+                "100.0" : 53.780536131566926
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    53.780536131566926,
+                    52.97834055469636,
+                    53.56122754906746,
+                    52.21330070989724,
+                    50.962914739286475,
+                    52.393789860728646,
+                    52.38871325039351,
+                    51.20066151959817,
+                    52.729262470649935,
+                    52.18099469949911
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.original_50_withConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 42.86805155428304,
+            "scoreError" : 9.944245289914404,
+            "scoreConfidence" : [
+                32.923806264368636,
+                52.81229684419745
+            ],
+            "scorePercentiles" : {
+                "0.0" : 38.06594282805487,
+                "50.0" : 39.70370859519193,
+                "90.0" : 55.22357015458582,
+                "95.0" : 55.28748014655078,
+                "99.0" : 55.28748014655078,
+                "99.9" : 55.28748014655078,
+                "99.99" : 55.28748014655078,
+                "99.999" : 55.28748014655078,
+                "99.9999" : 55.28748014655078,
+                "100.0" : 55.28748014655078
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    43.85806550559267,
+                    40.06703915974008,
+                    38.06594282805487,
+                    39.244079902349824,
+                    40.610772027851375,
+                    55.28748014655078,
+                    54.648380226901246,
+                    39.20162438746704,
+                    39.34037803064377,
+                    38.35675332767883
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.simplified_5000_withConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 2571.503504173913,
+            "scoreError" : 53.442042206086406,
+            "scoreConfidence" : [
+                2518.0614619678263,
+                2624.9455463799995
+            ],
+            "scorePercentiles" : {
+                "0.0" : 2513.685151205111,
+                "50.0" : 2561.910726487027,
+                "90.0" : 2612.9888078091367,
+                "95.0" : 2613.232030196532,
+                "99.0" : 2613.232030196532,
+                "99.9" : 2613.232030196532,
+                "99.99" : 2613.232030196532,
+                "99.999" : 2613.232030196532,
+                "99.9999" : 2613.232030196532,
+                "100.0" : 2613.232030196532
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    2613.232030196532,
+                    2536.387495026356,
+                    2557.7661803089836,
+                    2610.7998063225796,
+                    2547.29581682026,
+                    2513.685151205111,
+                    2603.075032955723,
+                    2565.426649030022,
+                    2558.3948039440324,
+                    2608.972075929529
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.simplified_500_withConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 171.31278842648797,
+            "scoreError" : 11.405602157805257,
+            "scoreConfidence" : [
+                159.90718626868272,
+                182.71839058429322
+            ],
+            "scorePercentiles" : {
+                "0.0" : 164.94534622824827,
+                "50.0" : 169.08803266606458,
+                "90.0" : 189.36017555526425,
+                "95.0" : 190.7560817600612,
+                "99.0" : 190.7560817600612,
+                "99.9" : 190.7560817600612,
+                "99.99" : 190.7560817600612,
+                "99.999" : 190.7560817600612,
+                "99.9999" : 190.7560817600612,
+                "100.0" : 190.7560817600612
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    190.7560817600612,
+                    169.5825032892584,
+                    169.6573436200525,
+                    176.79701971209158,
+                    168.03955207884056,
+                    168.5935620428708,
+                    171.03013538730193,
+                    166.99997871780408,
+                    164.94534622824827,
+                    166.72636142835026
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.simplified_50_noConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 5.41879611174194,
+            "scoreError" : 0.5249989868113102,
+            "scoreConfidence" : [
+                4.89379712493063,
+                5.94379509855325
+            ],
+            "scorePercentiles" : {
+                "0.0" : 5.018654640481569,
+                "50.0" : 5.320024045402095,
+                "90.0" : 6.097986639612646,
+                "95.0" : 6.133457945120746,
+                "99.0" : 6.133457945120746,
+                "99.9" : 6.133457945120746,
+                "99.99" : 6.133457945120746,
+                "99.999" : 6.133457945120746,
+                "99.9999" : 6.133457945120746,
+                "100.0" : 6.133457945120746
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    5.399672851048785,
+                    6.133457945120746,
+                    5.6891232257399755,
+                    5.778744890039747,
+                    5.264851311341425,
+                    5.175296986899402,
+                    5.109082921620743,
+                    5.018654640481569,
+                    5.3751967794627635,
+                    5.243879565664247
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.sorting.benchmark.SimplifiedSortingBenchmark.simplified_50_withConstraints",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\dependency-aware-sorting"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 14.0040767727162,
+            "scoreError" : 0.7645542495137003,
+            "scoreConfidence" : [
+                13.2395225232025,
+                14.7686310222299
+            ],
+            "scorePercentiles" : {
+                "0.0" : 13.357506781384458,
+                "50.0" : 13.88368728528997,
+                "90.0" : 14.973721382497553,
+                "95.0" : 15.028339447552433,
+                "99.0" : 15.028339447552433,
+                "99.9" : 15.028339447552433,
+                "99.99" : 15.028339447552433,
+                "99.999" : 15.028339447552433,
+                "99.9999" : 15.028339447552433,
+                "100.0" : 15.028339447552433
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    14.482158797003637,
+                    15.028339447552433,
+                    14.458132925110892,
+                    13.919015480798333,
+                    13.550370208973634,
+                    13.773585753968622,
+                    13.357506781384458,
+                    13.944368966310947,
+                    13.678930276277438,
+                    13.848359089781606
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

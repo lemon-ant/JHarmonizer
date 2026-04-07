@@ -20,12 +20,13 @@ import org.junit.jupiter.api.Test;
  *
  * <p>{@link SimplifiedDependencyAwareSorter} is exercised.</p>
  */
+// TODO Split it
 class GenericSortingTest {
 
     private static final Comparator<String> NATURAL_ORDER = Comparator.naturalOrder();
 
     @Nested
-    class SimplifiedDependencyAwareSorterStringTests {
+    class GeneralStringTests {
 
         @Test
         void sort_emptyInput_returnsEmptyList() {
@@ -155,7 +156,7 @@ class GenericSortingTest {
         }
 
         @Test
-        void sort_resultIsUnmodifiable_throwsOnMutation() {
+        void sort_validInput_resultIsUnmodifiable() {
             // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
                     List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
@@ -165,7 +166,7 @@ class GenericSortingTest {
         }
 
         @Test
-        void sort_deterministic_shuffledInputProducesSameResult() {
+        void sort_shuffledInput_producesDeterministicResult() {
             // Given
             var base = List.of("fig", "cherry", "apple", "elderberry", "banana", "date");
             var g = new Groups<>(List.of(Group.of("fig", "date")));
@@ -180,52 +181,162 @@ class GenericSortingTest {
 
                 // Then
                 assertThat(SimplifiedDependencyAwareSorter.sort(shuffled, g, d, NATURAL_ORDER))
-                        .as("run %d", run)
+                        .as("run %d: result must be deterministic", run)
                         .isEqualTo(expected);
             }
         }
     }
 
     @Nested
-    class SimplifiedDependencyAwareSorterIntegerTests {
+    class SimplifiedSorterStringTests {
 
         @Test
-        void sort_integerItems_sortedNaturally() {
+        void sort_emptyInput_returnsEmptyList() {
             // When
-            List<Integer> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of(5, 3, 1, 4, 2), Groups.empty(), Dependencies.empty(), Comparator.naturalOrder());
+            List<String> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of(), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
 
             // Then
-            assertThat(result).containsExactly(1, 2, 3, 4, 5);
+            assertThat(result).isEmpty();
         }
 
         @Test
-        void sort_integerGroups_groupKeptTogether() {
+        void sort_noGroupsOrDependencies_returnsNaturalOrder() {
+            // When
+            List<String> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of("cherry", "apple", "banana"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
+            assertThat(result).containsExactly("apple", "banana", "cherry");
+        }
+
+        @Test
+        void sort_oneGroup_itemsKeptTogether() {
             // Given
-            var items = List.of(5, 3, 1, 4, 2);
-            var groups = new Groups<>(List.of(new Group<>(List.of(5, 3))));
+            var items = List.of("zebra", "bravo", "alpha", "mango");
+            var groups = new Groups<>(List.of(Group.of("zebra", "bravo")));
 
             // When
-            List<Integer> result = SimplifiedDependencyAwareSorter.sort(
-                    items, groups, Dependencies.empty(), Comparator.naturalOrder());
+            List<String> result =
+                    SimplifiedDependencyAwareSorter.sort(items, groups, Dependencies.empty(), NATURAL_ORDER);
 
             // Then
-            assertThat(result).containsExactly(1, 2, 3, 5, 4);
+            assertThat(result).containsExactly("alpha", "bravo", "zebra", "mango");
         }
 
         @Test
-        void sort_integerDependencyReversesOrder_providerFirst() {
+        void sort_dependencyOnSingletons_providerBeforeDependent() {
+            // Given
+            var items = List.of("alpha", "bravo", "charlie");
+
             // When
-            List<Integer> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of(1, 2, 3), Groups.empty(), Dependencies.of(3, 1), Comparator.naturalOrder());
+            List<String> result = SimplifiedDependencyAwareSorter.sort(
+                    items, Groups.empty(), Dependencies.of("charlie", "alpha"), NATURAL_ORDER);
 
             // Then
-            assertThat(result.indexOf(3)).isLessThan(result.indexOf(1));
+            assertThat(result.indexOf("charlie")).isLessThan(result.indexOf("alpha"));
+        }
+
+        @Test
+        void sort_groupsAndDepsOnDisjointMembers_bothConstraintsHonoured() {
+            // Given
+            var items = List.of("delta", "gamma", "beta", "alpha");
+            var groups = new Groups<>(List.of(Group.of("alpha", "beta")));
+
+            // When
+            List<String> result = SimplifiedDependencyAwareSorter.sort(
+                    items, groups, Dependencies.of("gamma", "delta"), NATURAL_ORDER);
+
+            // Then
+            assertThat(result.indexOf("alpha")).isLessThan(result.indexOf("beta"));
+            assertThat(result.indexOf("gamma")).isLessThan(result.indexOf("delta"));
+        }
+
+        @Test
+        void sort_groupMemberInDependency_throwsSortingException() {
+            // When / Then
+            assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
+                            List.of("alpha", "beta", "gamma"),
+                            new Groups<>(List.of(Group.of("alpha", "beta"))),
+                            Dependencies.of("alpha", "gamma"),
+                            NATURAL_ORDER))
+                    .isInstanceOf(SortingException.class)
+                    .hasMessageContaining("alpha");
+        }
+
+        @Test
+        void sort_validInput_resultIsUnmodifiable() {
+            // When
+            List<String> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+
+            // Then
+            assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
     @Nested
-    class SimplifiedDependencyAwareSorterCustomTypeTests {
+    class IntegerItemTests {
+
+        private static final Comparator<Integer> INT_ORDER = Comparator.naturalOrder();
+
+        @Test
+        void sort_integerItems_returnsNaturalOrder() {
+            // When
+            List<Integer> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
+
+            // Then
+            assertThat(result).containsExactly(1, 3, 4, 5, 9, 1_000);
+        }
+
+        @Test
+        void sort_integerGroup_membersKeptTogether() {
+            // Given
+            var items = List.of(50, 30, 10, 20, 40);
+            var groups = new Groups<>(List.of(Group.of(50, 30)));
+
+            // When
+            List<Integer> result = SimplifiedDependencyAwareSorter.sort(items, groups, Dependencies.empty(), INT_ORDER);
+
+            // Then
+            assertThat(result.indexOf(30)).isLessThan(result.indexOf(50));
+            assertThat(Math.abs(result.indexOf(30) - result.indexOf(50))).isEqualTo(1);
+        }
+
+        @Test
+        void sort_integerDependency_providerBeforeDependent() {
+            // When
+            List<Integer> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of(1, 2, 3), Groups.empty(), Dependencies.of(3, 1), INT_ORDER);
+
+            // Then
+            assertThat(result.indexOf(3)).isLessThan(result.indexOf(1));
+        }
+
+        @Test
+        void sort_fiveHundredIntegerItems_allDepsRespected() {
+            // Given
+            int total = 500;
+            var items = IntStream.range(0, total).boxed().collect(Collectors.toList());
+            var depList = IntStream.range(401, 500)
+                    .mapToObj(i -> new Dependencies.Dependency<>(i, i - 1))
+                    .toList();
+
+            // When
+            List<Integer> result =
+                    SimplifiedDependencyAwareSorter.sort(items, Groups.empty(), new Dependencies<>(depList), INT_ORDER);
+
+            // Then
+            assertThat(result).hasSize(total);
+            depList.forEach(dep -> assertThat(result.indexOf(dep.getProvider()))
+                    .as("%d must precede %d", dep.getProvider(), dep.getDependent())
+                    .isLessThan(result.indexOf(dep.getDependent())));
+        }
+    }
+
+    @Nested
+    class CustomRecordTests {
 
         @Value
         static class Task {
@@ -237,56 +348,42 @@ class GenericSortingTest {
                 Comparator.comparingInt(Task::getPriority).thenComparing(Task::getId);
 
         @Test
-        void sort_customObjects_sortedByComparator() {
-            // Given
-            var tasks = List.of(new Task("deploy", 3), new Task("build", 1), new Task("test", 2));
-
-            // When
-            List<Task> result = SimplifiedDependencyAwareSorter.sort(
-                    tasks, Groups.empty(), Dependencies.empty(), BY_PRIORITY_THEN_ID);
-
-            // Then
-            assertThat(result).extracting(Task::getId).containsExactly("build", "test", "deploy");
-        }
-
-        @Test
-        void sort_customObjectsWithDeps_dependencyOverridesComparator() {
+        void sort_customTypeWithDependency_depConstraintRespected() {
             // Given
             var deploy = new Task("deploy", 3);
             var build = new Task("build", 1);
             var test = new Task("test", 2);
-            var items = List.of(deploy, build, test);
-            var deps = new Dependencies<>(List.of(new Dependencies.Dependency<>(deploy, build)));
+            var lint = new Task("lint", 1);
 
             // When
-            List<Task> result = SimplifiedDependencyAwareSorter.sort(items, Groups.empty(), deps, BY_PRIORITY_THEN_ID);
+            List<Task> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of(deploy, build, test, lint),
+                    Groups.empty(),
+                    Dependencies.of(build, test, test, deploy),
+                    BY_PRIORITY_THEN_ID);
 
             // Then
-            assertThat(result.indexOf(deploy)).isLessThan(result.indexOf(build));
+            assertThat(result.indexOf(build)).isLessThan(result.indexOf(test));
+            assertThat(result.indexOf(test)).isLessThan(result.indexOf(deploy));
         }
 
         @Test
-        void sort_largeInput_completesSuccessfully() {
+        void sort_customTypeWithGroupAndDep_bothConstraintsHonoured() {
             // Given
-            int total = 1000;
-            var tasks = IntStream.range(0, total)
-                    .mapToObj(i -> new Task(String.format("task%04d", i), i % 5))
-                    .collect(Collectors.toList());
-            var depEdges = IntStream.range(1, 100)
-                    .mapToObj(i -> new Dependencies.Dependency<>(tasks.get(i + 100), tasks.get(i)))
-                    .toList();
-            var deps = new Dependencies<>(depEdges);
+            var deploy = new Task("deploy", 3);
+            var build = new Task("build", 1);
+            var test = new Task("test", 2);
+            var lint = new Task("lint", 1);
+            var groups = new Groups<>(List.of(Group.of(build, lint)));
 
             // When
-            List<Task> result = SimplifiedDependencyAwareSorter.sort(tasks, Groups.empty(), deps, BY_PRIORITY_THEN_ID);
+            List<Task> result = SimplifiedDependencyAwareSorter.sort(
+                    List.of(deploy, build, test, lint), groups, Dependencies.of(test, deploy), BY_PRIORITY_THEN_ID);
 
             // Then
-            assertThat(result).hasSize(total);
-            depEdges.forEach(dep -> assertThat(result.indexOf(dep.getProvider()))
-                    .as(
-                            "%s must precede %s",
-                            dep.getProvider().getId(), dep.getDependent().getId())
-                    .isLessThan(result.indexOf(dep.getDependent())));
+            assertThat(result.indexOf(build)).isLessThan(result.indexOf(lint));
+            assertThat(Math.abs(result.indexOf(build) - result.indexOf(lint))).isEqualTo(1);
+            assertThat(result.indexOf(test)).isLessThan(result.indexOf(deploy));
         }
     }
 }

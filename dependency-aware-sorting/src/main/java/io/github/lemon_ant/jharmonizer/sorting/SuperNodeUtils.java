@@ -115,8 +115,8 @@ class SuperNodeUtils {
             nodeLength[superNodeCount] = groupItems.size();
             resolveGroupMembers(groupItems, itemToIndex, itemToSuperNode, superNodeCount, memberIndices, dataPosition);
 
-            nodeKeys[superNodeCount] =
-                    findComparatorMinimum(memberIndices, dataPosition, groupItems.size(), items, comparator);
+            insertionSortRange(memberIndices, dataPosition, groupItems.size(), items, comparator);
+            nodeKeys[superNodeCount] = items.get(memberIndices[dataPosition]);
             dataPosition += groupItems.size();
             superNodeCount++;
         }
@@ -209,20 +209,22 @@ class SuperNodeUtils {
     // ------------------------------------------------------------------ //
 
     /**
-     * Finds the comparator-minimum item across a range in {@code data[offset .. offset+length-1]}.
-     * The range is not modified — only the minimum item is returned for use as the super-node key.
+     * Insertion sort for a small range within {@code data[offset .. offset+length-1]}.
+     * Used for intra-group ordering where groups are typically small.
      */
-    @NonNull
-    private static <TSortableItem> TSortableItem findComparatorMinimum(
+    @SuppressWarnings("PMD.AvoidArrayLoops")
+    private static <TSortableItem> void insertionSortRange(
             int[] data, int offset, int length, List<TSortableItem> items, Comparator<TSortableItem> comparator) {
-        TSortableItem minItem = items.get(data[offset]);
         for (int i = 1; i < length; i++) {
-            TSortableItem candidate = items.get(data[offset + i]);
-            if (comparator.compare(candidate, minItem) < 0) {
-                minItem = candidate;
+            int insertedIndex = data[offset + i];
+            TSortableItem insertedItem = items.get(insertedIndex);
+            int j = i - 1;
+            while (j >= 0 && comparator.compare(items.get(data[offset + j]), insertedItem) > 0) {
+                data[offset + j + 1] = data[offset + j];
+                j--;
             }
+            data[offset + j + 1] = insertedIndex;
         }
-        return minItem;
     }
 
     // ------------------------------------------------------------------ //

@@ -10,11 +10,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -32,8 +28,23 @@ import org.junit.jupiter.params.provider.MethodSource;
  *   <li>{@code expected.json} — expected sorted output (list of item names)</li>
  * </ul>
  *
- * <p>Only cases that satisfy the simplified preconditions (no group–dependency overlap) are
- * run against {@link SimplifiedDependencyAwareSorter}.</p>
+ * <p>Input format:
+ * <pre>{@code
+ * {
+ *   "description": "Human-readable explanation of the case",
+ *   "items":        [{"name": "name1", "numeration": "STATIC"}, {"name": "name2", "numeration": "DYNAMIC"}, ...],
+ *   "clusters":     [["name1", "name3"], ...],
+ *   "dependencies": [{"provider": "name1", "dependent": "name2"}, ...]
+ * }
+ * }</pre>
+ *
+ * <p>Expected output format:
+ * <pre>{@code
+ * ["result1", "result2", ...]
+ * }</pre>
+ *
+ * <p>All cases run against {@link SimplifiedDependencyAwareSorter}. Cases that satisfy the simplified
+ * preconditions (no group–dependency overlap) are included.</p>
  *
  * <p>To add a new case just drop a new sub-directory with the two JSON files — no code
  * changes required.
@@ -108,6 +119,7 @@ class JsonDrivenSortingTest {
 
         // Parse items — preserve declared order/content in the list, and build a
         // separate name→SortableTypeMember index for reference lookup.
+        // Each item must be an object: {"name": "...", "numeration": "STATIC|DYNAMIC"}
         List<SortableTypeMember> items = new ArrayList<>();
         Map<String, SortableTypeMember> itemMap = new LinkedHashMap<>();
         StreamSupport.stream(input.get("items").spliterator(), false).forEach(itemNode -> {

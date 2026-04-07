@@ -38,12 +38,6 @@ public class SortableTypeMember {
         @NonNull
         Numeration numeration;
 
-        /**
-         * Creates a new ordering key.
-         *
-         * @param name       the member name (must not be blank)
-         * @param numeration the numeration type
-         */
         public OrderingKey(String name, @NonNull Numeration numeration) {
             if (name == null || name.isBlank()) {
                 throw new SortingException("Member name must not be blank");
@@ -64,31 +58,15 @@ public class SortableTypeMember {
     @NonNull
     OrderingKey orderingKey;
 
-    /**
-     * Creates a static member with the given name.
-     *
-     * @param name the member name
-     * @return a new static member
-     */
     public static SortableTypeMember staticMember(String name) {
         return new SortableTypeMember(new OrderingKey(name, Numeration.STATIC));
     }
 
-    /**
-     * Creates a dynamic member with the given name.
-     *
-     * @param name the member name
-     * @return a new dynamic member
-     */
     public static SortableTypeMember dynamicMember(String name) {
         return new SortableTypeMember(new OrderingKey(name, Numeration.DYNAMIC));
     }
 
-    /**
-     * Returns the name from the ordering key (convenience accessor).
-     *
-     * @return the member name
-     */
+    /** Returns the name from the ordering key (convenience accessor). */
     public String getName() {
         return orderingKey.getName();
     }
