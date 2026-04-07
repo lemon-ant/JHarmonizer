@@ -4,9 +4,8 @@ import java.io.Serial;
 import lombok.experimental.StandardException;
 
 /**
- * Thrown when the input to {@link DependencyAwareSorter} is invalid — e.g. duplicate items,
- * an item in multiple groups, an intra-group dependency that conflicts with comparator
- * ordering, or a cycle in the dependency graph.
+ * Thrown when the input to {@link SimplifiedDependencyAwareSorter} is invalid — e.g. duplicate items,
+ * an item in multiple groups, or a cycle in the dependency graph.
  */
 @StandardException
 public class SortingException extends RuntimeException {

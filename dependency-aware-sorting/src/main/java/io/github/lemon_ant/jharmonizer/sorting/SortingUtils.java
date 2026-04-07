@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,14 +9,13 @@ import lombok.Value;
 import lombok.experimental.UtilityClass;
 
 /**
- * Shared utilities used by both {@link DependencyAwareSorter} and
- * {@link SimplifiedDependencyAwareSorter}.
+ * Shared utilities used by {@link SimplifiedDependencyAwareSorter}.
  *
  * <p>Contains common validation routines, item-index building,
- * and low-level data structures that are identical across both algorithms.</p>
+ * and low-level data structures.</p>
  */
 @UtilityClass
-class CommonSortingUtils {
+class SortingUtils {
 
     /** Sentinel value indicating an item has not been assigned to any super-node yet. */
     static final int UNASSIGNED = -1;
@@ -34,7 +33,6 @@ class CommonSortingUtils {
      * @throws SortingException if two items are equal (duplicates)
      */
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
     static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(@NonNull List<TSortableItem> items) {
         Map<TSortableItem, Integer> itemToIndex = new HashMap<>(items.size() * 2);
         for (int i = 0; i < items.size(); i++) {
@@ -43,7 +41,7 @@ class CommonSortingUtils {
                 throw new SortingException("Duplicate item: \"" + item + "\"");
             }
         }
-        return itemToIndex;
+        return Collections.unmodifiableMap(itemToIndex);
     }
 
     // ------------------------------------------------------------------ //
@@ -96,7 +94,11 @@ class CommonSortingUtils {
     static class ResolvedEdge<TSortableItem> {
         int providerIndex;
         int dependentIndex;
+
+        @NonNull
         TSortableItem provider;
+
+        @NonNull
         TSortableItem dependent;
     }
 
@@ -131,34 +133,5 @@ class CommonSortingUtils {
         }
 
         return new ResolvedEdge<>(providerIndex, dependentIndex, provider, dependent);
-    }
-
-    // ------------------------------------------------------------------ //
-    // IntBag — compact resizable int collection                           //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * A compact, resizable collection of primitive {@code int} values.
-     * Used for adjacency lists to avoid {@code Integer} boxing overhead.
-     */
-    static final class IntBag {
-        int[] data = new int[4];
-        int size;
-
-        void add(int value) {
-            if (size == data.length) {
-                data = Arrays.copyOf(data, size * 2);
-            }
-            data[size] = value;
-            size++;
-        }
-
-        /** Linear scan — efficient for the typically small adjacency lists in sorting graphs. */
-        boolean contains(int value) {
-            for (int i = 0; i < size; i++) {
-                if (data[i] == value) return true;
-            }
-            return false;
-        }
     }
 }
