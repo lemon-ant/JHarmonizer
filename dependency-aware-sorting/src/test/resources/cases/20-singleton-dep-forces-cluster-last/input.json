@@ -1,0 +1,33 @@
+{
+  "description": "Cluster {bravo,charlie} (key='bravo') naturally comes before singleton delta (key='delta'). Dependency delta->bravo forces delta before the cluster, reversing their natural order. alpha singleton is unconstrained and goes first.",
+  "items": [
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [
+    [
+      "bravo",
+      "charlie"
+    ]
+  ],
+  "dependencies": [
+    {
+      "provider": "delta",
+      "dependent": "bravo"
+    }
+  ]
+}
