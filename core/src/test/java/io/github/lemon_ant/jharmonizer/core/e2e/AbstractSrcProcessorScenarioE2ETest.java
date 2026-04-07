@@ -40,16 +40,23 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         String inputSrcCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
         String expectedSrcCode = Files.readString(expectedSrcFile, StandardCharsets.UTF_8);
 
-        Path workingScenarioRoot =
-                temporaryDirectory.resolve(resolveWorkspaceDirectoryName()).resolve(scenarioName);
+        Path workingScenarioRoot = temporaryDirectory
+                .resolve(resolveDirectoryNamePrefix() + "-working-dir")
+                .resolve(scenarioName);
         Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
         boolean unchangedFixture = inputSrcCode.equals(expectedSrcCode);
 
-        Path compileBeforeOutput =
-                temporaryDirectory.resolve(resolveCompileBeforeDirectoryName()).resolve(scenarioName);
-        Path compileAfterOutput =
-                temporaryDirectory.resolve(resolveCompileAfterDirectoryName()).resolve(scenarioName);
+        Path compileBeforeOutput = temporaryDirectory
+                .resolve(resolveDirectoryNamePrefix() + "-compile-before")
+                .resolve(scenarioName);
+        Path compileAfterOutput = temporaryDirectory
+                .resolve(resolveDirectoryNamePrefix() + "-compile-after")
+                .resolve(scenarioName);
+        Path compileExpectedOutput = temporaryDirectory
+                .resolve(resolveDirectoryNamePrefix() + "-compile-expected")
+                .resolve(scenarioName);
         ValidationStateT beforeValidationState = validateBeforeProcessing(workingInputFile, compileBeforeOutput);
+        validateExpectedFixture(expectedSrcFile, compileExpectedOutput, beforeValidationState);
 
         assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
@@ -121,17 +128,14 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     protected abstract Optional<Path> findScenarioConfigPath(Path fixtureScenario);
 
     @NonNull
-    protected abstract String resolveWorkspaceDirectoryName();
-
-    @NonNull
-    protected abstract String resolveCompileBeforeDirectoryName();
-
-    @NonNull
-    protected abstract String resolveCompileAfterDirectoryName();
+    protected abstract String resolveDirectoryNamePrefix();
 
     @NonNull
     protected abstract ValidationStateT validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
             throws Exception;
+
+    protected abstract void validateExpectedFixture(
+            Path expectedSrcFile, Path compileExpectedOutput, ValidationStateT beforeValidationState) throws Exception;
 
     protected abstract void validateAfterProcessing(
             Path workingInputFile, Path compileAfterOutput, ValidationStateT validationState) throws Exception;

@@ -60,26 +60,21 @@ class SrcProcessorRegressionTest
 
     @Override
     @NonNull
-    protected String resolveWorkspaceDirectoryName() {
-        return "SrcProcessorRegressionE2E-working-dir";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileBeforeDirectoryName() {
-        return "SrcProcessorRegressionE2E-compile-before";
-    }
-
-    @Override
-    @NonNull
-    protected String resolveCompileAfterDirectoryName() {
-        return "SrcProcessorRegressionE2E-compile-after";
+    protected String resolveDirectoryNamePrefix() {
+        return "SrcProcessorRegressionE2E";
     }
 
     @Override
     @NonNull
     protected CompileAndRunSnapshot validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput) {
         return captureCompileAndRunSnapshot(workingInputFile, compileBeforeOutput);
+    }
+
+    @Override
+    protected void validateExpectedFixture(
+            Path expectedSrcFile, Path compileExpectedOutput, CompileAndRunSnapshot beforeSnapshot) {
+        CompileAndRunSnapshot expectedSnapshot = captureCompileAndRunSnapshot(expectedSrcFile, compileExpectedOutput);
+        assertRelaxedCompileAndRunConsistency(beforeSnapshot, expectedSnapshot, expectedSrcFile);
     }
 
     @Override
