@@ -77,6 +77,12 @@ class SrcProcessorE2EFixtureTest
 
     @Override
     @NonNull
+    protected String resolveCompileExpectedDirectoryName() {
+        return "SrcProcessorE2E-compile-expected";
+    }
+
+    @Override
+    @NonNull
     protected StrictValidationState validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
             throws Exception {
         JavaCompileTestUtils.CompileResult compileBeforeResult =
@@ -88,6 +94,19 @@ class SrcProcessorE2EFixtureTest
                 .isZero();
         assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
         return StrictValidationState.INSTANCE;
+    }
+
+    @Override
+    protected void validateExpectedFixture(
+            Path expectedSrcFile, Path compileExpectedOutput, StrictValidationState beforeState) throws Exception {
+        JavaCompileTestUtils.CompileResult compileExpectedResult =
+                compileJavaSrcWithRelease21(expectedSrcFile, compileExpectedOutput);
+        assertThat(compileExpectedResult.getExitCode())
+                .as(
+                        "Expected javac --release 21 to compile expected fixture %s. Diagnostics:%n%s",
+                        expectedSrcFile, compileExpectedResult.getOutput())
+                .isZero();
+        assertMainMethodExecutionSucceedsWhenPresent(expectedSrcFile, compileExpectedOutput);
     }
 
     @Override
