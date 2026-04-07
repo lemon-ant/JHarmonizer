@@ -17,6 +17,19 @@ public enum EnumLambdaBodyMemberBoundaryRegressionSample {
     private final MetricDescriptor descriptor;
     private final boolean visible;
 
+    public static void main(String[] args) {
+        if (FIRST.getDescriptor() == null
+                || FIRST.isVisible()
+                || BROKEN.getDescriptor() == null
+                || !BROKEN.isVisible()) {
+            throw new IllegalStateException("Unexpected enum field values:"
+                    + " FIRST.descriptor=" + FIRST.getDescriptor()
+                    + ", FIRST.visible=" + FIRST.isVisible()
+                    + ", BROKEN.descriptor=" + BROKEN.getDescriptor()
+                    + ", BROKEN.visible=" + BROKEN.isVisible());
+        }
+    }
+
     public MetricDescriptor getDescriptor() {
         return descriptor;
     }
