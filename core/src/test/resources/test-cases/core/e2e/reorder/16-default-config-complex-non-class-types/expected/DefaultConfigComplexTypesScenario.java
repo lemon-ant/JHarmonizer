@@ -1,22 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class DefaultConfigComplexTypesScenario {
-
-    private @interface PrivateAnnotation {
-        String name();
-    }
-
-    private interface PrivateInterface {
-        String value();
-    }
-
-    private enum PrivateEnum {
-        SECOND,
-        FIRST
-    }
-
-    private record PrivateRecord(String value) {}
-
     public static void main(String[] args) {
         AlphaRecord record = new AlphaRecord(2, 1);
         if (!"2:1".equals(record.zDescribe())) {
@@ -48,15 +32,30 @@ public class DefaultConfigComplexTypesScenario {
             throw new IllegalStateException("Nested enum constants order changed");
         }
     }
+
+    private @interface PrivateAnnotation {
+        String name();
+    }
+
+    private interface PrivateInterface {
+        String value();
+    }
+
+    private enum PrivateEnum {
+        SECOND,
+        FIRST
+    }
+
+    private record PrivateRecord(String value) {}
 }
 
 record AlphaRecord(int z, int a) {
-    static String zUtility() {
-        return "zUtility";
+    public String zDescribe() {
+        return z + ":" + a;
     }
 
-    private static String aPrivateUtility() {
-        return "aPrivateUtility";
+    static String zUtility() {
+        return "zUtility";
     }
 
     AlphaRecord {
@@ -65,8 +64,8 @@ record AlphaRecord(int z, int a) {
         }
     }
 
-    public String zDescribe() {
-        return z + ":" + a;
+    private static String aPrivateUtility() {
+        return "aPrivateUtility";
     }
 
     private String aInternal() {
@@ -75,23 +74,23 @@ record AlphaRecord(int z, int a) {
 }
 
 interface BetaInterface {
-    private static String zPrivateStatic() {
-        return "zPrivateStatic";
-    }
-
     static String bStatic() {
         return "bStatic";
     }
+
+    String cAbstract();
 
     default String dDefault() {
         return "dDefault";
     }
 
+    private static String zPrivateStatic() {
+        return "zPrivateStatic";
+    }
+
     private String aPrivate() {
         return "aPrivate";
     }
-
-    String cAbstract();
 }
 
 enum ZetaEnum {
@@ -103,10 +102,6 @@ enum ZetaEnum {
 
     private final int code;
 
-    private ZetaEnum() {
-        this.code = ordinal();
-    }
-
     public static String zUtility() {
         return MARKER;
     }
@@ -115,13 +110,17 @@ enum ZetaEnum {
         return code;
     }
 
+    private ZetaEnum() {
+        this.code = ordinal();
+    }
+
     private String aLabel() {
         return name().toLowerCase();
     }
 }
 
 @interface SampleAnno {
-    int zeta() default 7;
-
     String alpha() default "alpha";
+
+    int zeta() default 7;
 }

@@ -10,14 +10,6 @@ public enum EnumStaticMixedInitializationScenario {
 
     private static String zProvider = "provider";
 
-    private EnumStaticMixedInitializationScenario(String label) {
-        this.label = label;
-    }
-
-    private static String resolveDependent() {
-        return zProvider + "-dep";
-    }
-
     public static void main(String[] args) {
         if (!"null-dep".equals(bDependent)) {
             throw new IllegalStateException("Mixed static initialization order changed: " + bDependent);
@@ -25,5 +17,13 @@ public enum EnumStaticMixedInitializationScenario {
         if (!"first:second".equals(aEnumSnapshot)) {
             throw new IllegalStateException("Enum constant snapshot changed: " + aEnumSnapshot);
         }
+    }
+
+    private static String resolveDependent() {
+        return zProvider + "-dep";
+    }
+
+    private EnumStaticMixedInitializationScenario(String label) {
+        this.label = label;
     }
 }
