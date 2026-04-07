@@ -25,7 +25,7 @@ class GenericSortingTest {
     private static final Comparator<String> NATURAL_ORDER = Comparator.naturalOrder();
 
     @Nested
-    class SorterStringTests {
+    class GeneralStringTests {
 
         @Test
         void sort_emptyInput_returnsEmptyList() {
@@ -281,16 +281,6 @@ class GenericSortingTest {
 
         @Test
         void sort_integerItems_returnsNaturalOrder() {
-            // When
-            List<Integer> result = SimplifiedDependencyAwareSorter.sort(
-                    List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
-
-            // Then
-            assertThat(result).containsExactly(1, 3, 4, 5, 9, 1_000);
-        }
-
-        @Test
-        void sort_simplifiedIntegerItems_returnsNaturalOrder() {
             // When
             List<Integer> result = SimplifiedDependencyAwareSorter.sort(
                     List.of(3, 1, 4, 1_000, 5, 9), Groups.empty(), Dependencies.empty(), INT_ORDER);
