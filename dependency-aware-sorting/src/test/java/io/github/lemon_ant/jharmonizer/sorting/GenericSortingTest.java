@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
  *
  * <p>{@link SimplifiedDependencyAwareSorter} is exercised.</p>
  */
+// TODO Split it
 class GenericSortingTest {
 
     private static final Comparator<String> NATURAL_ORDER = Comparator.naturalOrder();
