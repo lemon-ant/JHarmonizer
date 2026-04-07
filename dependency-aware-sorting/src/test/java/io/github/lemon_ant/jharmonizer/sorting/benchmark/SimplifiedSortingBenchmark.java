@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.sorting.benchmark;
 
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
-import io.github.lemon_ant.jharmonizer.sorting.DependencyAwareSorter;
 import io.github.lemon_ant.jharmonizer.sorting.Group;
 import io.github.lemon_ant.jharmonizer.sorting.Groups;
 import io.github.lemon_ant.jharmonizer.sorting.SimplifiedDependencyAwareSorter;
@@ -14,9 +13,8 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 /**
- * JMH benchmarks comparing {@link DependencyAwareSorter} and {@link SimplifiedDependencyAwareSorter}
- * on <b>identical</b> inputs that satisfy the simplified preconditions (no group–dependency
- * overlap).
+ * JMH benchmarks for {@link SimplifiedDependencyAwareSorter}
+ * on inputs that satisfy the simplified preconditions (no group–dependency overlap).
  *
  * <p>Run with:
  * <pre>
@@ -83,30 +81,6 @@ public class SimplifiedSortingBenchmark {
         int cl5000 = items5000.size() / 2 / 2; // 1250 groups
         groups5000 = makeSimplifiedGrouping(items5000, cl5000, 2);
         deps5000 = makeSimplifiedDeps(items5000, 1000, cl5000 * 2);
-    }
-
-    // ------------------------------------------------------------------ //
-    // Benchmarks – original DependencyAwareSorter                         //
-    // ------------------------------------------------------------------ //
-
-    @Benchmark
-    public void original_50_noConstraints(Blackhole bh) {
-        bh.consume(DependencyAwareSorter.sort(items50, groups50Empty, deps50Empty, SortableTypeMember.DEFAULT_ORDER));
-    }
-
-    @Benchmark
-    public void original_50_withConstraints(Blackhole bh) {
-        bh.consume(DependencyAwareSorter.sort(items50c, groups50C, deps50c, SortableTypeMember.DEFAULT_ORDER));
-    }
-
-    @Benchmark
-    public void original_500_withConstraints(Blackhole bh) {
-        bh.consume(DependencyAwareSorter.sort(items500, groups500, deps500, SortableTypeMember.DEFAULT_ORDER));
-    }
-
-    @Benchmark
-    public void original_5000_withConstraints(Blackhole bh) {
-        bh.consume(DependencyAwareSorter.sort(items5000, groups5000, deps5000, SortableTypeMember.DEFAULT_ORDER));
     }
 
     // ------------------------------------------------------------------ //

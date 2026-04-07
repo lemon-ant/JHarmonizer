@@ -20,8 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * JSON-driven integration tests for {@link DependencyAwareSorter} and
- * {@link SimplifiedDependencyAwareSorter}.
+ * JSON-driven integration tests for {@link SimplifiedDependencyAwareSorter}.
  *
  * <p>Each sub-directory under {@code src/test/resources/cases/} contains two files:
  * <ul>
@@ -44,9 +43,8 @@ import org.junit.jupiter.params.provider.MethodSource;
  * ["result1", "result2", ...]
  * }</pre>
  *
- * <p>All cases run against {@link DependencyAwareSorter}. Cases that satisfy the simplified
- * preconditions (no group–dependency overlap) also run against
- * {@link SimplifiedDependencyAwareSorter}.</p>
+ * <p>All cases run against {@link SimplifiedDependencyAwareSorter}. Cases that satisfy the simplified
+ * preconditions (no group–dependency overlap) are included.</p>
  *
  * <p>To add a new case just drop a new sub-directory with the two JSON files — no code
  * changes required.
@@ -86,10 +84,6 @@ class JsonDrivenSortingTest {
 
             return !hasOverlap;
         }
-    }
-
-    static Stream<TestCase> loadCases() throws IOException, URISyntaxException {
-        return loadAllCases().stream();
     }
 
     static Stream<TestCase> loadSimplifiedCompatibleCases() throws IOException, URISyntaxException {
@@ -188,23 +182,6 @@ class JsonDrivenSortingTest {
     // ------------------------------------------------------------------ //
     // Parameterized tests                                                 //
     // ------------------------------------------------------------------ //
-
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("loadCases")
-    @DisplayName("JSON-driven case — DependencyAwareSorter")
-    void dependencyAwareSorter_jsonDrivenCase_returnsExpectedOrder(TestCase tc) {
-        // Given
-        printCase(tc);
-
-        // When
-        List<SortableTypeMember> result = DependencyAwareSorter.sort(
-                tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
-        List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
-
-        // Then
-        System.out.println("  Actual      : " + actual);
-        assertThat(actual).as("Mismatch in case '%s'", tc.getName()).isEqualTo(tc.getExpected());
-    }
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("loadSimplifiedCompatibleCases")

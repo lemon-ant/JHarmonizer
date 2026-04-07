@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
  * Shared test scenarios for any implementation of the dependency-aware sorting contract.
  *
  * <p>Subclasses must implement the two {@code sort} overloads. Every {@code @Test} method
- * in this class exercises behaviour that is valid under <b>both</b> the general
- * ({@link DependencyAwareSorter}) and simplified ({@link SimplifiedDependencyAwareSorter}) algorithms —
+ * in this class exercises behaviour that is valid under the
+ * {@link SimplifiedDependencyAwareSorter} algorithm —
  * i.e. groups and dependencies never overlap.</p>
  */
 abstract class AbstractDependencyAwareSortingTest {

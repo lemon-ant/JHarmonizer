@@ -33,6 +33,7 @@ class SortingUtils {
      * @throws SortingException if two items are equal (duplicates)
      */
     @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
     static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(@NonNull List<TSortableItem> items) {
         Map<TSortableItem, Integer> itemToIndex = new HashMap<>(items.size() * 2);
         for (int i = 0; i < items.size(); i++) {
