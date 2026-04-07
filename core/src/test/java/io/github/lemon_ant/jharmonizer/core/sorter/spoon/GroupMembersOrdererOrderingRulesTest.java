@@ -150,7 +150,8 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then
+        // Then — zPattern comes before aFormatter due to the declaration dependency;
+        // cAnchor is unconstrained and follows the dependency chain
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(patternFieldMember, formatterFieldMember, anchorFieldMember);
     }
@@ -313,7 +314,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_keepAccessorsTogetherWithDeclarationDependency_keepDependencyBeforeAccessorTail() {
+    void orderMembersInsideGroups_accessorBundleWithDependencyToGroupedMember_groupComesFirstDependencyIgnored() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessors-with-dependency", true, List.of(OrderingRule.ALPHA));
@@ -323,36 +324,29 @@ class GroupMembersOrdererOrderingRulesTest {
         MemberGroupBlock inputBlock = new MemberGroupBlock(
                 compiledMemberGroup, List.of(middleMethodMember, setValueMethodMember, getValueMethodMember));
         MemberDependencyGraph dependencyGraph = mock(MemberDependencyGraph.class);
-        doReturn(Set.of())
-                .when(dependencyGraph)
-                .findDirectDependents(middleMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        // getValue and setValue form an accessor bundle; middleMethod is a standalone singleton
         doReturn(Set.of(setValueMethodMember))
                 .when(dependencyGraph)
                 .findDirectDependents(getValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
-        doReturn(Set.of())
-                .when(dependencyGraph)
-                .findDirectDependents(setValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
+        // middleMethod has a declaration dependency to setValue, but setValue is in a group:
+        // SimplifiedDependencyAwareSorter requires groups and dependencies to be mutually exclusive,
+        // so this edge is filtered out during dependency construction.
         doReturn(Set.of(setValueMethodMember))
                 .when(dependencyGraph)
-                .findTransitiveDependents(middleMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
-        doReturn(Set.of())
-                .when(dependencyGraph)
-                .findTransitiveDependents(getValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
-        doReturn(Set.of())
-                .when(dependencyGraph)
-                .findTransitiveDependents(setValueMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
+                .findDirectDependents(middleMethodMember, Constants.DECLARATION_DEPENDENCY_ONLY);
 
         // When
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then
+        // Then — accessor bundle {getValue, setValue} sorts before singleton middleMethod by alpha (g < m)
         assertThat(orderedBlocks.getFirst().getTypeMembers())
-                .containsExactly(middleMethodMember, getValueMethodMember, setValueMethodMember);
+                .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
     }
 
     @Test
-    void orderMembersInsideGroups_sameRepresentativeFieldAndInitializer_fieldComesFirst() {
+    void
+            orderMembersInsideGroups_blankFinalWithStaticInitializerAndDependentField_fieldAndInitializerOrderedBeforeDependent() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "alpha-static-tie", false, List.of(OrderingRule.ALPHA));
