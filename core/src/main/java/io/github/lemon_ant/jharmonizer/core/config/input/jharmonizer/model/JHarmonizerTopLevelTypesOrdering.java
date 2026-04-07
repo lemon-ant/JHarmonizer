@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
@@ -51,7 +51,7 @@ public class JHarmonizerTopLevelTypesOrdering {
     }
 
     private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
-        Set<JHarmonizerTypeKind> encounteredTypeKinds = new HashSet<>();
+        Set<JHarmonizerTypeKind> encounteredTypeKinds = EnumSet.noneOf(JHarmonizerTypeKind.class);
         typeGroups.stream()
                 .flatMap(typeGroup -> typeGroup.getTypeKinds().stream())
                 .filter(typeKind -> !encounteredTypeKinds.add(typeKind))
