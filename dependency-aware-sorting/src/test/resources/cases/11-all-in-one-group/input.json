@@ -1,5 +1,5 @@
 {
-  "description": "All three items belong to a single cluster. Items are sorted alphabetically within the cluster regardless of input order.",
+  "description": "All three items belong to a single group. Items are sorted alphabetically within the group regardless of input order.",
   "items": [
     {
       "name": "cherry",
@@ -14,7 +14,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "cherry",
       "apple",

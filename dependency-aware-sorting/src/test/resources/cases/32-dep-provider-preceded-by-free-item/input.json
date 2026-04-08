@@ -6,7 +6,7 @@
     {"name": "label", "numeration": "STATIC"},
     {"name": "zProvider", "numeration": "STATIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {"provider": "label", "dependent": "aEnumSnapshot"}
   ]

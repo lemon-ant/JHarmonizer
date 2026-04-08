@@ -14,7 +14,7 @@
     {"name": "ySigma", "numeration": "STATIC"},
     {"name": "zeta", "numeration": "STATIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {"provider": "zeta", "dependent": "alpha"}
   ]

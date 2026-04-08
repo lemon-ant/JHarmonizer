@@ -6,7 +6,7 @@
     {"name": "staticNoise", "numeration": "STATIC"},
     {"name": "static2", "numeration": "DYNAMIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {"provider": "STATIC_BLANK_FINAL", "dependent": "B_STATIC_READ"},
     {"provider": "static2", "dependent": "B_STATIC_READ"}

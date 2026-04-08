@@ -1,5 +1,5 @@
 {
-  "description": "One cluster {zebra, bravo} plus three singletons. Cluster key='bravo'.",
+  "description": "One group {zebra, bravo} plus three singletons. Group key='bravo'.",
   "items": [
     {
       "name": "zebra",
@@ -22,7 +22,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "zebra",
       "bravo"

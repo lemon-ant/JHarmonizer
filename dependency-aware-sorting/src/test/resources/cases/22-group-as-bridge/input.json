@@ -1,5 +1,5 @@
 {
-  "description": "Cluster as bridge: free node Quinn points into Cluster1={Liam,Mila,Nora} (forcing it after Quinn); Cluster2={Oscar,Pavel} points to free node Ivan (forcing it before Ivan). Two separate bridge patterns in one scenario.",
+  "description": "Group as bridge: free node Quinn points into Group1={Liam,Mila,Nora} (forcing it after Quinn); Group2={Oscar,Pavel} points to free node Ivan (forcing it before Ivan). Two separate bridge patterns in one scenario.",
   "items": [
     {"name": "nora",  "numeration": "STATIC"},
     {"name": "ivan",  "numeration": "STATIC"},
@@ -9,7 +9,7 @@
     {"name": "pavel", "numeration": "STATIC"},
     {"name": "mila",  "numeration": "STATIC"}
   ],
-  "clusters": [
+  "groups": [
     ["liam", "mila", "nora"],
     ["oscar", "pavel"]
   ],

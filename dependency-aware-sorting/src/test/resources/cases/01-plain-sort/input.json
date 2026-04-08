@@ -1,5 +1,5 @@
 {
-  "description": "Plain alphabetical sort — no clusters, no dependencies.",
+  "description": "Plain alphabetical sort — no groups, no dependencies.",
   "items": [
     {
       "name": "fig",
@@ -26,6 +26,6 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": []
 }

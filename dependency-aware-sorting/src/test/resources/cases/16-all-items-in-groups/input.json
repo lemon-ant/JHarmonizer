@@ -1,5 +1,5 @@
 {
-  "description": "Every item belongs to a cluster — no singletons at all. Three clusters of two items each, sorted by cluster key (lex-min item name): {alpha,charlie} < {delta,echo} < {foxtrot,golf}.",
+  "description": "Every item belongs to a group — no singletons at all. Three groups of two items each, sorted by group key (lex-min item name): {alpha,charlie} < {delta,echo} < {foxtrot,golf}.",
   "items": [
     {
       "name": "charlie",
@@ -26,7 +26,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "charlie",
       "alpha"

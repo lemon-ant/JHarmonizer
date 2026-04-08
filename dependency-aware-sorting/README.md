@@ -175,7 +175,7 @@ Each test case lives in `src/test/resources/cases/<name>/` with two files:
 
 | File | Contents |
 |------|----------|
-| `input.json` | `description`, `items` (array of `{"name": "...", "numeration": "STATIC\|DYNAMIC"}`), `clusters` (JSON key for groups), `dependencies` |
+| `input.json` | `description`, `items` (array of `{"name": "...", "numeration": "STATIC\|DYNAMIC"}`), `groups`, `dependencies` |
 | `expected.json` | Expected sorted list of item names |
 
 Example `input.json` fragment:
@@ -186,7 +186,7 @@ Example `input.json` fragment:
     {"name": "alpha", "numeration": "STATIC"},
     {"name": "beta",  "numeration": "DYNAMIC"}
   ],
-  "clusters": [["alpha"]],
+  "groups": [["alpha"]],
   "dependencies": [{"provider": "alpha", "dependent": "beta"}]
 }
 ```
@@ -221,9 +221,9 @@ Benchmark scenarios in `SortingBenchmark`:
 | Benchmark | Members | Constraints |
 |-----------|---------|-------------|
 | `sort_50_noConstraints` | 50 | none |
-| `sort_50_withConstraints` | 50 | 5 clusters × 5 + 30 dep edges |
-| `sort_500_withConstraints` | 500 | 25 clusters × 10 + 200 dep edges |
-| `sort_5000_withConstraints` | 5 000 | 125 clusters × 20 + 1 000 dep edges |
+| `sort_50_withConstraints` | 50 | 5 groups × 5 + 30 dep edges |
+| `sort_500_withConstraints` | 500 | 25 groups × 10 + 200 dep edges |
+| `sort_5000_withConstraints` | 5 000 | 125 groups × 20 + 1 000 dep edges |
 
 ---
 

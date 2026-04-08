@@ -33,7 +33,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * {
  *   "description": "Human-readable explanation of the case",
  *   "items":        [{"name": "name1", "numeration": "STATIC"}, {"name": "name2", "numeration": "DYNAMIC"}, ...],
- *   "clusters":     [["name1", "name3"], ...],
+ *   "groups":       [["name1", "name3"], ...],
  *   "dependencies": [{"provider": "name1", "dependent": "name2"}, ...]
  * }
  * }</pre>
@@ -137,9 +137,9 @@ class JsonDrivenSortingTest {
             }
         });
 
-        // Parse groups (JSON key is still "clusters" for backward compat with test data)
+        // Parse groups
         List<Group<SortableTypeMember>> groups = new ArrayList<>();
-        JsonNode groupsNode = input.get("clusters");
+        JsonNode groupsNode = input.get("groups");
         if (groupsNode != null && groupsNode.isArray()) {
             StreamSupport.stream(groupsNode.spliterator(), false)
                     .map(groupNode -> new Group<>(StreamSupport.stream(groupNode.spliterator(), false)

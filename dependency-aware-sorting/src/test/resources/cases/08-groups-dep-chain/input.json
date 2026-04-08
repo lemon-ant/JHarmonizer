@@ -1,5 +1,5 @@
 {
-  "description": "Three clusters linked in a dependency chain: Cluster1={victor,whiskey}->Cluster2={tango,uniform}->Cluster3={romeo,sierra}. Natural block key order would be romeo<tango<victor, but the dep chain reverses it entirely.",
+  "description": "Three groups linked in a dependency chain: Group1={victor,whiskey}->Group2={tango,uniform}->Group3={romeo,sierra}. Natural block key order would be romeo<tango<victor, but the dep chain reverses it entirely.",
   "items": [
     {
       "name": "whiskey",
@@ -26,7 +26,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "whiskey",
       "victor"

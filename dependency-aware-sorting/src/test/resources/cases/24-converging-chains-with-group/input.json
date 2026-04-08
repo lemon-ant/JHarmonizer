@@ -1,5 +1,5 @@
 {
-  "description": "Two convergent dependency chains sharing a single terminal: chain Gamma->Beta->Alpha AND cluster {Delta,Epsilon}->Alpha. Both chains must precede Alpha. Lex tie-break: Cluster(rep=Delta) < Gamma, so cluster comes first, then Gamma->Beta->Alpha in order.",
+  "description": "Two convergent dependency chains sharing a single terminal: chain Gamma->Beta->Alpha AND group {Delta,Epsilon}->Alpha. Both chains must precede Alpha. Lex tie-break: Group(rep=Delta) < Gamma, so group comes first, then Gamma->Beta->Alpha in order.",
   "items": [
     {"name": "gamma",   "numeration": "STATIC"},
     {"name": "alpha",   "numeration": "STATIC"},
@@ -7,7 +7,7 @@
     {"name": "beta",    "numeration": "STATIC"},
     {"name": "epsilon", "numeration": "STATIC"}
   ],
-  "clusters": [
+  "groups": [
     ["delta", "epsilon"]
   ],
   "dependencies": [

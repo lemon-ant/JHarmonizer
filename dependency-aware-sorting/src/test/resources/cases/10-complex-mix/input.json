@@ -1,5 +1,5 @@
 {
-  "description": "Complex mix: three clusters, four singletons, and multi-level cross-cluster dependencies. Cluster1={xray,zulu} (key='xray') -> Cluster2={victor,whiskey} (key='victor') -> Cluster3={sierra,tango} (key='sierra'). Singleton romeo->papa. Singletons quebec and yankee are unconstrained. Lex tie-break determines order among free nodes: quebec < romeo < xray < yankee.",
+  "description": "Complex mix: three groups, four singletons, and multi-level cross-group dependencies. Group1={xray,zulu} (key='xray') -> Group2={victor,whiskey} (key='victor') -> Group3={sierra,tango} (key='sierra'). Singleton romeo->papa. Singletons quebec and yankee are unconstrained. Lex tie-break determines order among free nodes: quebec < romeo < xray < yankee.",
   "items": [
     {
       "name": "zulu",
@@ -42,7 +42,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "zulu",
       "xray"
