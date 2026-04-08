@@ -130,15 +130,16 @@ class DeclaringTypeFieldReferenceUtils {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
+                .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
                 .filter(fieldAccess -> Optional.ofNullable(
                                 fieldAccess.getVariable().getDeclaration())
-                        .map(field -> isRegularFieldDeclaredInType(field, declaringType))
+                        .map(field -> isFieldDeclaredInType(field, declaringType))
                         .orElse(false));
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isRegularFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
-        return !(field instanceof CtEnumValue<?>) && field.getDeclaringType() == declaringType;
+    private static boolean isFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
+        return field.getDeclaringType() == declaringType;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
