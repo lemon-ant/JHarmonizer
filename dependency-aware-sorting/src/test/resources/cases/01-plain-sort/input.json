@@ -1,0 +1,31 @@
+{
+  "description": "Plain alphabetical sort — no clusters, no dependencies.",
+  "items": [
+    {
+      "name": "fig",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "cherry",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "apple",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "elderberry",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "banana",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "date",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [],
+  "dependencies": []
+}

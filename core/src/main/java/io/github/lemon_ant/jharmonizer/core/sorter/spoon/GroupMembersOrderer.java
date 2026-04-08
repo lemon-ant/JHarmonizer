@@ -1,11 +1,14 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.ComparatorUtils.buildTypeMemberBaseComparator;
-
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
+import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
+import io.github.lemon_ant.jharmonizer.sorting.Group;
+import io.github.lemon_ant.jharmonizer.sorting.Groups;
+import io.github.lemon_ant.jharmonizer.sorting.SimplifiedDependencyAwareSorter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -13,8 +16,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,8 +28,9 @@ import spoon.reflect.declaration.CtTypeMember;
  * Orders type members inside each {@link MemberGroupBlock} according to the group's configured ordering rules,
  * respecting declaration dependencies and optional accessor-pair bundling.
  *
- * <p>This class builds {@link SortableTypeMember} wrappers, resolves representative relationships and
- * accessor bundles, then delegates the actual constrained sorting to {@link ConstrainedSuperNodeSorter}.</p>
+ * <p>Accessor-pair bundles are mapped to {@link Groups} and declaration dependency edges from the
+ * {@link MemberDependencyGraph} are mapped to {@link Dependencies}; the actual constrained sort is
+ * then delegated to {@link SimplifiedDependencyAwareSorter}.</p>
  */
 @UtilityClass
 class GroupMembersOrderer {
@@ -38,13 +40,15 @@ class GroupMembersOrderer {
 
     private static final Set<MemberDependencyEdgeKind> ACCESSOR_BUNDLE_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
+
     private static final int ONE = 1;
 
     /**
-     * Performs the order members inside groups.
+     * Orders the members inside each group block according to the group's ordering rules.
+     *
      * @param unorderedMemberGroupBlocks the unordered member group blocks
      * @param memberDependencyGraph the member dependency graph
-     * @return the resulting list
+     * @return the resulting list with members ordered inside each block
      */
     @NonNull
     static List<@NonNull MemberGroupBlock> orderMembersInsideGroups(
@@ -58,13 +62,10 @@ class GroupMembersOrderer {
     @NonNull
     private static MemberGroupBlock orderMembersInsideGroup(
             MemberGroupBlock memberGroupBlock, MemberDependencyGraph memberDependencyGraph) {
-
         CompiledMemberGroup compiledMemberGroup = memberGroupBlock.getCompiledMemberGroup();
         List<CtTypeMember> groupMembers = memberGroupBlock.getTypeMembers();
-
         List<CtTypeMember> orderedMembers =
                 orderMembersInsideGroup(compiledMemberGroup, groupMembers, memberDependencyGraph);
-
         return new MemberGroupBlock(compiledMemberGroup, orderedMembers);
     }
 
@@ -78,202 +79,102 @@ class GroupMembersOrderer {
         }
 
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
-
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
-        List<SortableTypeMember> sortableTypeMembers = convertTypeMembers2SortableTypeMembers(
-                compiledMemberGroup, groupMembers, memberDependencyGraph, orderingKeyComparator);
-        return orderSortableTypeMembers(sortableTypeMembers, orderingKeyComparator).stream()
+
+        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
+                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
+        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
+                .map(m -> new SortableTypeMember(m, orderingKeyProvider.apply(m)))
+                .toList();
+
+        Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
+        Comparator<SortableTypeMember> comparator =
+                Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
+
+        Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
+                ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, typeMemberToSortable)
+                : Groups.empty();
+
+        // Collect accessor-bundle members so declaration-dependency edges involving them are skipped.
+        // SimplifiedDependencyAwareSorter requires groups and dependencies to be mutually exclusive.
+        Set<CtTypeMember> bundledMembers = groups.getGroups().stream()
+                .flatMap(g -> g.getItems().stream())
+                .map(SortableTypeMember::getTypeMember)
+                .collect(Collectors.toUnmodifiableSet());
+
+        Dependencies<SortableTypeMember> dependencies = buildDeclarationDependencies(
+                groupMembers, groupMemberSet, bundledMembers, memberDependencyGraph, typeMemberToSortable);
+
+        return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
                 .map(SortableTypeMember::getTypeMember)
                 .toList();
     }
 
-    /**
-     * Converts the type members2 sortable type members.
-     * @param compiledMemberGroup the compiled member group
-     * @param groupMembers the group members
-     * @param memberDependencyGraph the member dependency graph
-     * @param orderingKeyComparator the ordering key comparator
-     * @return the converted type members2 sortable type members
-     */
     @NonNull
-    static List<@NonNull SortableTypeMember> convertTypeMembers2SortableTypeMembers(
-            @NonNull CompiledMemberGroup compiledMemberGroup,
-            @NonNull List<@NonNull CtTypeMember> groupMembers,
-            @NonNull MemberDependencyGraph memberDependencyGraph,
-            @NonNull Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
-
-        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
-        Comparator<CtTypeMember> typeMemberBaseComparator =
-                buildTypeMemberBaseComparator(orderingKeyProvider, orderingKeyComparator);
-        Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = keepAccessorsTogether
-                ? buildAccessorBundleMembersByMember(groupMemberSet, memberDependencyGraph, typeMemberBaseComparator)
-                : Map.of();
-
-        class SortableTypeMemberFactory {
-
-            @SuppressWarnings("PMD.UseConcurrentHashMap")
-            private final Map<CtTypeMember, SortableTypeMember> sortableTypeMemberByMember = new HashMap<>();
-
-            private final Set<CtTypeMember> resolvingMembers = new HashSet<>();
-
-            @NonNull
-            private SortableTypeMember getOrCreate(CtTypeMember typeMember) {
-                SortableTypeMember cachedSortableTypeMember = sortableTypeMemberByMember.get(typeMember);
-                if (cachedSortableTypeMember != null) {
-                    return cachedSortableTypeMember;
-                }
-                if (!resolvingMembers.add(typeMember)) {
-                    throw new IllegalStateException(
-                            "Detected a cycle while resolving representative sortable members for "
-                                    + SpoonTypeMemberUtils.deriveAlphaKey(typeMember));
-                }
-
-                try {
-                    Set<CtTypeMember> declarationDependentsInGroup = findDeclarationDependentsInGroup(
-                            typeMember,
-                            groupMemberSet,
-                            memberDependencyGraph,
-                            keepAccessorsTogether,
-                            accessorBundleMembersByMember);
-
-                    CtTypeMember representativeTypeMember = findRepresentativeTypeMember(
-                            typeMember,
-                            declarationDependentsInGroup,
-                            keepAccessorsTogether,
-                            accessorBundleMembersByMember,
-                            typeMemberBaseComparator);
-
-                    SortableTypeMember representativeSortableTypeMember =
-                            Objects.equals(representativeTypeMember, typeMember)
-                                    ? null
-                                    : getOrCreate(representativeTypeMember);
-
-                    SortableTypeMember sortableTypeMember = new SortableTypeMember(
-                            typeMember,
-                            representativeSortableTypeMember,
-                            declarationDependentsInGroup,
-                            orderingKeyProvider);
-                    sortableTypeMemberByMember.put(typeMember, sortableTypeMember);
-                    return sortableTypeMember;
-                } finally {
-                    resolvingMembers.remove(typeMember);
-                }
-            }
-        }
-
-        SortableTypeMemberFactory sortableTypeMemberFactory = new SortableTypeMemberFactory();
-        return groupMembers.stream().map(sortableTypeMemberFactory::getOrCreate).toList();
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static Map<CtTypeMember, SortableTypeMember> buildTypeMemberToSortableMap(
+            List<SortableTypeMember> sortableTypeMembers) {
+        Map<CtTypeMember, SortableTypeMember> map = new HashMap<>(sortableTypeMembers.size() * 2);
+        sortableTypeMembers.forEach(s -> map.put(s.getTypeMember(), s));
+        return Collections.unmodifiableMap(map);
     }
 
     @NonNull
-    private static Set<@NonNull CtTypeMember> findDeclarationDependentsInGroup(
-            CtTypeMember typeMember,
-            Set<CtTypeMember> groupMembers,
+    private static Groups<SortableTypeMember> buildAccessorBundleGroups(
+            List<CtTypeMember> groupMembers,
+            Set<CtTypeMember> groupMemberSet,
             MemberDependencyGraph memberDependencyGraph,
-            boolean keepAccessorsTogether,
-            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
-        Set<CtTypeMember> declarationDependentsInGroup =
-                memberDependencyGraph.findTransitiveDependents(typeMember, DECLARATION_DEPENDENCY_ONLY).stream()
-                        .filter(groupMembers::contains)
-                        .collect(Collectors.toUnmodifiableSet());
+            Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
+        Set<CtTypeMember> alreadyGrouped = new HashSet<>();
+        List<Group<SortableTypeMember>> bundles = new ArrayList<>();
 
-        if (keepAccessorsTogether) {
-            declarationDependentsInGroup =
-                    expandDependentsWithAccessorBundles(declarationDependentsInGroup, accessorBundleMembersByMember);
-        }
-        return declarationDependentsInGroup;
-    }
-
-    @NonNull
-    private static CtTypeMember findRepresentativeTypeMember(
-            CtTypeMember typeMember,
-            Set<CtTypeMember> declarationDependentsInGroup,
-            boolean keepAccessorsTogether,
-            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
-        if (!declarationDependentsInGroup.isEmpty()) {
-            return Stream.concat(Stream.of(typeMember), declarationDependentsInGroup.stream())
-                    .min(typeMemberBaseComparator)
-                    .orElseThrow();
-        }
-        if (keepAccessorsTogether) {
-            return findAccessorBundleRepresentativeTypeMember(typeMember, accessorBundleMembersByMember);
-        }
-        return typeMember;
-    }
-
-    @NonNull
-    private static Set<@NonNull CtTypeMember> expandDependentsWithAccessorBundles(
-            Set<CtTypeMember> declarationDependentsInGroup,
-            Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
-        return declarationDependentsInGroup.stream()
-                .flatMap(dependentMember -> Optional.ofNullable(accessorBundleMembersByMember.get(dependentMember))
-                        .map(List::stream)
-                        .orElseGet(() -> Stream.of(dependentMember)))
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    /**
-     * Sorts sortable type members respecting dependency constraints and representative grouping.
-     *
-     * <p>Delegates to {@link ConstrainedSuperNodeSorter#sort} which encapsulates the super-node
-     * construction, dependency graph building, free/constrained partitioning, topological sort, and
-     * the final merge-expand phase.</p>
-     *
-     * @param sortableTypeMembers the members to sort
-     * @param orderingKeyComparator the ordering key comparator
-     * @return the sorted list of members
-     */
-    @NonNull
-    private static List<@NonNull SortableTypeMember> orderSortableTypeMembers(
-            List<SortableTypeMember> sortableTypeMembers,
-            Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        return ConstrainedSuperNodeSorter.sort(sortableTypeMembers, orderingKeyComparator);
-    }
-
-    @NonNull
-    private static Map<CtTypeMember, List<CtTypeMember>> buildAccessorBundleMembersByMember(
-            Set<CtTypeMember> groupMembers,
-            MemberDependencyGraph memberDependencyGraph,
-            Comparator<CtTypeMember> typeMemberBaseComparator) {
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember = new HashMap<>();
-        Set<CtTypeMember> alreadyIndexedMembers = new HashSet<>();
-
-        for (CtTypeMember groupMember : groupMembers) {
-            if (alreadyIndexedMembers.contains(groupMember)) {
+        for (CtTypeMember member : groupMembers) {
+            if (alreadyGrouped.contains(member)) {
                 continue;
             }
-
-            List<CtTypeMember> sortedBundleMembersInGroup = Stream.concat(
-                            Stream.of(groupMember),
-                            memberDependencyGraph.findDirectDependents(groupMember, ACCESSOR_BUNDLE_ONLY).stream())
-                    .filter(groupMembers::contains)
-                    .sorted(typeMemberBaseComparator)
+            Set<CtTypeMember> bundleDependents =
+                    memberDependencyGraph.findDirectDependents(member, ACCESSOR_BUNDLE_ONLY).stream()
+                            .filter(groupMemberSet::contains)
+                            .collect(Collectors.toUnmodifiableSet());
+            if (bundleDependents.isEmpty()) {
+                continue;
+            }
+            alreadyGrouped.add(member);
+            alreadyGrouped.addAll(bundleDependents);
+            List<SortableTypeMember> bundleMembers = Stream.concat(Stream.of(member), bundleDependents.stream())
+                    .map(typeMemberToSortable::get)
                     .toList();
-
-            alreadyIndexedMembers.addAll(sortedBundleMembersInGroup);
-
-            // Store only real bundles (size > 1). Singletons are not accessor bundles semantically.
-            if (sortedBundleMembersInGroup.size() <= ONE) {
-                continue;
-            }
-
-            sortedBundleMembersInGroup.forEach(
-                    bundleMember -> accessorBundleMembersByMember.put(bundleMember, sortedBundleMembersInGroup));
+            bundles.add(new Group<>(bundleMembers));
         }
 
-        return Collections.unmodifiableMap(accessorBundleMembersByMember);
+        return bundles.isEmpty() ? Groups.empty() : new Groups<>(List.copyOf(bundles));
     }
 
     @NonNull
-    private static CtTypeMember findAccessorBundleRepresentativeTypeMember(
-            CtTypeMember typeMember, Map<CtTypeMember, List<CtTypeMember>> accessorBundleMembersByMember) {
-        List<CtTypeMember> sortedBundleMembersInGroup = accessorBundleMembersByMember.get(typeMember);
-        return sortedBundleMembersInGroup == null ? typeMember : sortedBundleMembersInGroup.getFirst();
+    private static Dependencies<SortableTypeMember> buildDeclarationDependencies(
+            List<CtTypeMember> groupMembers,
+            Set<CtTypeMember> groupMemberSet,
+            Set<CtTypeMember> bundledMembers,
+            MemberDependencyGraph memberDependencyGraph,
+            Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
+        List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();
+
+        for (CtTypeMember provider : groupMembers) {
+            if (bundledMembers.contains(provider)) {
+                continue;
+            }
+            for (CtTypeMember dependent :
+                    memberDependencyGraph.findDirectDependents(provider, DECLARATION_DEPENDENCY_ONLY)) {
+                if (!groupMemberSet.contains(dependent) || bundledMembers.contains(dependent)) {
+                    continue;
+                }
+                edges.add(new Dependencies.Dependency<>(
+                        typeMemberToSortable.get(provider), typeMemberToSortable.get(dependent)));
+            }
+        }
+
+        return edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(List.copyOf(edges));
     }
 }
