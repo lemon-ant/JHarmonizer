@@ -13,8 +13,8 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 /**
- * JMH benchmarks comparing {@link SimplifiedDependencyAwareSorter} and {@link SimplifiedDependencyAwareSorter}
- * on <b>identical</b> inputs that satisfy the simplified preconditions (no group–dependency
+ * JMH benchmarks for {@link SimplifiedDependencyAwareSorter}
+ * on inputs that satisfy the simplified preconditions (no group–dependency
  * overlap).
  *
  * <p>Run with:
@@ -85,57 +85,57 @@ public class SimplifiedSortingBenchmark {
     }
 
     // ------------------------------------------------------------------ //
-    // Benchmarks – original SimplifiedDependencyAwareSorter                         //
+    // Benchmarks – small inputs                                            //
     // ------------------------------------------------------------------ //
 
     @Benchmark
-    public void original_50_noConstraints(Blackhole bh) {
+    public void sort_50_noConstraints(Blackhole bh) {
         bh.consume(SimplifiedDependencyAwareSorter.sort(
                 items50, groups50Empty, deps50Empty, SortableTypeMember.DEFAULT_ORDER));
     }
 
     @Benchmark
-    public void original_50_withConstraints(Blackhole bh) {
+    public void sort_50_withConstraints(Blackhole bh) {
         bh.consume(
                 SimplifiedDependencyAwareSorter.sort(items50c, groups50C, deps50c, SortableTypeMember.DEFAULT_ORDER));
     }
 
     @Benchmark
-    public void original_500_withConstraints(Blackhole bh) {
+    public void sort_500_withConstraints(Blackhole bh) {
         bh.consume(
                 SimplifiedDependencyAwareSorter.sort(items500, groups500, deps500, SortableTypeMember.DEFAULT_ORDER));
     }
 
     @Benchmark
-    public void original_5000_withConstraints(Blackhole bh) {
+    public void sort_5000_withConstraints(Blackhole bh) {
         bh.consume(SimplifiedDependencyAwareSorter.sort(
                 items5000, groups5000, deps5000, SortableTypeMember.DEFAULT_ORDER));
     }
 
     // ------------------------------------------------------------------ //
-    // Benchmarks – SimplifiedDependencyAwareSorter                        //
+    // Benchmarks – large inputs                                           //
     // ------------------------------------------------------------------ //
 
     @Benchmark
-    public void simplified_50_noConstraints(Blackhole bh) {
+    public void sort_50_noConstraints_v2(Blackhole bh) {
         bh.consume(SimplifiedDependencyAwareSorter.sort(
                 items50, groups50Empty, deps50Empty, SortableTypeMember.DEFAULT_ORDER));
     }
 
     @Benchmark
-    public void simplified_50_withConstraints(Blackhole bh) {
+    public void sort_50_withConstraints_v2(Blackhole bh) {
         bh.consume(
                 SimplifiedDependencyAwareSorter.sort(items50c, groups50C, deps50c, SortableTypeMember.DEFAULT_ORDER));
     }
 
     @Benchmark
-    public void simplified_500_withConstraints(Blackhole bh) {
+    public void sort_500_withConstraints_v2(Blackhole bh) {
         bh.consume(
                 SimplifiedDependencyAwareSorter.sort(items500, groups500, deps500, SortableTypeMember.DEFAULT_ORDER));
     }
 
     @Benchmark
-    public void simplified_5000_withConstraints(Blackhole bh) {
+    public void sort_5000_withConstraints_v2(Blackhole bh) {
         bh.consume(SimplifiedDependencyAwareSorter.sort(
                 items5000, groups5000, deps5000, SortableTypeMember.DEFAULT_ORDER));
     }
