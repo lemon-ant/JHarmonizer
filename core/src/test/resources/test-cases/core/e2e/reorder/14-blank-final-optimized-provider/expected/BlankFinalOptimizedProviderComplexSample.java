@@ -2,26 +2,26 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class BlankFinalOptimizedProviderComplexSample {
     private static final int STATIC_BLANK_FINAL;
+    private static int staticNoise = 0;
 
     static {
         STATIC_BLANK_FINAL = 10;
     }
 
     private static final int B_STATIC_READ = STATIC_BLANK_FINAL + 1;
-    private static int staticNoise = 0;
 
     static {
         staticNoise++;
     }
 
     private final int INSTANCE_BLANK_FINAL;
+    private int instanceNoise = 0;
 
     {
         INSTANCE_BLANK_FINAL = 20;
     }
 
     private final int A_INSTANCE_READ = INSTANCE_BLANK_FINAL + 1;
-    private int instanceNoise = 0;
 
     {
         instanceNoise++;

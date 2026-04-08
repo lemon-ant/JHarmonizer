@@ -4,9 +4,9 @@ public enum EnumStaticMixedInitializationScenario {
     SECOND("second"),
     FIRST("first");
 
+    private static final String bDependent = resolveDependent();
     private final String label;
     private static final String aEnumSnapshot = FIRST.label + ":" + SECOND.label;
-    private static final String bDependent = resolveDependent();
 
     private static String zProvider = "provider";
 

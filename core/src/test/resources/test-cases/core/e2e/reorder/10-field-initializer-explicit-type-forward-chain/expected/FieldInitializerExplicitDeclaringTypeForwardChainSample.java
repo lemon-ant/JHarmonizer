@@ -1,10 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
-    private static final int zeta = FieldInitializerExplicitDeclaringTypeForwardChainSample.alpha + 2;
-    private static int alpha = 10;
-    private static final int theta = FieldInitializerExplicitDeclaringTypeForwardChainSample.beta + 1;
-    private static int beta = 3;
     private static final double omega = FieldInitializerExplicitDeclaringTypeForwardChainSample.psi + 1.0;
     private static char phi = '\0';
     private static boolean pi = false;
@@ -13,7 +9,11 @@ public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
     private static final String sigma =
             FieldInitializerExplicitDeclaringTypeForwardChainSample.tau == null ? "null-default" : "set";
     private static String tau = null;
+    private static final int theta = FieldInitializerExplicitDeclaringTypeForwardChainSample.beta + 1;
+    private static int beta = 3;
     private static final char upsilon = (char) (FieldInitializerExplicitDeclaringTypeForwardChainSample.phi + 1);
+    private static final int zeta = FieldInitializerExplicitDeclaringTypeForwardChainSample.alpha + 2;
+    private static int alpha = 10;
 
     public static void main(String[] args) {
         if (alpha != 10

@@ -150,10 +150,10 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — zPattern comes before aFormatter due to the declaration dependency;
-        // cAnchor is unconstrained and follows the dependency chain
+        // Then — cAnchor is unconstrained and alphabetically first, so it leads;
+        // zPattern comes before aFormatter due to the declaration dependency
         assertThat(orderedBlocks.getFirst().getTypeMembers())
-                .containsExactly(patternFieldMember, formatterFieldMember, anchorFieldMember);
+                .containsExactly(anchorFieldMember, patternFieldMember, formatterFieldMember);
     }
 
     @Test
