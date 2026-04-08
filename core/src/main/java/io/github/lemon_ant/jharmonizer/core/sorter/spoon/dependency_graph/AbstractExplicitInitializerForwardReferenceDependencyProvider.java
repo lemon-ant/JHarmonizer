@@ -16,6 +16,7 @@ import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -40,6 +41,9 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+        if (dependentMember instanceof CtEnumValue<?>) {
+            return Set.of();
+        }
         if (!(dependentMember instanceof CtField<?> referencedField) || !isSupportedReferencedField(referencedField)) {
             return Set.of();
         }
@@ -117,6 +121,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
         return referencedField.getDeclaringType().getTypeMembers().stream()
                 .filter(typeMember -> typeMember instanceof CtField<?>)
+                .filter(typeMember -> !(typeMember instanceof CtEnumValue<?>))
                 .filter(typeMember -> requireSrcStart(typeMember) < referencedFieldSrcStart)
                 .map(typeMember -> (CtField<?>) typeMember)
                 .filter(this::isSupportedReferrerField)
