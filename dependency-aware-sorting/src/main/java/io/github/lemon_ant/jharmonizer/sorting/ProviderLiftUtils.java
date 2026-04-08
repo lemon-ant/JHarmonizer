@@ -1,15 +1,12 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntComparator;
+import it.unimi.dsi.fastutil.ints.IntHeapPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntList;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.Set;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -18,6 +15,11 @@ import lombok.experimental.UtilityClass;
  *
  * <p>Contains the left-to-right scan that emits super-nodes in dependency-valid order,
  * transitive provider closure computation, and subset topological sorting.</p>
+ *
+ * <p>All internal data structures use fastutil primitive-int collections to avoid
+ * {@link Integer} boxing in the hot path.  Expensive per-call allocations
+ * ({@code boolean[]} for DFS visited tracking, {@code int[]} for sub-graph in-degrees)
+ * are allocated once in the entry point and reused across iterations.</p>
  */
 @UtilityClass
 class ProviderLiftUtils {
@@ -33,6 +35,9 @@ class ProviderLiftUtils {
      * Scans base order left to right, emitting each super-node either directly
      * (when all its providers are already emitted) or after lifting its unemitted
      * transitive provider closure.
+     *
+     * <p>Reusable scratch structures are allocated once and passed to helper methods
+     * to avoid per-blocked-node allocations.</p>
      *
      * @param baseOrder      super-node indices in comparator-sorted order
      * @param reverseAdj     reverse adjacency lists (dependent → providers)
@@ -52,6 +57,15 @@ class ProviderLiftUtils {
         int[] result = new int[nodeCount];
         int writePos = 0;
 
+        // Reusable structures — allocated once, reused across all provider-lift iterations.
+        // visitGeneration + generation counter replace per-closure boolean[] allocation.
+        int[] visitGeneration = new int[nodeCount];
+        int generation = 0;
+        int[] dfsStack = new int[nodeCount];
+        IntList closureBuffer = new IntArrayList();
+        // subInDegree self-cleans after each Kahn's run (all entries return to 0).
+        int[] subInDegree = new int[nodeCount];
+
         for (int i = 0; i < nodeCount; i++) {
             int node = baseOrder[i];
             if (emitted[node]) {
@@ -63,8 +77,19 @@ class ProviderLiftUtils {
                 writePos++;
                 emitted[node] = true;
             } else {
+                generation++;
+                computeTransitiveProviderClosure(
+                        node, reverseAdj, emitted, visitGeneration, generation, dfsStack, closureBuffer);
                 writePos = emitProviderBlock(
-                        node, reverseAdj, adjacencyLists, emitted, baseRank, nodeCount, result, writePos);
+                        closureBuffer,
+                        adjacencyLists,
+                        reverseAdj,
+                        emitted,
+                        baseRank,
+                        subInDegree,
+                        node,
+                        result,
+                        writePos);
             }
         }
 
@@ -75,39 +100,42 @@ class ProviderLiftUtils {
      * Lifts the unemitted transitive provider closure of a blocked node as a contiguous block,
      * topologically sorts them, emits them, then emits the blocked node itself.
      *
-     * @param node           the blocked super-node whose providers need lifting
-     * @param reverseAdj     reverse adjacency lists (dependent → providers)
+     * @param providers      the unemitted transitive providers (populated by
+     *                       {@link #computeTransitiveProviderClosure})
      * @param adjacencyLists forward adjacency lists (provider → dependents)
+     * @param reverseAdj     reverse adjacency lists (dependent → providers)
      * @param emitted        boolean array tracking which nodes have been emitted (mutated)
      * @param baseRank       base-order rank for each super-node (tie-breaker)
-     * @param nodeCount      total number of super-nodes
+     * @param subInDegree    reusable in-degree scratch array (self-cleaning after Kahn's)
+     * @param blockedNode    the blocked super-node whose providers were lifted
      * @param result         the output array for the final ordering (mutated)
      * @param initialWritePos current write position in the result array
      * @return the updated write position after emitting the provider block and the blocked node
      */
     private static int emitProviderBlock(
-            int node,
-            IntList[] reverseAdj,
+            IntList providers,
             IntList[] adjacencyLists,
+            IntList[] reverseAdj,
             boolean[] emitted,
             int[] baseRank,
-            int nodeCount,
+            int[] subInDegree,
+            int blockedNode,
             int[] result,
             int initialWritePos) {
         int writePos = initialWritePos;
-        List<Integer> providers = computeTransitiveProviderClosure(node, reverseAdj, emitted, nodeCount);
-        List<Integer> sorted = topologicallySortSubset(providers, adjacencyLists, reverseAdj, baseRank);
+        IntList sorted = topologicallySortSubset(providers, adjacencyLists, reverseAdj, baseRank, subInDegree);
 
-        for (int p : sorted) {
+        for (int i = 0; i < sorted.size(); i++) {
+            int p = sorted.getInt(i);
             if (!emitted[p]) {
                 result[writePos] = p;
                 writePos++;
                 emitted[p] = true;
             }
         }
-        result[writePos] = node;
+        result[writePos] = blockedNode;
         writePos++;
-        emitted[node] = true;
+        emitted[blockedNode] = true;
         return writePos;
     }
 
@@ -118,7 +146,6 @@ class ProviderLiftUtils {
     /**
      * Returns {@code true} when every provider of {@code node} has already been emitted.
      */
-    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
     @SuppressWarnings("PMD.UseVarargs")
     private static boolean allProvidersEmitted(int node, IntList[] reverseAdj, boolean[] emitted) {
         IntList providers = reverseAdj[node];
@@ -140,37 +167,58 @@ class ProviderLiftUtils {
     /**
      * Computes the minimal set of unemitted transitive providers required to unblock
      * {@code node}.  Uses iterative DFS on the reverse adjacency graph.
+     *
+     * <p>Uses a generation counter ({@code visitGeneration}/{@code generation}) instead of
+     * allocating a fresh {@code boolean[]} per call, and a flat {@code int[]} manual stack
+     * instead of {@code ArrayDeque<Integer>} to avoid boxing.</p>
+     *
+     * @param node            the blocked super-node
+     * @param reverseAdj      reverse adjacency lists (dependent → providers)
+     * @param emitted         which nodes have been emitted
+     * @param visitGeneration per-node generation stamps (reused across calls)
+     * @param generation      current generation counter value
+     * @param dfsStack        reusable manual DFS stack
+     * @param closure         output buffer (cleared and populated with the closure members)
      */
-    @NonNull
-    private static List<Integer> computeTransitiveProviderClosure(
-            int node, IntList[] reverseAdj, boolean[] emitted, int nodeCount) {
-        List<Integer> closure = new ArrayList<>();
-        boolean[] visited = new boolean[nodeCount];
-        Deque<Integer> stack = new ArrayDeque<>();
+    private static void computeTransitiveProviderClosure(
+            int node,
+            IntList[] reverseAdj,
+            boolean[] emitted,
+            int[] visitGeneration,
+            int generation,
+            int[] dfsStack,
+            IntList closure) {
+        closure.clear();
+        int stackTop = seedDfsStack(reverseAdj[node], emitted, visitGeneration, generation, dfsStack, 0);
 
-        seedStack(reverseAdj[node], emitted, visited, stack);
-        while (!stack.isEmpty()) {
-            int current = stack.pop();
+        while (stackTop > 0) {
+            stackTop--;
+            int current = dfsStack[stackTop];
             closure.add(current);
-            seedStack(reverseAdj[current], emitted, visited, stack);
+            stackTop = seedDfsStack(reverseAdj[current], emitted, visitGeneration, generation, dfsStack, stackTop);
         }
-        return closure;
     }
 
     /**
-     * Pushes all unemitted, unvisited providers onto the DFS stack.
+     * Pushes all unemitted, unvisited providers onto the manual DFS stack.
+     *
+     * @return the updated stack top position
      */
-    private static void seedStack(IntList providers, boolean[] emitted, boolean[] visited, Deque<Integer> stack) {
+    private static int seedDfsStack(
+            IntList providers, boolean[] emitted, int[] visitGeneration, int generation, int[] dfsStack, int stackTop) {
         if (providers == null) {
-            return;
+            return stackTop;
         }
+        int top = stackTop;
         for (int i = 0; i < providers.size(); i++) {
             int p = providers.getInt(i);
-            if (!emitted[p] && !visited[p]) {
-                visited[p] = true;
-                stack.push(p);
+            if (!emitted[p] && visitGeneration[p] != generation) {
+                visitGeneration[p] = generation;
+                dfsStack[top] = p;
+                top++;
             }
         }
+        return top;
     }
 
     // ------------------------------------------------------------------ //
@@ -180,59 +228,64 @@ class ProviderLiftUtils {
     /**
      * Topologically sorts a subset of nodes using only edges within the subset.
      * Base-rank is used as a deterministic tie-breaker.
+     *
+     * <p>Uses {@link IntOpenHashSet} for O(1) unboxed membership tests and
+     * {@link IntHeapPriorityQueue} for unboxed priority-queue operations.</p>
      */
-    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
     @NonNull
     @SuppressWarnings("PMD.UseVarargs")
-    private static List<Integer> topologicallySortSubset(
-            List<Integer> nodes, IntList[] adjacencyLists, IntList[] reverseAdj, int[] baseRank) {
+    private static IntList topologicallySortSubset(
+            IntList nodes, IntList[] adjacencyLists, IntList[] reverseAdj, int[] baseRank, int[] subInDegree) {
         if (nodes.size() < TOPOLOGICAL_SORT_THRESHOLD) {
             return nodes;
         }
 
-        Set<Integer> nodeSet = new HashSet<>(nodes.size() * 2);
-        for (int n : nodes) {
-            nodeSet.add(n);
+        IntSet nodeSet = new IntOpenHashSet(nodes.size() * 2);
+        for (int i = 0; i < nodes.size(); i++) {
+            nodeSet.add(nodes.getInt(i));
         }
 
-        int[] subInDegree = computeSubGraphInDegrees(nodes, nodeSet, reverseAdj, baseRank.length);
-        Queue<Integer> ready = collectZeroInDegreeNodes(nodes, subInDegree, baseRank);
+        computeSubGraphInDegrees(nodes, nodeSet, reverseAdj, subInDegree);
+        IntComparator rankComparator = (a, b) -> Integer.compare(baseRank[a], baseRank[b]);
+        IntPriorityQueue ready = collectZeroInDegreeNodes(nodes, subInDegree, rankComparator);
         return runKahnOnSubset(ready, subInDegree, adjacencyLists, nodeSet, nodes.size());
     }
 
     /**
      * Computes in-degrees for each node in the subset, counting only edges
-     * whose source is also in the subset.
+     * whose source is also in the subset.  Writes directly into the reusable
+     * {@code subInDegree} array (entries self-clean after Kahn's run).
      */
-    @NonNull
-    private static int[] computeSubGraphInDegrees(
-            List<Integer> nodes, Set<Integer> nodeSet, IntList[] reverseAdj, int arrayLength) {
-        int[] subInDegree = new int[arrayLength];
-        for (int n : nodes) {
+    @SuppressWarnings("PMD.UseVarargs")
+    private static void computeSubGraphInDegrees(
+            IntList nodes, IntSet nodeSet, IntList[] reverseAdj, int[] subInDegree) {
+        for (int i = 0; i < nodes.size(); i++) {
+            int n = nodes.getInt(i);
             IntList providers = reverseAdj[n];
             if (providers != null) {
-                for (int i = 0; i < providers.size(); i++) {
-                    if (nodeSet.contains(providers.getInt(i))) {
-                        subInDegree[n]++;
+                int count = 0;
+                for (int j = 0; j < providers.size(); j++) {
+                    if (nodeSet.contains(providers.getInt(j))) {
+                        count++;
                     }
                 }
+                subInDegree[n] = count;
             }
         }
-        return subInDegree;
     }
 
     /**
      * Collects all zero-in-degree nodes from the subset into a priority queue
      * ordered by base rank.
      */
-    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
-    @SuppressWarnings("PMD.UseVarargs")
     @NonNull
-    private static Queue<Integer> collectZeroInDegreeNodes(List<Integer> nodes, int[] subInDegree, int[] baseRank) {
-        Queue<Integer> ready = new PriorityQueue<>(Comparator.comparingInt(n -> baseRank[n]));
-        for (int n : nodes) {
+    private static IntPriorityQueue collectZeroInDegreeNodes(
+            IntList nodes, int[] subInDegree, IntComparator rankComparator) {
+        IntHeapPriorityQueue ready = new IntHeapPriorityQueue(nodes.size(), rankComparator);
+        for (int i = 0; i < nodes.size(); i++) {
+            int n = nodes.getInt(i);
             if (subInDegree[n] == 0) {
-                ready.add(n);
+                ready.enqueue(n);
             }
         }
         return ready;
@@ -243,11 +296,11 @@ class ProviderLiftUtils {
      * a topologically sorted list.
      */
     @NonNull
-    private static List<Integer> runKahnOnSubset(
-            Queue<Integer> ready, int[] subInDegree, IntList[] adjacencyLists, Set<Integer> nodeSet, int expectedSize) {
-        List<Integer> sorted = new ArrayList<>(expectedSize);
+    private static IntList runKahnOnSubset(
+            IntPriorityQueue ready, int[] subInDegree, IntList[] adjacencyLists, IntSet nodeSet, int expectedSize) {
+        IntList sorted = new IntArrayList(expectedSize);
         while (!ready.isEmpty()) {
-            int current = ready.poll();
+            int current = ready.dequeueInt();
             sorted.add(current);
             IntList dependents = adjacencyLists[current];
             if (dependents != null) {
@@ -258,7 +311,7 @@ class ProviderLiftUtils {
                     }
                     subInDegree[dep]--;
                     if (subInDegree[dep] == 0) {
-                        ready.add(dep);
+                        ready.enqueue(dep);
                     }
                 }
             }
