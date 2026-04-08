@@ -755,7 +755,7 @@ The current printer track has three structural issues:
    lookups) cause avoidable repeated work and poor scalability on larger classes.
 
 #### Proposed solution
-Build a **fully specialized JHarmonizer printer** focused only on this tool’s needs.
+Build a **fully specialized JHarmonizer printer** focused only on this tool's needs.
 
 Core principles:
 - No dependency on generic “universal” printer behavior for ordering/render decisions.
