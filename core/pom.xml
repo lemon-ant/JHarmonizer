@@ -17,6 +17,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.github.lemon_ant.jharmonizer</groupId>
+            <artifactId>dependency-aware-sorting</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.palantir.javaformat</groupId>
             <artifactId>palantir-java-format</artifactId>
             <version>${palantir-java-format.version}</version>

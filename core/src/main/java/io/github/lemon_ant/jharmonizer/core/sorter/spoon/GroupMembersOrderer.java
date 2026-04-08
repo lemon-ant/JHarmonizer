@@ -6,11 +6,17 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
+import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
+import io.github.lemon_ant.jharmonizer.sorting.Group;
+import io.github.lemon_ant.jharmonizer.sorting.Groups;
+import io.github.lemon_ant.jharmonizer.sorting.SimplifiedDependencyAwareSorter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +34,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * respecting declaration dependencies and optional accessor-pair bundling.
  *
  * <p>This class builds {@link SortableTypeMember} wrappers, resolves representative relationships and
- * accessor bundles, then delegates the actual constrained sorting to {@link ConstrainedSuperNodeSorter}.</p>
+ * accessor bundles, then delegates the actual constrained sorting to {@link SimplifiedDependencyAwareSorter}.</p>
  */
 @UtilityClass
 class GroupMembersOrderer {
@@ -220,19 +226,58 @@ class GroupMembersOrderer {
     /**
      * Sorts sortable type members respecting dependency constraints and representative grouping.
      *
-     * <p>Delegates to {@link ConstrainedSuperNodeSorter#sort} which encapsulates the super-node
-     * construction, dependency graph building, free/constrained partitioning, topological sort, and
-     * the final merge-expand phase.</p>
+     * <p>Builds {@link Groups} from representative relationships and {@link Dependencies} from
+     * each member's ordering dependents, then delegates to {@link SimplifiedDependencyAwareSorter}.</p>
      *
      * @param sortableTypeMembers the members to sort
      * @param orderingKeyComparator the ordering key comparator
      * @return the sorted list of members
      */
     @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
     private static List<@NonNull SortableTypeMember> orderSortableTypeMembers(
             List<SortableTypeMember> sortableTypeMembers,
             Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        return ConstrainedSuperNodeSorter.sort(sortableTypeMembers, orderingKeyComparator);
+
+        // Build CtTypeMember → SortableTypeMember lookup for dependency resolution.
+        Map<CtTypeMember, SortableTypeMember> ctToSortable = new HashMap<>(sortableTypeMembers.size() * 2);
+        for (SortableTypeMember stm : sortableTypeMembers) {
+            ctToSortable.put(stm.getTypeMember(), stm);
+        }
+
+        // Build Groups from representative identity relationships.
+        // IdentityHashMap is required: grouping uses representative object identity (instance sharing).
+        Map<SortableTypeMember, List<SortableTypeMember>> groupsByRep = new IdentityHashMap<>();
+        for (SortableTypeMember stm : sortableTypeMembers) {
+            groupsByRep
+                    .computeIfAbsent(stm.getRepresentativeTypeMember(), k -> new ArrayList<>())
+                    .add(stm);
+        }
+        List<Group<SortableTypeMember>> groupList = groupsByRep.values().stream()
+                .filter(g -> g.size() > ONE)
+                .map(g -> new Group<>(List.copyOf(g)))
+                .toList();
+        Groups<SortableTypeMember> groups =
+                groupList.isEmpty() ? Groups.empty() : new Groups<>(List.copyOf(groupList));
+
+        // Build Dependencies from each member's ordering dependents.
+        List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();
+        for (SortableTypeMember stm : sortableTypeMembers) {
+            for (CtTypeMember dep : stm.getOrderingDependentsInGroup()) {
+                SortableTypeMember depStm = ctToSortable.get(dep);
+                if (depStm != null) {
+                    edges.add(new Dependencies.Dependency<>(stm, depStm));
+                }
+            }
+        }
+        Dependencies<SortableTypeMember> dependencies =
+                edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(List.copyOf(edges));
+
+        // Build comparator on SortableTypeMember via OrderingKey.
+        Comparator<SortableTypeMember> comparator =
+                Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
+
+        return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator);
     }
 
     @NonNull

@@ -1,0 +1,47 @@
+package io.github.lemon_ant.jharmonizer.sorting;
+
+import java.util.List;
+import lombok.NonNull;
+import lombok.Value;
+
+/**
+ * Describes which items form groups (groups that must stay together as an indivisible block).
+ *
+ * <p>Each {@link Group} contains the actual items that form that group.
+ * Items that do not appear in any group are treated as singleton groups internally.
+ *
+ * @param <TSortableItem> the type of items
+ */
+@Value
+@SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName")
+public class Groups<TSortableItem> {
+
+    List<Group<TSortableItem>> groups;
+
+    private static final Groups<?> EMPTY_INSTANCE = new Groups<>(List.of());
+
+    /**
+     * Returns an empty grouping (no groups — every item is its own singleton block).
+     *
+     * @param <TSortableItem> the type of items
+     * @return empty groups
+     */
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public static <TSortableItem> Groups<TSortableItem> empty() {
+        return (Groups<TSortableItem>) EMPTY_INSTANCE;
+    }
+
+    /**
+     * Convenience factory: each vararg is one {@link Group}.
+     *
+     * @param groups the groups
+     * @param <TSortableItem> the type of items
+     * @return groups from the given group definitions
+     */
+    @NonNull
+    @SafeVarargs
+    public static <TSortableItem> Groups<TSortableItem> of(@NonNull Group<TSortableItem>... groups) {
+        return new Groups<>(List.of(groups));
+    }
+}
