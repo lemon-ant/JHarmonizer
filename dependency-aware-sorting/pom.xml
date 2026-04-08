@@ -12,6 +12,7 @@
     <name>Dependency-Aware Sorting</name>
 
     <properties>
+        <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
         <jmh.version>1.37</jmh.version>
     </properties>
 

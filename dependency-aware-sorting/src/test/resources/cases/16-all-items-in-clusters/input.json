@@ -1,0 +1,44 @@
+{
+  "description": "Every item belongs to a cluster — no singletons at all. Three clusters of two items each, sorted by cluster key (lex-min item name): {alpha,charlie} < {delta,echo} < {foxtrot,golf}.",
+  "items": [
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "echo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "golf",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "foxtrot",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [
+    [
+      "charlie",
+      "alpha"
+    ],
+    [
+      "echo",
+      "delta"
+    ],
+    [
+      "golf",
+      "foxtrot"
+    ]
+  ],
+  "dependencies": []
+}

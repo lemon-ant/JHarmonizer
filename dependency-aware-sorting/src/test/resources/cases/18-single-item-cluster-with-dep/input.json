@@ -1,0 +1,28 @@
+{
+  "description": "charlie forms a single-item cluster; the cluster must precede alpha due to the dependency. bravo is a free singleton. Tests that a cluster of size 1 is treated correctly as a super-node in the dependency graph.",
+  "items": [
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [
+    [
+      "charlie"
+    ]
+  ],
+  "dependencies": [
+    {
+      "provider": "charlie",
+      "dependent": "alpha"
+    }
+  ]
+}

@@ -37,6 +37,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * accessor bundles, then delegates the actual constrained sorting to {@link SimplifiedDependencyAwareSorter}.</p>
  */
 @UtilityClass
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 class GroupMembersOrderer {
 
     private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
@@ -234,7 +235,7 @@ class GroupMembersOrderer {
      * @return the sorted list of members
      */
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    @SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
     private static List<@NonNull SortableTypeMember> orderSortableTypeMembers(
             List<SortableTypeMember> sortableTypeMembers,
             Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
@@ -257,8 +258,7 @@ class GroupMembersOrderer {
                 .filter(g -> g.size() > ONE)
                 .map(g -> new Group<>(List.copyOf(g)))
                 .toList();
-        Groups<SortableTypeMember> groups =
-                groupList.isEmpty() ? Groups.empty() : new Groups<>(List.copyOf(groupList));
+        Groups<SortableTypeMember> groups = groupList.isEmpty() ? Groups.empty() : new Groups<>(List.copyOf(groupList));
 
         // Build Dependencies from each member's ordering dependents.
         List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();

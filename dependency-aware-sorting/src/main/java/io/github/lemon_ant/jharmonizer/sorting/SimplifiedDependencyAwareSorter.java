@@ -45,7 +45,8 @@ import lombok.experimental.UtilityClass;
     "PMD.TooManyMethods",
     "PMD.CyclomaticComplexity",
     "PMD.UseVarargs",
-    "PMD.AssignmentInOperand"
+    "PMD.AssignmentInOperand",
+    "PMD.CouplingBetweenObjects"
 })
 public class SimplifiedDependencyAwareSorter {
 
@@ -96,8 +97,7 @@ public class SimplifiedDependencyAwareSorter {
         SuperNodeLayout layout = buildSuperNodeLayout(itemList, itemToIndex, groups);
 
         // Step 2: Build per-member dependency adjacency for intra-super-node use.
-        MemberDependencyIndex memberDeps =
-                buildMemberDependencyIndex(dependencies, itemToIndex, layout.memberToSuperNode, itemList.size());
+        MemberDependencyIndex memberDeps = buildMemberDependencyIndex(dependencies, itemToIndex, itemList.size());
 
         // Step 3: Fast path — if every item is its own super-node and has no dependencies.
         if (isUnconstrainedSingletons(layout, memberDeps, itemList.size())) {
@@ -111,7 +111,7 @@ public class SimplifiedDependencyAwareSorter {
         // Step 5: Compute representative keys for inter-super-node comparison.
         @SuppressWarnings("unchecked")
         TSortableItem[] snRepresentativeKey = (TSortableItem[]) new Object[layout.superNodeCount];
-        collectRepresentativeKeys(layout, itemList, snRepresentativeKey);
+        collectRepresentativeKeys(layout, itemList, snRepresentativeKey, comparator);
 
         // Step 6: Build the super-node dependency graph.
         SuperNodeGraph graph = buildSuperNodeDependencyGraph(
@@ -144,7 +144,6 @@ public class SimplifiedDependencyAwareSorter {
      * the flat-array storage for efficient random access.
      */
     @NonNull
-    @SuppressWarnings("PMD.CognitiveComplexity")
     private static <TSortableItem> SuperNodeLayout buildSuperNodeLayout(
             List<TSortableItem> items, Map<TSortableItem, Integer> itemToIndex, Groups<TSortableItem> groups) {
         int itemCount = items.size();
@@ -204,10 +203,7 @@ public class SimplifiedDependencyAwareSorter {
     @NonNull
     @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     private static <TSortableItem> MemberDependencyIndex buildMemberDependencyIndex(
-            Dependencies<TSortableItem> dependencies,
-            Map<TSortableItem, Integer> itemToIndex,
-            int[] memberToSuperNode,
-            int itemCount) {
+            Dependencies<TSortableItem> dependencies, Map<TSortableItem, Integer> itemToIndex, int itemCount) {
         IntBag[] memberDependents = new IntBag[itemCount];
         boolean hasDependencies = false;
 
@@ -297,12 +293,26 @@ public class SimplifiedDependencyAwareSorter {
     // ------------------------------------------------------------------ //
 
     /**
-     * Collects the representative item (first member after intra-sort) of each super-node.
+     * Collects the representative item (comparator-minimum member) of each super-node.
+     * Uses the minimum member by comparator for consistent inter-super-node ordering,
+     * regardless of intra-super-node dependency reordering.
      */
     private static <TSortableItem> void collectRepresentativeKeys(
-            SuperNodeLayout layout, List<TSortableItem> items, TSortableItem[] snRepresentativeKey) {
+            SuperNodeLayout layout,
+            List<TSortableItem> items,
+            TSortableItem[] snRepresentativeKey,
+            Comparator<TSortableItem> comparator) {
         for (int sn = 0; sn < layout.superNodeCount; sn++) {
-            snRepresentativeKey[sn] = items.get(layout.snMembers[layout.snOffset[sn]]);
+            int offset = layout.snOffset[sn];
+            int length = layout.snLength[sn];
+            TSortableItem min = items.get(layout.snMembers[offset]);
+            for (int i = 1; i < length; i++) {
+                TSortableItem candidate = items.get(layout.snMembers[offset + i]);
+                if (comparator.compare(candidate, min) < 0) {
+                    min = candidate;
+                }
+            }
+            snRepresentativeKey[sn] = min;
         }
     }
 
@@ -315,7 +325,7 @@ public class SimplifiedDependencyAwareSorter {
      * dependency index. Intra-super-node edges are skipped.
      */
     @NonNull
-    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.AvoidInstantiatingObjectsInLoops"})
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     private static SuperNodeGraph buildSuperNodeDependencyGraph(
             MemberDependencyIndex memberDeps, int[] memberToSuperNode, int superNodeCount, int itemCount) {
         IntBag[] snDependents = new IntBag[superNodeCount];
@@ -570,6 +580,7 @@ public class SimplifiedDependencyAwareSorter {
      * Checks whether the insertion-sorted order violates any internal dependency constraint.
      * A violation occurs when a provider appears after its dependent within the same super-node.
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private static boolean hasInternalDependencyViolation(
             int[] snMembers, int offset, int length, MemberDependencyIndex memberDeps, int[] memberToSuperNode) {
         int superNodeId = memberToSuperNode[snMembers[offset]];
@@ -604,12 +615,7 @@ public class SimplifiedDependencyAwareSorter {
      * provider by the configured comparator, causing both to share a group and creating
      * super-nodes with internal dependency edges that insertion sort alone cannot resolve.</p>
      */
-    @SuppressWarnings({
-        "PMD.UseConcurrentHashMap",
-        "PMD.CognitiveComplexity",
-        "PMD.CyclomaticComplexity",
-        "PMD.NPathComplexity"
-    })
+    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     private static <TSortableItem> void topoSortMemberIndices(
             int[] snMembers,
             int offset,

@@ -1,0 +1,25 @@
+{
+  "description": "All three items belong to a single cluster. Items are sorted alphabetically within the cluster regardless of input order.",
+  "items": [
+    {
+      "name": "cherry",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "apple",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "banana",
+      "numeration": "STATIC"
+    }
+  ],
+  "clusters": [
+    [
+      "cherry",
+      "apple",
+      "banana"
+    ]
+  ],
+  "dependencies": []
+}
