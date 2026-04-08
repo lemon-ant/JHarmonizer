@@ -41,8 +41,8 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
-        if (!(dependentMember instanceof CtField<?> referencedField)
-                || dependentMember instanceof CtEnumValue<?>
+        if (dependentMember instanceof CtEnumValue<?>
+                || !(dependentMember instanceof CtField<?> referencedField)
                 || !isSupportedReferencedField(referencedField)) {
             return Set.of();
         }
