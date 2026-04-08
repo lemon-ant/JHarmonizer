@@ -12,11 +12,17 @@
     <name>Dependency-Aware Sorting</name>
 
     <properties>
+        <fastutil.version>8.5.18</fastutil.version>
         <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
         <jmh.version>1.37</jmh.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil-core</artifactId>
+            <version>${fastutil.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

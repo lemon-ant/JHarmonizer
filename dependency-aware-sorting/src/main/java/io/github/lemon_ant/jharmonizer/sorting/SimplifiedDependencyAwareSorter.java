@@ -1,13 +1,12 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -22,10 +21,20 @@ import lombok.experimental.UtilityClass;
  *
  * <h2>Optimizations</h2>
  * <ul>
+ *   <li><b>Boxing-free item index</b> — uses fastutil {@code Object2IntOpenHashMap} to store
+ *       item-to-index mappings as primitive {@code int} values, eliminating {@code Integer}
+ *       boxing across all lookup hot paths.</li>
  *   <li><b>Flat-array super-node storage</b> — a single {@code int[n]} holds all member indices
  *       grouped by super-node, with offset/length pairs for O(1) random access.</li>
  *   <li><b>Boxing-free {@link IntHeap}</b> — replaces {@code PriorityQueue}, eliminating all
  *       {@code Integer} boxing/unboxing in the topological selection hot path.</li>
+ *   <li><b>Reusable scratch position array</b> — a single {@code int[itemCount]} array is
+ *       allocated once and reused across intra-super-node violation checks and topo-sorts,
+ *       replacing per-call {@code HashMap&lt;Integer, Integer&gt;} allocations.</li>
+ *   <li><b>O(1) position lookup</b> — intra-super-node dependency violation checks use the
+ *       scratch array for direct-indexed position lookup instead of O(n) linear scans.</li>
+ *   <li><b>Allocation-free edge resolution</b> — dependency edges are resolved via a reusable
+ *       two-element output array instead of allocating per-edge wrapper objects.</li>
  *   <li><b>Free / constrained split</b> — super-nodes without dependency edges are pre-sorted
  *       with merge sort; only dependency-involved nodes go through the heap.</li>
  *   <li><b>{@link IntBag} adjacency dedup</b> — duplicate super-node edges are detected via
@@ -46,7 +55,8 @@ import lombok.experimental.UtilityClass;
     "PMD.CyclomaticComplexity",
     "PMD.UseVarargs",
     "PMD.AssignmentInOperand",
-    "PMD.CouplingBetweenObjects"
+    "PMD.CouplingBetweenObjects",
+    "PMD.LooseCoupling"
 })
 public class SimplifiedDependencyAwareSorter {
 
@@ -85,7 +95,7 @@ public class SimplifiedDependencyAwareSorter {
             return List.copyOf(itemList);
         }
 
-        Map<TSortableItem, Integer> itemToIndex = SortingUtils.buildItemIndex(itemList);
+        Object2IntOpenHashMap<TSortableItem> itemToIndex = SortingUtils.buildItemIndex(itemList);
 
         // Fast path — no constraints: sort directly.
         if (groups.getGroups().isEmpty() && dependencies.getEdges().isEmpty()) {
@@ -145,7 +155,7 @@ public class SimplifiedDependencyAwareSorter {
      */
     @NonNull
     private static <TSortableItem> SuperNodeLayout buildSuperNodeLayout(
-            List<TSortableItem> items, Map<TSortableItem, Integer> itemToIndex, Groups<TSortableItem> groups) {
+            List<TSortableItem> items, Object2IntOpenHashMap<TSortableItem> itemToIndex, Groups<TSortableItem> groups) {
         int itemCount = items.size();
         int[] memberToSuperNode = new int[itemCount];
         Arrays.fill(memberToSuperNode, SortingUtils.UNASSIGNED);
@@ -203,15 +213,16 @@ public class SimplifiedDependencyAwareSorter {
     @NonNull
     @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     private static <TSortableItem> MemberDependencyIndex buildMemberDependencyIndex(
-            Dependencies<TSortableItem> dependencies, Map<TSortableItem, Integer> itemToIndex, int itemCount) {
+            Dependencies<TSortableItem> dependencies, Object2IntOpenHashMap<TSortableItem> itemToIndex, int itemCount) {
         IntBag[] memberDependents = new IntBag[itemCount];
         boolean hasDependencies = false;
+        int[] edgeIndices = new int[2];
 
         for (Dependencies.Dependency<TSortableItem> edge : dependencies.getEdges()) {
-            SortingUtils.ResolvedEdge<TSortableItem> resolved = SortingUtils.resolveDependencyEdge(edge, itemToIndex);
+            SortingUtils.resolveDependencyEdge(edge, itemToIndex, edgeIndices);
 
-            int providerIdx = resolved.getProviderIndex();
-            int dependentIdx = resolved.getDependentIndex();
+            int providerIdx = edgeIndices[0];
+            int dependentIdx = edgeIndices[1];
 
             IntBag bag = memberDependents[providerIdx];
             if (bag == null) {
@@ -224,7 +235,7 @@ public class SimplifiedDependencyAwareSorter {
             }
         }
 
-        return new MemberDependencyIndex(memberDependents, hasDependencies);
+        return new MemberDependencyIndex(memberDependents, hasDependencies, itemCount);
     }
 
     // ------------------------------------------------------------------ //
@@ -579,33 +590,42 @@ public class SimplifiedDependencyAwareSorter {
     /**
      * Checks whether the insertion-sorted order violates any internal dependency constraint.
      * A violation occurs when a provider appears after its dependent within the same super-node.
+     *
+     * <p>Uses a flat position-lookup array indexed by global member index to convert the inner
+     * scan from O(n) to O(1), reducing overall complexity from O(n²·d) to O(n·d).</p>
      */
-    @SuppressWarnings("PMD.CognitiveComplexity")
     private static boolean hasInternalDependencyViolation(
             int[] snMembers, int offset, int length, MemberDependencyIndex memberDeps, int[] memberToSuperNode) {
         int superNodeId = memberToSuperNode[snMembers[offset]];
 
+        int[] positionOf = memberDeps.scratchPositionArray;
         for (int i = 0; i < length; i++) {
-            int memberIdx = snMembers[offset + i];
-            IntBag dependents = memberDeps.memberDependents[memberIdx];
-            if (dependents == null) {
-                continue;
-            }
-            for (int bagIdx = 0; bagIdx < dependents.size(); bagIdx++) {
-                int depIdx = dependents.get(bagIdx);
-                if (memberToSuperNode[depIdx] != superNodeId) {
+            positionOf[snMembers[offset + i]] = i;
+        }
+
+        try {
+            for (int i = 0; i < length; i++) {
+                int memberIdx = snMembers[offset + i];
+                IntBag dependents = memberDeps.memberDependents[memberIdx];
+                if (dependents == null) {
                     continue;
                 }
-                // Provider at position i must come before dependent. If dependent appears at
-                // position j < i, the insertion-sort ordering violates the dependency.
-                for (int j = 0; j < i; j++) {
-                    if (snMembers[offset + j] == depIdx) {
+                for (int bagIdx = 0; bagIdx < dependents.size(); bagIdx++) {
+                    int depIdx = dependents.get(bagIdx);
+                    if (memberToSuperNode[depIdx] != superNodeId) {
+                        continue;
+                    }
+                    if (positionOf[depIdx] < i) {
                         return true;
                     }
                 }
             }
+            return false;
+        } finally {
+            for (int i = 0; i < length; i++) {
+                positionOf[snMembers[offset + i]] = SortingUtils.UNASSIGNED;
+            }
         }
-        return false;
     }
 
     /**
@@ -614,8 +634,10 @@ public class SimplifiedDependencyAwareSorter {
      * <p>This handles the case where a dependent member sorts before its
      * provider by the configured comparator, causing both to share a group and creating
      * super-nodes with internal dependency edges that insertion sort alone cannot resolve.</p>
+     *
+     * <p>Uses the reusable scratch position array from {@link MemberDependencyIndex} instead
+     * of a {@code HashMap} for global-to-local mapping, eliminating all {@link Integer} boxing.</p>
      */
-    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     private static <TSortableItem> void topoSortMemberIndices(
             int[] snMembers,
             int offset,
@@ -626,13 +648,43 @@ public class SimplifiedDependencyAwareSorter {
             int[] memberToSuperNode) {
         int superNodeId = memberToSuperNode[snMembers[offset]];
 
-        // Map global member indices to local [0..length) positions within this super-node.
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<Integer, Integer> globalToLocal = new HashMap<>(length * 2);
+        int[] globalToLocal = memberDeps.scratchPositionArray;
         for (int localIdx = 0; localIdx < length; localIdx++) {
-            globalToLocal.put(snMembers[offset + localIdx], localIdx);
+            globalToLocal[snMembers[offset + localIdx]] = localIdx;
         }
 
+        try {
+            topoSortWithLocalMapping(
+                    snMembers,
+                    offset,
+                    length,
+                    items,
+                    comparator,
+                    memberDeps,
+                    memberToSuperNode,
+                    superNodeId,
+                    globalToLocal);
+        } finally {
+            for (int localIdx = 0; localIdx < length; localIdx++) {
+                globalToLocal[snMembers[offset + localIdx]] = SortingUtils.UNASSIGNED;
+            }
+        }
+    }
+
+    /**
+     * Core topological sort logic using a pre-populated global-to-local position array.
+     */
+    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+    private static <TSortableItem> void topoSortWithLocalMapping(
+            int[] snMembers,
+            int offset,
+            int length,
+            List<TSortableItem> items,
+            Comparator<TSortableItem> comparator,
+            MemberDependencyIndex memberDeps,
+            int[] memberToSuperNode,
+            int superNodeId,
+            int[] globalToLocal) {
         // Compute local in-degrees from internal dependency edges.
         int[] localInDegree = new int[length];
         for (int localIdx = 0; localIdx < length; localIdx++) {
@@ -646,8 +698,8 @@ public class SimplifiedDependencyAwareSorter {
                 if (memberToSuperNode[depGlobalIdx] != superNodeId) {
                     continue;
                 }
-                Integer depLocalIdx = globalToLocal.get(depGlobalIdx);
-                if (depLocalIdx != null) {
+                int depLocalIdx = globalToLocal[depGlobalIdx];
+                if (depLocalIdx != SortingUtils.UNASSIGNED) {
                     localInDegree[depLocalIdx]++;
                 }
             }
@@ -688,8 +740,8 @@ public class SimplifiedDependencyAwareSorter {
                     if (memberToSuperNode[depGlobalIdx] != superNodeId) {
                         continue;
                     }
-                    Integer depLocalIdx = globalToLocal.get(depGlobalIdx);
-                    if (depLocalIdx != null) {
+                    int depLocalIdx = globalToLocal[depGlobalIdx];
+                    if (depLocalIdx != SortingUtils.UNASSIGNED) {
                         localInDegree[depLocalIdx]--;
                     }
                 }
@@ -727,10 +779,13 @@ public class SimplifiedDependencyAwareSorter {
 
         final IntBag[] memberDependents;
         final boolean hasDependencies;
+        final int[] scratchPositionArray;
 
-        private MemberDependencyIndex(IntBag[] memberDependents, boolean hasDependencies) {
+        private MemberDependencyIndex(IntBag[] memberDependents, boolean hasDependencies, int itemCount) {
             this.memberDependents = memberDependents;
             this.hasDependencies = hasDependencies;
+            this.scratchPositionArray = new int[itemCount];
+            Arrays.fill(this.scratchPositionArray, SortingUtils.UNASSIGNED);
         }
     }
 

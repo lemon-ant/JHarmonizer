@@ -1,35 +1,37 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import java.util.HashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.experimental.UtilityClass;
 
 /**
  * Shared validation and index-building utilities for sorting algorithms.
  */
 @UtilityClass
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.UseVarargs"})
 class SortingUtils {
 
     static final int UNASSIGNED = -1;
 
     /**
-     * Builds a map from each item to its list index, detecting duplicates.
+     * Builds a boxing-free map from each item to its list index, detecting duplicates.
+     *
+     * <p>Uses {@link Object2IntOpenHashMap} to store primitive {@code int} values without
+     * boxing to {@link Integer}, improving lookup performance in hot paths.</p>
      *
      * @param items the item list
      * @param <TSortableItem> the item type
-     * @return unmodifiable map from item to index
+     * @return boxing-free map from item to index
      * @throws SortingException if a duplicate item is found
      */
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
-    static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(@NonNull List<TSortableItem> items) {
-        Map<TSortableItem, Integer> index = new HashMap<>(items.size() * 2);
+    static <TSortableItem> Object2IntOpenHashMap<TSortableItem> buildItemIndex(@NonNull List<TSortableItem> items) {
+        Object2IntOpenHashMap<TSortableItem> index = new Object2IntOpenHashMap<>(items.size(), 0.5f);
+        index.defaultReturnValue(UNASSIGNED);
         for (int i = 0; i < items.size(); i++) {
             TSortableItem item = items.get(i);
-            if (index.put(item, i) != null) {
+            if (index.putIfAbsent(item, i) != UNASSIGNED) {
                 throw new SortingException("Duplicate item: " + item);
             }
         }
@@ -46,9 +48,9 @@ class SortingUtils {
      * @throws SortingException if the member is unknown
      */
     static <TSortableItem> int resolveGroupMemberIndex(
-            @NonNull Map<TSortableItem, Integer> itemToIndex, TSortableItem member) {
-        Integer idx = itemToIndex.get(member);
-        if (idx == null) {
+            @NonNull Object2IntOpenHashMap<TSortableItem> itemToIndex, TSortableItem member) {
+        int idx = itemToIndex.getInt(member);
+        if (idx == UNASSIGNED) {
             throw new SortingException("Group references unknown member: " + member);
         }
         return idx;
@@ -68,50 +70,35 @@ class SortingUtils {
     }
 
     /**
-     * Resolves and validates a dependency edge. Checks that both endpoints exist and are not self-referencing.
+     * Resolves a dependency edge's provider and dependent indices, validating that both
+     * endpoints exist and are not self-referencing. Returns indices via the provided
+     * two-element output array to avoid per-edge object allocation.
      *
      * @param edge the dependency edge
      * @param itemToIndex the item-to-index map
+     * @param outIndices two-element array: {@code [0]} = provider index, {@code [1]} = dependent index
      * @param <TSortableItem> the item type
-     * @return the resolved edge with provider and dependent indices
      * @throws SortingException if an endpoint is unknown or the edge is a self-dependency
      */
-    @NonNull
-    static <TSortableItem> ResolvedEdge<TSortableItem> resolveDependencyEdge(
-            @NonNull Dependencies.Dependency<TSortableItem> edge, @NonNull Map<TSortableItem, Integer> itemToIndex) {
+    static <TSortableItem> void resolveDependencyEdge(
+            @NonNull Dependencies.Dependency<TSortableItem> edge,
+            @NonNull Object2IntOpenHashMap<TSortableItem> itemToIndex,
+            int[] outIndices) {
         TSortableItem provider = edge.getProvider();
         TSortableItem dependent = edge.getDependent();
 
-        Integer providerIdx = itemToIndex.get(provider);
-        if (providerIdx == null) {
+        int providerIdx = itemToIndex.getInt(provider);
+        if (providerIdx == UNASSIGNED) {
             throw new SortingException("Dependency references unknown provider: " + provider);
         }
-        Integer dependentIdx = itemToIndex.get(dependent);
-        if (dependentIdx == null) {
+        int dependentIdx = itemToIndex.getInt(dependent);
+        if (dependentIdx == UNASSIGNED) {
             throw new SortingException("Dependency references unknown dependent: " + dependent);
         }
-        if (providerIdx.equals(dependentIdx)) {
+        if (providerIdx == dependentIdx) {
             throw new SortingException("Self-dependency: " + provider);
         }
-        return new ResolvedEdge<>(provider, providerIdx, dependent, dependentIdx);
-    }
-
-    /**
-     * A resolved dependency edge with both item references and their indices.
-     *
-     * @param <TSortableItem> the item type
-     */
-    @Value
-    static class ResolvedEdge<TSortableItem> {
-
-        @NonNull
-        TSortableItem provider;
-
-        int providerIndex;
-
-        @NonNull
-        TSortableItem dependent;
-
-        int dependentIndex;
+        outIndices[0] = providerIdx;
+        outIndices[1] = dependentIdx;
     }
 }
