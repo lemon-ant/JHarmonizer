@@ -14,7 +14,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {
       "provider": "alpha",

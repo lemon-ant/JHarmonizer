@@ -1,5 +1,5 @@
 {
-  "description": "Two clusters and one singleton, no dependencies. Blocks ordered by cluster key: {alpha,beta} < charlie < {delta,echo}.",
+  "description": "Two groups and one singleton, no dependencies. Blocks ordered by group key: {alpha,beta} < charlie < {delta,echo}.",
   "items": [
     {
       "name": "delta",
@@ -22,7 +22,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "delta",
       "echo"

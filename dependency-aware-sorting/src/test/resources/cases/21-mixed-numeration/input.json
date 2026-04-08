@@ -6,6 +6,6 @@
     {"name": "beta",  "numeration": "DYNAMIC"},
     {"name": "delta", "numeration": "STATIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": []
 }

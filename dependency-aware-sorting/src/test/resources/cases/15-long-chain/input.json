@@ -34,7 +34,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {
       "provider": "hotel",

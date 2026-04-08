@@ -14,7 +14,7 @@
     {"name": "upsilon", "numeration": "STATIC"},
     {"name": "zeta", "numeration": "STATIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {"provider": "zeta", "dependent": "alpha"},
     {"provider": "theta", "dependent": "beta"}

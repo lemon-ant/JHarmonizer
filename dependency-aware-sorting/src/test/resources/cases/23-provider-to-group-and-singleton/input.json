@@ -1,5 +1,5 @@
 {
-  "description": "One provider (c1) has outgoing dependencies to both a cluster member (b2, in cluster {b1,b2}) and a standalone singleton (a3). Tests that super-node construction correctly captures c1->cluster when only one cluster member is listed as a dependent.",
+  "description": "One provider (c1) has outgoing dependencies to both a group member (b2, in group {b1,b2}) and a standalone singleton (a3). Tests that super-node construction correctly captures c1->group when only one group member is listed as a dependent.",
   "items": [
     {"name": "a1", "numeration": "STATIC"},
     {"name": "a2", "numeration": "STATIC"},
@@ -9,7 +9,7 @@
     {"name": "c1", "numeration": "STATIC"},
     {"name": "d1", "numeration": "STATIC"}
   ],
-  "clusters": [
+  "groups": [
     ["b1", "b2"]
   ],
   "dependencies": [

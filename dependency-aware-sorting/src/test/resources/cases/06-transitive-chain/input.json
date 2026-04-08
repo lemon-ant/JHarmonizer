@@ -22,7 +22,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {
       "provider": "echo",

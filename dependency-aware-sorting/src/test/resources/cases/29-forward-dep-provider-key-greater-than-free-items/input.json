@@ -7,7 +7,7 @@
     {"name": "mFromConst", "numeration": "STATIC"},
     {"name": "zFromNonConst", "numeration": "STATIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {"provider": "zFromNonConst", "dependent": "aNonConstValue"}
   ]

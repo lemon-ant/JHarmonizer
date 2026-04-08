@@ -11,7 +11,7 @@
     {"name": "h", "numeration": "STATIC"},
     {"name": "i", "numeration": "STATIC"}
   ],
-  "clusters": [],
+  "groups": [],
   "dependencies": [
     {"provider": "h", "dependent": "e"},
     {"provider": "h", "dependent": "b"},

@@ -1,5 +1,5 @@
 {
-  "description": "Two clusters with a cross-cluster dependency that inverts natural alphabetical block order. Cluster1={nu,omega} (key='nu'), Cluster2={lambda,mu} (key='lambda'). Natural: Cluster2 < Cluster1. Dependency omega->lambda forces Cluster1 first.",
+  "description": "Two groups with a cross-group dependency that inverts natural alphabetical block order. Group1={nu,omega} (key='nu'), Group2={lambda,mu} (key='lambda'). Natural: Group2 < Group1. Dependency omega->lambda forces Group1 first.",
   "items": [
     {
       "name": "omega",
@@ -18,7 +18,7 @@
       "numeration": "STATIC"
     }
   ],
-  "clusters": [
+  "groups": [
     [
       "omega",
       "nu"
