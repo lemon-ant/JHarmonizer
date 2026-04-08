@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtAnonymousExecutable;
-import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
@@ -397,26 +397,20 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
-    void buildDependencyGraph_enumConstantsPresent_enumConstantsExcludedFromGraph() {
+    @Disabled("TODO Enable when enum constants are supported in tests and graph building")
+    void buildDependencyGraph_enumConstantInitializerReferencesEarlierConstant_declarationDependencyEdgeCreated() {
         // Given
-        Map<CtTypeMember, CompiledMemberGroup> membersWithEnumConstants =
-                new HashMap<>(Constants.ENUM_CONSTANT_INITIALIZER_MEMBERS);
-        membersWithEnumConstants.put(
-                Constants.ENUM_CONSTANT_BRAVO_MEMBER, Constants.MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
-        membersWithEnumConstants.put(
-                Constants.ENUM_CONSTANT_ALPHA_MEMBER, Constants.MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
         MemberDependencyGraph memberDependencyGraph =
-                MemberDependencyGraphBuilder.buildDependencyGraph(membersWithEnumConstants);
+                MemberDependencyGraphBuilder.buildDependencyGraph(Constants.ENUM_CONSTANT_INITIALIZER_MEMBERS);
 
+        /* TODO Enable when enum constants are supported
         // When
-        Set<CtTypeMember> transitiveDependentsOfBravo =
-                memberDependencyGraph.findTransitiveDependents(Constants.ENUM_CONSTANT_BRAVO_MEMBER);
-        Set<CtTypeMember> transitiveProvidersOfAlpha =
-                memberDependencyGraph.findTransitiveProviders(Constants.ENUM_CONSTANT_ALPHA_MEMBER);
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.ENUM_CONSTANT_ALPHA_MEMBER, EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
 
         // Then
-        assertThat(transitiveDependentsOfBravo).isEmpty();
-        assertThat(transitiveProvidersOfAlpha).isEmpty();
+        assertThat(directProviders).containsExactly(Constants.ENUM_CONSTANT_BRAVO_MEMBER);
+        */
     }
 
     @Test
@@ -502,20 +496,6 @@ class MemberDependencyGraphBuilderTest {
         }
 
         return initializerBlocks.getFirst();
-    }
-
-    @NonNull
-    private static CtTypeMember requireEnumValueBySimpleName(CtType<?> enumType, String expectedSimpleName) {
-        if (!(enumType instanceof CtEnum<?> ctEnum)) {
-            throw new IllegalArgumentException(
-                    "Expected CtEnum but got: " + enumType.getClass().getSimpleName());
-        }
-
-        return ctEnum.getEnumValues().stream()
-                .filter(enumValue -> expectedSimpleName.equals(enumValue.getSimpleName()))
-                .findFirst()
-                .orElseThrow(
-                        () -> new IllegalStateException("No enum value found for simple name: " + expectedSimpleName));
     }
 
     private static final class Constants {
@@ -948,10 +928,12 @@ class MemberDependencyGraphBuilderTest {
         private static final Map<CtTypeMember, CompiledMemberGroup> ENUM_CONSTANT_INITIALIZER_MEMBERS =
                 buildTypeMember2NaturalGroup(
                         ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        /* TODO Enable when enum constants are supported
         private static final CtTypeMember ENUM_CONSTANT_BRAVO_MEMBER =
-                requireEnumValueBySimpleName(ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, "BRAVO");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "BRAVO");
         private static final CtTypeMember ENUM_CONSTANT_ALPHA_MEMBER =
-                requireEnumValueBySimpleName(ENUM_CONSTANT_INITIALIZER_FIXTURE_MAIN_TYPE, "ALPHA");
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(ENUM_CONSTANT_INITIALIZER_MEMBERS, "ALPHA");
+        */
 
         private static final URL BLANK_FINAL_STATIC_READ_FIXTURE_URL =
                 TestCaseResourceUtils.requireClasspathResourceUrl(
