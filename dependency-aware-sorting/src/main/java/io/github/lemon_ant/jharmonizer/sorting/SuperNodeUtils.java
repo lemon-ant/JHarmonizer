@@ -195,13 +195,30 @@ class SuperNodeUtils {
             @NonNull List<TSortableItem> items) {
         List<TSortableItem> result = new ArrayList<>(items.size());
         for (int nodeIndex : superNodeOrder) {
-            int start = superNodes.getNodeOffset()[nodeIndex];
-            int memberCount = superNodes.getNodeLength()[nodeIndex];
-            for (int i = start; i < start + memberCount; i++) {
-                result.add(items.get(superNodes.getMemberIndices()[i]));
-            }
+            expandSuperNode(nodeIndex, superNodes, items, result);
         }
         return result;
+    }
+
+    /**
+     * Appends all items of the specified super-node to the result list.
+     *
+     * @param superNodeIndex the super-node to expand
+     * @param superNodes     the super-node layout
+     * @param items          the original item list
+     * @param result         the target list to append to
+     * @param <TSortableItem> the item type
+     */
+    static <TSortableItem> void expandSuperNode(
+            int superNodeIndex,
+            @NonNull SuperNodes<TSortableItem> superNodes,
+            @NonNull List<TSortableItem> items,
+            @NonNull List<TSortableItem> result) {
+        int start = superNodes.getNodeOffset()[superNodeIndex];
+        int memberCount = superNodes.getNodeLength()[superNodeIndex];
+        for (int i = start; i < start + memberCount; i++) {
+            result.add(items.get(superNodes.getMemberIndices()[i]));
+        }
     }
 
     // ------------------------------------------------------------------ //

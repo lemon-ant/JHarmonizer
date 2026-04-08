@@ -12,17 +12,10 @@
     <name>Dependency-Aware Sorting</name>
 
     <properties>
-        <fastutil.version>8.5.18</fastutil.version>
         <jmh.version>1.37</jmh.version>
     </properties>
 
     <dependencies>
-        <!-- Production: Fastutil (primitive collections) -->
-        <dependency>
-            <groupId>it.unimi.dsi</groupId>
-            <artifactId>fastutil-core</artifactId>
-            <version>${fastutil.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

@@ -1,8 +1,5 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import it.unimi.dsi.fastutil.ints.IntComparator;
-import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,27 +23,18 @@ import lombok.experimental.UtilityClass;
  * <p>These invariants allow several optimizations:</p>
  * <ul>
  *   <li><b>Flat-array super-node storage</b> — a single {@code int[n]} holds all item indices
- *       grouped by super-node, with offset/length pairs for O(1) random access.  This eliminates
- *       per-singleton {@code int[]{i}} allocations and {@code List<Integer>} boxing entirely.</li>
- *   <li><b>Adjacency-based edge dedup</b> — duplicate super-node edges are detected via
- *       linear scan on small lists instead of
- *       {@code HashSet<Long>}, avoiding {@code Long} boxing entirely.</li>
- *   <li><b>Insertion sort</b> for intra-group ordering instead of {@code List.sort()}.</li>
- *   <li><b>No intra-group dependency checks</b> — impossible by precondition, so the
- *       comparator is never invoked during graph construction.</li>
- *   <li><b>Fast path</b> — when there are no constraints at all, items are sorted directly
- *       by the comparator with a single {@code List.sort()}, bypassing all super-node
- *       machinery.</li>
+ *       grouped by super-node, with offset/length pairs for O(1) random access.</li>
+ *   <li><b>Boxing-free {@link DependencyGraphUtils.IntHeap}</b> — replaces
+ *       {@code PriorityQueue<Integer>}, eliminating all {@code Integer} boxing/unboxing
+ *       in the topological selection hot path.</li>
+ *   <li><b>Free / constrained split</b> — super-nodes without dependency edges are pre-sorted
+ *       with merge sort; only dependency-involved nodes go through the heap.</li>
+ *   <li><b>{@link DependencyGraphUtils.IntBag} adjacency dedup</b> — duplicate super-node
+ *       edges are detected via linear scan on small lists instead of {@code HashSet}.</li>
+ *   <li><b>Insertion sort</b> for intra-group ordering (typically ≤ 4 elements).</li>
+ *   <li><b>Fast path</b> — when no groups and no dependencies exist, a single
+ *       {@code List.sort()} bypasses all super-node machinery.</li>
  * </ul>
- *
- * <h2>Ordering policy — Provider-lift repair</h2>
- * <p>When dependency edges exist, the engine computes the <b>base order</b> (sorted by the
- * supplied comparator) and repairs it using a single deterministic strategy:
- * <b>provider-lift</b>.  The base order is scanned left to right; when a blocked dependent
- * is encountered (its required providers have not yet been emitted), the minimal transitive
- * provider closure is lifted as a contiguous block directly before the blocked element.
- * Lifted providers are topologically sorted among themselves with base-rank tie-breaking
- * to ensure determinism and dependency validity.</p>
  *
  * <p>Time complexity: <em>O(n log n + E)</em> · Space: <em>O(n + E)</em>.</p>
  */
@@ -57,11 +45,18 @@ public class SimplifiedDependencyAwareSorter {
      * Sorts {@code items} according to the supplied constraints, comparator, and identity
      * function.
      *
-     * <p>The comparator governs:
-     * <ul>
-     *   <li>the ordering of items <em>within</em> each group block, and</li>
-     *   <li>the base order used as the starting point for provider-lift repair.</li>
-     * </ul>
+     * <p>The algorithm proceeds through these stages:</p>
+     * <ol>
+     *   <li><b>Item index</b> — maps each item to its position in the list.</li>
+     *   <li><b>Super-node construction</b> — groups items by explicit groups, plus singletons.</li>
+     *   <li><b>Fast-path check</b> — if no groups and no dependencies exist, sorts directly.</li>
+     *   <li><b>Intra-super-node sort</b> — orders items within each group (insertion sort).</li>
+     *   <li><b>Super-node dependency graph</b> — builds edges between super-nodes with dedup.</li>
+     *   <li><b>Free / constrained split</b> — partitions super-nodes by edge participation.</li>
+     *   <li><b>Free-node merge sort</b> — pre-sorts free super-nodes by key.</li>
+     *   <li><b>Constrained-node topological sort</b> — Kahn's algorithm via boxing-free heap.</li>
+     *   <li><b>Merge and expand</b> — merges the two sorted streams, expanding super-nodes.</li>
+     * </ol>
      *
      * <p>Items are identified by their {@code equals/hashCode} contract for duplicate
      * detection, dependency/group resolution, and error messages.
@@ -69,7 +64,7 @@ public class SimplifiedDependencyAwareSorter {
      *
      * @param <TSortableItem>        the item type
      * @param items             items to sort (input order is irrelevant)
-     * @param groups          group definitions; use {@link Groups#empty()} if none
+     * @param groups            group definitions; use {@link Groups#empty()} if none
      * @param dependencies      provider → dependent ordering edges; use
      *                          {@link Dependencies#empty()} if none
      * @param comparator        determines intra-group and base ordering
@@ -87,63 +82,67 @@ public class SimplifiedDependencyAwareSorter {
         }
         List<TSortableItem> itemList = new ArrayList<>(items);
 
+        // Step 1: Build index mapping from item → list position.
         Map<TSortableItem, Integer> itemToIndex = SortingUtils.buildItemIndex(itemList);
 
-        // Fast path: no constraints at all — just sort by comparator, skip all super-node machinery
+        // Fast path: no constraints at all — just sort by comparator, skip all super-node machinery.
         if (groups.getGroups().isEmpty() && dependencies.getEdges().isEmpty()) {
             itemList.sort(comparator);
             return Collections.unmodifiableList(itemList);
         }
 
+        // Step 2: Build super-nodes from explicit groups + singletons.
+        //         Intra-group items are sorted by insertion sort during construction.
         SuperNodeUtils.SuperNodes<TSortableItem> superNodes =
                 SuperNodeUtils.buildSuperNodes(itemList, itemToIndex, groups, comparator);
+        int nodeCount = superNodes.getCount();
 
-        int[] inDegree = new int[superNodes.getCount()];
-        IntList[] adjacencyLists = DependencyGraphUtils.buildDependencyGraph(
+        // Step 3: Build the super-node dependency graph.
+        DependencyGraphUtils.SuperNodeGraph graph = DependencyGraphUtils.buildDependencyGraph(
                 itemToIndex,
                 superNodes.getItemToSuperNode(),
                 superNodes.getFirstSingletonIndex(),
-                superNodes.getCount(),
-                dependencies,
-                inDegree);
+                nodeCount,
+                dependencies);
 
-        IntComparator nodeKeyComparator = (a, b) ->
-                comparator.compare(superNodes.getNodeKeys()[a], superNodes.getNodeKeys()[b]);
+        // No dependency edges — sort all super-nodes by key and expand.
+        if (graph == null) {
+            int[] sortedOrder = computeIdentityOrder(nodeCount);
+            DependencyGraphUtils.mergeSortByKey(sortedOrder, 0, nodeCount, superNodes.getNodeKeys(), comparator);
+            List<TSortableItem> result = SuperNodeUtils.expandOrder(sortedOrder, superNodes, itemList);
+            return Collections.unmodifiableList(result);
+        }
 
-        int[] finalOrder = providerLiftRepair(superNodes.getCount(), inDegree, adjacencyLists, nodeKeyComparator);
+        // Step 4: Split super-nodes into free (no edges) and constrained partitions.
+        DependencyGraphUtils.FreeConstrainedPartition partition =
+                DependencyGraphUtils.partitionFreeAndConstrained(graph, nodeCount);
 
-        List<TSortableItem> result = SuperNodeUtils.expandOrder(finalOrder, superNodes, itemList);
+        // Step 5: Pre-sort free super-nodes by key (merge sort).
+        DependencyGraphUtils.mergeSortByKey(
+                partition.freeSuperNodes, 0, partition.freeCount, superNodes.getNodeKeys(), comparator);
+
+        // Step 6: Topologically sort constrained super-nodes (Kahn's algorithm via IntHeap).
+        int[] constrainedOrder = DependencyGraphUtils.topologicallySortConstrained(
+                partition, graph, nodeCount, superNodes.getNodeKeys(), comparator);
+
+        // Step 7: Merge the two sorted streams and expand each super-node into its items.
+        List<TSortableItem> result = DependencyGraphUtils.mergeAndExpand(
+                partition, constrainedOrder, superNodes.getNodeKeys(), comparator, superNodes, itemList);
         return Collections.unmodifiableList(result);
     }
 
     /**
-     * Produces the final super-node ordering by provider-lift repair over the base order.
+     * Creates an identity permutation array {@code [0, 1, 2, ..., n-1]}.
      *
-     * @param nodeCount      total number of super-nodes
-     * @param inDegree       in-degree array (consumed by cycle check)
-     * @param adjacencyLists provider → dependent adjacency lists (may contain {@code null} entries)
-     * @param nodeComparator comparator for super-node indices based on their keys
-     * @return an ordered array of super-node indices
-     * @throws SortingException if a dependency cycle is detected
+     * @param nodeCount the number of elements
+     * @return an identity permutation array
      */
     @NonNull
-    private static int[] providerLiftRepair(
-            int nodeCount, int[] inDegree, @Nullable IntList[] adjacencyLists, IntComparator nodeComparator) {
-        // No dependency edges — just return base order
-        if (adjacencyLists == null) {
-            return DependencyGraphUtils.computeBaseOrder(nodeCount, nodeComparator);
+    private static int[] computeIdentityOrder(int nodeCount) {
+        int[] order = new int[nodeCount];
+        for (int i = 0; i < nodeCount; i++) {
+            order[i] = i;
         }
-
-        // Validate acyclicity via Kahn's algorithm
-        DependencyGraphUtils.validateAcyclic(nodeCount, inDegree, adjacencyLists);
-
-        // Compute base order and its inverse (rank)
-        int[] baseOrder = DependencyGraphUtils.computeBaseOrder(nodeCount, nodeComparator);
-        int[] baseRank = DependencyGraphUtils.computeBaseRank(baseOrder, nodeCount);
-
-        // Build reverse adjacency (dependent → list of providers)
-        IntList[] reverseAdj = DependencyGraphUtils.buildReverseAdjacency(nodeCount, adjacencyLists);
-
-        return ProviderLiftUtils.scanAndEmitOrder(baseOrder, reverseAdj, adjacencyLists, baseRank, nodeCount);
+        return order;
     }
 }
