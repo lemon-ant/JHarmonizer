@@ -27,7 +27,7 @@ class SortingUtils {
      */
     @NonNull
     static <TSortableItem> Object2IntOpenHashMap<TSortableItem> buildItemIndex(@NonNull List<TSortableItem> items) {
-        Object2IntOpenHashMap<TSortableItem> index = new Object2IntOpenHashMap<>(items.size(), 0.5f);
+        Object2IntOpenHashMap<TSortableItem> index = new Object2IntOpenHashMap<>(items.size());
         index.defaultReturnValue(UNASSIGNED);
         for (int i = 0; i < items.size(); i++) {
             TSortableItem item = items.get(i);
