@@ -728,6 +728,87 @@ Initial capability set:
 
 ---
 
+### 18. Replace current printer implementation with a specialized source-preserving printer
+
+#### Status
+- [ ] Not implemented (captured as a future major refactor)
+- [ ] Revisit after: first stable version is fully validated on real projects
+- [ ] Priority context: output correctness + deterministic formatting + runtime performance
+
+#### Background
+Current printing logic evolved from overriding/extending an existing generic printer implementation.
+Over time, most of the meaningful behavior became custom, while inherited base behavior still leaks into
+edge-case formatting decisions.
+
+At the same time, the project strategy is source-preserving where possible:
+- reuse source fragments according to the harmonized model,
+- avoid full model re-serialization whenever an original fragment can be reused safely.
+
+This source-preserving direction does not align well with a generic printer architecture originally designed
+for broad AST serialization use cases.
+
+#### Problem statement
+The current printer track has three structural issues:
+1) **Architecture mismatch**: extension-overrides on top of a generic printer make behavior harder to reason about;
+2) **Output quality risk**: inherited/default printer behavior may still produce undesirable formatting in edge cases;
+3) **Inefficient algorithms**: repeated scans over the same member/component collections (for first/next/related element
+   lookups) cause avoidable repeated work and poor scalability on larger classes.
+
+#### Proposed solution
+Build a **fully specialized JHarmonizer printer** focused only on this tool’s needs.
+
+Core principles:
+- No dependency on generic “universal” printer behavior for ordering/render decisions.
+- Source-preserving by default: compose output from indexed original source fragments guided by the harmonized model.
+- Pre-index once, print many: construct all navigation/index structures in a single preparation phase, then render
+  in linear (or near-linear) passes without repeated deep rescans.
+
+#### Design direction (future version)
+
+#### A. Two-phase printer pipeline
+1) **Preparation/indexing phase**
+- build a per-type immutable print context;
+- index members, anchors, delimiters, trivia/comment blocks, and adjacency relationships;
+- precompute “next printable element”/“first element in group” lookups.
+
+2) **Rendering phase**
+- emit output using prepared indices and precomputed traversal order;
+- reuse source slices for unchanged fragments;
+- apply targeted synthetic rendering only where source reuse is impossible or unsafe.
+
+#### B. Data structures and complexity goals
+- Replace repeated list scans with direct maps/index arrays for frequent lookups.
+- Ensure each member/component is classified and linked once during preparation.
+- Target complexity shift from repeated quasi-`O(n^2)` traversals toward `O(n)`/`O(n log n)` total passes depending on
+  configured sorting.
+
+#### C. Scope specialization
+- Limit feature surface strictly to JHarmonizer scenarios (class member harmonization output).
+- Do not attempt to expose this printer as a generic public formatting framework.
+
+#### Expected benefits
+- More predictable and controllable output behavior.
+- Better alignment with source-preserving strategy (copy-by-model instead of broad re-serialization).
+- Lower runtime overhead on large/complex classes due to single-pass indexing and reduced repeated searches.
+- Simpler maintenance: one explicit printer architecture instead of layered override chains.
+
+#### Non-goals
+- Do not couple this refactor with unrelated parsing/rule DSL redesign.
+- Do not broaden scope into a general-purpose Java formatter.
+- Do not require byte-identical output migration in one step; allow staged parity checkpoints with explicit tests.
+
+#### Implementation outline (when revisited)
+- [ ] Document current printer responsibilities and inherited behavior still in effect.
+- [ ] Define specialized printer contracts (input model, indexed context, rendering steps, invariants).
+- [ ] Implement immutable indexing context built in one preprocessing pass.
+- [ ] Replace repeated lookup loops with precomputed navigation tables.
+- [ ] Implement source-fragment composition pipeline with controlled fallback rendering.
+- [ ] Add focused performance benchmarks on representative large classes.
+- [ ] Add regression tests for edge-case formatting and comment/trivia preservation.
+- [ ] Roll out behind a feature flag, compare outputs, and remove old printer path after parity is proven.
+
+---
+
 ## Technical debt / stabilization backlog
 
 ### 1. Blank-final nearest-provider edge cases still not covered by active E2E
@@ -770,7 +851,7 @@ Initial capability set:
 
 ---
 
-### 3. Spoon partial evaluator NPE on method-reference expressions in no-classpath mode
+### 3. Spoon partial evaluator runtime failures in no-classpath mode (`NullPointerException` + class-loading edge case)
 
 #### Status
 - [ ] Open investigation / upstream issue not yet created
@@ -780,6 +861,10 @@ Initial capability set:
   field-initializer expressions containing method references.
 - Reproduced with expression shape similar to:
   `Map.of(WHOLE_CONFIG_KEY, WholeConfigDifferentiator::getByteBufferDifferentiator)`.
+- In self-type class-literal initializer shapes, Spoon partial evaluation may throw
+  `spoon.support.SpoonClassNotFoundException` while attempting classpath lookup for the currently processed source type.
+- Reproduced by fixture:
+  `core/src/test/resources/test-cases/core/e2e/regression/01-self-type-class-literal-logger-factory`.
 
 #### Representative stack trace (captured)
 ```text
@@ -796,7 +881,61 @@ because the return value of "spoon.reflect.reference.CtFieldReference.getDeclari
 
 #### Follow-up actions
 - [ ] Create upstream Spoon issue with a minimal reproducible sample based on method-reference field initializer.
+- [ ] Create upstream Spoon issue (or linked follow-up) for self-type class-literal partial-evaluation class-loading failure.
 - [ ] Attach the captured stack trace and no-classpath context to the upstream report.
 - [ ] Revisit local fallback scope after upstream fix becomes available.
+
+---
+### 4. Spoon incorrect `sourceStart` for first explicit enum member after constant/lambda region
+
+#### Status
+- [ ] Open investigation / upstream issue not yet created
+- [ ] Local workaround implemented and covered by dedicated regression fixture
+
+#### Verified current behavior
+- For a specific enum shape, Spoon may report incorrect `sourceStart` for the **first explicit member** after
+  enum constants (for example a method declared right after constant declarations).
+- Observed in regression fixture:
+  `core/src/test/resources/test-cases/core/e2e/regression/02-enum-lambda-body-member-boundary`.
+- In this case, the reported start can be shifted into the preceding enum constant/lambda body zone, which breaks
+  member boundary slicing for source-preserving printing.
+
+#### Temporary workaround in code
+- `EnumMemberStartCorrectionResolver` applies targeted correction for enum member starts.
+- Correction flow:
+  - finds the earliest explicit enum member;
+  - searches declaration-prefix pattern inside the extracted source fragment;
+  - shifts start offset when Spoon start points before the real declaration.
+
+#### Follow-up actions
+- [ ] Create upstream Spoon issue with a minimal enum reproducer from regression `02-enum-lambda-body-member-boundary`.
+- [ ] Attach before/after `sourceStart` observations for affected members and expected boundary behavior.
+- [ ] Re-evaluate and simplify/remove local correction once Spoon fix is released and validated.
+
+---
+
+### 5. Spoon partial evaluator `StackOverflowError` on anonymous-class chains during expression evaluation
+
+#### Status
+- [ ] Open investigation / upstream issue not yet created
+- [ ] Local guard implemented and covered by dedicated regression fixture
+
+#### Verified current behavior
+- Spoon partial evaluation may recurse into anonymous-class initializer structures and crash with
+  `StackOverflowError`.
+- Reproduced by fixture:
+  `core/src/test/resources/test-cases/core/e2e/regression/03-string-selector-anonymous-chain-overflow`.
+- Repeating stack includes `VisitorPartialEvaluator` with `CtNewClassImpl.accept(...)` recursion patterns.
+
+#### Temporary workaround in code
+- `DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(...)` skips partial evaluation for expressions
+  containing `CtNewClass` nodes.
+- This avoids triggering recursion trap and preserves pipeline stability by falling back to non-partially-evaluated
+  analysis path.
+
+#### Follow-up actions
+- [ ] Create upstream Spoon issue with minimal reproducer from regression `03-string-selector-anonymous-chain-overflow`.
+- [ ] Attach captured stack trace and note no-classpath/e2e context where recursion occurs.
+- [ ] Revisit local `CtNewClass` guard scope after upstream fix is available.
 
 ---
