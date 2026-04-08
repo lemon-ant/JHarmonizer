@@ -129,8 +129,8 @@ class DeclaringTypeFieldReferenceUtils {
             CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
-                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
+                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> Optional.ofNullable(
                                 fieldAccess.getVariable().getDeclaration())
                         .map(field -> isFieldDeclaredInType(field, declaringType))
