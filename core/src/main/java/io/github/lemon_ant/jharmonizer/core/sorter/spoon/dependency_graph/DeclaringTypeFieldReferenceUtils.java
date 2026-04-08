@@ -21,6 +21,7 @@ import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -131,13 +132,13 @@ class DeclaringTypeFieldReferenceUtils {
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> Optional.ofNullable(
                                 fieldAccess.getVariable().getDeclaration())
-                        .map(field -> isFieldDeclaredInType(field, declaringType))
+                        .map(field -> isRegularFieldDeclaredInType(field, declaringType))
                         .orElse(false));
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
-        return field.getDeclaringType() == declaringType;
+    private static boolean isRegularFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
+        return !(field instanceof CtEnumValue<?>) && field.getDeclaringType() == declaringType;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")

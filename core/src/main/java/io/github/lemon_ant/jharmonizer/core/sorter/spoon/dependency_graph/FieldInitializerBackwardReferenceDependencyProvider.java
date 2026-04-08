@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 import java.util.Optional;
 import lombok.NonNull;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -24,6 +25,10 @@ final class FieldInitializerBackwardReferenceDependencyProvider
     @NonNull
     @Override
     protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
+        if (dependentMember instanceof CtEnumValue<?>) {
+            return Optional.empty();
+        }
+
         if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Optional.empty();
         }
