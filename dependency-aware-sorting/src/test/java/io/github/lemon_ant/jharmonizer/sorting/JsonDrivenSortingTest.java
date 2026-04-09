@@ -51,6 +51,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class JsonDrivenSortingTest {
 
+    private static final String TEST_CASES_DIR = "test-cases";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     // ------------------------------------------------------------------ //
@@ -91,9 +92,9 @@ class JsonDrivenSortingTest {
     }
 
     private static List<TestCase> loadAllCases() throws IOException, URISyntaxException {
-        URL casesUrl = JsonDrivenSortingTest.class.getClassLoader().getResource("test-cases");
+        URL casesUrl = JsonDrivenSortingTest.class.getClassLoader().getResource(TEST_CASES_DIR);
         if (casesUrl == null) {
-            throw new IllegalStateException("'test-cases' resource directory not found");
+            throw new IllegalStateException("'" + TEST_CASES_DIR + "' resource directory not found");
         }
         Path casesDir = Paths.get(casesUrl.toURI());
 

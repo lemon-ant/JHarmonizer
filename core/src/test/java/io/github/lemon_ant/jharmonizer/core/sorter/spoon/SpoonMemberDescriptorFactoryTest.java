@@ -16,6 +16,7 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYP
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_ENUM;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_INTERFACE;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
@@ -33,7 +34,7 @@ import spoon.reflect.declaration.CtTypeMember;
 class SpoonMemberDescriptorFactoryTest {
 
     private static final URL TEST_CASES_RESOURCE_ROOT_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(
-            "/test-cases/core/sorter/spoon/member-descriptor/valid/");
+            "/" + TEST_CASES_DIR + "/core/sorter/spoon/member-descriptor/valid/");
     private static final CtType<?> CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES =
             parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
     private static final CtType<?> ENUM_WITH_CONSTANTS_AND_REGULAR_MEMBERS =

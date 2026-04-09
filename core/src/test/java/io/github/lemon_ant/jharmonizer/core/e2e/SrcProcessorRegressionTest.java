@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
@@ -24,7 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SrcProcessorRegressionTest
         extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorRegressionTest.CompileAndRunSnapshot> {
 
-    private static final String FIXTURES_RESOURCE = "/test-cases/core/e2e/regression/";
+    private static final String FIXTURES_RESOURCE = "/" + TEST_CASES_DIR + "/core/e2e/regression/";
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
 

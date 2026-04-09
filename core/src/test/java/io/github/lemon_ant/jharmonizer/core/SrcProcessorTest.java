@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -47,8 +48,9 @@ class SrcProcessorTest {
     private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
-    private static final String FLOW_LEVEL_FIXTURES_RESOURCE = "/test-cases/core/source-processor/flow-level/";
+            "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java");
+    private static final String FLOW_LEVEL_FIXTURES_RESOURCE =
+            "/" + TEST_CASES_DIR + "/core/source-processor/flow-level/";
     private static final URL FLOW_LEVEL_FIXTURES_ROOT_URL =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FLOW_LEVEL_FIXTURES_RESOURCE);
     private static final Path FLOW_LEVEL_FIXTURES_ROOT = resolveFlowLevelFixturesRoot();
