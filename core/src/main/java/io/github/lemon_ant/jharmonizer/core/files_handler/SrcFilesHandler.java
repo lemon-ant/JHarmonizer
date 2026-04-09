@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -25,13 +24,6 @@ public class SrcFilesHandler {
     /**
      * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
      * Supports mixed absolute and relative globs and removes duplicates from the result.
-     *
-     * <p>The discovered paths are materialized into a list before returning a parallel stream.
-     * This is necessary because the upstream {@link GlobPathFinder#findPaths(PathQuery)} stream
-     * is built via {@code flatMap} on a typically single-element source (one base directory),
-     * which produces a spliterator that cannot split effectively for parallel execution.
-     * Materializing first gives the returned stream an {@code ArrayList}-backed spliterator
-     * that the ForkJoinPool can split evenly across worker threads.</p>
      *
      * @param baseDir the base directory to scan
      * @param includeGlobs the include globs to apply
@@ -47,11 +39,7 @@ public class SrcFilesHandler {
                 .excludeGlobs(excludeGlobs)
                 .allowedExtensions(Set.of("java"))
                 .build();
-        List<Path> discoveredPaths;
-        try (Stream<Path> pathStream = GlobPathFinder.findPaths(pathQuery)) {
-            discoveredPaths = pathStream.toList();
-        }
-        return discoveredPaths.parallelStream().peek(path -> log.debug("Path: {}", path));
+        return GlobPathFinder.findPaths(pathQuery).parallel().peek(path -> log.debug("Path: {}", path));
     }
 
     /**

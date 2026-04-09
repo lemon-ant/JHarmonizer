@@ -40,9 +40,13 @@ import org.slf4j.helpers.MessageFormatter;
  *   <li><b>Excludes</b>: relative/absolute patterns compiled as {@code PathMatcher("glob:...")}.</li>
  *   <li><b>Files/directories</b>: {@code onlyFiles=true} keeps regular files only; otherwise both files and directories may appear.</li>
  *   <li><b>Depth/options</b>: {@code maxDepth} and {@code getVisitOptions()} are passed to {@link java.nio.file.Files#find}.</li>
- *   <li><b>Parallelism</b>: different base directories are scanned in parallel; downstream is {@code unordered()}.</li>
+ *   <li><b>Parallelism</b>: discovered paths are collected into a {@code List} internally so that the
+ *       returned stream has a splittable {@code Spliterator}. This allows the caller to obtain true
+ *       parallel processing by calling {@code .parallel()} on the result. File-walk streams are
+ *       fully consumed and closed during collection.</li>
  *   <li><b>Uniqueness</b>: resulting paths are deduplicated; the stream yields unique entries ({@code distinct()}).</li>
- *   <li><b>Stream safety</b>: the inner stream from {@code Files.find(...)} is closed via {@code onClose} when the outer stream is closed.</li>
+ *   <li><b>Stream safety</b>: inner file-walk streams from {@code Files.find(...)} are fully consumed
+ *       and closed during path collection. The returned stream does not hold open file handles.</li>
  * </ul>
  */
 @Slf4j
@@ -55,9 +59,12 @@ public class GlobPathFinder {
     /**
      * Find paths according to the provided {@link PathQuery}.
      *
+     * <p>The returned stream is backed by an internal {@code List}, so its {@code Spliterator}
+     * can split evenly — calling {@code .parallel()} on it enables true ForkJoinPool parallelism.</p>
+     *
      * @param pathQuery configuration (base, include/exclude, extensions, depth, onlyFiles)
-     * @return a stream of absolute, normalized and <b>unique</b> paths that satisfy the filters;
-     *         the caller is responsible for closing the returned stream
+     * @return a sequential stream of absolute, normalized and <b>unique</b> paths that satisfy the
+     *         filters; call {@code .parallel()} to enable multi-threaded consumption
      * @throws UncheckedIOException on IO errors during traversal
      */
     @NonNull
@@ -93,17 +100,22 @@ public class GlobPathFinder {
         Function<Entry<Path, Set<PathMatcher>>, Function<Stream<Path>, Stream<Path>>> perBasePipelineFactory =
                 buildPerBasePipelineFactory(relativeExcludeMatchers);
 
-        // 4) Start traversal: each base is scanned in parallel; I/O is isolated inside scanBase(...) with shielding.
-        Stream<Path> resultPathStream = baseToIncludeMatchers.entrySet().parallelStream()
+        // 4) Scan all base directories, apply filters, and collect the discovered paths.
+        // Collection into a List is intentional: flatMap on a typically single-element source
+        // (one base directory) produces a Spliterator that cannot split, which prevents the
+        // caller's ForkJoinPool from distributing work across threads when the stream is
+        // consumed in parallel. A List-backed Spliterator splits evenly, enabling true
+        // parallel processing downstream. Path objects are lightweight references, so memory
+        // overhead is negligible even for large codebases.
+        // Inner file-walk streams opened by scanBaseDir are closed by flatMap after consumption.
+        List<Path> discoveredPaths = baseToIncludeMatchers.entrySet().stream()
                 .flatMap(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
-                // Keep downstream parallel-friendly; order is irrelevant.
-                .unordered()
-                .distinct();
+                .distinct()
+                .toList();
+
+        Stream<Path> resultPathStream = discoveredPaths.stream();
         if (log.isDebugEnabled()) {
-            // DEBUG: final emission (after all filters)
-            resultPathStream = resultPathStream.peek(path -> {
-                log.debug("Emitting {}", path);
-            });
+            resultPathStream = resultPathStream.peek(path -> log.debug("Emitting {}", path));
         }
         return resultPathStream;
     }
