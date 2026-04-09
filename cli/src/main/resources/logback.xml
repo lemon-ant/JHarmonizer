@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    Runtime overrides: BaseCommand switches the appender pattern and root level
-    when ‑‑verbose is active.
-    Do not rename the appender "STDOUT" or the root level
-    without updating BaseCommand constants.
--->
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -13,7 +7,6 @@
         </encoder>
     </appender>
 
-    <!-- Permanently suppress Spoon TypeFactory WARN stack traces (harmless, noisy). -->
     <logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>
 
     <root level="INFO">
