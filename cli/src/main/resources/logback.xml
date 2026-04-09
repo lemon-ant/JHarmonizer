@@ -6,9 +6,7 @@
         </encoder>
     </appender>
 
-    <!-- Suppress Spoon's internal WARN/INFO messages (e.g. shadow class failures) in normal mode.
-         BaseCommand resets this logger to WARN when verbose/debug is enabled. -->
-    <logger name="spoon" level="ERROR"/>
+    <logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

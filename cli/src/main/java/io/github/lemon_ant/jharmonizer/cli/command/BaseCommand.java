@@ -2,6 +2,9 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
@@ -31,6 +34,10 @@ import picocli.CommandLine.Option;
  */
 @Slf4j
 abstract class BaseCommand implements Callable<Integer> {
+
+    private static final String SPOON_TYPE_FACTORY_LOGGER_NAME = "spoon.reflect.factory.TypeFactory";
+    private static final String STDOUT_APPENDER_NAME = "STDOUT";
+    private static final String VERBOSE_LOG_PATTERN = "%-5level [%logger{36}] %msg%n";
 
     /**
      * Creates a new base CLI command.
@@ -133,7 +140,8 @@ abstract class BaseCommand implements Callable<Integer> {
                 .build();
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
-            ((Logger) LoggerFactory.getLogger("spoon")).setLevel(Level.WARN);
+            ((Logger) LoggerFactory.getLogger(SPOON_TYPE_FACTORY_LOGGER_NAME)).setLevel(Level.WARN);
+            switchToVerboseLogPattern();
         }
         try {
             return processWithFlow(commandOptions);
@@ -225,6 +233,20 @@ abstract class BaseCommand implements Callable<Integer> {
             return exceptionType;
         }
         return exceptionType + ": " + exceptionMessage;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void switchToVerboseLogPattern() {
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        ConsoleAppender<ILoggingEvent> consoleAppender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
+        if (consoleAppender == null) {
+            return;
+        }
+        PatternLayoutEncoder encoder = (PatternLayoutEncoder) consoleAppender.getEncoder();
+        encoder.stop();
+        encoder.setPattern(VERBOSE_LOG_PATTERN);
+        encoder.start();
     }
 
     @Value
