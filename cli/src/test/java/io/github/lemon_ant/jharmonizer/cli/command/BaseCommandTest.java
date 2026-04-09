@@ -35,7 +35,7 @@ import picocli.CommandLine;
 class BaseCommandTest {
 
     private static final String SPOON_TYPE_FACTORY_LOGGER_NAME = "spoon.reflect.factory.TypeFactory";
-    private static final String DEFAULT_LOG_PATTERN = "%-5level %msg%n";
+    private static final String STDOUT_APPENDER_NAME = "STDOUT";
 
     private CommandLine commandLine;
     private Level initialRootLevel;
@@ -267,7 +267,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_verboseWithRuntimeException_logsDetailedStackTrace() {
+    void call_verboseWithRuntimeException_returnsExitCode1() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -293,7 +293,8 @@ class BaseCommandTest {
     @Nullable
     @SuppressWarnings("unchecked")
     private static String resolveCurrentLogPattern(Logger rootLogger) {
-        ConsoleAppender<ILoggingEvent> appender = (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender("STDOUT");
+        ConsoleAppender<ILoggingEvent> appender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
         if (appender == null) {
             return null;
         }
@@ -305,7 +306,8 @@ class BaseCommandTest {
             return;
         }
         @SuppressWarnings("unchecked")
-        ConsoleAppender<ILoggingEvent> appender = (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender("STDOUT");
+        ConsoleAppender<ILoggingEvent> appender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
         if (appender == null) {
             return;
         }
