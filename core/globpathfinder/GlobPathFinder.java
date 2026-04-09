@@ -42,8 +42,8 @@ import org.slf4j.helpers.MessageFormatter;
  *   <li><b>Excludes</b>: relative/absolute patterns compiled as {@code PathMatcher("glob:...")}.</li>
  *   <li><b>Files/directories</b>: {@code onlyFiles=true} keeps regular files only; otherwise both files and directories may appear.</li>
  *   <li><b>Depth/options</b>: {@code maxDepth} and {@code getVisitOptions()} are passed to {@link java.nio.file.Files#find}.</li>
- *   <li><b>Parallelism</b>: per-entry streams from {@link java.nio.file.Files#find} are concatenated via
- *       {@link Stream#concat} and then wrapped in a {@link FixedBatchSpliterator} whose batch size equals
+ *   <li><b>Parallelism</b>: per-entry streams from {@link java.nio.file.Files#find} are merged via
+ *       {@code flatMap} and then wrapped in a {@link BatchingSpliterator} whose batch size equals
  *       the number of available processors. This enables effective parallel splitting via {@code .parallel()}
  *       without collecting all discovered paths into an intermediate collection.
  *       Each batch is backed by an array-based spliterator that further splits down to individual elements,
@@ -68,8 +68,8 @@ public class GlobPathFinder {
     /**
      * Find paths according to the provided {@link PathQuery}.
      *
-     * <p>Per-entry streams from {@link java.nio.file.Files#find} are concatenated via
-     * {@link Stream#concat} and then wrapped in a {@link FixedBatchSpliterator} whose batch size
+     * <p>Per-entry streams from {@link java.nio.file.Files#find} are merged via {@code flatMap}
+     * and then wrapped in a {@link BatchingSpliterator} whose batch size
      * equals the number of available processors. Calling {@code .parallel()} on the result enables
      * true ForkJoinPool parallelism without collecting all paths into an intermediate collection.
      * Each batch is backed by an array-based spliterator that further splits down to individual
@@ -115,26 +115,25 @@ public class GlobPathFinder {
         Function<Entry<Path, Set<PathMatcher>>, Function<Stream<Path>, Stream<Path>>> perBasePipelineFactory =
                 buildPerBasePipelineFactory(relativeExcludeMatchers);
 
-        // 4) Build a streaming pipeline by concatenating per-entry streams.
+        // 4) Build a streaming pipeline by merging per-entry streams via flatMap.
         // Each entry in the map produces its own Files.find() stream via scanBaseDir().
-        // Stream.concat propagates close handlers, so all file-walk handles are released
-        // when the outermost stream is closed.
-        // The FixedBatchSpliterator wraps the concatenated source and enables parallel splitting
+        // flatMap lazily opens and auto-closes inner streams as they are consumed,
+        // so file handles are released incrementally rather than held all at once.
+        // The BatchingSpliterator wraps the merged source and enables parallel splitting
         // by pulling small batches on demand — batch memory is O(batchSize), not O(totalPaths).
         // Note: distinct() maintains an internal HashSet of O(uniquePaths) for deduplication,
         // but paths flow through incrementally — no full path collection is created before processing.
         // Batch size equals available processors so that even small file sets (e.g. 8 files
         // on 8 cores) produce fine-grained batches whose ArraySpliterator splits further
         // down to individual files.
-        Stream<Path> concatenated = baseToIncludeMatchers.entrySet().stream()
-                .map(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
-                .reduce(Stream.empty(), Stream::concat)
+        Stream<Path> merged = baseToIncludeMatchers.entrySet().stream()
+                .flatMap(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
                 .distinct();
 
         Spliterator<Path> batchSpliterator =
-                new FixedBatchSpliterator<>(concatenated.spliterator(), BATCH_SIZE);
+                new BatchingSpliterator<>(merged.spliterator(), BATCH_SIZE);
         Stream<Path> resultPathStream = StreamSupport.stream(batchSpliterator, false)
-                .onClose(concatenated::close);
+                .onClose(merged::close);
         if (log.isDebugEnabled()) {
             resultPathStream = resultPathStream.peek(path -> log.debug("Emitting {}", path));
         }
