@@ -133,6 +133,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 .build();
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
+            ((Logger) LoggerFactory.getLogger("spoon")).setLevel(Level.WARN);
         }
         try {
             return processWithFlow(commandOptions);
