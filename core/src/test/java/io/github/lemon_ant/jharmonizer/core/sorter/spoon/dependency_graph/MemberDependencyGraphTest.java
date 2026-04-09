@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,7 +16,7 @@ import spoon.reflect.declaration.CtTypeMember;
 class MemberDependencyGraphTest {
 
     private static final URL DEPENDENCY_GRAPH_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
+            "/" + TEST_CASES_DIR + "/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
     private static final CtType<?> PARSED_FIXTURE_MAIN_TYPE =
             SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(DEPENDENCY_GRAPH_FIXTURE_URL);
     private static final CtTypeMember ALPHA_FIELD_MEMBER =

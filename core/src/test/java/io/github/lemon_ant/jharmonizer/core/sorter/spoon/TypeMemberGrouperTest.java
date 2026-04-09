@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator.createTrivialMemberGroup;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -17,7 +18,7 @@ import spoon.reflect.declaration.CtTypeMember;
 class TypeMemberGrouperTest {
 
     private static final URL FIXTURE_URL = TypeMemberGrouperTest.class.getResource(
-            "/test-cases/core/sorter/spoon/type-member-grouper/valid/TypeMemberGrouperFixture.java");
+            "/" + TEST_CASES_DIR + "/core/sorter/spoon/type-member-grouper/valid/TypeMemberGrouperFixture.java");
     private static final CtType<?> PARSED_MAIN_TYPE =
             SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
 

@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
@@ -16,9 +17,9 @@ import spoon.reflect.declaration.CtTypeMember;
 class NaturalMemberGroupResolverTest {
 
     private static final URL CONFIG_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml");
+            "/" + TEST_CASES_DIR + "/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml");
     private static final URL FIXTURE_DIRECTORY_RESOURCE_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(
-            "/test-cases/core/sorter/spoon/natural-group-resolution/valid/");
+            "/" + TEST_CASES_DIR + "/core/sorter/spoon/natural-group-resolution/valid/");
 
     @Test
     void resolveNaturalGroups_fieldMatchesNestedGroups_selectDeepestMatchingGroup() {
