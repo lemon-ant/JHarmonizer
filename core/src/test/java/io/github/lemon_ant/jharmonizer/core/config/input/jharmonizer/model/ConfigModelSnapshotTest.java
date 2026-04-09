@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoaderHelper.DEFAULT_JHARMONIZER_CONFIG;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.Test;
 class ConfigModelSnapshotTest {
 
     private static final String CLASS_PATH_TO_SNAPSHOT =
-            "/test-cases/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
     private static final URL SNAPSHOT_RESOURCE_URL =
             TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;

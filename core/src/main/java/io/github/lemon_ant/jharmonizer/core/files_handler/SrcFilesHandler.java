@@ -39,7 +39,9 @@ public class SrcFilesHandler {
                 .excludeGlobs(excludeGlobs)
                 .allowedExtensions(Set.of("java"))
                 .build();
-        return GlobPathFinder.findPaths(pathQuery);
+        return GlobPathFinder.findPaths(pathQuery).parallel().peek(path -> {
+            log.debug("Path: {}", path);
+        });
     }
 
     /**

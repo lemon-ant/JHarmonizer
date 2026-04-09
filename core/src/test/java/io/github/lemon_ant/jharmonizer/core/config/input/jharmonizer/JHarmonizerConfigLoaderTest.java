@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,15 +26,15 @@ import org.junit.jupiter.api.io.TempDir;
 // TODO Refactor
 class JHarmonizerConfigLoaderTest {
     private static final String INVALID_INCLUDES_CONFIG_PATH =
-            "/test-cases/core/config/input/jharmonizer/invalid-config-duplicate-types.yml";
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-duplicate-types.yml";
     private static final String STRICT_MISSING_GROUP_NAME_CONFIG_PATH =
-            "/test-cases/core/config/input/jharmonizer/invalid-config-missing-member-group-name.yml";
-    private static final String FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH =
-            "/test-cases/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml";
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-missing-member-group-name.yml";
+    private static final String FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH = "/" + TEST_CASES_DIR
+            + "/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml";
     private static final String SIMPLE_WORKING_CONFIG_PATH =
-            "/test-cases/core/config/input/jharmonizer/simplest-working-config.yml";
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/simplest-working-config.yml";
     private static final URL MIXED_GROUP_SYNTAX_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/test-cases/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
 
     @Test
     void loadFrom_emptyFile_throwsException(@TempDir Path tempDir) throws IOException {
