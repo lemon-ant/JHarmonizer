@@ -17,9 +17,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +42,13 @@ import org.slf4j.helpers.MessageFormatter;
  *   <li><b>Excludes</b>: relative/absolute patterns compiled as {@code PathMatcher("glob:...")}.</li>
  *   <li><b>Files/directories</b>: {@code onlyFiles=true} keeps regular files only; otherwise both files and directories may appear.</li>
  *   <li><b>Depth/options</b>: {@code maxDepth} and {@code getVisitOptions()} are passed to {@link java.nio.file.Files#find}.</li>
- *   <li><b>Parallelism</b>: discovered paths are collected into a {@code List} internally so that the
- *       returned stream has a splittable {@code Spliterator}. This allows the caller to obtain true
- *       parallel processing by calling {@code .parallel()} on the result. File-walk streams are
- *       fully consumed and closed during collection.</li>
+ *   <li><b>Parallelism</b>: the returned stream is backed by a {@link FixedBatchSpliterator} that pulls
+ *       small batches from the underlying file walk on demand. This enables effective parallel splitting
+ *       via {@code .parallel()} without collecting all discovered paths into an intermediate collection.
+ *       Memory usage during splitting is {@code O(batchSize)}, not {@code O(totalPaths)}.</li>
  *   <li><b>Uniqueness</b>: resulting paths are deduplicated; the stream yields unique entries ({@code distinct()}).</li>
- *   <li><b>Stream safety</b>: inner file-walk streams from {@code Files.find(...)} are fully consumed
- *       and closed during path collection. The returned stream does not hold open file handles.</li>
+ *   <li><b>Stream safety</b>: the caller must close the returned stream (e.g. via try-with-resources) to release
+ *       underlying {@code Files.find(...)} file handles. Close handlers are propagated from inner streams.</li>
  * </ul>
  */
 @Slf4j
@@ -56,15 +58,19 @@ public class GlobPathFinder {
     public static final String FAILED_TO_START_SCANNING_BASE =
             "Failed to start scanning base '{}'. Skipping this base.";
 
+    private static final int BATCH_SIZE = 256;
+
     /**
      * Find paths according to the provided {@link PathQuery}.
      *
-     * <p>The returned stream is backed by an internal {@code List}, so its {@code Spliterator}
-     * can split evenly — calling {@code .parallel()} on it enables true ForkJoinPool parallelism.</p>
+     * <p>The returned stream is backed by a {@link FixedBatchSpliterator} that pulls small batches
+     * from the underlying file walk on demand. Calling {@code .parallel()} on it enables true
+     * ForkJoinPool parallelism without collecting all paths into an intermediate collection.</p>
      *
      * @param pathQuery configuration (base, include/exclude, extensions, depth, onlyFiles)
-     * @return a sequential stream of absolute, normalized and <b>unique</b> paths that satisfy the
-     *         filters; call {@code .parallel()} to enable multi-threaded consumption
+     * @return a stream of absolute, normalized and <b>unique</b> paths that satisfy the filters;
+     *         the caller must close the returned stream to release underlying file handles;
+     *         call {@code .parallel()} to enable multi-threaded consumption
      * @throws UncheckedIOException on IO errors during traversal
      */
     @NonNull
@@ -100,22 +106,18 @@ public class GlobPathFinder {
         Function<Entry<Path, Set<PathMatcher>>, Function<Stream<Path>, Stream<Path>>> perBasePipelineFactory =
                 buildPerBasePipelineFactory(relativeExcludeMatchers);
 
-        // 4) Scan all base directories, apply filters, and collect the discovered paths.
-        // Collection into a List is intentional: flatMap on a typically single-element source
-        // (one base directory) produces a Spliterator that cannot split, which prevents the
-        // caller's ForkJoinPool from distributing work across threads when the stream is
-        // consumed in parallel. A List-backed Spliterator splits evenly, enabling true
-        // parallel processing downstream. Path objects are lightweight references, so memory
-        // overhead is negligible even for large codebases.
-        // Inner file-walk streams opened by scanBaseDir register onClose handlers;
-        // flatMap calls close() on each inner stream after consuming it (per Stream API contract),
-        // so Files.find() file handles are properly released during collection.
-        List<Path> discoveredPaths = baseToIncludeMatchers.entrySet().stream()
+        // 4) Build a streaming pipeline that flows paths directly from Files.find() to the caller
+        // without accumulating all discovered paths in an intermediate collection.
+        // The FixedBatchSpliterator wraps the sequential source and enables parallel splitting
+        // by pulling small batches on demand — memory usage is O(batchSize), not O(totalPaths).
+        Stream<Path> sequentialStream = baseToIncludeMatchers.entrySet().stream()
                 .flatMap(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
-                .distinct()
-                .toList();
+                .distinct();
 
-        Stream<Path> resultPathStream = discoveredPaths.stream();
+        Spliterator<Path> batchingSpliterator =
+                new FixedBatchSpliterator<>(sequentialStream.spliterator(), BATCH_SIZE);
+        Stream<Path> resultPathStream = StreamSupport.stream(batchingSpliterator, false)
+                .onClose(sequentialStream::close);
         if (log.isDebugEnabled()) {
             resultPathStream = resultPathStream.peek(path -> log.debug("Emitting {}", path));
         }
