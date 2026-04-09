@@ -35,7 +35,6 @@ import picocli.CommandLine.Option;
 @Slf4j
 abstract class BaseCommand implements Callable<Integer> {
 
-    private static final String SPOON_TYPE_FACTORY_LOGGER_NAME = "spoon.reflect.factory.TypeFactory";
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
     private static final String VERBOSE_LOG_PATTERN = "%-5level [%logger{36}] %msg%n";
 
@@ -140,7 +139,6 @@ abstract class BaseCommand implements Callable<Integer> {
                 .build();
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
-            ((Logger) LoggerFactory.getLogger(SPOON_TYPE_FACTORY_LOGGER_NAME)).setLevel(Level.WARN);
             switchToVerboseLogPattern();
         }
         try {

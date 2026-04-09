@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Runtime overrides: BaseCommand switches the appender pattern, root level,
-    and the TypeFactory logger level when ‑‑verbose is active.
-    Do not rename the appender "STDOUT", the logger name below,
-    or the root level without updating BaseCommand constants.
+    Runtime overrides: BaseCommand switches the appender pattern and root level
+    when ‑‑verbose is active.
+    Do not rename the appender "STDOUT" or the root level
+    without updating BaseCommand constants.
 -->
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
+            <!--  <pattern>%-5level %msg%n</pattern> -->
             <pattern>%-5level [%thread] %msg%n</pattern>
         </encoder>
     </appender>
 
+    <!-- Permanently suppress Spoon shadow-class WARN stack traces (harmless, noisy). -->
     <logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>
 
     <root level="INFO">

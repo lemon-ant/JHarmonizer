@@ -34,12 +34,10 @@ import picocli.CommandLine;
 
 class BaseCommandTest {
 
-    private static final String SPOON_TYPE_FACTORY_LOGGER_NAME = "spoon.reflect.factory.TypeFactory";
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
 
     private CommandLine commandLine;
     private Level initialRootLevel;
-    private Level initialSpoonLevel;
     private String initialPattern;
 
     @TempDir
@@ -50,7 +48,6 @@ class BaseCommandTest {
         commandLine = new CommandLine(new TestCommand());
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         initialRootLevel = rootLogger.getLevel();
-        initialSpoonLevel = ((Logger) LoggerFactory.getLogger(SPOON_TYPE_FACTORY_LOGGER_NAME)).getLevel();
         initialPattern = resolveCurrentLogPattern(rootLogger);
     }
 
@@ -58,7 +55,6 @@ class BaseCommandTest {
     void tearDown() {
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.setLevel(initialRootLevel);
-        ((Logger) LoggerFactory.getLogger(SPOON_TYPE_FACTORY_LOGGER_NAME)).setLevel(initialSpoonLevel);
         restoreLogPattern(rootLogger, initialPattern);
     }
 
@@ -261,8 +257,6 @@ class BaseCommandTest {
         assertThat(exitCode).isZero();
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         assertThat(rootLogger.getLevel()).isEqualTo(Level.DEBUG);
-        Logger spoonTypeFactoryLogger = (Logger) LoggerFactory.getLogger(SPOON_TYPE_FACTORY_LOGGER_NAME);
-        assertThat(spoonTypeFactoryLogger.getLevel()).isEqualTo(Level.WARN);
         assertThat(resolveCurrentLogPattern(rootLogger)).contains("%logger");
     }
 
