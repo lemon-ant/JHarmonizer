@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.GroupMembersOrderer.orderMembersInsideGroups;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -368,8 +369,8 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     private static class Constants {
-        private static final String GROUP_MEMBER_ORDERING_COMPLEX_FIXTURE_CLASSPATH_PATH =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleComplexFixture.java";
+        private static final String GROUP_MEMBER_ORDERING_COMPLEX_FIXTURE_CLASSPATH_PATH = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleComplexFixture.java";
         private static final String W_PROVIDER_ALPHA_KEY = "w_provider:int";
         private static final String X_PROVIDER_ALPHA_KEY = "x_provider:int";
         private static final String Y_PROVIDER_ALPHA_KEY = "y_provider:int";

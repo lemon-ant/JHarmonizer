@@ -414,10 +414,11 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     private static final class Constants {
-        private static final String BASIC_PROJECT_RESOURCE = "test-cases/cli/e2e/projects/basic-project";
-        private static final String EXPECTED_APP_RESOURCE = "test-cases/cli/e2e/expected/App.java";
+        private static final String TEST_CASES_DIR = "test-cases";
+        private static final String BASIC_PROJECT_RESOURCE = TEST_CASES_DIR + "/cli/e2e/projects/basic-project";
+        private static final String EXPECTED_APP_RESOURCE = TEST_CASES_DIR + "/cli/e2e/expected/App.java";
         private static final String EXPECTED_FEATURE_SERVICE_RESOURCE =
-                "test-cases/cli/e2e/expected/FeatureService.java";
+                TEST_CASES_DIR + "/cli/e2e/expected/FeatureService.java";
         private static final String APP_JAVA = "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/App.java";
         private static final String STABLE_SERVICE_JAVA =
                 "src/main/java/io/github/lemon_ant/jharmonizer/cli/e2e/sample/service/StableService.java";

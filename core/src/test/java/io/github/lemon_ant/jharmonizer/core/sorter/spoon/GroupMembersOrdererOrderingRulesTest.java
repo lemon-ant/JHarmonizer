@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -544,8 +545,8 @@ class GroupMembersOrdererOrderingRulesTest {
 
     private static final class Constants {
 
-        private static final String FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFieldInitializerTieFixture.java";
+        private static final String FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFieldInitializerTieFixture.java";
         private static final URL FIELD_INITIALIZER_TIE_FIXTURE_RESOURCE_URL =
                 GroupMembersOrdererOrderingRulesTest.class.getResource(
                         FIELD_INITIALIZER_TIE_FIXTURE_CLASSPATH_RESOURCE);
@@ -555,8 +556,8 @@ class GroupMembersOrdererOrderingRulesTest {
                         FIELD_INITIALIZER_TIE_FIXTURE_MAIN_TYPE)
                 .toList();
 
-        private static final String SOURCE_START_TIE_FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleSourceStartTieFixture.java";
+        private static final String SOURCE_START_TIE_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleSourceStartTieFixture.java";
         private static final URL SOURCE_START_TIE_FIXTURE_RESOURCE_URL =
                 GroupMembersOrdererOrderingRulesTest.class.getResource(SOURCE_START_TIE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> SOURCE_START_TIE_FIXTURE_MAIN_TYPE =
@@ -564,8 +565,8 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final List<CtTypeMember> SOURCE_START_TIE_FIXTURE_MEMBERS =
                 streamExplicitSrcTypeMembers(SOURCE_START_TIE_FIXTURE_MAIN_TYPE).toList();
 
-        private static final String LOCALE_FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleLocaleFixture.java";
+        private static final String LOCALE_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleLocaleFixture.java";
         private static final URL LOCALE_FIXTURE_RESOURCE_URL =
                 GroupMembersOrdererOrderingRulesTest.class.getResource(LOCALE_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> LOCALE_FIXTURE_MAIN_TYPE =
@@ -573,8 +574,8 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final List<CtTypeMember> LOCALE_FIXTURE_MEMBERS =
                 streamExplicitSrcTypeMembers(LOCALE_FIXTURE_MAIN_TYPE).toList();
 
-        private static final String IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleImplicitConstantSourceOrderFixture.java";
+        private static final String IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleImplicitConstantSourceOrderFixture.java";
         private static final URL IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_RESOURCE_URL =
                 GroupMembersOrdererOrderingRulesTest.class.getResource(
                         IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_CLASSPATH_RESOURCE);
@@ -585,8 +586,8 @@ class GroupMembersOrdererOrderingRulesTest {
                 streamExplicitSrcTypeMembers(IMPLICIT_CONSTANT_SOURCE_ORDER_FIXTURE_MAIN_TYPE)
                         .toList();
 
-        private static final String URI_REGRESSION_FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/e2e/regression/05-uri-field-initializer-string-forward-reference/input/UriFieldInitializerStringForwardReferenceRegressionSample.java";
+        private static final String URI_REGRESSION_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/e2e/regression/05-uri-field-initializer-string-forward-reference/input/UriFieldInitializerStringForwardReferenceRegressionSample.java";
         private static final URL URI_REGRESSION_FIXTURE_RESOURCE_URL =
                 GroupMembersOrdererOrderingRulesTest.class.getResource(URI_REGRESSION_FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> URI_REGRESSION_FIXTURE_MAIN_TYPE =
@@ -595,7 +596,7 @@ class GroupMembersOrdererOrderingRulesTest {
                 streamExplicitSrcTypeMembers(URI_REGRESSION_FIXTURE_MAIN_TYPE).toList();
 
         private static final String FIXTURE_CLASSPATH_RESOURCE =
-                "/test-cases/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
+                "/" + TEST_CASES_DIR + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleFixture.java";
         private static final URL FIXTURE_RESOURCE_URL =
                 GroupMembersOrdererOrderingRulesTest.class.getResource(FIXTURE_CLASSPATH_RESOURCE);
         private static final CtType<?> FIXTURE_MAIN_TYPE =

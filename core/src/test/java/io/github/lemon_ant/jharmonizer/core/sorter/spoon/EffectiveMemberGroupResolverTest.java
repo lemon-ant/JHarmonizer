@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator.createTrivialMemberGroup;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -265,8 +266,8 @@ class EffectiveMemberGroupResolverTest {
     }
 
     private static final class FixtureConstants {
-        private static final String FIXTURE_RESOURCE_PATH =
-                "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionFixture.java";
+        private static final String FIXTURE_RESOURCE_PATH = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionFixture.java";
         private static final URL FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURE_RESOURCE_PATH);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
@@ -285,8 +286,8 @@ class EffectiveMemberGroupResolverTest {
     }
 
     private static final class AccessorFixtureConstants {
-        private static final String FIXTURE_RESOURCE_PATH =
-                "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionAccessorBundleFixture.java";
+        private static final String FIXTURE_RESOURCE_PATH = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionAccessorBundleFixture.java";
         private static final URL FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURE_RESOURCE_PATH);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
@@ -301,8 +302,8 @@ class EffectiveMemberGroupResolverTest {
     }
 
     private static final class BlankFinalFixtureConstants {
-        private static final String FIXTURE_RESOURCE_PATH =
-                "/test-cases/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionBlankFinalFixture.java";
+        private static final String FIXTURE_RESOURCE_PATH = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/effective-group-resolution/valid/EffectiveGroupResolutionBlankFinalFixture.java";
         private static final URL FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURE_RESOURCE_PATH);
         private static final CtType<?> FIXTURE_MAIN_TYPE =
                 SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);

@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
@@ -85,7 +86,7 @@ class DefaultConfigOrderingIntegrationTest {
         private static final Collection<String> EXCLUDE_NO_FILES = List.of();
         private static final String SAMPLE_ALL_JAVA21_FILE_NAME = "SampleAllJava21FeaturesList.java";
         private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-                "/test-cases/core/translator/valid/SampleAllJava21FeaturesList.java");
+                "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java");
         private static final String PUBLIC_STATIC_MAIN_METHOD_FRAGMENT = "public static void main(String[] args)";
         private static final String PUBLIC_CONSTRUCTOR_FRAGMENT = "public SampleAllJava21FeaturesList()";
         private static final String PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT = "public void assertionTest()";
