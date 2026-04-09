@@ -114,9 +114,9 @@ public class GlobPathFinder {
                 .flatMap(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
                 .distinct();
 
-        Spliterator<Path> batchingSpliterator =
+        Spliterator<Path> batchSpliterator =
                 new FixedBatchSpliterator<>(sequentialStream.spliterator(), BATCH_SIZE);
-        Stream<Path> resultPathStream = StreamSupport.stream(batchingSpliterator, false)
+        Stream<Path> resultPathStream = StreamSupport.stream(batchSpliterator, false)
                 .onClose(sequentialStream::close);
         if (log.isDebugEnabled()) {
             resultPathStream = resultPathStream.peek(path -> log.debug("Emitting {}", path));

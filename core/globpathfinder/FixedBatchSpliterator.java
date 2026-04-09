@@ -1,5 +1,6 @@
 package io.github.lemon_ant.globpathfinder;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -30,9 +31,12 @@ class FixedBatchSpliterator<T> implements Spliterator<T> {
      * Wraps the given source spliterator with fixed-batch splitting capability.
      *
      * @param source    the underlying spliterator to pull elements from
-     * @param batchSize maximum number of elements per split batch
+     * @param batchSize maximum number of elements per split batch; must be positive
      */
     FixedBatchSpliterator(@NonNull Spliterator<T> source, int batchSize) {
+        if (batchSize <= 0) {
+            throw new IllegalArgumentException("batchSize must be positive: " + batchSize);
+        }
         this.source = source;
         this.batchSize = batchSize;
     }
@@ -74,6 +78,7 @@ class FixedBatchSpliterator<T> implements Spliterator<T> {
 
     private static final class HoldingConsumer<T> implements Consumer<T> {
 
+        @Nullable
         T value;
 
         @Override
