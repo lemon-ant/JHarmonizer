@@ -19,6 +19,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TestCaseResourceUtils {
 
+    /** Root directory name for all test-case fixtures under {@code src/test/resources/}. */
+    public static final String TEST_CASES_DIR = "test-cases";
+
     @NonNull
     public static URL requireClasspathResourceUrl(@NonNull String classpathAbsolutePath) {
         if (!classpathAbsolutePath.startsWith("/")) {

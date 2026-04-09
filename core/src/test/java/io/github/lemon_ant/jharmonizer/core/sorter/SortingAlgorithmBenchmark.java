@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
+
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
@@ -78,8 +80,8 @@ public class SortingAlgorithmBenchmark {
 
     @State(Scope.Thread)
     public static class BenchmarkState {
-        private static final String E2E_REORDER_FIXTURES_ROOT = "/test-cases/core/e2e/reorder/";
-        private static final String E2E_REGRESSION_FIXTURES_ROOT = "/test-cases/core/e2e/regression/";
+        private static final String E2E_REORDER_FIXTURES_ROOT = "/" + TEST_CASES_DIR + "/core/e2e/reorder/";
+        private static final String E2E_REGRESSION_FIXTURES_ROOT = "/" + TEST_CASES_DIR + "/core/e2e/regression/";
 
         private SpoonSorter spoonSorter;
 

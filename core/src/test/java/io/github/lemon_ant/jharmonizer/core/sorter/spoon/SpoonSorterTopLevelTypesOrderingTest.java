@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 class SpoonSorterTopLevelTypesOrderingTest {
     private static final String FIXTURES_RESOURCE_ROOT =
-            "/test-cases/core/sorter/spoon/top-level-types-ordering/valid/";
+            "/" + TEST_CASES_DIR + "/core/sorter/spoon/top-level-types-ordering/valid/";
     private static final URL FIXTURES_RESOURCE_ROOT_URL =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE_ROOT);
 

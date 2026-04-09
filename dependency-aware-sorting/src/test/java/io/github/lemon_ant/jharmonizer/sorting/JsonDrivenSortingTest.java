@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 /**
  * JSON-driven integration tests for {@link SimplifiedDependencyAwareSorter}.
  *
- * <p>Each sub-directory under {@code src/test/resources/cases/} contains two files:
+ * <p>Each sub-directory under {@code src/test/resources/test-cases/} contains two files:
  * <ul>
  *   <li>{@code input.json}    — items, groups, dependencies</li>
  *   <li>{@code expected.json} — expected sorted output (list of item names)</li>
@@ -51,6 +51,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class JsonDrivenSortingTest {
 
+    private static final String TEST_CASES_DIR = "test-cases";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     // ------------------------------------------------------------------ //
@@ -91,9 +92,9 @@ class JsonDrivenSortingTest {
     }
 
     private static List<TestCase> loadAllCases() throws IOException, URISyntaxException {
-        URL casesUrl = JsonDrivenSortingTest.class.getClassLoader().getResource("cases");
+        URL casesUrl = JsonDrivenSortingTest.class.getClassLoader().getResource(TEST_CASES_DIR);
         if (casesUrl == null) {
-            throw new IllegalStateException("'cases' resource directory not found");
+            throw new IllegalStateException("'" + TEST_CASES_DIR + "' resource directory not found");
         }
         Path casesDir = Paths.get(casesUrl.toURI());
 
