@@ -13,7 +13,7 @@
         </encoder>
     </appender>
 
-    <!-- Permanently suppress Spoon shadow-class WARN stack traces (harmless, noisy). -->
+    <!-- Permanently suppress Spoon TypeFactory WARN stack traces (harmless, noisy). -->
     <logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>
 
     <root level="INFO">
