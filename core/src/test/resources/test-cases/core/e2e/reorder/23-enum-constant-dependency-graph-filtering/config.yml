@@ -1,0 +1,345 @@
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR # NONE, AOSP, GOOGLE, PALANTIR
+
+backups-enabled: true
+print-processing-statistics: true
+
+header-line:
+  character: '-'
+  left-padding: 3
+
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class, record ]
+    - interface
+    - enum
+    - annotation
+  ordering-rules: [ visibility-desc, alpha ]
+
+type-members-ordering:
+  - name: Test Classes
+    includes:
+      - [ class, '@~.*Test$' ]
+      - [ class, '@ExtendWith' ]
+      - [ class, '@RunWith' ]
+      - [ class, ~.*Test$ ]
+    ordering-rules: alpha
+    groups:
+      - name: JUnit Fields
+        separator: new-line
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: field
+        groups:
+          - name: JUnit Constants
+            separator: new-line
+            ordering-rules: [ visibility-desc, alpha ]
+            includes: [ static, final ]
+          - name: JUnit Static fields
+            separator: new-line
+            ordering-rules: [ visibility-desc, alpha ]
+            includes: static
+
+      - name: JUnit Methods
+        separator: new-line
+        ordering-rules: alpha
+        includes: method
+        groups:
+          - name: JUnit Setup Methods
+            separator: header
+            ordering-rules: preserve
+            includes:
+              - '@BeforeEach'
+              - '@BeforeAll'
+
+          - name: JUnit Test Methods
+            separator: header
+            ordering-rules: alpha
+            includes: '@Test'
+
+          - name: JUnit Teardown Methods
+            separator: header
+            ordering-rules: preserve
+            includes:
+              - '@AfterEach'
+              - '@AfterAll'
+
+          - name: Utility Methods
+            separator: header
+            includes: static
+            ordering-rules: alpha
+
+      - name: JUnit Test Configuration
+        separator: new-line
+        ordering-rules: alpha
+        includes:
+          - [ static, class, '@TestConfiguration' ]
+
+
+  - name: DTO and Entities
+    includes:
+      - ~.*(Dto|DTO)$
+      - ~.*Entity$
+      - '@Value'
+      - '@Data'
+      - '@Entity'
+      - '@MappedSuperclass'
+      - '@Embeddable'
+      - '@ConfigurationProperties'
+      - '@Document'
+    ordering-rules: [ visibility-desc, alpha ]
+    groups:
+      - name: Serializable UID
+        separator: new-line
+        ordering-rules: preserve
+        includes: [ field, static, final, =serialVersionUID ]
+
+      - name: Fields
+        separator: new-line
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: field
+        groups:
+          - name: Constants
+            separator: new-line
+            ordering-rules: [ visibility-desc, alpha ]
+            includes: [ static, final ]
+            groups:
+              - name: Public Constants
+                separator: new-line
+                ordering-rules: alpha
+                includes: public
+              - name: Protected Constants
+                separator: new-line
+                ordering-rules: alpha
+                includes: protected
+              - name: Package-Private Constants
+                separator: new-line
+                ordering-rules: alpha
+                includes: package-private
+              - name: Private Constants
+                separator: new-line
+                ordering-rules: alpha
+                includes: private
+
+          - name: Static Fields
+            separator: new-line
+            ordering-rules: [ visibility-desc, alpha ]
+            includes: static
+
+          - name: Final Instance Fields
+            separator: new-line
+            ordering-rules: [ visibility-desc, alpha ]
+            includes: final
+
+      - name: Static Initializer Blocks
+        separator: none
+        ordering-rules: preserve
+        includes: [ static, initializer ]
+
+      - name: Static Methods
+        separator: none
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: [ static, method ]
+
+      - name: Instance Initializer Blocks
+        separator: none
+        ordering-rules: preserve
+        includes: [ initializer ]
+        excludes: static
+
+      - name: Constructors
+        separator: none
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: constructor
+
+      - name: Accessor Methods
+        separator: none
+        keepAccessorsTogether: true
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: [ method, ~^(get|set|is|has).+$ ]
+
+      - name: Instance Methods
+        separator: none
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: [ method ]
+        excludes:
+          - [ method, =toString ]
+          - [ method, =equals ]
+          - [ method, =hashCode ]
+          - [ method, =clone ]
+
+      - name: Basic Object Methods
+        ordering-rules: preserve
+        includes:
+          - [ method, =toString ]
+          - [ method, =equals ]
+          - [ method, =hashCode ]
+          - [ method, =clone ]
+
+  - name: Default Rule
+    includes: ~.*
+    ordering-rules: preserve
+    groups:
+      # Record components live in the record header; keep them stable.
+      - name: Record components
+        separator: none
+        ordering-rules: preserve
+        includes: [ record-component ]
+
+      # Enum constants must stay at the top of enum bodies; keep them stable.
+      - name: Enum constants
+        separator: none
+        ordering-rules: preserve
+        includes: [ enum-constant ]
+
+      - name: Fields
+        separator: new-line
+        ordering-rules: [ visibility-desc, alpha ]
+        includes: field
+        groups:
+          - name: Static fields
+            includes: static
+            groups:
+              - name: Static final fields
+                includes: final
+                groups:
+                  - name: serialVersionUID
+                    separator: new-line
+                    ordering-rules: preserve
+                    includes: [ =serialVersionUID ]
+
+                  - name: Logger fields
+                    separator: new-line
+                    ordering-rules: preserve
+                    includes: [ '~(?i)(log|.*logger)$' ]
+
+          - name: Instance final fields
+            includes: final
+
+      - name: Initializers
+        separator: none
+        ordering-rules: preserve
+        includes: [ initializer ]
+        groups:
+          - name: Static initializers
+            includes: [ static, initializer ]
+
+          - name: Instance initializers
+            includes: [ initializer ]
+            excludes: static
+
+      - name: Methods
+        separator: none
+        ordering-rules: alpha
+        keepAccessorsTogether: true
+        includes:
+          - method
+          - constructor
+        groups:
+          - name: Public
+            includes: public
+            groups:
+              - name: Static methods
+                includes: [ method, static ]
+
+              - name: Constructors
+                includes: constructor
+
+              - name: Instance methods
+                includes: method
+
+          - name: Protected
+            includes: protected
+            groups:
+              - name: Static methods
+                includes: [ method, static ]
+
+              - name: Constructors
+                includes: constructor
+
+              - name: Instance methods
+                includes: method
+
+          - name: Package-private
+            includes: package-private
+            groups:
+              - name: Static methods
+                includes: [ method, static ]
+
+              - name: Constructors
+                includes: constructor
+
+              - name: Instance methods
+                includes: method
+
+          - name: Private
+            includes: private
+            groups:
+              - name: Static methods
+                includes: [ method, static ]
+
+              - name: Constructors
+                includes: constructor
+
+              - name: Instance methods
+                includes: method
+
+      - name: Nested types
+        separator: new-line
+        ordering-rules: alpha
+        includes:
+          - annotation
+          - enum
+          - record
+          - interface
+          - class
+        groups:
+          - name: Public
+            includes: public
+            groups:
+              - name: Annotations and Interfaces
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
+                includes:
+                  - class
+                  - enum
+                  - record
+          - name: Protected
+            includes: protected
+            groups:
+              - name: Annotations and Interfaces
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
+                includes:
+                  - class
+                  - enum
+                  - record
+          - name: Package-private
+            includes: package-private
+            groups:
+              - name: Annotations and Interfaces
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
+                includes:
+                  - class
+                  - enum
+                  - record
+          - name: Private
+            includes: private
+            groups:
+              - name: Annotations and Interfaces
+                includes:
+                  - annotation
+                  - interface
+              - name: Classes, Enums, and Records
+                includes:
+                  - class
+                  - enum
+                  - record
