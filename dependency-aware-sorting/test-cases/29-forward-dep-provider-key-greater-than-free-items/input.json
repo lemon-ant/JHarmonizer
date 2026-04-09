@@ -1,0 +1,14 @@
+{
+  "description": "Models the FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample E2E case. Provider zFromNonConst must precede its dependent aNonConstValue. Three free items (anchor, bConstValue, mFromConst) have keys smaller than the provider, so they would naturally appear first if unconstrained.",
+  "items": [
+    {"name": "anchor", "numeration": "STATIC"},
+    {"name": "aNonConstValue", "numeration": "STATIC"},
+    {"name": "bConstValue", "numeration": "STATIC"},
+    {"name": "mFromConst", "numeration": "STATIC"},
+    {"name": "zFromNonConst", "numeration": "STATIC"}
+  ],
+  "groups": [],
+  "dependencies": [
+    {"provider": "zFromNonConst", "dependent": "aNonConstValue"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "description": "Mix of STATIC and DYNAMIC members with no constraints. DEFAULT_ORDER puts all STATIC members first (sorted by name), then all DYNAMIC members (sorted by name). gamma:DYNAMIC appears after both STATIC members even though it precedes them alphabetically.",
+  "items": [
+    {"name": "gamma", "numeration": "DYNAMIC"},
+    {"name": "alpha", "numeration": "STATIC"},
+    {"name": "beta",  "numeration": "DYNAMIC"},
+    {"name": "delta", "numeration": "STATIC"}
+  ],
+  "groups": [],
+  "dependencies": []
+}

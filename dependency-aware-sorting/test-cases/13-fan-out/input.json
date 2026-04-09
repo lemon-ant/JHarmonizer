@@ -1,0 +1,44 @@
+{
+  "description": "Fan-out pattern: zulu is the single root that must precede all four others. After zulu is processed, its four dependents become available and are output in lex order.",
+  "items": [
+    {
+      "name": "zulu",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "yankee",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "xray",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "whiskey",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "victor",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "zulu",
+      "dependent": "victor"
+    },
+    {
+      "provider": "zulu",
+      "dependent": "whiskey"
+    },
+    {
+      "provider": "zulu",
+      "dependent": "xray"
+    },
+    {
+      "provider": "zulu",
+      "dependent": "yankee"
+    }
+  ]
+}

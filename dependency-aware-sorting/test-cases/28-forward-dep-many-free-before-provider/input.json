@@ -1,0 +1,21 @@
+{
+  "description": "Models the FieldInitializerExplicitThisDefaultCombinatoricsSample E2E case. Single dependency zeta->alpha where zeta is alphabetically last but must appear first. All other items (aTau through ySigma) are free and their keys fall between aTau and zeta.",
+  "items": [
+    {"name": "alpha", "numeration": "STATIC"},
+    {"name": "aTau", "numeration": "STATIC"},
+    {"name": "beta", "numeration": "STATIC"},
+    {"name": "omega", "numeration": "STATIC"},
+    {"name": "phi", "numeration": "STATIC"},
+    {"name": "pi", "numeration": "STATIC"},
+    {"name": "psi", "numeration": "STATIC"},
+    {"name": "rho", "numeration": "STATIC"},
+    {"name": "theta", "numeration": "STATIC"},
+    {"name": "upsilon", "numeration": "STATIC"},
+    {"name": "ySigma", "numeration": "STATIC"},
+    {"name": "zeta", "numeration": "STATIC"}
+  ],
+  "groups": [],
+  "dependencies": [
+    {"provider": "zeta", "dependent": "alpha"}
+  ]
+}

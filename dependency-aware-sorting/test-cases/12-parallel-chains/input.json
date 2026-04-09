@@ -1,0 +1,32 @@
+{
+  "description": "Two completely independent dependency chains: delta->charlie and hotel->golf. No connection between the chains; lex tie-breaking determines interleaving: both roots (delta, hotel) are processed in lex order, then their dependents.",
+  "items": [
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "hotel",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "golf",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "delta",
+      "dependent": "charlie"
+    },
+    {
+      "provider": "hotel",
+      "dependent": "golf"
+    }
+  ]
+}

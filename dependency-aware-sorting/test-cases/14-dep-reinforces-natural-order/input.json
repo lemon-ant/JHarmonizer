@@ -1,0 +1,28 @@
+{
+  "description": "Dependencies alpha->beta->gamma reinforce the natural alphabetical order. No reordering is needed; the algorithm confirms constraints are satisfied and outputs alpha, beta, gamma as expected.",
+  "items": [
+    {
+      "name": "gamma",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "beta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "alpha",
+      "dependent": "beta"
+    },
+    {
+      "provider": "beta",
+      "dependent": "gamma"
+    }
+  ]
+}

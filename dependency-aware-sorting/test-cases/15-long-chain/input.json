@@ -1,0 +1,68 @@
+{
+  "description": "A long linear chain of 8 items: hotel->golf->foxtrot->echo->delta->charlie->bravo->alpha. This reverses the full alphabetical order and tests deep transitive dependency resolution.",
+  "items": [
+    {
+      "name": "hotel",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "golf",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "foxtrot",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "echo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "hotel",
+      "dependent": "golf"
+    },
+    {
+      "provider": "golf",
+      "dependent": "foxtrot"
+    },
+    {
+      "provider": "foxtrot",
+      "dependent": "echo"
+    },
+    {
+      "provider": "echo",
+      "dependent": "delta"
+    },
+    {
+      "provider": "delta",
+      "dependent": "charlie"
+    },
+    {
+      "provider": "charlie",
+      "dependent": "bravo"
+    },
+    {
+      "provider": "bravo",
+      "dependent": "alpha"
+    }
+  ]
+}
