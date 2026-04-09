@@ -42,10 +42,12 @@ import org.slf4j.helpers.MessageFormatter;
  *   <li><b>Excludes</b>: relative/absolute patterns compiled as {@code PathMatcher("glob:...")}.</li>
  *   <li><b>Files/directories</b>: {@code onlyFiles=true} keeps regular files only; otherwise both files and directories may appear.</li>
  *   <li><b>Depth/options</b>: {@code maxDepth} and {@code getVisitOptions()} are passed to {@link java.nio.file.Files#find}.</li>
- *   <li><b>Parallelism</b>: the returned stream is backed by a {@link FixedBatchSpliterator} that pulls
- *       small batches from the underlying file walk on demand. This enables effective parallel splitting
- *       via {@code .parallel()} without collecting all discovered paths into an intermediate collection.
- *       Memory usage during splitting is {@code O(batchSize)}, not {@code O(totalPaths)}.</li>
+ *   <li><b>Parallelism</b>: per-entry streams from {@link java.nio.file.Files#find} are concatenated via
+ *       {@link Stream#concat} and then wrapped in a {@link FixedBatchSpliterator} whose batch size equals
+ *       the number of available processors. This enables effective parallel splitting via {@code .parallel()}
+ *       without collecting all discovered paths into an intermediate collection.
+ *       Each batch is backed by an array-based spliterator that further splits down to individual elements,
+ *       so even small file sets (e.g. 8 files on 8 cores) are distributed across all threads.</li>
  *   <li><b>Uniqueness</b>: resulting paths are deduplicated; the stream yields unique entries ({@code distinct()}).</li>
  *   <li><b>Stream safety</b>: the caller must close the returned stream (e.g. via try-with-resources) to release
  *       underlying {@code Files.find(...)} file handles. Close handlers are propagated from inner streams.</li>
@@ -58,14 +60,18 @@ public class GlobPathFinder {
     public static final String FAILED_TO_START_SCANNING_BASE =
             "Failed to start scanning base '{}'. Skipping this base.";
 
-    private static final int BATCH_SIZE = 256;
+    private static final int BATCH_SIZE = Runtime.getRuntime().availableProcessors();
 
     /**
      * Find paths according to the provided {@link PathQuery}.
      *
-     * <p>The returned stream is backed by a {@link FixedBatchSpliterator} that pulls small batches
-     * from the underlying file walk on demand. Calling {@code .parallel()} on it enables true
-     * ForkJoinPool parallelism without collecting all paths into an intermediate collection.</p>
+     * <p>Per-entry streams from {@link java.nio.file.Files#find} are concatenated via
+     * {@link Stream#concat} and then wrapped in a {@link FixedBatchSpliterator} whose batch size
+     * equals the number of available processors. Calling {@code .parallel()} on the result enables
+     * true ForkJoinPool parallelism without collecting all paths into an intermediate collection.
+     * Each batch is backed by an array-based spliterator that further splits down to individual
+     * elements, so even small file sets (e.g. 8 files on 8 cores) are distributed across all
+     * threads.</p>
      *
      * @param pathQuery configuration (base, include/exclude, extensions, depth, onlyFiles)
      * @return a stream of absolute, normalized and <b>unique</b> paths that satisfy the filters;
@@ -106,18 +112,24 @@ public class GlobPathFinder {
         Function<Entry<Path, Set<PathMatcher>>, Function<Stream<Path>, Stream<Path>>> perBasePipelineFactory =
                 buildPerBasePipelineFactory(relativeExcludeMatchers);
 
-        // 4) Build a streaming pipeline that flows paths directly from Files.find() to the caller
-        // without accumulating all discovered paths in an intermediate collection.
-        // The FixedBatchSpliterator wraps the sequential source and enables parallel splitting
+        // 4) Build a streaming pipeline by concatenating per-entry streams.
+        // Each entry in the map produces its own Files.find() stream via scanBaseDir().
+        // Stream.concat propagates close handlers, so all file-walk handles are released
+        // when the outermost stream is closed.
+        // The FixedBatchSpliterator wraps the concatenated source and enables parallel splitting
         // by pulling small batches on demand — memory usage is O(batchSize), not O(totalPaths).
-        Stream<Path> sequentialStream = baseToIncludeMatchers.entrySet().stream()
-                .flatMap(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
+        // Batch size equals available processors so that even small file sets (e.g. 8 files
+        // on 8 cores) produce fine-grained batches whose ArraySpliterator splits further
+        // down to individual files.
+        Stream<Path> concatenated = baseToIncludeMatchers.entrySet().stream()
+                .map(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
+                .reduce(Stream.empty(), Stream::concat)
                 .distinct();
 
         Spliterator<Path> batchSpliterator =
-                new FixedBatchSpliterator<>(sequentialStream.spliterator(), BATCH_SIZE);
+                new FixedBatchSpliterator<>(concatenated.spliterator(), BATCH_SIZE);
         Stream<Path> resultPathStream = StreamSupport.stream(batchSpliterator, false)
-                .onClose(sequentialStream::close);
+                .onClose(concatenated::close);
         if (log.isDebugEnabled()) {
             resultPathStream = resultPathStream.peek(path -> log.debug("Emitting {}", path));
         }
