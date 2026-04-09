@@ -107,7 +107,9 @@ public class GlobPathFinder {
         // consumed in parallel. A List-backed Spliterator splits evenly, enabling true
         // parallel processing downstream. Path objects are lightweight references, so memory
         // overhead is negligible even for large codebases.
-        // Inner file-walk streams opened by scanBaseDir are closed by flatMap after consumption.
+        // Inner file-walk streams opened by scanBaseDir register onClose handlers;
+        // flatMap calls close() on each inner stream after consuming it (per Stream API contract),
+        // so Files.find() file handles are properly released during collection.
         List<Path> discoveredPaths = baseToIncludeMatchers.entrySet().stream()
                 .flatMap(entry -> scanBaseDir(entry, pathQuery, globalPipeline, perBasePipelineFactory, fileTypeFilter))
                 .distinct()
