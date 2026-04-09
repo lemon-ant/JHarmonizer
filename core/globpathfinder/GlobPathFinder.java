@@ -47,7 +47,10 @@ import org.slf4j.helpers.MessageFormatter;
  *       the number of available processors. This enables effective parallel splitting via {@code .parallel()}
  *       without collecting all discovered paths into an intermediate collection.
  *       Each batch is backed by an array-based spliterator that further splits down to individual elements,
- *       so even small file sets (e.g. 8 files on 8 cores) are distributed across all threads.</li>
+ *       so even small file sets (e.g. 8 files on 8 cores) are distributed across all threads.
+ *       Note: {@code distinct()} maintains an internal {@code HashSet} of {@code O(uniquePaths)} for
+ *       deduplication, but paths flow through incrementally — no full path collection is created before
+ *       processing starts.</li>
  *   <li><b>Uniqueness</b>: resulting paths are deduplicated; the stream yields unique entries ({@code distinct()}).</li>
  *   <li><b>Stream safety</b>: the caller must close the returned stream (e.g. via try-with-resources) to release
  *       underlying {@code Files.find(...)} file handles. Close handlers are propagated from inner streams.</li>
@@ -117,7 +120,9 @@ public class GlobPathFinder {
         // Stream.concat propagates close handlers, so all file-walk handles are released
         // when the outermost stream is closed.
         // The FixedBatchSpliterator wraps the concatenated source and enables parallel splitting
-        // by pulling small batches on demand — memory usage is O(batchSize), not O(totalPaths).
+        // by pulling small batches on demand — batch memory is O(batchSize), not O(totalPaths).
+        // Note: distinct() maintains an internal HashSet of O(uniquePaths) for deduplication,
+        // but paths flow through incrementally — no full path collection is created before processing.
         // Batch size equals available processors so that even small file sets (e.g. 8 files
         // on 8 cores) produce fine-grained batches whose ArraySpliterator splits further
         // down to individual files.
