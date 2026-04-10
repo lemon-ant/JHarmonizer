@@ -191,13 +191,14 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processorThrowsRuntimeException_returnsExitCode1() {
+    void call_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
         // When
         int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenThrow(new RuntimeException("Unexpected error"));
-        })) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Unexpected error"));
+                })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
 
@@ -206,12 +207,15 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_baseDirMissing_returnsExitCode1() {
+    void call_baseDirMissing_returnsExitCode1() throws Exception {
         // Given
         Path missingDirectoryPath = temporaryDirectory.resolve("missing-base-dir");
 
         // When
-        int exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
+            exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
+        }
 
         // Then
         assertThat(Files.exists(missingDirectoryPath)).isFalse();
@@ -219,12 +223,15 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_configFileMissing_returnsExitCode1() {
+    void call_configFileMissing_returnsExitCode1() throws Exception {
         // Given
         Path missingConfigPath = temporaryDirectory.resolve("missing-config.yml");
 
         // When
-        int exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
+            exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
+        }
 
         // Then
         assertThat(Files.exists(missingConfigPath)).isFalse();
@@ -232,12 +239,14 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processorThrowsRuntimeWithoutMessage_returnsExitCode1() {
+    void call_processorThrowsRuntimeWithoutMessage_returnsExitCode1() throws Exception {
         // When
         int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any())).thenThrow(new RuntimeException());
-        })) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException());
+                })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
 
@@ -261,13 +270,14 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_verboseWithRuntimeException_returnsExitCode1() {
+    void call_verboseWithRuntimeException_returnsExitCode1() throws Exception {
         // When
         int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenThrow(new RuntimeException("Verbose error"));
-        })) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Verbose error"));
+                })) {
             exitCode = commandLine.execute("--base-dir", "src", "--verbose");
         }
 

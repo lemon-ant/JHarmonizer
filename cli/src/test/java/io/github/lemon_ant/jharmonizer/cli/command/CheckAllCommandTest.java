@@ -42,13 +42,14 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_processorThrowsRuntimeException_returnsExitCode1() {
+    void checkCommand_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
         // When
         int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenThrow(new RuntimeException("Unexpected error"));
-        })) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Unexpected error"));
+                })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
 
