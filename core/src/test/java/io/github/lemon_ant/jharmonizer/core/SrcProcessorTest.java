@@ -385,6 +385,8 @@ class SrcProcessorTest {
                 .contains("status=COMPLETED")
                 .contains("processedFiles=1")
                 .contains("totalSizeBytes=")
+                .contains("wallClockTimeNanos=")
+                .contains("totalCpuTimeNanos=")
                 .contains("unexpectedErrors=0");
     }
 

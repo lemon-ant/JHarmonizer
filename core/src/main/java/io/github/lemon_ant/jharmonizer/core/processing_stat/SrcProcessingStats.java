@@ -52,6 +52,7 @@ public class SrcProcessingStats {
         long totalSortingTimeNanos;
         long totalSerializationTimeNanos;
         long totalFormattingTimeNanos;
+        long wallClockTimeNanos;
 
         @Nullable
         FileProcessingStatistic smallestFile;
@@ -62,7 +63,7 @@ public class SrcProcessingStats {
         @NonNull
         List<@NonNull Path> filesWithUnexpectedErrors;
 
-        @Builder(access = AccessLevel.PACKAGE)
+        @Builder(access = AccessLevel.PACKAGE, toBuilder = true)
         private AggregatedProcessingStatistic(
                 long fileCount,
                 long totalSize,
@@ -71,6 +72,7 @@ public class SrcProcessingStats {
                 long totalSortingTimeNanos,
                 long totalSerializationTimeNanos,
                 long totalFormattingTimeNanos,
+                long wallClockTimeNanos,
                 @Nullable FileProcessingStatistic smallestFile,
                 @Nullable FileProcessingStatistic largestFile,
                 @NonNull List<@NonNull Path> filesWithUnexpectedErrors) {
@@ -81,9 +83,21 @@ public class SrcProcessingStats {
             this.totalSortingTimeNanos = totalSortingTimeNanos;
             this.totalSerializationTimeNanos = totalSerializationTimeNanos;
             this.totalFormattingTimeNanos = totalFormattingTimeNanos;
+            this.wallClockTimeNanos = wallClockTimeNanos;
             this.smallestFile = smallestFile;
             this.largestFile = largestFile;
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
+        }
+
+        /**
+         * Creates a copy of this statistic with the given wall-clock elapsed time.
+         *
+         * @param wallClockTimeNanos wall-clock elapsed time in nanoseconds
+         * @return new instance with the wall-clock time set
+         */
+        @NonNull
+        public AggregatedProcessingStatistic withWallClockTimeNanos(long wallClockTimeNanos) {
+            return toBuilder().wallClockTimeNanos(wallClockTimeNanos).build();
         }
 
         // Average time spent on processing a file

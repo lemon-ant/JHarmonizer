@@ -100,13 +100,15 @@ public final class SrcProcessor {
                 };
         IFlow flow = SafeFlow.wrap(baseFlow);
 
+        long wallClockStartNanos = System.nanoTime();
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
                 .map(flow::processSrc)
                 .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
                         flowProcessingResult.getPath(),
                         flowProcessingResult.getFlowProcessingStatus().name())))
-                .collect(SrcProcessingStats.statsCollector());
+                .collect(SrcProcessingStats.statsCollector())
+                .withWallClockTimeNanos(System.nanoTime() - wallClockStartNanos);
 
         if (config.isPrintProcessingStatistics()) {
             log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
@@ -124,11 +126,12 @@ public final class SrcProcessor {
                         ? SUMMARY_STATUS_COMPLETED
                         : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
         log.debug(
-                "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, totalProcessingTimeNanos={}, unexpectedErrors={}",
+                "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, wallClockTimeNanos={}, totalCpuTimeNanos={}, unexpectedErrors={}",
                 flowType,
                 processingStatus,
                 aggregatedStatistic.getFileCount(),
                 aggregatedStatistic.getTotalSize(),
+                aggregatedStatistic.getWallClockTimeNanos(),
                 aggregatedStatistic.getTotalProcessingTimeNanos(),
                 aggregatedStatistic.getFilesWithUnexpectedErrors().size());
     }
