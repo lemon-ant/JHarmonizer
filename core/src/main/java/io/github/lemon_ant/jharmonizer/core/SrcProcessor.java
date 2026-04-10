@@ -100,12 +100,16 @@ public final class SrcProcessor {
                 };
         IFlow flow = SafeFlow.wrap(baseFlow);
 
+        ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
                 .map(flow::processSrc)
-                .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
-                        flowProcessingResult.getPath(),
-                        flowProcessingResult.getFlowProcessingStatus().name())))
+                .peek(flowProcessingResult -> {
+                    log.debug(formatSingleFileLogMessage(
+                            flowProcessingResult.getPath(),
+                            flowProcessingResult.getFlowProcessingStatus().name()));
+                    progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus());
+                })
                 .collect(SrcProcessingStats.statsCollector());
 
         if (config.isPrintProcessingStatistics()) {

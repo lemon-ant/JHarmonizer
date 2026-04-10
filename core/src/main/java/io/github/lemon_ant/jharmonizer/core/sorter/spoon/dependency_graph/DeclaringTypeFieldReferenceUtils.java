@@ -113,7 +113,7 @@ class DeclaringTypeFieldReferenceUtils {
         try {
             return Optional.of(expression.partiallyEvaluate());
         } catch (RuntimeException exception) {
-            log.debug(
+            log.trace(
                     "Failed to partially evaluate field initializer expression at {} ({}: {}). "
                             + "Falling back to raw expression.",
                     expression.getPosition(),

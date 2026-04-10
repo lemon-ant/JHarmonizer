@@ -159,8 +159,8 @@ abstract class AbstractOptOutFlow implements IFlow {
 
     private static void logFileOptOutSkip(
             SrcFile srcFile, String skippedOperationDescription, JHarmonizerOptOutMode optOutMode) {
-        if (LOG.isInfoEnabled()) {
-            LOG.info(
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(
                     "Skipping {} for {} because of {} ({})",
                     skippedOperationDescription,
                     srcFile.getPath(),

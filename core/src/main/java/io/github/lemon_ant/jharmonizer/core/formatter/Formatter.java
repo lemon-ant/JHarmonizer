@@ -59,7 +59,7 @@ public final class Formatter {
             @NonNull String srcCode,
             @NonNull Path srcPath,
             @NonNull List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
-        log.debug("Formatting {}", srcPath);
+        log.trace("Formatting {}", srcPath);
         TimedResult<String> formattingResult =
                 StopWatch.measure(() -> applyFormatting(srcCode, formattingSkippedRanges));
 

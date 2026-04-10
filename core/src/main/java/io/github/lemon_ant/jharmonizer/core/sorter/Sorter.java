@@ -31,7 +31,7 @@ public final class Sorter {
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
-        log.debug("Sorting {}", spoonAstModel.getPath());
+        log.trace("Sorting {}", spoonAstModel.getPath());
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
             spoonSorter.sortCompilationUnitRecursively(
                     spoonAstModel.getCompilationUnit(),
