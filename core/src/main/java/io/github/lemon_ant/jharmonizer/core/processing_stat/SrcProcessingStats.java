@@ -7,12 +7,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
@@ -63,7 +63,7 @@ public class SrcProcessingStats {
         @NonNull
         List<@NonNull Path> filesWithUnexpectedErrors;
 
-        @Builder(access = AccessLevel.PACKAGE, toBuilder = true)
+        @Builder(access = AccessLevel.PACKAGE)
         private AggregatedProcessingStatistic(
                 long fileCount,
                 long totalSize,
@@ -87,17 +87,6 @@ public class SrcProcessingStats {
             this.smallestFile = smallestFile;
             this.largestFile = largestFile;
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
-        }
-
-        /**
-         * Creates a copy of this statistic with the given wall-clock elapsed time.
-         *
-         * @param wallClockTimeNanos wall-clock elapsed time in nanoseconds
-         * @return new instance with the wall-clock time set
-         */
-        @NonNull
-        public AggregatedProcessingStatistic withWallClockTimeNanos(long wallClockTimeNanos) {
-            return toBuilder().wallClockTimeNanos(wallClockTimeNanos).build();
         }
 
         // Average time spent on processing a file
@@ -164,8 +153,8 @@ public class SrcProcessingStats {
     }
 
     // Statistics container for collector
-    @NoArgsConstructor
     public class StatsContainer {
+        private final AtomicLong wallClockStartNanos = new AtomicLong(System.nanoTime());
         private final LongAdder count = new LongAdder();
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();
@@ -209,6 +198,7 @@ public class SrcProcessingStats {
          */
         @NonNull
         StatsContainer combine(@NonNull StatsContainer other) {
+            wallClockStartNanos.accumulateAndGet(other.wallClockStartNanos.get(), Math::min);
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
             totalTime.add(other.totalTime.sum());
@@ -237,6 +227,7 @@ public class SrcProcessingStats {
          */
         @NonNull
         AggregatedProcessingStatistic toAggregatedStats() {
+            long wallClockElapsedNanos = System.nanoTime() - wallClockStartNanos.get();
             return AggregatedProcessingStatistic.builder()
                     .fileCount(count.sum())
                     .totalSize(totalSize.sum())
@@ -245,6 +236,7 @@ public class SrcProcessingStats {
                     .totalSortingTimeNanos(totalSortingTime.sum())
                     .totalSerializationTimeNanos(totalSerializationTime.sum())
                     .totalFormattingTimeNanos(totalFormattingTime.sum())
+                    .wallClockTimeNanos(wallClockElapsedNanos)
                     .smallestFile(minSize.get())
                     .largestFile(maxSize.get())
                     .filesWithUnexpectedErrors(Collections.unmodifiableList(unexpectedErrorPaths))

@@ -100,15 +100,13 @@ public final class SrcProcessor {
                 };
         IFlow flow = SafeFlow.wrap(baseFlow);
 
-        long wallClockStartNanos = System.nanoTime();
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
                 .map(flow::processSrc)
                 .peek(flowProcessingResult -> log.info(formatSingleFileLogMessage(
                         flowProcessingResult.getPath(),
                         flowProcessingResult.getFlowProcessingStatus().name())))
-                .collect(SrcProcessingStats.statsCollector())
-                .withWallClockTimeNanos(System.nanoTime() - wallClockStartNanos);
+                .collect(SrcProcessingStats.statsCollector());
 
         if (config.isPrintProcessingStatistics()) {
             log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
