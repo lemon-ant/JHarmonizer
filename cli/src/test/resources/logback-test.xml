@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Test-only logback configuration.
+    The ThresholdFilter with level OFF suppresses all console log output so that
+    expected ERROR messages and stack traces emitted by negative-path tests
+    (e.g. BaseCommandTest) do not pollute the Maven Surefire output.
+    The STDOUT appender must remain attached with a PatternLayoutEncoder because
+    BaseCommandTest inspects the appender name and encoder pattern at runtime.
+-->
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>OFF</level>
+        </filter>
         <encoder>
             <pattern>%-5level [%thread] %msg%n</pattern>
         </encoder>
