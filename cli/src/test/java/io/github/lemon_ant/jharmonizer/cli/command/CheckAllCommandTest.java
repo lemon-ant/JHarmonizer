@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.nio.file.Path;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -23,11 +22,6 @@ class CheckAllCommandTest {
     @BeforeEach
     void setUp() {
         commandLine = new CommandLine(new CheckAllCommand());
-    }
-
-    @AfterEach
-    void tearDown() {
-        CommandTestUtils.restoreBaseCommandLogs();
     }
 
     @Test
@@ -48,16 +42,14 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_processorThrowsRuntimeException_returnsExitCode1() {
-        // Given
-        CommandTestUtils.suppressBaseCommandLogs();
-
+    void checkCommand_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
         // When
         int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenThrow(new RuntimeException("Unexpected error"));
-        })) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Unexpected error"));
+                })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
 

@@ -26,11 +26,11 @@ class CommandTestUtils {
         });
     }
 
-    static void suppressBaseCommandLogs() {
-        ((Logger) LoggerFactory.getLogger(BaseCommand.class)).setLevel(Level.OFF);
-    }
-
-    static void restoreBaseCommandLogs() {
-        ((Logger) LoggerFactory.getLogger(BaseCommand.class)).setLevel(null);
+    @NonNull
+    static AutoCloseable suppressBaseCommandLogs() {
+        Logger logger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
+        Level previousLevel = logger.getLevel();
+        logger.setLevel(Level.OFF);
+        return () -> logger.setLevel(previousLevel);
     }
 }
