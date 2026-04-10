@@ -7,12 +7,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collector;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
@@ -31,7 +31,7 @@ public class SrcProcessingStats {
      * @return the result
      */
     @NonNull
-    public Collector<FlowProcessingResult, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
+    public Collector<FlowProcessingResult, ?, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
                 StatsContainer::accumulate,
@@ -52,6 +52,7 @@ public class SrcProcessingStats {
         long totalSortingTimeNanos;
         long totalSerializationTimeNanos;
         long totalFormattingTimeNanos;
+        long wallClockTimeNanos;
 
         @Nullable
         FileProcessingStatistic smallestFile;
@@ -71,6 +72,7 @@ public class SrcProcessingStats {
                 long totalSortingTimeNanos,
                 long totalSerializationTimeNanos,
                 long totalFormattingTimeNanos,
+                long wallClockTimeNanos,
                 @Nullable FileProcessingStatistic smallestFile,
                 @Nullable FileProcessingStatistic largestFile,
                 @NonNull List<@NonNull Path> filesWithUnexpectedErrors) {
@@ -81,6 +83,7 @@ public class SrcProcessingStats {
             this.totalSortingTimeNanos = totalSortingTimeNanos;
             this.totalSerializationTimeNanos = totalSerializationTimeNanos;
             this.totalFormattingTimeNanos = totalFormattingTimeNanos;
+            this.wallClockTimeNanos = wallClockTimeNanos;
             this.smallestFile = smallestFile;
             this.largestFile = largestFile;
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
@@ -150,8 +153,8 @@ public class SrcProcessingStats {
     }
 
     // Statistics container for collector
-    @NoArgsConstructor
-    public class StatsContainer {
+    static class StatsContainer {
+        private final AtomicLong wallClockStartNanos = new AtomicLong(System.nanoTime());
         private final LongAdder count = new LongAdder();
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();
@@ -195,6 +198,7 @@ public class SrcProcessingStats {
          */
         @NonNull
         StatsContainer combine(@NonNull StatsContainer other) {
+            wallClockStartNanos.accumulateAndGet(other.wallClockStartNanos.get(), Math::min);
             count.add(other.count.sum());
             totalSize.add(other.totalSize.sum());
             totalTime.add(other.totalTime.sum());
@@ -223,6 +227,7 @@ public class SrcProcessingStats {
          */
         @NonNull
         AggregatedProcessingStatistic toAggregatedStats() {
+            long wallClockElapsedNanos = System.nanoTime() - wallClockStartNanos.get();
             return AggregatedProcessingStatistic.builder()
                     .fileCount(count.sum())
                     .totalSize(totalSize.sum())
@@ -231,6 +236,7 @@ public class SrcProcessingStats {
                     .totalSortingTimeNanos(totalSortingTime.sum())
                     .totalSerializationTimeNanos(totalSerializationTime.sum())
                     .totalFormattingTimeNanos(totalFormattingTime.sum())
+                    .wallClockTimeNanos(wallClockElapsedNanos)
                     .smallestFile(minSize.get())
                     .largestFile(maxSize.get())
                     .filesWithUnexpectedErrors(Collections.unmodifiableList(unexpectedErrorPaths))

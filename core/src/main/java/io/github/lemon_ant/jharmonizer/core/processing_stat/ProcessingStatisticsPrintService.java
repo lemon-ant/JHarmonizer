@@ -50,8 +50,8 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
         reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
         reportLines.add(renderRow("Max size", formatSize(stats.getLargestFile())));
-        reportLines.add(
-                renderRow("Total processing time", formatHmsMillisFromNanos(stats.getTotalProcessingTimeNanos())));
+        reportLines.add(renderRow("Wall-clock time", formatHmsMillisFromNanos(stats.getWallClockTimeNanos())));
+        reportLines.add(renderRow("Total CPU time", formatHmsMillisFromNanos(stats.getTotalProcessingTimeNanos())));
         reportLines.add(renderRow(
                 "Parsing time (share)",
                 formatPhaseTimeAndPercent(stats.getTotalParsingTimeNanos(), stats.calculateParsingTimePercent())));

@@ -37,6 +37,8 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("JHarmonizer harmonization summary")
                 .contains("| Files processed")
                 .contains("| Total size")
+                .contains("| Wall-clock time")
+                .contains("| Total CPU time")
                 .contains("| Parsing time (share)")
                 .contains("| Sorting time (share)")
                 .contains("| Serialization time (share)")
@@ -45,6 +47,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("Unexpected internal error files:")
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(brokenPath, 120));
+        assertThat(report.indexOf("| Wall-clock time")).isLessThan(report.indexOf("| Total CPU time"));
         assertThat(report.indexOf("| Serialization time (share)"))
                 .isLessThan(report.indexOf("| Formatting time (share)"));
     }
