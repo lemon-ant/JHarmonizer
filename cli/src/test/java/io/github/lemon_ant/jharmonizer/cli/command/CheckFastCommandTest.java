@@ -13,6 +13,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.file.Path;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -25,6 +26,11 @@ class CheckFastCommandTest {
     @BeforeEach
     void setUp() {
         commandLine = new CommandLine(new CheckFastCommand());
+    }
+
+    @AfterEach
+    void tearDown() {
+        CommandTestUtils.restoreBaseCommandLogs();
     }
 
     @Test
@@ -77,6 +83,9 @@ class CheckFastCommandTest {
 
     @Test
     void checkFastCommand_processorThrowsRuntimeException_returnsExitCode1() {
+        // Given
+        CommandTestUtils.suppressBaseCommandLogs();
+
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {

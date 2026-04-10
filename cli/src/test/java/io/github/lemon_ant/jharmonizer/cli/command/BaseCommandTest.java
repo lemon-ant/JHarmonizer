@@ -56,6 +56,7 @@ class BaseCommandTest {
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.setLevel(initialRootLevel);
         restoreLogPattern(rootLogger, initialPattern);
+        CommandTestUtils.restoreBaseCommandLogs();
     }
 
     @Test
@@ -192,6 +193,9 @@ class BaseCommandTest {
 
     @Test
     void call_processorThrowsRuntimeException_returnsExitCode1() {
+        // Given
+        CommandTestUtils.suppressBaseCommandLogs();
+
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -208,6 +212,7 @@ class BaseCommandTest {
     @Test
     void call_baseDirMissing_returnsExitCode1() {
         // Given
+        CommandTestUtils.suppressBaseCommandLogs();
         Path missingDirectoryPath = temporaryDirectory.resolve("missing-base-dir");
 
         // When
@@ -221,6 +226,7 @@ class BaseCommandTest {
     @Test
     void call_configFileMissing_returnsExitCode1() {
         // Given
+        CommandTestUtils.suppressBaseCommandLogs();
         Path missingConfigPath = temporaryDirectory.resolve("missing-config.yml");
 
         // When
@@ -233,6 +239,9 @@ class BaseCommandTest {
 
     @Test
     void call_processorThrowsRuntimeWithoutMessage_returnsExitCode1() {
+        // Given
+        CommandTestUtils.suppressBaseCommandLogs();
+
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -262,6 +271,9 @@ class BaseCommandTest {
 
     @Test
     void call_verboseWithRuntimeException_returnsExitCode1() {
+        // Given
+        CommandTestUtils.suppressBaseCommandLogs();
+
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {

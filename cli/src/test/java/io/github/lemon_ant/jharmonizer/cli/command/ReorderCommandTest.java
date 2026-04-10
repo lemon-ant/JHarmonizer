@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.NonNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -45,6 +46,11 @@ class ReorderCommandTest {
     @BeforeEach
     void setUp() {
         commandLine = new CommandLine(new ReorderCommand());
+    }
+
+    @AfterEach
+    void tearDown() {
+        CommandTestUtils.restoreBaseCommandLogs();
     }
 
     @Test
@@ -106,6 +112,9 @@ class ReorderCommandTest {
 
     @Test
     void reorderCommand_processorThrowsRuntimeException_returnsExitCode1() {
+        // Given
+        CommandTestUtils.suppressBaseCommandLogs();
+
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
