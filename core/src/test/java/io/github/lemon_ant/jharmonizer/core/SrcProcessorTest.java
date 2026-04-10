@@ -8,6 +8,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
@@ -127,9 +128,7 @@ class SrcProcessorTest {
         Map<String, String> expectedSources = readScenarioExpectedSources("check-all");
         List<String> orderedInputFiles = List.of("A_Checked.java", "B_Reordered.java", "C_Formatted.java");
         SrcProcessor srcProcessor = new SrcProcessor();
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        Level initialLevel = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
+        Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -139,7 +138,7 @@ class SrcProcessorTest {
                     srcProcessor.processSources(scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
         } finally {
             detachListAppender(listAppender);
-            logger.setLevel(initialLevel);
+            restoreLoggerLevel(initialLevel);
         }
         String logs = collectLogMessages(listAppender);
 
@@ -180,9 +179,7 @@ class SrcProcessorTest {
                 "InternalToolForLoggingVerification.java",
                 "package demo; public class InternalToolForLoggingVerification {}");
         SrcProcessor srcProcessor = new SrcProcessor();
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        Level initialLevel = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
+        Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -190,7 +187,7 @@ class SrcProcessorTest {
             srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
-            logger.setLevel(initialLevel);
+            restoreLoggerLevel(initialLevel);
         }
 
         // Then
@@ -216,9 +213,7 @@ class SrcProcessorTest {
         Path javaFilePath = writeJavaFile(temporaryDirectory, "FullyOffSample.java", fullyOffSrcCode);
         String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SrcProcessor srcProcessor = new SrcProcessor();
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        Level initialLevel = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
+        Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -226,7 +221,7 @@ class SrcProcessorTest {
             srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
-            logger.setLevel(initialLevel);
+            restoreLoggerLevel(initialLevel);
         }
         String logs = collectLogMessages(listAppender);
 
@@ -246,9 +241,7 @@ class SrcProcessorTest {
         String brokenOriginalSrcCode = Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8);
         String validOriginalSrcCode = Files.readString(validJavaFilePath, StandardCharsets.UTF_8);
         SrcProcessor srcProcessor = new SrcProcessor();
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        Level initialLevel = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
+        Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -256,7 +249,7 @@ class SrcProcessorTest {
             srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
-            logger.setLevel(initialLevel);
+            restoreLoggerLevel(initialLevel);
         }
         String logs = collectLogMessages(listAppender);
 
@@ -379,9 +372,7 @@ class SrcProcessorTest {
                 writeJavaFile(temporaryDirectory, "SummarySample.java", "package demo; public class SummarySample {}");
         SrcProcessor srcProcessor = new SrcProcessor(
                 FlexibleUnifiedConfig.builder().printProcessingStatistics(false).build());
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        Level initialLevel = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
+        Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -389,7 +380,7 @@ class SrcProcessorTest {
             srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
-            logger.setLevel(initialLevel);
+            restoreLoggerLevel(initialLevel);
         }
         String logs = collectLogMessages(listAppender);
 
@@ -423,6 +414,19 @@ class SrcProcessorTest {
         Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
         logger.detachAppender(listAppender);
         listAppender.stop();
+    }
+
+    @Nullable
+    private static Level enableDebugLogLevel() {
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
+        Level initialLevel = logger.getLevel();
+        logger.setLevel(Level.DEBUG);
+        return initialLevel;
+    }
+
+    private static void restoreLoggerLevel(@Nullable Level level) {
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
+        logger.setLevel(level);
     }
 
     @NonNull
