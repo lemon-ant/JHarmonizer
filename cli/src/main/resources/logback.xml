@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    BaseCommand (cli/src/main/java/.../cli/command/BaseCommand.java) manipulates this configuration
+    at runtime when the user passes the verbose flag:
+      ~ Looks up the console appender by name "STDOUT"  (constant STDOUT_APPENDER_NAME)
+      ~ Switches the root level from INFO to DEBUG
+      ~ Replaces the encoder pattern with VERBOSE_LOG_PATTERN (includes %logger)
+    Do not rename the appender, change the root level, or alter the encoder structure
+    without updating the corresponding constants and logic in BaseCommand.
+-->
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -7,7 +16,9 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>
+
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

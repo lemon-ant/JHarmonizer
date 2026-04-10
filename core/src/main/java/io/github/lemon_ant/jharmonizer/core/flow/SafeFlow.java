@@ -47,6 +47,7 @@ public final class SafeFlow implements IFlow {
                     "Unexpected internal processing error for file {}: {}",
                     srcFile.getPath(),
                     describeRuntimeFailure(exception));
+            log.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
             return FlowProcessingResult.builder()
                     .path(srcFile.getPath())
                     .relocations(List.of())

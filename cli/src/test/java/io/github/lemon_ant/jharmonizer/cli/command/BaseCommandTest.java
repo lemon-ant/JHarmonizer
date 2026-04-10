@@ -8,6 +8,12 @@ import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -18,15 +24,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 class BaseCommandTest {
 
+    private static final String STDOUT_APPENDER_NAME = "STDOUT";
+
     private CommandLine commandLine;
+    private Level initialRootLevel;
+    private String initialPattern;
 
     @TempDir
     Path temporaryDirectory;
@@ -34,6 +46,16 @@ class BaseCommandTest {
     @BeforeEach
     void setUp() {
         commandLine = new CommandLine(new TestCommand());
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        initialRootLevel = rootLogger.getLevel();
+        initialPattern = resolveCurrentLogPattern(rootLogger);
+    }
+
+    @AfterEach
+    void tearDown() {
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(initialRootLevel);
+        restoreLogPattern(rootLogger, initialPattern);
     }
 
     @Test
@@ -223,6 +245,36 @@ class BaseCommandTest {
         assertThat(exitCode).isEqualTo(1);
     }
 
+    @Test
+    void call_verboseOptionInvoked_setsDebugLevelAndVerbosePattern() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute("--base-dir", "src", "--verbose");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        assertThat(rootLogger.getLevel()).isEqualTo(Level.DEBUG);
+        assertThat(resolveCurrentLogPattern(rootLogger)).contains("%logger");
+    }
+
+    @Test
+    void call_verboseWithRuntimeException_returnsExitCode1() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenThrow(new RuntimeException("Verbose error"));
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src", "--verbose");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
+    }
+
     private static final class TestCommand extends BaseCommand {
 
         @Override
@@ -230,5 +282,32 @@ class BaseCommandTest {
         protected FlowType getFlowType() {
             return FlowType.REORDER;
         }
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private static String resolveCurrentLogPattern(Logger rootLogger) {
+        ConsoleAppender<ILoggingEvent> appender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
+        if (appender == null) {
+            return null;
+        }
+        return ((PatternLayoutEncoder) appender.getEncoder()).getPattern();
+    }
+
+    private static void restoreLogPattern(Logger rootLogger, @Nullable String pattern) {
+        if (pattern == null) {
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        ConsoleAppender<ILoggingEvent> appender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
+        if (appender == null) {
+            return;
+        }
+        PatternLayoutEncoder encoder = (PatternLayoutEncoder) appender.getEncoder();
+        encoder.stop();
+        encoder.setPattern(pattern);
+        encoder.start();
     }
 }
