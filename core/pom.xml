@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.lemon_ant.jharmonizer</groupId>
+        <groupId>io.github.lemon-ant.jharmonizer</groupId>
         <artifactId>jharmonizer-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -36,6 +36,11 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.lemon-ant</groupId>
+            <artifactId>glob-path-finder</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.java-diff-utils</groupId>
             <artifactId>java-diff-utils</artifactId>
             <version>4.16</version>
@@ -46,7 +51,7 @@
             <version>11.2.1</version>
         </dependency>
         <dependency>
-            <groupId>io.github.lemon_ant.jharmonizer</groupId>
+            <groupId>io.github.lemon-ant.jharmonizer</groupId>
             <artifactId>dependency-aware-sorting</artifactId>
             <version>${project.version}</version>
         </dependency>

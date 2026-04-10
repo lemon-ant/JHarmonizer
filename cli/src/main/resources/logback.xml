@@ -16,7 +16,8 @@
         </encoder>
     </appender>
 
-    <logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>
+    <!--<logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>-->
+    <logger name="spoon.Launcher" level="ERROR"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

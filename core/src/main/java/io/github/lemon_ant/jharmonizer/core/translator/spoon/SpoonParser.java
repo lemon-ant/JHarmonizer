@@ -42,7 +42,11 @@ public class SpoonParser {
         try {
             launcher.buildModel();
         } catch (RuntimeException exception) {
-            throw new SpoonModelBuildException(srcFile.getPath(), describeModelBuildFailure(exception), exception);
+            throw new SpoonModelBuildException(
+                    srcFile.getPath(),
+                    "Cannot build AST model from " + srcFile.getPath() + " with error"
+                            + describeModelBuildFailure(exception),
+                    exception);
         }
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
