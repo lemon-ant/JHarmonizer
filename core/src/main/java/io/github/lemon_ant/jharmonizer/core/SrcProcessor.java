@@ -105,9 +105,11 @@ public final class SrcProcessor {
                         baseDir, includeGlobs, excludeGlobs)
                 .map(flow::processSrc)
                 .peek(flowProcessingResult -> {
-                    log.debug(formatSingleFileLogMessage(
-                            flowProcessingResult.getPath(),
-                            flowProcessingResult.getFlowProcessingStatus().name()));
+                    if (log.isDebugEnabled()) {
+                        log.debug(formatSingleFileLogMessage(
+                                flowProcessingResult.getPath(),
+                                flowProcessingResult.getFlowProcessingStatus().name()));
+                    }
                     progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus());
                 })
                 .collect(SrcProcessingStats.statsCollector());
