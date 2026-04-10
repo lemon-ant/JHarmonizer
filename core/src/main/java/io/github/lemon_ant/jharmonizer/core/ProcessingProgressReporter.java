@@ -30,8 +30,8 @@ final class ProcessingProgressReporter {
      * @param status the processing outcome for the file
      */
     void recordProcessedFile(@NonNull FlowProcessingStatus status) {
-        incrementStatusCounter(status);
         long count = totalProcessed.incrementAndGet();
+        incrementStatusCounter(status);
         if (count % PROGRESS_BATCH_SIZE == 0) {
             logBatchProgress(count);
         }

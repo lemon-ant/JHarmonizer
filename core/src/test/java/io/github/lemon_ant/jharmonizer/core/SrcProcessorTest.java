@@ -128,7 +128,7 @@ class SrcProcessorTest {
         Map<String, String> expectedSources = readScenarioExpectedSources("check-all");
         List<String> orderedInputFiles = List.of("A_Checked.java", "B_Reordered.java", "C_Formatted.java");
         SrcProcessor srcProcessor = new SrcProcessor();
-        Level initialLevel = enableDebugLogLevel();
+        @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -179,7 +179,7 @@ class SrcProcessorTest {
                 "InternalToolForLoggingVerification.java",
                 "package demo; public class InternalToolForLoggingVerification {}");
         SrcProcessor srcProcessor = new SrcProcessor();
-        Level initialLevel = enableDebugLogLevel();
+        @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -213,7 +213,7 @@ class SrcProcessorTest {
         Path javaFilePath = writeJavaFile(temporaryDirectory, "FullyOffSample.java", fullyOffSrcCode);
         String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SrcProcessor srcProcessor = new SrcProcessor();
-        Level initialLevel = enableDebugLogLevel();
+        @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -241,7 +241,7 @@ class SrcProcessorTest {
         String brokenOriginalSrcCode = Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8);
         String validOriginalSrcCode = Files.readString(validJavaFilePath, StandardCharsets.UTF_8);
         SrcProcessor srcProcessor = new SrcProcessor();
-        Level initialLevel = enableDebugLogLevel();
+        @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
@@ -372,7 +372,7 @@ class SrcProcessorTest {
                 writeJavaFile(temporaryDirectory, "SummarySample.java", "package demo; public class SummarySample {}");
         SrcProcessor srcProcessor = new SrcProcessor(
                 FlexibleUnifiedConfig.builder().printProcessingStatistics(false).build());
-        Level initialLevel = enableDebugLogLevel();
+        @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When

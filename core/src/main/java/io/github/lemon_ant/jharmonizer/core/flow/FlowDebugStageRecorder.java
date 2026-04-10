@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Optional debug helper that writes intermediate source-code snapshots to disk for each
- * processing stage when DEBUG logging is enabled.
+ * processing stage when TRACE logging is enabled.
  * Files are written directly into the {@code debug/} directory with timestamp-prefixed file names.
  */
 @Slf4j
