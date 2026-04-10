@@ -215,7 +215,14 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "check-all", "--base-dir", ".", "--include", "**/*.java");
+                EXECUTABLE_JAR,
+                projectDirectory,
+                "check-all",
+                "--verbose",
+                "--base-dir",
+                ".",
+                "--include",
+                "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -243,6 +250,7 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "check-all",
+                "--verbose",
                 "--no-statistics",
                 "--base-dir",
                 ".",
@@ -294,6 +302,7 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "check-all",
+                "--verbose",
                 "--no-statistics",
                 "--base-dir",
                 ".",

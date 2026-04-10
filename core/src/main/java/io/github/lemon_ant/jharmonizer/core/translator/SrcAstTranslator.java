@@ -35,7 +35,7 @@ public final class SrcAstTranslator {
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
     public static ParsingResult parse(@NonNull SrcFile srcFile) {
-        log.debug("Parsing {}", srcFile.getPath());
+        log.trace("Parsing {}", srcFile.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
 
@@ -53,7 +53,7 @@ public final class SrcAstTranslator {
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
-        log.debug("Serializing {}", sortedSpoonAstModel.getPath());
+        log.trace("Serializing {}", sortedSpoonAstModel.getPath());
 
         TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
                 () -> sortedSpoonAstModel.getSerializedSrcCode().get());

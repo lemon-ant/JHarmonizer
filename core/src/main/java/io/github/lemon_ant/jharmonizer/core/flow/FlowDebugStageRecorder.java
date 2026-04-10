@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Optional debug helper that writes intermediate source-code snapshots to disk for each
- * processing stage when DEBUG logging is enabled.
+ * processing stage when TRACE logging is enabled.
  * Files are written directly into the {@code debug/} directory with timestamp-prefixed file names.
  */
 @Slf4j
@@ -43,14 +43,14 @@ final class FlowDebugStageRecorder {
 
     @SuppressWarnings("PMD.GuardLogStatement")
     private FlowDebugStageRecorder(FlowType flowType, Clock clock) {
-        this.enabled = log.isDebugEnabled();
+        this.enabled = log.isTraceEnabled();
         this.flowType = flowType;
         this.runTimestampPrefix = TIMESTAMP_FORMATTER.format(Instant.now(clock));
         this.flowOutputDirectory = BASE_OUTPUT_DIRECTORY;
 
         if (enabled) {
             ensureDirectoryExists(flowOutputDirectory);
-            log.debug("Debug stage recorder enabled. Output directory: {}", flowOutputDirectory.toAbsolutePath());
+            log.trace("Debug stage recorder enabled. Output directory: {}", flowOutputDirectory.toAbsolutePath());
         }
     }
 
@@ -87,7 +87,7 @@ final class FlowDebugStageRecorder {
 
         try {
             Files.writeString(outputFile, javaSrcText, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
-            log.debug("Saved debug stage: {}", outputFile.toAbsolutePath());
+            log.trace("Saved debug stage: {}", outputFile.toAbsolutePath());
         } catch (IOException ioException) {
             throw new UncheckedIOException("Failed to write debug stage file: " + outputFile, ioException);
         }
