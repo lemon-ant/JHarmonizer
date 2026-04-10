@@ -31,7 +31,7 @@ public class SrcProcessingStats {
      * @return the result
      */
     @NonNull
-    public Collector<FlowProcessingResult, StatsContainer, AggregatedProcessingStatistic> statsCollector() {
+    public Collector<FlowProcessingResult, ?, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
                 StatsContainer::accumulate,
@@ -153,7 +153,7 @@ public class SrcProcessingStats {
     }
 
     // Statistics container for collector
-    public class StatsContainer {
+    static class StatsContainer {
         private final AtomicLong wallClockStartNanos = new AtomicLong(System.nanoTime());
         private final LongAdder count = new LongAdder();
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
