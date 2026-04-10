@@ -213,7 +213,7 @@ class BaseCommandTest {
 
         // When
         int exitCode;
-        try (AutoCloseable ignored = CommandTestUtils.suppressBaseCommandLogs()) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
             exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
         }
 
@@ -229,7 +229,7 @@ class BaseCommandTest {
 
         // When
         int exitCode;
-        try (AutoCloseable ignored = CommandTestUtils.suppressBaseCommandLogs()) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
             exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
         }
 
