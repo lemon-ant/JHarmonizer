@@ -14,7 +14,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import lombok.NonNull;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -414,7 +413,7 @@ class JHarmonizerCliPackagedJarIT {
     private Path copyDirectory(Path srcDirectory, String targetDirectoryName) throws IOException {
         Path targetDirectory = temporaryDirectory.resolve(targetDirectoryName);
         Files.createDirectories(targetDirectory);
-        FileUtils.copyDirectory(srcDirectory.toFile(), targetDirectory.toFile());
+        TemporaryProjectCopier.copyDirectoryRecursively(srcDirectory, targetDirectory);
         return targetDirectory;
     }
 
