@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class LazyNestedTypeContextSample {
-
     static Runnable aDependent = new Runnable() {
         @Override
         public void run() {

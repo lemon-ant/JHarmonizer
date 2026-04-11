@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 import java.net.URI;
 
 class UriFieldInitializerStringForwardReferenceRegressionSample {
-
     private static final URI HTTP_LOCALHOST_URI = URI.create("http://localhost/");
     private static final String PARAMETER_NAME = "search";
     private static final String RESOURCES_PATH_SEGMENT = "resources";

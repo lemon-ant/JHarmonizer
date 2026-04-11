@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Locale;
 
 class AlphaAttachmentHelper {
-
     static String label() {
         return "alpha-helper";
     }

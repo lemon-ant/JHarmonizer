@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public record RecordScenario(int value) {
-
     String alpha() {
         return "a";
     }

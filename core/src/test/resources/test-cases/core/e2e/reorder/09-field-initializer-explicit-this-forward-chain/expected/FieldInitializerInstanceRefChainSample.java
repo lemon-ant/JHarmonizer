@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerInstanceRefChainSample {
-
     int a = 0; // explicit 0; same value as default, included for clarity
     int h = this.e + 1; // e is default 0 here, so h initializes to 1 (forward ref)
     int e = this.b + 3; // b is default 0 here, so e initializes to 3 (forward ref)

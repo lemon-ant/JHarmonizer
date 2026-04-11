@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class InitializerBlockStaticConstantExclusionSample {
-
     static int bProvider = Integer.parseInt("1");
 
     static {

@@ -13,7 +13,6 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
  * expression.partiallyEvaluate().
  */
 public class StringSelectorAnonymousChainOverflowRegressionSample {
-
     private static final String expectedValue = "selected";
     private static final StringSelector selector = StringSelector.of((String) null, "", "selected");
 
@@ -25,7 +24,6 @@ public class StringSelectorAnonymousChainOverflowRegressionSample {
     }
 
     private interface StringSelector {
-
         StringSelector EMPTY_STRING_SELECTOR = new StringSelector() {
             @Override
             public String toString() {

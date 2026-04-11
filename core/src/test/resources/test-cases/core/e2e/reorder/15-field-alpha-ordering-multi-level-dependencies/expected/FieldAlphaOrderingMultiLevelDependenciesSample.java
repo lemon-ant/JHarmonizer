@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldAlphaOrderingMultiLevelDependenciesSample {
-
     private static int C1 = 10;
     private static int C2 = 20;
     private static int C3 = 30;

@@ -1,7 +1,7 @@
 formatting:
   fix-imports: true
   formatter-style: PALANTIR
-  blank-line-after-type-header: true
+  blank-line-after-type-header: false
   blank-line-before-comment: true
 
 backups-enabled: true

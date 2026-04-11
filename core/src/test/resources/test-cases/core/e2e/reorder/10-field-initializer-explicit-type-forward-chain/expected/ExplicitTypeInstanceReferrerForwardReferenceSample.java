@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class ExplicitTypeInstanceReferrerForwardReferenceSample {
-
     private static int aStatic = 10;
     private int zInstance = ExplicitTypeInstanceReferrerForwardReferenceSample.aStatic + 1;
 

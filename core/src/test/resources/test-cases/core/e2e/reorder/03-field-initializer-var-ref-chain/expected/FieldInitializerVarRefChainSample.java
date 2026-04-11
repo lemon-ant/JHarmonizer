@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerVarRefChainSample {
-
     int a = 12; // literal 12; independent constant field
     int h = 1; // literal 1; anchor for the h -> d -> b dependency chain
     int d = h + 3; // expects 4; depends on h, so h must stay before d

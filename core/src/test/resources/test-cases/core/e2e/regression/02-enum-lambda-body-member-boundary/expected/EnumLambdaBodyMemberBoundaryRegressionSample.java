@@ -44,12 +44,10 @@ public enum EnumLambdaBodyMemberBoundaryRegressionSample {
     }
 
     private interface ValueMapper {
-
         long apply(long value);
     }
 
     private static final class MetricDescriptor {
-
         private final ValueMapper mapper;
 
         private MetricDescriptor(final ValueMapper mapper) {

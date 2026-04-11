@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Locale;
 
 public class FloatingSortOffBetweenNestedTypes {
-
     String describe() {
         List<String> labels = new ArrayList<>();
         labels.add(new ZuluNested().describe().toUpperCase(Locale.ROOT));
@@ -15,7 +14,6 @@ public class FloatingSortOffBetweenNestedTypes {
     }
 
     static class AlphaNested {
-
         int ant;
 
         static String describe() {
@@ -53,7 +51,6 @@ public class FloatingSortOffBetweenNestedTypes {
     }
 
     static class ZuluNested {
-
         int ant;
 
         static String describe() {

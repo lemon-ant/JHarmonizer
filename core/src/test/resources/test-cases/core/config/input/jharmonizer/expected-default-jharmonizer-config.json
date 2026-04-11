@@ -2,7 +2,7 @@
   "formatting" : {
     "fixImports" : true,
     "formatterStyle" : "PALANTIR",
-    "blankLineAfterTypeHeader" : true,
+    "blankLineAfterTypeHeader" : false,
     "blankLineBeforeComment" : true
   },
   "backupsEnabled" : true,
