@@ -350,8 +350,9 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isEqualTo(3);
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .contains("Flow CHECK_FAIL_FAST stopped early")
-                .contains("stopped early: violation detected. Exit code: 3")
+                .contains("stopped early")
+                .contains("violation detected on file #")
+                .contains("Exit code: 3")
                 .containsAnyOf(
                         "App.java",
                         "StableService.java",

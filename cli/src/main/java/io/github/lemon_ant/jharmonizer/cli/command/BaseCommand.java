@@ -170,12 +170,12 @@ abstract class BaseCommand implements Callable<Integer> {
                             commandOptions.getExcludeGlobs(),
                             flowType);
             int exitCode = resolveCheckExitCode(stats, flowType);
-            logCompletionSummary(flowType, stats, exitCode);
+            log.info("Exit code: {}", exitCode);
             return exitCode;
         } catch (NotFormattedException | NotOrderedException e) {
             int exitCode = checkFailedExitCode();
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
-            log.info("{} stopped early: violation detected. Exit code: {}", flowType, exitCode);
+            log.info("Exit code: {}", exitCode);
             return exitCode;
         }
     }
@@ -192,39 +192,6 @@ abstract class BaseCommand implements Callable<Integer> {
             return checkFailedExitCode();
         }
         return 0;
-    }
-
-    @SuppressWarnings({"PMD.GuardLogStatement", "PMD.ExhaustiveSwitchHasDefault"})
-    private static void logCompletionSummary(
-            @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic stats, int exitCode) {
-        long nonConforming = stats.computeNonConformingFileCount();
-        switch (flowType) {
-            case CHECK_ALL -> {
-                if (nonConforming == 0) {
-                    log.info(
-                            "{} completed successfully. All {} file(s) conform. Exit code: {}",
-                            flowType,
-                            stats.getFileCount(),
-                            exitCode);
-                } else {
-                    log.info(
-                            "{} completed. {} of {} file(s) do not conform. Exit code: {}",
-                            flowType,
-                            nonConforming,
-                            stats.getFileCount(),
-                            exitCode);
-                }
-            }
-            case CHECK_FAIL_FAST ->
-                log.info("{} completed successfully. All processed files conform. Exit code: {}", flowType, exitCode);
-            case REORDER ->
-                log.info(
-                        "{} completed successfully. Processed {} file(s). Exit code: {}",
-                        flowType,
-                        stats.getFileCount(),
-                        exitCode);
-            default -> throw new IllegalStateException("Unexpected flow type: " + flowType);
-        }
     }
 
     @NonNull

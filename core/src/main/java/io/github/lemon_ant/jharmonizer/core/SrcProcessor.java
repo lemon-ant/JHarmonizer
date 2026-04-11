@@ -9,6 +9,8 @@ import io.github.lemon_ant.jharmonizer.core.flow.CheckAllFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
+import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
+import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import io.github.lemon_ant.jharmonizer.core.flow.ReorderFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.SafeFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -101,18 +103,30 @@ public final class SrcProcessor {
         IFlow flow = SafeFlow.wrap(baseFlow);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
-        AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
-                        baseDir, includeGlobs, excludeGlobs)
-                .map(flow::processSrc)
-                .peek(flowProcessingResult -> {
-                    if (log.isDebugEnabled()) {
-                        log.debug(formatSingleFileLogMessage(
-                                flowProcessingResult.getPath(),
-                                flowProcessingResult.getFlowProcessingStatus().name()));
-                    }
-                    progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus());
-                })
-                .collect(SrcProcessingStats.statsCollector());
+        AggregatedProcessingStatistic aggregatedProcessingStatistic;
+        try {
+            aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs)
+                    .map(flow::processSrc)
+                    .peek(flowProcessingResult -> {
+                        if (log.isDebugEnabled()) {
+                            log.debug(formatSingleFileLogMessage(
+                                    flowProcessingResult.getPath(),
+                                    flowProcessingResult
+                                            .getFlowProcessingStatus()
+                                            .name()));
+                        }
+                        progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus());
+                    })
+                    .collect(SrcProcessingStats.statsCollector());
+        } catch (NotFormattedException | NotOrderedException e) {
+            long checkedCount = progressReporter.getTotalProcessedCount();
+            log.info(
+                    "{} stopped early. Checked {} file(s), violation detected on file #{}.",
+                    flowType,
+                    checkedCount,
+                    checkedCount + 1);
+            throw e;
+        }
 
         if (config.isPrintProcessingStatistics()) {
             log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
@@ -120,7 +134,32 @@ public final class SrcProcessor {
             logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
             logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
         }
+        logProcessingCompletion(flowType, aggregatedProcessingStatistic);
         return aggregatedProcessingStatistic;
+    }
+
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
+    private static void logProcessingCompletion(
+            @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic stats) {
+        long nonConforming = stats.computeNonConformingFileCount();
+        switch (flowType) {
+            case CHECK_ALL -> {
+                if (nonConforming == 0) {
+                    log.info("{} completed successfully. All {} file(s) conform.", flowType, stats.getFileCount());
+                } else {
+                    log.info(
+                            "{} completed. {} of {} file(s) do not conform.",
+                            flowType,
+                            nonConforming,
+                            stats.getFileCount());
+                }
+            }
+            case CHECK_FAIL_FAST ->
+                log.info("{} completed successfully. Checked {} file(s), all conform.", flowType, stats.getFileCount());
+            case REORDER ->
+                log.info("{} completed successfully. Processed {} file(s).", flowType, stats.getFileCount());
+            default -> throw new IllegalStateException("Unexpected flow type: " + flowType);
+        }
     }
 
     private static void logDebugProcessingCompletionSummary(

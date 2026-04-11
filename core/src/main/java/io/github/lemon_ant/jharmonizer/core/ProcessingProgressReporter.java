@@ -25,6 +25,15 @@ final class ProcessingProgressReporter {
     private final LongAdder errorCount = new LongAdder();
 
     /**
+     * Returns the total number of files recorded so far.
+     *
+     * @return current count of processed files
+     */
+    long getTotalProcessedCount() {
+        return totalProcessed.get();
+    }
+
+    /**
      * Records a single processed file and logs periodic progress at INFO level.
      *
      * @param status the processing outcome for the file
@@ -37,6 +46,7 @@ final class ProcessingProgressReporter {
         }
     }
 
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FlowProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();
