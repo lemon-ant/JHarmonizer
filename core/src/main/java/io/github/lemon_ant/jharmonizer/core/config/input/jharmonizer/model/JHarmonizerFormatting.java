@@ -11,11 +11,9 @@ import lombok.Value;
 @Value
 public class JHarmonizerFormatting {
 
-    // TODO Exclude to a dedicated class
     boolean fixImports;
 
     @NonNull
-    // TODO Exclude to a dedicated class
     FormatterStyle formatterStyle;
 
     boolean blankLineAfterTypeHeader;

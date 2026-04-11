@@ -36,7 +36,7 @@ import picocli.CommandLine.Option;
 abstract class BaseCommand implements Callable<Integer> {
 
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
-    private static final String VERBOSE_LOG_PATTERN = "%-5level [%.8thread] [%logger{36}] %msg%n";
+    private static final String VERBOSE_LOG_PATTERN = "%-5level [%-8.8thread] [%logger{36}] %msg%n";
 
     /**
      * Creates a new base CLI command.
