@@ -156,16 +156,10 @@ abstract class BaseCommand implements Callable<Integer> {
     @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
-        log.info(
-                "Processing sources with flow {} in: {} using config: {}",
-                flowType,
-                commandOptions.getBaseDir(),
-                describeConfigSrc(commandOptions.getConfigFilePath()));
         try {
-            AggregatedProcessingStatistic stats = createSrcProcessor(
-                            commandOptions.getConfigFilePath(),
-                            commandOptions.isNoBackup(),
-                            commandOptions.isNoStatistics())
+            FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
+                    commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
+            AggregatedProcessingStatistic stats = new SrcProcessor(effectiveConfig)
                     .processSources(
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
@@ -183,8 +177,8 @@ abstract class BaseCommand implements Callable<Integer> {
         }
     }
 
-    @NonNull
-    private static SrcProcessor createSrcProcessor(
+    @Nullable
+    private static FlexibleUnifiedConfig resolveEffectiveConfig(
             @Nullable Path configFilePath, boolean disableBackups, boolean disableStatisticsOutput) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
@@ -195,8 +189,7 @@ abstract class BaseCommand implements Callable<Integer> {
                         .printProcessingStatistics(disableStatisticsOutput ? false : null)
                         .build()
                 : null;
-        FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
-        return new SrcProcessor(effectiveConfig);
+        return mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
     }
 
     @Nullable
@@ -214,13 +207,6 @@ abstract class BaseCommand implements Callable<Integer> {
     @Nullable
     private static Path toAbsoluteNormalizedPath(@Nullable Path path) {
         return path == null ? null : path.toAbsolutePath().normalize();
-    }
-
-    @NonNull
-    private static String describeConfigSrc(@Nullable Path configFilePath) {
-        return configFilePath != null
-                ? configFilePath.toString()
-                : "embedded default resource config (/default-config.yml)";
     }
 
     private static void logRuntimeFailure(boolean verbose, RuntimeException exception) {

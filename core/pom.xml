@@ -27,11 +27,6 @@
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
@@ -49,6 +44,27 @@
             <groupId>fr.inria.gforge.spoon</groupId>
             <artifactId>spoon-core</artifactId>
             <version>11.2.1</version>
+            <exclusions>
+                <!-- Maven model support — not used by JHarmonizer -->
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-model</artifactId>
+                </exclusion>
+                <!-- Maven invoker support — not used by JHarmonizer -->
+                <exclusion>
+                    <groupId>org.apache.maven.shared</groupId>
+                    <artifactId>maven-invoker</artifactId>
+                </exclusion>
+                <!--
+                    commons-compress is a transitive dependency of spoon-core, but JHarmonizer does not use the
+                    Spoon functionality that requires it. The project's former direct basename usage was migrated
+                    from commons-compress FileNameUtils.getBaseName to commons-io FilenameUtils.
+                -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.github.lemon-ant.jharmonizer</groupId>
