@@ -13,7 +13,7 @@ import spoon.reflect.declaration.CtTypeMember;
 /**
  * Internal utilities shared between the custom Spoon source printer and its callers.
  * Provides helpers for detecting the dominant line separator
- * and compiled predicate factories for blank-line decisions based on {@link PrinterSpacingConfig}.
+ * and compiled predicate factories for blank-line decisions based on {@link PrinterConfig}.
  */
 @UtilityClass
 public class SpoonSrcPrinterUtils {
@@ -78,13 +78,13 @@ public class SpoonSrcPrinterUtils {
 
     /**
      * Compiles a predicate that determines whether a separator is needed after a given member,
-     * based on the spacing configuration. The predicate is compiled once at printer initialization time.
+     * based on the printer configuration. The predicate is compiled once at printer initialization time.
      *
-     * @param config the printer spacing configuration
+     * @param config the printer configuration
      * @return a predicate that returns {@code true} when a separator is needed after the member
      */
     @NonNull
-    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterSpacingConfig config) {
+    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
         Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
 
         if (config.isBlankLineBeforeAnnotation()) {
@@ -95,13 +95,13 @@ public class SpoonSrcPrinterUtils {
 
     /**
      * Compiles a bi-predicate that determines whether a separator is needed before a given member,
-     * based on the spacing configuration. The predicate is compiled once at printer initialization time.
+     * based on the printer configuration. The predicate is compiled once at printer initialization time.
      *
-     * @param config the printer spacing configuration
+     * @param config the printer configuration
      * @return a bi-predicate accepting (member, isFirst) that returns {@code true} when a separator is needed
      */
     @NonNull
-    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore(@NonNull PrinterSpacingConfig config) {
+    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore(@NonNull PrinterConfig config) {
         BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
 
         if (config.isBlankLineBeforeAnnotation() && config.isBlankLineBeforeComment()) {
@@ -120,11 +120,11 @@ public class SpoonSrcPrinterUtils {
      * Compiles a predicate that determines whether a blank line should be inserted after
      * the type declaration header, before the first member. The predicate is compiled once.
      *
-     * @param config the printer spacing configuration
+     * @param config the printer configuration
      * @return a predicate accepting the type and returning {@code true} when a blank line is needed
      */
     @NonNull
-    static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterSpacingConfig config) {
+    static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterConfig config) {
         if (config.isBlankLineAfterTypeHeader()) {
             return type -> type instanceof CtEnum<?>;
         }

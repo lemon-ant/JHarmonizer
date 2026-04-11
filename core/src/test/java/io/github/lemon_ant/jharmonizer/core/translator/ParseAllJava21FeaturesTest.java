@@ -7,7 +7,7 @@ import static org.assertj.core.data.Percentage.withPercentage;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.nio.file.Path;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
 
-    private static final PrinterSpacingConfig DEFAULT_SPACING_CONFIG = new PrinterSpacingConfig(true, true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, true);
     private static final int ORIGINAL_SOURCE_CODE_LENGTH = 10053;
     private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
             "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java";
@@ -29,7 +29,7 @@ class ParseAllJava21FeaturesTest {
         SrcFile srcFile = createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_SPACING_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then
@@ -52,7 +52,7 @@ class ParseAllJava21FeaturesTest {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
                 createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH),
-                DEFAULT_SPACING_CONFIG);
+                DEFAULT_PRINTER_CONFIG);
 
         // When
         SerializationResult serializationResult = SrcAstTranslator.serialize(spoonASTModel);

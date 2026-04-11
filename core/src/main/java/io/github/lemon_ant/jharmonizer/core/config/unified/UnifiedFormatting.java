@@ -5,7 +5,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 /**
- * A cohesive bundle of formatting-related options, including printer spacing flags.
+ * A cohesive bundle of formatting-related options, including printer flags.
  * Kept as a separate value object to make semantic grouping explicit.
  */
 @Value

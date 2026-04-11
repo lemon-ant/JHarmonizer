@@ -25,7 +25,7 @@ import spoon.reflect.visitor.TokenWriter;
 
 /**
  * Prints structured type declarations while preserving original source fragments and skipped-type ranges.
- * Blank-line insertion predicates are compiled once from the supplied {@link PrinterSpacingConfig}
+ * Blank-line insertion predicates are compiled once from the supplied {@link PrinterConfig}
  * so that no per-member flag checks are needed during printing.
  */
 final class SpoonTypePrinter {
@@ -52,24 +52,24 @@ final class SpoonTypePrinter {
     private final Predicate<CtType<?>> needsBlankLineAfterTypeHeader;
 
     /**
-     * Creates a new SpoonTypePrinter with compiled spacing predicates.
+     * Creates a new SpoonTypePrinter with compiled printer predicates.
      *
      * @param originalSrcCode the original source text
      * @param sortingSkippedTypes the types that must be copied without sorting
      * @param tokenWriter the token writer for output
-     * @param spacingConfig the printer spacing configuration used to compile blank-line predicates
+     * @param printerConfig the printer configuration used to compile blank-line predicates
      */
     SpoonTypePrinter(
             @NonNull String originalSrcCode,
             @NonNull Set<CtType<?>> sortingSkippedTypes,
             @NonNull TokenWriter tokenWriter,
-            @NonNull PrinterSpacingConfig spacingConfig) {
+            @NonNull PrinterConfig printerConfig) {
         this.originalSrcCode = originalSrcCode;
         this.sortingSkippedTypes = sortingSkippedTypes;
         this.tokenWriter = tokenWriter;
-        this.needsSeparatorAfter = compileNeedsSeparatorAfter(spacingConfig);
-        this.needsSeparatorBefore = compileNeedsSeparatorBefore(spacingConfig);
-        this.needsBlankLineAfterTypeHeader = compileNeedsBlankLineAfterTypeHeader(spacingConfig);
+        this.needsSeparatorAfter = compileNeedsSeparatorAfter(printerConfig);
+        this.needsSeparatorBefore = compileNeedsSeparatorBefore(printerConfig);
+        this.needsBlankLineAfterTypeHeader = compileNeedsBlankLineAfterTypeHeader(printerConfig);
     }
 
     /**

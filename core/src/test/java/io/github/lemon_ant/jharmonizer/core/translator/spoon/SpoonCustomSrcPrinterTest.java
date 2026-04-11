@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class SpoonCustomSrcPrinterTest {
 
-    private static final PrinterSpacingConfig DEFAULT_SPACING_CONFIG = new PrinterSpacingConfig(true, true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, true);
 
     @Test
     void serializeCompilationUnit_afterSkippedRangesHandedOff_throwIllegalStateException() {
@@ -22,12 +22,12 @@ class SpoonCustomSrcPrinterTest {
                 class Beta { int z; int a; }
                 """;
         SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Beta.java")), DEFAULT_SPACING_CONFIG);
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Beta.java")), DEFAULT_PRINTER_CONFIG);
         SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
                 spoonAstModel.getCompilationUnit().getFactory().getEnvironment(),
                 srcCode,
                 spoonAstModel.getOptOuts().getSortingSkippedTypes(),
-                DEFAULT_SPACING_CONFIG);
+                DEFAULT_PRINTER_CONFIG);
 
         // When
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges =
@@ -69,12 +69,12 @@ class SpoonCustomSrcPrinterTest {
                 }
                 """;
         SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_SPACING_CONFIG);
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_PRINTER_CONFIG);
         SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
                 spoonAstModel.getCompilationUnit().getFactory().getEnvironment(),
                 srcCode,
                 spoonAstModel.getOptOuts().getSortingSkippedTypes(),
-                DEFAULT_SPACING_CONFIG);
+                DEFAULT_PRINTER_CONFIG);
 
         // When
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges =
@@ -89,6 +89,6 @@ class SpoonCustomSrcPrinterTest {
     }
 
     private static void assertThatCodeParses(String srcCode) {
-        SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_SPACING_CONFIG);
+        SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_PRINTER_CONFIG);
     }
 }

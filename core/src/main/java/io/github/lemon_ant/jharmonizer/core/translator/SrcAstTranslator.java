@@ -5,7 +5,7 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTy
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
@@ -31,16 +31,16 @@ public final class SrcAstTranslator {
      * Parses the source file.
      *
      * @param srcFile the source file to parse
-     * @param spacingConfig the printer spacing configuration used during serialization
+     * @param printerConfig the printer configuration used during serialization
      * @return the parsing result containing the Spoon model and parsing statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
-    public static ParsingResult parse(@NonNull SrcFile srcFile, @NonNull PrinterSpacingConfig spacingConfig) {
+    public static ParsingResult parse(@NonNull SrcFile srcFile, @NonNull PrinterConfig printerConfig) {
         log.trace("Parsing {}", srcFile.getPath());
 
         TimedResult<SpoonAstModel> parsingTimedResult =
-                StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile, spacingConfig));
+                StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile, printerConfig));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         ParsingStatistic statistic = createParsingStatistic(srcFile.getSrcCode(), parsingTimedResult);

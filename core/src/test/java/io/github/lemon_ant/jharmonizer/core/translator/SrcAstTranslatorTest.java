@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SrcAstTranslatorTest {
 
-    private static final PrinterSpacingConfig DEFAULT_SPACING_CONFIG = new PrinterSpacingConfig(true, true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, true);
 
     SrcFilesHandler srcFilesHandler;
 
@@ -34,7 +34,7 @@ class SrcAstTranslatorTest {
         SrcFile srcFile = createSrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // When
-        ParsingResult result = SrcAstTranslator.parse(srcFile, DEFAULT_SPACING_CONFIG);
+        ParsingResult result = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
 
         // Then
         assertThat(result).isNotNull();
@@ -51,7 +51,7 @@ class SrcAstTranslatorTest {
         String src = "class Demo { void m() {} }";
         SrcFile srcFile = createSrcFile(src, Path.of("Demo.java"));
         SpoonAstModel model =
-                SrcAstTranslator.parse(srcFile, DEFAULT_SPACING_CONFIG).getSpoonAstModel();
+                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
 
         // When
         SerializationResult result = SrcAstTranslator.serialize(model);
@@ -85,7 +85,7 @@ class SrcAstTranslatorTest {
                 """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
         SpoonAstModel spoonAstModel =
-                SrcAstTranslator.parse(srcFile, DEFAULT_SPACING_CONFIG).getSpoonAstModel();
+                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
 
         // When
         SerializationResult result = SrcAstTranslator.serialize(spoonAstModel);
@@ -109,7 +109,7 @@ class SrcAstTranslatorTest {
         String srcCode = "class Gamma {}";
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Gamma.java"));
         SpoonAstModel spoonAstModel =
-                SrcAstTranslator.parse(srcFile, DEFAULT_SPACING_CONFIG).getSpoonAstModel();
+                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = new SerializedSrcWithSkippedTypeRanges(
                 srcCode,
                 new HashMap<>(

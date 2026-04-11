@@ -17,7 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -43,7 +43,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     private final Sorter sorter;
 
     @NonNull
-    private final PrinterSpacingConfig spacingConfig;
+    private final PrinterConfig printerConfig;
 
     @NonNull
     private final FlowDebugStageRecorder debugStageRecorder;
@@ -51,11 +51,11 @@ abstract class AbstractOptOutFlow implements IFlow {
     protected AbstractOptOutFlow(
             @NonNull Formatter formatter,
             @NonNull Sorter sorter,
-            @NonNull PrinterSpacingConfig spacingConfig,
+            @NonNull PrinterConfig printerConfig,
             @NonNull FlowType flowType) {
         this.formatter = formatter;
         this.sorter = sorter;
-        this.spacingConfig = spacingConfig;
+        this.printerConfig = printerConfig;
         this.debugStageRecorder = new FlowDebugStageRecorder(flowType);
     }
 

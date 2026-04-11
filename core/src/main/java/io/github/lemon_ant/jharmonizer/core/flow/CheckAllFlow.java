@@ -17,7 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
@@ -31,12 +31,11 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      *
      * @param formatter the formatter used after sorting
      * @param sorter the sorter used to reorder members
-     * @param spacingConfig the printer spacing configuration
+     * @param printerConfig the printer configuration
      */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
-    public CheckAllFlow(
-            @NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterSpacingConfig spacingConfig) {
-        super(formatter, sorter, spacingConfig, CHECK_ALL);
+    public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
+        super(formatter, sorter, printerConfig, CHECK_ALL);
     }
 
     /**
@@ -50,7 +49,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile, getSpacingConfig());
+            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
         } catch (SpoonModelBuildException exception) {
             return processSrcWithFormattingOnlyFallback(srcFile, exception);
         }

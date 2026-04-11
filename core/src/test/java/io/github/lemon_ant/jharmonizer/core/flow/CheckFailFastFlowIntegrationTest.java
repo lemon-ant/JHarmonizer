@@ -10,7 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
@@ -81,8 +81,11 @@ class CheckFailFastFlowIntegrationTest {
                 compiledConfig.getFormatting().getFormatterStyle(),
                 compiledConfig.getFormatting().isFixImports());
         Sorter sorter = new Sorter(compiledConfig);
-        PrinterSpacingConfig spacingConfig = PrinterSpacingConfig.fromFormatting(compiledConfig.getFormatting());
-        return new CheckFailFastFlow(formatter, sorter, spacingConfig);
+        PrinterConfig printerConfig = new PrinterConfig(
+                compiledConfig.getFormatting().isBlankLineAfterTypeHeader(),
+                compiledConfig.getFormatting().isBlankLineBeforeAnnotation(),
+                compiledConfig.getFormatting().isBlankLineBeforeComment());
+        return new CheckFailFastFlow(formatter, sorter, printerConfig);
     }
 
     @NonNull

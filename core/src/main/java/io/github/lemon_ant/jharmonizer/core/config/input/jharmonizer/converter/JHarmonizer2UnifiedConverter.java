@@ -36,7 +36,7 @@ public final class JHarmonizer2UnifiedConverter {
         // 3) formatterStyle
         UnifiedFormatterStyle style = vendor.getFormatting().getFormatterStyle().getUnifiedFormatterStyle();
 
-        // 4) printer spacing flags
+        // 4) printer flags
         boolean blankLineAfterTypeHeader = vendor.getFormatting().isBlankLineAfterTypeHeader();
         boolean blankLineBeforeAnnotation = vendor.getFormatting().isBlankLineBeforeAnnotation();
         boolean blankLineBeforeComment = vendor.getFormatting().isBlankLineBeforeComment();

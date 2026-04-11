@@ -7,6 +7,9 @@ top-level-types-ordering:
 formatting:
   fix-imports: true
   formatter-style: palantir
+  blank-line-after-type-header: true
+  blank-line-before-annotation: true
+  blank-line-before-comment: true
 
 backups-enabled: false
 print-processing-statistics: true

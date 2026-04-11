@@ -35,19 +35,19 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
      * @param env the Spoon printing environment
      * @param srcCode the original source text being re-serialized
      * @param sortingSkippedTypes the types that must be copied without sorting
-     * @param spacingConfig the printer spacing configuration
+     * @param printerConfig the printer configuration
      */
     @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     SpoonCustomSrcPrinter(
             @NonNull Environment env,
             @NonNull String srcCode,
             @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull PrinterSpacingConfig spacingConfig) {
+            @NonNull PrinterConfig printerConfig) {
         super(env);
         String lineSeparator = detectDominantLineSeparator(srcCode);
         setLineSeparator(lineSeparator);
         this.typeStructurePrinter =
-                new SpoonTypePrinter(srcCode, sortingSkippedTypes, getPrinterTokenWriter(), spacingConfig);
+                new SpoonTypePrinter(srcCode, sortingSkippedTypes, getPrinterTokenWriter(), printerConfig);
     }
 
     /**
