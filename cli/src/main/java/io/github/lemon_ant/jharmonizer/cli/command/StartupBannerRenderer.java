@@ -16,8 +16,9 @@ import lombok.experimental.UtilityClass;
 class StartupBannerRenderer {
 
     private static final String HEADER = "JHarmonizer started";
-    private static final String LABEL_FORMAT = " %-18s";
-    private static final String GLOB_CONTINUATION_INDENT = "                    ";
+    private static final int LABEL_WIDTH = 18;
+    private static final String LABEL_FORMAT = " %-" + LABEL_WIDTH + "s";
+    private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH + 2);
 
     /**
      * Builds a multiline startup banner describing the active processing parameters.
