@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.io.FileUtils;
 
 @UtilityClass
 class JavaCompileTestUtils {
@@ -50,7 +51,7 @@ class JavaCompileTestUtils {
     }
 
     private static void ensureOutputDirectoryExists(Path outputDirectoryPath) throws IOException {
-        Files.createDirectories(outputDirectoryPath);
+        FileUtils.forceMkdir(outputDirectoryPath.toFile());
     }
 
     @Value

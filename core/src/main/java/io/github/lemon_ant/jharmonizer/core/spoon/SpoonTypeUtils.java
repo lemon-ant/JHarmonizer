@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.io.FilenameUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
@@ -84,7 +85,7 @@ public class SpoonTypeUtils {
             return declaredTypes.getFirst();
         }
 
-        String baseName = stripExtension(compilationUnit.getFile().getName());
+        String baseName = FilenameUtils.getBaseName(compilationUnit.getFile().getName());
         CtType<?> fileNameMatchType = null;
         for (CtType<?> type : declaredTypes) {
             if (type.hasModifier(ModifierKind.PUBLIC)) {
@@ -122,18 +123,6 @@ public class SpoonTypeUtils {
                     return Stream.of(member);
                 });
         return Stream.concat(self, membersAndNested);
-    }
-
-    /**
-     * Returns the file name without its extension (the part before the last dot).
-     *
-     * @param fileName the file name to strip the extension from
-     * @return the base name without the extension, or the original name when there is no dot
-     */
-    @NonNull
-    private static String stripExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        return dotIndex == -1 ? fileName : fileName.substring(0, dotIndex);
     }
 
     @NonNull
