@@ -34,17 +34,28 @@ import picocli.CommandLine.Option;
  * and delegates concrete flow execution to sub-classes.
  */
 @Slf4j
-@SuppressWarnings("PMD.TooManyMethods")
 abstract class BaseCommand implements Callable<Integer> {
 
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
     private static final String VERBOSE_LOG_PATTERN = "%-5level [%.8thread] [%logger{36}] %msg%n";
+    private static final int DEFAULT_CHECK_FAILED_EXIT_CODE = 1;
+
+    private final int checkFailedExitCode;
 
     /**
-     * Creates a new base CLI command.
+     * Creates a new base CLI command with the default check-failed exit code.
      */
     protected BaseCommand() {
-        // Protected so only concrete commands in this hierarchy can instantiate the base type.
+        this(DEFAULT_CHECK_FAILED_EXIT_CODE);
+    }
+
+    /**
+     * Creates a new base CLI command with a custom check-failed exit code.
+     *
+     * @param checkFailedExitCode exit code returned when a check flow detects violations
+     */
+    protected BaseCommand(int checkFailedExitCode) {
+        this.checkFailedExitCode = checkFailedExitCode;
     }
 
     @Option(
@@ -100,15 +111,6 @@ abstract class BaseCommand implements Callable<Integer> {
      */
     @NonNull
     protected abstract FlowType getFlowType();
-
-    /**
-     * Returns the exit code used when a check command detects violations.
-     *
-     * @return the exit code for check failures
-     */
-    protected int checkFailedExitCode() {
-        return 1;
-    }
 
     /**
      * Parses command-line options and runs the selected processing flow.
@@ -169,29 +171,16 @@ abstract class BaseCommand implements Callable<Integer> {
                             commandOptions.getIncludeGlobs(),
                             commandOptions.getExcludeGlobs(),
                             flowType);
-            int exitCode = resolveCheckExitCode(stats, flowType);
+            int exitCode = (flowType == FlowType.CHECK_ALL && stats.computeNonConformingFileCount() > 0)
+                    ? checkFailedExitCode
+                    : 0;
             log.info("Exit code: {}", exitCode);
             return exitCode;
         } catch (NotFormattedException | NotOrderedException e) {
-            int exitCode = checkFailedExitCode();
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
-            log.info("Exit code: {}", exitCode);
-            return exitCode;
+            log.info("Exit code: {}", checkFailedExitCode);
+            return checkFailedExitCode;
         }
-    }
-
-    /**
-     * Returns a non-zero exit code when a check flow detects non-conforming files.
-     *
-     * @param stats aggregated processing statistics
-     * @param flowType the current flow type
-     * @return 0 when no violations are detected, otherwise the flow-specific failure exit code
-     */
-    private int resolveCheckExitCode(@NonNull AggregatedProcessingStatistic stats, @NonNull FlowType flowType) {
-        if (flowType == FlowType.CHECK_ALL && stats.computeNonConformingFileCount() > 0) {
-            return checkFailedExitCode();
-        }
-        return 0;
     }
 
     @NonNull

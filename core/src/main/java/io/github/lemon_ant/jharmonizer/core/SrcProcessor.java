@@ -115,8 +115,9 @@ public final class SrcProcessor {
                                             .getFlowProcessingStatus()
                                             .name()));
                         }
-                        progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus());
                     })
+                    .peek(flowProcessingResult ->
+                            progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus()))
                     .collect(SrcProcessingStats.statsCollector());
         } catch (NotFormattedException | NotOrderedException e) {
             long checkedCount = progressReporter.getTotalProcessedCount();
@@ -138,7 +139,6 @@ public final class SrcProcessor {
         return aggregatedProcessingStatistic;
     }
 
-    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private static void logProcessingCompletion(
             @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic stats) {
         long nonConforming = stats.computeNonConformingFileCount();
