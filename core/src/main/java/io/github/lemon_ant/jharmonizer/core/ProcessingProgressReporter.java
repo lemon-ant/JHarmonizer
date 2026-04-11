@@ -46,6 +46,8 @@ final class ProcessingProgressReporter {
         }
     }
 
+    // PMD 7.23.0 ExhaustiveSwitchHasDefault conflicts with NonExhaustiveSwitch for exhaustive enum switches.
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FlowProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();

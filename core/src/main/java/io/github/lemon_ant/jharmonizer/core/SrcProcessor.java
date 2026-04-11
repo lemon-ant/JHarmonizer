@@ -151,7 +151,6 @@ public final class SrcProcessor {
                 log.info("{} completed successfully. Checked {} file(s), all conform.", flowType, stats.getFileCount());
             case REORDER ->
                 log.info("{} completed successfully. Processed {} file(s).", flowType, stats.getFileCount());
-            default -> throw new IllegalStateException("Unexpected flow type: " + flowType);
         }
     }
 
