@@ -4,6 +4,7 @@ public class PrinterConfigBlankLineFlagsDisabledScenario {
 
     @Deprecated
     int beta = 2;
+
     // comment before field
     int gamma = 3;
     int alpha = 1;
