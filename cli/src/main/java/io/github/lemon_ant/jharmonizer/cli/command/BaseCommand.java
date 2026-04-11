@@ -155,15 +155,6 @@ abstract class BaseCommand implements Callable<Integer> {
         try {
             FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
                     commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
-            boolean backupsEnabled = effectiveConfig == null
-                    || effectiveConfig.getBackupsEnabled().orElse(true);
-            log.info(StartupBannerRenderer.render(
-                    flowType,
-                    commandOptions.getBaseDir(),
-                    describeConfigSrc(commandOptions.getConfigFilePath()),
-                    backupsEnabled,
-                    commandOptions.getIncludeGlobs(),
-                    commandOptions.getExcludeGlobs()));
             new SrcProcessor(effectiveConfig)
                     .processSources(
                             commandOptions.getBaseDir(),
@@ -207,11 +198,6 @@ abstract class BaseCommand implements Callable<Integer> {
     @Nullable
     private static Path toAbsoluteNormalizedPath(@Nullable Path path) {
         return path == null ? null : path.toAbsolutePath().normalize();
-    }
-
-    @NonNull
-    private static String describeConfigSrc(@Nullable Path configFilePath) {
-        return configFilePath != null ? configFilePath.toString() : "embedded default (/default-config.yml)";
     }
 
     private static void logRuntimeFailure(boolean verbose, RuntimeException exception) {
