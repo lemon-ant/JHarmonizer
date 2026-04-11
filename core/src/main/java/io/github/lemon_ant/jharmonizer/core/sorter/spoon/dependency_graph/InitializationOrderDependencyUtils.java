@@ -94,6 +94,8 @@ final class InitializationOrderDependencyUtils {
      * causing "variable might not have been initialized" compilation errors.
      */
     @NonNull
+    // Intentional identity check on Spoon AST nodes
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember, @NonNull CtField<?> blankFinalField, int dependentSrcStart) {
 

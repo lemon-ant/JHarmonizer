@@ -37,6 +37,10 @@ final class ProcessingProgressReporter {
         }
     }
 
+    // PMD ExhaustiveSwitchHasDefault and NonExhaustiveSwitch conflict for exhaustive enum switch
+    // statements: removing the default triggers NonExhaustiveSwitch, keeping it triggers
+    // ExhaustiveSwitchHasDefault. The default is a safety net for future enum additions.
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FlowProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();
