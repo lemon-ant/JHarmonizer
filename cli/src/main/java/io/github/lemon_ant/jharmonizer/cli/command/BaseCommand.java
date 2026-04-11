@@ -153,20 +153,23 @@ abstract class BaseCommand implements Callable<Integer> {
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
         try {
-            SrcProcessor srcProcessor = createSrcProcessor(
+            FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
                     commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
+            boolean backupsEnabled = effectiveConfig == null
+                    || effectiveConfig.getBackupsEnabled().orElse(true);
             log.info(StartupBannerRenderer.render(
                     flowType,
                     commandOptions.getBaseDir(),
                     describeConfigSrc(commandOptions.getConfigFilePath()),
-                    srcProcessor.isBackupsEnabled(),
+                    backupsEnabled,
                     commandOptions.getIncludeGlobs(),
                     commandOptions.getExcludeGlobs()));
-            srcProcessor.processSources(
-                    commandOptions.getBaseDir(),
-                    commandOptions.getIncludeGlobs(),
-                    commandOptions.getExcludeGlobs(),
-                    flowType);
+            new SrcProcessor(effectiveConfig)
+                    .processSources(
+                            commandOptions.getBaseDir(),
+                            commandOptions.getIncludeGlobs(),
+                            commandOptions.getExcludeGlobs(),
+                            flowType);
             return 0;
         } catch (NotFormattedException | NotOrderedException e) {
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
@@ -174,8 +177,8 @@ abstract class BaseCommand implements Callable<Integer> {
         }
     }
 
-    @NonNull
-    private static SrcProcessor createSrcProcessor(
+    @Nullable
+    private static FlexibleUnifiedConfig resolveEffectiveConfig(
             @Nullable Path configFilePath, boolean disableBackups, boolean disableStatisticsOutput) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
@@ -186,8 +189,7 @@ abstract class BaseCommand implements Callable<Integer> {
                         .printProcessingStatistics(disableStatisticsOutput ? false : null)
                         .build()
                 : null;
-        FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
-        return new SrcProcessor(effectiveConfig);
+        return mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
     }
 
     @Nullable

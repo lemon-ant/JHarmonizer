@@ -16,7 +16,6 @@ import lombok.experimental.UtilityClass;
 class StartupBannerRenderer {
 
     private static final String HEADER = "JHarmonizer";
-    private static final int SEPARATOR_WIDTH = 71;
     private static final String LABEL_FORMAT = " %-18s";
     private static final String GLOB_INDENT = "                    - ";
 
@@ -41,22 +40,14 @@ class StartupBannerRenderer {
             @NonNull Collection<String> excludeGlobs) {
         List<String> lines = new ArrayList<>();
         lines.add("");
-        lines.add(renderSeparator());
         lines.add(" " + HEADER);
-        lines.add(renderSeparator());
         lines.add(renderRow("Flow:", flowType.name()));
         lines.add(renderRow("Base directory:", baseDir.toString()));
         lines.add(renderRow("Config:", configDescription));
         lines.add(renderRow("Backups:", backupsEnabled ? "enabled" : "disabled"));
         addGlobRows(lines, "Include globs:", includeGlobs, "(all)");
         addGlobRows(lines, "Exclude globs:", excludeGlobs, "(none)");
-        lines.add(renderSeparator());
         return String.join(System.lineSeparator(), lines);
-    }
-
-    @NonNull
-    private static String renderSeparator() {
-        return "=".repeat(SEPARATOR_WIDTH);
     }
 
     @NonNull

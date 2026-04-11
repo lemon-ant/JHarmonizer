@@ -71,15 +71,6 @@ public final class SrcProcessor {
     }
 
     /**
-     * Returns whether backup file creation is enabled in the active configuration.
-     *
-     * @return {@code true} if backups are enabled
-     */
-    public boolean isBackupsEnabled() {
-        return config.isBackupsEnabled();
-    }
-
-    /**
      * Processes a specific list of source file paths.
      * It processes each source file in parallel and collects the results.
      * The outcome of the processing is logged at the info level.
