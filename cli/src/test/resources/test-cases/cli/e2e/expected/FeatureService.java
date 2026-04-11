@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.cli.e2e.sample.service.nested;
 
 public class FeatureService {
+
     int a = 1;
     int b = 2;
 

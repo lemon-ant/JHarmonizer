@@ -10,6 +10,7 @@ import org.apache.nifi.minifi.bootstrap.configuration.differentiators.Differenti
 import org.apache.nifi.minifi.bootstrap.configuration.differentiators.WholeConfigDifferentiator;
 
 public class FileChangeIngestorPartialEvalNpeRegressionSample {
+
     static final String CONFIG_FILE_BASE_KEY = NOTIFIER_INGESTORS_KEY + ".file";
     static final String DIFFERENTIATOR_KEY = CONFIG_FILE_BASE_KEY + ".differentiator";
     private static final Map<String, Supplier<Differentiator<ByteBuffer>>> DIFFERENTIATOR_CONSTRUCTOR_MAP =
