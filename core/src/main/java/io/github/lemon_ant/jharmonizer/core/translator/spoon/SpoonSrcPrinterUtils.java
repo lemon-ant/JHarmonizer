@@ -5,6 +5,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -125,7 +126,7 @@ public class SpoonSrcPrinterUtils {
     @NonNull
     static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterSpacingConfig config) {
         if (config.isBlankLineAfterTypeHeader()) {
-            return type -> true;
+            return type -> type instanceof CtEnum<?>;
         }
         return type -> false;
     }

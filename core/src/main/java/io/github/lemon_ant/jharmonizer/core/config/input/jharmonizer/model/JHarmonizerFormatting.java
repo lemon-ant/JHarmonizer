@@ -36,13 +36,13 @@ public class JHarmonizerFormatting {
     public JHarmonizerFormatting(
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle,
-            @JsonProperty(value = "blank-line-after-type-header", required = true) boolean blankLineAfterTypeHeader,
-            @JsonProperty(value = "blank-line-before-annotation", required = true) boolean blankLineBeforeAnnotation,
-            @JsonProperty(value = "blank-line-before-comment", required = true) boolean blankLineBeforeComment) {
+            @JsonProperty(value = "blank-line-after-type-header") Boolean blankLineAfterTypeHeader,
+            @JsonProperty(value = "blank-line-before-annotation") Boolean blankLineBeforeAnnotation,
+            @JsonProperty(value = "blank-line-before-comment") Boolean blankLineBeforeComment) {
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;
-        this.blankLineAfterTypeHeader = blankLineAfterTypeHeader;
-        this.blankLineBeforeAnnotation = blankLineBeforeAnnotation;
-        this.blankLineBeforeComment = blankLineBeforeComment;
+        this.blankLineAfterTypeHeader = blankLineAfterTypeHeader == null || blankLineAfterTypeHeader;
+        this.blankLineBeforeAnnotation = blankLineBeforeAnnotation == null || blankLineBeforeAnnotation;
+        this.blankLineBeforeComment = blankLineBeforeComment == null || blankLineBeforeComment;
     }
 }

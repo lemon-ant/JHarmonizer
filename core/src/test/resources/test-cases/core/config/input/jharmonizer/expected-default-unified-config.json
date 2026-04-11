@@ -1,7 +1,10 @@
 {
   "formatting" : {
     "fixImports" : true,
-    "formatterStyle" : "PALANTIR"
+    "formatterStyle" : "PALANTIR",
+    "blankLineAfterTypeHeader" : true,
+    "blankLineBeforeAnnotation" : true,
+    "blankLineBeforeComment" : true
   },
   "backupsEnabled" : true,
   "printProcessingStatistics" : true,
