@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.compress.utils.FileNameUtils;
+import org.apache.commons.io.FilenameUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
@@ -85,7 +85,7 @@ public class SpoonTypeUtils {
             return declaredTypes.getFirst();
         }
 
-        String baseName = FileNameUtils.getBaseName(compilationUnit.getFile().toPath());
+        String baseName = FilenameUtils.getBaseName(compilationUnit.getFile().getName());
         CtType<?> fileNameMatchType = null;
         for (CtType<?> type : declaredTypes) {
             if (type.hasModifier(ModifierKind.PUBLIC)) {
