@@ -12,10 +12,24 @@ public enum EnumLambdaBodyMemberBoundaryRegressionSample {
                 }
                 return normalized;
             },
-            true);
+            true
+    );
+
+    public MetricDescriptor getDescriptor() {
+        return descriptor;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
 
     private final MetricDescriptor descriptor;
     private final boolean visible;
+
+    EnumLambdaBodyMemberBoundaryRegressionSample(final ValueMapper mapper, final boolean visible) {
+        this.descriptor = new MetricDescriptor(mapper);
+        this.visible = visible;
+    }
 
     public static void main(String[] args) {
         if (FIRST.getDescriptor() == null
@@ -28,19 +42,6 @@ public enum EnumLambdaBodyMemberBoundaryRegressionSample {
                     + ", BROKEN.descriptor=" + BROKEN.getDescriptor()
                     + ", BROKEN.visible=" + BROKEN.isVisible());
         }
-    }
-
-    public MetricDescriptor getDescriptor() {
-        return descriptor;
-    }
-
-    public boolean isVisible() {
-        return visible;
-    }
-
-    EnumLambdaBodyMemberBoundaryRegressionSample(final ValueMapper mapper, final boolean visible) {
-        this.descriptor = new MetricDescriptor(mapper);
-        this.visible = visible;
     }
 
     private interface ValueMapper {
