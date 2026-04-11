@@ -71,6 +71,15 @@ public final class SrcProcessor {
     }
 
     /**
+     * Returns whether backup file creation is enabled in the active configuration.
+     *
+     * @return {@code true} if backups are enabled
+     */
+    public boolean isBackupsEnabled() {
+        return config.isBackupsEnabled();
+    }
+
+    /**
      * Processes a specific list of source file paths.
      * It processes each source file in parallel and collects the results.
      * The outcome of the processing is logged at the info level.
@@ -83,14 +92,6 @@ public final class SrcProcessor {
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
-        log.info(
-                "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
-                flowType,
-                baseDir.toAbsolutePath(),
-                includeGlobs,
-                excludeGlobs,
-                config.isBackupsEnabled());
-
         IFlow baseFlow =
                 // TODO Move it into the flow factory
                 switch (flowType) {

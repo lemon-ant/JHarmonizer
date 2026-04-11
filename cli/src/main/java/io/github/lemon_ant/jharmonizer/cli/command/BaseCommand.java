@@ -152,21 +152,21 @@ abstract class BaseCommand implements Callable<Integer> {
     @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
-        log.info(
-                "Processing sources with flow {} in: {} using config: {}",
-                flowType,
-                commandOptions.getBaseDir(),
-                describeConfigSrc(commandOptions.getConfigFilePath()));
         try {
-            createSrcProcessor(
-                            commandOptions.getConfigFilePath(),
-                            commandOptions.isNoBackup(),
-                            commandOptions.isNoStatistics())
-                    .processSources(
-                            commandOptions.getBaseDir(),
-                            commandOptions.getIncludeGlobs(),
-                            commandOptions.getExcludeGlobs(),
-                            flowType);
+            SrcProcessor srcProcessor = createSrcProcessor(
+                    commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
+            log.info(StartupBannerRenderer.render(
+                    flowType,
+                    commandOptions.getBaseDir(),
+                    describeConfigSrc(commandOptions.getConfigFilePath()),
+                    srcProcessor.isBackupsEnabled(),
+                    commandOptions.getIncludeGlobs(),
+                    commandOptions.getExcludeGlobs()));
+            srcProcessor.processSources(
+                    commandOptions.getBaseDir(),
+                    commandOptions.getIncludeGlobs(),
+                    commandOptions.getExcludeGlobs(),
+                    flowType);
             return 0;
         } catch (NotFormattedException | NotOrderedException e) {
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
