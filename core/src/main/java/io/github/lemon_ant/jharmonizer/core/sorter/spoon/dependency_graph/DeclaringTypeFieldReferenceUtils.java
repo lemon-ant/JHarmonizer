@@ -21,6 +21,7 @@ import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -128,6 +129,7 @@ class DeclaringTypeFieldReferenceUtils {
             CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
+                .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
                 .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> Optional.ofNullable(
                                 fieldAccess.getVariable().getDeclaration())
