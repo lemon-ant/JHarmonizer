@@ -80,11 +80,10 @@ public class SpoonSrcPrinterUtils {
      * Compiles a predicate that determines whether a separator is needed after a given member.
      * Annotation-based blank lines are always active (Palantir formatter enforces them).
      *
-     * @param config the printer configuration
      * @return a predicate that returns {@code true} when a separator is needed after the member
      */
     @NonNull
-    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
+    static Predicate<CtTypeMember> compileNeedsSeparatorAfter() {
         Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
         return isNotField.or(member -> !member.getAnnotations().isEmpty());
     }
@@ -109,6 +108,8 @@ public class SpoonSrcPrinterUtils {
     /**
      * Compiles a predicate that determines whether a blank line should be inserted after
      * the type declaration header, before the first member. The predicate is compiled once.
+     * Enums always get a blank line after the header (after the constant list, before methods).
+     * When the flag is enabled, all types get a blank line after the header.
      *
      * @param config the printer configuration
      * @return a predicate accepting the type and returning {@code true} when a blank line is needed
@@ -116,9 +117,9 @@ public class SpoonSrcPrinterUtils {
     @NonNull
     static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterConfig config) {
         if (config.isBlankLineAfterTypeHeader()) {
-            return type -> type instanceof CtEnum<?>;
+            return type -> true;
         }
-        return type -> false;
+        return type -> type instanceof CtEnum<?>;
     }
 
     @NonNull

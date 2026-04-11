@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerExplicitDeclaringTypeForwardChainSample {
+
     private static final int zeta = FieldInitializerExplicitDeclaringTypeForwardChainSample.alpha + 2;
     private static int alpha = 10;
     private static final int theta = FieldInitializerExplicitDeclaringTypeForwardChainSample.beta + 1;

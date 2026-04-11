@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class OuterThisAnonymousInitializerForwardReferenceSample {
+
     private final int zDependent = new Object() {
         private final int captured = OuterThisAnonymousInitializerForwardReferenceSample.this.aProvider + 1;
     }.captured;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class AlphaTopLevel {
+
     int ant;
 
     static String describe() {
@@ -21,6 +22,7 @@ class AlphaTopLevel {
 class BetaTopLevel{int zebra; static class ZuluNested{static String describe(){return "zulu-nested";}} int ant; static class AlphaNested{static String describe(){return "alpha-nested";}} String describe(){return ZuluNested.describe()+AlphaNested.describe()+zebra+ant;}}
 
 public class FloatingFullyOffBetweenTopLevelTypes {
+
     String describe() {
         List<String> labels = new ArrayList<>();
         labels.add(new ZuluTopLevel().describe());
@@ -35,6 +37,7 @@ public class FloatingFullyOffBetweenTopLevelTypes {
 }
 
 class ZuluTopLevel {
+
     int ant;
 
     static String describe() {

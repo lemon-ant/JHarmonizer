@@ -1,4 +1,5 @@
 public class TopLevelTypesOrderingFixture {
+
     public static void main(String[] args) {
         System.out.println(new BetaRecord(1).value()
                 + AlphaUtility.message()
@@ -20,24 +21,28 @@ enum AlphaKind {
 }
 
 class AlphaUtility {
+
     static String message() {
         return "ok";
     }
 }
 
 interface BetaContract {
+
     String value();
 }
 
 record BetaRecord(int value) {}
 
 class BetaUtility {
+
     static String message() {
         return "beta";
     }
 }
 
 interface GammaContract {
+
     String value();
 }
 
@@ -50,6 +55,7 @@ enum ZetaKind {
 }
 
 class ZetaUtility {
+
     static String message() {
         return "zeta";
     }

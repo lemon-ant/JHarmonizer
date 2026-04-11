@@ -1,12 +1,14 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class OuterThisQualifiedNestedClassForwardReferenceSample {
+
     private int aProvider = 10;
     private static final int aUtilityConstant = 1;
     private final int zDependent = new Inner().captured;
     private static final int zUtilityConstant = 2;
 
     private final class Inner {
+
         private final int captured = OuterThisQualifiedNestedClassForwardReferenceSample.this.aProvider + 1;
     }
 

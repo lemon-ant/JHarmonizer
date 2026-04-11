@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class WriteOnlyQualifiedAssignmentSample {
+
     static int aWriter = (WriteOnlyQualifiedAssignmentSample.zTarget = 5);
     static int bIndependent = 1;
     static int zTarget;

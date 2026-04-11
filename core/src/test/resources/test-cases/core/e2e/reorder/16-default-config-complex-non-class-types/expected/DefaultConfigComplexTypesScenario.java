@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class DefaultConfigComplexTypesScenario {
+
     public static void main(String[] args) {
         AlphaRecord record = new AlphaRecord(2, 1);
         if (!"2:1".equals(record.zDescribe())) {
@@ -34,10 +35,12 @@ public class DefaultConfigComplexTypesScenario {
     }
 
     private @interface PrivateAnnotation {
+
         String name();
     }
 
     private interface PrivateInterface {
+
         String value();
     }
 
@@ -50,6 +53,7 @@ public class DefaultConfigComplexTypesScenario {
 }
 
 record AlphaRecord(int z, int a) {
+
     public String zDescribe() {
         return z + ":" + a;
     }
@@ -74,6 +78,7 @@ record AlphaRecord(int z, int a) {
 }
 
 interface BetaInterface {
+
     static String bStatic() {
         return "bStatic";
     }
@@ -120,6 +125,7 @@ enum ZetaEnum {
 }
 
 @interface SampleAnno {
+
     String alpha() default "alpha";
 
     int zeta() default 7;

@@ -1,4 +1,5 @@
 public class TopLevelTypesOrderingFixture {
+
     public static void main(String[] args) {
         System.out.println(new BetaRecord(1).value()
                 + AlphaUtility.message()
@@ -14,6 +15,7 @@ public class TopLevelTypesOrderingFixture {
 }
 
 class AlphaUtility {
+
     static String message() {
         return "ok";
     }
@@ -22,6 +24,7 @@ class AlphaUtility {
 record BetaRecord(int value) {}
 
 class BetaUtility {
+
     static String message() {
         return "beta";
     }
@@ -30,16 +33,19 @@ class BetaUtility {
 record GammaRecord(String value) {}
 
 class ZetaUtility {
+
     static String message() {
         return "zeta";
     }
 }
 
 interface BetaContract {
+
     String value();
 }
 
 interface GammaContract {
+
     String value();
 }
 

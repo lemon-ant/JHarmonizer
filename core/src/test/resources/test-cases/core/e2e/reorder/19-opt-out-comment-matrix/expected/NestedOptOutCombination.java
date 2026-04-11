@@ -10,6 +10,7 @@ class Beta {
 }
 
 class Gamma {
+
     static String describe() {
         return "gamma";
     }
@@ -25,6 +26,7 @@ class Gamma {
 public class NestedOptOutCombination {
 
     static class AlphaSortableInner {
+
         int aardvark;
         int beta;
 
@@ -68,6 +70,7 @@ public class NestedOptOutCombination {
     }
 
     static class ZetaSortableInner {
+
         int alpha;
 
         static String describe() {

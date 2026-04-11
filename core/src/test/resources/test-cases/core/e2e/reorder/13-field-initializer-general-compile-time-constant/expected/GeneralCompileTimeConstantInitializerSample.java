@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class GeneralCompileTimeConstantInitializerSample {
+
     static final int bProvider = Integer.parseInt("1");
     static final int aDependent = bProvider + GeneralCompileTimeConstantInitializerSample.zConstant;
     static final int cIndependent = 2;

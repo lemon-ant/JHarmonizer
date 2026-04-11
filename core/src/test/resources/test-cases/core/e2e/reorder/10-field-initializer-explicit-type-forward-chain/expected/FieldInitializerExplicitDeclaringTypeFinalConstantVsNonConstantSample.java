@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample {
+
     private static final int zFromNonConst =
             FieldInitializerExplicitDeclaringTypeFinalConstantVsNonConstantSample.aNonConstValue + 1;
     private static final int aNonConstValue = Integer.parseInt("41");

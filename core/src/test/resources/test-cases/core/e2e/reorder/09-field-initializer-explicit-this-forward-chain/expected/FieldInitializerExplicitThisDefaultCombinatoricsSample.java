@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class FieldInitializerExplicitThisDefaultCombinatoricsSample {
+
     String aTau = null;
     int zeta = this.alpha + 5; // non-default forward reference: must stay before alpha
     int alpha = 10;

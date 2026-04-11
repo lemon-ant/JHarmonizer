@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 public class StaticInstanceInitializerSample {
+
     private static String staticOrder = "";
 
     static {
