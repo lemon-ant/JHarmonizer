@@ -211,9 +211,7 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @NonNull
     private static String describeConfigSrc(@Nullable Path configFilePath) {
-        return configFilePath != null
-                ? configFilePath.toString()
-                : "embedded default resource config (/default-config.yml)";
+        return configFilePath != null ? configFilePath.toString() : "embedded default (/default-config.yml)";
     }
 
     private static void logRuntimeFailure(boolean verbose, RuntimeException exception) {

@@ -15,9 +15,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class StartupBannerRenderer {
 
-    private static final String HEADER = "JHarmonizer";
+    private static final String HEADER = "JHarmonizer started";
     private static final String LABEL_FORMAT = " %-18s";
-    private static final String GLOB_INDENT = "                    - ";
+    private static final String GLOB_CONTINUATION_INDENT = "                    ";
 
     /**
      * Builds a multiline startup banner describing the active processing parameters.
@@ -41,6 +41,7 @@ class StartupBannerRenderer {
         List<String> lines = new ArrayList<>();
         lines.add("");
         lines.add(" " + HEADER);
+        lines.add(" " + "=".repeat(HEADER.length()));
         lines.add(renderRow("Flow:", flowType.name()));
         lines.add(renderRow("Base directory:", baseDir.toString()));
         lines.add(renderRow("Config:", configDescription));
@@ -65,9 +66,9 @@ class StartupBannerRenderer {
             return;
         }
         List<String> sortedGlobs = globs.stream().sorted().toList();
-        lines.add(renderRow(label, sortedGlobs.getFirst()));
+        lines.add(renderRow(label, "- " + sortedGlobs.getFirst()));
         for (int globIndex = 1; globIndex < sortedGlobs.size(); globIndex++) {
-            lines.add(GLOB_INDENT + sortedGlobs.get(globIndex));
+            lines.add(GLOB_CONTINUATION_INDENT + "- " + sortedGlobs.get(globIndex));
         }
     }
 }
