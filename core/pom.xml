@@ -56,8 +56,9 @@
                     <artifactId>maven-invoker</artifactId>
                 </exclusion>
                 <!--
-                    commons-compress was only pulled in for FileNameUtils.getBaseName; that usage has been migrated
-                    to commons-io FilenameUtils, so the transitive dependency is no longer needed.
+                    commons-compress is a transitive dependency of spoon-core, but JHarmonizer does not use the
+                    Spoon functionality that requires it. The project's former direct basename usage was migrated
+                    from commons-compress FileNameUtils.getBaseName to commons-io FilenameUtils.
                 -->
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
