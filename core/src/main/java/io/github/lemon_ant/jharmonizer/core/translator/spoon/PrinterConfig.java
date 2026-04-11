@@ -4,9 +4,7 @@ import lombok.Value;
 
 /**
  * Immutable configuration controlling blank-line insertion by the source printer.
- * <p>
- * Instances are created once from the compiled configuration and passed to the printer
- * so that printer predicates can be compiled at initialization time.
+ * Instances are created once from the compiled configuration and passed to the printer.
  */
 @Value
 public class PrinterConfig {

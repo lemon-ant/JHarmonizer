@@ -74,6 +74,12 @@ public final class SrcProcessor {
                 createPrinterConfig(compiledConfig.getFormatting()));
     }
 
+    /**
+     * Extracts printer configuration flags from the unified formatting settings.
+     *
+     * @param formatting the unified formatting settings
+     * @return the printer config
+     */
     @NonNull
     private static PrinterConfig createPrinterConfig(@NonNull UnifiedFormatting formatting) {
         return new PrinterConfig(
