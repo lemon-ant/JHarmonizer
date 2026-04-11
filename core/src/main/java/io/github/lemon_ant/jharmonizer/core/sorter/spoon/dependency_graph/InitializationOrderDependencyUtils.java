@@ -15,7 +15,6 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -29,8 +28,7 @@ import spoon.reflect.declaration.ModifierKind;
 final class InitializationOrderDependencyUtils {
 
     private static boolean matchesInitializationMemberStaticness(CtTypeMember typeMember, boolean requiredStaticness) {
-        return !(typeMember instanceof CtEnumValue<?>)
-                && (typeMember instanceof CtField<?> || typeMember instanceof CtAnonymousExecutable)
+        return (typeMember instanceof CtField<?> || typeMember instanceof CtAnonymousExecutable)
                 && typeMember.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness;
     }
 
@@ -41,9 +39,6 @@ final class InitializationOrderDependencyUtils {
      */
     @NonNull
     static Optional<CtElement> resolveInitializationAstRoot(@NonNull CtTypeMember typeMember) {
-        if (typeMember instanceof CtEnumValue<?>) {
-            return Optional.empty();
-        }
         if (typeMember instanceof CtField<?> fieldWithPotentialInitializer) {
             return Optional.ofNullable(fieldWithPotentialInitializer.getDefaultExpression());
         }
