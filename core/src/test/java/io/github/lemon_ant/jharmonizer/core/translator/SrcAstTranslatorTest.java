@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SrcAstTranslatorTest {
 
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true);
 
     SrcFilesHandler srcFilesHandler;
 

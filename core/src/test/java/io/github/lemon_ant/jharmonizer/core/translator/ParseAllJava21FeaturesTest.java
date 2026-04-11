@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
 
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true);
     private static final int ORIGINAL_SOURCE_CODE_LENGTH = 10053;
     private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
             "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java";

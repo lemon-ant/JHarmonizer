@@ -3,7 +3,6 @@
     "fixImports" : true,
     "formatterStyle" : "PALANTIR",
     "blankLineAfterTypeHeader" : true,
-    "blankLineBeforeAnnotation" : true,
     "blankLineBeforeComment" : true
   },
   "backupsEnabled" : true,

@@ -2,7 +2,6 @@ formatting:
   fix-imports: false
   formatter-style: PALANTIR
   blank-line-after-type-header: false
-  blank-line-before-annotation: false
   blank-line-before-comment: false
 backups-enabled: false
 print-processing-statistics: true

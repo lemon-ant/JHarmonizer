@@ -77,8 +77,8 @@ public class SpoonSrcPrinterUtils {
     }
 
     /**
-     * Compiles a predicate that determines whether a separator is needed after a given member,
-     * based on the printer configuration. The predicate is compiled once at printer initialization time.
+     * Compiles a predicate that determines whether a separator is needed after a given member.
+     * Annotation-based blank lines are always active (Palantir formatter enforces them).
      *
      * @param config the printer configuration
      * @return a predicate that returns {@code true} when a separator is needed after the member
@@ -86,16 +86,12 @@ public class SpoonSrcPrinterUtils {
     @NonNull
     static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
         Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
-
-        if (config.isBlankLineBeforeAnnotation()) {
-            return isNotField.or(member -> !member.getAnnotations().isEmpty());
-        }
-        return isNotField;
+        return isNotField.or(member -> !member.getAnnotations().isEmpty());
     }
 
     /**
-     * Compiles a bi-predicate that determines whether a separator is needed before a given member,
-     * based on the printer configuration. The predicate is compiled once at printer initialization time.
+     * Compiles a bi-predicate that determines whether a separator is needed before a given member.
+     * Annotation-based blank lines are always active (Palantir formatter enforces them).
      *
      * @param config the printer configuration
      * @return a bi-predicate accepting (member, isFirst) that returns {@code true} when a separator is needed
@@ -104,16 +100,10 @@ public class SpoonSrcPrinterUtils {
     static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore(@NonNull PrinterConfig config) {
         BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
 
-        if (config.isBlankLineBeforeAnnotation() && config.isBlankLineBeforeComment()) {
+        if (config.isBlankLineBeforeComment()) {
             return compileAnnotationCheck().or(basePredicate).or(compileCommentCheck());
         }
-        if (config.isBlankLineBeforeAnnotation()) {
-            return compileAnnotationCheck().or(basePredicate);
-        }
-        if (config.isBlankLineBeforeComment()) {
-            return basePredicate.or(compileCommentCheck());
-        }
-        return basePredicate;
+        return compileAnnotationCheck().or(basePredicate);
     }
 
     /**

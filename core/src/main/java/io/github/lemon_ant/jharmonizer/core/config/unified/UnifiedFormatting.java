@@ -28,11 +28,6 @@ public class UnifiedFormatting {
     boolean blankLineAfterTypeHeader;
 
     /**
-     * Whether to insert a blank line before annotated members.
-     */
-    boolean blankLineBeforeAnnotation;
-
-    /**
      * Whether to insert a blank line before members with leading comments.
      */
     boolean blankLineBeforeComment;

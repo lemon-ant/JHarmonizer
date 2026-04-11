@@ -345,7 +345,7 @@ class OptOutSrcProcessorIntegrationTest {
                 .build();
         return FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(topLevelTypesOrdering)
-                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, true))
+                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true))
                 .backupsEnabled(false)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .rootMemberGroups(List.of(rootMemberGroup))
