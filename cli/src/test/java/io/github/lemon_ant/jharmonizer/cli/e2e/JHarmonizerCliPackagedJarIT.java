@@ -7,12 +7,15 @@ import static io.github.lemon_ant.jharmonizer.cli.e2e.TemporaryProjectCopier.loc
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -413,7 +416,20 @@ class JHarmonizerCliPackagedJarIT {
     private Path copyDirectory(Path srcDirectory, String targetDirectoryName) throws IOException {
         Path targetDirectory = temporaryDirectory.resolve(targetDirectoryName);
         Files.createDirectories(targetDirectory);
-        TemporaryProjectCopier.copyDirectoryRecursively(srcDirectory, targetDirectory);
+        try (Stream<Path> stream = Files.walk(srcDirectory)) {
+            stream.forEach(srcPath -> {
+                Path destPath = targetDirectory.resolve(srcDirectory.relativize(srcPath));
+                try {
+                    if (Files.isDirectory(srcPath)) {
+                        Files.createDirectories(destPath);
+                    } else {
+                        Files.copy(srcPath, destPath, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException exception) {
+                    throw new UncheckedIOException(exception);
+                }
+            });
+        }
         return targetDirectory;
     }
 
