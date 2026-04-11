@@ -18,9 +18,11 @@ interface MemberDependencyProvider {
      *
      * @param dependentMember the dependent member to inspect
      * @param keepAccessorsTogether whether accessor bundles should be preserved
+     * @param relaxedForwardReferences whether forward references to fields declared later in source order
+     *     are ignored for dependency resolution
      * @return the direct provider edges for the member
      */
     @NonNull
     Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether);
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences);
 }

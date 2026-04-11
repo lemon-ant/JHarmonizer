@@ -29,6 +29,8 @@ public class CompiledMemberGroup {
 
     int orderIndex;
 
+    boolean relaxedForwardReferences;
+
     @NonNull
     CompiledMemberGroupSelectorBlock selectorBlock;
 
@@ -46,6 +48,7 @@ public class CompiledMemberGroup {
             boolean keepAccessorsTogether,
             int orderIndex,
             @Nullable String name,
+            boolean relaxedForwardReferences,
             @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
             @NonNull UnifiedSeparator separator,
             @NonNull @Singular List<@NonNull OrderingRule> orderingRules) {
@@ -54,6 +57,7 @@ public class CompiledMemberGroup {
 
         this.orderIndex = orderIndex;
         this.name = name;
+        this.relaxedForwardReferences = relaxedForwardReferences;
         this.selectorBlock = selectorBlock;
 
         this.separator = separator;
@@ -86,6 +90,7 @@ public class CompiledMemberGroup {
 
         return keepAccessorsTogether == that.keepAccessorsTogether
                 && orderIndex == that.orderIndex
+                && relaxedForwardReferences == that.relaxedForwardReferences
                 && compiledSubGroups.equals(that.compiledSubGroups)
                 && Objects.equals(name, that.name)
                 && selectorBlock.equals(that.selectorBlock)
@@ -99,6 +104,7 @@ public class CompiledMemberGroup {
         result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
         result = 31 * result + Objects.hashCode(name);
         result = 31 * result + orderIndex;
+        result = 31 * result + Boolean.hashCode(relaxedForwardReferences);
         result = 31 * result + selectorBlock.hashCode();
         result = 31 * result + separator.hashCode();
         result = 31 * result + orderingRules.hashCode();

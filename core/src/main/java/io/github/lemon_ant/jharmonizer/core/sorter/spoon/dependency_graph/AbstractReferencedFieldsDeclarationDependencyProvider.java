@@ -18,18 +18,20 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
      * @param keepAccessorsTogether the keep accessors together
+     * @param relaxedForwardReferences whether forward references to fields declared later in source order
+     *     are ignored for dependency resolution
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences) {
 
         Optional<CtElement> dependentInitializationAst = resolveDependentInitializationAst(dependentMember);
         return dependentInitializationAst
                 .map(ctElement ->
-                        DeclaringTypeFieldReferenceUtils.findReferencedFieldAccessesDeclaredBeforeMember(
-                                        dependentMember, ctElement)
+                        DeclaringTypeFieldReferenceUtils.findReferencedFieldAccesses(
+                                        dependentMember, ctElement, relaxedForwardReferences)
                                 .stream()
                                 .filter(
                                         AbstractReferencedFieldsDeclarationDependencyProvider

@@ -17,12 +17,13 @@ final class AccessorPairDependencyProvider implements MemberDependencyProvider {
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
      * @param keepAccessorsTogether the keep accessors together
+     * @param relaxedForwardReferences ignored by this provider
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences) {
 
         if (!keepAccessorsTogether || !(dependentMember instanceof CtMethod<?> dependentMethod)) {
             return Set.of();

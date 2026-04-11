@@ -42,11 +42,13 @@ public class MemberDependencyGraphBuilder {
                     resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
             boolean keepAccessorsTogether = dependentNaturalGroup.isKeepAccessorsTogether();
+            boolean relaxedForwardReferences = dependentNaturalGroup.isRelaxedForwardReferences();
 
             memberDependencyProviders.stream()
-                    .flatMap(memberDependencyProvider ->
-                            memberDependencyProvider
-                                    .findDirectProviderEdges(dependentMember, keepAccessorsTogether)
+                    .flatMap(
+                            memberDependencyProvider -> memberDependencyProvider
+                                    .findDirectProviderEdges(
+                                            dependentMember, keepAccessorsTogether, relaxedForwardReferences)
                                     .stream())
                     .forEach(providerEdge -> memberDependencyGraph.addEdge(
                             providerEdge.getAdjacentMember(), dependentMember, providerEdge.getEdgeKind()));

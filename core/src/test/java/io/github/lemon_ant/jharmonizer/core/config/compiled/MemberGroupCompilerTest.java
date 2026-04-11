@@ -113,11 +113,12 @@ class MemberGroupCompilerTest {
     @Test
     void compileTopLevelGroups_separator_isInheritedAndCanBeOverridden() {
         // Given
-        UnifiedMemberGroup inheritedChild = createGroup("InheritedChild", null, null, List.of(), null);
+        UnifiedMemberGroup inheritedChild = createGroup("InheritedChild", null, null, null, List.of(), null);
         UnifiedMemberGroup overriddenChild = createGroup(
-                "OverriddenChild", null, UnifiedSeparator.HEADER, List.of(), List.of(UnifiedOrderingRule.ALPHA));
+                "OverriddenChild", null, null, UnifiedSeparator.HEADER, List.of(), List.of(UnifiedOrderingRule.ALPHA));
         UnifiedMemberGroup root = createGroup(
                 "Root",
+                null,
                 null,
                 UnifiedSeparator.NEW_LINE,
                 List.of(inheritedChild, overriddenChild),
@@ -142,10 +143,16 @@ class MemberGroupCompilerTest {
         // Given
         List<UnifiedOrderingRule> parentOrderingRules = List.of(UnifiedOrderingRule.ALPHA);
         List<UnifiedOrderingRule> childOrderingRules = List.of(UnifiedOrderingRule.PRESERVE);
-        UnifiedMemberGroup inheritedChild = createGroup("InheritedChild", null, null, List.of(), null);
-        UnifiedMemberGroup overriddenChild = createGroup("OverriddenChild", null, null, List.of(), childOrderingRules);
+        UnifiedMemberGroup inheritedChild = createGroup("InheritedChild", null, null, null, List.of(), null);
+        UnifiedMemberGroup overriddenChild =
+                createGroup("OverriddenChild", null, null, null, List.of(), childOrderingRules);
         UnifiedMemberGroup root = createGroup(
-                "Root", null, UnifiedSeparator.NONE, List.of(inheritedChild, overriddenChild), parentOrderingRules);
+                "Root",
+                null,
+                null,
+                UnifiedSeparator.NONE,
+                List.of(inheritedChild, overriddenChild),
+                parentOrderingRules);
 
         // When
         CompiledMemberGroup compiledRoot =
@@ -164,8 +171,8 @@ class MemberGroupCompilerTest {
     @Test
     void compileTopLevelGroups_orderingRules_emptyList_isAllowed() {
         // Given
-        UnifiedMemberGroup child = createGroup("Child", null, null, List.of(), null);
-        UnifiedMemberGroup root = createGroup("Root", null, UnifiedSeparator.NONE, List.of(child), List.of());
+        UnifiedMemberGroup child = createGroup("Child", null, null, null, List.of(), null);
+        UnifiedMemberGroup root = createGroup("Root", null, null, UnifiedSeparator.NONE, List.of(child), List.of());
 
         // When
         CompiledMemberGroup compiledRoot =
@@ -177,19 +184,91 @@ class MemberGroupCompilerTest {
         assertThat(compiledChild.getOrderingRules()).isEmpty();
     }
 
-    @NonNull
-    private static UnifiedMemberGroup createGroup(
-            String groupName,
-            Boolean keepAccessorsTogether,
-            List<UnifiedMemberGroup> memberSubGroups,
-            List<UnifiedOrderingRule> orderingRules) {
-        return createGroup(groupName, keepAccessorsTogether, UnifiedSeparator.NONE, memberSubGroups, orderingRules);
+    @Test
+    void compileTopLevelGroups_relaxedForwardReferences_isInheritedAndCanBeOverridden() {
+        // Given
+        UnifiedMemberGroup inheritedChild =
+                createGroup("InheritedChild", null, null, List.of(), List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup overriddenChild =
+                createGroup("OverriddenChild", null, true, List.of(), List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup inheritedUnderOverride =
+                createGroup("InheritedUnderOverride", null, null, List.of(), List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup overrideContainer = createGroup(
+                "OverrideContainer",
+                null,
+                true,
+                List.of(overriddenChild, inheritedUnderOverride),
+                List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup root = createGroup(
+                "Root", null, false, List.of(inheritedChild, overrideContainer), List.of(UnifiedOrderingRule.ALPHA));
+
+        // When
+        List<CompiledMemberGroup> compiledRoots = MemberGroupCompiler.compileTopLevelGroups(List.of(root));
+        CompiledMemberGroup compiledRoot = compiledRoots.getFirst();
+
+        // Then
+        CompiledMemberGroup compiledInheritedChild =
+                compiledRoot.getCompiledSubGroups().getFirst();
+        CompiledMemberGroup compiledOverrideContainer =
+                compiledRoot.getCompiledSubGroups().get(1);
+        CompiledMemberGroup compiledOverriddenChild =
+                compiledOverrideContainer.getCompiledSubGroups().getFirst();
+        CompiledMemberGroup compiledInheritedUnderOverride =
+                compiledOverrideContainer.getCompiledSubGroups().get(1);
+        assertThat(compiledRoot.isRelaxedForwardReferences()).isFalse();
+        assertThat(compiledInheritedChild.isRelaxedForwardReferences()).isFalse();
+        assertThat(compiledOverrideContainer.isRelaxedForwardReferences()).isTrue();
+        assertThat(compiledOverriddenChild.isRelaxedForwardReferences()).isTrue();
+        assertThat(compiledInheritedUnderOverride.isRelaxedForwardReferences()).isTrue();
+    }
+
+    @Test
+    void compileTopLevelGroups_relaxedForwardReferences_defaultsToTrue() {
+        // Given
+        UnifiedMemberGroup child = createGroup("Child", null, null, List.of(), List.of(UnifiedOrderingRule.ALPHA));
+        UnifiedMemberGroup root = createGroup("Root", null, null, List.of(child), List.of(UnifiedOrderingRule.ALPHA));
+
+        // When
+        CompiledMemberGroup compiledRoot =
+                MemberGroupCompiler.compileTopLevelGroups(List.of(root)).getFirst();
+
+        // Then
+        CompiledMemberGroup compiledChild = compiledRoot.getCompiledSubGroups().getFirst();
+        assertThat(compiledRoot.isRelaxedForwardReferences()).isTrue();
+        assertThat(compiledChild.isRelaxedForwardReferences()).isTrue();
     }
 
     @NonNull
     private static UnifiedMemberGroup createGroup(
             String groupName,
             Boolean keepAccessorsTogether,
+            List<UnifiedMemberGroup> memberSubGroups,
+            List<UnifiedOrderingRule> orderingRules) {
+        return createGroup(
+                groupName, keepAccessorsTogether, null, UnifiedSeparator.NONE, memberSubGroups, orderingRules);
+    }
+
+    @NonNull
+    private static UnifiedMemberGroup createGroup(
+            String groupName,
+            Boolean keepAccessorsTogether,
+            Boolean relaxedForwardReferences,
+            List<UnifiedMemberGroup> memberSubGroups,
+            List<UnifiedOrderingRule> orderingRules) {
+        return createGroup(
+                groupName,
+                keepAccessorsTogether,
+                relaxedForwardReferences,
+                UnifiedSeparator.NONE,
+                memberSubGroups,
+                orderingRules);
+    }
+
+    @NonNull
+    private static UnifiedMemberGroup createGroup(
+            String groupName,
+            Boolean keepAccessorsTogether,
+            Boolean relaxedForwardReferences,
             UnifiedSeparator separator,
             List<UnifiedMemberGroup> memberSubGroups,
             List<UnifiedOrderingRule> orderingRules) {
@@ -198,6 +277,7 @@ class MemberGroupCompilerTest {
         return UnifiedMemberGroup.builder()
                 .groupName(groupName)
                 .keepAccessorsTogether(keepAccessorsTogether)
+                .relaxedForwardReferences(relaxedForwardReferences)
                 .memberSubGroups(memberSubGroups)
                 .selectorBlock(selectorBlock)
                 .separator(separator)

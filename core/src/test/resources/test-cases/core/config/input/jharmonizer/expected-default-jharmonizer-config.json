@@ -20,6 +20,7 @@
     "excludes" : [ ],
     "separator" : null,
     "keepAccessorsTogether" : null,
+    "relaxedForwardReferences" : null,
     "memberSubGroups" : [ {
       "name" : "JUnit Fields",
       "includes" : [
@@ -28,6 +29,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Constants",
         "includes" : [
@@ -36,6 +38,7 @@
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
@@ -46,6 +49,7 @@
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
@@ -58,6 +62,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "JUnit Setup Methods",
         "includes" : [
@@ -67,6 +72,7 @@
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "PRESERVE" ]
       }, {
@@ -77,6 +83,7 @@
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "ALPHA" ]
       }, {
@@ -88,6 +95,7 @@
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "PRESERVE" ]
       }, {
@@ -98,6 +106,7 @@
         "excludes" : [ ],
         "separator" : "HEADER",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "ALPHA" ]
       } ],
@@ -110,6 +119,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "ALPHA" ]
     } ],
@@ -130,6 +140,7 @@
     "excludes" : [ ],
     "separator" : null,
     "keepAccessorsTogether" : null,
+    "relaxedForwardReferences" : null,
     "memberSubGroups" : [ {
       "name" : "Serializable UID",
       "includes" : [
@@ -138,6 +149,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     }, {
@@ -148,6 +160,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "Constants",
         "includes" : [
@@ -156,6 +169,7 @@
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Public Constants",
           "includes" : [
@@ -164,6 +178,7 @@
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
@@ -174,6 +189,7 @@
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
@@ -184,6 +200,7 @@
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         }, {
@@ -194,6 +211,7 @@
           "excludes" : [ ],
           "separator" : "NEW_LINE",
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : [ "ALPHA" ]
         } ],
@@ -206,6 +224,7 @@
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       }, {
@@ -216,6 +235,7 @@
         "excludes" : [ ],
         "separator" : "NEW_LINE",
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
       } ],
@@ -228,6 +248,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     }, {
@@ -238,6 +259,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -250,6 +272,7 @@
       ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     }, {
@@ -260,6 +283,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -270,6 +294,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -285,6 +310,7 @@
       ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
@@ -298,6 +324,7 @@
       "excludes" : [ ],
       "separator" : null,
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     } ],
@@ -310,6 +337,7 @@
     "excludes" : [ ],
     "separator" : null,
     "keepAccessorsTogether" : null,
+    "relaxedForwardReferences" : null,
     "memberSubGroups" : [ {
       "name" : "Record components",
       "includes" : [
@@ -318,6 +346,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     }, {
@@ -328,6 +357,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
       "orderingRules" : [ "PRESERVE" ]
     }, {
@@ -338,6 +368,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "Static fields",
         "includes" : [
@@ -346,6 +377,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Static final fields",
           "includes" : [
@@ -354,6 +386,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ {
             "name" : "serialVersionUID",
             "includes" : [
@@ -362,6 +395,7 @@
             "excludes" : [ ],
             "separator" : "NEW_LINE",
             "keepAccessorsTogether" : null,
+            "relaxedForwardReferences" : null,
             "memberSubGroups" : [ ],
             "orderingRules" : [ "PRESERVE" ]
           }, {
@@ -372,6 +406,7 @@
             "excludes" : [ ],
             "separator" : "NEW_LINE",
             "keepAccessorsTogether" : null,
+            "relaxedForwardReferences" : null,
             "memberSubGroups" : [ ],
             "orderingRules" : [ "PRESERVE" ]
           } ],
@@ -386,6 +421,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : null
       } ],
@@ -398,6 +434,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "Static initializers",
         "includes" : [
@@ -406,6 +443,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : null
       }, {
@@ -418,6 +456,7 @@
         ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : null
       } ],
@@ -431,6 +470,7 @@
       "excludes" : [ ],
       "separator" : "NONE",
       "keepAccessorsTogether" : true,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "Public",
         "includes" : [
@@ -439,6 +479,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
@@ -447,6 +488,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -457,6 +499,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -467,6 +510,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -479,6 +523,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
@@ -487,6 +532,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -497,6 +543,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -507,6 +554,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -519,6 +567,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
@@ -527,6 +576,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -537,6 +587,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -547,6 +598,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -559,6 +611,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
@@ -567,6 +620,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -577,6 +631,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -587,6 +642,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -605,6 +661,7 @@
       "excludes" : [ ],
       "separator" : "NEW_LINE",
       "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
         "name" : "Public",
         "includes" : [
@@ -613,6 +670,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Annotations and Interfaces",
           "includes" : [
@@ -622,6 +680,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -634,6 +693,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -646,6 +706,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Annotations and Interfaces",
           "includes" : [
@@ -655,6 +716,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -667,6 +729,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -679,6 +742,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Annotations and Interfaces",
           "includes" : [
@@ -688,6 +752,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -700,6 +765,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],
@@ -712,6 +778,7 @@
         "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
         "memberSubGroups" : [ {
           "name" : "Annotations and Interfaces",
           "includes" : [
@@ -721,6 +788,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         }, {
@@ -733,6 +801,7 @@
           "excludes" : [ ],
           "separator" : null,
           "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
         } ],

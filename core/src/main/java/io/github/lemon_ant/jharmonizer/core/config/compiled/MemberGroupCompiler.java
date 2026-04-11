@@ -27,7 +27,7 @@ class MemberGroupCompiler {
         int currentIndex = 0;
         List<CompiledMemberGroup> compiledRoots = new ArrayList<>(unifiedRoots.size());
         GroupInheritanceContext rootInheritanceContext =
-                new GroupInheritanceContext(false, UnifiedSeparator.NONE, Collections.emptyList());
+                new GroupInheritanceContext(false, true, UnifiedSeparator.NONE, Collections.emptyList());
         for (UnifiedMemberGroup unifiedRoot : unifiedRoots) {
             Pair<CompiledMemberGroup, Integer> rootResult =
                     compileGroupRecursively(unifiedRoot, currentIndex, rootInheritanceContext);
@@ -53,6 +53,7 @@ class MemberGroupCompiler {
                 new ArrayList<>(unifiedGroup.getMemberSubGroups().size());
         GroupInheritanceContext effectiveContext = resolveEffectiveContext(unifiedGroup, inheritedContext);
         boolean keepAccessorsTogether = effectiveContext.isKeepAccessorsTogether();
+        boolean relaxedForwardReferences = effectiveContext.isRelaxedForwardReferences();
         UnifiedSeparator separator = effectiveContext.getSeparator();
         List<UnifiedOrderingRule> effectiveOrderingRules = effectiveContext.getOrderingRules();
         for (UnifiedMemberGroup unifiedChild : unifiedGroup.getMemberSubGroups()) {
@@ -77,6 +78,7 @@ class MemberGroupCompiler {
                 .selectorBlock(compiledMemberGroupSelectorBlock)
                 .orderingRules(compiledOrderingRules)
                 .keepAccessorsTogether(keepAccessorsTogether)
+                .relaxedForwardReferences(relaxedForwardReferences)
                 .compiledSubGroups(compiledChildren)
                 .orderIndex(assignedPostOrderIndex)
                 .separator(separator)
@@ -103,16 +105,19 @@ class MemberGroupCompiler {
             UnifiedMemberGroup unifiedGroup, GroupInheritanceContext inheritedContext) {
         boolean keepAccessorsTogether = Optional.ofNullable(unifiedGroup.getKeepAccessorsTogether())
                 .orElse(inheritedContext.isKeepAccessorsTogether());
+        boolean relaxedForwardReferences = Optional.ofNullable(unifiedGroup.getRelaxedForwardReferences())
+                .orElse(inheritedContext.isRelaxedForwardReferences());
         UnifiedSeparator separator =
                 Optional.ofNullable(unifiedGroup.getSeparator()).orElse(inheritedContext.getSeparator());
         List<UnifiedOrderingRule> orderingRules =
                 Optional.ofNullable(unifiedGroup.getOrderingRules()).orElse(inheritedContext.getOrderingRules());
-        return new GroupInheritanceContext(keepAccessorsTogether, separator, orderingRules);
+        return new GroupInheritanceContext(keepAccessorsTogether, relaxedForwardReferences, separator, orderingRules);
     }
 
     @Value
     private static final class GroupInheritanceContext {
         boolean keepAccessorsTogether;
+        boolean relaxedForwardReferences;
 
         @NonNull
         UnifiedSeparator separator;

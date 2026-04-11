@@ -34,12 +34,14 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
      * @param keepAccessorsTogether the keep accessors together
+     * @param relaxedForwardReferences whether forward references to fields declared later in source order
+     *     are ignored for dependency resolution
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences) {
         if (!(dependentMember instanceof CtField<?> referencedField) || !isSupportedReferencedField(referencedField)) {
             return Set.of();
         }
@@ -48,7 +50,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
             return Set.of();
         }
 
-        return findEarlierReferrerFieldsWithExplicitReferenceTo(referencedField).stream()
+        return findReferrerFieldsWithExplicitReferenceTo(referencedField, relaxedForwardReferences).stream()
                 .map(providerMember ->
                         new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
@@ -112,12 +114,14 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     }
 
     @NonNull
-    private Set<CtTypeMember> findEarlierReferrerFieldsWithExplicitReferenceTo(CtField<?> referencedField) {
+    private Set<CtTypeMember> findReferrerFieldsWithExplicitReferenceTo(
+            CtField<?> referencedField, boolean relaxedForwardReferences) {
         int referencedFieldSrcStart = requireSrcStart(referencedField);
 
         return referencedField.getDeclaringType().getTypeMembers().stream()
                 .filter(typeMember -> typeMember instanceof CtField<?>)
-                .filter(typeMember -> requireSrcStart(typeMember) < referencedFieldSrcStart)
+                .filter(typeMember ->
+                        !relaxedForwardReferences || requireSrcStart(typeMember) < referencedFieldSrcStart)
                 .map(typeMember -> (CtField<?>) typeMember)
                 .filter(this::isSupportedReferrerField)
                 .filter(referrerField -> hasExplicitReferenceTo(referrerField, referencedField))
