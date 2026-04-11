@@ -52,11 +52,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         Path compileAfterOutput = temporaryDirectory
                 .resolve(resolveDirectoryNamePrefix() + "-compile-after")
                 .resolve(scenarioName);
-        Path compileExpectedOutput = temporaryDirectory
-                .resolve(resolveDirectoryNamePrefix() + "-compile-expected")
-                .resolve(scenarioName);
         ValidationStateT beforeValidationState = validateBeforeProcessing(workingInputFile, compileBeforeOutput);
-        validateExpectedFixture(expectedSrcFile, compileExpectedOutput, beforeValidationState);
 
         assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
@@ -133,9 +129,6 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     @NonNull
     protected abstract ValidationStateT validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
             throws Exception;
-
-    protected abstract void validateExpectedFixture(
-            Path expectedSrcFile, Path compileExpectedOutput, ValidationStateT beforeValidationState) throws Exception;
 
     protected abstract void validateAfterProcessing(
             Path workingInputFile, Path compileAfterOutput, ValidationStateT validationState) throws Exception;

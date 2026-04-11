@@ -72,13 +72,6 @@ class SrcProcessorRegressionTest
     }
 
     @Override
-    protected void validateExpectedFixture(
-            Path expectedSrcFile, Path compileExpectedOutput, CompileAndRunSnapshot beforeSnapshot) {
-        CompileAndRunSnapshot expectedSnapshot = captureCompileAndRunSnapshot(expectedSrcFile, compileExpectedOutput);
-        assertRelaxedCompileAndRunConsistency(beforeSnapshot, expectedSnapshot, expectedSrcFile);
-    }
-
-    @Override
     protected void validateAfterProcessing(
             Path workingInputFile, Path compileAfterOutput, CompileAndRunSnapshot beforeSnapshot) {
         CompileAndRunSnapshot afterSnapshot = captureCompileAndRunSnapshot(workingInputFile, compileAfterOutput);

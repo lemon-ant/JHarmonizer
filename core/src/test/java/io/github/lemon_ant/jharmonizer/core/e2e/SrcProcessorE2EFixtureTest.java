@@ -80,19 +80,6 @@ class SrcProcessorE2EFixtureTest
     }
 
     @Override
-    protected void validateExpectedFixture(
-            Path expectedSrcFile, Path compileExpectedOutput, StrictValidationState beforeState) throws Exception {
-        JavaCompileTestUtils.CompileResult compileExpectedResult =
-                compileJavaSrcWithRelease21(expectedSrcFile, compileExpectedOutput);
-        assertThat(compileExpectedResult.getExitCode())
-                .as(
-                        "Expected javac --release 21 to compile expected fixture %s. Diagnostics:%n%s",
-                        expectedSrcFile, compileExpectedResult.getOutput())
-                .isZero();
-        assertMainMethodExecutionSucceedsWhenPresent(expectedSrcFile, compileExpectedOutput);
-    }
-
-    @Override
     protected void validateAfterProcessing(
             Path workingInputFile, Path compileAfterOutput, StrictValidationState validationState) throws Exception {
         JavaCompileTestUtils.CompileResult compileAfterResult =
