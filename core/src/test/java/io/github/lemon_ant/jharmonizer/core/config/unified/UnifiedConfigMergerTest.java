@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 
 class UnifiedConfigMergerTest {
 
-    private static final UnifiedFormatting FORMATTING = new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR);
+    private static final UnifiedFormatting FORMATTING =
+            new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, true);
     private static final UnifiedHeaderLine HEADER_LINE = new UnifiedHeaderLine('-', 2);
     private static final UnifiedMemberGroupSelectorBlock SELECTOR_BLOCK =
             UnifiedMemberGroupSelectorBlock.builder().build();

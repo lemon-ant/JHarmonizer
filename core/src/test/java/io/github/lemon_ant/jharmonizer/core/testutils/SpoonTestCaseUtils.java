@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;
@@ -21,6 +22,8 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 public class SpoonTestCaseUtils {
 
+    private static final PrinterSpacingConfig DEFAULT_SPACING_CONFIG = new PrinterSpacingConfig(true, true, true);
+
     public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource) {
         SpoonAstModel spoonAstModel = parseAstModelFromJavaFixtureResource(javaFixtureResource);
         return spoonAstModel
@@ -34,7 +37,8 @@ public class SpoonTestCaseUtils {
 
         String srcCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
         return SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
+                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))),
+                DEFAULT_SPACING_CONFIG);
     }
 
     /**

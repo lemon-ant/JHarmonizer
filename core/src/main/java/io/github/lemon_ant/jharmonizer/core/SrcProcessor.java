@@ -17,6 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatistics
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterSpacingConfig;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
@@ -44,6 +45,7 @@ public final class SrcProcessor {
     private final CompiledConfig config;
     private final Formatter formatter;
     private final Sorter sorter;
+    private final PrinterSpacingConfig spacingConfig;
 
     /**
      * Creates a new SrcProcessor.
@@ -67,7 +69,8 @@ public final class SrcProcessor {
                 new Formatter(
                         compiledConfig.getFormatting().getFormatterStyle(),
                         compiledConfig.getFormatting().isFixImports()),
-                new Sorter(compiledConfig));
+                new Sorter(compiledConfig),
+                PrinterSpacingConfig.fromFormatting(compiledConfig.getFormatting()));
     }
 
     /**
@@ -94,9 +97,9 @@ public final class SrcProcessor {
         IFlow baseFlow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
-                    case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter);
-                    case CHECK_ALL -> new CheckAllFlow(formatter, sorter);
-                    case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter);
+                    case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, spacingConfig);
+                    case CHECK_ALL -> new CheckAllFlow(formatter, sorter, spacingConfig);
+                    case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, spacingConfig);
                 };
         IFlow flow = SafeFlow.wrap(baseFlow);
 

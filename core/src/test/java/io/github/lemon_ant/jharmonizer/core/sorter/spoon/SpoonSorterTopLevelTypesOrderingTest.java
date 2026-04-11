@@ -134,7 +134,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build();
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
                 .topLevelTypesOrdering(topLevelTypesOrdering)
-                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
+                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, true))
                 .backupsEnabled(false)
                 .printProcessingStatistics(true)
                 .headerLine(new UnifiedHeaderLine('-', 0))

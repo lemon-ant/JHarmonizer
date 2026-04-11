@@ -2,8 +2,9 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_HEADER_METADATA;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.needsSeparatorAfter;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.needsSeparatorBefore;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsBlankLineAfterTypeHeader;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsSeparatorAfter;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsSeparatorBefore;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
@@ -13,9 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import lombok.AccessLevel;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtType;
@@ -24,8 +25,9 @@ import spoon.reflect.visitor.TokenWriter;
 
 /**
  * Prints structured type declarations while preserving original source fragments and skipped-type ranges.
+ * Blank-line insertion predicates are compiled once from the supplied {@link PrinterSpacingConfig}
+ * so that no per-member flag checks are needed during printing.
  */
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 final class SpoonTypePrinter {
     @NonNull
     private final String originalSrcCode;
@@ -39,6 +41,36 @@ final class SpoonTypePrinter {
 
     @NonNull
     private final TokenWriter tokenWriter;
+
+    @NonNull
+    private final Predicate<CtTypeMember> needsSeparatorAfter;
+
+    @NonNull
+    private final BiPredicate<CtTypeMember, Boolean> needsSeparatorBefore;
+
+    @NonNull
+    private final Predicate<CtType<?>> needsBlankLineAfterTypeHeader;
+
+    /**
+     * Creates a new SpoonTypePrinter with compiled spacing predicates.
+     *
+     * @param originalSrcCode the original source text
+     * @param sortingSkippedTypes the types that must be copied without sorting
+     * @param tokenWriter the token writer for output
+     * @param spacingConfig the printer spacing configuration used to compile blank-line predicates
+     */
+    SpoonTypePrinter(
+            @NonNull String originalSrcCode,
+            @NonNull Set<CtType<?>> sortingSkippedTypes,
+            @NonNull TokenWriter tokenWriter,
+            @NonNull PrinterSpacingConfig spacingConfig) {
+        this.originalSrcCode = originalSrcCode;
+        this.sortingSkippedTypes = sortingSkippedTypes;
+        this.tokenWriter = tokenWriter;
+        this.needsSeparatorAfter = compileNeedsSeparatorAfter(spacingConfig);
+        this.needsSeparatorBefore = compileNeedsSeparatorBefore(spacingConfig);
+        this.needsBlankLineAfterTypeHeader = compileNeedsBlankLineAfterTypeHeader(spacingConfig);
+    }
 
     /**
      * Prints a type declaration using preserved source fragments and group-separator metadata.
@@ -70,7 +102,7 @@ final class SpoonTypePrinter {
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute first member start from explicit type members"));
         printOriginalFragment(typePosition.getSourceStart(), minMemberStart - 1);
-        if (type instanceof CtEnum<?>) {
+        if (needsBlankLineAfterTypeHeader.test(type)) {
             tokenWriter.writeln();
         }
         printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts);
@@ -145,12 +177,12 @@ final class SpoonTypePrinter {
             boolean previousElementNeedSeparatorAfter) {
         // TODO Check Orphaned comments
 
-        boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore(member, first);
+        boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore.test(member, first);
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();
         }
-        boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter(member);
+        boolean currentElementNeedsSeparatorAfter = needsSeparatorAfter.test(member);
 
         String groupHeader = findGroupHeader(member);
         if (GROUP_SEPARATOR_NEW_LINE.equals(groupHeader)) {
