@@ -83,14 +83,7 @@ public final class SrcProcessor {
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
-        log.info(
-                "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
-                flowType,
-                baseDir.toAbsolutePath(),
-                includeGlobs,
-                excludeGlobs,
-                config.isBackupsEnabled());
-
+        logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
         IFlow baseFlow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
@@ -155,5 +148,24 @@ public final class SrcProcessor {
     private static String formatSingleFileLogMessage(Path path, String status) {
         String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH);
         return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;
+    }
+
+    private void logStartupBanner(
+            @NonNull FlowType flowType,
+            @NonNull Path baseDir,
+            @NonNull Collection<String> includeGlobs,
+            @NonNull Collection<String> excludeGlobs) {
+        if (config.isPrintProcessingStatistics() && log.isInfoEnabled()) {
+            log.info(StartupBannerRenderer.render(
+                    flowType, baseDir, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
+        } else {
+            log.debug(
+                    "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
+                    flowType,
+                    baseDir.toAbsolutePath(),
+                    includeGlobs,
+                    excludeGlobs,
+                    config.isBackupsEnabled());
+        }
     }
 }
