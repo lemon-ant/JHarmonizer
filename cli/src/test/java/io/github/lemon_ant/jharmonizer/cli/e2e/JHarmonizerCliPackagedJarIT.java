@@ -226,12 +226,14 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isZero();
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("JHarmonizer harmonization summary")
                 .contains("App.java")
-                .containsAnyOf("REORDERED", "FORMATTED");
+                .containsAnyOf("REORDERED", "FORMATTED")
+                .contains("do not conform")
+                .contains("Exit code: 1");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
@@ -263,7 +265,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isZero();
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("App.java")
@@ -315,6 +317,8 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("CHECKED")
+                .contains("completed successfully")
+                .contains("Exit code: 0")
                 .doesNotContain("REORDERED")
                 .doesNotContain("FORMATTED");
         assertFileUnchanged(expectedProjectDirectory, projectDirectory, Constants.APP_JAVA);
@@ -347,6 +351,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("Flow CHECK_FAIL_FAST stopped early")
+                .contains("stopped early: violation detected. Exit code: 3")
                 .containsAnyOf(
                         "App.java",
                         "StableService.java",

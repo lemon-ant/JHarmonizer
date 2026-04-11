@@ -6,6 +6,7 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.A
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.api.parallel.Resources;
@@ -26,6 +27,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalSerializationTimeNanos(200_000_000L)
                 .totalFormattingTimeNanos(500_000_000L)
                 .filesWithUnexpectedErrors(List.of(brokenPath, failurePath))
+                .statusCounts(Map.of())
                 .build();
 
         // When
@@ -64,6 +66,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalSerializationTimeNanos(0)
                 .totalFormattingTimeNanos(0)
                 .filesWithUnexpectedErrors(List.of())
+                .statusCounts(Map.of())
                 .build();
 
         // When
@@ -92,6 +95,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .totalSerializationTimeNanos(78_000_000L)
                 .totalFormattingTimeNanos(300_000_000L)
                 .filesWithUnexpectedErrors(List.of(longPath))
+                .statusCounts(Map.of())
                 .build();
 
         // When
@@ -120,6 +124,7 @@ class ProcessingStatisticsPrintServiceTest {
                     .totalSerializationTimeNanos(0)
                     .totalFormattingTimeNanos(0)
                     .filesWithUnexpectedErrors(List.of())
+                    .statusCounts(Map.of())
                     .build();
 
             // When

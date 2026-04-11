@@ -3,12 +3,14 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,25 @@ class CheckAllCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.CHECK_ALL));
+    }
+
+    @Test
+    void checkCommand_nonConformingFilesDetected_returnsExitCode1() {
+        // Given
+        AggregatedProcessingStatistic statsWithViolations = mock(AggregatedProcessingStatistic.class);
+        when(statsWithViolations.computeNonConformingFileCount()).thenReturn(5L);
+        when(statsWithViolations.getFileCount()).thenReturn(10L);
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any())).thenReturn(statsWithViolations);
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
     }
 
     @Test

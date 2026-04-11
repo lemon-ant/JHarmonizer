@@ -13,6 +13,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
 import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import picocli.CommandLine.Option;
  * and delegates concrete flow execution to sub-classes.
  */
 @Slf4j
+@SuppressWarnings("PMD.TooManyMethods")
 abstract class BaseCommand implements Callable<Integer> {
 
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
@@ -158,7 +160,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 commandOptions.getBaseDir(),
                 describeConfigSrc(commandOptions.getConfigFilePath()));
         try {
-            createSrcProcessor(
+            AggregatedProcessingStatistic stats = createSrcProcessor(
                             commandOptions.getConfigFilePath(),
                             commandOptions.isNoBackup(),
                             commandOptions.isNoStatistics())
@@ -167,10 +169,61 @@ abstract class BaseCommand implements Callable<Integer> {
                             commandOptions.getIncludeGlobs(),
                             commandOptions.getExcludeGlobs(),
                             flowType);
-            return 0;
+            int exitCode = resolveCheckExitCode(stats, flowType);
+            logCompletionSummary(flowType, stats, exitCode);
+            return exitCode;
         } catch (NotFormattedException | NotOrderedException e) {
+            int exitCode = checkFailedExitCode();
             log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
+            log.info("{} stopped early: violation detected. Exit code: {}", flowType, exitCode);
+            return exitCode;
+        }
+    }
+
+    /**
+     * Returns a non-zero exit code when a check flow detects non-conforming files.
+     *
+     * @param stats aggregated processing statistics
+     * @param flowType the current flow type
+     * @return 0 when no violations are detected, otherwise the flow-specific failure exit code
+     */
+    private int resolveCheckExitCode(@NonNull AggregatedProcessingStatistic stats, @NonNull FlowType flowType) {
+        if (flowType == FlowType.CHECK_ALL && stats.computeNonConformingFileCount() > 0) {
             return checkFailedExitCode();
+        }
+        return 0;
+    }
+
+    @SuppressWarnings({"PMD.GuardLogStatement", "PMD.ExhaustiveSwitchHasDefault"})
+    private static void logCompletionSummary(
+            @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic stats, int exitCode) {
+        long nonConforming = stats.computeNonConformingFileCount();
+        switch (flowType) {
+            case CHECK_ALL -> {
+                if (nonConforming == 0) {
+                    log.info(
+                            "{} completed successfully. All {} file(s) conform. Exit code: {}",
+                            flowType,
+                            stats.getFileCount(),
+                            exitCode);
+                } else {
+                    log.info(
+                            "{} completed. {} of {} file(s) do not conform. Exit code: {}",
+                            flowType,
+                            nonConforming,
+                            stats.getFileCount(),
+                            exitCode);
+                }
+            }
+            case CHECK_FAIL_FAST ->
+                log.info("{} completed successfully. All processed files conform. Exit code: {}", flowType, exitCode);
+            case REORDER ->
+                log.info(
+                        "{} completed successfully. Processed {} file(s). Exit code: {}",
+                        flowType,
+                        stats.getFileCount(),
+                        exitCode);
+            default -> throw new IllegalStateException("Unexpected flow type: " + flowType);
         }
     }
 
