@@ -27,10 +27,6 @@
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.github.lemon-ant</groupId>
             <artifactId>glob-path-finder</artifactId>
             <version>1.0-SNAPSHOT</version>
@@ -57,8 +53,7 @@
                 </exclusion>
                 <!--
                     commons-compress is a transitive dependency of spoon-core, but JHarmonizer does not use the
-                    Spoon functionality that requires it. The project's former direct basename usage was migrated
-                    from commons-compress FileNameUtils.getBaseName to commons-io FilenameUtils.
+                    Spoon functionality that requires it.
                 -->
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
