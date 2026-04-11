@@ -97,6 +97,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <minimizeJar>true</minimizeJar>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <filters>
                                 <filter>
@@ -113,6 +114,30 @@
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
+                                </filter>
+                                <!--
+                                    Palantir Java Format loads its Java-version-specific visitor
+                                    (e.g. Java21InputAstVisitor) via ServiceLoader at runtime.
+                                    Without this filter the minimizer strips those reflectively
+                                    loaded classes, causing a LinkageError.
+                                -->
+                                <filter>
+                                    <artifact>com.palantir.javaformat:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!--
+                                    Logback is wired via SLF4J's ServiceLoader mechanism
+                                    (SLF4JServiceProvider). The minimizer does not trace SPI
+                                    bindings, so the provider and its supporting classes must
+                                    be kept explicitly.
+                                -->
+                                <filter>
+                                    <artifact>ch.qos.logback:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                             </filters>
                             <transformers>
