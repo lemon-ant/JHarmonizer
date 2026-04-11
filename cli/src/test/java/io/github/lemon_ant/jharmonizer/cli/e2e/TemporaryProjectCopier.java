@@ -33,7 +33,7 @@ class TemporaryProjectCopier {
         }
     }
 
-    private static void copyDirectoryRecursively(Path source, Path target) throws IOException {
+    static void copyDirectoryRecursively(@NonNull Path source, @NonNull Path target) throws IOException {
         try (Stream<Path> stream = Files.walk(source)) {
             stream.forEach(srcPath -> {
                 Path destPath = target.resolve(source.relativize(srcPath));
