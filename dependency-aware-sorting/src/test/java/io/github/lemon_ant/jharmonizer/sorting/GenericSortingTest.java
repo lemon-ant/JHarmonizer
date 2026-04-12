@@ -169,9 +169,9 @@ class GenericSortingTest {
         void sort_shuffledInput_producesDeterministicResult() {
             // Given
             var base = List.of("fig", "cherry", "apple", "elderberry", "banana", "date");
-            var g = new Groups<>(List.of(Group.of("fig", "date")));
-            var d = Dependencies.of("cherry", "apple");
-            var expected = SimplifiedDependencyAwareSorter.sort(base, g, d, NATURAL_ORDER);
+            var groups = new Groups<>(List.of(Group.of("fig", "date")));
+            var dependencies = Dependencies.of("cherry", "apple");
+            var expected = SimplifiedDependencyAwareSorter.sort(base, groups, dependencies, NATURAL_ORDER);
             var rng = new Random(42);
 
             for (int run = 0; run < 20; run++) {
@@ -180,7 +180,7 @@ class GenericSortingTest {
                 Collections.shuffle(shuffled, rng);
 
                 // Then
-                assertThat(SimplifiedDependencyAwareSorter.sort(shuffled, g, d, NATURAL_ORDER))
+                assertThat(SimplifiedDependencyAwareSorter.sort(shuffled, groups, dependencies, NATURAL_ORDER))
                         .as("run %d: result must be deterministic", run)
                         .isEqualTo(expected);
             }

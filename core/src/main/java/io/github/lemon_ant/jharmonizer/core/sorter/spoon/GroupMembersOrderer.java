@@ -85,7 +85,7 @@ class GroupMembersOrderer {
         Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
                 SortableTypeMember.OrderingKey.getOrderingKeyProvider();
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(m -> new SortableTypeMember(m, orderingKeyProvider.apply(m)))
+                .map(member -> new SortableTypeMember(member, orderingKeyProvider.apply(member)))
                 .toList();
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
@@ -100,7 +100,7 @@ class GroupMembersOrderer {
         // Collect accessor-bundle members so declaration-dependency edges involving them are skipped.
         // SimplifiedDependencyAwareSorter requires groups and dependencies to be mutually exclusive.
         Set<CtTypeMember> bundledMembers = groups.getGroups().stream()
-                .flatMap(g -> g.getItems().stream())
+                .flatMap(group -> group.getItems().stream())
                 .map(SortableTypeMember::getTypeMember)
                 .collect(Collectors.toUnmodifiableSet());
 
@@ -117,7 +117,7 @@ class GroupMembersOrderer {
     private static Map<CtTypeMember, SortableTypeMember> buildTypeMemberToSortableMap(
             List<SortableTypeMember> sortableTypeMembers) {
         Map<CtTypeMember, SortableTypeMember> map = new HashMap<>(sortableTypeMembers.size() * 2);
-        sortableTypeMembers.forEach(s -> map.put(s.getTypeMember(), s));
+        sortableTypeMembers.forEach(sortable -> map.put(sortable.getTypeMember(), sortable));
         return Collections.unmodifiableMap(map);
     }
 
