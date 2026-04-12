@@ -318,7 +318,6 @@ class OptOutSrcProcessorIntegrationTest {
 
         // Then
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.getStopTriggers()).isNotEmpty();
     }
 
     private Path writeJavaFile(String fileName, String fileContent) throws Exception {

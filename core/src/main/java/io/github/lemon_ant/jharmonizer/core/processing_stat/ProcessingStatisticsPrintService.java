@@ -6,7 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadable
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;

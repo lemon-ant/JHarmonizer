@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
@@ -11,6 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowS
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -21,9 +22,11 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
+@Slf4j
 public class CheckAllFlow extends AbstractOptOutFlow {
 
     /**
@@ -45,7 +48,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    public FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -77,7 +80,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
             srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
 
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(elementRelocations)
                 .diff(srcDiff)
@@ -86,18 +89,18 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
-                .flowProcessingStatus(
-                        defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
+                .fileProcessingStatus(
+                        defineFileProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();
     }
 
     @NonNull
-    private FlowProcessingResult processSrcWithFormattingOnlyFallback(
+    private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
         FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         String srcDiff = hasChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(List.of())
                 .diff(srcDiff)
@@ -106,7 +109,23 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(formattingResult.getFormattingStatistic())
-                .flowProcessingStatus(defineFlowProcessingStatus(false, hasChanges, true))
+                .fileProcessingStatus(defineFileProcessingStatus(false, hasChanges, true))
                 .build();
+    }
+
+    @Override
+    public boolean isSuccessful(@NonNull AggregatedProcessingStatistic stats) {
+        return stats.computeNonConformingFileCount() == 0;
+    }
+
+    @Override
+    @SuppressWarnings("PMD.GuardLogStatement")
+    public void logCompletion(@NonNull AggregatedProcessingStatistic stats) {
+        long nonConforming = stats.computeNonConformingFileCount();
+        if (nonConforming == 0) {
+            log.info("{} completed successfully. All {} file(s) conform.", CHECK_ALL, stats.getFileCount());
+        } else {
+            log.info("{} completed. {} of {} file(s) do not conform.", CHECK_ALL, nonConforming, stats.getFileCount());
+        }
     }
 }

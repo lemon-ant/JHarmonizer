@@ -27,11 +27,11 @@ class CheckFailFastFlowIntegrationTest {
         SrcFile srcFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
 
         // When
-        FlowProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult result = flow.processSrc(srcFile);
 
         // Then
         assertThat(result.isStopRequested()).isTrue();
-        assertThat(result.getFlowProcessingStatus()).isEqualTo(FlowProcessingStatus.REORDERED);
+        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
         assertThat(result.getRelocations()).isNotEmpty();
     }
 
@@ -47,7 +47,7 @@ class CheckFailFastFlowIntegrationTest {
         // When
         // takeWhile stops before adding the stop-requested result, so the list
         // contains only results processed before the first violation.
-        List<FlowProcessingResult> resultsBeforeStop = srcFiles.stream()
+        List<FileProcessingResult> resultsBeforeStop = srcFiles.stream()
                 .map(srcFile -> {
                     processedSources.incrementAndGet();
                     return flow.processSrc(srcFile);
@@ -69,11 +69,11 @@ class CheckFailFastFlowIntegrationTest {
                 new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
 
         // When
-        FlowProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+        FileProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
 
         // Then
         assertThat(result.isStopRequested()).isTrue();
-        assertThat(result.getFlowProcessingStatus()).isEqualTo(FlowProcessingStatus.FORMATTED);
+        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
         assertThat(result.getDiff()).isNotEmpty();
     }
 
@@ -86,10 +86,10 @@ class CheckFailFastFlowIntegrationTest {
                 new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
 
         // When
-        FlowProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+        FileProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
 
         // Then
-        assertThat(result.getFlowProcessingStatus()).isEqualTo(FlowProcessingStatus.CHECKED);
+        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
         assertThat(result.isStopRequested()).isFalse();
         assertThat(result.getSortingStatistic().getSortingTimeInNanos()).isZero();
     }
@@ -109,7 +109,7 @@ class CheckFailFastFlowIntegrationTest {
     }
 
     @NonNull
-    private static FlowProcessingResult invokeFormattingOnlyFallback(
+    private static FileProcessingResult invokeFormattingOnlyFallback(
             @NonNull CheckFailFastFlow flow,
             @NonNull SrcFile srcFile,
             @NonNull SpoonModelBuildException modelBuildException)
@@ -118,7 +118,7 @@ class CheckFailFastFlowIntegrationTest {
                 "processSrcWithFormattingOnlyFallback", SrcFile.class, SpoonModelBuildException.class);
         method.setAccessible(true);
         try {
-            return (FlowProcessingResult) method.invoke(flow, srcFile, modelBuildException);
+            return (FileProcessingResult) method.invoke(flow, srcFile, modelBuildException);
         } catch (InvocationTargetException exception) {
             if (exception.getCause() instanceof RuntimeException runtimeException) {
                 throw runtimeException;

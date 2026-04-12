@@ -1,8 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResult;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 // TODO Review this
-public class SrcProcessingStats {
+public class FlowProcessingStats {
 
     // Collector for parallel processing
     /**
@@ -34,7 +34,7 @@ public class SrcProcessingStats {
      * @return the result
      */
     @NonNull
-    public Collector<FlowProcessingResult, ?, AggregatedProcessingStatistic> statsCollector() {
+    public Collector<FileProcessingResult, ?, AggregatedProcessingStatistic> statsCollector() {
         return Collector.of(
                 StatsContainer::new,
                 StatsContainer::accumulate,
@@ -67,7 +67,7 @@ public class SrcProcessingStats {
         List<@NonNull Path> filesWithUnexpectedErrors;
 
         @NonNull
-        Map<@NonNull FlowProcessingStatus, @NonNull Long> statusCounts;
+        Map<@NonNull FileProcessingStatus, @NonNull Long> statusCounts;
 
         @Builder(access = AccessLevel.PACKAGE)
         private AggregatedProcessingStatistic(
@@ -82,7 +82,7 @@ public class SrcProcessingStats {
                 @Nullable FileProcessingStatistic smallestFile,
                 @Nullable FileProcessingStatistic largestFile,
                 @NonNull List<@NonNull Path> filesWithUnexpectedErrors,
-                @NonNull Map<@NonNull FlowProcessingStatus, @NonNull Long> statusCounts) {
+                @NonNull Map<@NonNull FileProcessingStatus, @NonNull Long> statusCounts) {
             this.fileCount = fileCount;
             this.totalSize = totalSize;
             this.totalProcessingTimeNanos = totalProcessingTimeNanos;
@@ -104,8 +104,8 @@ public class SrcProcessingStats {
          * @return count of non-conforming files
          */
         public long computeNonConformingFileCount() {
-            return statusCounts.getOrDefault(FlowProcessingStatus.REORDERED, 0L)
-                    + statusCounts.getOrDefault(FlowProcessingStatus.FORMATTED, 0L);
+            return statusCounts.getOrDefault(FileProcessingStatus.REORDERED, 0L)
+                    + statusCounts.getOrDefault(FileProcessingStatus.FORMATTED, 0L);
         }
 
         // Average time spent on processing a file
@@ -178,7 +178,7 @@ public class SrcProcessingStats {
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();
         private final List<Path> unexpectedErrorPaths = Collections.synchronizedList(new ArrayList<>());
-        private final Map<FlowProcessingStatus, LongAdder> statusCounts = new ConcurrentHashMap<>();
+        private final Map<FileProcessingStatus, LongAdder> statusCounts = new ConcurrentHashMap<>();
         private final LongAdder totalSize = new LongAdder();
         private final LongAdder totalTime = new LongAdder();
         private final LongAdder totalParsingTime = new LongAdder();
@@ -188,21 +188,21 @@ public class SrcProcessingStats {
 
         /**
          * Performs the accumulate.
-         * @param flowProcessingResult the result
+         * @param fileProcessingResult the result
          */
-        void accumulate(@NonNull FlowProcessingResult flowProcessingResult) {
-            FileProcessingStatistic stats = FileProcessingStatistic.convert(flowProcessingResult);
+        void accumulate(@NonNull FileProcessingResult fileProcessingResult) {
+            FileProcessingStatistic stats = FileProcessingStatistic.convert(fileProcessingResult);
             count.increment();
             totalSize.add(stats.getSize());
             totalTime.add(stats.getProcessingTimeNanos());
-            totalParsingTime.add(flowProcessingResult.getParsingStatistic().getParsingTimeInNanos());
-            totalSortingTime.add(flowProcessingResult.getSortingStatistic().getSortingTimeInNanos());
+            totalParsingTime.add(fileProcessingResult.getParsingStatistic().getParsingTimeInNanos());
+            totalSortingTime.add(fileProcessingResult.getSortingStatistic().getSortingTimeInNanos());
             totalSerializationTime.add(stats.getSerializationTimeNanos());
             totalFormattingTime.add(
-                    flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos());
-            FlowProcessingStatus status = flowProcessingResult.getFlowProcessingStatus();
-            if (status == FlowProcessingStatus.ERROR) {
-                unexpectedErrorPaths.add(flowProcessingResult.getPath());
+                    fileProcessingResult.getFormattingStatistic().getFormattingTimeInNanos());
+            FileProcessingStatus status = fileProcessingResult.getFileProcessingStatus();
+            if (status == FileProcessingStatus.ERROR) {
+                unexpectedErrorPaths.add(fileProcessingResult.getPath());
             }
             statusCounts.computeIfAbsent(status, key -> new LongAdder()).increment();
 
@@ -253,7 +253,7 @@ public class SrcProcessingStats {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         AggregatedProcessingStatistic toAggregatedStats() {
             long wallClockElapsedNanos = System.nanoTime() - wallClockStartNanos.get();
-            Map<FlowProcessingStatus, Long> resolvedStatusCounts = new EnumMap<>(FlowProcessingStatus.class);
+            Map<FileProcessingStatus, Long> resolvedStatusCounts = new EnumMap<>(FileProcessingStatus.class);
             statusCounts.forEach((status, adder) -> resolvedStatusCounts.put(status, adder.sum()));
             return AggregatedProcessingStatistic.builder()
                     .fileCount(count.sum())

@@ -27,13 +27,13 @@ import spoon.reflect.declaration.CtElement;
 @Value
 @Builder(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class FlowProcessingResult {
+public class FileProcessingResult {
     // TODO Make it non null???
     @Nullable
     String diff;
 
     @NonNull
-    FlowProcessingStatus flowProcessingStatus;
+    FileProcessingStatus fileProcessingStatus;
 
     @NonNull
     FormattingStatistic formattingStatistic;

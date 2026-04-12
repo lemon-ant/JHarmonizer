@@ -10,7 +10,7 @@ import lombok.NonNull;
  * {@code UNCHANGED} means the file was left as-is in a non-checking flow,
  * and {@code ERROR} means processing failed due to an unexpected internal runtime error.
  */
-public enum FlowProcessingStatus {
+public enum FileProcessingStatus {
     REORDERED,
     FORMATTED,
     CHECKED,
@@ -28,7 +28,7 @@ public enum FlowProcessingStatus {
      * @return the resulting processing status
      */
     @NonNull
-    public static FlowProcessingStatus defineFlowProcessingStatus(
+    public static FileProcessingStatus defineFileProcessingStatus(
             boolean hasRelocations, boolean contentChanged, boolean checkingOnly) {
         if (hasRelocations) {
             return REORDERED;

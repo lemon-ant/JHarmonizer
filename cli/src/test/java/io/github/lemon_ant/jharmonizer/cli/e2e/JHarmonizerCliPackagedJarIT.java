@@ -208,7 +208,7 @@ class JHarmonizerCliPackagedJarIT {
     }
 
     @Test
-    void checkCommand_nonHarmonizedFilesPresent_returnSuccessWithoutModifyingFiles()
+    void checkCommand_nonHarmonizedFilesPresent_returnFailureWithoutModifyingFiles()
             throws IOException, InterruptedException {
         // Given
         Path projectDirectory = copyBasicProject("project-check-dirty");

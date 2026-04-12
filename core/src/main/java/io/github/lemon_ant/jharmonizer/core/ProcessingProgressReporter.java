@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core;
 
-import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import lombok.NonNull;
@@ -29,7 +29,7 @@ final class ProcessingProgressReporter {
      *
      * @param status the processing outcome for the file
      */
-    void recordProcessedFile(@NonNull FlowProcessingStatus status) {
+    void recordProcessedFile(@NonNull FileProcessingStatus status) {
         long count = totalProcessed.incrementAndGet();
         incrementStatusCounter(status);
         if (count % PROGRESS_BATCH_SIZE == 0) {
@@ -39,7 +39,7 @@ final class ProcessingProgressReporter {
 
     // PMD 7.23.0 ExhaustiveSwitchHasDefault conflicts with NonExhaustiveSwitch for exhaustive enum switches.
     @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
-    private void incrementStatusCounter(FlowProcessingStatus status) {
+    private void incrementStatusCounter(FileProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();
             case FORMATTED -> formattedCount.increment();

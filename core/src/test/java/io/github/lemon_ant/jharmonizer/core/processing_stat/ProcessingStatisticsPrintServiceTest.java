@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
