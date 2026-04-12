@@ -75,13 +75,14 @@ class JsonDrivenSortingTest {
         /** Returns {@code true} if this case satisfies the simplified algorithm preconditions. */
         boolean isSimplifiedCompatible() {
             Set<String> groupedNames = groups.getGroups().stream()
-                    .flatMap(g -> g.getItems().stream())
+                    .flatMap(group -> group.getItems().stream())
                     .map(SortableTypeMember::getName)
                     .collect(Collectors.toSet());
 
             boolean hasOverlap = dependencies.getEdges().stream()
-                    .anyMatch(d -> groupedNames.contains(d.getProvider().getName())
-                            || groupedNames.contains(d.getDependent().getName()));
+                    .anyMatch(dependency -> groupedNames.contains(
+                                    dependency.getProvider().getName())
+                            || groupedNames.contains(dependency.getDependent().getName()));
 
             return !hasOverlap;
         }
@@ -144,7 +145,7 @@ class JsonDrivenSortingTest {
         if (groupsNode != null && groupsNode.isArray()) {
             StreamSupport.stream(groupsNode.spliterator(), false)
                     .map(groupNode -> new Group<>(StreamSupport.stream(groupNode.spliterator(), false)
-                            .map(n -> requireMember(itemMap, n.asText(), dir))
+                            .map(nameNode -> requireMember(itemMap, nameNode.asText(), dir))
                             .toList()))
                     .forEach(groups::add);
         }
@@ -205,18 +206,19 @@ class JsonDrivenSortingTest {
         System.out.printf("%n=== %s ===%n%s%n", tc.getName(), tc.getDescription());
         System.out.println("  Input items : "
                 + tc.getItems().stream()
-                        .map(m -> m.getName() + ":" + m.getOrderingKey().getNumeration())
+                        .map(member ->
+                                member.getName() + ":" + member.getOrderingKey().getNumeration())
                         .toList());
         System.out.println("  Groups      : "
                 + tc.getGroups().getGroups().stream()
-                        .map(g -> g.getItems().stream()
+                        .map(group -> group.getItems().stream()
                                 .map(SortableTypeMember::getName)
                                 .toList())
                         .toList());
         System.out.println("  Dependencies: "
                 + tc.getDependencies().getEdges().stream()
-                        .map(d -> d.getProvider().getName() + "->"
-                                + d.getDependent().getName())
+                        .map(dependency -> dependency.getProvider().getName() + "->"
+                                + dependency.getDependent().getName())
                         .toList());
         System.out.println("  Expected    : " + tc.getExpected());
     }

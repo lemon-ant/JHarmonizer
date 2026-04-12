@@ -52,8 +52,8 @@ public class SortableTypeMember {
      * members (by name).
      */
     public static final Comparator<SortableTypeMember> DEFAULT_ORDER = Comparator.comparing(
-                    (SortableTypeMember m) -> m.getOrderingKey().getNumeration())
-            .thenComparing(m -> m.getOrderingKey().getName());
+                    (SortableTypeMember member) -> member.getOrderingKey().getNumeration())
+            .thenComparing(member -> member.getOrderingKey().getName());
 
     @NonNull
     OrderingKey orderingKey;

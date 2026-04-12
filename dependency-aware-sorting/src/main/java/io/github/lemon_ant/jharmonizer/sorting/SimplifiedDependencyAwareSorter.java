@@ -107,8 +107,8 @@ public class SimplifiedDependencyAwareSorter {
                 dependencies,
                 inDegree);
 
-        IntComparator nodeKeyComparator = (a, b) ->
-                comparator.compare(superNodes.getNodeKeys()[a], superNodes.getNodeKeys()[b]);
+        IntComparator nodeKeyComparator = (leftIndex, rightIndex) -> comparator.compare(
+                superNodes.getNodeKeys()[leftIndex], superNodes.getNodeKeys()[rightIndex]);
 
         int[] finalOrder = providerLiftRepair(superNodes.getCount(), inDegree, adjacencyLists, nodeKeyComparator);
 

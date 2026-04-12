@@ -98,11 +98,11 @@ class ProviderLiftUtils {
         List<Integer> providers = computeTransitiveProviderClosure(node, reverseAdj, emitted, nodeCount);
         List<Integer> sorted = topologicallySortSubset(providers, adjacencyLists, reverseAdj, baseRank);
 
-        for (int p : sorted) {
-            if (!emitted[p]) {
-                result[writePos] = p;
+        for (int provider : sorted) {
+            if (!emitted[provider]) {
+                result[writePos] = provider;
                 writePos++;
-                emitted[p] = true;
+                emitted[provider] = true;
             }
         }
         result[writePos] = node;
@@ -165,10 +165,10 @@ class ProviderLiftUtils {
             return;
         }
         for (int i = 0; i < providers.size(); i++) {
-            int p = providers.getInt(i);
-            if (!emitted[p] && !visited[p]) {
-                visited[p] = true;
-                stack.push(p);
+            int provider = providers.getInt(i);
+            if (!emitted[provider] && !visited[provider]) {
+                visited[provider] = true;
+                stack.push(provider);
             }
         }
     }
@@ -191,8 +191,8 @@ class ProviderLiftUtils {
         }
 
         Set<Integer> nodeSet = new HashSet<>(nodes.size() * 2);
-        for (int n : nodes) {
-            nodeSet.add(n);
+        for (int node : nodes) {
+            nodeSet.add(node);
         }
 
         int[] subInDegree = computeSubGraphInDegrees(nodes, nodeSet, reverseAdj, baseRank.length);
@@ -208,12 +208,12 @@ class ProviderLiftUtils {
     private static int[] computeSubGraphInDegrees(
             List<Integer> nodes, Set<Integer> nodeSet, IntList[] reverseAdj, int arrayLength) {
         int[] subInDegree = new int[arrayLength];
-        for (int n : nodes) {
-            IntList providers = reverseAdj[n];
+        for (int node : nodes) {
+            IntList providers = reverseAdj[node];
             if (providers != null) {
                 for (int i = 0; i < providers.size(); i++) {
                     if (nodeSet.contains(providers.getInt(i))) {
-                        subInDegree[n]++;
+                        subInDegree[node]++;
                     }
                 }
             }
@@ -229,10 +229,10 @@ class ProviderLiftUtils {
     @SuppressWarnings("PMD.UseVarargs")
     @NonNull
     private static Queue<Integer> collectZeroInDegreeNodes(List<Integer> nodes, int[] subInDegree, int[] baseRank) {
-        Queue<Integer> ready = new PriorityQueue<>(Comparator.comparingInt(n -> baseRank[n]));
-        for (int n : nodes) {
-            if (subInDegree[n] == 0) {
-                ready.add(n);
+        Queue<Integer> ready = new PriorityQueue<>(Comparator.comparingInt(node -> baseRank[node]));
+        for (int node : nodes) {
+            if (subInDegree[node] == 0) {
+                ready.add(node);
             }
         }
         return ready;
