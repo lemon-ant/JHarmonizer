@@ -17,6 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -31,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Getter(AccessLevel.PROTECTED)
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 abstract class AbstractOptOutFlow implements IFlow {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOptOutFlow.class);
 
@@ -41,11 +43,19 @@ abstract class AbstractOptOutFlow implements IFlow {
     private final Sorter sorter;
 
     @NonNull
+    private final PrinterConfig printerConfig;
+
+    @NonNull
     private final FlowDebugStageRecorder debugStageRecorder;
 
-    protected AbstractOptOutFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull FlowType flowType) {
+    protected AbstractOptOutFlow(
+            @NonNull Formatter formatter,
+            @NonNull Sorter sorter,
+            @NonNull PrinterConfig printerConfig,
+            @NonNull FlowType flowType) {
         this.formatter = formatter;
         this.sorter = sorter;
+        this.printerConfig = printerConfig;
         this.debugStageRecorder = new FlowDebugStageRecorder(flowType);
     }
 

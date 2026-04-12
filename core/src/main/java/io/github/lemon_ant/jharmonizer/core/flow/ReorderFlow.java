@@ -16,6 +16,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
@@ -33,9 +34,14 @@ public class ReorderFlow extends AbstractOptOutFlow {
      * @param formatter the formatter used after sorting
      * @param backupsEnabled whether rewritten files should keep a backup copy
      * @param sorter the sorter used to reorder members
+     * @param printerConfig the printer configuration
      */
-    public ReorderFlow(@NonNull Formatter formatter, boolean backupsEnabled, @NonNull Sorter sorter) {
-        super(formatter, sorter, REORDER);
+    public ReorderFlow(
+            @NonNull Formatter formatter,
+            boolean backupsEnabled,
+            @NonNull Sorter sorter,
+            @NonNull PrinterConfig printerConfig) {
+        super(formatter, sorter, printerConfig, REORDER);
         this.backupsEnabled = backupsEnabled;
     }
 
@@ -51,7 +57,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile);
+            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
         } catch (SpoonModelBuildException exception) {
             return processSrcWithFormattingOnlyFallback(srcFile, exception);
         }

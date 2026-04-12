@@ -79,6 +79,9 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     private static UnifiedFormatting mapFormatting(JHarmonizerFormatting vendorFormatting) {
         return new UnifiedFormatting(
                 vendorFormatting.isFixImports(),
-                vendorFormatting.getFormatterStyle().getUnifiedFormatterStyle());
+                vendorFormatting.getFormatterStyle().getUnifiedFormatterStyle(),
+                vendorFormatting.isBlankLineAfterTypeHeader(),
+                vendorFormatting.isBlankLineBeforeComment(),
+                vendorFormatting.isBlankLineBetweenFields());
     }
 }

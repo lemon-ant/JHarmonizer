@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URISyntaxException;
@@ -146,7 +147,8 @@ public class SortingAlgorithmBenchmark {
     private static Stream<BenchmarkFixture> loadFixturesFromRoot(@NonNull Path fixtureRoot) {
         return SrcFilesHandler.readJavaFiles(fixtureRoot, List.of("**/input/*.java"), List.of())
                 .map(srcFile -> {
-                    SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(srcFile);
+                    SpoonAstModel spoonAstModel =
+                            SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false));
                     Set<String> sortingSkippedTypeQualifiedNames =
                             spoonAstModel.getOptOuts().getSortingSkippedTypes().stream()
                                     .map(CtType::getQualifiedName)

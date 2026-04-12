@@ -36,6 +36,11 @@ public final class JHarmonizer2UnifiedConverter {
         // 3) formatterStyle
         UnifiedFormatterStyle style = vendor.getFormatting().getFormatterStyle().getUnifiedFormatterStyle();
 
+        // 4) printer flags
+        boolean blankLineAfterTypeHeader = vendor.getFormatting().isBlankLineAfterTypeHeader();
+        boolean blankLineBeforeComment = vendor.getFormatting().isBlankLineBeforeComment();
+        boolean blankLineBetweenFields = vendor.getFormatting().isBlankLineBetweenFields();
+
         boolean backupsEnabled = vendor.isBackupsEnabled();
         boolean printProcessingStatistics = vendor.isPrintProcessingStatistics();
 
@@ -49,7 +54,8 @@ public final class JHarmonizer2UnifiedConverter {
 
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
-                .formatting(new UnifiedFormatting(fixImports, style))
+                .formatting(new UnifiedFormatting(
+                        fixImports, style, blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields))
                 .backupsEnabled(backupsEnabled)
                 .printProcessingStatistics(printProcessingStatistics)
                 .headerLine(header)
