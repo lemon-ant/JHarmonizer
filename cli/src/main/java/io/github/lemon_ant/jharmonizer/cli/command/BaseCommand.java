@@ -11,9 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
-import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.flow.SrcProcessingResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -156,25 +154,17 @@ abstract class BaseCommand implements Callable<Integer> {
     @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
-        try {
-            FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
-                    commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
-            AggregatedProcessingStatistic stats = new SrcProcessor(effectiveConfig)
-                    .processSources(
-                            commandOptions.getBaseDir(),
-                            commandOptions.getIncludeGlobs(),
-                            commandOptions.getExcludeGlobs(),
-                            flowType);
-            int exitCode = (flowType == FlowType.CHECK_ALL && stats.computeNonConformingFileCount() > 0)
-                    ? checkFailedExitCode
-                    : 0;
-            log.info("Exit code: {}", exitCode);
-            return exitCode;
-        } catch (NotFormattedException | NotOrderedException e) {
-            log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
-            log.info("Exit code: {}", checkFailedExitCode);
-            return checkFailedExitCode;
-        }
+        FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
+                commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
+        SrcProcessingResult result = new SrcProcessor(effectiveConfig)
+                .processSources(
+                        commandOptions.getBaseDir(),
+                        commandOptions.getIncludeGlobs(),
+                        commandOptions.getExcludeGlobs(),
+                        flowType);
+        int exitCode = result.isSuccess() ? 0 : checkFailedExitCode;
+        log.info("Exit code: {}", exitCode);
+        return exitCode;
     }
 
     @Nullable

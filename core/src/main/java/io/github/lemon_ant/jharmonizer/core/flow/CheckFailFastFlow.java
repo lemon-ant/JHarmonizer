@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -23,14 +24,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
 /**
- * Flow that stops immediately when the first ordering or formatting violation is detected.
- * Throws {@link NotOrderedException} if member order is wrong, or
- * {@link NotFormattedException} if the formatted output differs from the original.
+ * Flow that signals pipeline stop when the first ordering or formatting violation is detected.
+ * Instead of throwing exceptions, returns a {@link FlowProcessingResult} with
+ * {@code stopRequested = true} so the pipeline can gracefully shut down
+ * while preserving all accumulated statistics.
  */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
 
     /**
-     * Creates a flow that stops at the first ordering or formatting violation in a source file.
+     * Creates a flow that signals stop at the first ordering or formatting violation in a source file.
      *
      * @param formatter the formatter used after sorting
      * @param sorter the sorter used to reorder members
@@ -40,12 +42,14 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     }
 
     /**
-     * Processes the source.
+     * Processes the source file and returns a result that may signal pipeline stop.
+     *
      * @param srcFile the source file
-     * @return the result
+     * @return the result, with {@code stopRequested = true} if a violation was detected
      */
     @Override
-    public @NonNull FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    @NonNull
+    public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -74,7 +78,18 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                         sortingAndSerializationResult.getSerializedSrcCode());
 
         if (!elementRelocations.isEmpty()) {
-            throw new NotOrderedException(srcFile.getPath(), elementRelocations);
+            return FlowProcessingResult.builder()
+                    .path(srcFile.getPath())
+                    .relocations(elementRelocations)
+                    .diff("")
+                    .parsingStatistic(parsingResult.getParsingStatistic())
+                    .sortingStatistic(
+                            sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                    .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                    .formattingStatistic(new FormattingStatistic(0, 0))
+                    .flowProcessingStatus(defineFlowProcessingStatus(true, false, true))
+                    .stopRequested(true)
+                    .build();
         }
 
         FormattingResult formattingResult = getFormatter()
@@ -92,7 +107,18 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
         if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
             String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
-            throw new NotFormattedException(srcFile.getPath(), srcDiff);
+            return FlowProcessingResult.builder()
+                    .path(srcFile.getPath())
+                    .relocations(List.of())
+                    .diff(srcDiff)
+                    .parsingStatistic(parsingResult.getParsingStatistic())
+                    .sortingStatistic(
+                            sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                    .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                    .formattingStatistic(formattingResult.getFormattingStatistic())
+                    .flowProcessingStatus(defineFlowProcessingStatus(false, true, true))
+                    .stopRequested(true)
+                    .build();
         }
 
         return FlowProcessingResult.builder()
@@ -105,6 +131,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(formattingResult.getFormattingStatistic())
                 .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
+                .stopRequested(false)
                 .build();
     }
 
@@ -112,20 +139,21 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     private FlowProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
         FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
-        if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
-            String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
-            throw new NotFormattedException(srcFile.getPath(), srcDiff);
-        }
+        boolean hasFormattingChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
+        String srcDiff = hasFormattingChanges
+                ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode())
+                : "";
         return FlowProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(null)
-                .diff("")
+                .relocations(List.of())
+                .diff(srcDiff)
                 .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
                 .sortingStatistic(new SortingStatistic(0))
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(formattingResult.getFormattingStatistic())
-                .flowProcessingStatus(defineFlowProcessingStatus(false, false, true))
+                .flowProcessingStatus(defineFlowProcessingStatus(false, hasFormattingChanges, true))
+                .stopRequested(hasFormattingChanges)
                 .build();
     }
 }

@@ -7,12 +7,12 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckAllFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
+import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
-import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
-import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import io.github.lemon_ant.jharmonizer.core.flow.ReorderFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.SafeFlow;
+import io.github.lemon_ant.jharmonizer.core.flow.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
@@ -21,8 +21,13 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.A
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -73,14 +78,18 @@ public final class SrcProcessor {
     }
 
     /**
-     * Processes a specific list of source file paths.
-     * It processes each source file in parallel and collects the results.
-     * The outcome of the processing is logged at the info level.
+     * Processes source files found by the given globs through the specified flow type.
+     * Returns a pipeline-level result that carries aggregated statistics, overall success
+     * status, and any stop-triggering files (for fail-fast flow).
      *
-     * @param paths List of paths to source files to be processed.
+     * @param baseDir the root directory to scan for source files
+     * @param includeGlobs glob patterns for files to include
+     * @param excludeGlobs glob patterns for files to exclude
+     * @param flowType the processing flow strategy to apply
+     * @return the pipeline-level processing result
      */
     @NonNull
-    public AggregatedProcessingStatistic processSources(
+    public SrcProcessingResult processSources(
             @NonNull Path baseDir,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
@@ -96,31 +105,39 @@ public final class SrcProcessor {
         IFlow flow = SafeFlow.wrap(baseFlow);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
-        AggregatedProcessingStatistic aggregatedProcessingStatistic;
-        try {
-            aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs)
-                    .map(flow::processSrc)
-                    .peek(flowProcessingResult -> {
-                        if (log.isDebugEnabled()) {
-                            log.debug(formatSingleFileLogMessage(
-                                    flowProcessingResult.getPath(),
-                                    flowProcessingResult
-                                            .getFlowProcessingStatus()
-                                            .name()));
+        Stream<FlowProcessingResult> resultStream = SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs)
+                .map(flow::processSrc);
+
+        List<FlowProcessingResult> stopTriggers;
+        if (flowType == FlowType.CHECK_FAIL_FAST) {
+            AtomicBoolean stopFlag = new AtomicBoolean(false);
+            CopyOnWriteArrayList<FlowProcessingResult> triggers = new CopyOnWriteArrayList<>();
+            resultStream = resultStream
+                    .takeWhile(result -> !stopFlag.get())
+                    .peek(result -> {
+                        if (result.isStopRequested()) {
+                            triggers.add(result);
+                            stopFlag.set(true);
                         }
-                    })
-                    .peek(flowProcessingResult ->
-                            progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus()))
-                    .collect(SrcProcessingStats.statsCollector());
-        } catch (NotFormattedException | NotOrderedException e) {
-            long checkedCount = progressReporter.getTotalProcessedCount();
-            log.info(
-                    "{} stopped early. Checked {} file(s), violation detected on file #{}.",
-                    flowType,
-                    checkedCount,
-                    checkedCount + 1);
-            throw e;
+                    });
+            stopTriggers = triggers;
+        } else {
+            stopTriggers = List.of();
         }
+
+        AggregatedProcessingStatistic aggregatedProcessingStatistic = resultStream
+                .peek(flowProcessingResult -> {
+                    if (log.isDebugEnabled()) {
+                        log.debug(formatSingleFileLogMessage(
+                                flowProcessingResult.getPath(),
+                                flowProcessingResult
+                                        .getFlowProcessingStatus()
+                                        .name()));
+                    }
+                })
+                .peek(flowProcessingResult ->
+                        progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus()))
+                .collect(SrcProcessingStats.statsCollector());
 
         if (config.isPrintProcessingStatistics()) {
             log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
@@ -128,12 +145,34 @@ public final class SrcProcessor {
             logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
             logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
         }
-        logProcessingCompletion(flowType, aggregatedProcessingStatistic);
-        return aggregatedProcessingStatistic;
+
+        SrcProcessingResult result = buildSrcProcessingResult(
+                flowType, aggregatedProcessingStatistic, Collections.unmodifiableList(stopTriggers));
+        logProcessingCompletion(flowType, result);
+        return result;
+    }
+
+    @NonNull
+    private static SrcProcessingResult buildSrcProcessingResult(
+            @NonNull FlowType flowType,
+            @NonNull AggregatedProcessingStatistic statistics,
+            @NonNull List<FlowProcessingResult> stopTriggers) {
+        return switch (flowType) {
+            case REORDER -> SrcProcessingResult.successful(statistics);
+            case CHECK_ALL -> {
+                boolean success = statistics.computeNonConformingFileCount() == 0;
+                yield success ? SrcProcessingResult.successful(statistics) : SrcProcessingResult.failed(statistics, List.of());
+            }
+            case CHECK_FAIL_FAST -> {
+                boolean success = stopTriggers.isEmpty();
+                yield success ? SrcProcessingResult.successful(statistics) : SrcProcessingResult.failed(statistics, stopTriggers);
+            }
+        };
     }
 
     private static void logProcessingCompletion(
-            @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic stats) {
+            @NonNull FlowType flowType, @NonNull SrcProcessingResult result) {
+        AggregatedProcessingStatistic stats = result.getStatistics();
         long nonConforming = stats.computeNonConformingFileCount();
         switch (flowType) {
             case CHECK_ALL -> {
@@ -147,8 +186,20 @@ public final class SrcProcessor {
                             stats.getFileCount());
                 }
             }
-            case CHECK_FAIL_FAST ->
-                log.info("{} completed successfully. Checked {} file(s), all conform.", flowType, stats.getFileCount());
+            case CHECK_FAIL_FAST -> {
+                if (result.isSuccess()) {
+                    log.info(
+                            "{} completed successfully. Checked {} file(s), all conform.",
+                            flowType,
+                            stats.getFileCount());
+                } else {
+                    long checkedCount = stats.getFileCount();
+                    log.info(
+                            "{} stopped early. Checked {} file(s), violation detected.",
+                            flowType,
+                            checkedCount);
+                }
+            }
             case REORDER ->
                 log.info("{} completed successfully. Processed {} file(s).", flowType, stats.getFileCount());
         }

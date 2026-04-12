@@ -40,8 +40,6 @@ public final class SafeFlow implements IFlow {
     public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
         try {
             return delegate.processSrc(srcFile);
-        } catch (NotFormattedException | NotOrderedException exception) {
-            throw exception;
         } catch (RuntimeException exception) {
             log.warn(
                     "Unexpected internal processing error for file {}: {}",
@@ -63,6 +61,7 @@ public final class SafeFlow implements IFlow {
                     .serializationStatistic(new SerializationStatistic(0, 0))
                     .formattingStatistic(new FormattingStatistic(0, 0))
                     .flowProcessingStatus(FlowProcessingStatus.ERROR)
+                    .stopRequested(false)
                     .build();
         }
     }
