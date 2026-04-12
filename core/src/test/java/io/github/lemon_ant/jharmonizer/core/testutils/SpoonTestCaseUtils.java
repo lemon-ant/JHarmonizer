@@ -22,7 +22,7 @@ import spoon.reflect.declaration.CtTypeMember;
 @UtilityClass
 public class SpoonTestCaseUtils {
 
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
 
     public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource) {
         SpoonAstModel spoonAstModel = parseAstModelFromJavaFixtureResource(javaFixtureResource);

@@ -13,7 +13,7 @@ import spoon.reflect.declaration.CtType;
 
 class JHarmonizerOptOutResolverTest {
 
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
 
     @Test
     void parseJavaSrcResource_fileOptOutBeforePackage_resolveFileOptOutOff() {

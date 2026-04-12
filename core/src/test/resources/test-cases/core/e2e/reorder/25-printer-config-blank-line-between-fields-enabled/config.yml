@@ -2,8 +2,8 @@ formatting:
   fix-imports: false
   formatter-style: PALANTIR
   blank-line-after-type-header: false
-  blank-line-before-comment: true
-  blank-line-between-fields: false
+  blank-line-before-comment: false
+  blank-line-between-fields: true
 backups-enabled: false
 print-processing-statistics: true
 header-line:
@@ -12,18 +12,26 @@ header-line:
 top-level-types-ordering:
   main-type-first: true
   type-groups:
-    - [ class ]
+    - [ class, enum ]
   ordering-rules: [ preserve ]
 type-members-ordering:
-  - name: Initializers then fields
+  - name: Default
     includes: ~.*
     ordering-rules: preserve
     groups:
-      - name: Initializers
+      - name: Enum constants
         separator: none
         ordering-rules: preserve
-        includes: initializer
+        includes: enum-constant
       - name: Fields
         separator: none
         ordering-rules: alpha
         includes: field
+      - name: Methods
+        separator: new-line
+        ordering-rules: alpha
+        includes: method
+      - name: Nested types
+        separator: new-line
+        ordering-rules: alpha
+        includes: [ class, enum ]

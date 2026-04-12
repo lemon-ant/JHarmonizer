@@ -79,11 +79,16 @@ public class SpoonSrcPrinterUtils {
     /**
      * Compiles a predicate that determines whether a separator is needed after a given member.
      * Annotation-based blank lines are always active (Palantir formatter enforces them).
+     * When {@code blankLineBetweenFields} is enabled, all fields get a separator after them.
      *
+     * @param config the printer configuration
      * @return a predicate that returns {@code true} when a separator is needed after the member
      */
     @NonNull
-    static Predicate<CtTypeMember> compileNeedsSeparatorAfter() {
+    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
+        if (config.isBlankLineBetweenFields()) {
+            return member -> true;
+        }
         Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
         return isNotField.or(member -> !member.getAnnotations().isEmpty());
     }

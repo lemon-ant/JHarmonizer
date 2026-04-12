@@ -83,7 +83,8 @@ class CheckFailFastFlowIntegrationTest {
         Sorter sorter = new Sorter(compiledConfig);
         PrinterConfig printerConfig = new PrinterConfig(
                 compiledConfig.getFormatting().isBlankLineAfterTypeHeader(),
-                compiledConfig.getFormatting().isBlankLineBeforeComment());
+                compiledConfig.getFormatting().isBlankLineBeforeComment(),
+                compiledConfig.getFormatting().isBlankLineBetweenFields());
         return new CheckFailFastFlow(formatter, sorter, printerConfig);
     }
 

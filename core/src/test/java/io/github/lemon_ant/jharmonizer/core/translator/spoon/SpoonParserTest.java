@@ -44,7 +44,7 @@ class SpoonParserTest {
                 "buildSpoonAstModel", SrcFile.class, Launcher.class, PrinterConfig.class);
         buildSpoonAstModel.setAccessible(true);
         try {
-            return (SpoonAstModel) buildSpoonAstModel.invoke(null, srcFile, launcher, new PrinterConfig(true, true));
+            return (SpoonAstModel) buildSpoonAstModel.invoke(null, srcFile, launcher, new PrinterConfig(true, true, false));
         } catch (InvocationTargetException exception) {
             if (exception.getCause() instanceof RuntimeException runtimeException) {
                 throw runtimeException;

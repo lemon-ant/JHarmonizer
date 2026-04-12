@@ -3,6 +3,7 @@ formatting:
   formatter-style: PALANTIR
   blank-line-after-type-header: false
   blank-line-before-comment: false
+  blank-line-between-fields: false
 backups-enabled: false
 print-processing-statistics: true
 header-line:

@@ -25,7 +25,7 @@ public class JHarmonizerConfigCreator {
     }
 
     public static JHarmonizerFormatting createFormatting(boolean fixImports, @NonNull FormatterStyle formatterStyle) {
-        return new JHarmonizerFormatting(fixImports, formatterStyle, true, true);
+        return new JHarmonizerFormatting(fixImports, formatterStyle, true, true, false);
     }
 
     /**
@@ -35,13 +35,16 @@ public class JHarmonizerConfigCreator {
      * @param formatterStyle the formatter style
      * @param blankLineAfterTypeHeader blank line after type header flag
      * @param blankLineBeforeComment blank line before comment flag
+     * @param blankLineBetweenFields blank line between fields flag
      * @return the formatting section
      */
     public static JHarmonizerFormatting createFormatting(
             boolean fixImports,
             @NonNull FormatterStyle formatterStyle,
             boolean blankLineAfterTypeHeader,
-            boolean blankLineBeforeComment) {
-        return new JHarmonizerFormatting(fixImports, formatterStyle, blankLineAfterTypeHeader, blankLineBeforeComment);
+            boolean blankLineBeforeComment,
+            boolean blankLineBetweenFields) {
+        return new JHarmonizerFormatting(
+                fixImports, formatterStyle, blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields);
     }
 }

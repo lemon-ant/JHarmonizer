@@ -82,7 +82,10 @@ public final class SrcProcessor {
      */
     @NonNull
     private static PrinterConfig createPrinterConfig(@NonNull UnifiedFormatting formatting) {
-        return new PrinterConfig(formatting.isBlankLineAfterTypeHeader(), formatting.isBlankLineBeforeComment());
+        return new PrinterConfig(
+                formatting.isBlankLineAfterTypeHeader(),
+                formatting.isBlankLineBeforeComment(),
+                formatting.isBlankLineBetweenFields());
     }
 
     /**

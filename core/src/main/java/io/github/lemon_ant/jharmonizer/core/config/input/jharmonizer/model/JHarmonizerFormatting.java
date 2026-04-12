@@ -20,6 +20,8 @@ public class JHarmonizerFormatting {
 
     boolean blankLineBeforeComment;
 
+    boolean blankLineBetweenFields;
+
     /**
      * Creates a new JHarmonizerFormatting.
      *
@@ -27,15 +29,18 @@ public class JHarmonizerFormatting {
      * @param formatterStyle the formatter style
      * @param blankLineAfterTypeHeader whether to add a blank line after type header before the first member
      * @param blankLineBeforeComment whether to add a blank line before members with leading comments
+     * @param blankLineBetweenFields whether to add a blank line between consecutive field declarations
      */
     public JHarmonizerFormatting(
             @JsonProperty(value = "fix-imports", required = true) boolean fixImports,
             @NonNull @JsonProperty(value = "formatter-style", required = true) FormatterStyle formatterStyle,
             @JsonProperty(value = "blank-line-after-type-header", required = true) boolean blankLineAfterTypeHeader,
-            @JsonProperty(value = "blank-line-before-comment", required = true) boolean blankLineBeforeComment) {
+            @JsonProperty(value = "blank-line-before-comment", required = true) boolean blankLineBeforeComment,
+            @JsonProperty(value = "blank-line-between-fields", required = true) boolean blankLineBetweenFields) {
         this.fixImports = fixImports;
         this.formatterStyle = formatterStyle;
         this.blankLineAfterTypeHeader = blankLineAfterTypeHeader;
         this.blankLineBeforeComment = blankLineBeforeComment;
+        this.blankLineBetweenFields = blankLineBetweenFields;
     }
 }

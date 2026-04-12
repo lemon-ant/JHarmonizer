@@ -67,7 +67,7 @@ final class SpoonTypePrinter {
         this.originalSrcCode = originalSrcCode;
         this.sortingSkippedTypes = sortingSkippedTypes;
         this.tokenWriter = tokenWriter;
-        this.needsSeparatorAfter = compileNeedsSeparatorAfter();
+        this.needsSeparatorAfter = compileNeedsSeparatorAfter(printerConfig);
         this.needsSeparatorBefore = compileNeedsSeparatorBefore(printerConfig);
         this.needsBlankLineAfterTypeHeader = compileNeedsBlankLineAfterTypeHeader(printerConfig);
     }

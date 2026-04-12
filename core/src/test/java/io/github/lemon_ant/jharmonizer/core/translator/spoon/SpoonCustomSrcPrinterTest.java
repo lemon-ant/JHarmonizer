@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class SpoonCustomSrcPrinterTest {
 
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true);
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
 
     @Test
     void serializeCompilationUnit_afterSkippedRangesHandedOff_throwIllegalStateException() {

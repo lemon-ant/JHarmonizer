@@ -31,4 +31,9 @@ public class UnifiedFormatting {
      * Whether to insert a blank line before members with leading comments.
      */
     boolean blankLineBeforeComment;
+
+    /**
+     * Whether to insert a blank line between consecutive field declarations.
+     */
+    boolean blankLineBetweenFields;
 }

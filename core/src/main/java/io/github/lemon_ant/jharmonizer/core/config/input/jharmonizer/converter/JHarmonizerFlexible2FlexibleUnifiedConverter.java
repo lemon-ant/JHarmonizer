@@ -81,6 +81,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 vendorFormatting.isFixImports(),
                 vendorFormatting.getFormatterStyle().getUnifiedFormatterStyle(),
                 vendorFormatting.isBlankLineAfterTypeHeader(),
-                vendorFormatting.isBlankLineBeforeComment());
+                vendorFormatting.isBlankLineBeforeComment(),
+                vendorFormatting.isBlankLineBetweenFields());
     }
 }
