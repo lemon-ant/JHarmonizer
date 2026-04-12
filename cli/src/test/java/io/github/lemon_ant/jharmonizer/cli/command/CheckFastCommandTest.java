@@ -9,10 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
-import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -51,7 +48,7 @@ class CheckFastCommandTest {
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenThrow(new NotFormattedException(Path.of("SomeFile.java"), "--- diff ---"));
+                    .thenReturn(CommandTestUtils.buildFailedResult());
         })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }
@@ -66,7 +63,7 @@ class CheckFastCommandTest {
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
             when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenThrow(new NotOrderedException(Path.of("SomeFile.java"), List.of()));
+                    .thenReturn(CommandTestUtils.buildFailedResult());
         })) {
             exitCode = commandLine.execute("--base-dir", "src");
         }

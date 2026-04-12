@@ -140,9 +140,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
         FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
         boolean hasFormattingChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
-        String srcDiff = hasFormattingChanges
-                ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode())
-                : "";
+        String srcDiff =
+                hasFormattingChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
         return FlowProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(List.of())

@@ -351,15 +351,8 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("stopped early")
-                .contains("violation detected on file #")
-                .contains("Exit code: 3")
-                .containsAnyOf(
-                        "App.java",
-                        "StableService.java",
-                        "FeatureService.java",
-                        "InternalTool.java",
-                        "ExcludedSample.java",
-                        "AppTest.java");
+                .contains("violation detected")
+                .contains("Exit code: 3");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);

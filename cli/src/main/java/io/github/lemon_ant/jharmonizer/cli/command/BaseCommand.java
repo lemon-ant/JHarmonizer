@@ -151,7 +151,6 @@ abstract class BaseCommand implements Callable<Integer> {
         }
     }
 
-    @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
         FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(

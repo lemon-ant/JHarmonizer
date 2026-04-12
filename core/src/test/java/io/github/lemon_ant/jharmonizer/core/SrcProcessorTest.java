@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core;
 
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -17,6 +16,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesO
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.flow.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
@@ -113,10 +113,13 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor();
         srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
-        // When / Then
-        assertThatCode(() -> srcProcessor.processSources(
-                        temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST))
-                .doesNotThrowAnyException();
+        // When
+        SrcProcessingResult result = srcProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+
+        // Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getStopTriggers()).isEmpty();
         String finalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSrcCode).isNotBlank();
     }
@@ -134,8 +137,9 @@ class SrcProcessorTest {
         // When
         AggregatedProcessingStatistic aggregatedProcessingStatistic;
         try {
-            aggregatedProcessingStatistic =
+            SrcProcessingResult result =
                     srcProcessor.processSources(scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+            aggregatedProcessingStatistic = result.getStatistics();
         } finally {
             detachListAppender(listAppender);
             restoreLoggerLevel(initialLevel);

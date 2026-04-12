@@ -21,13 +21,10 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.A
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -105,34 +102,24 @@ public final class SrcProcessor {
         IFlow flow = SafeFlow.wrap(baseFlow);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
-        Stream<FlowProcessingResult> resultStream = SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs)
-                .map(flow::processSrc);
+        AtomicBoolean stopFlag = new AtomicBoolean(false);
+        List<FlowProcessingResult> stopTriggers = new java.util.concurrent.CopyOnWriteArrayList<>();
 
-        List<FlowProcessingResult> stopTriggers;
-        if (flowType == FlowType.CHECK_FAIL_FAST) {
-            AtomicBoolean stopFlag = new AtomicBoolean(false);
-            CopyOnWriteArrayList<FlowProcessingResult> triggers = new CopyOnWriteArrayList<>();
-            resultStream = resultStream
-                    .takeWhile(result -> !stopFlag.get())
-                    .peek(result -> {
-                        if (result.isStopRequested()) {
-                            triggers.add(result);
-                            stopFlag.set(true);
-                        }
-                    });
-            stopTriggers = triggers;
-        } else {
-            stopTriggers = List.of();
-        }
-
-        AggregatedProcessingStatistic aggregatedProcessingStatistic = resultStream
+        AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
+                        baseDir, includeGlobs, excludeGlobs)
+                .map(flow::processSrc)
+                .takeWhile(result -> !stopFlag.get())
+                .peek(result -> {
+                    if (result.isStopRequested()) {
+                        stopTriggers.add(result);
+                        stopFlag.set(true);
+                    }
+                })
                 .peek(flowProcessingResult -> {
                     if (log.isDebugEnabled()) {
                         log.debug(formatSingleFileLogMessage(
                                 flowProcessingResult.getPath(),
-                                flowProcessingResult
-                                        .getFlowProcessingStatus()
-                                        .name()));
+                                flowProcessingResult.getFlowProcessingStatus().name()));
                     }
                 })
                 .peek(flowProcessingResult ->
@@ -146,32 +133,13 @@ public final class SrcProcessor {
             logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
         }
 
-        SrcProcessingResult result = buildSrcProcessingResult(
-                flowType, aggregatedProcessingStatistic, Collections.unmodifiableList(stopTriggers));
+        SrcProcessingResult result =
+                SrcProcessingResult.buildResult(flowType, aggregatedProcessingStatistic, stopTriggers);
         logProcessingCompletion(flowType, result);
         return result;
     }
 
-    @NonNull
-    private static SrcProcessingResult buildSrcProcessingResult(
-            @NonNull FlowType flowType,
-            @NonNull AggregatedProcessingStatistic statistics,
-            @NonNull List<FlowProcessingResult> stopTriggers) {
-        return switch (flowType) {
-            case REORDER -> SrcProcessingResult.successful(statistics);
-            case CHECK_ALL -> {
-                boolean success = statistics.computeNonConformingFileCount() == 0;
-                yield success ? SrcProcessingResult.successful(statistics) : SrcProcessingResult.failed(statistics, List.of());
-            }
-            case CHECK_FAIL_FAST -> {
-                boolean success = stopTriggers.isEmpty();
-                yield success ? SrcProcessingResult.successful(statistics) : SrcProcessingResult.failed(statistics, stopTriggers);
-            }
-        };
-    }
-
-    private static void logProcessingCompletion(
-            @NonNull FlowType flowType, @NonNull SrcProcessingResult result) {
+    private static void logProcessingCompletion(@NonNull FlowType flowType, @NonNull SrcProcessingResult result) {
         AggregatedProcessingStatistic stats = result.getStatistics();
         long nonConforming = stats.computeNonConformingFileCount();
         switch (flowType) {
@@ -194,10 +162,7 @@ public final class SrcProcessor {
                             stats.getFileCount());
                 } else {
                     long checkedCount = stats.getFileCount();
-                    log.info(
-                            "{} stopped early. Checked {} file(s), violation detected.",
-                            flowType,
-                            checkedCount);
+                    log.info("{} stopped early. Checked {} file(s), violation detected.", flowType, checkedCount);
                 }
             }
             case REORDER ->

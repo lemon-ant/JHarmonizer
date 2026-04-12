@@ -27,27 +27,31 @@ public class SrcProcessingResult {
     List<@NonNull FlowProcessingResult> stopTriggers;
 
     /**
-     * Creates a successful processing result with no stop triggers.
+     * Builds a pipeline-level result from aggregated statistics, flow type, and any stop triggers.
      *
+     * <p>Success is determined by the flow type:
+     * <ul>
+     *   <li>{@code REORDER} — always successful</li>
+     *   <li>{@code CHECK_ALL} — successful when no non-conforming files are found</li>
+     *   <li>{@code CHECK_FAIL_FAST} — successful when no stop triggers were recorded</li>
+     * </ul>
+     *
+     * @param flowType the processing flow strategy
      * @param statistics the aggregated processing statistics
-     * @return a successful result
+     * @param stopTriggers the files that caused the pipeline to stop (empty for non-fail-fast flows)
+     * @return a pipeline-level result with the correct success flag
      */
     @NonNull
-    static SrcProcessingResult successful(@NonNull AggregatedProcessingStatistic statistics) {
-        return new SrcProcessingResult(statistics, true, List.of());
-    }
-
-    /**
-     * Creates a failed processing result with the given stop triggers.
-     *
-     * @param statistics the aggregated processing statistics
-     * @param stopTriggers the files that caused the pipeline to stop
-     * @return a failed result
-     */
-    @NonNull
-    static SrcProcessingResult failed(
+    public static SrcProcessingResult buildResult(
+            @NonNull FlowType flowType,
             @NonNull AggregatedProcessingStatistic statistics,
             @NonNull List<@NonNull FlowProcessingResult> stopTriggers) {
-        return new SrcProcessingResult(statistics, false, Collections.unmodifiableList(stopTriggers));
+        boolean success =
+                switch (flowType) {
+                    case REORDER -> true;
+                    case CHECK_ALL -> statistics.computeNonConformingFileCount() == 0;
+                    case CHECK_FAIL_FAST -> stopTriggers.isEmpty();
+                };
+        return new SrcProcessingResult(statistics, success, Collections.unmodifiableList(stopTriggers));
     }
 }
