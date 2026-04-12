@@ -147,7 +147,8 @@ public class SortingAlgorithmBenchmark {
     private static Stream<BenchmarkFixture> loadFixturesFromRoot(@NonNull Path fixtureRoot) {
         return SrcFilesHandler.readJavaFiles(fixtureRoot, List.of("**/input/*.java"), List.of())
                 .map(srcFile -> {
-                    SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false));
+                    SpoonAstModel spoonAstModel =
+                            SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false));
                     Set<String> sortingSkippedTypeQualifiedNames =
                             spoonAstModel.getOptOuts().getSortingSkippedTypes().stream()
                                     .map(CtType::getQualifiedName)
