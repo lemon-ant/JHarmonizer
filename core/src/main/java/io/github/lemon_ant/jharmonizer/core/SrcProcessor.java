@@ -24,8 +24,6 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -120,8 +118,8 @@ public final class SrcProcessor {
         IFlow flow = SafeFlow.wrap(baseFlow);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
-        AtomicBoolean stopFlag = new AtomicBoolean(false);
-        List<FlowProcessingResult> stopTriggers = new java.util.concurrent.CopyOnWriteArrayList<>();
+        java.util.concurrent.atomic.AtomicBoolean stopFlag = new java.util.concurrent.atomic.AtomicBoolean(false);
+        java.util.List<FlowProcessingResult> stopTriggers = new java.util.concurrent.CopyOnWriteArrayList<>();
 
         AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
                         baseDir, includeGlobs, excludeGlobs)
@@ -185,6 +183,7 @@ public final class SrcProcessor {
             }
             case REORDER ->
                 log.info("{} completed successfully. Processed {} file(s).", flowType, stats.getFileCount());
+            default -> throw new IllegalStateException("Unexpected flow type: " + flowType);
         }
     }
 
