@@ -1,0 +1,37 @@
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: false
+  blank-line-between-fields: true
+backups-enabled: false
+print-processing-statistics: true
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class, enum ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Default
+    includes: ~.*
+    ordering-rules: preserve
+    groups:
+      - name: Enum constants
+        separator: none
+        ordering-rules: preserve
+        includes: enum-constant
+      - name: Fields
+        separator: none
+        ordering-rules: alpha
+        includes: field
+      - name: Methods
+        separator: new-line
+        ordering-rules: alpha
+        includes: method
+      - name: Nested types
+        separator: new-line
+        ordering-rules: alpha
+        includes: [ class, enum ]

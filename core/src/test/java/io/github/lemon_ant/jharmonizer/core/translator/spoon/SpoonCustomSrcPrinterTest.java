@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 class SpoonCustomSrcPrinterTest {
 
+    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
+
     @Test
     void serializeCompilationUnit_afterSkippedRangesHandedOff_throwIllegalStateException() {
         // Given
@@ -19,11 +21,13 @@ class SpoonCustomSrcPrinterTest {
                 // @jharmonizer:sort-off
                 class Beta { int z; int a; }
                 """;
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Beta.java")));
+        SpoonAstModel spoonAstModel =
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Beta.java")), DEFAULT_PRINTER_CONFIG);
         SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
                 spoonAstModel.getCompilationUnit().getFactory().getEnvironment(),
                 srcCode,
-                spoonAstModel.getOptOuts().getSortingSkippedTypes());
+                spoonAstModel.getOptOuts().getSortingSkippedTypes(),
+                DEFAULT_PRINTER_CONFIG);
 
         // When
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges =
@@ -64,11 +68,13 @@ class SpoonCustomSrcPrinterTest {
                     }
                 }
                 """;
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")));
+        SpoonAstModel spoonAstModel =
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_PRINTER_CONFIG);
         SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
                 spoonAstModel.getCompilationUnit().getFactory().getEnvironment(),
                 srcCode,
-                spoonAstModel.getOptOuts().getSortingSkippedTypes());
+                spoonAstModel.getOptOuts().getSortingSkippedTypes(),
+                DEFAULT_PRINTER_CONFIG);
 
         // When
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges =
@@ -83,6 +89,6 @@ class SpoonCustomSrcPrinterTest {
     }
 
     private static void assertThatCodeParses(String srcCode) {
-        SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")));
+        SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_PRINTER_CONFIG);
     }
 }

@@ -218,12 +218,12 @@ class SuperNodeUtils {
         for (int i = 1; i < length; i++) {
             int insertedIndex = data[offset + i];
             TSortableItem insertedItem = items.get(insertedIndex);
-            int j = i - 1;
-            while (j >= 0 && comparator.compare(items.get(data[offset + j]), insertedItem) > 0) {
-                data[offset + j + 1] = data[offset + j];
-                j--;
+            int shiftPos = i - 1;
+            while (shiftPos >= 0 && comparator.compare(items.get(data[offset + shiftPos]), insertedItem) > 0) {
+                data[offset + shiftPos + 1] = data[offset + shiftPos];
+                shiftPos--;
             }
-            data[offset + j + 1] = insertedIndex;
+            data[offset + shiftPos + 1] = insertedIndex;
         }
     }
 

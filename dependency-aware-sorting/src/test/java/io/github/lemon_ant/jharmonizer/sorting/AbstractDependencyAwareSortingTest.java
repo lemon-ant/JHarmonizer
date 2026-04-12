@@ -66,7 +66,9 @@ abstract class AbstractDependencyAwareSortingTest {
     /** Creates a {@link Groups} from vararg name-arrays. */
     @SuppressWarnings("unchecked")
     static Groups<SortableTypeMember> grouping(String[]... groups) {
-        return Groups.of(java.util.Arrays.stream(groups).map(g -> group(g)).toArray(Group[]::new));
+        return Groups.of(java.util.Arrays.stream(groups)
+                .map(groupNames -> group(groupNames))
+                .toArray(Group[]::new));
     }
 
     /** Creates {@link Dependencies} from alternating provider/dependent name pairs (all STATIC). */
@@ -266,13 +268,13 @@ abstract class AbstractDependencyAwareSortingTest {
     void sort_sameSeed_producesIdenticalResultsAcrossThreeRuns() {
         // Given
         var itemList = staticItems("fig", "cherry", "apple", "elderberry", "banana", "date");
-        var g = grouping(new String[] {"fig", "date"});
-        var d = deps("cherry", "apple", "elderberry", "banana");
+        var groups = grouping(new String[] {"fig", "date"});
+        var dependencies = deps("cherry", "apple", "elderberry", "banana");
 
         // When
-        var first = names(sort(itemList, g, d));
-        var second = names(sort(itemList, g, d));
-        var third = names(sort(itemList, g, d));
+        var first = names(sort(itemList, groups, dependencies));
+        var second = names(sort(itemList, groups, dependencies));
+        var third = names(sort(itemList, groups, dependencies));
 
         // Then
         assertThat(second).isEqualTo(first);
@@ -283,16 +285,16 @@ abstract class AbstractDependencyAwareSortingTest {
     void sort_shuffledInput_producesDeterministicResult() {
         // Given
         var base = staticItems("fig", "cherry", "apple", "elderberry", "banana", "date");
-        var g = grouping(new String[] {"fig", "date"});
-        var d = deps("cherry", "apple");
-        var expected = names(sort(base, g, d));
+        var groups = grouping(new String[] {"fig", "date"});
+        var dependencies = deps("cherry", "apple");
+        var expected = names(sort(base, groups, dependencies));
         var rng = new Random(42);
 
         for (int run = 0; run < 20; run++) {
             // When
             var shuffled = new ArrayList<>(base);
             Collections.shuffle(shuffled, rng);
-            var actual = names(sort(shuffled, g, d));
+            var actual = names(sort(shuffled, groups, dependencies));
 
             // Then
             assertThat(actual)

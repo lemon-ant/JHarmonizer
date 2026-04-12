@@ -1,15 +1,19 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import java.util.Optional;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Internal utilities shared between the custom Spoon source printer and its callers.
  * Provides helpers for detecting the dominant line separator
- * and deciding whether a member group separator is needed before or after a given member.
+ * and compiled predicate factories for blank-line decisions based on {@link PrinterConfig}.
  */
 @UtilityClass
 public class SpoonSrcPrinterUtils {
@@ -73,53 +77,81 @@ public class SpoonSrcPrinterUtils {
     }
 
     /**
-     * Returns whether a separator is needed after the member.
+     * Compiles a predicate that determines whether a separator is needed after a given member.
+     * Annotation-based blank lines are always active (Palantir formatter enforces them).
+     * When {@code blankLineBetweenFields} is enabled, all fields get a separator after them.
      *
-     * @param member the member to inspect
-     * @return {@code true} if a separator is needed after the member; otherwise {@code false}
+     * @param config the printer configuration
+     * @return a predicate that returns {@code true} when a separator is needed after the member
      */
-    static boolean needsSeparatorAfter(@NonNull CtTypeMember member) {
-        // Add the separator in any way if it's not field
-        boolean isNotField = !(member instanceof CtField);
-
-        return isNotField || !member.getAnnotations().isEmpty();
+    @NonNull
+    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
+        if (config.isBlankLineBetweenFields()) {
+            return member -> true;
+        }
+        Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
+        return isNotField.or(member -> !member.getAnnotations().isEmpty());
     }
 
     /**
-     * Returns whether a separator is needed before the member.
+     * Compiles a bi-predicate that determines whether a separator is needed before a given member.
+     * Annotation-based blank lines are always active (Palantir formatter enforces them).
      *
-     * @param member the member to inspect
-     * @param first whether the member is the first one in the printed sequence
-     * @return {@code true} if a separator is needed before the member; otherwise {@code false}
+     * @param config the printer configuration
+     * @return a bi-predicate accepting (member, isFirst) that returns {@code true} when a separator is needed
      */
-    static boolean needsSeparatorBefore(@NonNull CtTypeMember member, boolean first) {
-        // Has annotations on the member
-        boolean hasAnnotations = !member.getAnnotations().isEmpty();
+    @NonNull
+    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore(@NonNull PrinterConfig config) {
+        BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
 
-        if (hasAnnotations) {
-            return true;
+        if (config.isBlankLineBeforeComment()) {
+            return compileAnnotationCheck().or(basePredicate).or(compileCommentCheck());
         }
-        // Add the separator in any way if it's not field
-        boolean isNotField = !(member instanceof CtField);
+        return compileAnnotationCheck().or(basePredicate);
+    }
 
-        if (!first && isNotField) {
-            return true;
+    /**
+     * Compiles a predicate that determines whether a blank line should be inserted after
+     * the type declaration header, before the first member. The predicate is compiled once.
+     * Enums always get a blank line after the header (after the constant list, before methods).
+     * When the flag is enabled, all types get a blank line after the header.
+     *
+     * @param config the printer configuration
+     * @return a predicate accepting the type and returning {@code true} when a blank line is needed
+     */
+    @NonNull
+    static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterConfig config) {
+        if (config.isBlankLineAfterTypeHeader()) {
+            return type -> true;
         }
+        return type -> type instanceof CtEnum<?>;
+    }
 
-        // Has comments above
-        boolean hasCommentsAbove = member.getComments().stream()
+    @NonNull
+    private static BiPredicate<CtTypeMember, Boolean> compileBaseSeparatorBeforePredicate() {
+        return (member, first) -> {
+            boolean isNotField = !(member instanceof CtField);
+            if (!first && isNotField) {
+                return true;
+            }
+
+            Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
+                    .map(Object::toString);
+            return groupHeaderMetadata
+                    .map(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
+                    .orElse(false);
+        };
+    }
+
+    @NonNull
+    private static BiPredicate<CtTypeMember, Boolean> compileAnnotationCheck() {
+        return (member, first) -> !member.getAnnotations().isEmpty();
+    }
+
+    @NonNull
+    private static BiPredicate<CtTypeMember, Boolean> compileCommentCheck() {
+        return (member, first) -> member.getComments().stream()
                 .anyMatch(comment -> comment.getPosition().getEndLine()
                         < member.getPosition().getLine());
-
-        if (hasCommentsAbove) {
-            return true;
-        }
-
-        Optional<String> groupHeaderMetadata =
-                Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA)).map(Object::toString);
-
-        return groupHeaderMetadata
-                .map(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
-                .orElse(false);
     }
 }
