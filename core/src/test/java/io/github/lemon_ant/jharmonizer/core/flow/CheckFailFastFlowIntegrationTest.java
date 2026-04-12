@@ -44,7 +44,9 @@ class CheckFailFastFlowIntegrationTest {
         AtomicInteger processedSources = new AtomicInteger();
 
         // When
-        List<FlowProcessingResult> results = srcFiles.stream()
+        // takeWhile stops before adding the stop-requested result, so the list
+        // contains only results processed before the first violation.
+        List<FlowProcessingResult> resultsBeforeStop = srcFiles.stream()
                 .map(srcFile -> {
                     processedSources.incrementAndGet();
                     return flow.processSrc(srcFile);
@@ -54,7 +56,7 @@ class CheckFailFastFlowIntegrationTest {
 
         // Then
         assertThat(processedSources).hasValue(1);
-        assertThat(results).isEmpty();
+        assertThat(resultsBeforeStop).isEmpty();
     }
 
     @Test

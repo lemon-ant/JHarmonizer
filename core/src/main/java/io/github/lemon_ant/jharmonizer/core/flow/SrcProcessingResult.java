@@ -11,8 +11,12 @@ import lombok.Value;
 /**
  * Pipeline-level result of processing all source files through a flow.
  * Carries the aggregated statistics, overall success flag, and the list of
- * files that triggered pipeline stop (relevant for fail-fast check flow only,
- * where parallel threads may detect multiple stop triggers concurrently).
+ * files that triggered pipeline stop (relevant for fail-fast check flow only).
+ *
+ * <p>With the current sequential stream implementation, at most one stop trigger
+ * is expected. The list type supports future parallel stream execution where
+ * multiple threads may detect violations concurrently before the stop flag
+ * propagates.
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
