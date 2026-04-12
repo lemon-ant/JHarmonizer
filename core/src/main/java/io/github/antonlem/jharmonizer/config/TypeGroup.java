@@ -22,8 +22,8 @@ public class TypeGroup {
     }
 
     @Override
-    public boolean equals(Object o) {
-        return (o instanceof TypeGroup other) && typeKinds.equals(other.typeKinds);
+    public boolean equals(Object other) {
+        return (other instanceof TypeGroup that) && typeKinds.equals(that.typeKinds);
     }
 
     @Override

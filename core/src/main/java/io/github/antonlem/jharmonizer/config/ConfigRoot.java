@@ -38,8 +38,8 @@ public class ConfigRoot {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof ConfigRoot that)) {
+    public boolean equals(Object other) {
+        if (!(other instanceof ConfigRoot that)) {
             return false;
         }
         return fixImports == that.fixImports

@@ -62,8 +62,8 @@ public class MemberGroup {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof MemberGroup that)) {
+    public boolean equals(Object other) {
+        if (!(other instanceof MemberGroup that)) {
             return false;
         }
 

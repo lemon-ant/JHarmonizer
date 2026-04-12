@@ -47,7 +47,7 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
     private Set<String> parseCommaSeparated(String text) {
         return Collections.unmodifiableSet(Arrays.stream(StringUtils.split(text, ','))
                 .map(String::trim)
-                .filter(s -> !s.isEmpty())
+                .filter(value -> !value.isEmpty())
                 .collect(Collectors.<String, Set<String>>toCollection(HashSet::new)));
     }
 }

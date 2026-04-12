@@ -9,9 +9,9 @@ import java.util.*;
 class TypeGroupDeserializer extends JsonDeserializer<TypeGroup> {
 
     @Override
-    public TypeGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        ObjectCodec codec = p.getCodec();
-        JsonNode node = codec.readTree(p);
+    public TypeGroup deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException {
+        ObjectCodec codec = parser.getCodec();
+        JsonNode node = codec.readTree(parser);
 
         Set<TypeKind> result = new TreeSet<>();
 

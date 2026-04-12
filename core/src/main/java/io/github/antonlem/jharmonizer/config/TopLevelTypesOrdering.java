@@ -45,8 +45,8 @@ public class TopLevelTypesOrdering {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof TopLevelTypesOrdering that)) {
+    public boolean equals(Object other) {
+        if (!(other instanceof TopLevelTypesOrdering that)) {
             return false;
         }
 

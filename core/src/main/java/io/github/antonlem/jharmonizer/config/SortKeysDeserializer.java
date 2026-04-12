@@ -11,9 +11,9 @@ class SortKeysDeserializer extends JsonDeserializer<List<SortKey>> {
 
     @Override
     @SuppressWarnings("PMD.CyclomaticComplexity")
-    public List<SortKey> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        ObjectCodec codec = p.getCodec();
-        JsonNode node = codec.readTree(p);
+    public List<SortKey> deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException {
+        ObjectCodec codec = parser.getCodec();
+        JsonNode node = codec.readTree(parser);
 
         List<SortKey> result = new ArrayList<>();
 
