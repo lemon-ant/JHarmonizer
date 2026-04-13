@@ -809,6 +809,61 @@ Core principles:
 
 ---
 
+### 19. Automatic fully-qualified name optimizer (future version)
+
+#### Status
+- [ ] Not implemented (captured as a future improvement)
+- [ ] Revisit after: first stable version is fully validated on real projects
+
+#### Background
+Java source files sometimes contain fully-qualified type names used inline (for example
+`java.util.List<String>` instead of a `List` reference backed by an `import java.util.List;`
+declaration).
+This is occasionally justified when two types from different packages share the same simple name
+and both are referenced in the same file — in that case at most one of them can have a normal
+import, and the other must stay fully-qualified to avoid an ambiguous name collision.
+
+Outside of that justified case, inline fully-qualified names are noisy, harder to read, and
+inconsistent with the project's code style expectations.
+
+#### Problem statement
+When fully-qualified names appear in a file with no naming collision, they should be replaced by:
+1. a normal `import` statement for the referenced type, and
+2. the short (simple) name at all usage sites.
+
+The optimizer should perform this replacement automatically so that files converge toward the
+canonical import-plus-short-name form.
+
+#### Proposed solution (future)
+Introduce an import normalizer pass that:
+- detects all inline fully-qualified type references in the AST;
+- for each reference, checks whether the simple name is already used by another imported type
+  from a different package (collision check);
+- if no collision exists, rewrites the reference to its simple name and inserts the corresponding
+  import declaration into the file's import section;
+- applies the same conflict-aware collision check in reverse when resolving ambiguities
+  (for example two types named `Result` from different packages in the same file — one import is
+  kept, the other stays fully-qualified);
+- integrates with the existing import-section ordering rules so newly added imports land in the
+  correct position.
+
+#### Non-goals
+- Do not attempt to resolve types that are not available on the configured classpath — this pass
+  should operate only on types whose simple names are unambiguously resolvable in context.
+- Do not change the behavior of intentionally fully-qualified references used in annotations,
+  suppression strings, or other contexts where the FQN form is semantically required.
+
+#### Implementation outline (when revisited)
+- [ ] Enumerate all inline fully-qualified type references in the parsed AST.
+- [ ] Build per-file simple-name collision map from existing imports and other FQN occurrences.
+- [ ] For each FQN with no simple-name collision, replace all occurrences with the short name.
+- [ ] Insert the corresponding import declaration via the import-section pipeline.
+- [ ] Add dedicated E2E fixtures: one with a real collision (FQN must be preserved), one without
+      (FQN must be replaced), and one mixed-case file.
+- [ ] Expose a config option to disable this pass for projects that intentionally use FQNs.
+
+---
+
 ## Technical debt / stabilization backlog
 
 ### 1. Blank-final nearest-provider edge cases still not covered by active E2E
