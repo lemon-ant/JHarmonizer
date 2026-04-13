@@ -411,14 +411,14 @@ abstract class AbstractDependencyAwareSortingTest {
     @Test
     void sort_groupsContainsEmptyGroup_emptyGroupIgnoredAndItemsSorted() {
         // Given
-        var members = staticItems("charlie", "alpha", "bravo");
-        var groups = new Groups<>(List.of(new Group<SortableTypeMember>(List.of())));
+        List<SortableTypeMember> members = staticItems("charlie", "alpha", "bravo");
+        Groups<SortableTypeMember> groups = new Groups<>(List.of(new Group<SortableTypeMember>(List.of())));
 
         // When
-        List<SortableTypeMember> result = sort(members, groups, Dependencies.empty());
+        List<SortableTypeMember> sortedMembers = sort(members, groups, Dependencies.empty());
 
         // Then
-        assertThat(names(result)).containsExactly("alpha", "bravo", "charlie");
+        assertThat(names(sortedMembers)).containsExactly("alpha", "bravo", "charlie");
     }
 
     // ------------------------------------------------ closure with two in-subset providers //

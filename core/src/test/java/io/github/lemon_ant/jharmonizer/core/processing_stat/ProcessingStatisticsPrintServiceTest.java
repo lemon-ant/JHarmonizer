@@ -2,6 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResultTestCreator;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
@@ -228,15 +230,7 @@ class ProcessingStatisticsPrintServiceTest {
     }
 
     private static FileProcessingStatistic buildFileStatistic(Path path, long sizeInBytes) {
-        return FileProcessingStatistic.convert(
-                io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResultTestCreator.create(
-                        path,
-                        io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.CHECKED,
-                        false,
-                        sizeInBytes,
-                        0L,
-                        0L,
-                        0L,
-                        0L));
+        return FileProcessingStatistic.convert(FileProcessingResultTestCreator.create(
+                path, FileProcessingStatus.CHECKED, false, sizeInBytes, 0L, 0L, 0L, 0L));
     }
 }

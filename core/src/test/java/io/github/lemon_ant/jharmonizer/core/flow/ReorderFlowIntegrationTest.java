@@ -31,11 +31,11 @@ class ReorderFlowIntegrationTest {
         SrcFile srcFile = createSrcFile(Files.readString(javaFile), javaFile);
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.UNCHANGED);
-        assertThat(result.isStopRequested()).isFalse();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.UNCHANGED);
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
     }
 
     @Test
@@ -46,12 +46,12 @@ class ReorderFlowIntegrationTest {
         SrcFile srcFile = createSrcFile(Files.readString(javaFile), javaFile);
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus())
+        assertThat(fileProcessingResult.getFileProcessingStatus())
                 .isIn(FileProcessingStatus.REORDERED, FileProcessingStatus.FORMATTED);
-        assertThat(result.isStopRequested()).isFalse();
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
     }
 
     @Test
@@ -77,10 +77,10 @@ class ReorderFlowIntegrationTest {
         SrcFile srcFile = createSrcFile(Files.readString(javaFile), javaFile);
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
         String rewrittenContent = Files.readString(javaFile, StandardCharsets.UTF_8);
         assertThat(rewrittenContent).isNotEqualTo("class FormattingOnly{int x;}");
     }
@@ -121,14 +121,11 @@ class ReorderFlowIntegrationTest {
         SrcFile srcFile = createSrcFile(Files.readString(javaFile), javaFile);
 
         // When
-        FileProcessingResult result = flow.processSrcSafely(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrcSafely(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus())
-                .isIn(
-                        FileProcessingStatus.ERROR,
-                        FileProcessingStatus.UNCHANGED,
-                        FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getFileProcessingStatus())
+                .isIn(FileProcessingStatus.ERROR, FileProcessingStatus.UNCHANGED, FileProcessingStatus.FORMATTED);
     }
 
     @NonNull

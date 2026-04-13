@@ -13,8 +13,10 @@ import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtRecordComponent;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 
 class SpoonTypeMemberUtilsTest {
 
@@ -168,7 +170,7 @@ class SpoonTypeMemberUtilsTest {
             CtAnonymousExecutable staticInitBlock = MIXED_MEMBERS_TYPE.getTypeMembers().stream()
                     .filter(member -> member instanceof CtAnonymousExecutable)
                     .map(member -> (CtAnonymousExecutable) member)
-                    .filter(member -> member.getModifiers().contains(spoon.reflect.declaration.ModifierKind.STATIC))
+                    .filter(member -> member.getModifiers().contains(ModifierKind.STATIC))
                     .findFirst()
                     .orElseThrow();
 
@@ -185,7 +187,7 @@ class SpoonTypeMemberUtilsTest {
             CtAnonymousExecutable instanceInitBlock = MIXED_MEMBERS_TYPE.getTypeMembers().stream()
                     .filter(member -> member instanceof CtAnonymousExecutable)
                     .map(member -> (CtAnonymousExecutable) member)
-                    .filter(member -> !member.getModifiers().contains(spoon.reflect.declaration.ModifierKind.STATIC))
+                    .filter(member -> !member.getModifiers().contains(ModifierKind.STATIC))
                     .findFirst()
                     .orElseThrow();
 
@@ -220,7 +222,7 @@ class SpoonTypeMemberUtilsTest {
                     MIXED_MEMBERS_TYPE.getTypeMembers(), "NestedRecord");
             CtType<?> nestedRecordType = (CtType<?>) nestedRecord;
             CtTypeMember recordComponent = nestedRecordType.getTypeMembers().stream()
-                    .filter(member -> member instanceof spoon.reflect.declaration.CtRecordComponent)
+                    .filter(member -> member instanceof CtRecordComponent)
                     .findFirst()
                     .orElseThrow();
 

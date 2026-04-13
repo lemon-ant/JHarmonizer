@@ -4,7 +4,9 @@ import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtMethod;
 
 class RelocationDetectorTest {
 
@@ -99,8 +102,8 @@ class RelocationDetectorTest {
             Map<SourcePosition, Integer> originalOrderIndices =
                     RelocationDetector.indexElementsByOrder(compilationUnit);
             // Reverse the indices to simulate reordering (map becomes unmodifiable so we create shifted copy)
-            Map<SourcePosition, Integer> reversedIndices = new java.util.HashMap<>();
-            List<SourcePosition> positions = new java.util.ArrayList<>(originalOrderIndices.keySet());
+            Map<SourcePosition, Integer> reversedIndices = new HashMap<>();
+            List<SourcePosition> positions = new ArrayList<>(originalOrderIndices.keySet());
             int size = positions.size();
             for (int i = 0; i < size; i++) {
                 reversedIndices.put(positions.get(i), size - 1 - i);
@@ -181,7 +184,7 @@ class RelocationDetectorTest {
                     createSrcFile("class Sample { void foo() {} }", SAMPLE_PATH), DEFAULT_PRINTER_CONFIG);
             CtElement method =
                     spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getTypeMembers().stream()
-                            .filter(member -> member instanceof spoon.reflect.declaration.CtMethod)
+                            .filter(member -> member instanceof CtMethod)
                             .findFirst()
                             .orElseThrow();
             List<Pair<CtElement, Integer>> relocations = List.of(Pair.of(method, 1));

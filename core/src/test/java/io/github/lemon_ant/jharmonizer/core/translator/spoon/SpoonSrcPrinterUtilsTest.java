@@ -8,6 +8,8 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -159,7 +161,7 @@ class SpoonSrcPrinterUtilsTest {
                     SpoonParser.parseJavaSrcFile(createSrcFile("class Sample { int x; }", SAMPLE_PATH), printerConfig);
             CtTypeMember field =
                     spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getTypeMembers().stream()
-                            .filter(member -> member instanceof spoon.reflect.declaration.CtField)
+                            .filter(member -> member instanceof CtField)
                             .findFirst()
                             .orElseThrow();
 
@@ -180,7 +182,7 @@ class SpoonSrcPrinterUtilsTest {
                     createSrcFile("class Sample { void foo() {} }", SAMPLE_PATH), printerConfig);
             CtTypeMember method =
                     spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getTypeMembers().stream()
-                            .filter(member -> member instanceof spoon.reflect.declaration.CtMethod)
+                            .filter(member -> member instanceof CtMethod)
                             .findFirst()
                             .orElseThrow();
 

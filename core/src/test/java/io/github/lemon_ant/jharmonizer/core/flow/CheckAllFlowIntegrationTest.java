@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,13 +26,13 @@ class CheckAllFlowIntegrationTest {
         SrcFile srcFile = createSrcFile("class Sample {\n    int a;\n    int b;\n}\n", Path.of("Sample.java"));
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
-        assertThat(result.isStopRequested()).isFalse();
-        assertThat(result.getDiff()).isEmpty();
-        assertThat(result.getRelocations()).isEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
+        assertThat(fileProcessingResult.getDiff()).isEmpty();
+        assertThat(fileProcessingResult.getRelocations()).isEmpty();
     }
 
     @Test
@@ -41,12 +42,12 @@ class CheckAllFlowIntegrationTest {
         SrcFile srcFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
-        assertThat(result.isStopRequested()).isFalse();
-        assertThat(result.getRelocations()).isNotEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
+        assertThat(fileProcessingResult.getRelocations()).isNotEmpty();
     }
 
     @Test
@@ -56,11 +57,11 @@ class CheckAllFlowIntegrationTest {
         SrcFile srcFile = createSrcFile("class Sample{int x;}", Path.of("Sample.java"));
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
-        assertThat(result.getDiff()).isNotEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getDiff()).isNotEmpty();
     }
 
     @Test
@@ -72,12 +73,14 @@ class CheckAllFlowIntegrationTest {
                 createSrcFile("class B {\n    int b;\n}\n", Path.of("B.java")));
 
         // When
-        List<FileProcessingResult> results =
+        List<FileProcessingResult> fileProcessingResults =
                 flow.processStream(srcFiles.stream()).toList();
 
         // Then
-        assertThat(results).hasSize(2);
-        assertThat(results).allMatch(result -> result.getFileProcessingStatus() == FileProcessingStatus.CHECKED);
+        assertThat(fileProcessingResults).hasSize(2);
+        assertThat(fileProcessingResults)
+                .allMatch(fileProcessingResult ->
+                        fileProcessingResult.getFileProcessingStatus() == FileProcessingStatus.CHECKED);
     }
 
     @Test
@@ -105,45 +108,43 @@ class CheckAllFlowIntegrationTest {
         SrcFile malformedJavaFile = createSrcFile("not valid java !@#$%", Path.of("Broken.java"));
 
         // When
-        FileProcessingResult result = flow.processSrcSafely(malformedJavaFile);
+        FileProcessingResult fileProcessingResult = flow.processSrcSafely(malformedJavaFile);
 
         // Then
-        assertThat(result.getFileProcessingStatus())
-                .isIn(FileProcessingStatus.CHECKED, FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getFileProcessingStatus())
+                .isIn(FileProcessingStatus.ERROR, FileProcessingStatus.CHECKED, FileProcessingStatus.FORMATTED);
     }
 
     @Test
-    void processSourceWithFormattingOnlyFallback_formattingChanges_returnsFormattedResult() throws Exception {
+    void processSrcWithFormattingOnlyFallback_formattingChanges_returnsFormattedResult() throws Exception {
         // Given
         CheckAllFlow flow = createFlow();
         SrcFile srcFile = createSrcFile("class Sample{int x;}", Path.of("Sample.java"));
-        io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException modelBuildException =
-                new io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException(
-                        srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
+        SpoonModelBuildException modelBuildException =
+                new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
 
         // When
-        FileProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+        FileProcessingResult fileProcessingResult = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
-        assertThat(result.getDiff()).isNotEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getDiff()).isNotEmpty();
     }
 
     @Test
-    void processSourceWithFormattingOnlyFallback_noFormattingChanges_returnsCheckedResult() throws Exception {
+    void processSrcWithFormattingOnlyFallback_noFormattingChanges_returnsCheckedResult() throws Exception {
         // Given
         CheckAllFlow flow = createFlow();
         SrcFile srcFile = createSrcFile("class Sample {\n    int x;\n}\n", Path.of("Sample.java"));
-        io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException modelBuildException =
-                new io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException(
-                        srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
+        SpoonModelBuildException modelBuildException =
+                new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
 
         // When
-        FileProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+        FileProcessingResult fileProcessingResult = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
-        assertThat(result.getDiff()).isEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
+        assertThat(fileProcessingResult.getDiff()).isEmpty();
     }
 
     @NonNull
@@ -162,14 +163,9 @@ class CheckAllFlowIntegrationTest {
 
     @NonNull
     private static FileProcessingResult invokeFormattingOnlyFallback(
-            @NonNull CheckAllFlow flow,
-            @NonNull SrcFile srcFile,
-            @NonNull io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException modelBuildException)
-            throws Exception {
+            CheckAllFlow flow, SrcFile srcFile, SpoonModelBuildException modelBuildException) throws Exception {
         Method method = CheckAllFlow.class.getDeclaredMethod(
-                "processSrcWithFormattingOnlyFallback",
-                SrcFile.class,
-                io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException.class);
+                "processSrcWithFormattingOnlyFallback", SrcFile.class, SpoonModelBuildException.class);
         method.setAccessible(true);
         try {
             return (FileProcessingResult) method.invoke(flow, srcFile, modelBuildException);
