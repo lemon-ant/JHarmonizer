@@ -128,8 +128,7 @@ class ReorderFlowIntegrationTest {
                 .isIn(
                         FileProcessingStatus.ERROR,
                         FileProcessingStatus.UNCHANGED,
-                        FileProcessingStatus.FORMATTED,
-                        FileProcessingStatus.REORDERED);
+                        FileProcessingStatus.FORMATTED);
     }
 
     @NonNull
