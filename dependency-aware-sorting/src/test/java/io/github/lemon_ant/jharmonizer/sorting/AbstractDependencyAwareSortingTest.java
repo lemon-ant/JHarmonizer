@@ -415,7 +415,7 @@ abstract class AbstractDependencyAwareSortingTest {
         var groups = new Groups<>(List.of(new Group<SortableTypeMember>(List.of())));
 
         // When
-        var result = sort(members, groups, Dependencies.empty());
+        List<SortableTypeMember> result = sort(members, groups, Dependencies.empty());
 
         // Then
         assertThat(names(result)).containsExactly("alpha", "bravo", "charlie");
