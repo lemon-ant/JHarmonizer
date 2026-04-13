@@ -8,9 +8,9 @@ import static org.mockito.Mockito.when;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResultTestCreator;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
-import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -29,38 +29,22 @@ class CommandTestUtils {
 
     /**
      * Creates a real successful {@link SrcProcessingResult} for test stubs.
-     * Uses reflection because the constructor is package-private to the core module.
      *
      * @return a successful processing result with mock statistics
      */
     @NonNull
     static SrcProcessingResult buildSuccessfulResult() {
-        return createSrcProcessingResult(mock(AggregatedProcessingStatistic.class), true);
+        return SrcProcessingResultTestCreator.create(mock(AggregatedProcessingStatistic.class), true);
     }
 
     /**
      * Creates a real failed {@link SrcProcessingResult} for test stubs.
-     * Uses reflection because the constructor is package-private to the core module.
      *
      * @return a failed processing result
      */
     @NonNull
     static SrcProcessingResult buildFailedResult() {
-        return createSrcProcessingResult(mock(AggregatedProcessingStatistic.class), false);
-    }
-
-    @NonNull
-    @NonNull
-    private static SrcProcessingResult createSrcProcessingResult(
-            AggregatedProcessingStatistic statistics, boolean success) {
-        try {
-            Constructor<SrcProcessingResult> constructor = SrcProcessingResult.class.getDeclaredConstructor(
-                    AggregatedProcessingStatistic.class, boolean.class);
-            constructor.setAccessible(true);
-            return constructor.newInstance(statistics, success);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Failed to create SrcProcessingResult for testing", exception);
-        }
+        return SrcProcessingResultTestCreator.create(mock(AggregatedProcessingStatistic.class), false);
     }
 
     @NonNull
