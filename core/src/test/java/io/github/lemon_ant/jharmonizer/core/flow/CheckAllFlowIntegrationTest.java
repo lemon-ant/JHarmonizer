@@ -99,17 +99,17 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processSrcSafely_runtimeException_returnsErrorResult() {
+    void processSrcSafely_malformedJava_returnsFallbackResult() {
         // Given
         CheckAllFlow flow = createFlow();
-        SrcFile malformedFile = createSrcFile("not valid java !@#$%", Path.of("Broken.java"));
+        SrcFile malformedJavaFile = createSrcFile("not valid java !@#$%", Path.of("Broken.java"));
 
         // When
-        FileProcessingResult result = flow.processSrcSafely(malformedFile);
+        FileProcessingResult result = flow.processSrcSafely(malformedJavaFile);
 
         // Then
         assertThat(result.getFileProcessingStatus())
-                .isIn(FileProcessingStatus.ERROR, FileProcessingStatus.CHECKED, FileProcessingStatus.FORMATTED);
+                .isIn(FileProcessingStatus.CHECKED, FileProcessingStatus.FORMATTED);
     }
 
     @Test
