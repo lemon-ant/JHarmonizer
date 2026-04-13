@@ -16,7 +16,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesO
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;

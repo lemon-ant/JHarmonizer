@@ -293,8 +293,8 @@ public class FlowProcessingStats {
                     .wallClockTimeNanos(wallClockElapsedNanos)
                     .smallestFile(minSize.get())
                     .largestFile(maxSize.get())
-                    .filesWithUnexpectedErrors(Collections.unmodifiableList(unexpectedErrorPaths))
-                    .stopTriggerPaths(Collections.unmodifiableList(stopTriggerFilePaths))
+                    .filesWithUnexpectedErrors(new ArrayList<>(unexpectedErrorPaths))
+                    .stopTriggerPaths(new ArrayList<>(stopTriggerFilePaths))
                     .statusCounts(resolvedStatusCounts)
                     .build();
         }

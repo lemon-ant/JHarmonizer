@@ -11,7 +11,6 @@ import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.ReorderFlow;
-import io.github.lemon_ant.jharmonizer.core.flow.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
@@ -23,7 +22,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -138,8 +136,8 @@ public final class SrcProcessor {
 
         logCompletionMessage(flowType, aggregatedProcessingStatistic);
         long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
-        boolean success = flow.isSuccessful(modifiedFileCount);
-        return SrcProcessingResult.of(aggregatedProcessingStatistic, success);
+        boolean success = flow.isSuccessful(modifiedFileCount > 0);
+        return new SrcProcessingResult(aggregatedProcessingStatistic, success);
     }
 
     private static void logDebugProcessingCompletionSummary(
@@ -166,31 +164,29 @@ public final class SrcProcessor {
         List<Path> stopTriggerPaths = aggregatedProcessingStatistic.getStopTriggerPaths();
         if (!stopTriggerPaths.isEmpty()) {
             log.info(
-                    "{} stopped early. Processed {} file(s), {} non-conforming. Stop triggered by: {}",
+                    "{} stopped early. Processed {} file(s), {} non-conforming.{}",
                     flowType,
                     aggregatedProcessingStatistic.getFileCount(),
                     modifiedFileCount,
-                    formatPathList(stopTriggerPaths));
-        } else if (modifiedFileCount > 0) {
-            log.info(
-                    "{} completed. {} of {} file(s) modified.",
-                    flowType,
-                    modifiedFileCount,
-                    aggregatedProcessingStatistic.getFileCount());
+                    formatBulletList("Stop triggered by", stopTriggerPaths));
         } else {
             log.info(
-                    "{} completed successfully. Processed {} file(s).",
+                    "{} completed. Processed {} file(s), {} modified.",
                     flowType,
-                    aggregatedProcessingStatistic.getFileCount());
+                    aggregatedProcessingStatistic.getFileCount(),
+                    modifiedFileCount);
         }
     }
 
     @NonNull
-    private static String formatPathList(@NonNull List<Path> paths) {
-        return paths.stream()
+    private static String formatBulletList(@NonNull String header, @NonNull List<Path> paths) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n  ").append(header).append(':');
+        paths.stream()
                 .sorted(Comparator.comparing(Path::toString))
                 .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH))
-                .collect(Collectors.joining(", "));
+                .forEach(abbreviatedPath -> builder.append("\n    \u2022 ").append(abbreviatedPath));
+        return builder.toString();
     }
 
     private static void logFilesWithUnexpectedErrors(
@@ -199,8 +195,8 @@ public final class SrcProcessor {
             return;
         }
         log.warn(
-                "Files encountered unexpected errors and were not processed correctly: {}",
-                formatPathList(aggregatedProcessingStatistic.getFilesWithUnexpectedErrors()));
+                "Files encountered unexpected errors and were not processed correctly:{}",
+                formatBulletList("Affected files", aggregatedProcessingStatistic.getFilesWithUnexpectedErrors()));
     }
 
     @NonNull

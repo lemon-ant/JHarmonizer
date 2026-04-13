@@ -125,7 +125,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
     }
 
     @Override
-    public boolean isSuccessful(long modifiedFileCount) {
+    public boolean isSuccessful(boolean hasModifications) {
         return true;
     }
 }

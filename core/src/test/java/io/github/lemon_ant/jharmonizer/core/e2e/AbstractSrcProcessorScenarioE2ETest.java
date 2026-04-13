@@ -3,12 +3,12 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.SrcProcessingResult;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

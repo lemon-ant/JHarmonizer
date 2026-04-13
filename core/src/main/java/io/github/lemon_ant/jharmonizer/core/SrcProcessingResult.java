@@ -1,4 +1,4 @@
-package io.github.lemon_ant.jharmonizer.core.flow;
+package io.github.lemon_ant.jharmonizer.core;
 
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import lombok.AccessLevel;
@@ -18,16 +18,4 @@ public class SrcProcessingResult {
     AggregatedProcessingStatistic statistics;
 
     boolean success;
-
-    /**
-     * Creates a pipeline-level result from aggregated statistics and a success flag.
-     *
-     * @param statistics the aggregated processing statistics
-     * @param success whether the flow considers the run successful
-     * @return the pipeline-level result
-     */
-    @NonNull
-    public static SrcProcessingResult of(@NonNull AggregatedProcessingStatistic statistics, boolean success) {
-        return new SrcProcessingResult(statistics, success);
-    }
 }

@@ -111,7 +111,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     }
 
     @Override
-    public boolean isSuccessful(long modifiedFileCount) {
-        return modifiedFileCount == 0;
+    public boolean isSuccessful(boolean hasModifications) {
+        return !hasModifications;
     }
 }

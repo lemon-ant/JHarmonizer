@@ -25,10 +25,10 @@ public interface IFlow {
 
     /**
      * Determines whether the processing run was successful based on
-     * the number of files that were modified (or would need modification).
+     * whether any files were modified (or would need modification).
      *
-     * @param modifiedFileCount the number of non-conforming / modified files
+     * @param hasModifications {@code true} if at least one file was modified or non-conforming
      * @return {@code true} if the flow considers the run successful
      */
-    boolean isSuccessful(long modifiedFileCount);
+    boolean isSuccessful(boolean hasModifications);
 }
