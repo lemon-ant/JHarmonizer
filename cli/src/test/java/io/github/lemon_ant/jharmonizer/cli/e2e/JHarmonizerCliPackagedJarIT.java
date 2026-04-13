@@ -317,7 +317,8 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("CHECKED")
-                .contains("completed successfully")
+                .contains("completed")
+                .contains("0 modified")
                 .contains("Exit code: 0")
                 .doesNotContain("REORDERED")
                 .doesNotContain("FORMATTED");
