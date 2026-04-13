@@ -406,6 +406,61 @@ abstract class AbstractDependencyAwareSortingTest {
         assertThatThrownBy(() -> result.add(staticMember("x"))).isInstanceOf(UnsupportedOperationException.class);
     }
 
+    // ------------------------------------------------ empty-group handling ----- //
+
+    @Test
+    void sort_groupsContainsEmptyGroup_emptyGroupIgnoredAndItemsSorted() {
+        // Given
+        var members = staticItems("charlie", "alpha", "bravo");
+        var groups = new Groups<>(List.of(new Group<SortableTypeMember>(List.of())));
+
+        // When
+        var result = sort(members, groups, Dependencies.empty());
+
+        // Then
+        assertThat(names(result)).containsExactly("alpha", "bravo", "charlie");
+    }
+
+    // ------------------------------------------------ closure with two in-subset providers //
+
+    @Test
+    void sort_twoProvidersForOneInClosure_allProvidersLiftedCorrectly() {
+        // Given
+        // b→a, c→b, d→b: c and d must precede b; b must precede a.
+        // In natural order a < b < c < d, so a is scanned first and blocked.
+        // The transitive closure for a = {b, c, d} with subInDegree[b] = 2 (c and d both in subset).
+        var members = staticItems("a", "b", "c", "d");
+
+        // When
+        var result = sort(members, Groups.empty(), deps("b", "a", "c", "b", "d", "b"));
+
+        // Then
+        var resultNames = names(result);
+        assertThat(resultNames.indexOf("c")).isLessThan(resultNames.indexOf("b"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
+        assertThat(resultNames.indexOf("b")).isLessThan(resultNames.indexOf("a"));
+    }
+
+    // ------------------------------------------------ partially-emitted provider in closure //
+
+    @Test
+    void sort_oneProviderAlreadyEmittedInClosure_onlyUnemittedProvidersLifted() {
+        // Given
+        // a→e, e→d, f→d: a provides e; e and f both must precede d.
+        // In natural order a < b < c < d < e < f, d is scanned before e and f.
+        // When d is blocked, a is already emitted; a appears in reverseAdj[e] but is skipped.
+        var members = staticItems("a", "b", "c", "d", "e", "f");
+
+        // When
+        var result = sort(members, Groups.empty(), deps("a", "e", "e", "d", "f", "d"));
+
+        // Then
+        var resultNames = names(result);
+        assertThat(resultNames.indexOf("a")).isLessThan(resultNames.indexOf("e"));
+        assertThat(resultNames.indexOf("e")).isLessThan(resultNames.indexOf("d"));
+        assertThat(resultNames.indexOf("f")).isLessThan(resultNames.indexOf("d"));
+    }
+
     // ------------------------------------------------ mixed STATIC/DYNAMIC ----- //
 
     @Test

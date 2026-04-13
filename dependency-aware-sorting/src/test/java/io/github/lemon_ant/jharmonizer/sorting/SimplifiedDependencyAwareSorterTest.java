@@ -114,6 +114,40 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
         assertThat(resultNames.indexOf("gamma")).isLessThan(resultNames.indexOf("delta"));
     }
 
+    // --- null-parameter validation --- //
+
+    @Test
+    void sort_nullItems_throwsNullPointerException() {
+        // When / Then
+        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
+                        null, Groups.empty(), Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void sort_nullGroups_throwsNullPointerException() {
+        // When / Then
+        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
+                        List.of(), null, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void sort_nullDependencies_throwsNullPointerException() {
+        // When / Then
+        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
+                        List.of(), Groups.empty(), null, SortableTypeMember.DEFAULT_ORDER))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void sort_nullComparator_throwsNullPointerException() {
+        // When / Then
+        assertThatThrownBy(() ->
+                        SimplifiedDependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
     @Test
     void sort_multipleGroupsWithDepsOnSingletons_allConstraintsHonoured() {
         // Given

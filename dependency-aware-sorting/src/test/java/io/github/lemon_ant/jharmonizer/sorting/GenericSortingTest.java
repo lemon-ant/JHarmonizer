@@ -386,4 +386,29 @@ class GenericSortingTest {
             assertThat(result.indexOf(test)).isLessThan(result.indexOf(deploy));
         }
     }
+
+    @Nested
+    class ConstraintFactoryTests {
+
+        @Test
+        void dependenciesOf_oddPairsCount_throwsIllegalArgumentException() {
+            // When / Then
+            assertThatThrownBy(() -> Dependencies.of("only-one"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("even");
+        }
+
+        @Test
+        void groupOf_nullItemsArray_throwsNullPointerException() {
+            // When / Then
+            assertThatThrownBy(() -> Group.of((String[]) null)).isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @SuppressWarnings("unchecked")
+        void groupsOf_nullGroupsArray_throwsNullPointerException() {
+            // When / Then
+            assertThatThrownBy(() -> Groups.of((Group<String>[]) null)).isInstanceOf(NullPointerException.class);
+        }
+    }
 }

@@ -140,4 +140,103 @@ class ProcessingStatisticsPrintServiceTest {
             Locale.setDefault(defaultLocale);
         }
     }
+
+    @Test
+    void render_withSmallestAndLargestFile_showsSizeBoundarySection() {
+        // Given
+        Path smallestPath = Path.of("small", "Tiny.java");
+        Path largestPath = Path.of("large", "Huge.java");
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(2)
+                .totalSizeInBytes(1_000)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .smallestFile(buildFileStatistic(smallestPath, 100L))
+                .largestFile(buildFileStatistic(largestPath, 900L))
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report)
+                .contains("Size boundary files:")
+                .contains("- Min size file:")
+                .contains("- Max size file:");
+    }
+
+    @Test
+    void render_withOnlySmallestFile_showsOnlyMinPath() {
+        // Given
+        Path smallestPath = Path.of("only", "Smallest.java");
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(1)
+                .totalSizeInBytes(100)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .smallestFile(buildFileStatistic(smallestPath, 100L))
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report)
+                .contains("Size boundary files:")
+                .contains("- Min size file:")
+                .doesNotContain("- Max size file:");
+    }
+
+    @Test
+    void render_withOnlyLargestFile_showsOnlyMaxPath() {
+        // Given
+        Path largestPath = Path.of("only", "Largest.java");
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(1)
+                .totalSizeInBytes(1000)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .largestFile(buildFileStatistic(largestPath, 1000L))
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report)
+                .contains("Size boundary files:")
+                .contains("- Max size file:")
+                .doesNotContain("- Min size file:");
+    }
+
+    private static FileProcessingStatistic buildFileStatistic(Path path, long sizeInBytes) {
+        return FileProcessingStatistic.convert(
+                io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResultTestCreator.create(
+                        path,
+                        io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.CHECKED,
+                        false,
+                        sizeInBytes,
+                        0L,
+                        0L,
+                        0L,
+                        0L));
+    }
 }
