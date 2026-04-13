@@ -20,13 +20,14 @@ class ProcessingStatisticsPrintServiceTest {
         Path failurePath = Path.of("alpha", "Failure.java");
         AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
                 .fileCount(2)
-                .totalSize(6_500)
+                .totalSizeInBytes(6_500)
                 .totalProcessingTimeNanos(2_300_000_000L)
                 .totalParsingTimeNanos(1_100_000_000L)
                 .totalSortingTimeNanos(700_000_000L)
                 .totalSerializationTimeNanos(200_000_000L)
                 .totalFormattingTimeNanos(500_000_000L)
                 .filesWithUnexpectedErrors(List.of(brokenPath, failurePath))
+                .stopTriggerPaths(List.of())
                 .statusCounts(Map.of())
                 .build();
 
@@ -59,13 +60,14 @@ class ProcessingStatisticsPrintServiceTest {
         // Given
         AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
                 .fileCount(0)
-                .totalSize(0)
+                .totalSizeInBytes(0)
                 .totalProcessingTimeNanos(0)
                 .totalParsingTimeNanos(0)
                 .totalSortingTimeNanos(0)
                 .totalSerializationTimeNanos(0)
                 .totalFormattingTimeNanos(0)
                 .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
                 .statusCounts(Map.of())
                 .build();
 
@@ -88,13 +90,14 @@ class ProcessingStatisticsPrintServiceTest {
                 "InternalToolForVeryLongStatisticsOutputVerification.java");
         AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
                 .fileCount(1)
-                .totalSize(123_456)
+                .totalSizeInBytes(123_456)
                 .totalProcessingTimeNanos(1_234_567_890L)
                 .totalParsingTimeNanos(456_000_000L)
                 .totalSortingTimeNanos(400_000_000L)
                 .totalSerializationTimeNanos(78_000_000L)
                 .totalFormattingTimeNanos(300_000_000L)
                 .filesWithUnexpectedErrors(List.of(longPath))
+                .stopTriggerPaths(List.of())
                 .statusCounts(Map.of())
                 .build();
 
@@ -117,13 +120,14 @@ class ProcessingStatisticsPrintServiceTest {
             Locale.setDefault(Locale.forLanguageTag("pl-PL"));
             AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
                     .fileCount(1_234)
-                    .totalSize(0)
+                    .totalSizeInBytes(0)
                     .totalProcessingTimeNanos(0)
                     .totalParsingTimeNanos(0)
                     .totalSortingTimeNanos(0)
                     .totalSerializationTimeNanos(0)
                     .totalFormattingTimeNanos(0)
                     .filesWithUnexpectedErrors(List.of())
+                    .stopTriggerPaths(List.of())
                     .statusCounts(Map.of())
                     .build();
 

@@ -153,7 +153,7 @@ class SrcProcessorTest {
         assertThat(logs).contains("C_Formatted.java");
         assertThat(logs).contains("JHarmonizer FORMATTED");
         assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(3);
-        assertThat(aggregatedProcessingStatistic.getTotalSize())
+        assertThat(aggregatedProcessingStatistic.getTotalSizeInBytes())
                 .isEqualTo(expectedSources.values().stream()
                         .mapToLong(String::length)
                         .sum());

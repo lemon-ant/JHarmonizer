@@ -9,7 +9,6 @@ import lombok.Value;
 /**
  * Pipeline-level result of processing all source files through a flow.
  * Carries the aggregated statistics and overall success flag.
- * Each flow determines its own success criteria via {@link IFlow#isSuccessful}.
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)

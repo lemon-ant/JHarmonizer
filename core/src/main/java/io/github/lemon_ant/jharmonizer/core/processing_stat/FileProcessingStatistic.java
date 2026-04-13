@@ -19,25 +19,26 @@ public class FileProcessingStatistic {
 
     long processingTimeNanos;
     long serializationTimeNanos;
-    long size;
+    long sizeInBytes;
 
     /**
-     * Performs the convert.
-     * @param fileProcessingResult the flow processing result
-     * @return the result
+     * Converts a per-file processing result into a statistics record.
+     *
+     * @param fileProcessingResult the per-file processing result
+     * @return the derived statistics
      */
     @NonNull
     public static FileProcessingStatistic convert(@NonNull FileProcessingResult fileProcessingResult) {
-        long serializationTime =
+        long serializationTimeNanos =
                 fileProcessingResult.getSerializationStatistic().getProcessingTimeInNanos();
-        long processingTime = fileProcessingResult.getParsingStatistic().getParsingTimeInNanos()
+        long processingTimeNanos = fileProcessingResult.getParsingStatistic().getParsingTimeInNanos()
                 + fileProcessingResult.getSortingStatistic().getSortingTimeInNanos()
-                + serializationTime
+                + serializationTimeNanos
                 + fileProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
         return new FileProcessingStatistic(
                 fileProcessingResult.getPath(),
-                processingTime,
-                serializationTime,
+                processingTimeNanos,
+                serializationTimeNanos,
                 fileProcessingResult.getParsingStatistic().getOriginalSrcCodeSizeInBytes());
     }
 }

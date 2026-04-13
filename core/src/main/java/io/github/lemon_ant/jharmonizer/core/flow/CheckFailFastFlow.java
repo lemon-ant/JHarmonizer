@@ -12,7 +12,6 @@ import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
@@ -40,7 +38,6 @@ import spoon.reflect.declaration.CtElement;
  * {@code peek} (after processing), so files are not processed once a
  * violation has been detected.
  */
-@Slf4j
 public class CheckFailFastFlow extends AbstractOptOutFlow {
 
     /**
@@ -86,7 +83,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      */
     @Override
     @NonNull
-    public FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -194,22 +191,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     }
 
     @Override
-    public boolean isSuccessful(@NonNull AggregatedProcessingStatistic stats) {
-        return stats.computeNonConformingFileCount() == 0;
-    }
-
-    @Override
-    @SuppressWarnings("PMD.GuardLogStatement")
-    public void logCompletion(@NonNull AggregatedProcessingStatistic stats) {
-        long nonConforming = stats.computeNonConformingFileCount();
-        if (nonConforming == 0) {
-            log.info(
-                    "{} completed successfully. Checked {} file(s), all conform.",
-                    CHECK_FAIL_FAST,
-                    stats.getFileCount());
-        } else {
-            log.info(
-                    "{} stopped early. Checked {} file(s), violation detected.", CHECK_FAIL_FAST, stats.getFileCount());
-        }
+    public boolean isSuccessful(long modifiedFileCount) {
+        return modifiedFileCount == 0;
     }
 }

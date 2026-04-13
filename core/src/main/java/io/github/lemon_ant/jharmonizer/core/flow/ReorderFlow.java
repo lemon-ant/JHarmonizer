@@ -10,7 +10,6 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowS
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -20,13 +19,11 @@ import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
  * Optionally renames the original file to a backup before overwriting it.
  */
-@Slf4j
 public class ReorderFlow extends AbstractOptOutFlow {
 
     private final boolean backupsEnabled;
@@ -56,7 +53,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -128,13 +125,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
     }
 
     @Override
-    public boolean isSuccessful(@NonNull AggregatedProcessingStatistic stats) {
+    public boolean isSuccessful(long modifiedFileCount) {
         return true;
-    }
-
-    @Override
-    @SuppressWarnings("PMD.GuardLogStatement")
-    public void logCompletion(@NonNull AggregatedProcessingStatistic stats) {
-        log.info("{} completed successfully. Processed {} file(s).", REORDER, stats.getFileCount());
     }
 }

@@ -11,7 +11,6 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowS
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
@@ -22,11 +21,10 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
-@Slf4j
+@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
 public class CheckAllFlow extends AbstractOptOutFlow {
 
     /**
@@ -48,7 +46,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -114,18 +112,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     }
 
     @Override
-    public boolean isSuccessful(@NonNull AggregatedProcessingStatistic stats) {
-        return stats.computeNonConformingFileCount() == 0;
-    }
-
-    @Override
-    @SuppressWarnings("PMD.GuardLogStatement")
-    public void logCompletion(@NonNull AggregatedProcessingStatistic stats) {
-        long nonConforming = stats.computeNonConformingFileCount();
-        if (nonConforming == 0) {
-            log.info("{} completed successfully. All {} file(s) conform.", CHECK_ALL, stats.getFileCount());
-        } else {
-            log.info("{} completed. {} of {} file(s) do not conform.", CHECK_ALL, nonConforming, stats.getFileCount());
-        }
+    public boolean isSuccessful(long modifiedFileCount) {
+        return modifiedFileCount == 0;
     }
 }

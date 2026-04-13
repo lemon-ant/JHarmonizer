@@ -46,7 +46,7 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(" " + HEADER);
         reportLines.add(renderSeparator('='));
         reportLines.add(renderRow("Files processed", String.format(Locale.ROOT, "%,d", stats.getFileCount())));
-        reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSize())));
+        reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSizeInBytes())));
         reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
         reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
         reportLines.add(renderRow("Max size", formatSize(stats.getLargestFile())));
@@ -90,7 +90,7 @@ public class ProcessingStatisticsPrintService {
         if (fileProcessingStatistic == null) {
             return formatBytes(0L);
         }
-        return formatBytes(fileProcessingStatistic.getSize());
+        return formatBytes(fileProcessingStatistic.getSizeInBytes());
     }
 
     private static void addSizeBoundaryPaths(

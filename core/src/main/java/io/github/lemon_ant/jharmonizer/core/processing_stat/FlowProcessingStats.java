@@ -30,8 +30,9 @@ public class FlowProcessingStats {
 
     // Collector for parallel processing
     /**
-     * Performs the stats collector.
-     * @return the result
+     * Creates a stream collector that aggregates per-file results into flow-level statistics.
+     *
+     * @return a collector producing an {@link AggregatedProcessingStatistic}
      */
     @NonNull
     public Collector<FileProcessingResult, ?, AggregatedProcessingStatistic> statsCollector() {
@@ -49,7 +50,7 @@ public class FlowProcessingStats {
     public static class AggregatedProcessingStatistic {
         public static final int MAX_PATH_LENGTH = 100;
         long fileCount;
-        long totalSize;
+        long totalSizeInBytes;
         long totalProcessingTimeNanos;
         long totalParsingTimeNanos;
         long totalSortingTimeNanos;
@@ -67,12 +68,15 @@ public class FlowProcessingStats {
         List<@NonNull Path> filesWithUnexpectedErrors;
 
         @NonNull
+        List<@NonNull Path> stopTriggerPaths;
+
+        @NonNull
         Map<@NonNull FileProcessingStatus, @NonNull Long> statusCounts;
 
         @Builder(access = AccessLevel.PACKAGE)
         private AggregatedProcessingStatistic(
                 long fileCount,
-                long totalSize,
+                long totalSizeInBytes,
                 long totalProcessingTimeNanos,
                 long totalParsingTimeNanos,
                 long totalSortingTimeNanos,
@@ -82,9 +86,10 @@ public class FlowProcessingStats {
                 @Nullable FileProcessingStatistic smallestFile,
                 @Nullable FileProcessingStatistic largestFile,
                 @NonNull List<@NonNull Path> filesWithUnexpectedErrors,
+                @NonNull List<@NonNull Path> stopTriggerPaths,
                 @NonNull Map<@NonNull FileProcessingStatus, @NonNull Long> statusCounts) {
             this.fileCount = fileCount;
-            this.totalSize = totalSize;
+            this.totalSizeInBytes = totalSizeInBytes;
             this.totalProcessingTimeNanos = totalProcessingTimeNanos;
             this.totalParsingTimeNanos = totalParsingTimeNanos;
             this.totalSortingTimeNanos = totalSortingTimeNanos;
@@ -94,6 +99,7 @@ public class FlowProcessingStats {
             this.smallestFile = smallestFile;
             this.largestFile = largestFile;
             this.filesWithUnexpectedErrors = Collections.unmodifiableList(filesWithUnexpectedErrors);
+            this.stopTriggerPaths = Collections.unmodifiableList(stopTriggerPaths);
             this.statusCounts = Collections.unmodifiableMap(statusCounts);
         }
 
@@ -110,8 +116,9 @@ public class FlowProcessingStats {
 
         // Average time spent on processing a file
         /**
-         * Performs the calculate average processing time.
-         * @return the result
+         * Calculates the average processing time per file.
+         *
+         * @return the average processing time in nanoseconds
          */
         long calculateAverageProcessingTime() {
             return fileCount > 0 ? totalProcessingTimeNanos / fileCount : 0;
@@ -121,10 +128,10 @@ public class FlowProcessingStats {
         /**
          * Calculates the average processed file size.
          *
-         * @return the average size
+         * @return the average size in bytes
          */
         long calculateAverageSize() {
-            return fileCount > 0 ? totalSize / fileCount : 0;
+            return fileCount > 0 ? totalSizeInBytes / fileCount : 0;
         }
 
         /**
@@ -178,7 +185,8 @@ public class FlowProcessingStats {
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();
         private final List<Path> unexpectedErrorPaths = Collections.synchronizedList(new ArrayList<>());
-        private final Map<FileProcessingStatus, LongAdder> statusCounts = new ConcurrentHashMap<>();
+        private final List<Path> stopTriggerFilePaths = Collections.synchronizedList(new ArrayList<>());
+        private final Map<FileProcessingStatus, LongAdder> fileStatusCounts = new ConcurrentHashMap<>();
         private final LongAdder totalSize = new LongAdder();
         private final LongAdder totalTime = new LongAdder();
         private final LongAdder totalParsingTime = new LongAdder();
@@ -187,36 +195,47 @@ public class FlowProcessingStats {
         private final LongAdder totalFormattingTime = new LongAdder();
 
         /**
-         * Performs the accumulate.
-         * @param fileProcessingResult the result
+         * Accumulates a single per-file processing result into this container.
+         *
+         * @param fileProcessingResult the per-file result to accumulate
          */
         void accumulate(@NonNull FileProcessingResult fileProcessingResult) {
-            FileProcessingStatistic stats = FileProcessingStatistic.convert(fileProcessingResult);
+            FileProcessingStatistic fileStatistic = FileProcessingStatistic.convert(fileProcessingResult);
             count.increment();
-            totalSize.add(stats.getSize());
-            totalTime.add(stats.getProcessingTimeNanos());
+            totalSize.add(fileStatistic.getSizeInBytes());
+            totalTime.add(fileStatistic.getProcessingTimeNanos());
             totalParsingTime.add(fileProcessingResult.getParsingStatistic().getParsingTimeInNanos());
             totalSortingTime.add(fileProcessingResult.getSortingStatistic().getSortingTimeInNanos());
-            totalSerializationTime.add(stats.getSerializationTimeNanos());
+            totalSerializationTime.add(fileStatistic.getSerializationTimeNanos());
             totalFormattingTime.add(
                     fileProcessingResult.getFormattingStatistic().getFormattingTimeInNanos());
-            FileProcessingStatus status = fileProcessingResult.getFileProcessingStatus();
-            if (status == FileProcessingStatus.ERROR) {
+            FileProcessingStatus fileProcessingStatus = fileProcessingResult.getFileProcessingStatus();
+            if (fileProcessingStatus == FileProcessingStatus.ERROR) {
                 unexpectedErrorPaths.add(fileProcessingResult.getPath());
             }
-            statusCounts.computeIfAbsent(status, key -> new LongAdder()).increment();
+            if (fileProcessingResult.isStopRequested()) {
+                stopTriggerFilePaths.add(fileProcessingResult.getPath());
+            }
+            fileStatusCounts
+                    .computeIfAbsent(fileProcessingStatus, key -> new LongAdder())
+                    .increment();
 
             minSize.accumulateAndGet(
-                    stats, (current, next) -> current == null || next.getSize() < current.getSize() ? next : current);
+                    fileStatistic,
+                    (current, next) ->
+                            current == null || next.getSizeInBytes() < current.getSizeInBytes() ? next : current);
 
             maxSize.accumulateAndGet(
-                    stats, (current, next) -> current == null || next.getSize() > current.getSize() ? next : current);
+                    fileStatistic,
+                    (current, next) ->
+                            current == null || next.getSizeInBytes() > current.getSizeInBytes() ? next : current);
         }
 
         /**
-         * Performs the combine.
-         * @param other the object to compare with
-         * @return the result
+         * Merges another container into this one.
+         *
+         * @param other the container to merge
+         * @return this container
          */
         @NonNull
         StatsContainer combine(@NonNull StatsContainer other) {
@@ -229,35 +248,43 @@ public class FlowProcessingStats {
             totalSerializationTime.add(other.totalSerializationTime.sum());
             totalFormattingTime.add(other.totalFormattingTime.sum());
             unexpectedErrorPaths.addAll(other.unexpectedErrorPaths);
-            other.statusCounts.forEach((status, adder) ->
-                    statusCounts.computeIfAbsent(status, key -> new LongAdder()).add(adder.sum()));
+            stopTriggerFilePaths.addAll(other.stopTriggerFilePaths);
+            other.fileStatusCounts.forEach((fileProcessingStatus, adder) -> fileStatusCounts
+                    .computeIfAbsent(fileProcessingStatus, key -> new LongAdder())
+                    .add(adder.sum()));
 
             minSize.accumulateAndGet(
                     other.minSize.get(),
                     (current, next) ->
-                            current == null || (next != null && next.getSize() < current.getSize()) ? next : current);
+                            current == null || (next != null && next.getSizeInBytes() < current.getSizeInBytes())
+                                    ? next
+                                    : current);
 
             maxSize.accumulateAndGet(
                     other.maxSize.get(),
                     (current, next) ->
-                            current == null || (next != null && next.getSize() > current.getSize()) ? next : current);
+                            current == null || (next != null && next.getSizeInBytes() > current.getSizeInBytes())
+                                    ? next
+                                    : current);
 
             return this;
         }
 
         /**
-         * Performs the to aggregated stats.
-         * @return the result
+         * Finalizes the accumulated statistics into an immutable result.
+         *
+         * @return the aggregated processing statistics
          */
         @NonNull
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         AggregatedProcessingStatistic toAggregatedStats() {
             long wallClockElapsedNanos = System.nanoTime() - wallClockStartNanos.get();
             Map<FileProcessingStatus, Long> resolvedStatusCounts = new EnumMap<>(FileProcessingStatus.class);
-            statusCounts.forEach((status, adder) -> resolvedStatusCounts.put(status, adder.sum()));
+            fileStatusCounts.forEach(
+                    (fileProcessingStatus, adder) -> resolvedStatusCounts.put(fileProcessingStatus, adder.sum()));
             return AggregatedProcessingStatistic.builder()
                     .fileCount(count.sum())
-                    .totalSize(totalSize.sum())
+                    .totalSizeInBytes(totalSize.sum())
                     .totalProcessingTimeNanos(totalTime.sum())
                     .totalParsingTimeNanos(totalParsingTime.sum())
                     .totalSortingTimeNanos(totalSortingTime.sum())
@@ -267,6 +294,7 @@ public class FlowProcessingStats {
                     .smallestFile(minSize.get())
                     .largestFile(maxSize.get())
                     .filesWithUnexpectedErrors(Collections.unmodifiableList(unexpectedErrorPaths))
+                    .stopTriggerPaths(Collections.unmodifiableList(stopTriggerFilePaths))
                     .statusCounts(resolvedStatusCounts)
                     .build();
         }

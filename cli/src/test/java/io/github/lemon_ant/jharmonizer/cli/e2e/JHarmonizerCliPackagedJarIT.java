@@ -232,7 +232,7 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("JHarmonizer harmonization summary")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED")
-                .contains("do not conform")
+                .contains("modified")
                 .contains("Exit code: 1");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
@@ -351,7 +351,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("stopped early")
-                .contains("violation detected")
+                .contains("non-conforming")
                 .contains("Exit code: 3");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);

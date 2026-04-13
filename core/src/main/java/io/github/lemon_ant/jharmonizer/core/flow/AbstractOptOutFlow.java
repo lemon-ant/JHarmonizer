@@ -59,6 +59,15 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     /**
+     * Processes a single source file with the current flow strategy.
+     *
+     * @param srcFile the source file to process
+     * @return the processing result for the source file
+     */
+    @NonNull
+    protected abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
+
+    /**
      * Processes a stream of source files with runtime-failure isolation.
      * Subclasses may override to add pipeline steps (e.g. fail-fast termination).
      *
