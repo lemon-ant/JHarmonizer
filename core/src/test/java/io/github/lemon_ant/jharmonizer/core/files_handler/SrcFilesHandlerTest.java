@@ -59,6 +59,15 @@ class SrcFilesHandlerTest {
     }
 
     @Test
+    void backup_existingDirectoryPath_throwsIOException() throws IOException {
+        // Given
+        Path directory = Files.createDirectories(tempDir.resolve("mypackage"));
+
+        // When / Then
+        assertThatThrownBy(() -> SrcFilesHandler.renameToBackup(directory)).isInstanceOf(UncheckedIOException.class);
+    }
+
+    @Test
     void fileContent_twoInstancesWithSameValues_equalsAndHashCodeMatch() {
         // Given
         Path path1 = tempDir.resolve("A.java");
@@ -88,6 +97,22 @@ class SrcFilesHandlerTest {
         assertThat(result)
                 .contains(javaFile.normalize().toAbsolutePath())
                 .doesNotContain(txtFile.normalize().toAbsolutePath());
+    }
+
+    @Test
+    void findJavaFiles_withExcludeGlob_excludedFilesNotReturned() throws IOException {
+        // Given
+        Path includedFile = Files.writeString(tempDir.resolve("IncludeMe.java"), "class IncludeMe {}");
+        Path excludedFile = Files.writeString(tempDir.resolve("ExcludeMe.java"), "class ExcludeMe {}");
+
+        // When
+        List<Path> foundFiles = SrcFilesHandler.findJavaFiles(tempDir, Set.of(), Set.of("**ExcludeMe.java"))
+                .collect(Collectors.toList());
+
+        // Then
+        assertThat(foundFiles)
+                .contains(includedFile.normalize().toAbsolutePath())
+                .doesNotContain(excludedFile.normalize().toAbsolutePath());
     }
 
     @Test

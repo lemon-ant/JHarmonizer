@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
@@ -151,5 +152,43 @@ class JHarmonizerConfigLoaderTest {
                 .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
         assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+    }
+
+    @Test
+    void loadFrom_validFileOnDisk_returnsParsedConfig(@TempDir Path tempDir) throws IOException {
+        // Given
+        URL simpleConfigUrl = TestCaseResourceUtils.requireClasspathResourceUrl(SIMPLE_WORKING_CONFIG_PATH);
+        File configFile = tempDir.resolve("working-config.yml").toFile();
+        Files.copy(simpleConfigUrl.openStream(), configFile.toPath());
+
+        // When
+        JHarmonizerConfig jharmonizerConfig = JHarmonizerConfigLoader.loadFrom(configFile);
+
+        // Then
+        assertThat(jharmonizerConfig).isNotNull();
+    }
+
+    @Test
+    void loadFlexibleFrom_validFileOnDisk_returnsParsedFlexibleConfig(@TempDir Path tempDir) throws IOException {
+        // Given
+        URL simpleConfigUrl = TestCaseResourceUtils.requireClasspathResourceUrl(SIMPLE_WORKING_CONFIG_PATH);
+        File configFile = tempDir.resolve("working-config.yml").toFile();
+        Files.copy(simpleConfigUrl.openStream(), configFile.toPath());
+
+        // When
+        JHarmonizerFlexibleConfig flexibleConfig = JHarmonizerConfigLoader.loadFlexibleFrom(configFile);
+
+        // Then
+        assertThat(flexibleConfig).isNotNull();
+    }
+
+    @Test
+    void loadFlexibleFromClasspathResource_validUrl_returnsParsedFlexibleConfig() {
+        // When
+        JHarmonizerFlexibleConfig flexibleConfig =
+                JHarmonizerConfigLoader.loadFlexibleFromClasspathResource(MIXED_GROUP_SYNTAX_CONFIG_URL);
+
+        // Then
+        assertThat(flexibleConfig).isNotNull();
     }
 }

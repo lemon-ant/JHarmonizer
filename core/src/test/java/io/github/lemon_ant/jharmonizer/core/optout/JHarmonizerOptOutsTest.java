@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.optout;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
