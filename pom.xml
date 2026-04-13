@@ -445,6 +445,11 @@
                                             <element>BUNDLE</element>
                                             <limits>
                                                 <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>${jacoco.minimum.line.coverage}</minimum>
+                                                </limit>
+                                                <limit>
                                                     <counter>LINE</counter>
                                                     <value>COVEREDRATIO</value>
                                                     <minimum>${jacoco.minimum.line.coverage}</minimum>
