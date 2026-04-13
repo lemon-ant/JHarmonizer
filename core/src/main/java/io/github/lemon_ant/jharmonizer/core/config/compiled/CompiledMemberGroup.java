@@ -5,7 +5,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
@@ -76,32 +75,5 @@ public class CompiledMemberGroup {
                 .flatMap(Optional::stream)
                 .findFirst()
                 .or(() -> Optional.of(this)); // fallback to parent bucket
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof CompiledMemberGroup that)) {
-            return false;
-        }
-
-        return keepAccessorsTogether == that.keepAccessorsTogether
-                && orderIndex == that.orderIndex
-                && compiledSubGroups.equals(that.compiledSubGroups)
-                && Objects.equals(name, that.name)
-                && selectorBlock.equals(that.selectorBlock)
-                && separator == that.separator
-                && orderingRules.equals(that.orderingRules);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = compiledSubGroups.hashCode();
-        result = 31 * result + Boolean.hashCode(keepAccessorsTogether);
-        result = 31 * result + Objects.hashCode(name);
-        result = 31 * result + orderIndex;
-        result = 31 * result + selectorBlock.hashCode();
-        result = 31 * result + separator.hashCode();
-        result = 31 * result + orderingRules.hashCode();
-        return result;
     }
 }

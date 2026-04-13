@@ -17,20 +17,4 @@ public class FormattingResult {
 
     @NonNull
     FormattingStatistic formattingStatistic;
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof FormattingResult that)) {
-            return false;
-        }
-
-        return formattedSrcCode.equals(that.formattedSrcCode) && formattingStatistic.equals(that.formattingStatistic);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = formattedSrcCode.hashCode();
-        result = 31 * result + formattingStatistic.hashCode();
-        return result;
-    }
 }

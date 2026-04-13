@@ -38,20 +38,4 @@ public class UnifiedMemberGroupSelectorBlock {
         this.excludes = Collections.unmodifiableSet(excludes);
         this.includes = Collections.unmodifiableSet(includes);
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof UnifiedMemberGroupSelectorBlock that)) {
-            return false;
-        }
-
-        return includes.equals(that.includes) && excludes.equals(that.excludes);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = includes.hashCode();
-        result = 31 * result + excludes.hashCode();
-        return result;
-    }
 }

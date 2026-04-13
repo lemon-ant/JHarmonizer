@@ -58,29 +58,4 @@ public class JHarmonizerConfig {
         Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
         this.memberGroups = Collections.unmodifiableList(memberGroups);
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof JHarmonizerConfig that)) {
-            return false;
-        }
-
-        return backupsEnabled == that.backupsEnabled
-                && printProcessingStatistics == that.printProcessingStatistics
-                && formatting.equals(that.formatting)
-                && headerLine.equals(that.headerLine)
-                && memberGroups.equals(that.memberGroups)
-                && topLevelTypesOrdering.equals(that.topLevelTypesOrdering);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = formatting.hashCode();
-        result = 31 * result + Boolean.hashCode(backupsEnabled);
-        result = 31 * result + Boolean.hashCode(printProcessingStatistics);
-        result = 31 * result + headerLine.hashCode();
-        result = 31 * result + memberGroups.hashCode();
-        result = 31 * result + topLevelTypesOrdering.hashCode();
-        return result;
-    }
 }

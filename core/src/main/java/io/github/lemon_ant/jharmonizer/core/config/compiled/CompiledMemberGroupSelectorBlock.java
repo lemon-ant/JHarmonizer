@@ -31,22 +31,6 @@ public class CompiledMemberGroupSelectorBlock {
         this.excludePredicate = Collections.unmodifiableList(excludePredicate);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof CompiledMemberGroupSelectorBlock that)) {
-            return false;
-        }
-
-        return includePredicate.equals(that.includePredicate) && excludePredicate.equals(that.excludePredicate);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = includePredicate.hashCode();
-        result = 31 * result + excludePredicate.hashCode();
-        return result;
-    }
-
     /**
      * Performs the match.
      * @param descriptor the member descriptor to inspect

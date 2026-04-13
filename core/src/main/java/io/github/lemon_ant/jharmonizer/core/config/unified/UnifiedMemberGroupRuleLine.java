@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import lombok.Builder;
@@ -89,29 +88,6 @@ public class UnifiedMemberGroupRuleLine {
                 || hasDeclarationModifiersConfigured
                 || hasNameMatcherConfigured
                 || hasAnnotationMatchersConfigured;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof UnifiedMemberGroupRuleLine that)) {
-            return false;
-        }
-
-        return memberKinds.equals(that.memberKinds)
-                && memberAccesses.equals(that.memberAccesses)
-                && declarationModifiers.equals(that.declarationModifiers)
-                && Objects.equals(nameMatcher, that.nameMatcher)
-                && annotationMatchers.equals(that.annotationMatchers);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = memberKinds.hashCode();
-        result = 31 * result + memberAccesses.hashCode();
-        result = 31 * result + declarationModifiers.hashCode();
-        result = 31 * result + Objects.hash(nameMatcher);
-        result = 31 * result + annotationMatchers.hashCode();
-        return result;
     }
 
     /**
