@@ -24,7 +24,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtElement;
 
-@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
 public class CheckAllFlow extends AbstractOptOutFlow {
 
     /**
