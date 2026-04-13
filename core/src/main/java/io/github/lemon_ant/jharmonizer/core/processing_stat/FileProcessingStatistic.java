@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingResult;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResult;
 import java.nio.file.Path;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 /**
- * Per-file processing statistics derived from a {@link FlowProcessingResult}.
+ * Per-file processing statistics derived from a {@link FileProcessingResult}.
  * Aggregates wall-clock processing time across all phases and records original file size in bytes.
  */
 @Value
@@ -19,25 +19,26 @@ public class FileProcessingStatistic {
 
     long processingTimeNanos;
     long serializationTimeNanos;
-    long size;
+    long sizeInBytes;
 
     /**
-     * Performs the convert.
-     * @param flowProcessingResult the flow processing result
-     * @return the result
+     * Converts a per-file processing result into a statistics record.
+     *
+     * @param fileProcessingResult the per-file processing result
+     * @return the derived statistics
      */
     @NonNull
-    public static FileProcessingStatistic convert(@NonNull FlowProcessingResult flowProcessingResult) {
-        long serializationTime =
-                flowProcessingResult.getSerializationStatistic().getProcessingTimeInNanos();
-        long processingTime = flowProcessingResult.getParsingStatistic().getParsingTimeInNanos()
-                + flowProcessingResult.getSortingStatistic().getSortingTimeInNanos()
-                + serializationTime
-                + flowProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
+    public static FileProcessingStatistic convert(@NonNull FileProcessingResult fileProcessingResult) {
+        long serializationTimeNanos =
+                fileProcessingResult.getSerializationStatistic().getProcessingTimeInNanos();
+        long processingTimeNanos = fileProcessingResult.getParsingStatistic().getParsingTimeInNanos()
+                + fileProcessingResult.getSortingStatistic().getSortingTimeInNanos()
+                + serializationTimeNanos
+                + fileProcessingResult.getFormattingStatistic().getFormattingTimeInNanos();
         return new FileProcessingStatistic(
-                flowProcessingResult.getPath(),
-                processingTime,
-                serializationTime,
-                flowProcessingResult.getParsingStatistic().getOriginalSrcCodeSizeInBytes());
+                fileProcessingResult.getPath(),
+                processingTimeNanos,
+                serializationTimeNanos,
+                fileProcessingResult.getParsingStatistic().getOriginalSrcCodeSizeInBytes());
     }
 }

@@ -6,7 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadable
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,7 +46,7 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(" " + HEADER);
         reportLines.add(renderSeparator('='));
         reportLines.add(renderRow("Files processed", String.format(Locale.ROOT, "%,d", stats.getFileCount())));
-        reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSize())));
+        reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSizeInBytes())));
         reportLines.add(renderRow("Average size", formatBytes(stats.calculateAverageSize())));
         reportLines.add(renderRow("Min size", formatSize(stats.getSmallestFile())));
         reportLines.add(renderRow("Max size", formatSize(stats.getLargestFile())));
@@ -90,7 +90,7 @@ public class ProcessingStatisticsPrintService {
         if (fileProcessingStatistic == null) {
             return formatBytes(0L);
         }
-        return formatBytes(fileProcessingStatistic.getSize());
+        return formatBytes(fileProcessingStatistic.getSizeInBytes());
     }
 
     private static void addSizeBoundaryPaths(

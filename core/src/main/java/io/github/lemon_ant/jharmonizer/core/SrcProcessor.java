@@ -11,18 +11,17 @@ import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.ReorderFlow;
-import io.github.lemon_ant.jharmonizer.core.flow.SafeFlow;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.stream.Collectors;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -89,41 +88,45 @@ public final class SrcProcessor {
     }
 
     /**
-     * Processes a specific list of source file paths.
-     * It processes each source file in parallel and collects the results.
-     * The outcome of the processing is logged at the info level.
+     * Processes source files found by the given globs through the specified flow type.
+     * The flow itself controls stream pipeline decoration (e.g. early termination for
+     * fail-fast), success determination, and completion logging.
      *
-     * @param paths List of paths to source files to be processed.
+     * @param baseDir the root directory to scan for source files
+     * @param includeGlobs glob patterns for files to include
+     * @param excludeGlobs glob patterns for files to exclude
+     * @param flowType the processing flow strategy to apply
+     * @return the pipeline-level processing result
      */
     @NonNull
-    public AggregatedProcessingStatistic processSources(
+    public SrcProcessingResult processSources(
             @NonNull Path baseDir,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
         logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
-        IFlow baseFlow =
+        IFlow flow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
                     case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
                     case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
                     case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
                 };
-        IFlow flow = SafeFlow.wrap(baseFlow);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
-        AggregatedProcessingStatistic aggregatedProcessingStatistic = SrcFilesHandler.readJavaFiles(
-                        baseDir, includeGlobs, excludeGlobs)
-                .map(flow::processSrc)
-                .peek(flowProcessingResult -> {
+
+        AggregatedProcessingStatistic aggregatedProcessingStatistic = flow.processStream(
+                        SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs))
+                .peek(fileProcessingResult -> {
                     if (log.isDebugEnabled()) {
                         log.debug(formatSingleFileLogMessage(
-                                flowProcessingResult.getPath(),
-                                flowProcessingResult.getFlowProcessingStatus().name()));
+                                fileProcessingResult.getPath(),
+                                fileProcessingResult.getFileProcessingStatus().name()));
                     }
-                    progressReporter.recordProcessedFile(flowProcessingResult.getFlowProcessingStatus());
                 })
-                .collect(SrcProcessingStats.statsCollector());
+                .peek(fileProcessingResult ->
+                        progressReporter.recordProcessedFile(fileProcessingResult.getFileProcessingStatus()))
+                .collect(FlowProcessingStats.statsCollector());
 
         if (config.isPrintProcessingStatistics()) {
             log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
@@ -131,35 +134,70 @@ public final class SrcProcessor {
             logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
             logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
         }
-        return aggregatedProcessingStatistic;
+
+        logCompletionMessage(flowType, aggregatedProcessingStatistic);
+        long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
+        boolean success = flow.isSuccessful(modifiedFileCount > 0);
+        return new SrcProcessingResult(aggregatedProcessingStatistic, success);
     }
 
     private static void logDebugProcessingCompletionSummary(
-            @NonNull AggregatedProcessingStatistic aggregatedStatistic, @NonNull FlowType flowType) {
+            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic, @NonNull FlowType flowType) {
         String processingStatus =
-                aggregatedStatistic.getFilesWithUnexpectedErrors().isEmpty()
+                aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().isEmpty()
                         ? SUMMARY_STATUS_COMPLETED
                         : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
         log.debug(
                 "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, wallClockTimeNanos={}, totalCpuTimeNanos={}, unexpectedErrors={}",
                 flowType,
                 processingStatus,
-                aggregatedStatistic.getFileCount(),
-                aggregatedStatistic.getTotalSize(),
-                aggregatedStatistic.getWallClockTimeNanos(),
-                aggregatedStatistic.getTotalProcessingTimeNanos(),
-                aggregatedStatistic.getFilesWithUnexpectedErrors().size());
+                aggregatedProcessingStatistic.getFileCount(),
+                aggregatedProcessingStatistic.getTotalSizeInBytes(),
+                aggregatedProcessingStatistic.getWallClockTimeNanos(),
+                aggregatedProcessingStatistic.getTotalProcessingTimeNanos(),
+                aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().size());
     }
 
-    private static void logFilesWithUnexpectedErrors(@NonNull AggregatedProcessingStatistic aggregatedStatistic) {
-        if (aggregatedStatistic.getFilesWithUnexpectedErrors().isEmpty()) {
-            return;
+    @SuppressWarnings("PMD.GuardLogStatement")
+    private static void logCompletionMessage(
+            @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic) {
+        long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
+        List<Path> stopTriggerPaths = aggregatedProcessingStatistic.getStopTriggerPaths();
+        if (!stopTriggerPaths.isEmpty()) {
+            log.info(
+                    "{} stopped early. Processed {} file(s), {} non-conforming.{}",
+                    flowType,
+                    aggregatedProcessingStatistic.getFileCount(),
+                    modifiedFileCount,
+                    formatBulletList("Stop triggered by", stopTriggerPaths));
+        } else {
+            log.info(
+                    "{} completed. Processed {} file(s), {} modified.",
+                    flowType,
+                    aggregatedProcessingStatistic.getFileCount(),
+                    modifiedFileCount);
         }
-        String failedFilesLog = aggregatedStatistic.getFilesWithUnexpectedErrors().stream()
+    }
+
+    @NonNull
+    private static String formatBulletList(@NonNull String header, @NonNull List<Path> paths) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n  ").append(header).append(':');
+        paths.stream()
                 .sorted(Comparator.comparing(Path::toString))
                 .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH))
-                .collect(Collectors.joining(", "));
-        log.warn("Files encountered unexpected errors and were not processed correctly: {}", failedFilesLog);
+                .forEach(abbreviatedPath -> builder.append("\n    - ").append(abbreviatedPath));
+        return builder.toString();
+    }
+
+    private static void logFilesWithUnexpectedErrors(
+            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic) {
+        if (aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().isEmpty()) {
+            return;
+        }
+        log.warn(
+                "Files encountered unexpected errors and were not processed correctly:{}",
+                formatBulletList("Affected files", aggregatedProcessingStatistic.getFilesWithUnexpectedErrors()));
     }
 
     @NonNull

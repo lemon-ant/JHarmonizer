@@ -275,6 +275,7 @@ The test decides which one to use:
 ## Code style in tests
 
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
+- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.
 

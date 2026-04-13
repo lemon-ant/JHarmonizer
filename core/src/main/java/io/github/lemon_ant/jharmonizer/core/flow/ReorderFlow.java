@@ -1,6 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
@@ -53,7 +53,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -81,7 +81,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
             SrcFilesHandler.overwrite(srcFile.getPath(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
 
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(null)
                 .diff(null)
@@ -90,7 +90,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
-                .flowProcessingStatus(defineFlowProcessingStatus(
+                .fileProcessingStatus(defineFileProcessingStatus(
                         !sortingAndSerializationResult.isSortingSkipped()
                                 && isRelocated(
                                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),
@@ -101,7 +101,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
     }
 
     @NonNull
-    private FlowProcessingResult processSrcWithFormattingOnlyFallback(
+    private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
         FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
@@ -111,7 +111,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
             }
             SrcFilesHandler.overwrite(srcFile.getPath(), formattingResult.getFormattedSrcCode());
         }
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(null)
                 .diff(null)
@@ -120,7 +120,12 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(formattingResult.getFormattingStatistic())
-                .flowProcessingStatus(defineFlowProcessingStatus(false, hasChanges, false))
+                .fileProcessingStatus(defineFileProcessingStatus(false, hasChanges, false))
                 .build();
+    }
+
+    @Override
+    public boolean isSuccessful(boolean hasModifications) {
+        return true;
     }
 }

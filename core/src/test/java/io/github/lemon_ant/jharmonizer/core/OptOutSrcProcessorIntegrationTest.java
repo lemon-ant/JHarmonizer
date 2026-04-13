@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
@@ -15,7 +14,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSe
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -313,12 +311,12 @@ class OptOutSrcProcessorIntegrationTest {
         writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
-        // When / Then
-        assertThatThrownBy(() -> srcProcessor.processSources(
-                        temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST))
-                .isInstanceOf(NotOrderedException.class)
-                .hasMessageContaining("Outer$Inner expected to relocate UP")
-                .hasMessageContaining("Outer$a expected to relocate DOWN");
+        // When
+        SrcProcessingResult result =
+                srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST);
+
+        // Then
+        assertThat(result.isSuccess()).isFalse();
     }
 
     private Path writeJavaFile(String fileName, String fileContent) throws Exception {
