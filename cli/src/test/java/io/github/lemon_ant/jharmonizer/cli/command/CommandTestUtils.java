@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
-import io.github.lemon_ant.jharmonizer.core.SrcProcessingResultTestCreator;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResultCreator;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
@@ -34,7 +34,7 @@ class CommandTestUtils {
      */
     @NonNull
     static SrcProcessingResult buildSuccessfulResult() {
-        return SrcProcessingResultTestCreator.create(mock(AggregatedProcessingStatistic.class), true);
+        return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), true);
     }
 
     /**
@@ -44,7 +44,7 @@ class CommandTestUtils {
      */
     @NonNull
     static SrcProcessingResult buildFailedResult() {
-        return SrcProcessingResultTestCreator.create(mock(AggregatedProcessingStatistic.class), false);
+        return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), false);
     }
 
     @NonNull

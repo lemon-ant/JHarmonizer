@@ -117,14 +117,15 @@ public final class SrcProcessor {
 
         AggregatedProcessingStatistic aggregatedProcessingStatistic = flow.processStream(
                         SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs))
-                .peek(result -> {
+                .peek(fileProcessingResult -> {
                     if (log.isDebugEnabled()) {
                         log.debug(formatSingleFileLogMessage(
-                                result.getPath(),
-                                result.getFileProcessingStatus().name()));
+                                fileProcessingResult.getPath(),
+                                fileProcessingResult.getFileProcessingStatus().name()));
                     }
                 })
-                .peek(result -> progressReporter.recordProcessedFile(result.getFileProcessingStatus()))
+                .peek(fileProcessingResult ->
+                        progressReporter.recordProcessedFile(fileProcessingResult.getFileProcessingStatus()))
                 .collect(FlowProcessingStats.statsCollector());
 
         if (config.isPrintProcessingStatistics()) {

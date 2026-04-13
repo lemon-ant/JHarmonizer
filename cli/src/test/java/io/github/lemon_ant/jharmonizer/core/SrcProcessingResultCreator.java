@@ -5,11 +5,11 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Test-only creator that accesses the package-private constructor of {@link SrcProcessingResult}.
+ * Creator that accesses the package-private constructor of {@link SrcProcessingResult}.
  * Lives in the same package as {@code SrcProcessingResult} so no reflection is needed.
  */
 @UtilityClass
-public class SrcProcessingResultTestCreator {
+public class SrcProcessingResultCreator {
 
     /**
      * Creates a {@link SrcProcessingResult} via the package-private constructor.

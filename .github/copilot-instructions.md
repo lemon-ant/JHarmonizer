@@ -60,6 +60,7 @@
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 - When debugging uncovers a non-obvious runtime or framework edge case (for example parser or evaluator recursion traps), document the guard/workaround with a nearby code comment so future refactors do not remove it accidentally.
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`, or an established repository abbreviation such as the `src*` naming family.
+- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
 
 ## Test conventions
@@ -208,5 +209,6 @@
 ### Code style in tests
 
 - Prefer fully descriptive variable names instead of names such as `i`, `tmp`, or `m`.
+- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Prefer Stream API when it makes the flow clearer.
 - Keep helpers small and single-purpose.

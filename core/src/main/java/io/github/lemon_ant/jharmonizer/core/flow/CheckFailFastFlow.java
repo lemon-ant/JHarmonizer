@@ -68,8 +68,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         AtomicBoolean stopFlag = new AtomicBoolean(false);
         return srcFiles.takeWhile(srcFile -> !stopFlag.get())
                 .map(this::processSrcSafely)
-                .peek(result -> {
-                    if (result.isStopRequested()) {
+                .peek(fileProcessingResult -> {
+                    if (fileProcessingResult.isStopRequested()) {
                         stopFlag.set(true);
                     }
                 });
