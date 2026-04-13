@@ -50,6 +50,7 @@ class CommandTestUtils {
     }
 
     @NonNull
+    @NonNull
     private static SrcProcessingResult createSrcProcessingResult(
             AggregatedProcessingStatistic statistics, boolean success) {
         try {
