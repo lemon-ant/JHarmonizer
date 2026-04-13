@@ -146,7 +146,7 @@ class ReorderFlowIntegrationTest {
     }
 
     @NonNull
-    private Path writeJavaFile(@NonNull String fileName, @NonNull String content) throws IOException {
+    private Path writeJavaFile(String fileName, String content) throws IOException {
         Path javaFile = temporaryDirectory.resolve(fileName);
         Files.writeString(javaFile, content, StandardCharsets.UTF_8);
         return javaFile;
