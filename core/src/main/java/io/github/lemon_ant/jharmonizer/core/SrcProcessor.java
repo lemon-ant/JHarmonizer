@@ -136,7 +136,7 @@ public final class SrcProcessor {
             logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
         }
 
-        logCompletionMessage(flowType, aggregatedProcessingStatistic);
+        logCompletionMessage(flowType, aggregatedProcessingStatistic, flow.isModifyingFlow());
         long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         boolean success = flow.isSuccessful(modifiedFileCount > 0);
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
@@ -161,7 +161,9 @@ public final class SrcProcessor {
 
     @SuppressWarnings("PMD.GuardLogStatement")
     private static void logCompletionMessage(
-            @NonNull FlowType flowType, @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic) {
+            @NonNull FlowType flowType,
+            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic,
+            boolean isModifyingFlow) {
         long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         List<Path> stopTriggerPaths = aggregatedProcessingStatistic.getStopTriggerPaths();
         if (!stopTriggerPaths.isEmpty()) {
@@ -172,11 +174,13 @@ public final class SrcProcessor {
                     modifiedFileCount,
                     formatBulletList("Stop triggered by", stopTriggerPaths));
         } else {
+            String countLabel = isModifyingFlow ? "modified" : "non-conforming";
             log.info(
-                    "{} completed. Processed {} file(s), {} modified.",
+                    "{} completed. Processed {} file(s), {} {}.",
                     flowType,
                     aggregatedProcessingStatistic.getFileCount(),
-                    modifiedFileCount);
+                    modifiedFileCount,
+                    countLabel);
         }
     }
 

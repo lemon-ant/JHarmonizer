@@ -194,4 +194,9 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     public boolean isSuccessful(boolean hasModifications) {
         return !hasModifications;
     }
+
+    @Override
+    public boolean isModifyingFlow() {
+        return false;
+    }
 }

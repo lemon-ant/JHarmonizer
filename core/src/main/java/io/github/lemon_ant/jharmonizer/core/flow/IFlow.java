@@ -31,4 +31,13 @@ public interface IFlow {
      * @return {@code true} if the flow considers the run successful
      */
     boolean isSuccessful(boolean hasModifications);
+
+    /**
+     * Indicates whether this flow modifies source files on disk.
+     * Returns {@code true} for reorder flows that rewrite files in place,
+     * and {@code false} for check flows that only report violations.
+     *
+     * @return {@code true} if this flow rewrites files; {@code false} if it only checks them
+     */
+    boolean isModifyingFlow();
 }
