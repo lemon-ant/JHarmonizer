@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.formatter;
 
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle.PALANTIR;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.nio.file.Path;
@@ -89,8 +89,12 @@ class FormatterTest {
         List<SrcCharacterRange> formattingSkippedRanges =
                 List.of(new SrcCharacterRange(0, 10), new SrcCharacterRange(8, 15));
 
-        // When / Then
-        assertThatThrownBy(() -> formatter.formatSrc(srcCode, Path.of("Person.java"), formattingSkippedRanges))
+        // When
+        Throwable thrown =
+                catchThrowable(() -> formatter.formatSrc(srcCode, Path.of("Person.java"), formattingSkippedRanges));
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Excluded ranges must be sorted and non-overlapping");
     }

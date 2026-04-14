@@ -114,9 +114,13 @@
 - Do not insert an empty line at the very beginning of the method body before `// Given`.
 - Keep each block contiguous and focused.
 - It is valid to merge blocks when it improves readability.
-- Exception tests may use `// When / Then` together because the assertion captures both the action and the expectation.
 - Very small tests may use `// Given / When` together if separating them would add noise.
+- Non-exception assertion tests may use `// When / Then` together when action and assertion fit naturally in one block.
 - Combined blocks are allowed only when they stay contiguous and clear.
+- Exception tests must **not** use `// When / Then` together. Instead:
+  - `// When` block: capture the thrown exception with `catchThrowable(...)` (or `catchThrowableOfType(ExceptionType.class, ...)` when type-specific methods must be called on the exception in the Then block).
+  - `// Then` block: assert on the captured throwable with `assertThat(thrown)`.
+  - Do not use `assertThatThrownBy(...)` in `// When / Then` or `// Then` blocks.
 - Use parameterized tests when they reduce repetition and improve readability.
 - The 3-segment method naming rule still applies to parameterized tests.
 - Do not introduce a `// Given` block for a single obvious local variable assignment.

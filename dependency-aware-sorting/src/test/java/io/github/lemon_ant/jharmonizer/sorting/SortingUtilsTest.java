@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.util.Collections;
 import java.util.Map;
@@ -16,15 +17,20 @@ class SortingUtilsTest {
 
     @Test
     void buildItemIndex_nullList_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> SortingUtils.buildItemIndex(null)).isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.buildItemIndex(null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void resolveGroupMemberIndex_nullMap_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> SortingUtils.resolveGroupMemberIndex(null, "item"))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveGroupMemberIndex(null, "item"));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -32,16 +38,20 @@ class SortingUtilsTest {
         // Given
         Map<String, Integer> emptyMap = Collections.emptyMap();
 
-        // When / Then
-        assertThatThrownBy(() -> SortingUtils.resolveGroupMemberIndex(emptyMap, null))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveGroupMemberIndex(emptyMap, null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void validateNotAlreadyGrouped_nullMember_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> SortingUtils.validateNotAlreadyGrouped(SortingUtils.UNASSIGNED, null))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.validateNotAlreadyGrouped(SortingUtils.UNASSIGNED, null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -49,9 +59,11 @@ class SortingUtilsTest {
         // Given
         Map<String, Integer> emptyMap = Collections.emptyMap();
 
-        // When / Then
-        assertThatThrownBy(() -> SortingUtils.resolveDependencyEdge(null, emptyMap))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(null, emptyMap));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -59,8 +71,10 @@ class SortingUtilsTest {
         // Given
         Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("provider", "dependent");
 
-        // When / Then
-        assertThatThrownBy(() -> SortingUtils.resolveDependencyEdge(edge, null))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(edge, null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 }

@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,15 +12,19 @@ class DependenciesTest {
 
     @Test
     void of_nullPairs_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> Dependencies.of((String[]) null)).isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> Dependencies.of((String[]) null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void of_oddNumberOfArguments_throwsIllegalArgumentException() {
-        // When / Then
-        assertThatThrownBy(() -> Dependencies.of("a", "b", "c"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("even");
+        // When
+        Throwable thrown = catchThrowable(() -> Dependencies.of("a", "b", "c"));
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("even");
     }
 }

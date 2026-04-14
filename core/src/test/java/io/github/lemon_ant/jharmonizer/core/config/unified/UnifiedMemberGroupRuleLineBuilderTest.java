@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,10 +13,11 @@ class UnifiedMemberGroupRuleLineBuilderTest {
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
                 UnifiedMemberGroupRuleLine.builder();
 
-        // When / Then
-        assertThatThrownBy(unifiedMemberGroupRuleLineBuilder::build)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("at least one selector");
+        // When
+        Throwable thrown = catchThrowable(unifiedMemberGroupRuleLineBuilder::build);
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("at least one selector");
     }
 
     @Test
@@ -42,9 +43,10 @@ class UnifiedMemberGroupRuleLineBuilderTest {
                 UnifiedMemberGroupRuleLine.builder();
         unifiedMemberGroupRuleLineBuilder.nameMatcher(null);
 
-        // When / Then
-        assertThatThrownBy(() -> unifiedMemberGroupRuleLineBuilder.nameMatcher(null))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already been assigned");
+        // When
+        Throwable thrown = catchThrowable(() -> unifiedMemberGroupRuleLineBuilder.nameMatcher(null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalStateException.class).hasMessageContaining("already been assigned");
     }
 }
