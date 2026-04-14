@@ -12,8 +12,9 @@
     <name>JHarmonizer CLI</name>
 
     <properties>
-        <!-- Branch coverage is currently at 84 %; lower the module threshold until coverage improves. -->
-        <jacoco.minimum.branch.coverage>0.84</jacoco.minimum.branch.coverage>
+        <!-- Branch coverage is now at 94 %; the two remaining missed branches are in JHarmonizerCliApplication
+             which calls System.exit and cannot be exercised via unit tests. -->
+        <jacoco.minimum.branch.coverage>0.94</jacoco.minimum.branch.coverage>
     </properties>
 
     <dependencies>
