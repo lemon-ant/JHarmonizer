@@ -37,7 +37,7 @@ class ProcessingStatisticsPrintServiceTest {
         // Then
         assertThat(report)
                 .startsWith(System.lineSeparator())
-                .contains("JHarmonizer harmonization summary")
+                .contains("JHarmonizer summary")
                 .contains("| Files processed")
                 .contains("| Total size")
                 .contains("| Wall-clock time")
