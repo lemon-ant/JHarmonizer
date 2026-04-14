@@ -16,20 +16,4 @@ public class UnifiedNameMatcher {
      */
     @NonNull
     String value;
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof UnifiedNameMatcher that)) {
-            return false;
-        }
-
-        return matchMethod == that.matchMethod && value.equals(that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = matchMethod.hashCode();
-        result = 31 * result + value.hashCode();
-        return result;
-    }
 }
