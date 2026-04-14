@@ -178,68 +178,6 @@
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco-maven-plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>prepare-jacoco-agent</id>
-                            <goals>
-                                <goal>prepare-agent</goal>
-                            </goals>
-                            <configuration>
-                                <!-- Append so later test executions in the same module do not overwrite earlier coverage data. -->
-                                <append>true</append>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>prepare-jacoco-agent-integration</id>
-                            <goals>
-                                <goal>prepare-agent-integration</goal>
-                            </goals>
-                            <configuration>
-                                <!-- Append so unit-test and integration-test coverage can accumulate in one module build. -->
-                                <append>true</append>
-                                <propertyName>failsafeArgLine</propertyName>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>build-jacoco-report</id>
-                            <goals>
-                                <goal>report</goal>
-                            </goals>
-                            <phase>verify</phase>
-                        </execution>
-                        <execution>
-                            <id>enforce-jacoco-coverage</id>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                            <!--
-                                Phase is set to "none" so this execution is never triggered automatically.
-                                The quality-gates profile re-binds the same execution id to the verify phase,
-                                keeping the rules configuration here (global) while the actual run only happens
-                                when that profile is active.
-                            -->
-                            <phase>none</phase>
-                            <configuration>
-                                <rules>
-                                    <rule>
-                                        <element>BUNDLE</element>
-                                        <limits>
-                                            <limit>
-                                                <counter>BRANCH</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>${jacoco.minimum.branch.coverage}</minimum>
-                                            </limit>
-                                            <limit>
-                                                <counter>LINE</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>${jacoco.minimum.line.coverage}</minimum>
-                                            </limit>
-                                        </limits>
-                                    </rule>
-                                </rules>
-                            </configuration>
-                        </execution>
-                    </executions>
                 </plugin>
 
                 <plugin>
@@ -338,10 +276,6 @@
         </pluginManagement>
 
         <plugins>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -514,13 +448,59 @@
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <executions>
-                            <!--
-                                Re-binds the enforce-jacoco-coverage execution to the verify phase.
-                                The rules configuration lives in pluginManagement and is inherited here.
-                            -->
+                            <execution>
+                                <id>prepare-jacoco-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Append so later test executions in the same module do not overwrite earlier coverage data. -->
+                                    <append>true</append>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>prepare-jacoco-agent-integration</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Append so unit-test and integration-test coverage can accumulate in one module build. -->
+                                    <append>true</append>
+                                    <propertyName>failsafeArgLine</propertyName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>build-jacoco-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
                             <execution>
                                 <id>enforce-jacoco-coverage</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
                                 <phase>verify</phase>
+                                <configuration>
+                                    <rules>
+                                        <rule>
+                                            <element>BUNDLE</element>
+                                            <limits>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>${jacoco.minimum.branch.coverage}</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>${jacoco.minimum.line.coverage}</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                    </rules>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
