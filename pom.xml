@@ -21,12 +21,10 @@
         <argLine/>
         <!-- Late-bound by Failsafe so integration-test coverage can inject its agent without unresolved placeholders. -->
         <failsafeArgLine/>
-        <fastutil.version>8.5.18</fastutil.version>
         <jackson.version>2.21.2</jackson.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
         <jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
-        <java-diff-utils.version>4.16</java-diff-utils.version>
         <jmh.version>1.37</jmh.version>
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
@@ -48,11 +46,9 @@
         <mockito.agent.argLine>"-javaagent:${maven.repo.local}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</mockito.agent.argLine>
         <mockito.version>5.23.0</mockito.version>
         <palantir-java-format.version>2.90.0</palantir-java-format.version>
-        <picocli.version>4.7.7</picocli.version>
         <pmd.version>7.23.0</pmd.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <spoon.version>11.2.1</spoon.version>
         <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
         <spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
@@ -111,36 +107,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.20.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.palantir.javaformat</groupId>
-                <artifactId>palantir-java-format</artifactId>
-                <version>${palantir-java-format.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>fr.inria.gforge.spoon</groupId>
-                <artifactId>spoon-core</artifactId>
-                <version>${spoon.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>info.picocli</groupId>
-                <artifactId>picocli</artifactId>
-                <version>${picocli.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.java-diff-utils</groupId>
-                <artifactId>java-diff-utils</artifactId>
-                <version>${java-diff-utils.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.lemon-ant</groupId>
-                <artifactId>glob-path-finder</artifactId>
-                <version>1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>it.unimi.dsi</groupId>
-                <artifactId>fastutil-core</artifactId>
-                <version>${fastutil.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.openjdk.jmh</groupId>
