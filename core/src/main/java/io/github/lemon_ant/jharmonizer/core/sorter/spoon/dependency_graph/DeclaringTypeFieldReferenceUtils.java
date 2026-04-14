@@ -11,7 +11,6 @@ import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
@@ -130,7 +129,7 @@ class DeclaringTypeFieldReferenceUtils {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
-                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
+                .filter(fieldAccess -> isInDeclaringTypeScope(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> Optional.ofNullable(
                                 fieldAccess.getVariable().getDeclaration())
                         .map(field -> isFieldDeclaredInType(field, declaringType))
@@ -182,30 +181,38 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isInsideLazyContext(CtType<?> declaringType, CtElement astRoot, CtElement element) {
+    private static boolean isInDeclaringTypeScope(CtType<?> declaringType, CtElement astRoot, CtElement element) {
+        // Java forward-reference restriction inside initializers distinguishes access kinds:
+        // - Simple-name (implicit) accesses inside a lambda body ARE subject to the restriction.
+        // - Qualified accesses (e.g., ClassName.field) inside a lambda body are NOT subject to the restriction.
+        // - Anonymous/inner class member bodies belong to a different class scope and are never restricted.
+        boolean isImplicitAccess = isImplicitFieldAccess(element);
         CtElement currentParent = element.getParent();
 
         while (currentParent != null) {
-            if (currentParent instanceof CtLambda<?>) {
-                return true;
-            }
-
-            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
-                return true;
+            if (currentParent instanceof CtLambda<?> && !isImplicitAccess) {
+                return false;
             }
 
             if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
-                return true;
+                return false;
             }
 
             if (currentParent == astRoot) {
-                return false;
+                return true;
             }
 
             currentParent = currentParent.getParent();
         }
 
         return false;
+    }
+
+    private static boolean isImplicitFieldAccess(CtElement element) {
+        if (!(element instanceof CtFieldAccess<?> fieldAccess)) {
+            return false;
+        }
+        return fieldAccess.getTarget() == null || fieldAccess.getTarget().isImplicit();
     }
 
     @Value

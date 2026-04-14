@@ -185,7 +185,7 @@ public final class SrcProcessor {
         builder.append("\n  ").append(header).append(':');
         paths.stream()
                 .sorted(Comparator.comparing(Path::toString))
-                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, 120))
+                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH))
                 .forEach(abbreviatedPath -> builder.append("\n    - ").append(abbreviatedPath));
         return builder.toString();
     }
