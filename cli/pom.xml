@@ -12,8 +12,9 @@
     <name>JHarmonizer CLI</name>
 
     <properties>
-        <!-- Branch coverage is currently at 84 %; lower the module threshold until coverage improves. -->
-        <jacoco.minimum.branch.coverage>0.84</jacoco.minimum.branch.coverage>
+        <!-- Branch coverage is currently at ~94 %; threshold is kept at 85 % to provide headroom
+             for future code changes without requiring immediate test additions. -->
+        <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
     </properties>
 
     <dependencies>

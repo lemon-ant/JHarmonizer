@@ -16,6 +16,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -281,6 +282,88 @@ class BaseCommandTest {
 
         // Then
         assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void call_baseDirOptionOmitted_usesCurrentDirectoryAsBaseDir() {
+        // When
+        int exitCode;
+        SrcProcessor constructedProcessor;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute();
+            constructedProcessor = srcProcessorMocks.constructed().getFirst();
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(constructedProcessor)
+                .processSources(eq(Path.of(".").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
+    }
+
+    @Test
+    void call_externalConfigAndNoBackupBothProvided_backupsDisabledInMergedConfig() throws Exception {
+        // Given
+        Path configFilePath = Files.writeString(
+                temporaryDirectory.resolve("minimal-config.yml"), "backups-enabled: true\n", StandardCharsets.UTF_8);
+        AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            constructorArguments.set(context.arguments());
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildSuccessfulResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src", "--config", configFilePath.toString(), "--no-backup");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        assertThat(constructorArguments.get()).hasSize(1);
+        Object constructorConfig = constructorArguments.get().getFirst();
+        assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
+        FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
+        assertThat(flexibleConfig.getBackupsEnabled()).contains(false);
+    }
+
+    @Test
+    void call_processorThrowsRuntimeWithBlankMessage_returnsExitCode1() throws Exception {
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("  "));
+                })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void call_verboseOptionWithMissingStdoutAppender_returnsExitCode0() {
+        // Given
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        @SuppressWarnings("unchecked")
+        ConsoleAppender<ILoggingEvent> stdoutAppender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
+        rootLogger.detachAppender(STDOUT_APPENDER_NAME);
+
+        // When
+        int exitCode = -1;
+        try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute("--base-dir", "src", "--verbose");
+        } finally {
+            if (stdoutAppender != null) {
+                rootLogger.addAppender(stdoutAppender);
+            }
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
     }
 
     private static final class TestCommand extends BaseCommand {
