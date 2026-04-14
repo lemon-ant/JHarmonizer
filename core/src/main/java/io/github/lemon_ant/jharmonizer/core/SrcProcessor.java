@@ -137,8 +137,8 @@ public final class SrcProcessor {
         }
 
         logCompletionMessage(flowType, aggregatedProcessingStatistic, flow.isModifyingFlow());
-        long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
-        boolean success = flow.isSuccessful(modifiedFileCount > 0);
+        long nonConformingFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
+        boolean success = flow.isSuccessful(nonConformingFileCount > 0);
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
     }
 
