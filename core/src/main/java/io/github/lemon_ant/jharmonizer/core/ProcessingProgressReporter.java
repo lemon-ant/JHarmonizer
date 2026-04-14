@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import lombok.NonNull;
@@ -49,16 +50,18 @@ final class ProcessingProgressReporter {
         }
     }
 
-    @SuppressWarnings("PMD.GuardLogStatement")
     private void logBatchProgress(long count) {
+        if (!log.isInfoEnabled()) {
+            return;
+        }
         log.info(
                 "JHarmonization: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
-                String.format("%4d", count),
-                String.format("%4d", reorderedCount.sum()),
-                String.format("%4d", formattedCount.sum()),
-                String.format("%4d", unchangedCount.sum()),
-                String.format("%4d", checkedCount.sum()),
-                String.format("%4d", skippedCount.sum()),
-                String.format("%4d", errorCount.sum()));
+                String.format(Locale.ROOT, "%4d", count),
+                String.format(Locale.ROOT, "%4d", reorderedCount.sum()),
+                String.format(Locale.ROOT, "%4d", formattedCount.sum()),
+                String.format(Locale.ROOT, "%4d", unchangedCount.sum()),
+                String.format(Locale.ROOT, "%4d", checkedCount.sum()),
+                String.format(Locale.ROOT, "%4d", skippedCount.sum()),
+                String.format(Locale.ROOT, "%4d", errorCount.sum()));
     }
 }
