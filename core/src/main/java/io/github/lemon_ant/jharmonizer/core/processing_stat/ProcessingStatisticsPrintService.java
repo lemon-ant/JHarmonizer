@@ -26,7 +26,7 @@ public class ProcessingStatisticsPrintService {
     private static final String ELLIPSIS = "...";
     private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
     private static final int DETAIL_PATH_MAX_LENGTH = 120;
-    private static final String HEADER = "JHarmonizer summary";
+    private static final String HEADER = "JHarmonization summary";
 
     /**
      * Builds a pseudo-table report with a dedicated section for unexpected internal errors.
