@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ProcessingStatisticsPrintService {
 
-    private static final int METRIC_WIDTH = 40;
+    private static final int METRIC_WIDTH = "Files with unexpected internal errors".length() + 1;
     private static final int VALUE_WIDTH = 24;
     private static final String ELLIPSIS = "...";
     private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
