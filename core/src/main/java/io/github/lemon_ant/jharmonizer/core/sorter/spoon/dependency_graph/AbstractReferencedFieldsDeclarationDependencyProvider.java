@@ -63,8 +63,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     private static boolean isImplicitFieldAccess(@NonNull ReferencedFieldAccess referencedFieldAccess) {
         // Java allows qualified forward reads of compile-time constants, but same-type simple-name reads can become
         // illegal forward references after reordering, so only implicit accesses must keep declaration dependencies.
-        return referencedFieldAccess.getFieldAccess().getTarget() == null
-                || referencedFieldAccess.getFieldAccess().getTarget().isImplicit();
+        return DeclaringTypeFieldReferenceUtils.isImplicitFieldAccess(referencedFieldAccess.getFieldAccess());
     }
 
     /**
