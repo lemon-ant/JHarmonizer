@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import java.util.Objects;
 import lombok.Value;
 
 /**
@@ -19,20 +18,6 @@ public class SerializationStatistic {
     public SerializationStatistic(long serializedCodeLength, long processingTimeInNanos) {
         this.serializedCodeLength = serializedCodeLength;
         this.processingTimeInNanos = processingTimeInNanos;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (SerializationStatistic) obj;
-        return this.serializedCodeLength == that.serializedCodeLength
-                && this.processingTimeInNanos == that.processingTimeInNanos;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(serializedCodeLength, processingTimeInNanos);
     }
 
     @Override
