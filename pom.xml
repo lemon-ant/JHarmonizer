@@ -447,7 +447,7 @@
                                                 <limit>
                                                     <counter>BRANCH</counter>
                                                     <value>COVEREDRATIO</value>
-                                                    <minimum>${jacoco.minimum.line.coverage}</minimum>
+                                                    <minimum>0.60</minimum>
                                                 </limit>
                                                 <limit>
                                                     <counter>LINE</counter>
