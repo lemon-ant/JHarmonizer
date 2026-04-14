@@ -406,6 +406,62 @@ abstract class AbstractDependencyAwareSortingTest {
         assertThatThrownBy(() -> result.add(staticMember("x"))).isInstanceOf(UnsupportedOperationException.class);
     }
 
+    // ------------------------------------------------ empty group -------------- //
+
+    @Test
+    void sort_groupWithNoItems_emptyGroupSkippedAndItemsSorted() {
+        // Given
+        var members = staticItems("b", "a");
+        var emptyGroup = new Groups<SortableTypeMember>(List.of(new Group<>(List.of())));
+
+        // When
+        var result = sort(members, emptyGroup, Dependencies.empty());
+
+        // Then
+        assertThat(names(result)).containsExactly("a", "b");
+    }
+
+    // ------------------------------------------------ provider-lift edge cases - //
+
+    @Test
+    void sort_blockedNodeWithAlreadyEmittedProvider_liftsMissingProviderOnly() {
+        // Given: a->b and d->b; natural order a,b,c,d — when b is processed, a is already
+        // emitted but d is not, so only d is lifted; this covers the seedStack branch where
+        // an emitted provider is encountered during transitive-closure computation.
+        var members = staticItems("a", "b", "c", "d");
+        var dependencies = deps("a", "b", "d", "b");
+
+        // When
+        var result = sort(members, Groups.empty(), dependencies);
+
+        // Then
+        var resultNames = names(result);
+        assertThat(resultNames).hasSize(4);
+        assertThat(resultNames.indexOf("a")).isLessThan(resultNames.indexOf("b"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
+    }
+
+    @Test
+    void sort_multiProviderTransitiveClosure_allDependencyConstraintsRespected() {
+        // Given: b->a, c->a, d->b, d->c, e->c — node a is blocked; its transitive
+        // provider closure {b,c,d,e} requires a multi-node topological subset sort,
+        // exercising the intra-subset in-degree tracking and nodeSet membership check.
+        var members = staticItems("a", "b", "c", "d", "e");
+        var dependencies = deps("b", "a", "c", "a", "d", "b", "d", "c", "e", "c");
+
+        // When
+        var result = sort(members, Groups.empty(), dependencies);
+
+        // Then
+        var resultNames = names(result);
+        assertThat(resultNames).hasSize(5);
+        assertThat(resultNames.indexOf("b")).isLessThan(resultNames.indexOf("a"));
+        assertThat(resultNames.indexOf("c")).isLessThan(resultNames.indexOf("a"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("c"));
+        assertThat(resultNames.indexOf("e")).isLessThan(resultNames.indexOf("c"));
+    }
+
     // ------------------------------------------------ mixed STATIC/DYNAMIC ----- //
 
     @Test
