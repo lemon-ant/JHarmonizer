@@ -12,9 +12,7 @@
     <name>Dependency-Aware Sorting</name>
 
     <properties>
-        <fastutil.version>8.5.18</fastutil.version>
         <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
-        <jmh.version>1.37</jmh.version>
     </properties>
 
     <dependencies>
@@ -22,7 +20,6 @@
         <dependency>
             <groupId>it.unimi.dsi</groupId>
             <artifactId>fastutil-core</artifactId>
-            <version>${fastutil.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -33,13 +30,11 @@
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
