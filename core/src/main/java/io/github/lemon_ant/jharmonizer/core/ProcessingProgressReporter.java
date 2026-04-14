@@ -50,10 +50,8 @@ final class ProcessingProgressReporter {
         }
     }
 
+    @SuppressWarnings("PMD.GuardLogStatement")
     private void logBatchProgress(long count) {
-        if (!log.isInfoEnabled()) {
-            return;
-        }
         log.info(
                 "JHarmonization: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
                 String.format(Locale.ROOT, "%4d", count),
