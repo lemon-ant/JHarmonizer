@@ -52,13 +52,13 @@ final class ProcessingProgressReporter {
     @SuppressWarnings("PMD.GuardLogStatement")
     private void logBatchProgress(long count) {
         log.info(
-                "Progress: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
-                count,
-                reorderedCount.sum(),
-                formattedCount.sum(),
-                unchangedCount.sum(),
-                checkedCount.sum(),
-                skippedCount.sum(),
-                errorCount.sum());
+                "JHarmonization: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
+                String.format("%4d", count),
+                String.format("%4d", reorderedCount.sum()),
+                String.format("%4d", formattedCount.sum()),
+                String.format("%4d", unchangedCount.sum()),
+                String.format("%4d", checkedCount.sum()),
+                String.format("%4d", skippedCount.sum()),
+                String.format("%4d", errorCount.sum()));
     }
 }
