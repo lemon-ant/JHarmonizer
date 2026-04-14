@@ -104,4 +104,16 @@ class SrcFilesHandlerTest {
         String newText = Files.readString(srcPath);
         assertThat(newText).isEqualTo("new content");
     }
+
+    @Test
+    void backup_directoryPath_throwsIOException() throws IOException {
+        // Given
+        Path directoryPath = Files.createDirectory(tempDir.resolve("mydir"));
+
+        // When
+        Throwable thrown = catchThrowable(() -> SrcFilesHandler.renameToBackup(directoryPath));
+
+        // Then
+        assertThat(thrown).isInstanceOf(UncheckedIOException.class).hasMessageContaining("not a valid file");
+    }
 }

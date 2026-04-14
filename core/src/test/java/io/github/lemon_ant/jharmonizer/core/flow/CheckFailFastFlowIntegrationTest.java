@@ -94,6 +94,57 @@ class CheckFailFastFlowIntegrationTest {
         assertThat(result.getSortingStatistic().getSortingTimeInNanos()).isZero();
     }
 
+    @Test
+    void processSrc_fullyOffOptOut_returnsSkippedResultWithNoStopRequested() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile srcFile = createSrcFile(
+                "// @jharmonizer:fully-off\npublic class Z {\n    public void b() {}\n}\n", Path.of("Z.java"));
+
+        // When
+        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
+    }
+
+    @Test
+    void processStream_allCleanFiles_processesAllFilesWithoutStop() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile cleanFileA = createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
+        SrcFile cleanFileB = createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
+
+        // When
+        List<FileProcessingResult> fileProcessingResults =
+                flow.processStream(List.of(cleanFileA, cleanFileB).stream()).toList();
+
+        // Then
+        assertThat(fileProcessingResults).hasSize(2);
+        assertThat(fileProcessingResults)
+                .extracting(FileProcessingResult::isStopRequested)
+                .containsOnly(false);
+    }
+
+    @Test
+    void isSuccessful_noModifications_returnsTrue() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+
+        // When / Then
+        assertThat(flow.isSuccessful(false)).isTrue();
+    }
+
+    @Test
+    void isSuccessful_hasModifications_returnsFalse() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+
+        // When / Then
+        assertThat(flow.isSuccessful(true)).isFalse();
+    }
+
     @NonNull
     private static CheckFailFastFlow createFlow() {
         CompiledConfig compiledConfig = ConfigurationManager.loadDefaultConfig();

@@ -2,6 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResultCreator;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import java.util.List;
@@ -139,5 +141,66 @@ class ProcessingStatisticsPrintServiceTest {
         } finally {
             Locale.setDefault(defaultLocale);
         }
+    }
+
+    @Test
+    void render_withSmallestAndLargestFiles_includesSizeBoundarySection() {
+        // Given
+        FileProcessingStatistic smallestFile = FileProcessingStatistic.convert(FileProcessingResultCreator.createResult(
+                FileProcessingStatus.CHECKED, Path.of("Small.java"), 10, false));
+        FileProcessingStatistic largestFile = FileProcessingStatistic.convert(FileProcessingResultCreator.createResult(
+                FileProcessingStatus.CHECKED, Path.of("Large.java"), 500, false));
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(2)
+                .totalSizeInBytes(510)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .smallestFile(smallestFile)
+                .largestFile(largestFile)
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report)
+                .contains("Size boundary files:")
+                .contains("Min size file:")
+                .contains("Small.java")
+                .contains("Max size file:")
+                .contains("Large.java");
+    }
+
+    @Test
+    void render_withSmallestFileOnly_includesMinSizePath() {
+        // Given
+        FileProcessingStatistic smallestFile = FileProcessingStatistic.convert(
+                FileProcessingResultCreator.createResult(FileProcessingStatus.CHECKED, Path.of("Tiny.java"), 1, false));
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(1)
+                .totalSizeInBytes(1)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .smallestFile(smallestFile)
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report).contains("Min size file:").contains("Tiny.java");
+        assertThat(report).doesNotContain("Max size file:");
     }
 }

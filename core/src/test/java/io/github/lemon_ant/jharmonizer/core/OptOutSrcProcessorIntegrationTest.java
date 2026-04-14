@@ -319,6 +319,42 @@ class OptOutSrcProcessorIntegrationTest {
         assertThat(result.isSuccess()).isFalse();
     }
 
+    @Test
+    void processSources_duplicateFileScopeOptOut_usesLastDirectiveAndProcesses() throws Exception {
+        // Given
+        // Two file-scope opt-out comments: the second one (FULLY_OFF) should win.
+        String srcCodeWithDuplicateOptOut = """
+                // @jharmonizer:sort-off
+                // @jharmonizer:fully-off
+                public class DuplicateOptOut {
+                    public void b() {}
+                    public void a() {}
+                }
+                """;
+        Path javaFilePath = writeJavaFile("DuplicateOptOut.java", srcCodeWithDuplicateOptOut);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(srcCodeWithDuplicateOptOut);
+    }
+
+    @Test
+    void processSources_packageDeclarationFileWithOptOut_appliesRawSrcFallback() throws Exception {
+        // Given
+        String packageSrcCode = "// @jharmonizer:fully-off\npackage com.example;\n";
+        Path javaFilePath = writeJavaFile("package-info.java", packageSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(packageSrcCode);
+    }
+
     private Path writeJavaFile(String fileName, String fileContent) throws Exception {
         Path javaFilePath = temporaryDirectory.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);

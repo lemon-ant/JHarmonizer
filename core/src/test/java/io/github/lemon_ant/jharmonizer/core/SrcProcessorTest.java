@@ -399,6 +399,29 @@ class SrcProcessorTest {
                 .contains("unexpectedErrors=0");
     }
 
+    @Test
+    void processSources_checkFailFastWithViolation_logsStoppedEarlyMessage() throws Exception {
+        // Given
+        String violatingCode = "package demo; public class ViolatingOrder { public void b(){} public void a(){} }";
+        writeJavaFile(temporaryDirectory, "ViolatingOrder.java", violatingCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        SrcProcessingResult srcProcessingResult;
+        try {
+            srcProcessingResult = srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(srcProcessingResult.isSuccess()).isFalse();
+        assertThat(logs).contains("stopped early").contains("non-conforming").contains("Stop triggered by");
+    }
+
     @NonNull
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
