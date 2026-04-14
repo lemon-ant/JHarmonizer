@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
@@ -43,9 +43,11 @@ class JHarmonizerConfigLoaderTest {
         assertThat(empty.createNewFile()).isTrue();
         try (InputStream configYaml = Files.newInputStream(empty.toPath())) {
 
-            // When / Then
-            assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
-                    .isInstanceOf(MismatchedInputException.class);
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
         }
     }
 
@@ -54,8 +56,11 @@ class JHarmonizerConfigLoaderTest {
         // Given
         try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(INVALID_INCLUDES_CONFIG_PATH)) {
 
-            // When / Then
-            assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown)
                     .isInstanceOf(ValueInstantiationException.class)
                     .hasMessageContaining("Duplicate", "found");
         }
@@ -70,9 +75,11 @@ class JHarmonizerConfigLoaderTest {
         }
         try (InputStream configYaml = Files.newInputStream(badFile.toPath())) {
 
-            // When / Then
-            assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
-                    .isInstanceOf(MismatchedInputException.class);
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
         }
     }
 
@@ -82,9 +89,11 @@ class JHarmonizerConfigLoaderTest {
         try (InputStream configYaml =
                 TestCaseResourceUtils.openClasspathResourceStream(STRICT_MISSING_GROUP_NAME_CONFIG_PATH)) {
 
-            // When / Then
-            assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFrom(configYaml))
-                    .isInstanceOf(MismatchedInputException.class);
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
         }
     }
 
@@ -94,9 +103,11 @@ class JHarmonizerConfigLoaderTest {
         try (InputStream configYaml =
                 TestCaseResourceUtils.openClasspathResourceStream(FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH)) {
 
-            // When / Then
-            assertThatThrownBy(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml))
-                    .isInstanceOf(MismatchedInputException.class);
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
         }
     }
 

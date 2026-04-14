@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.util.Comparator;
 import java.util.List;
@@ -41,34 +41,42 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
 
     @Test
     void sort_nullItems_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        null, Groups.empty(), Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                null, Groups.empty(), Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void sort_nullGroups_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        List.of(), null, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                List.of(), null, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void sort_nullDependencies_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        List.of(), Groups.empty(), null, SortableTypeMember.DEFAULT_ORDER))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                List.of(), Groups.empty(), null, SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void sort_nullComparator_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() ->
-                        SimplifiedDependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), null))
-                .isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(
+                () -> SimplifiedDependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     // --- simplified constraint validations --- //
@@ -80,9 +88,12 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
         var groups = grouping(new String[] {"alpha", "beta"});
         var dependencies = deps("alpha", "gamma");
 
-        // When / Then
-        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER))
+        // When
+        Throwable thrown = catchThrowable(() ->
+                SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(SortingException.class)
                 .hasMessageContaining("alpha")
                 .hasMessageContaining("provider");
@@ -95,9 +106,12 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
         var groups = grouping(new String[] {"alpha", "beta"});
         var dependencies = deps("gamma", "alpha");
 
-        // When / Then
-        assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                        members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER))
+        // When
+        Throwable thrown = catchThrowable(() ->
+                SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(SortingException.class)
                 .hasMessageContaining("alpha")
                 .hasMessageContaining("dependent");

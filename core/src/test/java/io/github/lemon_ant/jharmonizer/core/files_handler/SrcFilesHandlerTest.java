@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.files_handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -52,10 +52,11 @@ class SrcFilesHandlerTest {
         // Given
         Path missingFile = tempDir.resolve("DoesNotExist.java");
 
-        // When / Then
-        assertThatThrownBy(() -> SrcFilesHandler.renameToBackup(missingFile))
-                .isInstanceOf(UncheckedIOException.class)
-                .hasMessageContaining("does not exist");
+        // When
+        Throwable thrown = catchThrowable(() -> SrcFilesHandler.renameToBackup(missingFile));
+
+        // Then
+        assertThat(thrown).isInstanceOf(UncheckedIOException.class).hasMessageContaining("does not exist");
     }
 
     @Test

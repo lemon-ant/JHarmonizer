@@ -25,7 +25,7 @@ import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYP
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_INTERFACE;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.TYPE_RECORD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -42,12 +42,15 @@ class MemberDescriptorTest {
         // Given
         String memberName = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
 
-        // When / Then
-        assertThatThrownBy(() -> MemberDescriptor.builder()
-                        .memberKind(kind)
-                        .name(memberName)
-                        .memberAccess(PUBLIC)
-                        .build())
+        // When
+        Throwable thrown = catchThrowable(() -> MemberDescriptor.builder()
+                .memberKind(kind)
+                .name(memberName)
+                .memberAccess(PUBLIC)
+                .build());
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Access level must be null for " + kind);
     }
@@ -58,11 +61,12 @@ class MemberDescriptorTest {
         // Given
         String memberName = kind.getTargetCategory() == TargetCategory.CONSTRUCTOR ? null : "Valid";
 
-        // When / Then
-        assertThatThrownBy(() -> MemberDescriptor.builder()
-                        .memberKind(kind)
-                        .name(memberName)
-                        .build())
+        // When
+        Throwable thrown = catchThrowable(() ->
+                MemberDescriptor.builder().memberKind(kind).name(memberName).build());
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Access level must be provided for " + kind);
     }
@@ -101,33 +105,38 @@ class MemberDescriptorTest {
     @ParameterizedTest(name = "abstract + {0} → IAE")
     @MethodSource("abstractConflicts")
     void builder_methodAbstractWithConflict_throwsIAE(DeclarationModifier conflicting) {
-        // When / Then
-        assertThatThrownBy(() -> buildMethodDescriptor("process")
-                        .declarationModifier(ABSTRACT)
-                        .declarationModifier(conflicting)
-                        .build())
-                .isInstanceOf(IllegalArgumentException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> buildMethodDescriptor("process")
+                .declarationModifier(ABSTRACT)
+                .declarationModifier(conflicting)
+                .build());
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void builder_methodAbstractWithPrivate_throwsIAE() {
-        // When / Then
-        assertThatThrownBy(() -> buildBaseDescriptor(METHOD, PRIVATE, "p")
-                        .declarationModifier(ABSTRACT)
-                        .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("abstract + private");
+        // When
+        Throwable thrown = catchThrowable(() -> buildBaseDescriptor(METHOD, PRIVATE, "p")
+                .declarationModifier(ABSTRACT)
+                .build());
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("abstract + private");
     }
 
     @ParameterizedTest(name = "default + {0} → IAE")
     @MethodSource("defaultConflicts")
     void builder_methodDefaultWithConflict_throwsIAE(DeclarationModifier conflicting) {
-        // When / Then
-        assertThatThrownBy(() -> buildMethodDescriptor("q")
-                        .declarationModifier(DEFAULT)
-                        .declarationModifier(conflicting)
-                        .build())
-                .isInstanceOf(IllegalArgumentException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> buildMethodDescriptor("q")
+                .declarationModifier(DEFAULT)
+                .declarationModifier(conflicting)
+                .build());
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -157,15 +166,16 @@ class MemberDescriptorTest {
         // Given
         String memberName = kind.getTargetCategory() == TargetCategory.INIT_BLOCK ? null : "Valid";
 
-        // When / Then
-        assertThatThrownBy(() -> MemberDescriptor.builder()
-                        .memberKind(kind)
-                        .name(memberName)
-                        .memberAccess(access)
-                        .declarationModifier(mod)
-                        .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Illegal modifier", kind);
+        // When
+        Throwable thrown = catchThrowable(() -> MemberDescriptor.builder()
+                .memberKind(kind)
+                .name(memberName)
+                .memberAccess(access)
+                .declarationModifier(mod)
+                .build());
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Illegal modifier", kind);
     }
 
     @ParameterizedTest(name = "{0} with blank name → IAE")
@@ -174,8 +184,12 @@ class MemberDescriptorTest {
         // Given
         MemberAccess access = kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null;
 
-        // When / Then
-        assertThatThrownBy(() -> buildBaseDescriptor(kind, access, "  ").build())
+        // When
+        Throwable thrown =
+                catchThrowable(() -> buildBaseDescriptor(kind, access, "  ").build());
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("non-initializer", "must have", "a non-blank name");
     }
@@ -186,30 +200,38 @@ class MemberDescriptorTest {
         // Given
         MemberAccess access = kind.getTargetCategory().isAccessLevelApplicable() ? PUBLIC : null;
 
-        // When / Then
-        assertThatThrownBy(() -> buildBaseDescriptor(kind, access, "X").build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("null name");
+        // When
+        Throwable thrown =
+                catchThrowable(() -> buildBaseDescriptor(kind, access, "X").build());
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("null name");
     }
 
     @Test
     void builder_typeAbstractPlusFinal_throwsIAE() {
-        // When / Then
-        assertThatThrownBy(() -> buildTypeDescriptor(TYPE_CLASS, "T")
-                        .declarationModifier(ABSTRACT)
-                        .declarationModifier(FINAL)
-                        .build())
+        // When
+        Throwable thrown = catchThrowable(() -> buildTypeDescriptor(TYPE_CLASS, "T")
+                .declarationModifier(ABSTRACT)
+                .declarationModifier(FINAL)
+                .build());
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Illegal modifier combination");
     }
 
     @Test
     void builder_typeSealedPlusNonSealed_throwsIAE() {
-        // When / Then
-        assertThatThrownBy(() -> buildTypeDescriptor(TYPE_CLASS, "T")
-                        .declarationModifier(SEALED)
-                        .declarationModifier(NON_SEALED)
-                        .build())
+        // When
+        Throwable thrown = catchThrowable(() -> buildTypeDescriptor(TYPE_CLASS, "T")
+                .declarationModifier(SEALED)
+                .declarationModifier(NON_SEALED)
+                .build());
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Illegal modifier combination");
     }

@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,8 +13,11 @@ class GroupTest {
 
     @Test
     void of_nullItems_throwsNullPointerException() {
-        // When / Then
-        assertThatThrownBy(() -> Group.of((String[]) null)).isInstanceOf(NullPointerException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> Group.of((String[]) null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
     }
 
     @Nested
@@ -24,8 +28,11 @@ class GroupTest {
             // Given
             Group<String>[] nullGroups = null;
 
-            // When / Then
-            assertThatThrownBy(() -> Groups.of(nullGroups)).isInstanceOf(NullPointerException.class);
+            // When
+            Throwable thrown = catchThrowable(() -> Groups.of(nullGroups));
+
+            // Then
+            assertThat(thrown).isInstanceOf(NullPointerException.class);
         }
     }
 }

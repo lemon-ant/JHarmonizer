@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -223,43 +223,47 @@ abstract class AbstractDependencyAwareSortingTest {
 
     @Test
     void sort_cyclicDependency_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> sort(staticItems("a", "b", "c"), Groups.empty(), deps("a", "b", "b", "c", "c", "a")))
-                .isInstanceOf(SortingException.class)
-                .message()
-                .containsIgnoringCase("cycle");
+        // When
+        Throwable thrown = catchThrowable(
+                () -> sort(staticItems("a", "b", "c"), Groups.empty(), deps("a", "b", "b", "c", "c", "a")));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("cycle");
     }
 
     @Test
     void sort_selfDependency_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "a")))
-                .isInstanceOf(SortingException.class)
-                .message()
-                .containsIgnoringCase("self");
+        // When
+        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "a")));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("self");
     }
 
     // ------------------------------------------------ scenario 8 --------------- //
 
     @Test
     void sort_memberInTwoGroups_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> sort(
-                        staticItems("a", "b", "c"),
-                        grouping(new String[] {"a", "b"}, new String[] {"b", "c"}),
-                        Dependencies.empty()))
-                .isInstanceOf(SortingException.class)
-                .hasMessageContaining("b");
+        // When
+        Throwable thrown = catchThrowable(() -> sort(
+                staticItems("a", "b", "c"),
+                grouping(new String[] {"a", "b"}, new String[] {"b", "c"}),
+                Dependencies.empty()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("b");
     }
 
     // ------------------------------------------------ scenario 9 --------------- //
 
     @Test
     void sort_duplicateMemberNames_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> sort(staticItems("apple", "banana", "apple"), Groups.empty(), Dependencies.empty()))
-                .isInstanceOf(SortingException.class)
-                .hasMessageContaining("apple");
+        // When
+        Throwable thrown = catchThrowable(
+                () -> sort(staticItems("apple", "banana", "apple"), Groups.empty(), Dependencies.empty()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("apple");
     }
 
     // ------------------------------------------------ scenario 11 -------------- //
@@ -368,42 +372,49 @@ abstract class AbstractDependencyAwareSortingTest {
 
     @Test
     void staticMember_blankName_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> SortableTypeMember.staticMember("   "))
-                .isInstanceOf(SortingException.class)
-                .message()
-                .containsIgnoringCase("blank");
+        // When
+        Throwable thrown = catchThrowable(() -> SortableTypeMember.staticMember("   "));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("blank");
     }
 
     @Test
     void sort_unknownMemberInGroup_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() ->
-                        sort(staticItems("a", "b"), grouping(new String[] {"a", "NONEXISTENT"}), Dependencies.empty()))
-                .isInstanceOf(SortingException.class);
+        // When
+        Throwable thrown = catchThrowable(
+                () -> sort(staticItems("a", "b"), grouping(new String[] {"a", "NONEXISTENT"}), Dependencies.empty()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class);
     }
 
     @Test
     void sort_unknownProviderInDependency_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> sort(staticItems("a", "b"), Groups.empty(), deps("GHOST", "a")))
-                .isInstanceOf(SortingException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("GHOST", "a")));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class);
     }
 
     @Test
     void sort_unknownDependentInDependency_throwsSortingException() {
-        // When / Then
-        assertThatThrownBy(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "GHOST")))
-                .isInstanceOf(SortingException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "GHOST")));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class);
     }
 
     @Test
     void sort_validInput_resultIsUnmodifiable() {
         // When
         var result = sort(staticItems("b", "a"), Groups.empty(), Dependencies.empty());
+        Throwable thrown = catchThrowable(() -> result.add(staticMember("x")));
 
         // Then
-        assertThatThrownBy(() -> result.add(staticMember("x"))).isInstanceOf(UnsupportedOperationException.class);
+        assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
     }
 
     // ------------------------------------------------ empty group -------------- //
