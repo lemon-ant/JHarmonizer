@@ -212,7 +212,13 @@
                             <goals>
                                 <goal>check</goal>
                             </goals>
-                            <phase>verify</phase>
+                            <!--
+                                Phase is set to "none" so this execution is never triggered automatically.
+                                The quality-gates profile re-binds the same execution id to the verify phase,
+                                keeping the rules configuration here (global) while the actual run only happens
+                                when that profile is active.
+                            -->
+                            <phase>none</phase>
                             <configuration>
                                 <rules>
                                     <rule>
@@ -500,6 +506,21 @@
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <!--
+                                Re-binds the enforce-jacoco-coverage execution to the verify phase.
+                                The rules configuration lives in pluginManagement and is inherited here.
+                            -->
+                            <execution>
+                                <id>enforce-jacoco-coverage</id>
+                                <phase>verify</phase>
                             </execution>
                         </executions>
                     </plugin>
