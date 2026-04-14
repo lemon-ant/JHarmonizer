@@ -39,6 +39,7 @@ public final class SrcProcessor {
 
     private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
     private static final int MAX_TOTAL_PATH_LENGTH = 100;
+    private static final int MAX_BULLET_LIST_PATH_LENGTH = 120;
     private static final String SUMMARY_STATUS_COMPLETED = "COMPLETED";
     private static final String SUMMARY_STATUS_COMPLETED_WITH_ERRORS = "COMPLETED_WITH_ERRORS";
 
@@ -185,7 +186,7 @@ public final class SrcProcessor {
         builder.append("\n  ").append(header).append(':');
         paths.stream()
                 .sorted(Comparator.comparing(Path::toString))
-                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, 120))
+                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_BULLET_LIST_PATH_LENGTH))
                 .forEach(abbreviatedPath -> builder.append("\n    - ").append(abbreviatedPath));
         return builder.toString();
     }
