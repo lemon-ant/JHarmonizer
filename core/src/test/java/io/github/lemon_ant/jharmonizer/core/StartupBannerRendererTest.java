@@ -86,6 +86,7 @@ class StartupBannerRendererTest {
             String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), excludeGlobs);
 
             // Then
+            assertThat(banner).contains("**/.git/**").contains("**/build/**").contains("**/target/**");
             assertThat(banner.indexOf("**/.git/**")).isLessThan(banner.indexOf("**/build/**"));
             assertThat(banner.indexOf("**/build/**")).isLessThan(banner.indexOf("**/target/**"));
         }
