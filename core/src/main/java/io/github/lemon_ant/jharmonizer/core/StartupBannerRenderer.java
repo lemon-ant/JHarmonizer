@@ -16,9 +16,9 @@ import lombok.experimental.UtilityClass;
 class StartupBannerRenderer {
 
     private static final String HEADER = "JHarmonizer started";
-    private static final int LABEL_WIDTH = 18;
-    private static final String LABEL_FORMAT = " %-" + LABEL_WIDTH + "s";
-    private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH + 2);
+    private static final int LABEL_WIDTH = "Base directory:".length() + 1;
+    private static final String LABEL_FORMAT = "%-" + LABEL_WIDTH + "s";
+    private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH);
 
     /**
      * Builds a multiline startup banner describing the active processing parameters.
@@ -39,8 +39,8 @@ class StartupBannerRenderer {
             @NonNull Collection<String> excludeGlobs) {
         List<String> lines = new ArrayList<>();
         lines.add("");
-        lines.add(" " + HEADER);
-        lines.add(" " + "=".repeat(HEADER.length()));
+        lines.add(HEADER);
+        lines.add("=".repeat(HEADER.length()));
         lines.add(renderRow("Flow:", flowType.name()));
         lines.add(renderRow("Base directory:", baseDir.toString()));
         lines.add(renderRow("Backups:", backupsEnabled ? "enabled" : "disabled"));
@@ -51,7 +51,7 @@ class StartupBannerRenderer {
 
     @NonNull
     private static String renderRow(@NonNull String label, @NonNull String value) {
-        return String.format(LABEL_FORMAT, label) + " " + value;
+        return String.format(LABEL_FORMAT, label) + value;
     }
 
     private static void addGlobRows(
@@ -64,9 +64,9 @@ class StartupBannerRenderer {
             return;
         }
         List<String> sortedGlobs = globs.stream().sorted().toList();
-        lines.add(renderRow(label, "- " + sortedGlobs.getFirst()));
+        lines.add(renderRow(label, sortedGlobs.getFirst()));
         for (int globIndex = 1; globIndex < sortedGlobs.size(); globIndex++) {
-            lines.add(GLOB_CONTINUATION_INDENT + "- " + sortedGlobs.get(globIndex));
+            lines.add(GLOB_CONTINUATION_INDENT + sortedGlobs.get(globIndex));
         }
     }
 }

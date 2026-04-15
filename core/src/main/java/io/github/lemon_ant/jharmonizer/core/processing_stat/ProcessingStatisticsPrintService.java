@@ -21,12 +21,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ProcessingStatisticsPrintService {
 
-    private static final int METRIC_WIDTH = 40;
+    private static final int METRIC_WIDTH = "Files with unexpected internal errors".length() + 1;
     private static final int VALUE_WIDTH = 24;
     private static final String ELLIPSIS = "...";
     private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
     private static final int DETAIL_PATH_MAX_LENGTH = 120;
-    private static final String HEADER = "JHarmonizer harmonization summary";
+    private static final String HEADER = "JHarmonization summary";
 
     /**
      * Builds a pseudo-table report with a dedicated section for unexpected internal errors.
@@ -43,7 +43,7 @@ public class ProcessingStatisticsPrintService {
 
         reportLines.add("");
         reportLines.add(renderSeparator('='));
-        reportLines.add(" " + HEADER);
+        reportLines.add(renderHeaderRow());
         reportLines.add(renderSeparator('='));
         reportLines.add(renderRow("Files processed", String.format(Locale.ROOT, "%,d", stats.getFileCount())));
         reportLines.add(renderRow("Total size", formatBytes(stats.getTotalSizeInBytes())));
@@ -114,6 +114,11 @@ public class ProcessingStatisticsPrintService {
         String metricCell = fitCell(metric, METRIC_WIDTH);
         String valueCell = fitCell(value, VALUE_WIDTH);
         return String.format("| %-" + METRIC_WIDTH + "s | %-" + VALUE_WIDTH + "s |", metricCell, valueCell);
+    }
+
+    @NonNull
+    private static String renderHeaderRow() {
+        return String.format("| %-" + (METRIC_WIDTH + VALUE_WIDTH + 3) + "s |", HEADER);
     }
 
     @NonNull

@@ -68,17 +68,17 @@ class StartupBannerRendererTest {
         }
 
         @Test
-        void render_singleGlob_prefixedWithDash() {
+        void render_singleGlob_displayedWithoutPrefix() {
             // When
             String banner =
                     StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of("**/*.java"), List.of());
 
             // Then
-            assertThat(banner).contains("Include globs:").contains("- **/*.java");
+            assertThat(banner).contains("Include globs:").contains("**/*.java").doesNotContain("- **/*.java");
         }
 
         @Test
-        void render_multipleGlobs_allPrefixedWithDashAndSorted() {
+        void render_multipleGlobs_sortedAscending() {
             // Given
             Set<String> excludeGlobs = Set.of("**/target/**", "**/build/**", "**/.git/**");
 
@@ -86,15 +86,9 @@ class StartupBannerRendererTest {
             String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), excludeGlobs);
 
             // Then
-            String[] lines = banner.split(System.lineSeparator());
-            List<String> excludeLines = List.of(lines).stream()
-                    .filter(line ->
-                            line.contains("Exclude globs:") || line.trim().startsWith("- "))
-                    .toList();
-            assertThat(excludeLines).hasSize(3);
-            assertThat(excludeLines.get(0)).contains("- **/.git/**");
-            assertThat(excludeLines.get(1)).contains("- **/build/**");
-            assertThat(excludeLines.get(2)).contains("- **/target/**");
+            assertThat(banner).contains("**/.git/**").contains("**/build/**").contains("**/target/**");
+            assertThat(banner.indexOf("**/.git/**")).isLessThan(banner.indexOf("**/build/**"));
+            assertThat(banner.indexOf("**/build/**")).isLessThan(banner.indexOf("**/target/**"));
         }
     }
 }

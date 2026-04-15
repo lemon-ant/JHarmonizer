@@ -120,7 +120,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .doesNotContain("JHarmonizer harmonization summary")
+                .doesNotContain("JHarmonization summary")
                 .doesNotContain("SLF4J(W)");
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
@@ -229,10 +229,10 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .contains("JHarmonizer harmonization summary")
+                .contains("JHarmonization summary")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED")
-                .contains("modified")
+                .contains("non-conforming")
                 .contains("Exit code: 1");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
@@ -318,7 +318,7 @@ class JHarmonizerCliPackagedJarIT {
                 .as(result.toString())
                 .contains("CHECKED")
                 .contains("completed")
-                .contains("0 modified")
+                .contains("0 non-conforming")
                 .contains("Exit code: 0")
                 .doesNotContain("REORDERED")
                 .doesNotContain("FORMATTED");
