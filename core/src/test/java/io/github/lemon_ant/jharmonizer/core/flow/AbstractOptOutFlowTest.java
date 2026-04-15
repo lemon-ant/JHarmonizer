@@ -103,5 +103,10 @@ class AbstractOptOutFlowTest {
         public boolean isSuccessful(boolean hasModifications) {
             return true;
         }
+
+        @Override
+        public boolean isModifyingFlow() {
+            return false;
+        }
     }
 }
