@@ -31,7 +31,7 @@ class JHarmonizerOptOutCommentUtilitiesTest {
     }
 
     @Test
-    void parseFileScopeOptOutMode_fullyOffLineComment_returnsFulLyOffMode() {
+    void parseFileScopeOptOutMode_fullyOffLineComment_returnsFullyOffMode() {
         // Given
         SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
 
