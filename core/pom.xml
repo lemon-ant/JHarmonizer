@@ -12,7 +12,7 @@
     <name>JHarmonizer Core</name>
 
     <properties>
-        <!-- Branch coverage raised to 70 % after adding coverage-improving tests in this PR. -->
+        <!-- Minimum module branch coverage threshold. -->
         <jacoco.minimum.branch.coverage>0.70</jacoco.minimum.branch.coverage>
     </properties>
 
