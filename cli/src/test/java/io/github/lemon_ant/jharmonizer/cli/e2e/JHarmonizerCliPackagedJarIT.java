@@ -120,7 +120,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isZero();
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .doesNotContain("JHarmonizer harmonization summary")
+                .doesNotContain("JHarmonization summary")
                 .doesNotContain("SLF4J(W)");
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileChanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
@@ -229,7 +229,7 @@ class JHarmonizerCliPackagedJarIT {
         assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
         assertThat(result.combinedOutput())
                 .as(result.toString())
-                .contains("JHarmonizer harmonization summary")
+                .contains("JHarmonization summary")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED")
                 .contains("non-conforming")
