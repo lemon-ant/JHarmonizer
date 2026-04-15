@@ -90,8 +90,6 @@ class RelocationDetectorTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        List<Pair<CtElement, Integer>> relocations = findRelocations(
-                indexElementsByOrder(spoonAstModel.getCompilationUnit()), spoonAstModel.getCompilationUnit());
         List<Pair<CtElement, Integer>> fakeRelocations = buildMethodsWithFakeOffset(spoonAstModel, 1);
 
         // When
