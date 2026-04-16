@@ -27,8 +27,8 @@ final class EnumConstantCrossTypeBackRefDependencyProvider implements MemberDepe
     /**
      * Finds the direct provider edges.
      *
-     * @param dependentMember the dependent member
-     * @param keepAccessorsTogether the keep accessors together
+     * @param dependentMember the type member whose initialization-order dependencies are being analyzed
+     * @param keepAccessorsTogether whether to treat getter/setter pairs as a unit when analyzing dependencies
      * @return the matching direct provider edges
      */
     @NonNull
@@ -72,7 +72,7 @@ final class EnumConstantCrossTypeBackRefDependencyProvider implements MemberDepe
                         fieldRead -> Optional.ofNullable(fieldRead.getVariable().getDeclaration()).stream())
                 .filter(fieldDecl -> !(fieldDecl instanceof CtEnumValue<?>))
                 .filter(fieldDecl -> fieldDecl instanceof CtField<?>)
-                .<CtField<?>>map(fieldDecl -> (CtField<?>) fieldDecl)
+                .<CtField<?>>map(fieldDecl -> fieldDecl)
                 .filter(field -> isFieldDeclaredInType(field, declaringType));
     }
 
