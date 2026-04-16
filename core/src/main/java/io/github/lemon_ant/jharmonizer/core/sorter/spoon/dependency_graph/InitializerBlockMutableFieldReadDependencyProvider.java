@@ -63,10 +63,11 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
 
         int dependentSrcStart = requireSrcStart(dependentMember);
         CtType<?> declaringType = requireDeclaringType(dependentMember);
+        boolean dependentMemberIsStatic = dependentMember.getModifiers().contains(ModifierKind.STATIC);
 
         return mutableFieldsReadByDependent.stream()
-                .flatMap(mutableField ->
-                        streamInitializerBlocksBeforeMemberReadingField(declaringType, mutableField, dependentSrcStart))
+                .flatMap(mutableField -> streamInitializerBlocksBeforeMemberReadingField(
+                        declaringType, mutableField, dependentSrcStart, dependentMemberIsStatic))
                 .map(initializerBlock ->
                         new MemberDependencyArc(initializerBlock, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
@@ -74,15 +75,13 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
 
     @NonNull
     private static Stream<CtAnonymousExecutable> streamInitializerBlocksBeforeMemberReadingField(
-            CtType<?> declaringType, CtField<?> field, int dependentSrcStart) {
-
-        boolean fieldIsStatic = field.getModifiers().contains(ModifierKind.STATIC);
+            CtType<?> declaringType, CtField<?> field, int dependentSrcStart, boolean dependentMemberIsStatic) {
 
         return streamExplicitSrcTypeMembers(declaringType)
                 .filter(member -> member instanceof CtAnonymousExecutable)
                 .map(member -> (CtAnonymousExecutable) member)
                 .filter(initializerBlock ->
-                        initializerBlock.getModifiers().contains(ModifierKind.STATIC) == fieldIsStatic)
+                        initializerBlock.getModifiers().contains(ModifierKind.STATIC) == dependentMemberIsStatic)
                 .filter(initializerBlock -> requireSrcStart(initializerBlock) < dependentSrcStart)
                 .filter(initializerBlock -> isFieldReadByInitializerBlock(initializerBlock, field));
     }
