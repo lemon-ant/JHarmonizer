@@ -23,7 +23,8 @@ public class MemberDependencyGraphBuilder {
             new FieldInitializerBackwardReferenceDependencyProvider(),
             new ExplicitThisInitializerFieldDependencyProvider(),
             new ExplicitDeclaringTypeInitializerFieldDependencyProvider(),
-            new InitializerBlockDependencyProvider());
+            new InitializerBlockDependencyProvider(),
+            new InitializerBlockMutableFieldReadDependencyProvider());
 
     /**
      * Performs the build dependency graph.
