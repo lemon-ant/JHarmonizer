@@ -25,7 +25,7 @@ public class MemberDependencyGraphBuilder {
             new ExplicitDeclaringTypeInitializerFieldDependencyProvider(),
             new InitializerBlockDependencyProvider(),
             new InitializerBlockMutableFieldReadDependencyProvider(),
-            new EnumConstantCrossTypeBackRefDependencyProvider());
+            new CrossTypeConstantBackRefDependencyProvider());
 
     /**
      * Performs the build dependency graph.
