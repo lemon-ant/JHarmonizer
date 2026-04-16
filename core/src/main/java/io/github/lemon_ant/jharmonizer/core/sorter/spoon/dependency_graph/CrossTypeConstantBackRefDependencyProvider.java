@@ -15,6 +15,7 @@ import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 /**
@@ -51,6 +52,10 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
             return Set.of();
         }
 
+        if (!dependentField.hasModifier(ModifierKind.STATIC)) {
+            return Set.of();
+        }
+
         CtElement dependentInitializerAst = dependentField.getDefaultExpression();
         if (dependentInitializerAst == null) {
             return Set.of();
@@ -69,18 +74,21 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
     @NonNull
     private static Stream<CtField<?>> collectProviderFieldsReachableViaBackRef(
             CtElement expr, CtType<?> declaringType, Set<CtType<?>> visitedTypes) {
-        List<CtField<?>> crossTypeFieldCandidates =
-                expr.getElements(new TypeFilter<>(CtFieldRead.class)).stream()
-                        .flatMap(fieldRead ->
-                                Optional.ofNullable(fieldRead.getVariable().getDeclaration()).stream())
-                        .filter(fieldDecl -> fieldDecl instanceof CtField<?>)
-                        .<CtField<?>>map(fieldDecl -> fieldDecl)
-                        .toList();
+        List<CtField<?>> crossTypeFieldCandidates = expr.getElements(new TypeFilter<>(CtFieldRead.class)).stream()
+                .flatMap(
+                        fieldRead -> Optional.ofNullable(fieldRead.getVariable().getDeclaration()).stream())
+                .filter(fieldDecl -> fieldDecl instanceof CtField<?>)
+                .<CtField<?>>map(fieldDecl -> fieldDecl)
+                .toList();
 
         Set<CtField<?>> providerFields = new HashSet<>();
         for (CtField<?> crossTypeField : crossTypeFieldCandidates) {
             CtType<?> crossType = crossTypeField.getDeclaringType();
             if (crossType == null || visitedTypes.contains(crossType)) {
+                continue;
+            }
+
+            if (!crossTypeField.hasModifier(ModifierKind.STATIC)) {
                 continue;
             }
 
