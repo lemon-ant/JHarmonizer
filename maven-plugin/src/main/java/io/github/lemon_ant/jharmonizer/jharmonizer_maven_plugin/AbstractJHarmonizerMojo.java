@@ -26,9 +26,9 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
      * Root directory to scan for Java source files.
-     * Defaults to the Maven project base directory.
+     * Defaults to the {@code src/} directory inside the Maven project base directory.
      */
-    @Parameter(defaultValue = "${project.basedir}", property = "jharmonizer.baseDir", required = true)
+    @Parameter(defaultValue = "${project.basedir}/src", property = "jharmonizer.baseDir", required = true)
     private File baseDir;
 
     /**
