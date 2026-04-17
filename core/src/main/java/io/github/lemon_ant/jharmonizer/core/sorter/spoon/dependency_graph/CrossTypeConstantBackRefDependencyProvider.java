@@ -79,7 +79,6 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
                 .filter(fieldRead -> isDirectlyEvaluatedDuringInit(expr, fieldRead))
                 .flatMap(
                         fieldRead -> Optional.ofNullable(fieldRead.getVariable().getDeclaration()).stream())
-                .filter(fieldDecl -> fieldDecl instanceof CtField<?>)
                 .<CtField<?>>map(fieldDecl -> fieldDecl)
                 .toList();
 
@@ -108,8 +107,6 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
                     .flatMap(backRefRead ->
                             Optional.ofNullable(backRefRead.getVariable().getDeclaration()).stream())
                     .filter(field -> !(field instanceof CtEnumValue<?>))
-                    .filter(field -> field instanceof CtField<?>)
-                    .<CtField<?>>map(field -> field)
                     .filter(field -> isFieldDeclaredInType(field, declaringType))
                     .filter(field -> field.hasModifier(ModifierKind.STATIC))
                     .filter(field -> !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(field))
