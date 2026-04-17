@@ -145,11 +145,11 @@ source level.
 
 ### Why it is broken code
 
-The JLS §12.4.2 processes static-field initializers strictly in textual order. If `F` is declared
-before `G` and `M()` reads `G`, the JVM assigns `F` before `G` has been set — causing `M()` to
-read `G`'s default value (`null` for objects, `0` for primitives). The bug is silent: swapping the
-declaration order, or inserting a new field between them, can break initialization without any
-compile-time warning.
+The Java Language Specification (JLS §12.4.2) specifies that static-field initializers are
+processed strictly in textual order. If `F` is declared before `G` and `M()` reads `G`, the JVM
+assigns `F` before `G` has been set — causing `M()` to read `G`'s default value (`null` for
+objects, `0` for primitives). The bug is silent: swapping the declaration order, or inserting a
+new field between them, can break initialization without any compile-time warning.
 
 The dependency exists; it is simply hidden. Code structured this way is misleading — readers
 scanning field declarations see `F = M()` with no indication that the ordering of `F` and `G`
