@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import spoon.reflect.code.CtFieldRead;
+import spoon.reflect.code.CtLambda;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtField;
@@ -75,6 +76,7 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
     private static Stream<CtField<?>> collectProviderFieldsReachableViaBackRef(
             CtElement expr, CtType<?> declaringType, Set<CtType<?>> visitedTypes) {
         List<CtField<?>> crossTypeFieldCandidates = expr.getElements(new TypeFilter<>(CtFieldRead.class)).stream()
+                .filter(fieldRead -> isDirectlyEvaluatedDuringInit(expr, fieldRead))
                 .flatMap(
                         fieldRead -> Optional.ofNullable(fieldRead.getVariable().getDeclaration()).stream())
                 .filter(fieldDecl -> fieldDecl instanceof CtField<?>)
@@ -92,18 +94,25 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
                 continue;
             }
 
+            if (InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(crossTypeField)) {
+                continue;
+            }
+
             CtElement crossTypeInitExpr = crossTypeField.getDefaultExpression();
             if (crossTypeInitExpr == null) {
                 continue;
             }
 
             crossTypeInitExpr.getElements(new TypeFilter<>(CtFieldRead.class)).stream()
+                    .filter(backRefRead -> isDirectlyEvaluatedDuringInit(crossTypeInitExpr, backRefRead))
                     .flatMap(backRefRead ->
                             Optional.ofNullable(backRefRead.getVariable().getDeclaration()).stream())
                     .filter(field -> !(field instanceof CtEnumValue<?>))
                     .filter(field -> field instanceof CtField<?>)
                     .<CtField<?>>map(field -> field)
                     .filter(field -> isFieldDeclaredInType(field, declaringType))
+                    .filter(field -> field.hasModifier(ModifierKind.STATIC))
+                    .filter(field -> !InitializationOrderDependencyUtils.isStaticCompileTimeConstantVariable(field))
                     .forEach(providerFields::add);
 
             visitedTypes.add(crossType);
@@ -112,6 +121,37 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
         }
 
         return providerFields.stream();
+    }
+
+    /**
+     * Returns {@code true} when {@code element} is directly evaluated during class initialization
+     * relative to {@code initAstRoot}, meaning there is no lambda body or nested-type body between
+     * {@code element} and {@code initAstRoot} in the parent chain.
+     *
+     * <p>Field reads inside lambda bodies are not evaluated when the lambda is created during
+     * {@code <clinit>}; they run only when the lambda is eventually called. Reads inside anonymous or
+     * inner class method bodies are similarly deferred and do not participate in {@code <clinit>}
+     * ordering.
+     */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isDirectlyEvaluatedDuringInit(CtElement initAstRoot, CtElement element) {
+        if (element == initAstRoot) {
+            return true;
+        }
+        CtElement currentParent = element.getParent();
+        while (currentParent != null) {
+            if (currentParent instanceof CtLambda<?>) {
+                return false;
+            }
+            if (currentParent instanceof CtType<?>) {
+                return false;
+            }
+            if (currentParent == initAstRoot) {
+                return true;
+            }
+            currentParent = currentParent.getParent();
+        }
+        return false;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
