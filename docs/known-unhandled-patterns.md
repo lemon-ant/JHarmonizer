@@ -35,7 +35,6 @@ The code below was stripped from the Apache NiFi project (HDFS processors module
 the affected declarations. Original class names, field names, and package structure are preserved
 exactly so the pattern can be traced back to its source.
 
-**`ListHDFS.java`** (package `org.apache.nifi.processors.hadoop`):
 ```java
 package org.apache.nifi.processors.hadoop;
 
@@ -64,7 +63,6 @@ public class ListHDFS extends AbstractHadoopProcessor {
 }
 ```
 
-**`FilterMode.java`** (separate file, package `org.apache.nifi.processors.hadoop.util`):
 ```java
 package org.apache.nifi.processors.hadoop.util;
 
