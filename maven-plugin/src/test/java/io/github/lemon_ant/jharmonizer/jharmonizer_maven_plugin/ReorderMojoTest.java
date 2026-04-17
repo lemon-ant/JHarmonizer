@@ -146,4 +146,36 @@ class ReorderMojoTest {
         // Then
         assertThat(thrown).isNull();
     }
+
+    @Test
+    void execute_autoDiscoveredConfigFilePresent_loadsConfigSuccessfully() throws Exception {
+        // Given
+        MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
+        Path autoDiscoveredConfigFile = MojoTestUtils.extractResourceToTemp(
+                "/test-cases/config-override/custom-config.yml", tempDir.resolve("jharmonizer.yml"));
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(reorderMojo, "configFile", MojoTestUtils.toFile(autoDiscoveredConfigFile));
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then
+        assertThat(thrown).isNull();
+    }
+
+    @Test
+    void execute_configFilePointsToNonExistentPath_skipsFileConfigAndSucceeds() throws Exception {
+        // Given
+        MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(reorderMojo, "configFile", MojoTestUtils.toFile(tempDir.resolve("jharmonizer.yml")));
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then
+        assertThat(thrown).isNull();
+    }
 }

@@ -10,7 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 import lombok.NonNull;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -36,13 +36,13 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
      * When empty, all {@code .java} files under {@code baseDir} are included.
      */
     @Parameter(property = "jharmonizer.includes")
-    private List<String> includes;
+    private Set<String> includes;
 
     /**
      * Glob patterns for Java source files to exclude from processing.
      */
     @Parameter(property = "jharmonizer.excludes")
-    private List<String> excludes;
+    private Set<String> excludes;
 
     /**
      * When {@code true}, skips execution of this goal entirely.
@@ -51,16 +51,18 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private boolean skip;
 
     /**
-     * Path to a custom YAML configuration file whose settings are merged over the built-in defaults.
-     * When not set, only the embedded default configuration is used.
+     * Path to a YAML configuration file whose settings are merged over the built-in defaults.
+     * Defaults to {@code jharmonizer.yml} in the project root when that file exists.
+     * When neither the default file nor an explicitly configured path exists, only the embedded
+     * default configuration is used.
      */
-    @Parameter(property = "jharmonizer.configFile")
+    @Parameter(defaultValue = "${project.basedir}/jharmonizer.yml", property = "jharmonizer.configFile")
     @Nullable
     private File configFile;
 
     /**
      * Overrides the {@code backupsEnabled} setting from the active configuration.
-     * When not set, the value from the configuration file (or the built-in default) is used.
+     * When not set, the value from the configuration file is used; the embedded default is {@code true}.
      */
     @Parameter(property = "jharmonizer.backupsEnabled")
     @Nullable
@@ -68,7 +70,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
      * Overrides the {@code printProcessingStatistics} setting from the active configuration.
-     * When not set, the value from the configuration file (or the built-in default) is used.
+     * When not set, the value from the configuration file is used; the embedded default is {@code true}.
      */
     @Parameter(property = "jharmonizer.printProcessingStatistics")
     @Nullable
@@ -122,8 +124,8 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     private SrcProcessingResult invokeSrcProcessor(Path baseDirPath) throws MojoExecutionException {
-        List<String> effectiveIncludes = includes != null ? includes : List.of();
-        List<String> effectiveExcludes = excludes != null ? excludes : List.of();
+        Set<String> effectiveIncludes = includes != null ? includes : Set.of();
+        Set<String> effectiveExcludes = excludes != null ? excludes : Set.of();
         try {
             return new SrcProcessor(buildConfig())
                     .processSources(baseDirPath, effectiveIncludes, effectiveExcludes, getFlowType());
@@ -134,9 +136,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     @Nullable
     private FlexibleUnifiedConfig buildConfig() {
-        FlexibleUnifiedConfig fileConfig = configFile != null
-                ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFile.toPath())
-                : null;
+        FlexibleUnifiedConfig fileConfig = resolveFileConfig();
 
         FlexibleUnifiedConfig paramOverrideConfig = (backupsEnabled != null || printProcessingStatistics != null)
                 ? FlexibleUnifiedConfig.builder()
@@ -146,6 +146,18 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                 : null;
 
         return mergeFlexibleConfigs(fileConfig, paramOverrideConfig);
+    }
+
+    @Nullable
+    private FlexibleUnifiedConfig resolveFileConfig() {
+        if (configFile == null) {
+            return null;
+        }
+        Path configFilePath = configFile.toPath();
+        if (!Files.isRegularFile(configFilePath)) {
+            return null;
+        }
+        return JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath);
     }
 
     @Nullable
