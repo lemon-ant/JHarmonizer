@@ -35,7 +35,7 @@ The code below was stripped from the Apache NiFi project (HDFS processors module
 the affected declarations. Original class names, field names, and package structure are preserved
 exactly so the pattern can be traced back to its source.
 
-**`ListHDFS.java`** (simplified, package `org.apache.nifi.processors.hadoop`):
+**`ListHDFS.java`** (package `org.apache.nifi.processors.hadoop`):
 ```java
 package org.apache.nifi.processors.hadoop;
 
@@ -46,30 +46,18 @@ import static org.apache.nifi.processors.hadoop.util.FilterMode.FILTER_DIRECTORI
 
 public class ListHDFS extends AbstractHadoopProcessor {
 
-    // RECURSE_SUBDIRS.getDisplayName() and FILE_FILTER.getDisplayName() are read back
-    // by FilterMode's enum constant initializers in FilterMode.java (a separate file).
+    // Read back by FilterMode enum constant initializers (FilterMode.java, a separate file).
     public static final PropertyDescriptor RECURSE_SUBDIRS = new PropertyDescriptor.Builder()
-            .name("Recurse Subdirectories")
-            .description("Indicates whether to list files from subdirectories of the HDFS directory")
-            .required(true)
-            .allowableValues("true", "false")
-            .defaultValue("true")
-            .build();
+            .name("Recurse Subdirectories").build();
 
+    // Read back by FilterMode enum constant initializers (FilterMode.java, a separate file).
     public static final PropertyDescriptor FILE_FILTER = new PropertyDescriptor.Builder()
-            .name("File Filter")
-            .description("Only files whose names match the given regular expression will be picked up")
-            .required(true)
-            .defaultValue("[^\\.].*")
-            .build();
+            .name("File Filter").build();
 
-    // This field triggers FilterMode.<clinit> via allowableValues(FilterMode.class).
-    // FilterMode's enum constants read back RECURSE_SUBDIRS and FILE_FILTER above.
+    // Triggers FilterMode.<clinit> via allowableValues(FilterMode.class).
+    // FilterMode's constants call RECURSE_SUBDIRS.getDisplayName() and FILE_FILTER.getDisplayName().
     public static final PropertyDescriptor FILE_FILTER_MODE = new PropertyDescriptor.Builder()
             .name("File Filter Mode")
-            .description("Determines how the regular expression in "
-                    + FILE_FILTER.getDisplayName() + " will be used when retrieving listings.")
-            .required(true)
             .allowableValues(FilterMode.class)
             .defaultValue(FILTER_DIRECTORIES_AND_FILES.getValue())
             .build();
@@ -87,39 +75,22 @@ import static org.apache.nifi.processors.hadoop.ListHDFS.RECURSE_SUBDIRS;
 
 public enum FilterMode implements DescribedValue {
 
-    // Each enum constant initializer reads back into ListHDFS via the static imports above.
-    FILTER_DIRECTORIES_AND_FILES(
-            "filter-mode-directories-and-files",
-            "Directories and Files",
-            "Filtering will be applied to the names of directories and files. If "
-                    + RECURSE_SUBDIRS.getDisplayName()
-                    + " is set to true, only subdirectories with a matching name will be searched "
-                    + "for files that match the regular expression defined in "
-                    + FILE_FILTER.getDisplayName() + "."
-    ),
-    FILTER_MODE_FILES_ONLY(
-            "filter-mode-files-only",
-            "Files Only",
-            "Filtering will only be applied to the names of files. If "
-                    + RECURSE_SUBDIRS.getDisplayName()
-                    + " is set to true, the entire subdirectory tree will be searched for files "
-                    + "that match the regular expression defined in "
-                    + FILE_FILTER.getDisplayName() + "."
-    ),
-    FILTER_MODE_FULL_PATH(
-            "filter-mode-full-path",
-            "Full Path",
-            "Filtering will be applied by evaluating the regular expression defined in "
-                    + FILE_FILTER.getDisplayName()
-                    + " against the full path of files. If " + RECURSE_SUBDIRS.getDisplayName()
-                    + " is set to true, the entire subdirectory tree will be searched."
-    );
+    // Each constant reads back into ListHDFS.RECURSE_SUBDIRS and ListHDFS.FILE_FILTER.
+    FILTER_DIRECTORIES_AND_FILES("filter-mode-directories-and-files", "Directories and Files",
+            "If " + RECURSE_SUBDIRS.getDisplayName() + " is true, search dirs matching "
+                    + FILE_FILTER.getDisplayName() + "."),
+    FILTER_MODE_FILES_ONLY("filter-mode-files-only", "Files Only",
+            "If " + RECURSE_SUBDIRS.getDisplayName() + " is true, search all dirs for files matching "
+                    + FILE_FILTER.getDisplayName() + "."),
+    FILTER_MODE_FULL_PATH("filter-mode-full-path", "Full Path",
+            "Match " + FILE_FILTER.getDisplayName() + " against the full path. If "
+                    + RECURSE_SUBDIRS.getDisplayName() + " is true, search entire tree.");
 
     private final String value;
     private final String displayName;
     private final String description;
 
-    FilterMode(final String value, final String displayName, final String description) {
+    FilterMode(String value, String displayName, String description) {
         this.value = value;
         this.displayName = displayName;
         this.description = description;
