@@ -6,6 +6,111 @@ source code itself that must be fixed by the developer, not worked around by a t
 
 ---
 
+## Hidden static-field dependency via method body
+
+### What it is
+
+A static field `F` is initialized by calling a private static method `M()` that reads another
+static field `G` of the same class in its body. From the perspective of the field declaration,
+`F`'s initializer is just `M()` — `G` never appears in the initializer expression itself, so the
+`F → G` ordering dependency is invisible to any tool that analyzes initializer expressions at the
+source level.
+
+### Why it is broken code
+
+The Java Language Specification (JLS §12.4.2) specifies that static-field initializers are
+processed strictly in textual order. If `F` is declared before `G` and `M()` reads `G`, the JVM
+assigns `F` before `G` has been set — causing `M()` to read `G`'s default value (`null` for
+objects, `0` for primitives). The bug is silent: swapping the declaration order, or inserting a
+new field between them, can break initialization without any compile-time warning.
+
+The dependency exists; it is simply hidden. Code structured this way is misleading — readers
+scanning field declarations see `F = M()` with no indication that the ordering of `F` and `G`
+matters at all. The correct fix is to pass `G` as an explicit argument to `M`, making the
+dependency visible in the initializer expression and allowing both humans and tools to reason about
+ordering correctly.
+
+### Illustrative example
+
+The code below was stripped from the Apache NiFi project (cluster protocol module,
+`org.apache.nifi.cluster.protocol.jaxb`) to show only the affected declarations. Original class
+names, field names, and package structure are preserved exactly so the pattern can be traced back
+to its source.
+
+```java
+// Broken: the dependency on JAXB_CONTEXT_PATH is hidden inside the method body.
+package org.apache.nifi.cluster.protocol.jaxb;
+
+public final class JaxbProtocolUtils {
+
+    public static final String JAXB_CONTEXT_PATH = ObjectFactory.class.getPackage().getName();
+
+    public static final JAXBContext JAXB_CONTEXT = initializeJaxbContext();
+
+    private static JAXBContext initializeJaxbContext() {
+        try {
+            return JAXBContext.newInstance(JAXB_CONTEXT_PATH); // reads JAXB_CONTEXT_PATH invisibly
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to create JAXBContext.", e);
+        }
+    }
+}
+```
+
+**Why this is dangerous:** in the broken form above, both fields happen to be in the correct
+initializer order (`JAXB_CONTEXT_PATH` before `JAXB_CONTEXT`), so the class works at runtime
+today. However, the dependency is completely invisible from the field declarations alone. Any
+alphabetical reordering — by a code formatter, an IDE's "sort members" action, a static-analysis
+tool, or even a developer manually tidying the file — will move `JAXB_CONTEXT` above
+`JAXB_CONTEXT_PATH`, because `JAXB_CONTEXT` sorts before `JAXB_CONTEXT_PATH` alphabetically.
+After that reordering, `<clinit>` assigns `JAXB_CONTEXT` first: `initializeJaxbContext()` is
+called while `JAXB_CONTEXT_PATH` is still `null`. `JAXBContext.newInstance(null)` throws a
+`JAXBException` (or, depending on the JAXB implementation, a `NullPointerException`), which is
+caught and re-thrown as `RuntimeException("Unable to create JAXBContext.")` — crashing class
+initialization with an `ExceptionInInitializerError`. The class compiles without any warning, yet
+fails at the very first load. This kind of hidden ordering constraint is particularly hazardous in
+a statically compiled language where developers expect compile-time safety.
+
+**Correct form** — dependency made explicit as a parameter:
+
+```java
+// Fixed: JAXB_CONTEXT_PATH appears directly in the initializer expression.
+package org.apache.nifi.cluster.protocol.jaxb;
+
+public final class JaxbProtocolUtils {
+
+    public static final String JAXB_CONTEXT_PATH = ObjectFactory.class.getPackage().getName();
+
+    public static final JAXBContext JAXB_CONTEXT = initializeJaxbContext(JAXB_CONTEXT_PATH);
+
+    private static JAXBContext initializeJaxbContext(String jaxbContextPath) {
+        try {
+            return JAXBContext.newInstance(jaxbContextPath);
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to create JAXBContext.", e);
+        }
+    }
+}
+```
+
+### Why JHarmonizer does not support this
+
+Resolving hidden method-body dependencies would require JHarmonizer to:
+
+1. Follow every static-initializer method call into its body and discover which fields are read
+   there.
+2. Repeat this recursively: `M()` may call `N()`, which may call `P()`, potentially crossing class
+   and file boundaries.
+3. Handle arbitrary call graphs that may include conditional branches, loops, or mutually recursive
+   calls — all without classpath resolution, since the tool operates in `noClasspath` mode.
+
+This analysis is complex, fragile, and would only benefit code that should not exist in the first
+place. There is no motivation to implement it. The only correct fix is to **make the dependency
+explicit** — pass the required field as a method parameter so that the initializer expression
+contains all the information needed to determine ordering.
+
+---
+
 ## Cross-file circular static initializer dependencies
 
 ### What it is
