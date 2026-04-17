@@ -209,7 +209,7 @@ Resolving hidden method-body dependencies would require JHarmonizer to:
 2. Repeat this recursively: `M()` may call `N()`, which may call `P()`, potentially crossing class
    and file boundaries.
 3. Handle arbitrary call graphs that may include conditional branches, loops, or mutually recursive
-   calls — all without class-path resolution, since the tool operates in `noClasspath` mode.
+   calls — all without classpath resolution, since the tool operates in `noClasspath` mode.
 
 This analysis is complex, fragile, and would only benefit code that should not exist in the first
 place. There is no motivation to implement it. The only correct fix is to **make the dependency
