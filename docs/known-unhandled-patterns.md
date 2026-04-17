@@ -27,7 +27,7 @@ guaranteed to be stable across JVM runs or build systems.
 
 Code like this **must not go to production**. The circular dependency needs to be broken by
 extracting the shared constants into a dedicated third class that neither cycle participant
-initializes in return.
+initializes in turn.
 
 ### Illustrative example
 
