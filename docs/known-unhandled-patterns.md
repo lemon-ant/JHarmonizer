@@ -180,6 +180,19 @@ public final class JaxbProtocolUtils {
 }
 ```
 
+**What JHarmonizer does to this code:** in the broken form above, both fields are in the correct
+initializer order (`JAXB_CONTEXT_PATH` before `JAXB_CONTEXT`), so the class works at runtime
+today. However, JHarmonizer sees two `public static final` fields whose names are
+`JAXB_CONTEXT_PATH` and `JAXB_CONTEXT`. Alphabetically, `JAXB_CONTEXT` sorts before
+`JAXB_CONTEXT_PATH`, so a reorder pass moves `JAXB_CONTEXT` above `JAXB_CONTEXT_PATH`. After that
+reordering, `<clinit>` assigns `JAXB_CONTEXT` first: `initializeJaxbContext()` is called while
+`JAXB_CONTEXT_PATH` is still `null`. `JAXBContext.newInstance(null)` throws a `JAXBException`
+(or, depending on the JAXB implementation, a `NullPointerException`), which is caught and
+re-thrown as `RuntimeException("Unable to create JAXBContext.")` — crashing class initialization
+with an `ExceptionInInitializerError`. Because the dependency is invisible to JHarmonizer (it
+lives inside the method body, not in the field initializer expression), the tool cannot detect that
+this reordering is unsafe and applies it silently.
+
 **Correct form** — dependency made explicit as a parameter:
 
 ```java
