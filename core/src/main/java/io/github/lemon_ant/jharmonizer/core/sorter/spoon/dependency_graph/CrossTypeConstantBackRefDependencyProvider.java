@@ -73,7 +73,7 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
     }
 
     @NonNull
-    @SuppressWarnings("AvoidInstantiatingObjectsInLoops")
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     private static Stream<CtField<?>> collectProviderFieldsReachableViaBackRef(
             CtElement expr, CtType<?> declaringType, Set<CtType<?>> visitedTypes) {
         List<CtField<?>> crossTypeFieldCandidates = expr.getElements(new TypeFilter<>(CtFieldRead.class)).stream()
