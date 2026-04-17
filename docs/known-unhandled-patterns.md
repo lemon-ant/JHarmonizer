@@ -31,52 +31,120 @@ initializes in turn.
 
 ### Illustrative example
 
-The code below was stripped from a real-world multi-module Java project to show only the
-affected declarations. Original class names, constant names, and package structure are preserved
-so the pattern can be traced back to its source.
+The code below was stripped from the Apache NiFi project (HDFS processors module) to show only
+the affected declarations. Original class names, field names, and package structure are preserved
+exactly so the pattern can be traced back to its source.
 
-**`OptionsPanel.java`** (simplified):
+**`ListHDFS.java`** (simplified, package `org.apache.nifi.processors.hadoop`):
 ```java
-package com.example.filebrowser.ui;
+package org.apache.nifi.processors.hadoop;
 
-class OptionsPanel {
-    // These two labels are read by FilterMode during its own static initialization.
-    static final String RECURSE_LABEL = new String("Recurse Subdirectories");
-    static final String FILTER_LABEL  = new String("File Filter");
+import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.processors.hadoop.util.FilterMode;
 
-    // This field triggers FilterMode's <clinit>, which reads FILTER_LABEL and RECURSE_LABEL.
-    static final String MODE_VALUE = FilterMode.FILTER_ALL.getValue();
+import static org.apache.nifi.processors.hadoop.util.FilterMode.FILTER_DIRECTORIES_AND_FILES;
+
+public class ListHDFS extends AbstractHadoopProcessor {
+
+    // RECURSE_SUBDIRS.getDisplayName() and FILE_FILTER.getDisplayName() are read back
+    // by FilterMode's enum constant initializers in FilterMode.java (a separate file).
+    public static final PropertyDescriptor RECURSE_SUBDIRS = new PropertyDescriptor.Builder()
+            .name("Recurse Subdirectories")
+            .description("Indicates whether to list files from subdirectories of the HDFS directory")
+            .required(true)
+            .allowableValues("true", "false")
+            .defaultValue("true")
+            .build();
+
+    public static final PropertyDescriptor FILE_FILTER = new PropertyDescriptor.Builder()
+            .name("File Filter")
+            .description("Only files whose names match the given regular expression will be picked up")
+            .required(true)
+            .defaultValue("[^\\.].*")
+            .build();
+
+    // This field triggers FilterMode.<clinit> via allowableValues(FilterMode.class).
+    // FilterMode's enum constants read back RECURSE_SUBDIRS and FILE_FILTER above.
+    public static final PropertyDescriptor FILE_FILTER_MODE = new PropertyDescriptor.Builder()
+            .name("File Filter Mode")
+            .description("Determines how the regular expression in "
+                    + FILE_FILTER.getDisplayName() + " will be used when retrieving listings.")
+            .required(true)
+            .allowableValues(FilterMode.class)
+            .defaultValue(FILTER_DIRECTORIES_AND_FILES.getValue())
+            .build();
 }
 ```
 
-**`FilterMode.java`** (in a separate file):
+**`FilterMode.java`** (separate file, package `org.apache.nifi.processors.hadoop.util`):
 ```java
-package com.example.filebrowser.ui;
+package org.apache.nifi.processors.hadoop.util;
 
-enum FilterMode {
-    // The enum constant initializer reads back into OptionsPanel.
-    FILTER_ALL(
-        OptionsPanel.FILTER_LABEL + "/" + OptionsPanel.RECURSE_LABEL
+import org.apache.nifi.components.DescribedValue;
+
+import static org.apache.nifi.processors.hadoop.ListHDFS.FILE_FILTER;
+import static org.apache.nifi.processors.hadoop.ListHDFS.RECURSE_SUBDIRS;
+
+public enum FilterMode implements DescribedValue {
+
+    // Each enum constant initializer reads back into ListHDFS via the static imports above.
+    FILTER_DIRECTORIES_AND_FILES(
+            "filter-mode-directories-and-files",
+            "Directories and Files",
+            "Filtering will be applied to the names of directories and files. If "
+                    + RECURSE_SUBDIRS.getDisplayName()
+                    + " is set to true, only subdirectories with a matching name will be searched "
+                    + "for files that match the regular expression defined in "
+                    + FILE_FILTER.getDisplayName() + "."
+    ),
+    FILTER_MODE_FILES_ONLY(
+            "filter-mode-files-only",
+            "Files Only",
+            "Filtering will only be applied to the names of files. If "
+                    + RECURSE_SUBDIRS.getDisplayName()
+                    + " is set to true, the entire subdirectory tree will be searched for files "
+                    + "that match the regular expression defined in "
+                    + FILE_FILTER.getDisplayName() + "."
+    ),
+    FILTER_MODE_FULL_PATH(
+            "filter-mode-full-path",
+            "Full Path",
+            "Filtering will be applied by evaluating the regular expression defined in "
+                    + FILE_FILTER.getDisplayName()
+                    + " against the full path of files. If " + RECURSE_SUBDIRS.getDisplayName()
+                    + " is set to true, the entire subdirectory tree will be searched."
     );
 
+    private final String value;
+    private final String displayName;
     private final String description;
 
-    FilterMode(String description) { this.description = description; }
+    FilterMode(final String value, final String displayName, final String description) {
+        this.value = value;
+        this.displayName = displayName;
+        this.description = description;
+    }
 
-    String getValue() { return description; }
+    @Override public String getValue() { return value; }
+    @Override public String getDisplayName() { return displayName; }
+    @Override public String getDescription() { return description; }
 }
 ```
 
 **What happens at runtime** depends entirely on which class the JVM loads first:
 
-- If `OptionsPanel` is loaded first, its `<clinit>` assigns `RECURSE_LABEL` and `FILTER_LABEL`,
-  then tries to initialize `MODE_VALUE`, which triggers `FilterMode.<clinit>`. The enum constant
-  reads `FILTER_LABEL` and `RECURSE_LABEL` — both already set — so `MODE_VALUE` gets the correct
-  concatenated string. Works by accident.
-- If `FilterMode` is loaded first (e.g. via a different call site), its `<clinit>` initializes
-  `FILTER_ALL`, which reads `OptionsPanel.FILTER_LABEL` and `RECURSE_LABEL`. Because
-  `OptionsPanel.<clinit>` has not run yet, both fields are `null`. `FILTER_ALL` is initialized
-  with `"null/null"`, and all downstream consumers see the wrong value permanently.
+- If `ListHDFS` is loaded first, its `<clinit>` assigns `RECURSE_SUBDIRS` and `FILE_FILTER`,
+  then initializes `FILE_FILTER_MODE`, which triggers `FilterMode.<clinit>`. The enum constants
+  read `RECURSE_SUBDIRS.getDisplayName()` and `FILE_FILTER.getDisplayName()` — both already
+  set — so all descriptions are built correctly. Works by accident.
+- If `FilterMode` is loaded first (e.g. from a different call site), its `<clinit>` starts
+  initializing the enum constants, which read `ListHDFS.RECURSE_SUBDIRS` and `ListHDFS.FILE_FILTER`.
+  This triggers `ListHDFS.<clinit>`. During `ListHDFS` initialization, `FILE_FILTER_MODE` is
+  built with `allowableValues(FilterMode.class)`, which tries to call `FilterMode.values()`.
+  Because `FilterMode.<clinit>` is already running (re-entrant guard), the JVM returns the
+  partially initialized `FilterMode` class — enum constants not yet assigned. The result depends
+  on JVM internals but may be `NullPointerException`, `ExceptionInInitializerError`, or silently
+  wrong enum descriptions that are baked in permanently.
 
 ### Why JHarmonizer does not support this
 
@@ -90,8 +158,8 @@ Handling cross-file circular initializer cycles would require JHarmonizer to:
    exist in the first place.
 
 There is no motivation to implement this. The only correct fix is to **break the circular
-dependency** in the source code — for instance, by extracting the shared constants into a
-dedicated `OptionsPanelConstants` class that neither `OptionsPanel` nor `FilterMode` reads back
+dependency** in the source code — for instance, by extracting the shared display-name strings
+into a dedicated `ListHDFSConstants` class that neither `ListHDFS` nor `FilterMode` reads back
 from.
 
 ---
