@@ -17,7 +17,7 @@ public class JvmShutdownSignal {
     private static final AtomicBoolean SHUTTING_DOWN = new AtomicBoolean(false);
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> SHUTTING_DOWN.set(true), "jharmonizer-shutdown-hook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> SHUTTING_DOWN.set(true), "jHarmonizer-shutdown-hook"));
     }
 
     /**
