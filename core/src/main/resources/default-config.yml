@@ -1,4 +1,5 @@
 formatting:
+  # Сделать более гибкое перекрытие
   fix-imports: true
   formatter-style: PALANTIR # NONE, AOSP, GOOGLE, PALANTIR
   blank-line-after-type-header: false
@@ -165,12 +166,12 @@ type-members-ordering:
       - name: Instance Methods
         separator: none
         ordering-rules: [ visibility-desc, alpha ]
-        includes: [ method ]
+        includes: method
         excludes:
-          - [ method, =toString ]
-          - [ method, =equals ]
-          - [ method, =hashCode ]
-          - [ method, =clone ]
+          - =toString
+          - =equals
+          - =hashCode
+          - =clone
 
       - name: Basic Object Methods
         ordering-rules: preserve
