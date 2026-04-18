@@ -70,7 +70,10 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
 
         return mutableFieldsReadByDependent.stream()
                 .flatMap(mutableField -> streamInitializerBlocksReadingField(
-                        declaringType, mutableField, dependentSrcStart, dependentMemberIsStatic,
+                        declaringType,
+                        mutableField,
+                        dependentSrcStart,
+                        dependentMemberIsStatic,
                         relaxedForwardReferences))
                 .map(initializerBlock ->
                         new MemberDependencyArc(initializerBlock, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
@@ -79,7 +82,10 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
 
     @NonNull
     private static Stream<CtAnonymousExecutable> streamInitializerBlocksReadingField(
-            CtType<?> declaringType, CtField<?> field, int dependentSrcStart, boolean dependentMemberIsStatic,
+            CtType<?> declaringType,
+            CtField<?> field,
+            int dependentSrcStart,
+            boolean dependentMemberIsStatic,
             boolean relaxedForwardReferences) {
 
         return streamExplicitSrcTypeMembers(declaringType)
