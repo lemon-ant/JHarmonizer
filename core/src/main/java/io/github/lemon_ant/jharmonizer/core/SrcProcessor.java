@@ -143,25 +143,6 @@ public final class SrcProcessor {
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
     }
 
-    /**
-     * Processes source files found under the given base directory by the specified flow type.
-     * Delegates to {@link #processSources(Collection, Collection, Collection, FlowType)}.
-     *
-     * @param baseDir the root directory to scan for source files
-     * @param includeGlobs glob patterns for files to include
-     * @param excludeGlobs glob patterns for files to exclude
-     * @param flowType the processing flow strategy to apply
-     * @return the pipeline-level processing result
-     */
-    @NonNull
-    public SrcProcessingResult processSources(
-            @NonNull Path baseDir,
-            @NonNull Collection<String> includeGlobs,
-            @NonNull Collection<String> excludeGlobs,
-            @NonNull FlowType flowType) {
-        return processSources(List.of(baseDir), includeGlobs, excludeGlobs, flowType);
-    }
-
     private static void logDebugProcessingCompletionSummary(
             @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic, @NonNull FlowType flowType) {
         String processingStatus =

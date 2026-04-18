@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -22,48 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 public class SrcFilesHandler {
 
     /**
-     * Recursively resolves all {@code .java} files that match the provided include and exclude globs
-     * across all given base directories. Removes duplicate paths that appear under multiple base dirs.
-     *
-     * @param baseDirs the base directories to scan
-     * @param includeGlobs the include globs to apply
-     * @param excludeGlobs the exclude globs to apply
-     * @return the matching Java file paths, deduplicated
-     */
-    @NonNull
-    public static Stream<Path> findJavaFiles(
-            @NonNull Collection<Path> baseDirs,
-            @NonNull Collection<String> includeGlobs,
-            @NonNull Collection<String> excludeGlobs) {
-        return baseDirs.stream()
-                .flatMap(baseDir -> findJavaFiles(baseDir, includeGlobs, excludeGlobs))
-                .distinct();
-    }
-
-    /**
-     * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
-     * Supports mixed absolute and relative globs and removes duplicates from the result.
-     *
-     * @param baseDir the base directory to scan
-     * @param includeGlobs the include globs to apply
-     * @param excludeGlobs the exclude globs to apply
-     * @return the matching Java file paths
-     */
-    @NonNull
-    public static Stream<Path> findJavaFiles(
-            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
-        PathQuery pathQuery = PathQuery.builder()
-                .baseDir(baseDir)
-                .includeGlobs(includeGlobs)
-                .excludeGlobs(excludeGlobs)
-                .allowedExtensions(Set.of("java"))
-                .build();
-        return GlobPathFinder.findPaths(pathQuery).parallel();
-    }
-
-    /**
      * Recursively resolves and reads all {@code .java} files matching the include and exclude globs
-     * across all given base directories. Removes duplicate paths before reading.
+     * across all given base directories. Paths that appear under multiple base directories are
+     * deduplicated before reading. Each base directory is scanned in parallel independently;
+     * the combined path set is then read in parallel.
      *
      * @param baseDirs the base directories to scan
      * @param includeGlobs the include globs to apply
@@ -75,7 +38,11 @@ public class SrcFilesHandler {
             @NonNull Collection<Path> baseDirs,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
-        return findJavaFiles(baseDirs, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
+        Set<Path> allPaths = new LinkedHashSet<>();
+        for (Path baseDir : baseDirs) {
+            allPaths.addAll(findJavaFiles(baseDir, includeGlobs, excludeGlobs).toList());
+        }
+        return allPaths.parallelStream().map(SrcFilesHandler::readFile);
     }
 
     /**
@@ -90,6 +57,27 @@ public class SrcFilesHandler {
     public static Stream<SrcFile> readJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
+    }
+
+    /**
+     * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
+     * Supports mixed absolute and relative globs and removes duplicates from the result.
+     *
+     * @param baseDir the base directory to scan
+     * @param includeGlobs the include globs to apply
+     * @param excludeGlobs the exclude globs to apply
+     * @return the matching Java file paths
+     */
+    @NonNull
+    static Stream<Path> findJavaFiles(
+            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
+        PathQuery pathQuery = PathQuery.builder()
+                .baseDir(baseDir)
+                .includeGlobs(includeGlobs)
+                .excludeGlobs(excludeGlobs)
+                .allowedExtensions(Set.of("java"))
+                .build();
+        return GlobPathFinder.findPaths(pathQuery).parallel();
     }
 
     /**

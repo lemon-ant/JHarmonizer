@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,7 +20,7 @@ class ReorderMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         String inputContent =
                 MojoTestUtils.readResourceAsString("/test-cases/reorder-basic/input/NonConformingSample.java");
         String expectedContent =
@@ -40,7 +40,7 @@ class ReorderMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(reorderMojo, "skip", true);
         String inputContent = Files.readString(tempDir.resolve("NonConformingSample.java"));
 
@@ -57,7 +57,7 @@ class ReorderMojoTest {
         // Given
         Path nonExistentDir = tempDir.resolve("does-not-exist");
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(nonExistentDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(nonExistentDir)));
 
         // When
         Throwable thrown = catchThrowable(reorderMojo::execute);
@@ -74,7 +74,7 @@ class ReorderMojoTest {
         Path fileInsteadOfDir = tempDir.resolve("NotADirectory.txt");
         Files.createFile(fileInsteadOfDir);
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(fileInsteadOfDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(fileInsteadOfDir)));
 
         // When
         Throwable thrown = catchThrowable(reorderMojo::execute);
@@ -89,7 +89,7 @@ class ReorderMojoTest {
     void execute_emptyDirectory_completesWithoutException() throws Exception {
         // Given
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
 
         // When
         Throwable thrown = catchThrowable(reorderMojo::execute);
@@ -103,7 +103,7 @@ class ReorderMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(reorderMojo, "backupsEnabled", Boolean.FALSE);
 
         // When
@@ -120,7 +120,7 @@ class ReorderMojoTest {
         Path configFile = MojoTestUtils.extractResourceToTemp(
                 "/test-cases/config-override/custom-config.yml", tempDir.resolve("custom-config.yml"));
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(reorderMojo, "configFile", MojoTestUtils.toFile(configFile));
 
         // When
@@ -137,7 +137,7 @@ class ReorderMojoTest {
         Path configFile = MojoTestUtils.extractResourceToTemp(
                 "/test-cases/config-override/custom-config.yml", tempDir.resolve("custom-config.yml"));
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(reorderMojo, "configFile", MojoTestUtils.toFile(configFile));
         MojoTestUtils.injectField(reorderMojo, "backupsEnabled", Boolean.FALSE);
 
@@ -155,7 +155,7 @@ class ReorderMojoTest {
         Path autoDiscoveredConfigFile = MojoTestUtils.extractResourceToTemp(
                 "/test-cases/config-override/custom-config.yml", tempDir.resolve("jharmonizer.yml"));
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(reorderMojo, "configFile", MojoTestUtils.toFile(autoDiscoveredConfigFile));
 
         // When
@@ -170,7 +170,7 @@ class ReorderMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
         ReorderMojo reorderMojo = new ReorderMojo();
-        MojoTestUtils.injectField(reorderMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(reorderMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(reorderMojo, "configFile", MojoTestUtils.toFile(tempDir.resolve("jharmonizer.yml")));
 
         // When

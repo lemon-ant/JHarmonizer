@@ -37,9 +37,6 @@
                         </goals>
                         <phase>process-sources</phase>
                         <configuration>
-                            <baseDirs>
-                                <baseDir>${project.basedir}/src/main/java</baseDir>
-                            </baseDirs>
                             <backupsEnabled>false</backupsEnabled>
                             <printProcessingStatistics>false</printProcessingStatistics>
                         </configuration>

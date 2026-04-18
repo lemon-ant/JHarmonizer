@@ -7,9 +7,9 @@ import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,13 +107,21 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         Comparator<Path> fixtureExecutionOrder = Comparator.comparing(
                         this::resolveScenarioDirectoryName, Comparator.reverseOrder())
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
-        return SrcFilesHandler.findJavaFiles(getFixturesRoot(), List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
-                .sorted(fixtureExecutionOrder)
-                .map(fixtureInputFile -> {
-                    Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
-                    Path srcFile = fixtureInputFile.getFileName();
-                    return Arguments.of(scenarioDir, srcFile);
-                });
+        try {
+            return Files.walk(getFixturesRoot())
+                    .filter(path -> path.toString().endsWith(".java"))
+                    .filter(path -> INPUT_DIRECTORY.equals(
+                            path.getParent().getFileName().toString()))
+                    .sorted(fixtureExecutionOrder)
+                    .map(fixtureInputFile -> {
+                        Path scenarioDir =
+                                fixtureInputFile.getParent().getParent().getFileName();
+                        Path srcFile = fixtureInputFile.getFileName();
+                        return Arguments.of(scenarioDir, srcFile);
+                    });
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @NonNull
@@ -191,7 +199,10 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
             Path srcFilePath, Path scenarioConfigPath, FlowType flowType) {
         SrcProcessor srcProcessor = buildSrcProcessor(scenarioConfigPath);
         return srcProcessor.processSources(
-                srcFilePath.getParent(), List.of(srcFilePath.getFileName().toString()), List.of(), flowType);
+                List.of(srcFilePath.getParent()),
+                List.of(srcFilePath.getFileName().toString()),
+                List.of(),
+                flowType);
     }
 
     @NonNull

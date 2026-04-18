@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 import org.apache.maven.plugin.MojoFailureException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -19,7 +19,7 @@ class CheckFastMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-conforming", tempDir);
         CheckFastMojo checkFastMojo = new CheckFastMojo();
-        MojoTestUtils.injectField(checkFastMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkFastMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
 
         // When
         Throwable thrown = catchThrowable(checkFastMojo::execute);
@@ -33,7 +33,7 @@ class CheckFastMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckFastMojo checkFastMojo = new CheckFastMojo();
-        MojoTestUtils.injectField(checkFastMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkFastMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(checkFastMojo, "failOnViolation", true);
 
         // When
@@ -50,7 +50,7 @@ class CheckFastMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckFastMojo checkFastMojo = new CheckFastMojo();
-        MojoTestUtils.injectField(checkFastMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkFastMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(checkFastMojo, "failOnViolation", false);
 
         // When
@@ -65,7 +65,7 @@ class CheckFastMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckFastMojo checkFastMojo = new CheckFastMojo();
-        MojoTestUtils.injectField(checkFastMojo, "baseDirs", List.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkFastMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
         MojoTestUtils.injectField(checkFastMojo, "skip", true);
 
         // When

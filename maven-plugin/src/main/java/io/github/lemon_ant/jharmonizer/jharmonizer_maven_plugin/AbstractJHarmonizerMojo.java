@@ -10,9 +10,9 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -33,7 +33,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
      */
     @Parameter(property = "jharmonizer.baseDirs")
     @Nullable
-    private List<File> baseDirs;
+    private Set<File> baseDirs;
 
     /**
      * Maven's main Java source directory, used as a default base directory when
@@ -149,14 +149,10 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                     .map(file -> file.toPath().toAbsolutePath().normalize())
                     .toList();
         }
-        List<Path> defaultDirs = new ArrayList<>();
-        if (defaultMainSourceDirectory != null) {
-            defaultDirs.add(defaultMainSourceDirectory.toPath().toAbsolutePath().normalize());
-        }
-        if (defaultTestSourceDirectory != null) {
-            defaultDirs.add(defaultTestSourceDirectory.toPath().toAbsolutePath().normalize());
-        }
-        return List.copyOf(defaultDirs);
+        return Stream.of(defaultMainSourceDirectory, defaultTestSourceDirectory)
+                .filter(dir -> dir != null && Files.isDirectory(dir.toPath()))
+                .map(dir -> dir.toPath().toAbsolutePath().normalize())
+                .toList();
     }
 
     @NonNull

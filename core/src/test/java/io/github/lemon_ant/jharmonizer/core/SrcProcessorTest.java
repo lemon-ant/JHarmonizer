@@ -72,7 +72,8 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -91,7 +92,7 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor();
 
         // When
-        srcProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), includeGlobs, EXCLUDE_NO_FILES, FlowType.REORDER);
         String includedProcessedSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
         String excludedProcessedSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
 
@@ -110,11 +111,12 @@ class SrcProcessorTest {
         String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
         Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor();
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // When
         SrcProcessingResult result = srcProcessor.processSources(
-                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -135,8 +137,8 @@ class SrcProcessorTest {
         // When
         AggregatedProcessingStatistic aggregatedProcessingStatistic;
         try {
-            SrcProcessingResult result =
-                    srcProcessor.processSources(scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+            SrcProcessingResult result = srcProcessor.processSources(
+                    List.of(scenarioRoot), orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
             aggregatedProcessingStatistic = result.getStatistics();
         } finally {
             detachListAppender(listAppender);
@@ -186,7 +188,8 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+            srcProcessor.processSources(
+                    List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
             restoreLoggerLevel(initialLevel);
@@ -220,7 +223,8 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+            srcProcessor.processSources(
+                    List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
             restoreLoggerLevel(initialLevel);
@@ -248,7 +252,8 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+            srcProcessor.processSources(
+                    List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
             restoreLoggerLevel(initialLevel);
@@ -279,7 +284,8 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor(externalConfig);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
@@ -296,7 +302,8 @@ class SrcProcessorTest {
                 FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -316,9 +323,11 @@ class SrcProcessorTest {
                 FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         SrcFilesHandler.overwrite(javaFilePath, secondSrcCode);
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -337,7 +346,8 @@ class SrcProcessorTest {
                 FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -358,7 +368,8 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor(effectiveConfig);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        srcProcessor.processSources(
+                List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
         Path backupFilePath =
@@ -379,7 +390,8 @@ class SrcProcessorTest {
 
         // When
         try {
-            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+            srcProcessor.processSources(
+                    List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
             restoreLoggerLevel(initialLevel);
@@ -411,7 +423,7 @@ class SrcProcessorTest {
         SrcProcessingResult srcProcessingResult;
         try {
             srcProcessingResult = srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+                    List.of(temporaryDirectory), INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
         } finally {
             detachListAppender(listAppender);
         }

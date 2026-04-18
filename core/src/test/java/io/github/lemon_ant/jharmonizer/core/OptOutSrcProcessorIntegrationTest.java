@@ -41,7 +41,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
@@ -75,7 +75,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
@@ -94,7 +94,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -116,7 +116,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -143,7 +143,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -176,7 +176,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -200,7 +200,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -236,7 +236,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -260,7 +260,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -287,7 +287,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
 
         // Then
@@ -312,8 +312,8 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        SrcProcessingResult result =
-                srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST);
+        SrcProcessingResult result = srcProcessor.processSources(
+                List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST);
 
         // Then
         assertThat(result.isSuccess()).isFalse();
@@ -335,7 +335,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(srcCodeWithDuplicateOptOut);
@@ -349,7 +349,7 @@ class OptOutSrcProcessorIntegrationTest {
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        srcProcessor.processSources(List.of(temporaryDirectory), List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(packageSrcCode);
