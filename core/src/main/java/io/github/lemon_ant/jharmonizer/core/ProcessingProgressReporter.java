@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core;
 
-import io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import lombok.NonNull;
@@ -14,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class ProcessingProgressReporter {
 
-    static final int PROGRESS_BATCH_SIZE = 100;
+    private static final int PROGRESS_BATCH_SIZE = 100;
+    private static final String PADDED_NUMBERS_FORMAT = "%4d";
 
     private final AtomicLong totalProcessed = new AtomicLong();
     private final LongAdder reorderedCount = new LongAdder();
@@ -29,7 +31,7 @@ final class ProcessingProgressReporter {
      *
      * @param status the processing outcome for the file
      */
-    void recordProcessedFile(@NonNull FlowProcessingStatus status) {
+    void recordProcessedFile(@NonNull FileProcessingStatus status) {
         long count = totalProcessed.incrementAndGet();
         incrementStatusCounter(status);
         if (count % PROGRESS_BATCH_SIZE == 0) {
@@ -37,7 +39,7 @@ final class ProcessingProgressReporter {
         }
     }
 
-    private void incrementStatusCounter(FlowProcessingStatus status) {
+    private void incrementStatusCounter(FileProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();
             case FORMATTED -> formattedCount.increment();
@@ -52,13 +54,13 @@ final class ProcessingProgressReporter {
     @SuppressWarnings("PMD.GuardLogStatement")
     private void logBatchProgress(long count) {
         log.info(
-                "Progress: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
-                count,
-                reorderedCount.sum(),
-                formattedCount.sum(),
-                unchangedCount.sum(),
-                checkedCount.sum(),
-                skippedCount.sum(),
-                errorCount.sum());
+                "JHarmonization: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, count),
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, reorderedCount.sum()),
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, formattedCount.sum()),
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, unchangedCount.sum()),
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, checkedCount.sum()),
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, skippedCount.sum()),
+                String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, errorCount.sum()));
     }
 }

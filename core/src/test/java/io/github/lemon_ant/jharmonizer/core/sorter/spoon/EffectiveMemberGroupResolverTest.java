@@ -3,7 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator.createTrivialMemberGroup;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
@@ -16,7 +16,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
-import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtType;
@@ -47,6 +46,8 @@ class EffectiveMemberGroupResolverTest {
         Map<CtTypeMember, CompiledMemberGroup> resolvedEffectiveGroups =
                 EffectiveMemberGroupResolver.resolveEffectiveGroups(
                         typeMember2NaturalMemberGroup, memberDependencyGraph);
+        Throwable unmodifiabilityThrown =
+                catchThrowable(() -> resolvedEffectiveGroups.put(FixtureConstants.PROVIDER_FIELD_MEMBER, lateGroup));
 
         // Then
         assertThat(resolvedEffectiveGroups.get(FixtureConstants.PROVIDER_FIELD_MEMBER))
@@ -61,8 +62,7 @@ class EffectiveMemberGroupResolverTest {
                 .isSameAs(unrelatedEarlierGroup);
         assertThat(resolvedEffectiveGroups.get(FixtureConstants.STATIC_INITIALIZER_BLOCK_MEMBER))
                 .isSameAs(initializerBlockLateGroup);
-        assertThatThrownBy(() -> resolvedEffectiveGroups.put(FixtureConstants.PROVIDER_FIELD_MEMBER, lateGroup))
-                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(unmodifiabilityThrown).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
@@ -223,11 +223,11 @@ class EffectiveMemberGroupResolverTest {
         incompleteNaturalGroupMapping.remove(FixtureConstants.TRANSITIVE_DEPENDENT_FIELD_MEMBER);
 
         // When
-        ThrowableAssert.ThrowingCallable resolveAction = () -> EffectiveMemberGroupResolver.resolveEffectiveGroups(
-                Map.copyOf(incompleteNaturalGroupMapping), memberDependencyGraph);
+        Throwable thrown = catchThrowable(() -> EffectiveMemberGroupResolver.resolveEffectiveGroups(
+                Map.copyOf(incompleteNaturalGroupMapping), memberDependencyGraph));
 
         // Then
-        assertThatThrownBy(resolveAction)
+        assertThat(thrown)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("missingMember=")
                 .hasMessageContaining("providerMember=");

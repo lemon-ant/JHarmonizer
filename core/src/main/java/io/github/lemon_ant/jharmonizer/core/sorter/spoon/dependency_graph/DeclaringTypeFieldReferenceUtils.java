@@ -11,7 +11,6 @@ import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
@@ -140,7 +139,7 @@ class DeclaringTypeFieldReferenceUtils {
         TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
         return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
                 .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
-                .filter(fieldAccess -> !isInsideLazyContext(declaringType, memberAstRoot, fieldAccess))
+                .filter(fieldAccess -> isInDeclaringTypeScope(declaringType, memberAstRoot, fieldAccess))
                 .filter(fieldAccess -> Optional.ofNullable(
                                 fieldAccess.getVariable().getDeclaration())
                         .map(field -> isFieldDeclaredInType(field, declaringType))
@@ -192,30 +191,52 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isInsideLazyContext(CtType<?> declaringType, CtElement astRoot, CtElement element) {
-        CtElement currentParent = element.getParent();
+    private static boolean isInDeclaringTypeScope(
+            CtType<?> declaringType, CtElement initializerAstRoot, CtFieldAccess<?> fieldAccess) {
+        // Java forward-reference restriction inside initializers distinguishes access kinds:
+        // - Simple-name (implicit) accesses inside a lambda body ARE subject to the restriction.
+        // - Qualified accesses (e.g., ClassName.field or this.field) inside a lambda body are NOT
+        //   subject to the restriction (verified experimentally: both compile as forward references).
+        // - Anonymous/inner class member bodies belong to a different class scope and are never restricted.
+        boolean implicitAccess = isImplicitFieldAccess(fieldAccess);
+        CtElement currentParent = fieldAccess.getParent();
 
         while (currentParent != null) {
-            if (currentParent instanceof CtLambda<?>) {
-                return true;
-            }
-
-            if (currentParent instanceof CtExecutableReferenceExpression<?, ?>) {
-                return true;
-            }
-
-            if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
-                return true;
-            }
-
-            if (currentParent == astRoot) {
+            // A qualified (non-implicit) access inside a lambda body does not violate the forward-reference
+            // restriction, so it does not contribute to ordering dependencies.
+            if (currentParent instanceof CtLambda<?> && !implicitAccess) {
                 return false;
+            }
+
+            // An access inside an anonymous or inner class body belongs to a different class scope
+            // and is never a forward-reference restriction for the enclosing declaring type.
+            if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
+                return false;
+            }
+
+            // Reached the root of the initializer subtree being scanned — the access is in scope.
+            if (currentParent == initializerAstRoot) {
+                return true;
             }
 
             currentParent = currentParent.getParent();
         }
 
         return false;
+    }
+
+    /**
+     * Returns whether the field access uses simple-name (implicit) syntax rather than a qualified target.
+     *
+     * <p>Simple-name accesses (e.g., {@code FIELD}) are subject to Java's forward-reference restriction
+     * inside field initializers and initializer blocks, so they must be tracked as ordering dependencies.
+     * Qualified accesses (e.g., {@code ClassName.FIELD} or {@code this.field}) are not restricted.
+     *
+     * @param fieldAccess the field access to inspect
+     * @return {@code true} for simple-name (implicit-target) accesses; otherwise {@code false}
+     */
+    static boolean isImplicitFieldAccess(@NonNull CtFieldAccess<?> fieldAccess) {
+        return fieldAccess.getTarget() == null || fieldAccess.getTarget().isImplicit();
     }
 
     @Value

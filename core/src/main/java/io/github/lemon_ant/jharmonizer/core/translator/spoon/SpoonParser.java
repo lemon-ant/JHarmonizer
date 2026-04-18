@@ -23,22 +23,23 @@ public class SpoonParser {
     /**
      * Parses the java source resource.
      * @param srcFile the original source file
+     * @param printerConfig the printer configuration for the serialization supplier
      * @return the java source resource
      */
     @NonNull
-    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile) {
+    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile, @NonNull PrinterConfig printerConfig) {
         VirtualFile virtualFile =
                 new VirtualFile(srcFile.getSrcCode(), srcFile.getPath().toString());
 
         Launcher launcher = createPreconfiguredParserLauncher();
         launcher.addInputResource(virtualFile);
 
-        return buildSpoonAstModel(srcFile, launcher);
+        return buildSpoonAstModel(srcFile, launcher, printerConfig);
     }
 
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
+    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher, PrinterConfig printerConfig) {
         try {
             launcher.buildModel();
         } catch (RuntimeException exception) {
@@ -57,7 +58,7 @@ public class SpoonParser {
             }
 
             SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
-                    launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
+                    launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes(), printerConfig);
             return printer.serializeCompilationUnit(compilationUnit);
         };
         return SpoonAstModel.builder()

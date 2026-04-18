@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -25,26 +25,26 @@ class SpoonParserTest {
         doThrow(launcherFailure).when(launcher).buildModel();
         SrcFile srcFile = createSrcFile("class Sample {}", Path.of("Sample.java"));
 
-        // When / Then
-        assertThatThrownBy(() -> invokeBuildSpoonAstModel(srcFile, launcher))
-                .isInstanceOf(SpoonModelBuildException.class)
-                .satisfies(throwable -> {
-                    SpoonModelBuildException spoonModelBuildException = (SpoonModelBuildException) throwable;
-                    assertThat(spoonModelBuildException.getSrcPath()).isEqualTo(Path.of("Sample.java"));
-                    assertThat(spoonModelBuildException)
-                            .hasMessageContaining("RuntimeException")
-                            .hasMessageContaining("boom")
-                            .hasCause(launcherFailure);
-                });
+        // When
+        SpoonModelBuildException thrown =
+                catchThrowableOfType(SpoonModelBuildException.class, () -> invokeBuildSpoonAstModel(srcFile, launcher));
+
+        // Then
+        assertThat(thrown.getSrcPath()).isEqualTo(Path.of("Sample.java"));
+        assertThat(thrown)
+                .hasMessageContaining("RuntimeException")
+                .hasMessageContaining("boom")
+                .hasCause(launcherFailure);
     }
 
     private static SpoonAstModel invokeBuildSpoonAstModel(@NonNull SrcFile srcFile, @NonNull Launcher launcher)
             throws Exception {
-        Method buildSpoonAstModel =
-                SpoonParser.class.getDeclaredMethod("buildSpoonAstModel", SrcFile.class, Launcher.class);
+        Method buildSpoonAstModel = SpoonParser.class.getDeclaredMethod(
+                "buildSpoonAstModel", SrcFile.class, Launcher.class, PrinterConfig.class);
         buildSpoonAstModel.setAccessible(true);
         try {
-            return (SpoonAstModel) buildSpoonAstModel.invoke(null, srcFile, launcher);
+            return (SpoonAstModel)
+                    buildSpoonAstModel.invoke(null, srcFile, launcher, new PrinterConfig(true, true, false));
         } catch (InvocationTargetException exception) {
             if (exception.getCause() instanceof RuntimeException runtimeException) {
                 throw runtimeException;

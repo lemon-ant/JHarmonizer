@@ -458,6 +458,21 @@ class MemberDependencyGraphBuilderTest {
     }
 
     @Test
+    void buildDependencyGraph_fieldInitializerReadsMutableFieldAlsoReadByEarlierInitBlock_initBlockAddedAsProvider() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(
+                Constants.INITIALIZER_BLOCK_MUTABLE_FIELD_READ_MEMBERS);
+
+        // When
+        Set<CtTypeMember> directProviders = memberDependencyGraph.findDirectProviders(
+                Constants.MUTABLE_FIELD_READ_REGISTRY_SNAPSHOT_FIELD_MEMBER,
+                EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY));
+
+        // Then
+        assertThat(directProviders).contains(Constants.MUTABLE_FIELD_READ_STATIC_INITIALIZER_BLOCK_MEMBER);
+    }
+
+    @Test
     void buildDependencyGraph_naturalGroupNull_illegalStateExceptionThrown() {
         // Given
         Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalGroup =
@@ -985,6 +1000,22 @@ class MemberDependencyGraphBuilderTest {
                 SpoonTestCaseUtils.requireTypeMemberBySimpleName(BLANK_FINAL_MEMBERS, "READ_AFTER_ASSIGNMENT");
         private static final CtTypeMember INSTANCE_INITIALIZER_BLOCK_MEMBER =
                 requireUniqueInitializerBlockMember(BLANK_FINAL_FIXTURE_MAIN_TYPE, false);
+
+        private static final URL INITIALIZER_BLOCK_MUTABLE_FIELD_READ_FIXTURE_URL =
+                TestCaseResourceUtils.requireClasspathResourceUrl(
+                        "/" + TEST_CASES_DIR
+                                + "/core/sorter/spoon/dependency-graph/valid/InitializerBlockMutableFieldReadBuilderFixture.java");
+        private static final CtType<?> INITIALIZER_BLOCK_MUTABLE_FIELD_READ_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        INITIALIZER_BLOCK_MUTABLE_FIELD_READ_FIXTURE_URL);
+        private static final Map<CtTypeMember, CompiledMemberGroup> INITIALIZER_BLOCK_MUTABLE_FIELD_READ_MEMBERS =
+                buildTypeMember2NaturalGroup(
+                        INITIALIZER_BLOCK_MUTABLE_FIELD_READ_FIXTURE_MAIN_TYPE, MEMBER_GROUP_WITHOUT_ACCESSOR_BUNDLING);
+        private static final CtTypeMember MUTABLE_FIELD_READ_REGISTRY_SNAPSHOT_FIELD_MEMBER =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                        INITIALIZER_BLOCK_MUTABLE_FIELD_READ_MEMBERS, "REGISTRY_SNAPSHOT");
+        private static final CtTypeMember MUTABLE_FIELD_READ_STATIC_INITIALIZER_BLOCK_MEMBER =
+                requireUniqueInitializerBlockMember(INITIALIZER_BLOCK_MUTABLE_FIELD_READ_FIXTURE_MAIN_TYPE, true);
 
         private Constants() {}
     }

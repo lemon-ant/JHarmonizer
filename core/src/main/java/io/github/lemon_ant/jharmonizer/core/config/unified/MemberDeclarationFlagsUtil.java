@@ -98,11 +98,11 @@ public class MemberDeclarationFlagsUtil {
 
         int kindFlags = memberKinds.stream()
                 .mapToInt(MemberDeclarationFlagsUtil::encodeMemberKindToFlag)
-                .reduce(0, (a, b) -> a | b);
+                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
 
         int accessFlags = memberAccesses.stream()
                 .mapToInt(MemberDeclarationFlagsUtil::encodeMemberAccessToFlag)
-                .reduce(0, (a, b) -> a | b);
+                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
 
         int modifierFlags = encodeDeclarationModifiersToFlags(declarationModifiers);
 

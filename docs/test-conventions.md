@@ -95,9 +95,50 @@ Rules:
 Notes:
 
 - In some tests, it is valid to **merge blocks** when it improves readability.
-  - Common case: exception tests can use `// When / Then` together because the assertion captures both the action and the expectation.
-  - Another common case: very small tests may use `// Given / When` together if separating them would add noise.
+  - Common case: very small tests may use `// Given / When` together if separating them would add noise.
+  - Another common case: non-exception assertion tests may use `// When / Then` together when the action and assertion fit naturally in one block (e.g., `assertThat(value).isEqualTo(...)`).
   - This is allowed as long as the combined block stays contiguous and clear.
+
+### Exception tests
+
+When a test verifies that a method throws an exception, **always** split the action and the assertion into separate `// When` and `// Then` blocks.
+
+- `// When` block: capture the thrown exception using `catchThrowable(...)` from AssertJ.
+- `// Then` block: assert on the captured throwable using `assertThat(thrown)`.
+
+Use `catchThrowableOfType(ExceptionType.class, ...)` instead of `catchThrowable(...)` only when the specific exception type needs to be accessed directly (e.g., calling type-specific methods on it) in the `// Then` block.
+
+**Do not** use `// When / Then` with `assertThatThrownBy(...)`.
+
+Good:
+
+```java
+// When
+Throwable thrown = catchThrowable(() -> SortingUtils.buildItemIndex(null));
+
+// Then
+assertThat(thrown).isInstanceOf(NullPointerException.class);
+```
+
+Good (typed access required):
+
+```java
+// When
+SpoonModelBuildException thrown = catchThrowableOfType(
+        SpoonModelBuildException.class, () -> parser.build(srcFile));
+
+// Then
+assertThat(thrown.getSrcPath()).isEqualTo(Path.of("Sample.java"));
+assertThat(thrown).hasMessageContaining("boom").hasCause(cause);
+```
+
+Bad:
+
+```java
+// When / Then
+assertThatThrownBy(() -> SortingUtils.buildItemIndex(null))
+        .isInstanceOf(NullPointerException.class);
+```
 
 Recommended skeleton:
 
@@ -275,6 +316,7 @@ The test decides which one to use:
 ## Code style in tests
 
 - Prefer fully descriptive variable names (avoid `i`, `tmp`, `m`, etc.).
+- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Prefer Stream API when it makes the flow clearer (filter → map → collect).
 - Keep helpers small and single-purpose.
 

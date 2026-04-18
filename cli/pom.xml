@@ -11,6 +11,12 @@
     <artifactId>jharmonizer-cli</artifactId>
     <name>JHarmonizer CLI</name>
 
+    <properties>
+        <!-- Branch coverage is currently at ~94 %; threshold is kept at 85 % to provide headroom
+             for future code changes without requiring immediate test additions. -->
+        <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.github.lemon-ant.jharmonizer</groupId>
@@ -97,6 +103,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <minimizeJar>true</minimizeJar>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <filters>
                                 <filter>
@@ -113,6 +120,30 @@
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
+                                </filter>
+                                <!--
+                                    Palantir Java Format loads its Java-version-specific visitor
+                                    (e.g. Java21InputAstVisitor) via ServiceLoader at runtime.
+                                    Without this filter the minimizer strips those reflectively
+                                    loaded classes, causing a LinkageError.
+                                -->
+                                <filter>
+                                    <artifact>com.palantir.javaformat:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!--
+                                    Logback is wired via SLF4J's ServiceLoader mechanism
+                                    (SLF4JServiceProvider). The minimizer does not trace SPI
+                                    bindings, so the provider and its supporting classes must
+                                    be kept explicitly.
+                                -->
+                                <filter>
+                                    <artifact>ch.qos.logback:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                             </filters>
                             <transformers>

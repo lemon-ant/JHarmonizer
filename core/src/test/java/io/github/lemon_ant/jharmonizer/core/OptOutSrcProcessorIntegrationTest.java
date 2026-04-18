@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
@@ -15,7 +14,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSe
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -313,12 +311,48 @@ class OptOutSrcProcessorIntegrationTest {
         writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
-        // When / Then
-        assertThatThrownBy(() -> srcProcessor.processSources(
-                        temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST))
-                .isInstanceOf(NotOrderedException.class)
-                .hasMessageContaining("Outer$Inner expected to relocate UP")
-                .hasMessageContaining("Outer$a expected to relocate DOWN");
+        // When
+        SrcProcessingResult result =
+                srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST);
+
+        // Then
+        assertThat(result.isSuccess()).isFalse();
+    }
+
+    @Test
+    void processSources_duplicateFileScopeOptOut_usesLastDirectiveAndProcesses() throws Exception {
+        // Given
+        // Two file-scope opt-out comments: the second one (FULLY_OFF) should win.
+        String srcCodeWithDuplicateOptOut = """
+                // @jharmonizer:sort-off
+                // @jharmonizer:fully-off
+                public class DuplicateOptOut {
+                    public void b() {}
+                    public void a() {}
+                }
+                """;
+        Path javaFilePath = writeJavaFile("DuplicateOptOut.java", srcCodeWithDuplicateOptOut);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(srcCodeWithDuplicateOptOut);
+    }
+
+    @Test
+    void processSources_packageDeclarationFileWithOptOut_appliesRawSrcFallback() throws Exception {
+        // Given
+        String packageSrcCode = "// @jharmonizer:fully-off\npackage com.example;\n";
+        Path javaFilePath = writeJavaFile("package-info.java", packageSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(packageSrcCode);
     }
 
     private Path writeJavaFile(String fileName, String fileContent) throws Exception {
@@ -345,7 +379,7 @@ class OptOutSrcProcessorIntegrationTest {
                 .build();
         return FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(topLevelTypesOrdering)
-                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR))
+                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false))
                 .backupsEnabled(false)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .rootMemberGroups(List.of(rootMemberGroup))

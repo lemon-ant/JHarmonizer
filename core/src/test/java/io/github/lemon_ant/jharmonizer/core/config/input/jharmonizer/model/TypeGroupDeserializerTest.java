@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -34,12 +34,12 @@ class TypeGroupDeserializerTest {
         // Given
         String yaml = "- UNICORN";
 
-        // When / Then
-        assertThatThrownBy(() -> mapper.readValue(
-                        yaml,
-                        mapper.getTypeFactory()
-                                .constructCollectionType(List.class, JHarmonizerTopLevelTypeSelector.class)))
-                .isInstanceOf(Exception.class)
-                .hasMessageContaining("UNICORN");
+        // When
+        Throwable thrown = catchThrowable(() -> mapper.readValue(
+                yaml,
+                mapper.getTypeFactory().constructCollectionType(List.class, JHarmonizerTopLevelTypeSelector.class)));
+
+        // Then
+        assertThat(thrown).isInstanceOf(Exception.class).hasMessageContaining("UNICORN");
     }
 }

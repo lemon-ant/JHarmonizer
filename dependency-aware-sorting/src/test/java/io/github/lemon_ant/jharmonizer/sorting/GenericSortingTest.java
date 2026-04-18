@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -100,46 +100,48 @@ class GenericSortingTest {
 
         @Test
         void sort_cyclicDependency_throwsSortingException() {
-            // When / Then
-            assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                            List.of("a", "b", "c"),
-                            Groups.empty(),
-                            Dependencies.of("a", "b", "b", "c", "c", "a"),
-                            NATURAL_ORDER))
-                    .isInstanceOf(SortingException.class)
-                    .message()
-                    .containsIgnoringCase("cycle");
+            // When
+            Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                    List.of("a", "b", "c"),
+                    Groups.empty(),
+                    Dependencies.of("a", "b", "b", "c", "c", "a"),
+                    NATURAL_ORDER));
+
+            // Then
+            assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("cycle");
         }
 
         @Test
         void sort_selfDependency_throwsSortingException() {
-            // When / Then
-            assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                            List.of("a", "b"), Groups.empty(), Dependencies.of("a", "a"), NATURAL_ORDER))
-                    .isInstanceOf(SortingException.class)
-                    .message()
-                    .containsIgnoringCase("self");
+            // When
+            Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                    List.of("a", "b"), Groups.empty(), Dependencies.of("a", "a"), NATURAL_ORDER));
+
+            // Then
+            assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("self");
         }
 
         @Test
         void sort_duplicateItem_throwsSortingException() {
-            // When / Then
-            assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                            List.of("apple", "banana", "apple"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER))
-                    .isInstanceOf(SortingException.class)
-                    .hasMessageContaining("apple");
+            // When
+            Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                    List.of("apple", "banana", "apple"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER));
+
+            // Then
+            assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("apple");
         }
 
         @Test
         void sort_memberInTwoGroups_throwsSortingException() {
-            // When / Then
-            assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                            List.of("a", "b", "c"),
-                            new Groups<>(List.of(Group.of("a", "b"), Group.of("b", "c"))),
-                            Dependencies.empty(),
-                            NATURAL_ORDER))
-                    .isInstanceOf(SortingException.class)
-                    .hasMessageContaining("b");
+            // When
+            Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                    List.of("a", "b", "c"),
+                    new Groups<>(List.of(Group.of("a", "b"), Group.of("b", "c"))),
+                    Dependencies.empty(),
+                    NATURAL_ORDER));
+
+            // Then
+            assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("b");
         }
 
         @Test
@@ -160,18 +162,19 @@ class GenericSortingTest {
             // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
                     List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+            Throwable thrown = catchThrowable(() -> result.add("x"));
 
             // Then
-            assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
+            assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
         }
 
         @Test
         void sort_shuffledInput_producesDeterministicResult() {
             // Given
             var base = List.of("fig", "cherry", "apple", "elderberry", "banana", "date");
-            var g = new Groups<>(List.of(Group.of("fig", "date")));
-            var d = Dependencies.of("cherry", "apple");
-            var expected = SimplifiedDependencyAwareSorter.sort(base, g, d, NATURAL_ORDER);
+            var groups = new Groups<>(List.of(Group.of("fig", "date")));
+            var dependencies = Dependencies.of("cherry", "apple");
+            var expected = SimplifiedDependencyAwareSorter.sort(base, groups, dependencies, NATURAL_ORDER);
             var rng = new Random(42);
 
             for (int run = 0; run < 20; run++) {
@@ -180,7 +183,7 @@ class GenericSortingTest {
                 Collections.shuffle(shuffled, rng);
 
                 // Then
-                assertThat(SimplifiedDependencyAwareSorter.sort(shuffled, g, d, NATURAL_ORDER))
+                assertThat(SimplifiedDependencyAwareSorter.sort(shuffled, groups, dependencies, NATURAL_ORDER))
                         .as("run %d: result must be deterministic", run)
                         .isEqualTo(expected);
             }
@@ -254,14 +257,15 @@ class GenericSortingTest {
 
         @Test
         void sort_groupMemberInDependency_throwsSortingException() {
-            // When / Then
-            assertThatThrownBy(() -> SimplifiedDependencyAwareSorter.sort(
-                            List.of("alpha", "beta", "gamma"),
-                            new Groups<>(List.of(Group.of("alpha", "beta"))),
-                            Dependencies.of("alpha", "gamma"),
-                            NATURAL_ORDER))
-                    .isInstanceOf(SortingException.class)
-                    .hasMessageContaining("alpha");
+            // When
+            Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                    List.of("alpha", "beta", "gamma"),
+                    new Groups<>(List.of(Group.of("alpha", "beta"))),
+                    Dependencies.of("alpha", "gamma"),
+                    NATURAL_ORDER));
+
+            // Then
+            assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("alpha");
         }
 
         @Test
@@ -269,9 +273,10 @@ class GenericSortingTest {
             // When
             List<String> result = SimplifiedDependencyAwareSorter.sort(
                     List.of("b", "a"), Groups.empty(), Dependencies.empty(), NATURAL_ORDER);
+            Throwable thrown = catchThrowable(() -> result.add("x"));
 
             // Then
-            assertThatThrownBy(() -> result.add("x")).isInstanceOf(UnsupportedOperationException.class);
+            assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 

@@ -12,7 +12,8 @@
     <name>JHarmonizer Core</name>
 
     <properties>
-        <jmh.version>1.37</jmh.version>
+        <!-- Minimum module branch coverage threshold. -->
+        <jacoco.minimum.branch.coverage>0.70</jacoco.minimum.branch.coverage>
     </properties>
 
     <dependencies>
@@ -24,11 +25,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
@@ -49,6 +45,27 @@
             <groupId>fr.inria.gforge.spoon</groupId>
             <artifactId>spoon-core</artifactId>
             <version>11.2.1</version>
+            <exclusions>
+                <!-- Maven model support — not used by JHarmonizer -->
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-model</artifactId>
+                </exclusion>
+                <!-- Maven invoker support — not used by JHarmonizer -->
+                <exclusion>
+                    <groupId>org.apache.maven.shared</groupId>
+                    <artifactId>maven-invoker</artifactId>
+                </exclusion>
+                <!--
+                    commons-compress is a transitive dependency of spoon-core, but JHarmonizer does not use the
+                    Spoon functionality that requires it. The project's former direct basename usage was migrated
+                    from commons-compress FileNameUtils.getBaseName to commons-io FilenameUtils.
+                -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.github.lemon-ant.jharmonizer</groupId>
@@ -63,13 +80,11 @@
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

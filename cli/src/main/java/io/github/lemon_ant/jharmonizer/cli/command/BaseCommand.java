@@ -6,13 +6,12 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
-import io.github.lemon_ant.jharmonizer.core.flow.NotFormattedException;
-import io.github.lemon_ant.jharmonizer.core.flow.NotOrderedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -36,13 +35,25 @@ import picocli.CommandLine.Option;
 abstract class BaseCommand implements Callable<Integer> {
 
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
-    private static final String VERBOSE_LOG_PATTERN = "%-5level [%.8thread] [%logger{36}] %msg%n";
+    private static final String VERBOSE_LOG_PATTERN = "%-5level [%-8.8thread] [%logger{36}] %msg%n";
+    private static final int DEFAULT_CHECK_FAILED_EXIT_CODE = 1;
+
+    private final int checkFailedExitCode;
 
     /**
-     * Creates a new base CLI command.
+     * Creates a new base CLI command with the default check-failed exit code.
      */
     protected BaseCommand() {
-        // Protected so only concrete commands in this hierarchy can instantiate the base type.
+        this(DEFAULT_CHECK_FAILED_EXIT_CODE);
+    }
+
+    /**
+     * Creates a new base CLI command with a custom check-failed exit code.
+     *
+     * @param checkFailedExitCode exit code returned when a check flow detects violations
+     */
+    protected BaseCommand(int checkFailedExitCode) {
+        this.checkFailedExitCode = checkFailedExitCode;
     }
 
     @Option(
@@ -100,15 +111,6 @@ abstract class BaseCommand implements Callable<Integer> {
     protected abstract FlowType getFlowType();
 
     /**
-     * Returns the exit code used when a check command detects violations.
-     *
-     * @return the exit code for check failures
-     */
-    protected int checkFailedExitCode() {
-        return 1;
-    }
-
-    /**
      * Parses command-line options and runs the selected processing flow.
      *
      * @return the process exit code
@@ -149,33 +151,23 @@ abstract class BaseCommand implements Callable<Integer> {
         }
     }
 
-    @SuppressWarnings("PMD.GuardLogStatement")
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
-        log.info(
-                "Processing sources with flow {} in: {} using config: {}",
-                flowType,
-                commandOptions.getBaseDir(),
-                describeConfigSrc(commandOptions.getConfigFilePath()));
-        try {
-            createSrcProcessor(
-                            commandOptions.getConfigFilePath(),
-                            commandOptions.isNoBackup(),
-                            commandOptions.isNoStatistics())
-                    .processSources(
-                            commandOptions.getBaseDir(),
-                            commandOptions.getIncludeGlobs(),
-                            commandOptions.getExcludeGlobs(),
-                            flowType);
-            return 0;
-        } catch (NotFormattedException | NotOrderedException e) {
-            log.warn("Flow {} stopped early: {}", flowType, e.getMessage());
-            return checkFailedExitCode();
-        }
+        FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
+                commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
+        SrcProcessingResult result = new SrcProcessor(effectiveConfig)
+                .processSources(
+                        commandOptions.getBaseDir(),
+                        commandOptions.getIncludeGlobs(),
+                        commandOptions.getExcludeGlobs(),
+                        flowType);
+        int exitCode = result.isSuccess() ? 0 : checkFailedExitCode;
+        log.info("Exit code: {}", exitCode);
+        return exitCode;
     }
 
-    @NonNull
-    private static SrcProcessor createSrcProcessor(
+    @Nullable
+    private static FlexibleUnifiedConfig resolveEffectiveConfig(
             @Nullable Path configFilePath, boolean disableBackups, boolean disableStatisticsOutput) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
@@ -186,8 +178,7 @@ abstract class BaseCommand implements Callable<Integer> {
                         .printProcessingStatistics(disableStatisticsOutput ? false : null)
                         .build()
                 : null;
-        FlexibleUnifiedConfig effectiveConfig = mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
-        return new SrcProcessor(effectiveConfig);
+        return mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
     }
 
     @Nullable
@@ -205,13 +196,6 @@ abstract class BaseCommand implements Callable<Integer> {
     @Nullable
     private static Path toAbsoluteNormalizedPath(@Nullable Path path) {
         return path == null ? null : path.toAbsolutePath().normalize();
-    }
-
-    @NonNull
-    private static String describeConfigSrc(@Nullable Path configFilePath) {
-        return configFilePath != null
-                ? configFilePath.toString()
-                : "embedded default resource config (/default-config.yml)";
     }
 
     private static void logRuntimeFailure(boolean verbose, RuntimeException exception) {

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.lemon-ant.jharmonizer</groupId>
+        <artifactId>jharmonizer-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>jharmonizer-maven-plugin</artifactId>
+    <packaging>maven-plugin</packaging>
+    <name>JHarmonizer Maven Plugin</name>
+
+    <properties>
+        <jacoco.minimum.branch.coverage>0.70</jacoco.minimum.branch.coverage>
+        <maven-invoker-plugin.version>3.9.0</maven-invoker-plugin.version>
+        <maven-plugin-annotations.version>3.15.1</maven-plugin-annotations.version>
+        <maven-plugin-api.version>3.9.9</maven-plugin-api.version>
+        <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.lemon-ant.jharmonizer</groupId>
+            <artifactId>jharmonizer-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>${maven-plugin-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>${maven-plugin-annotations.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <!--
+                            Palantir Java Format accesses JDK compiler internals via reflection at runtime.
+                            These opens are required when running under the module system (JDK 9+) for the
+                            same reason they are needed in the core module – palantir-java-format is a
+                            transitive runtime dependency here as well.
+                        -->
+                        <argLine>@{argLine} ${mockito.agent.argLine}
+                        --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                        --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
+                        --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                        --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+                        --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>${maven-plugin-plugin.version}</version>
+                    <configuration>
+                        <goalPrefix>jharmonizer</goalPrefix>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-descriptor</id>
+                        <goals>
+                            <goal>descriptor</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>generate-helpmojo</id>
+                        <goals>
+                            <goal>helpmojo</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <version>${maven-invoker-plugin.version}</version>
+                <configuration>
+                    <addTestClassPath>false</addTestClassPath>
+                    <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                    <!--
+                        An isolated local repo keeps IT downloads separate from the main build cache
+                        and avoids polluting the developer's global repository with IT artifacts.
+                    -->
+                    <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+                    <!--
+                        Palantir Java Format accesses JDK compiler internals via reflection.
+                        The required add-opens flags are supplied via .mvn/jvm.config in each IT project
+                        (not via mavenOpts here) so that each option can stay on its own line.
+                        Maven reads .mvn/jvm.config line-by-line in its launcher, so it works on Windows
+                        without the line-break problems that affect MAVEN_OPTS/mavenOpts.
+                    -->
+                    <postBuildHookScript>verify</postBuildHookScript>
+                    <projectsDirectory>src/it</projectsDirectory>
+                    <settingsFile>src/it/settings.xml</settingsFile>
+                    <showErrors>true</showErrors>
+                    <streamLogsOnFailures>true</streamLogsOnFailures>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <!--
+                                'install' copies the plugin under test into the IT-local repo so that
+                                the IT projects can depend on it without a separate install step.
+                                'run' executes each project under src/it/ and collects results.
+                            -->
+                            <goal>install</goal>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>quality-gates</id>
+            <activation>
+                <property>
+                    <name>!skip-quality-gates</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <!--
+                                    HelpMojo is auto-generated by maven-plugin-plugin:helpmojo and
+                                    contains no testable logic. Excluding it keeps coverage metrics
+                                    meaningful and avoids the need for boilerplate tests for generated code.
+                                -->
+                                <id>enforce-jacoco-coverage</id>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>**/HelpMojo.class</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

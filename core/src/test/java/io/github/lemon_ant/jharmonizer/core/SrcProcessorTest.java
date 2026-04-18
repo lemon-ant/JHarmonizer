@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core;
 
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -18,7 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -113,10 +112,12 @@ class SrcProcessorTest {
         SrcProcessor srcProcessor = new SrcProcessor();
         srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
-        // When / Then
-        assertThatCode(() -> srcProcessor.processSources(
-                        temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST))
-                .doesNotThrowAnyException();
+        // When
+        SrcProcessingResult result = srcProcessor.processSources(
+                temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+
+        // Then
+        assertThat(result.isSuccess()).isTrue();
         String finalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSrcCode).isNotBlank();
     }
@@ -134,8 +135,9 @@ class SrcProcessorTest {
         // When
         AggregatedProcessingStatistic aggregatedProcessingStatistic;
         try {
-            aggregatedProcessingStatistic =
+            SrcProcessingResult result =
                     srcProcessor.processSources(scenarioRoot, orderedInputFiles, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+            aggregatedProcessingStatistic = result.getStatistics();
         } finally {
             detachListAppender(listAppender);
             restoreLoggerLevel(initialLevel);
@@ -150,7 +152,7 @@ class SrcProcessorTest {
         assertThat(logs).contains("C_Formatted.java");
         assertThat(logs).contains("JHarmonizer FORMATTED");
         assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(3);
-        assertThat(aggregatedProcessingStatistic.getTotalSize())
+        assertThat(aggregatedProcessingStatistic.getTotalSizeInBytes())
                 .isEqualTo(expectedSources.values().stream()
                         .mapToLong(String::length)
                         .sum());
@@ -395,6 +397,29 @@ class SrcProcessorTest {
                 .contains("wallClockTimeNanos=")
                 .contains("totalCpuTimeNanos=")
                 .contains("unexpectedErrors=0");
+    }
+
+    @Test
+    void processSources_checkFailFastWithViolation_logsStoppedEarlyMessage() throws Exception {
+        // Given
+        String violatingCode = "package demo; public class ViolatingOrder { public void b(){} public void a(){} }";
+        writeJavaFile(temporaryDirectory, "ViolatingOrder.java", violatingCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        SrcProcessingResult srcProcessingResult;
+        try {
+            srcProcessingResult = srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(srcProcessingResult.isSuccess()).isFalse();
+        assertThat(logs).contains("stopped early").contains("non-conforming").contains("Stop triggered by");
     }
 
     @NonNull

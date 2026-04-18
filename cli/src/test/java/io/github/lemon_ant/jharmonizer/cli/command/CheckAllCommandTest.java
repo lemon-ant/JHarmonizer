@@ -42,6 +42,21 @@ class CheckAllCommandTest {
     }
 
     @Test
+    void checkCommand_nonConformingFilesDetected_returnsExitCode1() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildFailedResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
     void checkCommand_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
         // When
         int exitCode;

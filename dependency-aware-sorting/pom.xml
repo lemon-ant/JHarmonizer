@@ -13,7 +13,7 @@
 
     <properties>
         <fastutil.version>8.5.18</fastutil.version>
-        <jmh.version>1.37</jmh.version>
+        <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
     </properties>
 
     <dependencies>
@@ -32,13 +32,11 @@
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

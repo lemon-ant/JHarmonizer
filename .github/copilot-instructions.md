@@ -60,6 +60,7 @@
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 - When debugging uncovers a non-obvious runtime or framework edge case (for example parser or evaluator recursion traps), document the guard/workaround with a nearby code comment so future refactors do not remove it accidentally.
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`, or an established repository abbreviation such as the `src*` naming family.
+- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
 
 ## Test conventions
@@ -113,9 +114,13 @@
 - Do not insert an empty line at the very beginning of the method body before `// Given`.
 - Keep each block contiguous and focused.
 - It is valid to merge blocks when it improves readability.
-- Exception tests may use `// When / Then` together because the assertion captures both the action and the expectation.
 - Very small tests may use `// Given / When` together if separating them would add noise.
+- Non-exception assertion tests may use `// When / Then` together when action and assertion fit naturally in one block.
 - Combined blocks are allowed only when they stay contiguous and clear.
+- Exception tests must **not** use `// When / Then` together. Instead:
+  - `// When` block: capture the thrown exception with `catchThrowable(...)` (or `catchThrowableOfType(ExceptionType.class, ...)` when type-specific methods must be called on the exception in the Then block).
+  - `// Then` block: assert on the captured throwable with `assertThat(thrown)`.
+  - Do not use `assertThatThrownBy(...)` in `// When / Then` or `// Then` blocks.
 - Use parameterized tests when they reduce repetition and improve readability.
 - The 3-segment method naming rule still applies to parameterized tests.
 - Do not introduce a `// Given` block for a single obvious local variable assignment.
@@ -208,5 +213,6 @@
 ### Code style in tests
 
 - Prefer fully descriptive variable names instead of names such as `i`, `tmp`, or `m`.
+- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Prefer Stream API when it makes the flow clearer.
 - Keep helpers small and single-purpose.

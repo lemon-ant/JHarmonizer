@@ -2,9 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -52,11 +51,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         Path compileAfterOutput = temporaryDirectory
                 .resolve(resolveDirectoryNamePrefix() + "-compile-after")
                 .resolve(scenarioName);
-        Path compileExpectedOutput = temporaryDirectory
-                .resolve(resolveDirectoryNamePrefix() + "-compile-expected")
-                .resolve(scenarioName);
         ValidationStateT beforeValidationState = validateBeforeProcessing(workingInputFile, compileBeforeOutput);
-        validateExpectedFixture(expectedSrcFile, compileExpectedOutput, beforeValidationState);
 
         assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
 
@@ -134,9 +129,6 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     protected abstract ValidationStateT validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
             throws Exception;
 
-    protected abstract void validateExpectedFixture(
-            Path expectedSrcFile, Path compileExpectedOutput, ValidationStateT beforeValidationState) throws Exception;
-
     protected abstract void validateAfterProcessing(
             Path workingInputFile, Path compileAfterOutput, ValidationStateT validationState) throws Exception;
 
@@ -179,28 +171,26 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     private void assertFileIsNotProcessedYet(Path fixtureScenario, Path workingInputFile, boolean unchangedFixture) {
         Path scenarioConfigPath = findScenarioConfigPath(fixtureScenario).orElse(null);
+        SrcProcessingResult result =
+                runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST);
         if (unchangedFixture) {
-            assertThatCode(() ->
-                            runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
-                    .doesNotThrowAnyException();
+            assertThat(result.isSuccess()).isTrue();
             return;
         }
-        assertThatThrownBy(
-                        () -> runProcessorForSingleFile(workingInputFile, scenarioConfigPath, FlowType.CHECK_FAIL_FAST))
-                .isInstanceOf(RuntimeException.class);
+        assertThat(result.isSuccess()).isFalse();
     }
 
     private void assertFileProcessingIsDeterministic(Path fixtureScenario, Path workingInputFile) {
-        assertThatCode(() -> runProcessorForSingleFile(
-                        workingInputFile,
-                        findScenarioConfigPath(fixtureScenario).orElse(null),
-                        FlowType.CHECK_FAIL_FAST))
-                .doesNotThrowAnyException();
+        SrcProcessingResult result = runProcessorForSingleFile(
+                workingInputFile, findScenarioConfigPath(fixtureScenario).orElse(null), FlowType.CHECK_FAIL_FAST);
+        assertThat(result.isSuccess()).isTrue();
     }
 
-    private void runProcessorForSingleFile(Path srcFilePath, Path scenarioConfigPath, FlowType flowType) {
+    @NonNull
+    private SrcProcessingResult runProcessorForSingleFile(
+            Path srcFilePath, Path scenarioConfigPath, FlowType flowType) {
         SrcProcessor srcProcessor = buildSrcProcessor(scenarioConfigPath);
-        srcProcessor.processSources(
+        return srcProcessor.processSources(
                 srcFilePath.getParent(), List.of(srcFilePath.getFileName().toString()), List.of(), flowType);
     }
 

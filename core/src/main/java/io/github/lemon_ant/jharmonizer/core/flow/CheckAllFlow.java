@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.defineFlowProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
@@ -17,6 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
@@ -30,10 +31,11 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      *
      * @param formatter the formatter used after sorting
      * @param sorter the sorter used to reorder members
+     * @param printerConfig the printer configuration
      */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
-    public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter) {
-        super(formatter, sorter, CHECK_ALL);
+    public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
+        super(formatter, sorter, printerConfig, CHECK_ALL);
     }
 
     /**
@@ -43,11 +45,11 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    public FlowProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile);
+            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
         } catch (SpoonModelBuildException exception) {
             return processSrcWithFormattingOnlyFallback(srcFile, exception);
         }
@@ -75,7 +77,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
             srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }
 
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(elementRelocations)
                 .diff(srcDiff)
@@ -84,18 +86,18 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                         sortingAndSerializationResult.getSortingResult().getSortingStatistic())
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
-                .flowProcessingStatus(
-                        defineFlowProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
+                .fileProcessingStatus(
+                        defineFileProcessingStatus(!elementRelocations.isEmpty(), !srcDiff.isEmpty(), true))
                 .build();
     }
 
     @NonNull
-    private FlowProcessingResult processSrcWithFormattingOnlyFallback(
+    private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
         FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         String srcDiff = hasChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(List.of())
                 .diff(srcDiff)
@@ -104,7 +106,17 @@ public class CheckAllFlow extends AbstractOptOutFlow {
                 .serializationStatistic(
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(formattingResult.getFormattingStatistic())
-                .flowProcessingStatus(defineFlowProcessingStatus(false, hasChanges, true))
+                .fileProcessingStatus(defineFileProcessingStatus(false, hasChanges, true))
                 .build();
+    }
+
+    @Override
+    public boolean isSuccessful(boolean hasModifications) {
+        return !hasModifications;
+    }
+
+    @Override
+    public boolean isModifyingFlow() {
+        return false;
     }
 }

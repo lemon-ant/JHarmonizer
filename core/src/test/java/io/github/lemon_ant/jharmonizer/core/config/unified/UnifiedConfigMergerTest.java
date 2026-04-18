@@ -1,7 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.util.List;
 import java.util.Set;
@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 
 class UnifiedConfigMergerTest {
 
-    private static final UnifiedFormatting FORMATTING = new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR);
+    private static final UnifiedFormatting FORMATTING =
+            new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false);
     private static final UnifiedHeaderLine HEADER_LINE = new UnifiedHeaderLine('-', 2);
     private static final UnifiedMemberGroupSelectorBlock SELECTOR_BLOCK =
             UnifiedMemberGroupSelectorBlock.builder().build();
@@ -138,9 +139,12 @@ class UnifiedConfigMergerTest {
         FlexibleUnifiedConfig overlayConfig =
                 FlexibleUnifiedConfig.builder().rootMemberGroups(List.of()).build();
 
-        // When / Then
-        assertThatThrownBy(() -> UnifiedConfigMerger.merge(
-                        createConfig(List.of(firstBaselineGroup, duplicateBaselineGroup)), overlayConfig))
+        // When
+        Throwable thrown = catchThrowable(() -> UnifiedConfigMerger.merge(
+                createConfig(List.of(firstBaselineGroup, duplicateBaselineGroup)), overlayConfig));
+
+        // Then
+        assertThat(thrown)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Baseline root member group names must be unique");
     }

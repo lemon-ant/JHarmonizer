@@ -27,14 +27,4 @@ public class JHarmonizerTopLevelTypeSelector {
         Validate.notEmpty(typeKinds, "kinds cannot be empty");
         this.typeKinds = Collections.unmodifiableSet(typeKinds);
     }
-
-    @Override
-    public boolean equals(Object o) {
-        return (o instanceof JHarmonizerTopLevelTypeSelector other) && typeKinds.equals(other.typeKinds);
-    }
-
-    @Override
-    public int hashCode() {
-        return typeKinds.hashCode();
-    }
 }

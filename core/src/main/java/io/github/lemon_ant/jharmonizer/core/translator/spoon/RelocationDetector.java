@@ -171,8 +171,8 @@ public class RelocationDetector {
                 .map(CtElement::getPosition)
                 .filter(SourcePosition::isValidPosition)
                 .collect(Collectors.toMap(
-                        Function.identity(), // key: the element itself
-                        e -> runningIndex.getAndIncrement() // value: the element's sequential index
+                        Function.identity(), // key: the source position
+                        position -> runningIndex.getAndIncrement() // value: the element's sequential index
                         ));
     }
 }

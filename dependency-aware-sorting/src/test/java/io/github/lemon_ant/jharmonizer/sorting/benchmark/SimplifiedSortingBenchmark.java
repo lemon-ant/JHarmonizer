@@ -130,7 +130,8 @@ public class SimplifiedSortingBenchmark {
     private static Groups<SortableTypeMember> makeSimplifiedGrouping(
             List<SortableTypeMember> allItems, int numGroups, int groupSize) {
         List<Group<SortableTypeMember>> groups = IntStream.range(0, numGroups)
-                .mapToObj(g -> new Group<>(allItems.subList(g * groupSize, g * groupSize + groupSize)))
+                .mapToObj(groupIndex ->
+                        new Group<>(allItems.subList(groupIndex * groupSize, groupIndex * groupSize + groupSize)))
                 .toList();
         return new Groups<>(groups);
     }
@@ -141,17 +142,18 @@ public class SimplifiedSortingBenchmark {
      */
     private static Dependencies<SortableTypeMember> makeSimplifiedDeps(
             List<SortableTypeMember> allItems, int edgeCount, int firstFreeIdx) {
-        int n = allItems.size();
-        int available = n - firstFreeIdx;
+        int totalSize = allItems.size();
+        int available = totalSize - firstFreeIdx;
         int stride = Math.max(1, available / edgeCount);
 
         List<Dependencies.Dependency<SortableTypeMember>> edges = IntStream.range(0, edgeCount)
                 .filter(i -> {
-                    int provIdx = n - 1 - i;
+                    int provIdx = totalSize - 1 - i;
                     int depIdx = provIdx - stride;
                     return provIdx >= firstFreeIdx && depIdx >= firstFreeIdx;
                 })
-                .mapToObj(i -> new Dependencies.Dependency<>(allItems.get(n - 1 - i), allItems.get(n - 1 - i - stride)))
+                .mapToObj(i -> new Dependencies.Dependency<>(
+                        allItems.get(totalSize - 1 - i), allItems.get(totalSize - 1 - i - stride)))
                 .toList();
         return new Dependencies<>(edges);
     }

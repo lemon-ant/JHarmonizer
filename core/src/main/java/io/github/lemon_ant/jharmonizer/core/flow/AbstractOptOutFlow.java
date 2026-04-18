@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowProcessingStatus.SKIPPED;
-
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
@@ -17,11 +15,13 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Getter(AccessLevel.PROTECTED)
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 abstract class AbstractOptOutFlow implements IFlow {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOptOutFlow.class);
 
@@ -41,12 +42,90 @@ abstract class AbstractOptOutFlow implements IFlow {
     private final Sorter sorter;
 
     @NonNull
+    private final PrinterConfig printerConfig;
+
+    @NonNull
     private final FlowDebugStageRecorder debugStageRecorder;
 
-    protected AbstractOptOutFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull FlowType flowType) {
+    protected AbstractOptOutFlow(
+            @NonNull Formatter formatter,
+            @NonNull Sorter sorter,
+            @NonNull PrinterConfig printerConfig,
+            @NonNull FlowType flowType) {
         this.formatter = formatter;
         this.sorter = sorter;
+        this.printerConfig = printerConfig;
         this.debugStageRecorder = new FlowDebugStageRecorder(flowType);
+    }
+
+    /**
+     * Processes a single source file with the current flow strategy.
+     *
+     * @param srcFile the source file to process
+     * @return the processing result for the source file
+     */
+    @NonNull
+    protected abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
+
+    /**
+     * Processes a stream of source files with runtime-failure isolation.
+     * Subclasses may override to add pipeline steps (e.g. fail-fast termination).
+     *
+     * @param srcFiles the stream of source files to process
+     * @return a stream of per-file processing results
+     */
+    @Override
+    @NonNull
+    public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
+        return srcFiles.map(this::processSrcSafely);
+    }
+
+    /**
+     * Processes a single source file, catching unexpected runtime exceptions
+     * and converting them into {@link FileProcessingStatus#ERROR} results.
+     *
+     * @param srcFile the source file to process
+     * @return the processing result (never throws)
+     */
+    @NonNull
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
+    protected final FileProcessingResult processSrcSafely(@NonNull SrcFile srcFile) {
+        try {
+            return processSrc(srcFile);
+        } catch (RuntimeException exception) {
+            LOG.warn(
+                    "Unexpected internal processing error for file {}: {}",
+                    srcFile.getPath(),
+                    describeRuntimeFailure(exception));
+            LOG.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
+            return FileProcessingResult.builder()
+                    .path(srcFile.getPath())
+                    .relocations(List.of())
+                    .diff("")
+                    .parsingStatistic(new ParsingStatistic(
+                            srcFile.getSrcCode().length(),
+                            srcFile.getSrcCode().getBytes(StandardCharsets.UTF_8).length,
+                            0,
+                            0,
+                            0,
+                            0))
+                    .sortingStatistic(new SortingStatistic(0))
+                    .serializationStatistic(new SerializationStatistic(0, 0))
+                    .formattingStatistic(new FormattingStatistic(0, 0))
+                    .fileProcessingStatus(FileProcessingStatus.ERROR)
+                    .stopRequested(false)
+                    .build();
+        }
+    }
+
+    @NonNull
+    private static String describeRuntimeFailure(@NonNull RuntimeException exception) {
+        String exceptionType = exception.getClass().getSimpleName();
+        String exceptionMessage = exception.getMessage();
+        if (exceptionMessage == null || exceptionMessage.isBlank()) {
+            return exceptionType;
+        }
+        return exceptionType + ": " + exceptionMessage;
     }
 
     @NonNull
@@ -138,12 +217,12 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     @NonNull
-    protected static FlowProcessingResult buildFullyOffFileSkippedResult(
+    protected static FileProcessingResult buildFullyOffFileSkippedResult(
             @NonNull SrcFile srcFile,
             @NonNull ParsingResult parsingResult,
             @NonNull String skippedOperationDescription) {
         logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
-        return FlowProcessingResult.builder()
+        return FileProcessingResult.builder()
                 .path(srcFile.getPath())
                 .relocations(null)
                 .diff(null)
@@ -153,7 +232,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                         new SerializationStatistic(srcFile.getSrcCode().length(), 0))
                 .formattingStatistic(
                         new FormattingStatistic(srcFile.getSrcCode().length(), 0))
-                .flowProcessingStatus(SKIPPED)
+                .fileProcessingStatus(FileProcessingStatus.SKIPPED)
                 .build();
     }
 

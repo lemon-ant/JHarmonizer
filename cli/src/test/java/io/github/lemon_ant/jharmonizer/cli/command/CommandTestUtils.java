@@ -7,8 +7,10 @@ import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
+import io.github.lemon_ant.jharmonizer.core.SrcProcessingResultCreator;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
-import io.github.lemon_ant.jharmonizer.core.processing_stat.SrcProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import java.nio.file.Path;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -21,9 +23,28 @@ class CommandTestUtils {
     @NonNull
     static MockedConstruction<SrcProcessor> mockSuccessfulProcessorConstruction() {
         return mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(mock(AggregatedProcessingStatistic.class));
+            when(mock.processSources(any(Path.class), any(), any(), any())).thenReturn(buildSuccessfulResult());
         });
+    }
+
+    /**
+     * Creates a real successful {@link SrcProcessingResult} for test stubs.
+     *
+     * @return a successful processing result with mock statistics
+     */
+    @NonNull
+    static SrcProcessingResult buildSuccessfulResult() {
+        return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), true);
+    }
+
+    /**
+     * Creates a real failed {@link SrcProcessingResult} for test stubs.
+     *
+     * @return a failed processing result
+     */
+    @NonNull
+    static SrcProcessingResult buildFailedResult() {
+        return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), false);
     }
 
     @NonNull
