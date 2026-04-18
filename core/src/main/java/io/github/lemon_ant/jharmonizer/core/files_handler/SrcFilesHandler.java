@@ -11,8 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -24,9 +24,10 @@ public class SrcFilesHandler {
 
     /**
      * Recursively resolves and reads all {@code .java} files matching the include and exclude globs
-     * across all given base directories. Paths that appear under multiple base directories are
-     * deduplicated before reading. Each base directory is scanned in parallel independently;
-     * the combined path set is then read in parallel.
+     * across all given base directories. Each base directory is scanned in parallel by GlobPathFinder
+     * independently. The results are merged lazily via {@link Stream#concat} so that no paths are
+     * accumulated in memory before processing starts. Paths discovered under multiple base directories
+     * are deduplicated on-the-fly using a concurrent set.
      *
      * @param baseDirs the base directories to scan
      * @param includeGlobs the include globs to apply
@@ -38,11 +39,13 @@ public class SrcFilesHandler {
             @NonNull Collection<Path> baseDirs,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
-        Set<Path> allPaths = new LinkedHashSet<>();
-        for (Path baseDir : baseDirs) {
-            allPaths.addAll(findJavaFiles(baseDir, includeGlobs, excludeGlobs).toList());
-        }
-        return allPaths.parallelStream().map(SrcFilesHandler::readFile);
+        Set<Path> seen = ConcurrentHashMap.newKeySet();
+        return baseDirs.stream()
+                .map(baseDir -> findJavaFiles(baseDir, includeGlobs, excludeGlobs)
+                        .filter(seen::add)
+                        .map(SrcFilesHandler::readFile))
+                .reduce(Stream::concat)
+                .orElse(Stream.empty());
     }
 
     /**
@@ -69,7 +72,7 @@ public class SrcFilesHandler {
      * @return the matching Java file paths
      */
     @NonNull
-    static Stream<Path> findJavaFiles(
+    private static Stream<Path> findJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(baseDir)
