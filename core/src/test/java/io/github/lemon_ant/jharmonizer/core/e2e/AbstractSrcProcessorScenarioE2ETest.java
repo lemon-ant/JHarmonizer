@@ -108,17 +108,21 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                         this::resolveScenarioDirectoryName, Comparator.reverseOrder())
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
         try {
-            return Files.walk(getFixturesRoot())
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .filter(path -> INPUT_DIRECTORY.equals(
-                            path.getParent().getFileName().toString()))
-                    .sorted(fixtureExecutionOrder)
-                    .map(fixtureInputFile -> {
-                        Path scenarioDir =
-                                fixtureInputFile.getParent().getParent().getFileName();
-                        Path srcFile = fixtureInputFile.getFileName();
-                        return Arguments.of(scenarioDir, srcFile);
-                    });
+            List<Path> fixtureInputFiles;
+            try (Stream<Path> walkedPaths = Files.walk(getFixturesRoot())) {
+                fixtureInputFiles = walkedPaths
+                        .filter(path -> path.toString().endsWith(".java"))
+                        .filter(path -> INPUT_DIRECTORY.equals(
+                                path.getParent().getFileName().toString()))
+                        .sorted(fixtureExecutionOrder)
+                        .toList();
+            }
+            return fixtureInputFiles.stream().map(fixtureInputFile -> {
+                Path scenarioDir =
+                        fixtureInputFile.getParent().getParent().getFileName();
+                Path srcFile = fixtureInputFile.getFileName();
+                return Arguments.of(scenarioDir, srcFile);
+            });
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
