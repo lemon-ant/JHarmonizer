@@ -111,12 +111,11 @@
                         Palantir Java Format accesses JDK compiler internals via reflection.
                         These opens are required in the Maven JVM that executes the plugin during IT runs.
                         Without them the reorder/check goals fail with IllegalAccessError at runtime.
+                        All flags must be on one line: on Windows, mvn.cmd expands %MAVEN_OPTS% inline in
+                        the java command, and a newline in the value breaks the command at that point,
+                        causing java to run with no main class and print "Usage: java [options]".
                     -->
-                    <mavenOpts>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
-                        --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
-                        --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</mavenOpts>
+                    <mavenOpts>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</mavenOpts>
                     <postBuildHookScript>verify</postBuildHookScript>
                     <projectsDirectory>src/it</projectsDirectory>
                     <settingsFile>src/it/settings.xml</settingsFile>
