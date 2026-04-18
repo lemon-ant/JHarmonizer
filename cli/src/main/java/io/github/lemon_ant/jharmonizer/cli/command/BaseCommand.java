@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -126,14 +127,14 @@ abstract class BaseCommand implements Callable<Integer> {
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public final Integer call() {
         Set<Path> effectiveBaseDirs = baseDirs.isEmpty() ? Set.of(Path.of(".")) : Set.copyOf(baseDirs);
-        Set<Path> absoluteBaseDirs = new LinkedHashSet<>();
-        for (Path dir : effectiveBaseDirs) {
-            Path absoluteDir = dir.toAbsolutePath().normalize();
-            if (!Files.isDirectory(absoluteDir)) {
-                log.error("Base directory does not exist or is not a directory: {}", absoluteDir);
+        Set<Path> normalizedBaseDirs = effectiveBaseDirs.stream()
+                .map(dir -> dir.toAbsolutePath().normalize())
+                .collect(Collectors.toUnmodifiableSet());
+        for (Path normalizedDir : normalizedBaseDirs) {
+            if (!Files.isDirectory(normalizedDir)) {
+                log.error("Base directory does not exist or is not a directory: {}", normalizedDir);
                 return 1;
             }
-            absoluteBaseDirs.add(absoluteDir);
         }
         Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
         if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
@@ -141,7 +142,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         CommandOptions commandOptions = CommandOptions.builder()
-                .baseDirs(Set.copyOf(absoluteBaseDirs))
+                .baseDirs(normalizedBaseDirs)
                 .includeGlobs(Set.copyOf(includeGlobs))
                 .excludeGlobs(Set.copyOf(excludeGlobs))
                 .verbose(verbose)

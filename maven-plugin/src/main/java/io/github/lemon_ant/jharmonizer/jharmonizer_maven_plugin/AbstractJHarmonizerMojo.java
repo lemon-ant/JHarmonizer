@@ -124,15 +124,13 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
 
         List<Path> resolvedBaseDirs = resolveBaseDirPaths();
-        List<Path> validatedBaseDirs = new ArrayList<>();
         for (Path baseDirPath : resolvedBaseDirs) {
             if (!Files.isDirectory(baseDirPath)) {
                 throw new MojoExecutionException("baseDir does not exist or is not a directory: " + baseDirPath);
             }
-            validatedBaseDirs.add(baseDirPath);
         }
 
-        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(List.copyOf(validatedBaseDirs));
+        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(resolvedBaseDirs);
 
         if (!srcProcessingResult.isSuccess() && failOnViolation) {
             long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
@@ -148,8 +146,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private List<Path> resolveBaseDirPaths() {
         if (baseDirs != null && !baseDirs.isEmpty()) {
             return baseDirs.stream()
-                    .map(File::toPath)
-                    .map(path -> path.toAbsolutePath().normalize())
+                    .map(file -> file.toPath().toAbsolutePath().normalize())
                     .toList();
         }
         List<Path> defaultDirs = new ArrayList<>();
