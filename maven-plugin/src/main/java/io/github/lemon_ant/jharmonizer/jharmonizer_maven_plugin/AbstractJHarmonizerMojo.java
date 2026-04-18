@@ -124,9 +124,14 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
 
         List<Path> resolvedBaseDirs = resolveBaseDirPaths();
+        if (resolvedBaseDirs.isEmpty()) {
+            throw new MojoExecutionException(
+                    "No base directories to scan. Configure <baseDirs> explicitly, or ensure that"
+                            + " ${project.build.sourceDirectory} or ${project.build.testSourceDirectory} exist.");
+        }
         for (Path baseDirPath : resolvedBaseDirs) {
             if (!Files.isDirectory(baseDirPath)) {
-                throw new MojoExecutionException("baseDir does not exist or is not a directory: " + baseDirPath);
+                throw new MojoExecutionException("baseDirs entry does not exist or is not a directory: " + baseDirPath);
             }
         }
 

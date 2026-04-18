@@ -145,7 +145,7 @@ public class SortingAlgorithmBenchmark {
 
     @NonNull
     private static Stream<BenchmarkFixture> loadFixturesFromRoot(@NonNull Path fixtureRoot) {
-        return SrcFilesHandler.readJavaFiles(fixtureRoot, List.of("**/input/*.java"), List.of())
+        return SrcFilesHandler.readJavaFiles(List.of(fixtureRoot), List.of("**/input/*.java"), List.of())
                 .map(srcFile -> {
                     SpoonAstModel spoonAstModel =
                             SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false));

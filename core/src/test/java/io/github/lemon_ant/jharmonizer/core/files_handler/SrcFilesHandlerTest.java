@@ -82,7 +82,7 @@ class SrcFilesHandlerTest {
         Files.writeString(tempDir.resolve("notes.txt"), "not java");
 
         // When
-        List<SrcFile> srcFiles = SrcFilesHandler.readJavaFiles(tempDir, Set.of("**.java"), Set.of())
+        List<SrcFile> srcFiles = SrcFilesHandler.readJavaFiles(List.of(tempDir), Set.of("**.java"), Set.of())
                 .collect(Collectors.toList());
 
         // Then

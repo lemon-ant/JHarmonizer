@@ -118,8 +118,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                         .toList();
             }
             return fixtureInputFiles.stream().map(fixtureInputFile -> {
-                Path scenarioDir =
-                        fixtureInputFile.getParent().getParent().getFileName();
+                Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
                 Path srcFile = fixtureInputFile.getFileName();
                 return Arguments.of(scenarioDir, srcFile);
             });

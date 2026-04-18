@@ -106,6 +106,9 @@ public final class SrcProcessor {
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
+        if (baseDirs.isEmpty()) {
+            throw new IllegalArgumentException("baseDirs must not be empty");
+        }
         logStartupBanner(flowType, baseDirs, includeGlobs, excludeGlobs);
         IFlow flow =
                 // TODO Move it into the flow factory

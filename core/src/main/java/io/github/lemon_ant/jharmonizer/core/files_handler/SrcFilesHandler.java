@@ -39,27 +39,13 @@ public class SrcFilesHandler {
             @NonNull Collection<Path> baseDirs,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
-        Set<Path> seen = ConcurrentHashMap.newKeySet();
+        Set<Path> discoveredPaths = ConcurrentHashMap.newKeySet();
         return baseDirs.stream()
                 .map(baseDir -> findJavaFiles(baseDir, includeGlobs, excludeGlobs)
-                        .filter(seen::add)
+                        .filter(discoveredPaths::add)
                         .map(SrcFilesHandler::readFile))
                 .reduce(Stream::concat)
                 .orElse(Stream.empty());
-    }
-
-    /**
-     * Recursively resolves and reads all {@code .java} files matching the include and exclude globs.
-     *
-     * @param baseDir the base directory to scan
-     * @param includeGlobs the include globs to apply
-     * @param excludeGlobs the exclude globs to apply
-     * @return a stream of loaded source files
-     */
-    @NonNull
-    public static Stream<SrcFile> readJavaFiles(
-            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
-        return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
     }
 
     /**
