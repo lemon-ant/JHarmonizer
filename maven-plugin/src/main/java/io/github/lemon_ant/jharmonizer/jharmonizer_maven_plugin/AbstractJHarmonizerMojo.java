@@ -117,7 +117,8 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             throw new MojoFailureException("JHarmonizer: "
                     + nonConformingCount
                     + " source file(s) do not conform to the configured ordering."
-                    + " Set failOnViolation=false to suppress this failure.");
+                    + " To suppress this failure, set -Djharmonizer.failOnViolation=false"
+                    + " or configure <failOnViolation>false</failOnViolation> in the plugin configuration.");
         }
     }
 
