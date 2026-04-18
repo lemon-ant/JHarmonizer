@@ -35,16 +35,13 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
     /**
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
-     * @param keepAccessorsTogether the keep accessors together flag
-     * @param relaxedForwardReferences whether forward references to fields declared later in source order
-     *     are ignored for dependency resolution; when {@code false}, init blocks declared after the dependent
-     *     are also included as providers
+     * @param config the detector configuration
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences) {
+            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
 
         Optional<CtElement> dependentInitializationAstRoot =
                 InitializationOrderDependencyUtils.resolveInitializationAstRoot(dependentMember);
@@ -74,7 +71,7 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
                         mutableField,
                         dependentSrcStart,
                         dependentMemberIsStatic,
-                        relaxedForwardReferences))
+                        config.isRelaxedForwardReferences()))
                 .map(initializerBlock ->
                         new MemberDependencyArc(initializerBlock, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());

@@ -44,15 +44,14 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
      *
      * @param dependentMember the type member whose initialization-order dependencies are being
      *     analyzed
-     * @param keepAccessorsTogether whether to treat getter/setter pairs as a unit when analyzing
-     *     dependencies
-     * @param relaxedForwardReferences unused; cross-type chain dependencies are always hard constraints
+     * @param config the detector configuration; {@code relaxedForwardReferences} is intentionally
+     *     unused because cross-type chain dependencies are always hard constraints
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences) {
+            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Set.of();
         }

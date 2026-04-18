@@ -33,15 +33,13 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     /**
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
-     * @param keepAccessorsTogether the keep accessors together
-     * @param relaxedForwardReferences whether forward references to fields declared later in source order
-     *     are ignored for dependency resolution
+     * @param config the detector configuration
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether, boolean relaxedForwardReferences) {
+            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
         if (!(dependentMember instanceof CtField<?> referencedField) || !isSupportedReferencedField(referencedField)) {
             return Set.of();
         }
@@ -50,7 +48,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
             return Set.of();
         }
 
-        return findReferrerFieldsWithExplicitReferenceTo(referencedField, relaxedForwardReferences).stream()
+        return findReferrerFieldsWithExplicitReferenceTo(referencedField, config.isRelaxedForwardReferences()).stream()
                 .map(providerMember ->
                         new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
