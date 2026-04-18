@@ -28,13 +28,34 @@ public class MemberDependencyGraphBuilder {
             new CrossTypeConstantBackRefDependencyProvider());
 
     /**
-     * Performs the build dependency graph.
-     * @param typeMember2NaturalMemberGroup the type member2 natural member group
-     * @return the result
+     * Builds a dependency graph using each member's natural-group configuration.
+     *
+     * @param typeMember2NaturalMemberGroup maps each explicit source member to its natural member group
+     * @return the populated dependency graph
      */
     @NonNull
     public static MemberDependencyGraph buildDependencyGraph(
             @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
+        return buildDependencyGraph(typeMember2NaturalMemberGroup, false);
+    }
+
+    /**
+     * Builds a dependency graph, optionally overriding all groups to use relaxed forward-reference mode.
+     *
+     * <p>When {@code forceRelaxedForwardReferences} is {@code true}, every member's
+     * {@link DependencyDetectorConfig#isRelaxedForwardReferences()} is forced to {@code true}
+     * regardless of its natural-group setting.  This is used as a fallback when the strict-mode
+     * graph produces a dependency cycle that would otherwise cause a {@link io.github.lemon_ant.jharmonizer.sorting.SortingException}.
+     *
+     * @param typeMember2NaturalMemberGroup  maps each explicit source member to its natural member group
+     * @param forceRelaxedForwardReferences  when {@code true}, overrides relaxed-forward-references to {@code true}
+     *                                       for every member regardless of the group configuration
+     * @return the populated dependency graph
+     */
+    @NonNull
+    public static MemberDependencyGraph buildDependencyGraph(
+            @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
+            boolean forceRelaxedForwardReferences) {
 
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
 
@@ -45,7 +66,7 @@ public class MemberDependencyGraphBuilder {
 
             DependencyDetectorConfig detectorConfig = new DependencyDetectorConfig(
                     dependentNaturalGroup.isKeepAccessorsTogether(),
-                    dependentNaturalGroup.isRelaxedForwardReferences());
+                    forceRelaxedForwardReferences || dependentNaturalGroup.isRelaxedForwardReferences());
 
             memberDependencyProviders.stream()
                     .flatMap(memberDependencyProvider ->

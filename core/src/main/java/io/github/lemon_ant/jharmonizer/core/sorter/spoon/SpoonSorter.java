@@ -7,6 +7,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
+import io.github.lemon_ant.jharmonizer.sorting.SortingException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
@@ -26,6 +28,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * - recursively processes nested types (depth-first),
  * - applies member sorting to each type via
  */
+@Slf4j
 @RequiredArgsConstructor
 public class SpoonSorter {
     private static final int MAX_MEMBERS_WITHOUT_SORTING = 1;
@@ -143,7 +146,57 @@ public class SpoonSorter {
 
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupByMember);
+        try {
+            return orderMembersWithDependencyGraph(naturalGroupByMember, memberDependencyGraph);
+        } catch (SortingException sortingException) {
+            return retryWithRelaxedForwardReferences(type, naturalGroupByMember, sortingException);
+        }
+    }
 
+    /**
+     * Retries member ordering with forced relaxed forward references after a strict-mode cycle was detected.
+     *
+     * <p>If no member group uses strict forward references, the original exception is rethrown because
+     * the cycle was not caused by the strict-mode configuration and the fallback would not help.
+     * Otherwise, a warning is logged and the dependency graph is rebuilt with
+     * {@code forceRelaxedForwardReferences = true}.
+     *
+     * @param type               the type whose members failed to sort
+     * @param naturalGroupByMember the member-to-natural-group map
+     * @param sortingException   the exception thrown by the strict-mode sort attempt
+     * @return the member list produced by the relaxed-mode sort
+     * @throws SortingException if no strict-mode group was active, indicating a non-recoverable cycle
+     */
+    @NonNull
+    private static List<CtTypeMember> retryWithRelaxedForwardReferences(
+            CtType<?> type,
+            Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember,
+            SortingException sortingException) {
+        boolean anyGroupUsesStrictMode = naturalGroupByMember.values().stream()
+                .anyMatch(memberGroup -> !memberGroup.isRelaxedForwardReferences());
+        if (!anyGroupUsesStrictMode) {
+            throw sortingException;
+        }
+        log.warn(
+                "Dependency cycle detected in strict forward-reference mode for type '{}'. "
+                        + "Retrying dependency analysis with relaxed forward references.",
+                type.getQualifiedName());
+        MemberDependencyGraph relaxedDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupByMember, true);
+        return orderMembersWithDependencyGraph(naturalGroupByMember, relaxedDependencyGraph);
+    }
+
+    /**
+     * Runs the dependency-graph-dependent ordering steps and returns the final flat member list.
+     *
+     * @param naturalGroupByMember the member-to-natural-group map
+     * @param memberDependencyGraph the already-built dependency graph to use for ordering
+     * @return the ordered, flattened member list with group boundaries applied
+     */
+    @NonNull
+    private static List<CtTypeMember> orderMembersWithDependencyGraph(
+            @NonNull Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember,
+            @NonNull MemberDependencyGraph memberDependencyGraph) {
         Map<CtTypeMember, CompiledMemberGroup> effectiveGroupByMember =
                 EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupByMember, memberDependencyGraph);
 
