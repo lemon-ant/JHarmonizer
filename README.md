@@ -16,6 +16,8 @@ It parses Java source, resolves grouping/sorting rules, applies dependency-safe 
 - Add selector matching by type (field type / method return type).
 - Add explicit enum constant ordering strategies.
 - Add support for corner-cases with explicit declaring-type instance forward references during class initialization (currently parked as known failing E2E scenario).
+- Add automatic parameter-order harmonization for overriding methods and constructors: base/forwarded parameters first, extension parameters after them.
+- Add redundant-modifier cleanup pass that removes semantically useless Java modifiers (for example implicit interface/class member modifiers) while preserving behavior.
 - Add inter-procedural initializer dependency analysis:
   - if a field default expression calls a method, inspect method body reads/writes;
   - recursively follow nested method calls inside the same declaring type;
