@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -67,14 +70,14 @@ class MojoTestUtils {
         try {
             Files.createDirectories(targetDirectory);
             Path directoryPath = Path.of(directoryUrl.toURI());
-            try (java.util.stream.Stream<Path> entries = Files.list(directoryPath)) {
+            try (Stream<Path> entries = Files.list(directoryPath)) {
                 entries.filter(Files::isRegularFile).forEach(srcFile -> {
                     Path targetFile =
                             targetDirectory.resolve(srcFile.getFileName().toString());
                     copyFile(srcFile, targetFile);
                 });
             }
-        } catch (java.net.URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw new IllegalStateException("Cannot convert resource URL to path: " + directoryUrl, e);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to copy resource directory: " + resourceDirectory, e);
@@ -95,7 +98,7 @@ class MojoTestUtils {
             if (inputStream == null) {
                 throw new IllegalArgumentException("Classpath resource not found: " + resourcePath);
             }
-            return new String(inputStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read classpath resource: " + resourcePath, e);
         }
