@@ -109,14 +109,11 @@
                     <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                     <!--
                         Palantir Java Format accesses JDK compiler internals via reflection.
-                        These opens are required in the Maven JVM that executes the plugin during IT runs.
-                        Without them the reorder/check goals fail with IllegalAccessError at runtime.
+                        The required add-opens flags are supplied via .mvn/jvm.config in each IT project
+                        (not via mavenOpts here) so that each option can stay on its own line.
+                        Maven reads .mvn/jvm.config line-by-line in its launcher, so it works on Windows
+                        without the line-break problems that affect MAVEN_OPTS/mavenOpts.
                     -->
-                    <mavenOpts>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
-                        --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
-                        --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</mavenOpts>
                     <postBuildHookScript>verify</postBuildHookScript>
                     <projectsDirectory>src/it</projectsDirectory>
                     <settingsFile>src/it/settings.xml</settingsFile>
