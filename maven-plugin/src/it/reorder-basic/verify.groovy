@@ -3,7 +3,18 @@ File reorderedFile = new File(basedir, "src/main/java/sample/ReorderSample.java"
 assert reorderedFile.exists() : "ReorderSample.java should still exist after reorder"
 
 String content = reorderedFile.text
-assert content.indexOf("int a = 1;") < content.indexOf("void alpha()") :
+int fieldAIndex = content.indexOf("int a = 1;")
+int alphaIndex = content.indexOf("void alpha()")
+int zetaIndex = content.indexOf("void zeta()")
+
+assert fieldAIndex >= 0 :
+        "Field 'a' should be present after reorder, but got:\n" + content
+assert alphaIndex >= 0 :
+        "Method 'alpha' should be present after reorder, but got:\n" + content
+assert zetaIndex >= 0 :
+        "Method 'zeta' should be present after reorder, but got:\n" + content
+
+assert fieldAIndex < alphaIndex :
         "Field 'a' should appear before method 'alpha' after reorder, but got:\n" + content
-assert content.indexOf("void alpha()") < content.indexOf("void zeta()") :
+assert alphaIndex < zetaIndex :
         "Method 'alpha' should appear before method 'zeta' after reorder, but got:\n" + content
