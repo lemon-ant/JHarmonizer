@@ -17,6 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedT
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,8 @@ abstract class AbstractOptOutFlow implements IFlow {
     @Override
     @NonNull
     public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
-        return srcFiles.map(this::processSrcSafely);
+        return srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown())
+                .map(this::processSrcSafely);
     }
 
     /**
@@ -196,10 +198,14 @@ abstract class AbstractOptOutFlow implements IFlow {
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
     protected final FormattingResult formatSrcWithoutSorting(@NonNull SrcFile srcFile, @NonNull String failureMessage) {
-        LOG.warn(
-                "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
-                srcFile.getPath(),
-                failureMessage);
+        if (JvmShutdownSignal.isShuttingDown()) {
+            LOG.debug("Skipping sorting for {} because JVM is shutting down.", srcFile.getPath());
+        } else {
+            LOG.warn(
+                    "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
+                    srcFile.getPath(),
+                    failureMessage);
+        }
         FormattingResult formattingResult =
                 getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
         getDebugStageRecorder()

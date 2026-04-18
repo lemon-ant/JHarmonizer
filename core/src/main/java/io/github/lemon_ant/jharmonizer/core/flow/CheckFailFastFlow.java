@@ -20,6 +20,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -66,7 +67,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     @NonNull
     public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
         AtomicBoolean stopFlag = new AtomicBoolean(false);
-        return srcFiles.takeWhile(srcFile -> !stopFlag.get())
+        return srcFiles.takeWhile(srcFile -> !stopFlag.get() && !JvmShutdownSignal.isShuttingDown())
                 .map(this::processSrcSafely)
                 .peek(fileProcessingResult -> {
                     if (fileProcessingResult.isStopRequested()) {
