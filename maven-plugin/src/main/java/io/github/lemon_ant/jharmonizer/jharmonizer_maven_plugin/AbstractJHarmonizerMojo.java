@@ -10,6 +10,8 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
 import org.apache.maven.plugin.AbstractMojo;
@@ -25,15 +27,31 @@ import org.apache.maven.plugins.annotations.Parameter;
 abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
-     * Root directory to scan for Java source files.
-     * Defaults to Maven's main Java source directory ({@code ${project.build.sourceDirectory}}).
+     * Directories to scan for Java source files.
+     * When not configured, defaults to both the main Java source directory
+     * ({@code src/main/java}) and the test Java source directory ({@code src/test/java}).
      */
-    @Parameter(defaultValue = "${project.build.sourceDirectory}", property = "jharmonizer.baseDir", required = true)
-    private File baseDir;
+    @Parameter(property = "jharmonizer.baseDirs")
+    @Nullable
+    private List<File> baseDirs;
+
+    /**
+     * Maven's main Java source directory, used as a default base directory when
+     * {@code baseDirs} is not explicitly configured.
+     */
+    @Parameter(defaultValue = "${project.build.sourceDirectory}", readonly = true)
+    private File defaultMainSourceDirectory;
+
+    /**
+     * Maven's test Java source directory, used as a default base directory when
+     * {@code baseDirs} is not explicitly configured.
+     */
+    @Parameter(defaultValue = "${project.build.testSourceDirectory}", readonly = true)
+    private File defaultTestSourceDirectory;
 
     /**
      * Glob patterns for Java source files to include in processing.
-     * When empty, all {@code .java} files under {@code baseDir} are included.
+     * When empty, all {@code .java} files under the configured base directories are included.
      */
     @Parameter(property = "jharmonizer.includes")
     private Set<String> includes;
@@ -95,7 +113,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     /**
      * Validates parameters, builds configuration, and runs the selected JHarmonizer flow.
      *
-     * @throws MojoExecutionException when the base directory is invalid or an unexpected error occurs
+     * @throws MojoExecutionException when a base directory is invalid or an unexpected error occurs
      * @throws MojoFailureException   when the flow reports violations and {@code failOnViolation} is {@code true}
      */
     @Override
@@ -105,12 +123,16 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return;
         }
 
-        Path baseDirPath = baseDir.toPath().toAbsolutePath().normalize();
-        if (!Files.isDirectory(baseDirPath)) {
-            throw new MojoExecutionException("baseDir does not exist or is not a directory: " + baseDirPath);
+        List<Path> resolvedBaseDirs = resolveBaseDirPaths();
+        List<Path> validatedBaseDirs = new ArrayList<>();
+        for (Path baseDirPath : resolvedBaseDirs) {
+            if (!Files.isDirectory(baseDirPath)) {
+                throw new MojoExecutionException("baseDir does not exist or is not a directory: " + baseDirPath);
+            }
+            validatedBaseDirs.add(baseDirPath);
         }
 
-        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(baseDirPath);
+        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(List.copyOf(validatedBaseDirs));
 
         if (!srcProcessingResult.isSuccess() && failOnViolation) {
             long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
@@ -123,13 +145,31 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     }
 
     @NonNull
+    private List<Path> resolveBaseDirPaths() {
+        if (baseDirs != null && !baseDirs.isEmpty()) {
+            return baseDirs.stream()
+                    .map(File::toPath)
+                    .map(path -> path.toAbsolutePath().normalize())
+                    .toList();
+        }
+        List<Path> defaultDirs = new ArrayList<>();
+        if (defaultMainSourceDirectory != null) {
+            defaultDirs.add(defaultMainSourceDirectory.toPath().toAbsolutePath().normalize());
+        }
+        if (defaultTestSourceDirectory != null) {
+            defaultDirs.add(defaultTestSourceDirectory.toPath().toAbsolutePath().normalize());
+        }
+        return List.copyOf(defaultDirs);
+    }
+
+    @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private SrcProcessingResult invokeSrcProcessor(Path baseDirPath) throws MojoExecutionException {
+    private SrcProcessingResult invokeSrcProcessor(List<Path> baseDirPaths) throws MojoExecutionException {
         Set<String> effectiveIncludes = includes != null ? includes : Set.of();
         Set<String> effectiveExcludes = excludes != null ? excludes : Set.of();
         try {
             return new SrcProcessor(buildConfig())
-                    .processSources(baseDirPath, effectiveIncludes, effectiveExcludes, getFlowType());
+                    .processSources(baseDirPaths, effectiveIncludes, effectiveExcludes, getFlowType());
         } catch (RuntimeException e) {
             throw new MojoExecutionException("JHarmonizer processing failed unexpectedly.", e);
         }

@@ -14,6 +14,8 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Set;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,7 +64,10 @@ class ReorderCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Path.of("src/main/java").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
+                        eq(Set.of(Path.of("src/main/java").toAbsolutePath().normalize())),
+                        any(),
+                        any(),
+                        eq(FlowType.REORDER));
     }
 
     @Test
@@ -110,7 +115,7 @@ class ReorderCommandTest {
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
                 MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                    when(mock.processSources(any(Collection.class), any(), any(), any()))
                             .thenThrow(new RuntimeException("Unexpected error"));
                 })) {
             exitCode = commandLine.execute("--base-dir", "src");

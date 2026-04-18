@@ -89,11 +89,12 @@ public final class SrcProcessor {
     }
 
     /**
-     * Processes source files found by the given globs through the specified flow type.
+     * Processes source files found under the given base directories by the specified flow type.
+     * Files found under multiple base directories are deduplicated before processing.
      * The flow itself controls stream pipeline decoration (e.g. early termination for
      * fail-fast), success determination, and completion logging.
      *
-     * @param baseDir the root directory to scan for source files
+     * @param baseDirs the root directories to scan for source files
      * @param includeGlobs glob patterns for files to include
      * @param excludeGlobs glob patterns for files to exclude
      * @param flowType the processing flow strategy to apply
@@ -101,11 +102,11 @@ public final class SrcProcessor {
      */
     @NonNull
     public SrcProcessingResult processSources(
-            @NonNull Path baseDir,
+            @NonNull Collection<Path> baseDirs,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
-        logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
+        logStartupBanner(flowType, baseDirs, includeGlobs, excludeGlobs);
         IFlow flow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
@@ -117,7 +118,7 @@ public final class SrcProcessor {
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
 
         AggregatedProcessingStatistic aggregatedProcessingStatistic = flow.processStream(
-                        SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs))
+                        SrcFilesHandler.readJavaFiles(baseDirs, includeGlobs, excludeGlobs))
                 .peek(fileProcessingResult -> {
                     if (log.isDebugEnabled()) {
                         log.debug(formatSingleFileLogMessage(
@@ -140,6 +141,25 @@ public final class SrcProcessor {
         long nonConformingFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         boolean success = flow.isSuccessful(nonConformingFileCount > 0);
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
+    }
+
+    /**
+     * Processes source files found under the given base directory by the specified flow type.
+     * Delegates to {@link #processSources(Collection, Collection, Collection, FlowType)}.
+     *
+     * @param baseDir the root directory to scan for source files
+     * @param includeGlobs glob patterns for files to include
+     * @param excludeGlobs glob patterns for files to exclude
+     * @param flowType the processing flow strategy to apply
+     * @return the pipeline-level processing result
+     */
+    @NonNull
+    public SrcProcessingResult processSources(
+            @NonNull Path baseDir,
+            @NonNull Collection<String> includeGlobs,
+            @NonNull Collection<String> excludeGlobs,
+            @NonNull FlowType flowType) {
+        return processSources(List.of(baseDir), includeGlobs, excludeGlobs, flowType);
     }
 
     private static void logDebugProcessingCompletionSummary(
@@ -213,17 +233,17 @@ public final class SrcProcessor {
 
     private void logStartupBanner(
             @NonNull FlowType flowType,
-            @NonNull Path baseDir,
+            @NonNull Collection<Path> baseDirs,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
         if (config.isPrintProcessingStatistics() && log.isInfoEnabled()) {
             log.info(StartupBannerRenderer.render(
-                    flowType, baseDir, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
+                    flowType, baseDirs, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
         } else {
             log.debug(
-                    "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
+                    "Starting source processing. flowType={}, baseDirs={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
                     flowType,
-                    baseDir.toAbsolutePath(),
+                    baseDirs,
                     includeGlobs,
                     excludeGlobs,
                     config.isBackupsEnabled());
