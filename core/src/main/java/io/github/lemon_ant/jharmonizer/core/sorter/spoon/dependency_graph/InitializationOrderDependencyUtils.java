@@ -119,6 +119,8 @@ final class InitializationOrderDependencyUtils {
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->
                         new ProviderCandidate(candidateProviderMember, requireSrcStart(candidateProviderMember)))
+                // In relaxed mode, only include providers declared before the dependent (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all candidates regardless of position.
                 .filter(candidate -> !relaxedForwardReferences || candidate.getSrcStart() < dependentSrcStart)
                 .map(ProviderCandidate::getProviderMember)
                 .filter(providerMember -> isFieldWrittenByMember(providerMember, blankFinalField))

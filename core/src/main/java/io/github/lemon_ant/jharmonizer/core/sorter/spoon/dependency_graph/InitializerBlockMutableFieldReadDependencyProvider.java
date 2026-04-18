@@ -93,6 +93,8 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
                 .map(member -> (CtAnonymousExecutable) member)
                 .filter(initializerBlock ->
                         initializerBlock.getModifiers().contains(ModifierKind.STATIC) == dependentMemberIsStatic)
+                // In relaxed mode, only include init blocks declared before the dependent (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all init blocks regardless of position.
                 .filter(initializerBlock ->
                         !relaxedForwardReferences || requireSrcStart(initializerBlock) < dependentSrcStart)
                 .filter(initializerBlock -> isFieldReadByInitializerBlock(initializerBlock, field));

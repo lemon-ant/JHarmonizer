@@ -71,6 +71,8 @@ class DeclaringTypeFieldReferenceUtils {
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .map(fieldAccess -> new ReferencedFieldAccess(
                         (CtField<?>) fieldAccess.getVariable().getDeclaration(), fieldAccess))
+                // In relaxed mode, only include fields declared before the dependent (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all field accesses regardless of position.
                 .filter(referencedFieldAccess -> !relaxedForwardReferences
                         || isProviderDeclaredBeforeDependentMember(
                                 referencedFieldAccess.getProviderField(), dependentMember))

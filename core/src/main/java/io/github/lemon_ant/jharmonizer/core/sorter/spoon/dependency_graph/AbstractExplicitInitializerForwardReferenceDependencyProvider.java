@@ -120,6 +120,8 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
         return referencedField.getDeclaringType().getTypeMembers().stream()
                 .filter(typeMember -> typeMember instanceof CtField<?>)
+                // In relaxed mode, only include fields declared before the referenced field (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all field members regardless of position.
                 .filter(typeMember ->
                         !relaxedForwardReferences || requireSrcStart(typeMember) < referencedFieldSrcStart)
                 .map(typeMember -> (CtField<?>) typeMember)
