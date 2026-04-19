@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import lombok.Value;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -132,38 +133,9 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return;
         }
 
-        Path resolvedBaseDir;
-        Set<String> effectiveIncludes;
-
-        if (baseDir != null) {
-            resolvedBaseDir = baseDir.toPath().toAbsolutePath().normalize();
-            if (!Files.isDirectory(resolvedBaseDir)) {
-                throw new MojoExecutionException("baseDir does not exist or is not a directory: " + resolvedBaseDir);
-            }
-            effectiveIncludes = includes != null ? includes : Set.of();
-        } else {
-            if (projectBaseDir == null) {
-                throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
-                        + " Configure <baseDir> explicitly.");
-            }
-            Path projectBaseDirPath = projectBaseDir.toPath().toAbsolutePath().normalize();
-            if (!Files.isDirectory(projectBaseDirPath)) {
-                throw new MojoExecutionException(
-                        "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
-            }
-            resolvedBaseDir = projectBaseDirPath;
-            try {
-                effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
-            } catch (IllegalArgumentException e) {
-                throw new MojoExecutionException(
-                        "Cannot compute default source include patterns relative to project base directory '"
-                                + projectBaseDirPath + "'."
-                                + " Configure <baseDir> explicitly.",
-                        e);
-            }
-        }
-
-        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(resolvedBaseDir, effectiveIncludes);
+        BaseDirContext context = resolveBaseDirContext();
+        SrcProcessingResult srcProcessingResult =
+                invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
 
         if (!srcProcessingResult.isSuccess() && failOnViolation) {
             long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
@@ -176,14 +148,49 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     }
 
     @NonNull
+    private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
+        return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
+    }
+
+    @NonNull
+    private BaseDirContext resolveExplicitBaseDir() throws MojoExecutionException {
+        Path resolvedBaseDir = baseDir.toPath().toAbsolutePath().normalize();
+        if (!Files.isDirectory(resolvedBaseDir)) {
+            throw new MojoExecutionException("baseDir does not exist or is not a directory: " + resolvedBaseDir);
+        }
+        return new BaseDirContext(resolvedBaseDir, includes != null ? includes : Set.of());
+    }
+
+    @NonNull
+    private BaseDirContext resolveProjectBaseDir() throws MojoExecutionException {
+        if (projectBaseDir == null) {
+            throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
+                    + " Configure <baseDir> explicitly.");
+        }
+        Path projectBaseDirPath = projectBaseDir.toPath().toAbsolutePath().normalize();
+        if (!Files.isDirectory(projectBaseDirPath)) {
+            throw new MojoExecutionException(
+                    "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
+        }
+        try {
+            return new BaseDirContext(projectBaseDirPath, computeDefaultIncludes(projectBaseDirPath));
+        } catch (IllegalArgumentException e) {
+            throw new MojoExecutionException(
+                    "Cannot compute default source include patterns relative to project base directory '"
+                            + projectBaseDirPath + "'."
+                            + " Configure <baseDir> explicitly.",
+                    e);
+        }
+    }
+
+    @NonNull
     private Set<String> computeDefaultIncludes(Path projectBaseDirPath) {
         Stream<String> srcDirIncludes = Stream.of(mainSourceDirectory, testSourceDirectory)
                 .filter(Objects::nonNull)
-                .map(srcDir -> projectBaseDirPath
-                                .relativize(srcDir.toPath().toAbsolutePath().normalize())
-                                .toString()
-                                .replace(File.separatorChar, '/')
-                        + "/**");
+                .map(srcDir -> srcDir.toPath().toAbsolutePath().normalize())
+                .filter(Files::isDirectory)
+                .map(srcDirPath ->
+                        projectBaseDirPath.relativize(srcDirPath).toString().replace(File.separatorChar, '/') + "/**");
         Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());
     }
@@ -237,5 +244,14 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return baselineConfig;
         }
         return UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+    }
+
+    @Value
+    private static class BaseDirContext {
+        @NonNull
+        Path resolvedBaseDir;
+
+        @NonNull
+        Set<String> effectiveIncludes;
     }
 }

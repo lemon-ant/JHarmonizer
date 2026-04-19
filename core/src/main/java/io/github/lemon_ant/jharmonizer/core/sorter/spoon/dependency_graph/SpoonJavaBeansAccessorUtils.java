@@ -24,6 +24,7 @@ import spoon.reflect.reference.CtTypeReference;
  * (type erasure + boxing). Used for {@code keepAccessorsTogether}.
  */
 @UtilityClass
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 class SpoonJavaBeansAccessorUtils {
 
     private static final List<AccessorMethodContract> ACCESSOR_METHOD_CONTRACTS = List.of(

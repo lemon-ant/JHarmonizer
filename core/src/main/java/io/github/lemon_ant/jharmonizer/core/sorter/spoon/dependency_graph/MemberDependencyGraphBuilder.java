@@ -48,6 +48,7 @@ public class MemberDependencyGraphBuilder {
      * @throws SortingException if a dependency cycle exists that cannot be resolved by falling back to relaxed mode
      */
     @NonNull
+    @SuppressWarnings("PMD.GuardLogStatement")
     public static MemberDependencyGraph buildDependencyGraph(
             @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
 

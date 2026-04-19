@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.utilities;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Tracks whether the JVM has started its shutdown sequence.
@@ -11,6 +12,8 @@ import lombok.experimental.UtilityClass;
  * (e.g., triggered by Ctrl+C) and stop cleanly instead of flooding logs with spurious warnings
  * from Spoon's thread pool shutting down.
  */
+@Slf4j
+@SuppressWarnings("PMD.DoNotUseThreads")
 @UtilityClass
 public class JvmShutdownSignal {
 
@@ -25,6 +28,7 @@ public class JvmShutdownSignal {
         } catch (SecurityException e) {
             // Shutdown hook registration is not permitted in this environment.
             // Leave the flag unchanged so the class remains usable.
+            log.debug("JVM shutdown hook registration denied; running without shutdown detection.", e);
         }
     }
 

@@ -25,6 +25,7 @@ import spoon.reflect.declaration.ModifierKind;
  * and blank final definite assignment constraints.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 final class InitializationOrderDependencyUtils {
 
     private static boolean matchesInitializationMemberStaticness(CtTypeMember typeMember, boolean requiredStaticness) {
