@@ -9,7 +9,6 @@ import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
-import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
@@ -28,13 +27,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter(AccessLevel.PROTECTED)
-@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.ExcessiveImports", "PMD.TooManyMethods"})
 abstract class AbstractOptOutFlow implements IFlow {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractOptOutFlow.class);
 
     @NonNull
     private final Formatter formatter;
@@ -122,11 +119,11 @@ abstract class AbstractOptOutFlow implements IFlow {
         try {
             return processSrc(srcFile);
         } catch (RuntimeException exception) {
-            LOG.warn(
+            log.warn(
                     "Unexpected internal processing error for file {}: {}",
                     srcFile.getPath(),
                     describeRuntimeFailure(exception));
-            LOG.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
+            log.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
                     .relocations(List.of())
@@ -169,7 +166,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .orElse(false);
         if (reuseOriginalSrc) {
             JHarmonizerOptOutMode reuseMode = fileOptOutMode.orElseThrow();
-            logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
+            FlowResultHelpers.logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
             String originalSrcCode = srcFile.getSrcCode();
             return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
@@ -227,9 +224,9 @@ abstract class AbstractOptOutFlow implements IFlow {
     protected final FormattingResult formatSrcAfterModelBuildFailure(
             @NonNull SrcFile srcFile, @NonNull String failureMessage) {
         if (JvmShutdownSignal.isShuttingDown()) {
-            LOG.debug("Skipping sorting for {} after model build failure (JVM is shutting down).", srcFile.getPath());
+            log.debug("Skipping sorting for {} after model build failure (JVM is shutting down).", srcFile.getPath());
         } else {
-            LOG.warn(
+            log.warn(
                     "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
                     srcFile.getPath(),
                     failureMessage);
@@ -242,44 +239,6 @@ abstract class AbstractOptOutFlow implements IFlow {
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
                         formattingResult.getFormattedSrcCode());
         return formattingResult;
-    }
-
-    @NonNull
-    protected static ParsingStatistic buildSyntheticParsingStatistic(@NonNull SrcFile srcFile) {
-        String srcCode = srcFile.getSrcCode();
-        return new ParsingStatistic(srcCode.length(), srcCode.getBytes(StandardCharsets.UTF_8).length, 0, 0, 0, 0);
-    }
-
-    @NonNull
-    protected static FileProcessingResult buildFullyOffFileSkippedResult(
-            @NonNull SrcFile srcFile,
-            @NonNull ParsingResult parsingResult,
-            @NonNull String skippedOperationDescription) {
-        logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
-        return FileProcessingResult.builder()
-                .path(srcFile.getPath())
-                .relocations(null)
-                .diff(null)
-                .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(new SortingStatistic(0))
-                .serializationStatistic(
-                        new SerializationStatistic(srcFile.getSrcCode().length(), 0))
-                .formattingStatistic(
-                        new FormattingStatistic(srcFile.getSrcCode().length(), 0))
-                .fileProcessingStatus(FileProcessingStatus.SKIPPED)
-                .build();
-    }
-
-    private static void logFileOptOutSkip(
-            SrcFile srcFile, String skippedOperationDescription, JHarmonizerOptOutMode optOutMode) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                    "Skipping {} for {} because of {} ({})",
-                    skippedOperationDescription,
-                    srcFile.getPath(),
-                    optOutMode.getDisplayName(),
-                    optOutMode.getToken());
-        }
     }
 
     @Value

@@ -39,7 +39,6 @@ final class ProcessingProgressReporter {
         }
     }
 
-    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FileProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();
@@ -48,7 +47,6 @@ final class ProcessingProgressReporter {
             case CHECKED -> checkedCount.increment();
             case SKIPPED -> skippedCount.increment();
             case ERROR -> errorCount.increment();
-            default -> throw new IllegalStateException("Unexpected value: " + status);
         }
     }
 

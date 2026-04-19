@@ -25,6 +25,7 @@ import spoon.reflect.declaration.ModifierKind;
  * and blank final definite assignment constraints.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 final class InitializationOrderDependencyUtils {
 
     private static boolean matchesInitializationMemberStaticness(CtTypeMember typeMember, boolean requiredStaticness) {
@@ -104,7 +105,6 @@ final class InitializationOrderDependencyUtils {
      * @return the candidate provider members
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
             @NonNull CtField<?> blankFinalField,

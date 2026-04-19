@@ -1,6 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultHelpers.buildFullyOffFileSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultHelpers.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 

@@ -24,6 +24,7 @@ import spoon.reflect.reference.CtTypeReference;
  * (type erasure + boxing). Used for {@code keepAccessorsTogether}.
  */
 @UtilityClass
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 class SpoonJavaBeansAccessorUtils {
 
     private static final List<AccessorMethodContract> ACCESSOR_METHOD_CONTRACTS = List.of(
@@ -38,7 +39,6 @@ class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
