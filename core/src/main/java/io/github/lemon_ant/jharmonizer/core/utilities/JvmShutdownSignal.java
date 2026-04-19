@@ -18,7 +18,8 @@ public class JvmShutdownSignal {
 
     static {
         try {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> SHUTTING_DOWN.set(true), "jHarmonizer-shutdown-hook"));
+            Runtime.getRuntime()
+                    .addShutdownHook(new Thread(() -> SHUTTING_DOWN.set(true), "jHarmonizer-shutdown-hook"));
         } catch (IllegalStateException e) {
             SHUTTING_DOWN.set(true);
         } catch (SecurityException e) {
