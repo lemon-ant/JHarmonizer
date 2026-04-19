@@ -185,14 +185,15 @@ public final class MemberDependencyGraph {
      */
     @NonNull
     List<CtTypeMember> findDeclarationDependencyCyclePath() {
-        Set<CtTypeMember> allMembers = new HashSet<>();
-        allMembers.addAll(outgoingEdgesByProvider.keySet());
-        allMembers.addAll(incomingEdgesByDependent.keySet());
+        // Only members that have at least one outgoing edge can be part of a cycle.
+        // Members appearing only in incomingEdgesByDependent are leaf nodes with no outgoing
+        // edges and therefore cannot form or participate in a cycle.
+        Set<CtTypeMember> membersWithOutgoingEdges = outgoingEdgesByProvider.keySet();
 
         Set<CtTypeMember> fullyVisited = new HashSet<>();
         LinkedHashSet<CtTypeMember> currentPath = new LinkedHashSet<>();
 
-        for (CtTypeMember member : allMembers) {
+        for (CtTypeMember member : membersWithOutgoingEdges) {
             if (!fullyVisited.contains(member)) {
                 List<CtTypeMember> cyclePath = detectCyclePathDfs(member, fullyVisited, currentPath);
                 if (!cyclePath.isEmpty()) {

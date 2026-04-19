@@ -21,13 +21,13 @@ final class BlankFinalDefiniteAssignmentDependencyProvider implements MemberDepe
     /**
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
-     * @param config the detector configuration
+     * @param providerConfig the detector configuration
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
 
         Optional<CtElement> dependentInitializationAstRoot =
                 InitializationOrderDependencyUtils.resolveInitializationAstRoot(dependentMember);
@@ -50,7 +50,10 @@ final class BlankFinalDefiniteAssignmentDependencyProvider implements MemberDepe
 
         return blankFinalFieldsReadByDependentMember.stream()
                 .flatMap(blankFinalField -> InitializationOrderDependencyUtils.resolveProviderMembersForBlankFinalRead(
-                        dependentMember, blankFinalField, dependentSrcStart, config.isRelaxedForwardReferences())
+                        dependentMember,
+                        blankFinalField,
+                        dependentSrcStart,
+                        providerConfig.isRelaxedForwardReferences())
                         .stream())
                 .map(providerMember ->
                         new MemberDependencyArc(providerMember, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))

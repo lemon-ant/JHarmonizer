@@ -16,15 +16,15 @@ final class AccessorPairDependencyProvider implements MemberDependencyProvider {
     /**
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
-     * @param config the detector configuration
+     * @param providerConfig the detector configuration
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
 
-        if (!config.isKeepAccessorsTogether() || !(dependentMember instanceof CtMethod<?> dependentMethod)) {
+        if (!providerConfig.isKeepAccessorsTogether() || !(dependentMember instanceof CtMethod<?> dependentMethod)) {
             return Set.of();
         }
 

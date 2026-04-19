@@ -17,27 +17,26 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     /**
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
-     * @param config the detector configuration
+     * @param providerConfig the detector configuration
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
 
         Optional<CtElement> dependentInitializationAst = resolveDependentInitializationAst(dependentMember);
         return dependentInitializationAst
-                .map(
-                        ctElement -> DeclaringTypeFieldReferenceUtils.findReferencedFieldAccesses(
-                                        dependentMember, ctElement, config.isRelaxedForwardReferences())
-                                .stream()
-                                .filter(
-                                        AbstractReferencedFieldsDeclarationDependencyProvider
-                                                ::isNonConstantFieldAccessOrImplicitConstantAccess)
-                                .map(ReferencedFieldAccess::getProviderField)
-                                .map(providerField -> new MemberDependencyArc(
-                                        providerField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
-                                .collect(Collectors.toUnmodifiableSet()))
+                .map(ctElement -> DeclaringTypeFieldReferenceUtils.findReferencedFieldAccesses(
+                                dependentMember, ctElement, providerConfig.isRelaxedForwardReferences())
+                        .stream()
+                        .filter(
+                                AbstractReferencedFieldsDeclarationDependencyProvider
+                                        ::isNonConstantFieldAccessOrImplicitConstantAccess)
+                        .map(ReferencedFieldAccess::getProviderField)
+                        .map(providerField ->
+                                new MemberDependencyArc(providerField, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
+                        .collect(Collectors.toUnmodifiableSet()))
                 .orElseGet(Set::of);
     }
 
