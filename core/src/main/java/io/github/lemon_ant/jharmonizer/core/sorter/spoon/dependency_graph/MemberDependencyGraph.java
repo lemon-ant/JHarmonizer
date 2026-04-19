@@ -1,11 +1,14 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -73,6 +76,8 @@ public final class MemberDependencyGraph {
 
     private static final int ALL_EDGE_KIND_MASK = (1 << MemberDependencyEdgeKind.values().length) - 1;
     private static final Set<MemberDependencyEdgeKind> ALL_EDGE_KINDS = EnumSet.allOf(MemberDependencyEdgeKind.class);
+    private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
+            EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
     private static final int ONE = 1;
 
     private final Map<CtTypeMember, Set<MemberDependencyArc>> outgoingEdgesByProvider = new HashMap<>();
@@ -167,50 +172,70 @@ public final class MemberDependencyGraph {
     }
 
     /**
-     * Returns whether the graph contains a cycle among {@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} edges.
+     * Finds the cycle path among {@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} edges.
      *
      * <p>Only declaration-dependency edges are checked because they are the edges affected by
      * forward-reference strictness and the only edges that can produce ordering cycles.
      * Accessor-bundle edges do not participate in topological ordering.
      *
-     * @return {@code true} if at least one cycle exists in the declaration-dependency subgraph
+     * <p>The returned list represents the full cycle with the origin member repeated at both ends,
+     * for example {@code [A, B, C, A]}, so the caller can render it as {@code "A -> B -> C -> A"}.
+     *
+     * @return the cycle path with the first member repeated at the end, or an empty list if no cycle exists
      */
-    boolean containsDeclarationDependencyCycle() {
-        Set<MemberDependencyEdgeKind> declarationOnly = EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+    @NonNull
+    List<CtTypeMember> findDeclarationDependencyCyclePath() {
         Set<CtTypeMember> allMembers = new HashSet<>();
         allMembers.addAll(outgoingEdgesByProvider.keySet());
         allMembers.addAll(incomingEdgesByDependent.keySet());
 
         Set<CtTypeMember> fullyVisited = new HashSet<>();
-        Set<CtTypeMember> currentPath = new HashSet<>();
+        LinkedHashSet<CtTypeMember> currentPath = new LinkedHashSet<>();
 
         for (CtTypeMember member : allMembers) {
-            if (!fullyVisited.contains(member) && detectCycleDfs(member, fullyVisited, currentPath, declarationOnly)) {
-                return true;
+            if (!fullyVisited.contains(member)) {
+                List<CtTypeMember> cyclePath = detectCyclePathDfs(member, fullyVisited, currentPath);
+                if (!cyclePath.isEmpty()) {
+                    return cyclePath;
+                }
             }
         }
-        return false;
+        return List.of();
     }
 
-    private boolean detectCycleDfs(
-            CtTypeMember current,
-            Set<CtTypeMember> fullyVisited,
-            Set<CtTypeMember> currentPath,
-            Set<MemberDependencyEdgeKind> edgeKinds) {
+    @NonNull
+    private List<CtTypeMember> detectCyclePathDfs(
+            CtTypeMember current, Set<CtTypeMember> fullyVisited, LinkedHashSet<CtTypeMember> currentPath) {
         currentPath.add(current);
 
-        for (CtTypeMember neighbor : findDirectNeighbors(outgoingEdgesByProvider, current, edgeKinds)) {
+        for (CtTypeMember neighbor :
+                findDirectNeighbors(outgoingEdgesByProvider, current, DECLARATION_DEPENDENCY_ONLY)) {
             if (currentPath.contains(neighbor)) {
-                return true;
+                // Extract the cycle portion: from neighbor to the end of currentPath, then close it.
+                List<CtTypeMember> cycle = new ArrayList<>();
+                boolean cycleStarted = false;
+                for (CtTypeMember pathMember : currentPath) {
+                    if (pathMember == neighbor) {
+                        cycleStarted = true;
+                    }
+                    if (cycleStarted) {
+                        cycle.add(pathMember);
+                    }
+                }
+                cycle.add(neighbor);
+                return Collections.unmodifiableList(cycle);
             }
-            if (!fullyVisited.contains(neighbor) && detectCycleDfs(neighbor, fullyVisited, currentPath, edgeKinds)) {
-                return true;
+            if (!fullyVisited.contains(neighbor)) {
+                List<CtTypeMember> cyclePath = detectCyclePathDfs(neighbor, fullyVisited, currentPath);
+                if (!cyclePath.isEmpty()) {
+                    return cyclePath;
+                }
             }
         }
 
         currentPath.remove(current);
         fullyVisited.add(current);
-        return false;
+        return List.of();
     }
 
     /**

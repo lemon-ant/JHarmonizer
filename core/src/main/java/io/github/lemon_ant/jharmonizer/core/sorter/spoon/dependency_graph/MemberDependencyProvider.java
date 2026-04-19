@@ -15,6 +15,17 @@ import spoon.reflect.declaration.CtTypeMember;
 interface MemberDependencyProvider {
 
     /**
+     * Finds direct provider edges for the dependent member.
+     *
+     * @param dependentMember the dependent member to inspect
+     * @param providerConfig the provider configuration controlling accessor bundling and forward-reference strictness
+     * @return the direct provider edges for the member
+     */
+    @NonNull
+    Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
+            @NonNull CtTypeMember dependentMember, @NonNull ProviderConfig providerConfig);
+
+    /**
      * Holds the configuration settings used by all {@link MemberDependencyProvider} implementations
      * when detecting dependency edges between type members.
      *
@@ -22,7 +33,7 @@ interface MemberDependencyProvider {
      * and passed to every provider, so all settings are grouped here for easy future extension.
      */
     @Value
-    class Config {
+    class ProviderConfig {
 
         /**
          * When {@code true}, getter/setter pairs for the same property are kept adjacent by adding
@@ -41,15 +52,4 @@ interface MemberDependencyProvider {
          */
         boolean relaxedForwardReferences;
     }
-
-    /**
-     * Finds direct provider edges for the dependent member.
-     *
-     * @param dependentMember the dependent member to inspect
-     * @param config the provider configuration controlling accessor bundling and forward-reference strictness
-     * @return the direct provider edges for the member
-     */
-    @NonNull
-    Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull Config config);
 }

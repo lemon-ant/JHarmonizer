@@ -51,7 +51,7 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.Config config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig config) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Set.of();
         }

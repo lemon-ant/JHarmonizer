@@ -27,7 +27,7 @@ final class BlankFinalDefiniteAssignmentDependencyProvider implements MemberDepe
     @NonNull
     @Override
     public Set<MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.Config config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig config) {
 
         Optional<CtElement> dependentInitializationAstRoot =
                 InitializationOrderDependencyUtils.resolveInitializationAstRoot(dependentMember);

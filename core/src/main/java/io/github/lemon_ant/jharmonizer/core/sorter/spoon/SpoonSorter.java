@@ -143,20 +143,7 @@ public class SpoonSorter {
 
         MemberDependencyGraph memberDependencyGraph =
                 MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupByMember);
-        return orderMembersWithDependencyGraph(naturalGroupByMember, memberDependencyGraph);
-    }
 
-    /**
-     * Runs the dependency-graph-dependent ordering steps and returns the final flat member list.
-     *
-     * @param naturalGroupByMember the member-to-natural-group map
-     * @param memberDependencyGraph the already-built dependency graph to use for ordering
-     * @return the ordered, flattened member list with group boundaries applied
-     */
-    @NonNull
-    private static List<CtTypeMember> orderMembersWithDependencyGraph(
-            @NonNull Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember,
-            @NonNull MemberDependencyGraph memberDependencyGraph) {
         Map<CtTypeMember, CompiledMemberGroup> effectiveGroupByMember =
                 EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupByMember, memberDependencyGraph);
 

@@ -1,12 +1,12 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.sorting.SortingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -54,26 +54,28 @@ public class MemberDependencyGraphBuilder {
         MemberDependencyGraph memberDependencyGraph =
                 buildDependencyGraphInternal(typeMember2NaturalMemberGroup, false);
 
-        if (!memberDependencyGraph.containsDeclarationDependencyCycle()) {
+        List<CtTypeMember> strictCyclePath = memberDependencyGraph.findDeclarationDependencyCyclePath();
+        if (strictCyclePath.isEmpty()) {
             return memberDependencyGraph;
         }
 
         boolean anyGroupUsesStrictMode = typeMember2NaturalMemberGroup.values().stream()
                 .anyMatch(memberGroup -> !memberGroup.isRelaxedForwardReferences());
         if (!anyGroupUsesStrictMode) {
-            throw new SortingException("Dependency cycle detected among members");
+            throw new SortingException(buildCycleErrorMessage(strictCyclePath));
         }
 
-        String typeName = resolveTypeName(typeMember2NaturalMemberGroup);
         log.warn(
-                "Dependency cycle detected in strict forward-reference mode for type '{}'. "
+                "Dependency cycle detected in strict forward-reference mode for type '{}': {}. "
                         + "Retrying dependency analysis with relaxed forward references.",
-                typeName);
+                requireDeclaringTypeName(strictCyclePath.get(0)),
+                formatCyclePath(strictCyclePath));
 
         MemberDependencyGraph relaxedDependencyGraph =
                 buildDependencyGraphInternal(typeMember2NaturalMemberGroup, true);
-        if (relaxedDependencyGraph.containsDeclarationDependencyCycle()) {
-            throw new SortingException("Dependency cycle detected among members");
+        List<CtTypeMember> relaxedCyclePath = relaxedDependencyGraph.findDeclarationDependencyCyclePath();
+        if (!relaxedCyclePath.isEmpty()) {
+            throw new SortingException(buildCycleErrorMessage(relaxedCyclePath));
         }
 
         return relaxedDependencyGraph;
@@ -91,7 +93,7 @@ public class MemberDependencyGraphBuilder {
             CompiledMemberGroup dependentNaturalGroup =
                     resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
-            MemberDependencyProvider.Config providerConfig = new MemberDependencyProvider.Config(
+            MemberDependencyProvider.ProviderConfig providerConfig = new MemberDependencyProvider.ProviderConfig(
                     dependentNaturalGroup.isKeepAccessorsTogether(),
                     forceRelaxedForwardReferences || dependentNaturalGroup.isRelaxedForwardReferences());
 
@@ -115,12 +117,26 @@ public class MemberDependencyGraphBuilder {
                         + "Missing member: " + typeMember));
     }
 
-    @Nullable
-    private static String resolveTypeName(Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
-        return typeMember2NaturalMemberGroup.keySet().stream()
-                .findFirst()
-                .map(CtTypeMember::getDeclaringType)
-                .map(CtType::getQualifiedName)
-                .orElse(null);
+    @NonNull
+    private static String requireDeclaringTypeName(CtTypeMember typeMember) {
+        CtType<?> declaringType = typeMember.getDeclaringType();
+        if (declaringType == null) {
+            throw new IllegalStateException(
+                    "Expected type member to have a declaring type, but it was null. Member: " + typeMember);
+        }
+        return declaringType.getQualifiedName();
+    }
+
+    @NonNull
+    private static String buildCycleErrorMessage(List<CtTypeMember> cyclePath) {
+        return "Dependency cycle detected among members of type '"
+                + requireDeclaringTypeName(cyclePath.get(0))
+                + "': "
+                + formatCyclePath(cyclePath);
+    }
+
+    @NonNull
+    private static String formatCyclePath(List<CtTypeMember> cyclePath) {
+        return cyclePath.stream().map(CtTypeMember::getSimpleName).collect(Collectors.joining(" -> "));
     }
 }
