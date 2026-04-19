@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -23,7 +24,7 @@ class ReorderFlowIntegrationTest {
     Path temporaryDirectory;
 
     @Test
-    void processSrc_fullyOffOptOut_returnsSkippedResultAndLeavesFileUnchanged() throws IOException {
+    void processStream_fullyOffOptOut_returnsSkippedResultAndLeavesFileUnchanged() throws IOException {
         // Given
         String originalSrcCode = "// @jharmonizer:fully-off\nclass Z { void b() {} void a() {} }\n";
         Path javaFilePath = writeJavaFile("Z.java", originalSrcCode);
@@ -31,7 +32,8 @@ class ReorderFlowIntegrationTest {
         ReorderFlow reorderFlow = createFlow(false);
 
         // When
-        FileProcessingResult fileProcessingResult = reorderFlow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
@@ -39,7 +41,7 @@ class ReorderFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_alreadyFormattedAndOrdered_returnsUnchangedResultAndLeavesFileIntact() throws IOException {
+    void processStream_alreadyFormattedAndOrdered_returnsUnchangedResultAndLeavesFileIntact() throws IOException {
         // Given
         String alreadyFormattedSrcCode = "class A {\n    void a() {}\n\n    void b() {}\n}\n";
         Path javaFilePath = writeJavaFile("A.java", alreadyFormattedSrcCode);
@@ -47,7 +49,8 @@ class ReorderFlowIntegrationTest {
         ReorderFlow reorderFlow = createFlow(false);
 
         // When
-        FileProcessingResult fileProcessingResult = reorderFlow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.UNCHANGED);
@@ -55,7 +58,7 @@ class ReorderFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_unformattedFileWithoutBackups_rewritesFileNoBackup() throws IOException {
+    void processStream_unformattedFileWithoutBackups_rewritesFileNoBackup() throws IOException {
         // Given
         String unformattedSrcCode = "class B { void b() {} void a() {} }";
         Path javaFilePath = writeJavaFile("B.java", unformattedSrcCode);
@@ -63,7 +66,8 @@ class ReorderFlowIntegrationTest {
         ReorderFlow reorderFlow = createFlow(false);
 
         // When
-        FileProcessingResult fileProcessingResult = reorderFlow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus())
@@ -75,7 +79,7 @@ class ReorderFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_unformattedFileWithBackupsEnabled_rewritesFileAndCreatesBackup() throws IOException {
+    void processStream_unformattedFileWithBackupsEnabled_rewritesFileAndCreatesBackup() throws IOException {
         // Given
         String unformattedSrcCode = "class C { void b() {} void a() {} }";
         Path javaFilePath = writeJavaFile("C.java", unformattedSrcCode);
@@ -83,7 +87,8 @@ class ReorderFlowIntegrationTest {
         ReorderFlow reorderFlow = createFlow(true);
 
         // When
-        FileProcessingResult fileProcessingResult = reorderFlow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus())

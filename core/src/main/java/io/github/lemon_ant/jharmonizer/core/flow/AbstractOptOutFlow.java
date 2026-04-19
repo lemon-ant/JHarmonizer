@@ -66,14 +66,14 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the processing result for the source file
      */
     @NonNull
-    protected abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
+    abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
 
     /**
      * Processes a stream of source files through three explicit phases:
      * <ol>
      *   <li><b>Pre-check</b> — delegates to {@link #preCheckSrcFiles} for any flow-specific
      *       filtering (default: skips files when a JVM shutdown signal is detected).</li>
-     *   <li><b>Mapping</b> — applies per-file processing via {@link #processSrcSafely}.</li>
+     *   <li><b>Mapping</b> — applies per-file processing for each source file.</li>
      *   <li><b>Post-processing</b> — delegates to {@link #postProcessResults} for any
      *       flow-specific result-stream transformations.</li>
      * </ol>
@@ -116,16 +116,9 @@ abstract class AbstractOptOutFlow implements IFlow {
         return results;
     }
 
-    /**
-     * Processes a single source file, catching unexpected runtime exceptions
-     * and converting them into {@link FileProcessingStatus#ERROR} results.
-     *
-     * @param srcFile the source file to process
-     * @return the processing result (never throws)
-     */
     @NonNull
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
-    protected final FileProcessingResult processSrcSafely(@NonNull SrcFile srcFile) {
+    private FileProcessingResult processSrcSafely(SrcFile srcFile) {
         try {
             return processSrc(srcFile);
         } catch (RuntimeException exception) {

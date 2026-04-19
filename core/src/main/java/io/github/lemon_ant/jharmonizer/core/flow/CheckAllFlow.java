@@ -45,7 +45,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {

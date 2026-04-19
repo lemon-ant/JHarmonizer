@@ -58,7 +58,6 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * Extends the base JVM-shutdown pre-check with an early stop-flag guard,
      * so that no further source files are processed once a violation has been detected.
      * The stop-flag is set by {@link #postProcessResults} after the first violating result passes through.
-     * The flag is reset at the start of each call so this flow instance is safe to reuse.
      *
      * @param srcFiles the incoming stream of source files
      * @return a stream that skips remaining files once the stop flag is set
@@ -66,7 +65,6 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     @Override
     @NonNull
     protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
-        stopFlag.set(false);
         return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
     }
 
@@ -95,7 +93,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      */
     @Override
     @NonNull
-    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {

@@ -11,6 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
@@ -19,13 +20,14 @@ class CheckAllFlowIntegrationTest {
     private static final CheckAllFlow FLOW = createFlow();
 
     @Test
-    void processSrc_fullyOffOptOut_returnsSkippedResult() {
+    void processStream_fullyOffOptOut_returnsSkippedResult() {
         // Given
         SrcFile srcFile =
                 createSrcFile("// @jharmonizer:fully-off\nclass Z { void b() {} void a() {} }\n", Path.of("Z.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = FLOW.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
@@ -34,12 +36,13 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_alreadyFormattedAndOrdered_returnsCheckedResult() {
+    void processStream_alreadyFormattedAndOrdered_returnsCheckedResult() {
         // Given
         SrcFile srcFile = createSrcFile("class A {\n    void a() {}\n\n    void b() {}\n}\n", Path.of("A.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = FLOW.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
@@ -48,12 +51,13 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_membersOutOfOrder_returnsReorderedResult() {
+    void processStream_membersOutOfOrder_returnsReorderedResult() {
         // Given
         SrcFile srcFile = createSrcFile("class A { void b() {} void a() {} }", Path.of("A.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = FLOW.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
@@ -62,12 +66,13 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_formattingOnlyViolation_returnsFormattedResult() {
+    void processStream_formattingOnlyViolation_returnsFormattedResult() {
         // Given
         SrcFile srcFile = createSrcFile("class A{void a(){}}", Path.of("A.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = FLOW.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
@@ -76,14 +81,15 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processSrc_sortingOffOptOut_skipsReorderingAndFormatsSrcCode() {
+    void processStream_sortingOffOptOut_skipsReorderingAndFormatsSrcCode() {
         // Given
         SrcFile srcFile = createSrcFile(
                 "// @jharmonizer:sort-off\npublic class B {\n    public void b() {}\n\n    public void a() {}\n}\n",
                 Path.of("B.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = FLOW.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus())
