@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
@@ -16,8 +15,10 @@ import lombok.Value;
  * Fallback to the parent when none of the children matched.
  */
 @Value
+@Builder
 public class CompiledMemberGroup {
     @NonNull
+    @Singular
     List<CompiledMemberGroup> compiledSubGroups; // immutable, ordered
 
     // TODO How to compile it???
@@ -28,7 +29,8 @@ public class CompiledMemberGroup {
 
     int orderIndex;
 
-    boolean relaxedForwardReferences;
+    @Builder.Default
+    boolean relaxedForwardReferences = true;
 
     @NonNull
     CompiledMemberGroupSelectorBlock selectorBlock;
@@ -40,28 +42,6 @@ public class CompiledMemberGroup {
     @Singular
     // TODO How to compile it???
     List<@NonNull OrderingRule> orderingRules;
-
-    @Builder
-    private CompiledMemberGroup(
-            @NonNull List<CompiledMemberGroup> compiledSubGroups,
-            boolean keepAccessorsTogether,
-            int orderIndex,
-            @Nullable String name,
-            boolean relaxedForwardReferences,
-            @NonNull CompiledMemberGroupSelectorBlock selectorBlock,
-            @NonNull UnifiedSeparator separator,
-            @NonNull @Singular List<@NonNull OrderingRule> orderingRules) {
-        this.compiledSubGroups = Collections.unmodifiableList(compiledSubGroups);
-        this.keepAccessorsTogether = keepAccessorsTogether;
-
-        this.orderIndex = orderIndex;
-        this.name = name;
-        this.relaxedForwardReferences = relaxedForwardReferences;
-        this.selectorBlock = selectorBlock;
-
-        this.separator = separator;
-        this.orderingRules = Collections.unmodifiableList(orderingRules);
-    }
 
     /**
      * Classifies the recursively.
