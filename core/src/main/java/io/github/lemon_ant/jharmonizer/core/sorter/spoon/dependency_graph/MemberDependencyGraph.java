@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -191,7 +192,7 @@ public final class MemberDependencyGraph {
         Set<CtTypeMember> membersWithOutgoingEdges = outgoingEdgesByProvider.keySet();
 
         Set<CtTypeMember> fullyVisited = new HashSet<>();
-        LinkedHashSet<CtTypeMember> currentPath = new LinkedHashSet<>();
+        SequencedSet<CtTypeMember> currentPath = new LinkedHashSet<>();
 
         for (CtTypeMember member : membersWithOutgoingEdges) {
             if (!fullyVisited.contains(member)) {
@@ -206,25 +207,13 @@ public final class MemberDependencyGraph {
 
     @NonNull
     private List<CtTypeMember> detectCyclePathDfs(
-            CtTypeMember current, Set<CtTypeMember> fullyVisited, LinkedHashSet<CtTypeMember> currentPath) {
+            CtTypeMember current, Set<CtTypeMember> fullyVisited, SequencedSet<CtTypeMember> currentPath) {
         currentPath.add(current);
 
         for (CtTypeMember neighbor :
                 findDirectNeighbors(outgoingEdgesByProvider, current, DECLARATION_DEPENDENCY_ONLY)) {
             if (currentPath.contains(neighbor)) {
-                // Extract the cycle portion: from neighbor to the end of currentPath, then close it.
-                List<CtTypeMember> cycle = new ArrayList<>();
-                boolean cycleStarted = false;
-                for (CtTypeMember pathMember : currentPath) {
-                    if (pathMember == neighbor) {
-                        cycleStarted = true;
-                    }
-                    if (cycleStarted) {
-                        cycle.add(pathMember);
-                    }
-                }
-                cycle.add(neighbor);
-                return Collections.unmodifiableList(cycle);
+                return extractCyclePath(neighbor, currentPath);
             }
             if (!fullyVisited.contains(neighbor)) {
                 List<CtTypeMember> cyclePath = detectCyclePathDfs(neighbor, fullyVisited, currentPath);
@@ -237,6 +226,23 @@ public final class MemberDependencyGraph {
         currentPath.remove(current);
         fullyVisited.add(current);
         return List.of();
+    }
+
+    @NonNull
+    private static List<CtTypeMember> extractCyclePath(
+            CtTypeMember cycleStart, SequencedSet<CtTypeMember> currentPath) {
+        List<CtTypeMember> cycle = new ArrayList<>();
+        boolean collecting = false;
+        for (CtTypeMember pathMember : currentPath) {
+            if (pathMember.equals(cycleStart)) {
+                collecting = true;
+            }
+            if (collecting) {
+                cycle.add(pathMember);
+            }
+        }
+        cycle.add(cycleStart);
+        return Collections.unmodifiableList(cycle);
     }
 
     /**

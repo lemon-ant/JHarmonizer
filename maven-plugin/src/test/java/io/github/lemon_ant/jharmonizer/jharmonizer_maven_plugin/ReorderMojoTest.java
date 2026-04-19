@@ -35,6 +35,52 @@ class ReorderMojoTest {
     }
 
     @Test
+    void execute_noBaseDirWithProjectBaseDir_processesSuccessfully() throws Exception {
+        // Given
+        Path srcMainJava = tempDir.resolve("src/main/java");
+        Files.createDirectories(srcMainJava);
+        MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", srcMainJava);
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "projectBaseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(reorderMojo, "mainSourceDirectory", MojoTestUtils.toFile(srcMainJava));
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then
+        assertThat(thrown).isNull();
+    }
+
+    @Test
+    void execute_projectBaseDirNull_throwsMojoExecutionException() {
+        // Given
+        ReorderMojo reorderMojo = new ReorderMojo();
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then
+        assertThat(thrown).isInstanceOf(MojoExecutionException.class).hasMessageContaining("Project base directory");
+    }
+
+    @Test
+    void execute_projectBaseDirIsFile_throwsMojoExecutionException() throws Exception {
+        // Given
+        Path fileInsteadOfDir = tempDir.resolve("NotADirectory.txt");
+        Files.createFile(fileInsteadOfDir);
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "projectBaseDir", MojoTestUtils.toFile(fileInsteadOfDir));
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then
+        assertThat(thrown)
+                .isInstanceOf(MojoExecutionException.class)
+                .hasMessageContaining("does not exist or is not a directory");
+    }
+
+    @Test
     void execute_skipTrue_leavesFilesUnchanged() throws Exception {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);

@@ -65,11 +65,13 @@ public class MemberDependencyGraphBuilder {
             throw new SortingException(buildCycleErrorMessage(strictCyclePath));
         }
 
-        log.warn(
-                "Dependency cycle detected in strict forward-reference mode for type '{}': {}. "
-                        + "Retrying dependency analysis with relaxed forward references.",
-                requireDeclaringTypeName(strictCyclePath.get(0)),
-                formatCyclePath(strictCyclePath));
+        if (log.isWarnEnabled()) {
+            log.warn(
+                    "Dependency cycle detected in strict forward-reference mode for type '{}': {}. "
+                            + "Retrying dependency analysis with relaxed forward references.",
+                    requireDeclaringTypeName(strictCyclePath.get(0)),
+                    formatCyclePath(strictCyclePath));
+        }
 
         MemberDependencyGraph relaxedDependencyGraph =
                 buildDependencyGraphInternal(typeMember2NaturalMemberGroup, true);

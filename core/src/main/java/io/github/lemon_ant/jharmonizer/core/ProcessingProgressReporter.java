@@ -39,6 +39,7 @@ final class ProcessingProgressReporter {
         }
     }
 
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FileProcessingStatus status) {
         switch (status) {
             case REORDERED -> reorderedCount.increment();

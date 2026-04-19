@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Getter(AccessLevel.PROTECTED)
-@SuppressWarnings("PMD.CouplingBetweenObjects")
+@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.ExcessiveImports", "PMD.TooManyMethods"})
 abstract class AbstractOptOutFlow implements IFlow {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOptOutFlow.class);
 

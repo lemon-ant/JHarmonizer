@@ -126,6 +126,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
      * @throws MojoFailureException   when the flow reports violations and {@code failOnViolation} is {@code true}
      */
     @Override
+    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity"})
     public final void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
             getLog().info("JHarmonizer: skipping execution (jharmonizer.skip=true).");
@@ -179,11 +180,10 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private Set<String> computeDefaultIncludes(Path projectBaseDirPath) {
         Stream<String> srcDirIncludes = Stream.of(mainSourceDirectory, testSourceDirectory)
                 .filter(Objects::nonNull)
-                .map(srcDir -> projectBaseDirPath
-                                .relativize(srcDir.toPath().toAbsolutePath().normalize())
-                                .toString()
-                                .replace(File.separatorChar, '/')
-                        + "/**");
+                .map(srcDir -> srcDir.toPath().toAbsolutePath().normalize())
+                .filter(Files::isDirectory)
+                .map(srcDirPath ->
+                        projectBaseDirPath.relativize(srcDirPath).toString().replace(File.separatorChar, '/') + "/**");
         Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());
     }
