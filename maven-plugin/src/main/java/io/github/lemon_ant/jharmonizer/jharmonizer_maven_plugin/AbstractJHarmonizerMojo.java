@@ -10,7 +10,6 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,14 +28,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
-     * Directories to scan for Java source files.
-     * When not configured, defaults to both the main Java source directory
-     * ({@code src/main/java}) and the test Java source directory ({@code src/test/java}),
-     * by scanning the project base directory with auto-derived include patterns.
+     * Base directory to scan for Java source files.
+     * When not configured, defaults to the project base directory ({@code ${project.basedir}})
+     * with auto-derived include patterns for both {@code src/main/java} and {@code src/test/java}.
      */
-    @Parameter(property = "jharmonizer.baseDirs")
+    @Parameter(property = "jharmonizer.baseDir")
     @Nullable
-    private Set<File> baseDirs;
+    private File baseDir;
 
     /**
      * Maven's main Java source directory. Used in the default scan configuration to derive
@@ -53,7 +51,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private File testSourceDirectory;
 
     /**
-     * The Maven project base directory. When {@code baseDirs} is not explicitly configured,
+     * The Maven project base directory. When {@code baseDir} is not explicitly configured,
      * this is used as the single scan root and include patterns for both Java source directories
      * are derived relative to it automatically.
      */
@@ -62,7 +60,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
      * Glob patterns for Java source files to include in processing.
-     * When empty, all {@code .java} files under the configured base directories are included.
+     * When empty, all {@code .java} files under the configured base directory are included.
      */
     @Parameter(property = "jharmonizer.includes")
     private Set<String> includes;
@@ -134,43 +132,38 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return;
         }
 
-        List<Path> resolvedBaseDirs;
+        Path resolvedBaseDir;
         Set<String> effectiveIncludes;
 
-        if (baseDirs != null && !baseDirs.isEmpty()) {
-            resolvedBaseDirs = baseDirs.stream()
-                    .map(file -> file.toPath().toAbsolutePath().normalize())
-                    .toList();
-            for (Path baseDirPath : resolvedBaseDirs) {
-                if (!Files.isDirectory(baseDirPath)) {
-                    throw new MojoExecutionException(
-                            "baseDirs entry does not exist or is not a directory: " + baseDirPath);
-                }
+        if (baseDir != null) {
+            resolvedBaseDir = baseDir.toPath().toAbsolutePath().normalize();
+            if (!Files.isDirectory(resolvedBaseDir)) {
+                throw new MojoExecutionException("baseDir does not exist or is not a directory: " + resolvedBaseDir);
             }
             effectiveIncludes = includes != null ? includes : Set.of();
         } else {
             if (projectBaseDir == null) {
                 throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
-                        + " Configure <baseDirs> explicitly.");
+                        + " Configure <baseDir> explicitly.");
             }
             Path projectBaseDirPath = projectBaseDir.toPath().toAbsolutePath().normalize();
             if (!Files.isDirectory(projectBaseDirPath)) {
                 throw new MojoExecutionException(
                         "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
             }
-            resolvedBaseDirs = List.of(projectBaseDirPath);
+            resolvedBaseDir = projectBaseDirPath;
             try {
                 effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
             } catch (IllegalArgumentException e) {
                 throw new MojoExecutionException(
                         "Cannot compute default source include patterns relative to project base directory '"
                                 + projectBaseDirPath + "'."
-                                + " Configure <baseDirs> explicitly.",
+                                + " Configure <baseDir> explicitly.",
                         e);
             }
         }
 
-        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(resolvedBaseDirs, effectiveIncludes);
+        SrcProcessingResult srcProcessingResult = invokeSrcProcessor(resolvedBaseDir, effectiveIncludes);
 
         if (!srcProcessingResult.isSuccess() && failOnViolation) {
             long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
@@ -197,12 +190,12 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private SrcProcessingResult invokeSrcProcessor(
-            @NonNull List<Path> baseDirPaths, @NonNull Set<String> effectiveIncludes) throws MojoExecutionException {
+    private SrcProcessingResult invokeSrcProcessor(@NonNull Path baseDirPath, @NonNull Set<String> effectiveIncludes)
+            throws MojoExecutionException {
         Set<String> effectiveExcludes = excludes != null ? excludes : Set.of();
         try {
             return new SrcProcessor(buildConfig())
-                    .processSources(baseDirPaths, effectiveIncludes, effectiveExcludes, getFlowType());
+                    .processSources(baseDirPath, effectiveIncludes, effectiveExcludes, getFlowType());
         } catch (RuntimeException e) {
             throw new MojoExecutionException("JHarmonizer processing failed unexpectedly.", e);
         }

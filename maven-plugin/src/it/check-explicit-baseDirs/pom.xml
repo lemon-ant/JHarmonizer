@@ -37,9 +37,7 @@
                         </goals>
                         <phase>verify</phase>
                         <configuration>
-                            <baseDirs>
-                                <baseDir>${project.basedir}/src/custom/java</baseDir>
-                            </baseDirs>
+                            <baseDir>${project.basedir}/src/custom/java</baseDir>
                             <printProcessingStatistics>false</printProcessingStatistics>
                         </configuration>
                     </execution>

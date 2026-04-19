@@ -89,12 +89,11 @@ public final class SrcProcessor {
     }
 
     /**
-     * Processes source files found under the given base directories by the specified flow type.
-     * Files found under multiple base directories are deduplicated before processing.
+     * Processes source files found under the given base directory by the specified flow type.
      * The flow itself controls stream pipeline decoration (e.g. early termination for
      * fail-fast), success determination, and completion logging.
      *
-     * @param baseDirs the root directories to scan for source files
+     * @param baseDir the root directory to scan for source files
      * @param includeGlobs glob patterns for files to include
      * @param excludeGlobs glob patterns for files to exclude
      * @param flowType the processing flow strategy to apply
@@ -102,14 +101,11 @@ public final class SrcProcessor {
      */
     @NonNull
     public SrcProcessingResult processSources(
-            @NonNull Collection<Path> baseDirs,
+            @NonNull Path baseDir,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
-        if (baseDirs.isEmpty()) {
-            throw new IllegalArgumentException("baseDirs must not be empty");
-        }
-        logStartupBanner(flowType, baseDirs, includeGlobs, excludeGlobs);
+        logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
         IFlow flow =
                 // TODO Move it into the flow factory
                 switch (flowType) {
@@ -121,7 +117,7 @@ public final class SrcProcessor {
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
 
         AggregatedProcessingStatistic aggregatedProcessingStatistic = flow.processStream(
-                        SrcFilesHandler.readJavaFiles(baseDirs, includeGlobs, excludeGlobs))
+                        SrcFilesHandler.readJavaFiles(baseDir, includeGlobs, excludeGlobs))
                 .peek(fileProcessingResult -> {
                     if (log.isDebugEnabled()) {
                         log.debug(formatSingleFileLogMessage(
@@ -217,17 +213,17 @@ public final class SrcProcessor {
 
     private void logStartupBanner(
             @NonNull FlowType flowType,
-            @NonNull Collection<Path> baseDirs,
+            @NonNull Path baseDir,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
         if (config.isPrintProcessingStatistics() && log.isInfoEnabled()) {
             log.info(StartupBannerRenderer.render(
-                    flowType, baseDirs, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
+                    flowType, baseDir, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
         } else {
             log.debug(
-                    "Starting source processing. flowType={}, baseDirs={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
+                    "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
                     flowType,
-                    baseDirs,
+                    baseDir,
                     includeGlobs,
                     excludeGlobs,
                     config.isBackupsEnabled());

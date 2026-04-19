@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.nio.file.Path;
-import java.util.Set;
 import org.apache.maven.plugin.MojoFailureException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -19,7 +18,7 @@ class CheckMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-conforming", tempDir);
         CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
 
         // When
         Throwable thrown = catchThrowable(checkMojo::execute);
@@ -33,7 +32,7 @@ class CheckMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
         MojoTestUtils.injectField(checkMojo, "failOnViolation", true);
 
         // When
@@ -50,7 +49,7 @@ class CheckMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
         MojoTestUtils.injectField(checkMojo, "failOnViolation", false);
 
         // When
@@ -65,7 +64,7 @@ class CheckMojoTest {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
         MojoTestUtils.injectField(checkMojo, "skip", true);
 
         // When
@@ -79,7 +78,7 @@ class CheckMojoTest {
     void execute_emptyDirectory_completesWithoutException() throws Exception {
         // Given
         CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDirs", Set.of(MojoTestUtils.toFile(tempDir)));
+        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
 
         // When
         Throwable thrown = catchThrowable(checkMojo::execute);

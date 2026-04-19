@@ -202,10 +202,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
             Path srcFilePath, Path scenarioConfigPath, FlowType flowType) {
         SrcProcessor srcProcessor = buildSrcProcessor(scenarioConfigPath);
         return srcProcessor.processSources(
-                List.of(srcFilePath.getParent()),
-                List.of(srcFilePath.getFileName().toString()),
-                List.of(),
-                flowType);
+                srcFilePath.getParent(), List.of(srcFilePath.getFileName().toString()), List.of(), flowType);
     }
 
     @NonNull

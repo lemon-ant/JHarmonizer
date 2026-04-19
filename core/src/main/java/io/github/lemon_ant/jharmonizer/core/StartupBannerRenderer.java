@@ -16,7 +16,7 @@ import lombok.experimental.UtilityClass;
 class StartupBannerRenderer {
 
     private static final String HEADER = "JHarmonizer started";
-    private static final int LABEL_WIDTH = "Base directories:".length() + 1;
+    private static final int LABEL_WIDTH = "Base directory:".length() + 1;
     private static final String LABEL_FORMAT = "%-" + LABEL_WIDTH + "s";
     private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH);
 
@@ -24,7 +24,7 @@ class StartupBannerRenderer {
      * Builds a multiline startup banner describing the active processing parameters.
      *
      * @param flowType       the processing flow
-     * @param baseDirs       resolved base directories
+     * @param baseDir        the resolved base directory
      * @param backupsEnabled whether backup creation is active
      * @param includeGlobs   include glob patterns (empty means "all files")
      * @param excludeGlobs   exclude glob patterns (empty means "no exclusions")
@@ -33,7 +33,7 @@ class StartupBannerRenderer {
     @NonNull
     static String render(
             @NonNull FlowType flowType,
-            @NonNull Collection<Path> baseDirs,
+            @NonNull Path baseDir,
             boolean backupsEnabled,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
@@ -42,7 +42,7 @@ class StartupBannerRenderer {
         lines.add(HEADER);
         lines.add("=".repeat(HEADER.length()));
         lines.add(renderRow("Flow:", flowType.name()));
-        addBaseDirRows(lines, baseDirs);
+        lines.add(renderRow("Base directory:", baseDir.toString()));
         lines.add(renderRow("Backups:", backupsEnabled ? "enabled" : "disabled"));
         addGlobRows(lines, "Include globs:", includeGlobs, "(all)");
         addGlobRows(lines, "Exclude globs:", excludeGlobs, "(none)");
@@ -52,16 +52,6 @@ class StartupBannerRenderer {
     @NonNull
     private static String renderRow(@NonNull String label, @NonNull String value) {
         return String.format(LABEL_FORMAT, label) + value;
-    }
-
-    private static void addBaseDirRows(@NonNull List<String> lines, @NonNull Collection<Path> baseDirs) {
-        String label = baseDirs.size() == 1 ? "Base directory:" : "Base directories:";
-        List<String> sortedPaths =
-                baseDirs.stream().map(Path::toString).sorted().toList();
-        lines.add(renderRow(label, sortedPaths.getFirst()));
-        for (int pathIndex = 1; pathIndex < sortedPaths.size(); pathIndex++) {
-            lines.add(GLOB_CONTINUATION_INDENT + sortedPaths.get(pathIndex));
-        }
     }
 
     private static void addGlobRows(

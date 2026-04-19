@@ -15,10 +15,8 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -62,11 +60,10 @@ abstract class BaseCommand implements Callable<Integer> {
             names = {"-b", "--base-dir"},
             description = {
                 "Base directory containing Java source files.",
-                "Repeat this option to pass multiple base directories.",
                 "Defaults to the current directory when not specified."
             })
-    @SuppressWarnings("PMD.ImmutableField")
-    private Set<Path> baseDirs = new LinkedHashSet<>();
+    @Nullable
+    private Path baseDir;
 
     @Option(
             names = {"-i", "--include"},
@@ -126,15 +123,12 @@ abstract class BaseCommand implements Callable<Integer> {
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public final Integer call() {
-        Set<Path> effectiveBaseDirs = baseDirs.isEmpty() ? Set.of(Path.of(".")) : Set.copyOf(baseDirs);
-        Set<Path> normalizedBaseDirs = effectiveBaseDirs.stream()
-                .map(dir -> dir.toAbsolutePath().normalize())
-                .collect(Collectors.toUnmodifiableSet());
-        for (Path normalizedDir : normalizedBaseDirs) {
-            if (!Files.isDirectory(normalizedDir)) {
-                log.error("Base directory does not exist or is not a directory: {}", normalizedDir);
-                return 1;
-            }
+        Path normalizedBaseDir = baseDir != null
+                ? baseDir.toAbsolutePath().normalize()
+                : Path.of(".").toAbsolutePath().normalize();
+        if (!Files.isDirectory(normalizedBaseDir)) {
+            log.error("Base directory does not exist or is not a directory: {}", normalizedBaseDir);
+            return 1;
         }
         Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
         if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
@@ -142,7 +136,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         CommandOptions commandOptions = CommandOptions.builder()
-                .baseDirs(normalizedBaseDirs)
+                .baseDir(normalizedBaseDir)
                 .includeGlobs(Set.copyOf(includeGlobs))
                 .excludeGlobs(Set.copyOf(excludeGlobs))
                 .verbose(verbose)
@@ -168,7 +162,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
         SrcProcessingResult srcProcessingResult = new SrcProcessor(effectiveConfig)
                 .processSources(
-                        commandOptions.getBaseDirs(),
+                        commandOptions.getBaseDir(),
                         commandOptions.getIncludeGlobs(),
                         commandOptions.getExcludeGlobs(),
                         flowType);
@@ -247,7 +241,7 @@ abstract class BaseCommand implements Callable<Integer> {
     @Builder(access = AccessLevel.PRIVATE)
     private static class CommandOptions {
         @NonNull
-        Set<@NonNull Path> baseDirs;
+        Path baseDir;
 
         @NonNull
         Set<@NonNull String> includeGlobs;

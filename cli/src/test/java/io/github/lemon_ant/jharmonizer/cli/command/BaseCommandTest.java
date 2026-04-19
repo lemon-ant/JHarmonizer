@@ -19,7 +19,6 @@ import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,8 +71,7 @@ class BaseCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
-                .processSources(
-                        eq(Set.of(Path.of("src").toAbsolutePath().normalize())), any(), any(), eq(FlowType.REORDER));
+                .processSources(eq(Path.of("src").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
     }
 
     @Test
@@ -90,7 +88,7 @@ class BaseCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
-                .processSources(any(Collection.class), eq(Set.of("**/*.java")), any(), eq(FlowType.REORDER));
+                .processSources(any(Path.class), eq(Set.of("**/*.java")), any(), eq(FlowType.REORDER));
     }
 
     @Test
@@ -118,7 +116,7 @@ class BaseCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(
-                        eq(Set.of(Path.of("src").toAbsolutePath().normalize())),
+                        eq(Path.of("src").toAbsolutePath().normalize()),
                         eq(Set.of(
                                 "src/main/java/**/*.java",
                                 "src/test/java/**/*.java",
@@ -150,7 +148,7 @@ class BaseCommandTest {
         try (MockedConstruction<SrcProcessor> srcProcessorMocks =
                 mockConstruction(SrcProcessor.class, (mock, context) -> {
                     constructorArguments.set(context.arguments());
-                    when(mock.processSources(any(Collection.class), any(), any(), any()))
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenReturn(CommandTestUtils.buildSuccessfulResult());
                 })) {
             exitCode = cmd.execute("--base-dir", "src", "--no-backup");
@@ -176,7 +174,7 @@ class BaseCommandTest {
         try (MockedConstruction<SrcProcessor> srcProcessorMocks =
                 mockConstruction(SrcProcessor.class, (mock, context) -> {
                     constructorArguments.set(context.arguments());
-                    when(mock.processSources(any(Collection.class), any(), any(), any()))
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenReturn(CommandTestUtils.buildSuccessfulResult());
                 })) {
             exitCode = cmd.execute("--base-dir", "src", "--no-statistics");
@@ -197,7 +195,7 @@ class BaseCommandTest {
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
                 MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Collection.class), any(), any(), any()))
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenThrow(new RuntimeException("Unexpected error"));
                 })) {
             exitCode = commandLine.execute("--base-dir", "src");
@@ -245,7 +243,7 @@ class BaseCommandTest {
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
                 MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Collection.class), any(), any(), any()))
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenThrow(new RuntimeException());
                 })) {
             exitCode = commandLine.execute("--base-dir", "src");
@@ -276,7 +274,7 @@ class BaseCommandTest {
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
                 MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Collection.class), any(), any(), any()))
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenThrow(new RuntimeException("Verbose error"));
                 })) {
             exitCode = commandLine.execute("--base-dir", "src", "--verbose");
@@ -300,8 +298,7 @@ class BaseCommandTest {
         // Then
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
-                .processSources(
-                        eq(Set.of(Path.of(".").toAbsolutePath().normalize())), any(), any(), eq(FlowType.REORDER));
+                .processSources(eq(Path.of(".").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
     }
 
     @Test
@@ -315,7 +312,7 @@ class BaseCommandTest {
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
             constructorArguments.set(context.arguments());
-            when(mock.processSources(any(Collection.class), any(), any(), any()))
+            when(mock.processSources(any(Path.class), any(), any(), any()))
                     .thenReturn(CommandTestUtils.buildSuccessfulResult());
         })) {
             exitCode = commandLine.execute("--base-dir", "src", "--config", configFilePath.toString(), "--no-backup");
@@ -336,7 +333,7 @@ class BaseCommandTest {
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
                 MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Collection.class), any(), any(), any()))
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenThrow(new RuntimeException("  "));
                 })) {
             exitCode = commandLine.execute("--base-dir", "src");
@@ -370,40 +367,14 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_multipleBaseDirsProvided_passesAllDirsToProcessor() throws Exception {
-        // Given
-        Path secondDir = Files.createDirectory(temporaryDirectory.resolve("second-dir"));
-        SrcProcessor constructedProcessor;
-
-        // When
-        int exitCode;
-        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
-                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = commandLine.execute("--base-dir", "src", "--base-dir", secondDir.toString());
-            constructedProcessor = srcProcessorMocks.constructed().getFirst();
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(constructedProcessor)
-                .processSources(
-                        eq(Set.of(
-                                Path.of("src").toAbsolutePath().normalize(),
-                                secondDir.toAbsolutePath().normalize())),
-                        any(),
-                        any(),
-                        eq(FlowType.REORDER));
-    }
-
-    @Test
-    void call_oneOfMultipleBaseDirsMissing_returnsExitCode1() throws Exception {
+    void call_missingBaseDir_returnsExitCode1() throws Exception {
         // Given
         Path missingDir = temporaryDirectory.resolve("missing");
 
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
-            exitCode = commandLine.execute("--base-dir", "src", "--base-dir", missingDir.toString());
+            exitCode = commandLine.execute("--base-dir", missingDir.toString());
         }
 
         // Then

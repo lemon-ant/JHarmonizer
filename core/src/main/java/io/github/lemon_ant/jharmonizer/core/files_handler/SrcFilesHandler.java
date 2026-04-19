@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -24,28 +23,18 @@ public class SrcFilesHandler {
 
     /**
      * Recursively resolves and reads all {@code .java} files matching the include and exclude globs
-     * across all given base directories. Each base directory is scanned in parallel by GlobPathFinder
-     * independently. The results are merged lazily via {@link Stream#concat} so that no paths are
-     * accumulated in memory before processing starts. Paths discovered under multiple base directories
-     * are deduplicated on-the-fly using a concurrent set.
+     * under the given base directory. GlobPathFinder scans the directory in parallel, so paths flow
+     * directly through the pipeline without intermediate accumulation.
      *
-     * @param baseDirs the base directories to scan
+     * @param baseDir the base directory to scan
      * @param includeGlobs the include globs to apply
      * @param excludeGlobs the exclude globs to apply
      * @return a stream of loaded source files
      */
     @NonNull
     public static Stream<SrcFile> readJavaFiles(
-            @NonNull Collection<Path> baseDirs,
-            @NonNull Collection<String> includeGlobs,
-            @NonNull Collection<String> excludeGlobs) {
-        Set<Path> discoveredPaths = ConcurrentHashMap.newKeySet();
-        return baseDirs.stream()
-                .map(baseDir -> findJavaFiles(baseDir, includeGlobs, excludeGlobs)
-                        .filter(discoveredPaths::add)
-                        .map(SrcFilesHandler::readFile))
-                .reduce(Stream::concat)
-                .orElse(Stream.empty());
+            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
+        return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
     }
 
     /**

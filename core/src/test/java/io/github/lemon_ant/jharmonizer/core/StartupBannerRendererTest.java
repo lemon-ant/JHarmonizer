@@ -16,7 +16,7 @@ class StartupBannerRendererTest {
     @Test
     void render_defaultParameters_containsHeaderWithUnderline() {
         // When
-        String banner = StartupBannerRenderer.render(FlowType.REORDER, List.of(BASE_DIR), true, Set.of(), List.of());
+        String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
 
         // Then
         assertThat(banner).contains("JHarmonizer started").contains("=".repeat("JHarmonizer started".length()));
@@ -25,7 +25,7 @@ class StartupBannerRendererTest {
     @Test
     void render_allFlowParameters_containsFlowAndBaseDirAndBackups() {
         // When
-        String banner = StartupBannerRenderer.render(FlowType.CHECK_ALL, List.of(BASE_DIR), false, Set.of(), List.of());
+        String banner = StartupBannerRenderer.render(FlowType.CHECK_ALL, BASE_DIR, false, Set.of(), List.of());
 
         // Then
         assertThat(banner)
@@ -40,27 +40,10 @@ class StartupBannerRendererTest {
     @Test
     void render_backupsEnabled_showsEnabled() {
         // When
-        String banner = StartupBannerRenderer.render(FlowType.REORDER, List.of(BASE_DIR), true, Set.of(), List.of());
+        String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
 
         // Then
         assertThat(banner).contains("Backups:").contains("enabled");
-    }
-
-    @Test
-    void render_multipleBaseDirs_showsBaseDirsPluralLabel() {
-        // Given
-        Path secondBaseDir = Path.of("/project/test");
-
-        // When
-        String banner = StartupBannerRenderer.render(
-                FlowType.REORDER, List.of(BASE_DIR, secondBaseDir), true, Set.of(), List.of());
-
-        // Then
-        assertThat(banner)
-                .contains("Base directories:")
-                .contains(BASE_DIR.toString())
-                .contains(secondBaseDir.toString())
-                .doesNotContain("Base directory:");
     }
 
     @Nested
@@ -69,8 +52,7 @@ class StartupBannerRendererTest {
         @Test
         void render_emptyIncludeGlobs_showsAllPlaceholder() {
             // When
-            String banner =
-                    StartupBannerRenderer.render(FlowType.REORDER, List.of(BASE_DIR), true, Set.of(), List.of());
+            String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
 
             // Then
             assertThat(banner).contains("Include globs:").contains("(all)");
@@ -79,8 +61,7 @@ class StartupBannerRendererTest {
         @Test
         void render_emptyExcludeGlobs_showsNonePlaceholder() {
             // When
-            String banner =
-                    StartupBannerRenderer.render(FlowType.REORDER, List.of(BASE_DIR), true, Set.of(), List.of());
+            String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
 
             // Then
             assertThat(banner).contains("Exclude globs:").contains("(none)");
@@ -89,8 +70,8 @@ class StartupBannerRendererTest {
         @Test
         void render_singleGlob_displayedWithoutPrefix() {
             // When
-            String banner = StartupBannerRenderer.render(
-                    FlowType.REORDER, List.of(BASE_DIR), true, Set.of("**/*.java"), List.of());
+            String banner =
+                    StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of("**/*.java"), List.of());
 
             // Then
             assertThat(banner).contains("Include globs:").contains("**/*.java").doesNotContain("- **/*.java");
@@ -102,8 +83,7 @@ class StartupBannerRendererTest {
             Set<String> excludeGlobs = Set.of("**/target/**", "**/build/**", "**/.git/**");
 
             // When
-            String banner =
-                    StartupBannerRenderer.render(FlowType.REORDER, List.of(BASE_DIR), true, Set.of(), excludeGlobs);
+            String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), excludeGlobs);
 
             // Then
             assertThat(banner).contains("**/.git/**").contains("**/build/**").contains("**/target/**");
