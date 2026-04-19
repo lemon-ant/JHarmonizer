@@ -21,6 +21,11 @@ import org.junit.jupiter.api.Test;
 
 class CheckFailFastFlowIntegrationTest {
 
+    private static final SrcFile CLEAN_FILE_A =
+            createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
+    private static final SrcFile CLEAN_FILE_B =
+            createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
+
     @Test
     void processSource_firstViolationDetected_returnsStopRequestedResult() {
         // Given
@@ -114,12 +119,10 @@ class CheckFailFastFlowIntegrationTest {
     void processStream_allCleanFiles_processesAllFilesWithoutStop() {
         // Given
         CheckFailFastFlow flow = createFlow();
-        SrcFile cleanFileA = createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
-        SrcFile cleanFileB = createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
 
         // When
         List<FileProcessingResult> fileProcessingResults =
-                flow.processStream(List.of(cleanFileA, cleanFileB).stream()).toList();
+                flow.processStream(List.of(CLEAN_FILE_A, CLEAN_FILE_B).stream()).toList();
 
         // Then
         assertThat(fileProcessingResults).hasSize(2);
@@ -150,12 +153,10 @@ class CheckFailFastFlowIntegrationTest {
         CheckFailFastFlow flow = createFlow();
         SrcFile violatingFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
         flow.processStream(Stream.of(violatingFile)).toList();
-        SrcFile cleanFileA = createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
-        SrcFile cleanFileB = createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
 
         // When
         List<FileProcessingResult> fileProcessingResults =
-                flow.processStream(List.of(cleanFileA, cleanFileB).stream()).toList();
+                flow.processStream(List.of(CLEAN_FILE_A, CLEAN_FILE_B).stream()).toList();
 
         // Then
         assertThat(fileProcessingResults).hasSize(2);
