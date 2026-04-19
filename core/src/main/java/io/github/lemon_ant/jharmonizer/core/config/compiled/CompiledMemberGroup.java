@@ -19,7 +19,7 @@ import lombok.Value;
 public class CompiledMemberGroup {
     @NonNull
     @Singular
-    List<CompiledMemberGroup> compiledSubGroups; // unmodifiable after build, ordered
+    List<@NonNull CompiledMemberGroup> compiledSubGroups; // unmodifiable after build, ordered
 
     // TODO How to compile it???
     boolean keepAccessorsTogether;
