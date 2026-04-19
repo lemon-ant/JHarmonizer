@@ -71,7 +71,8 @@ abstract class AbstractOptOutFlow implements IFlow {
     /**
      * Processes a stream of source files through three explicit phases:
      * <ol>
-     *   <li><b>Pre-check</b> — skips files when a JVM shutdown signal is detected.</li>
+     *   <li><b>Pre-check</b> — delegates to {@link #preCheckSrcFiles} for any flow-specific
+     *       filtering (default: skips files when a JVM shutdown signal is detected).</li>
      *   <li><b>Mapping</b> — applies per-file processing via {@link #processSrcSafely}.</li>
      *   <li><b>Post-processing</b> — delegates to {@link #postProcessResults} for any
      *       flow-specific result-stream transformations.</li>
@@ -83,9 +84,23 @@ abstract class AbstractOptOutFlow implements IFlow {
     @Override
     @NonNull
     public final Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
-        Stream<SrcFile> preCheckedSrcFiles = srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown());
+        Stream<SrcFile> preCheckedSrcFiles = preCheckSrcFiles(srcFiles);
         Stream<FileProcessingResult> mappedResults = preCheckedSrcFiles.map(this::processSrcSafely);
         return postProcessResults(mappedResults);
+    }
+
+    /**
+     * Hook for subclasses to apply pre-processing filters to the source file stream.
+     * The default implementation skips remaining files when a JVM shutdown signal is detected.
+     * Subclasses may override to add additional filtering, and should call
+     * {@code super.preCheckSrcFiles(srcFiles)} to preserve the base shutdown guard.
+     *
+     * @param srcFiles the incoming stream of source files
+     * @return the filtered stream of source files to process
+     */
+    @NonNull
+    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
+        return srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown());
     }
 
     /**
