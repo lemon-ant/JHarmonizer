@@ -14,8 +14,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.maven.plugin.AbstractMojo;
@@ -249,7 +247,6 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     }
 
     @Value
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     private static class BaseDirContext {
         @NonNull
         Path resolvedBaseDir;

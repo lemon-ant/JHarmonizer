@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * Static helpers for building standard {@link FileProcessingResult} instances and emitting opt-out skip logs.
  *
  * <p>Extracted from {@link AbstractOptOutFlow} to keep the abstract base class focused on flow orchestration.
+ * This class is package-private and intended only for use by flow implementations in this package.
  */
 @Slf4j
 @UtilityClass
