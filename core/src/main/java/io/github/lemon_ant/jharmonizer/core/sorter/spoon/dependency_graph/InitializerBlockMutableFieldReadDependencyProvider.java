@@ -35,13 +35,13 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
     /**
      * Finds the direct provider edges.
      * @param dependentMember the dependent member
-     * @param keepAccessorsTogether the keep accessors together flag
+     * @param providerConfig the detector configuration
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
 
         Optional<CtElement> dependentInitializationAstRoot =
                 InitializationOrderDependencyUtils.resolveInitializationAstRoot(dependentMember);
@@ -66,23 +66,34 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
         boolean dependentMemberIsStatic = dependentMember.getModifiers().contains(ModifierKind.STATIC);
 
         return mutableFieldsReadByDependent.stream()
-                .flatMap(mutableField -> streamInitializerBlocksBeforeMemberReadingField(
-                        declaringType, mutableField, dependentSrcStart, dependentMemberIsStatic))
+                .flatMap(mutableField -> streamInitializerBlocksReadingField(
+                        declaringType,
+                        mutableField,
+                        dependentSrcStart,
+                        dependentMemberIsStatic,
+                        providerConfig.isRelaxedForwardReferences()))
                 .map(initializerBlock ->
                         new MemberDependencyArc(initializerBlock, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @NonNull
-    private static Stream<CtAnonymousExecutable> streamInitializerBlocksBeforeMemberReadingField(
-            CtType<?> declaringType, CtField<?> field, int dependentSrcStart, boolean dependentMemberIsStatic) {
+    private static Stream<CtAnonymousExecutable> streamInitializerBlocksReadingField(
+            CtType<?> declaringType,
+            CtField<?> field,
+            int dependentSrcStart,
+            boolean dependentMemberIsStatic,
+            boolean relaxedForwardReferences) {
 
         return streamExplicitSrcTypeMembers(declaringType)
                 .filter(member -> member instanceof CtAnonymousExecutable)
                 .map(member -> (CtAnonymousExecutable) member)
                 .filter(initializerBlock ->
                         initializerBlock.getModifiers().contains(ModifierKind.STATIC) == dependentMemberIsStatic)
-                .filter(initializerBlock -> requireSrcStart(initializerBlock) < dependentSrcStart)
+                // In relaxed mode, only include init blocks declared before the dependent (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all init blocks regardless of position.
+                .filter(initializerBlock ->
+                        !relaxedForwardReferences || requireSrcStart(initializerBlock) < dependentSrcStart)
                 .filter(initializerBlock -> isFieldReadByInitializerBlock(initializerBlock, field));
     }
 

@@ -51,19 +51,31 @@ class DeclaringTypeFieldReferenceUtils {
     }
 
     /**
-     * Finds same-type field accesses that target fields declared above the dependent member in source order.
+     * Finds same-type field accesses that target fields declared before the dependent member in source order,
+     * or all same-type field accesses when relaxed mode is off.
+     *
+     * @param dependentMember the dependent member
+     * @param dependentMemberAstRoot the AST root to scan for field accesses
+     * @param relaxedForwardReferences when {@code true}, only fields declared before the member are included;
+     *     when {@code false}, all same-type field accesses are included
+     * @return the matching field accesses
      */
     @NonNull
-    static Set<ReferencedFieldAccess> findReferencedFieldAccessesDeclaredBeforeMember(
-            @NonNull CtTypeMember dependentMember, @NonNull CtElement dependentMemberAstRoot) {
+    static Set<ReferencedFieldAccess> findReferencedFieldAccesses(
+            @NonNull CtTypeMember dependentMember,
+            @NonNull CtElement dependentMemberAstRoot,
+            boolean relaxedForwardReferences) {
         CtType<?> declaringType = requireDeclaringType(dependentMember);
 
         return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
                 .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
                 .map(fieldAccess -> new ReferencedFieldAccess(
                         (CtField<?>) fieldAccess.getVariable().getDeclaration(), fieldAccess))
-                .filter(referencedFieldAccess -> isProviderDeclaredBeforeDependentMember(
-                        referencedFieldAccess.getProviderField(), dependentMember))
+                // In relaxed mode, only include fields declared before the dependent (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all field accesses regardless of position.
+                .filter(referencedFieldAccess -> !relaxedForwardReferences
+                        || isProviderDeclaredBeforeDependentMember(
+                                referencedFieldAccess.getProviderField(), dependentMember))
                 .collect(Collectors.toUnmodifiableSet());
     }
 

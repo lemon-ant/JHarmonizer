@@ -37,6 +37,14 @@ public class UnifiedMemberGroup {
     List<UnifiedMemberGroup> memberSubGroups;
 
     /**
+     * Whether forward references to fields declared later in source order are ignored for dependency resolution.
+     * When {@code true} (default), the tool only considers references to fields above the current member.
+     * When {@code false}, all same-type field references create ordering constraints regardless of source position.
+     */
+    @Nullable
+    Boolean relaxedForwardReferences;
+
+    /**
      * Selectors for acceptance logic inside this node.
      */
     @NonNull
@@ -59,12 +67,14 @@ public class UnifiedMemberGroup {
             @Nullable String groupName,
             @Nullable Boolean keepAccessorsTogether,
             @NonNull @Singular List<@NonNull UnifiedMemberGroup> memberSubGroups,
+            @Nullable Boolean relaxedForwardReferences,
             @NonNull UnifiedMemberGroupSelectorBlock selectorBlock,
             @Nullable UnifiedSeparator separator,
             @Nullable List<@NonNull UnifiedOrderingRule> orderingRules) {
         this.groupName = groupName;
         this.keepAccessorsTogether = keepAccessorsTogether;
         this.memberSubGroups = memberSubGroups;
+        this.relaxedForwardReferences = relaxedForwardReferences;
         this.selectorBlock = selectorBlock;
         this.separator = separator;
         this.orderingRules =

@@ -39,16 +39,19 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
     /**
      * Finds the direct provider edges.
      *
+     * <p>Cross-type static initialization chain dependencies are always unconditional — they reflect
+     * real class-loading order constraints and are not affected by {@code relaxedForwardReferences}.
+     *
      * @param dependentMember the type member whose initialization-order dependencies are being
      *     analyzed
-     * @param keepAccessorsTogether whether to treat getter/setter pairs as a unit when analyzing
-     *     dependencies
+     * @param providerConfig the detector configuration; {@code relaxedForwardReferences} is intentionally
+     *     unused because cross-type chain dependencies are always hard constraints
      * @return the matching direct provider edges
      */
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, boolean keepAccessorsTogether) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
         if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Set.of();
         }
