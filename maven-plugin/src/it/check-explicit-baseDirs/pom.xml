@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.lemon-ant.jharmonizer.it</groupId>
-    <artifactId>reorder-basic-it</artifactId>
+    <artifactId>check-explicit-baseDirs-it</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>IT: reorder-basic</name>
+    <name>IT: check-explicit-baseDirs</name>
 
     <repositories>
         <repository>
@@ -31,13 +31,13 @@
                 <version>@project.version@</version>
                 <executions>
                     <execution>
-                        <id>reorder-sources</id>
+                        <id>check-sources</id>
                         <goals>
-                            <goal>reorder</goal>
+                            <goal>check</goal>
                         </goals>
-                        <phase>process-sources</phase>
+                        <phase>verify</phase>
                         <configuration>
-                            <backupsEnabled>false</backupsEnabled>
+                            <baseDir>${project.basedir}/src/custom/java</baseDir>
                             <printProcessingStatistics>false</printProcessingStatistics>
                         </configuration>
                     </execution>

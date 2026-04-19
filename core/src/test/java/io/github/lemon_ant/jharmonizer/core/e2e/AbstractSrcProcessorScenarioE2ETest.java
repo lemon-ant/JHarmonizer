@@ -7,9 +7,9 @@ import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,13 +107,24 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         Comparator<Path> fixtureExecutionOrder = Comparator.comparing(
                         this::resolveScenarioDirectoryName, Comparator.reverseOrder())
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
-        return SrcFilesHandler.findJavaFiles(getFixturesRoot(), List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
-                .sorted(fixtureExecutionOrder)
-                .map(fixtureInputFile -> {
-                    Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
-                    Path srcFile = fixtureInputFile.getFileName();
-                    return Arguments.of(scenarioDir, srcFile);
-                });
+        try {
+            List<Path> fixtureInputFiles;
+            try (Stream<Path> walkedPaths = Files.walk(getFixturesRoot())) {
+                fixtureInputFiles = walkedPaths
+                        .filter(path -> path.toString().endsWith(".java"))
+                        .filter(path -> INPUT_DIRECTORY.equals(
+                                path.getParent().getFileName().toString()))
+                        .sorted(fixtureExecutionOrder)
+                        .toList();
+            }
+            return fixtureInputFiles.stream().map(fixtureInputFile -> {
+                Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
+                Path srcFile = fixtureInputFile.getFileName();
+                return Arguments.of(scenarioDir, srcFile);
+            });
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @NonNull

@@ -366,6 +366,22 @@ class BaseCommandTest {
         assertThat(exitCode).isZero();
     }
 
+    @Test
+    void call_missingBaseDir_returnsExitCode1() throws Exception {
+        // Given
+        Path missingDir = temporaryDirectory.resolve("missing");
+
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
+            exitCode = commandLine.execute("--base-dir", missingDir.toString());
+        }
+
+        // Then
+        assertThat(Files.exists(missingDir)).isFalse();
+        assertThat(exitCode).isEqualTo(1);
+    }
+
     private static final class TestCommand extends BaseCommand {
 
         @Override

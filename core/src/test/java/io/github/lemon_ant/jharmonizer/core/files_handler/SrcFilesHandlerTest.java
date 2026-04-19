@@ -76,19 +76,19 @@ class SrcFilesHandlerTest {
     }
 
     @Test
-    void findJavaFiles_validRequest_returnsMatchingFiles() throws IOException {
+    void readJavaFiles_validRequest_returnsMatchingSrcFiles() throws IOException {
         // Given
         Path javaFile = Files.writeString(tempDir.resolve("MyClass.java"), "class MyClass {}");
-        Path txtFile = Files.writeString(tempDir.resolve("notes.txt"), "not java");
+        Files.writeString(tempDir.resolve("notes.txt"), "not java");
 
         // When
-        List<Path> result = SrcFilesHandler.findJavaFiles(tempDir, Set.of("**.java"), Set.of())
+        List<SrcFile> srcFiles = SrcFilesHandler.readJavaFiles(tempDir, Set.of("**.java"), Set.of())
                 .collect(Collectors.toList());
 
         // Then
-        assertThat(result)
-                .contains(javaFile.normalize().toAbsolutePath())
-                .doesNotContain(txtFile.normalize().toAbsolutePath());
+        assertThat(srcFiles)
+                .extracting(SrcFile::getPath)
+                .contains(javaFile.normalize().toAbsolutePath());
     }
 
     @Test

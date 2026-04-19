@@ -24,7 +24,7 @@ class StartupBannerRenderer {
      * Builds a multiline startup banner describing the active processing parameters.
      *
      * @param flowType       the processing flow
-     * @param baseDir        resolved base directory
+     * @param baseDir        the resolved base directory
      * @param backupsEnabled whether backup creation is active
      * @param includeGlobs   include glob patterns (empty means "all files")
      * @param excludeGlobs   exclude glob patterns (empty means "no exclusions")

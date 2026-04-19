@@ -89,7 +89,7 @@ public final class SrcProcessor {
     }
 
     /**
-     * Processes source files found by the given globs through the specified flow type.
+     * Processes source files found under the given base directory by the specified flow type.
      * The flow itself controls stream pipeline decoration (e.g. early termination for
      * fail-fast), success determination, and completion logging.
      *
@@ -223,7 +223,7 @@ public final class SrcProcessor {
             log.debug(
                     "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
                     flowType,
-                    baseDir.toAbsolutePath(),
+                    baseDir,
                     includeGlobs,
                     excludeGlobs,
                     config.isBackupsEnabled());
