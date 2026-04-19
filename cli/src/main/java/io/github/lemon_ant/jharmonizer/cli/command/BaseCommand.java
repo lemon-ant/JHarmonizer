@@ -123,11 +123,10 @@ abstract class BaseCommand implements Callable<Integer> {
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public final Integer call() {
-        Path normalizedBaseDir = baseDir != null
-                ? baseDir.toAbsolutePath().normalize()
-                : Path.of(".").toAbsolutePath().normalize();
-        if (!Files.isDirectory(normalizedBaseDir)) {
-            log.error("Base directory does not exist or is not a directory: {}", normalizedBaseDir);
+        Path effectiveBaseDir = baseDir != null ? baseDir : Path.of(".");
+        Path absoluteBaseDir = toAbsoluteNormalizedPath(effectiveBaseDir);
+        if (!Files.isDirectory(absoluteBaseDir)) {
+            log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
             return 1;
         }
         Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
@@ -136,7 +135,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return 1;
         }
         CommandOptions commandOptions = CommandOptions.builder()
-                .baseDir(normalizedBaseDir)
+                .baseDir(absoluteBaseDir)
                 .includeGlobs(Set.copyOf(includeGlobs))
                 .excludeGlobs(Set.copyOf(excludeGlobs))
                 .verbose(verbose)

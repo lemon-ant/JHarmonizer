@@ -176,7 +176,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     }
 
     @NonNull
-    private Set<String> computeDefaultIncludes(@NonNull Path projectBaseDirPath) {
+    private Set<String> computeDefaultIncludes(Path projectBaseDirPath) {
         Stream<String> srcDirIncludes = Stream.of(mainSourceDirectory, testSourceDirectory)
                 .filter(Objects::nonNull)
                 .map(srcDir -> projectBaseDirPath
@@ -190,7 +190,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private SrcProcessingResult invokeSrcProcessor(@NonNull Path baseDirPath, @NonNull Set<String> effectiveIncludes)
+    private SrcProcessingResult invokeSrcProcessor(Path baseDirPath, Set<String> effectiveIncludes)
             throws MojoExecutionException {
         Set<String> effectiveExcludes = excludes != null ? excludes : Set.of();
         try {
