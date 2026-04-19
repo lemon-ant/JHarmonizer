@@ -229,12 +229,13 @@ public final class MemberDependencyGraph {
     }
 
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static List<CtTypeMember> extractCyclePath(
             CtTypeMember cycleStart, SequencedSet<CtTypeMember> currentPath) {
         List<CtTypeMember> cycle = new ArrayList<>();
         boolean collecting = false;
         for (CtTypeMember pathMember : currentPath) {
-            if (pathMember.equals(cycleStart)) {
+            if (pathMember == cycleStart) {
                 collecting = true;
             }
             if (collecting) {
