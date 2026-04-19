@@ -17,6 +17,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedT
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -65,31 +66,59 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the processing result for the source file
      */
     @NonNull
-    protected abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
+    abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
 
     /**
-     * Processes a stream of source files with runtime-failure isolation.
-     * Subclasses may override to add pipeline steps (e.g. fail-fast termination).
+     * Processes a stream of source files through three explicit phases:
+     * <ol>
+     *   <li><b>Pre-check</b> — delegates to {@link #preCheckSrcFiles} for any flow-specific
+     *       filtering (default: skips files when a JVM shutdown signal is detected).</li>
+     *   <li><b>Mapping</b> — applies per-file processing for each source file.</li>
+     *   <li><b>Post-processing</b> — delegates to {@link #postProcessResults} for any
+     *       flow-specific result-stream transformations.</li>
+     * </ol>
      *
      * @param srcFiles the stream of source files to process
      * @return a stream of per-file processing results
      */
     @Override
     @NonNull
-    public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
-        return srcFiles.map(this::processSrcSafely);
+    public final Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
+        Stream<SrcFile> preCheckedSrcFiles = preCheckSrcFiles(srcFiles);
+        Stream<FileProcessingResult> mappedResults = preCheckedSrcFiles.map(this::processSrcSafely);
+        return postProcessResults(mappedResults);
     }
 
     /**
-     * Processes a single source file, catching unexpected runtime exceptions
-     * and converting them into {@link FileProcessingStatus#ERROR} results.
+     * Hook for subclasses to apply pre-processing filters to the source file stream.
+     * The default implementation skips remaining files when a JVM shutdown signal is detected.
+     * Subclasses may override to add additional filtering, and should call
+     * {@code super.preCheckSrcFiles(srcFiles)} to preserve the base shutdown guard.
      *
-     * @param srcFile the source file to process
-     * @return the processing result (never throws)
+     * @param srcFiles the incoming stream of source files
+     * @return the filtered stream of source files to process
      */
     @NonNull
+    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
+        return srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown());
+    }
+
+    /**
+     * Hook for subclasses to apply post-mapping transformations to the result stream.
+     * The default implementation returns the stream unchanged.
+     * Subclasses may override to add steps such as early-termination signalling.
+     *
+     * @param results the stream of per-file processing results from the mapping phase
+     * @return the post-processed result stream
+     */
+    @NonNull
+    protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
+        return results;
+    }
+
+    @NonNull
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
-    protected final FileProcessingResult processSrcSafely(@NonNull SrcFile srcFile) {
+    private FileProcessingResult processSrcSafely(SrcFile srcFile) {
         try {
             return processSrc(srcFile);
         } catch (RuntimeException exception) {
@@ -195,11 +224,16 @@ abstract class AbstractOptOutFlow implements IFlow {
 
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
-    protected final FormattingResult formatSrcWithoutSorting(@NonNull SrcFile srcFile, @NonNull String failureMessage) {
-        LOG.warn(
-                "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
-                srcFile.getPath(),
-                failureMessage);
+    protected final FormattingResult formatSrcAfterModelBuildFailure(
+            @NonNull SrcFile srcFile, @NonNull String failureMessage) {
+        if (JvmShutdownSignal.isShuttingDown()) {
+            LOG.debug("Skipping sorting for {} after model build failure (JVM is shutting down).", srcFile.getPath());
+        } else {
+            LOG.warn(
+                    "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
+                    srcFile.getPath(),
+                    failureMessage);
+        }
         FormattingResult formattingResult =
                 getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
         getDebugStageRecorder()

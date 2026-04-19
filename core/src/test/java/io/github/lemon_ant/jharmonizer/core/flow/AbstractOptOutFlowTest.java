@@ -11,6 +11,7 @@ import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
@@ -27,43 +28,46 @@ class AbstractOptOutFlowTest {
             DEFAULT_CONFIG.getFormatting().isBlankLineBetweenFields());
 
     @Test
-    void processSrcSafely_nullMessageException_returnsErrorResult() {
+    void processStream_nullMessageException_returnsErrorResult() {
         // Given
         ThrowingFlow throwingFlow = new ThrowingFlow(new RuntimeException((String) null));
         SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = throwingFlow.processSrcSafely(srcFile);
+        List<FileProcessingResult> fileProcessingResults =
+                throwingFlow.processStream(Stream.of(srcFile)).toList();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
-        assertThat(fileProcessingResult.getPath()).isEqualTo(Path.of("A.java"));
+        assertThat(fileProcessingResults.getFirst().getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
+        assertThat(fileProcessingResults.getFirst().getPath()).isEqualTo(Path.of("A.java"));
     }
 
     @Test
-    void processSrcSafely_blankMessageException_returnsErrorResult() {
+    void processStream_blankMessageException_returnsErrorResult() {
         // Given
         ThrowingFlow throwingFlow = new ThrowingFlow(new RuntimeException("   "));
         SrcFile srcFile = createSrcFile("class B {}", Path.of("B.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = throwingFlow.processSrcSafely(srcFile);
+        List<FileProcessingResult> fileProcessingResults =
+                throwingFlow.processStream(Stream.of(srcFile)).toList();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
+        assertThat(fileProcessingResults.getFirst().getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
     }
 
     @Test
-    void processSrcSafely_nonBlankMessageException_returnsErrorResult() {
+    void processStream_nonBlankMessageException_returnsErrorResult() {
         // Given
         ThrowingFlow throwingFlow = new ThrowingFlow(new RuntimeException("boom"));
         SrcFile srcFile = createSrcFile("class C {}", Path.of("C.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = throwingFlow.processSrcSafely(srcFile);
+        List<FileProcessingResult> fileProcessingResults =
+                throwingFlow.processStream(Stream.of(srcFile)).toList();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
+        assertThat(fileProcessingResults.getFirst().getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
     }
 
     @Test
@@ -95,7 +99,7 @@ class AbstractOptOutFlowTest {
 
         @Override
         @NonNull
-        protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+        FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
             throw exceptionToThrow;
         }
 
