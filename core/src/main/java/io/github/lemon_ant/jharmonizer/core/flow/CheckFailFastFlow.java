@@ -20,7 +20,6 @@ import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -34,9 +33,9 @@ import spoon.reflect.declaration.CtElement;
  * {@code stopRequested = true} so the pipeline can gracefully shut down
  * while preserving all accumulated statistics.
  *
- * <p>Overrides {@link #processStream} to add early termination via
- * {@code takeWhile} (before processing) and stop-flag propagation via
- * {@code peek} (after processing), so files are not processed once a
+ * <p>Overrides {@link #postProcessResults} to add early termination via
+ * {@code takeWhile} (using a stop flag on the result stream) and stop-flag
+ * propagation via {@code peek}, so files are not processed once a
  * violation has been detected.
  */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
@@ -54,26 +53,23 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     }
 
     /**
-     * Extends the base stream pipeline with early termination logic.
-     * The {@code takeWhile} gate is placed before the per-file processing map
-     * so that remaining source files are not processed once a violation has
-     * been detected. The {@code peek} after processing sets the stop flag
-     * when a result requests stop.
+     * Extends the result stream with early-termination logic.
+     * Results are emitted until the first result that requests stop is seen.
+     * The stop flag is set after the violating result passes through,
+     * so the violating result is included in the output but no further files are processed.
      *
-     * @param srcFiles the stream of source files to process
-     * @return a stream that terminates early when a violation is detected
+     * @param results the stream of per-file results from the mapping phase
+     * @return a stream that terminates after the first violation result
      */
     @Override
     @NonNull
-    public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
+    protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
         AtomicBoolean stopFlag = new AtomicBoolean(false);
-        return srcFiles.takeWhile(srcFile -> !stopFlag.get() && !JvmShutdownSignal.isShuttingDown())
-                .map(this::processSrcSafely)
-                .peek(fileProcessingResult -> {
-                    if (fileProcessingResult.isStopRequested()) {
-                        stopFlag.set(true);
-                    }
-                });
+        return results.takeWhile(fileProcessingResult -> !stopFlag.get()).peek(fileProcessingResult -> {
+            if (fileProcessingResult.isStopRequested()) {
+                stopFlag.set(true);
+            }
+        });
     }
 
     /**
@@ -173,7 +169,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     @NonNull
     private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
-        FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
+        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, exception.getMessage());
         boolean hasFormattingChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         String srcDiff =
                 hasFormattingChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";

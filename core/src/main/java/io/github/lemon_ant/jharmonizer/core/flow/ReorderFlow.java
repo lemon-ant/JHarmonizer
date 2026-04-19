@@ -103,7 +103,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
     @NonNull
     private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
-        FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
+        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, exception.getMessage());
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         if (hasChanges) {
             if (backupsEnabled) {

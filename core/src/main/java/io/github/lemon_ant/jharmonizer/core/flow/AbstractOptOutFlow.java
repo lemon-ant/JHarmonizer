@@ -69,17 +69,36 @@ abstract class AbstractOptOutFlow implements IFlow {
     protected abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
 
     /**
-     * Processes a stream of source files with runtime-failure isolation.
-     * Subclasses may override to add pipeline steps (e.g. fail-fast termination).
+     * Processes a stream of source files through three explicit phases:
+     * <ol>
+     *   <li><b>Pre-check</b> — skips files when a JVM shutdown signal is detected.</li>
+     *   <li><b>Mapping</b> — applies per-file processing via {@link #processSrcSafely}.</li>
+     *   <li><b>Post-processing</b> — delegates to {@link #postProcessResults} for any
+     *       flow-specific result-stream transformations.</li>
+     * </ol>
      *
      * @param srcFiles the stream of source files to process
      * @return a stream of per-file processing results
      */
     @Override
     @NonNull
-    public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
-        return srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown())
-                .map(this::processSrcSafely);
+    public final Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
+        Stream<SrcFile> preCheckedSrcFiles = srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown());
+        Stream<FileProcessingResult> mappedResults = preCheckedSrcFiles.map(this::processSrcSafely);
+        return postProcessResults(mappedResults);
+    }
+
+    /**
+     * Hook for subclasses to apply post-mapping transformations to the result stream.
+     * The default implementation returns the stream unchanged.
+     * Subclasses may override to add steps such as early-termination signalling.
+     *
+     * @param results the stream of per-file processing results from the mapping phase
+     * @return the post-processed result stream
+     */
+    @NonNull
+    protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
+        return results;
     }
 
     /**
@@ -197,7 +216,8 @@ abstract class AbstractOptOutFlow implements IFlow {
 
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
-    protected final FormattingResult formatSrcWithoutSorting(@NonNull SrcFile srcFile, @NonNull String failureMessage) {
+    protected final FormattingResult formatSrcAfterModelBuildFailure(
+            @NonNull SrcFile srcFile, @NonNull String failureMessage) {
         if (JvmShutdownSignal.isShuttingDown()) {
             LOG.debug("Skipping sorting for {} because JVM is shutting down.", srcFile.getPath());
         } else {
