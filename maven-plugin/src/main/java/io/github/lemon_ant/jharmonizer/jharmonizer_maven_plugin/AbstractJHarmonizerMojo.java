@@ -149,9 +149,25 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             }
             effectiveIncludes = includes != null ? includes : Set.of();
         } else {
+            if (projectBaseDir == null) {
+                throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
+                        + " Configure <baseDirs> explicitly.");
+            }
             Path projectBaseDirPath = projectBaseDir.toPath().toAbsolutePath().normalize();
+            if (!Files.isDirectory(projectBaseDirPath)) {
+                throw new MojoExecutionException(
+                        "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
+            }
             resolvedBaseDirs = List.of(projectBaseDirPath);
-            effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
+            try {
+                effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
+            } catch (IllegalArgumentException e) {
+                throw new MojoExecutionException(
+                        "Cannot compute default source include patterns relative to project base directory '"
+                                + projectBaseDirPath + "'."
+                                + " Configure <baseDirs> explicitly.",
+                        e);
+            }
         }
 
         SrcProcessingResult srcProcessingResult = invokeSrcProcessor(resolvedBaseDirs, effectiveIncludes);
