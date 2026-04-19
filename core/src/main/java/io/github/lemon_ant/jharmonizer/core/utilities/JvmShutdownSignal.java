@@ -17,7 +17,14 @@ public class JvmShutdownSignal {
     private static final AtomicBoolean SHUTTING_DOWN = new AtomicBoolean(false);
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> SHUTTING_DOWN.set(true), "jHarmonizer-shutdown-hook"));
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> SHUTTING_DOWN.set(true), "jHarmonizer-shutdown-hook"));
+        } catch (IllegalStateException e) {
+            SHUTTING_DOWN.set(true);
+        } catch (SecurityException e) {
+            // Shutdown hook registration is not permitted in this environment.
+            // Leave the flag unchanged so the class remains usable.
+        }
     }
 
     /**
