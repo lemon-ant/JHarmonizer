@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Flexible overlay for JHarmonizerConfig. All fields are optional.
@@ -21,7 +22,7 @@ import lombok.Value;
 public class JHarmonizerFlexibleConfig {
 
     @Nullable
-    JHarmonizerFormatting formatting;
+    JHarmonizerFlexibleFormatting formatting;
 
     @Nullable
     Boolean backupsEnabled;
@@ -42,7 +43,7 @@ public class JHarmonizerFlexibleConfig {
      * Creates a flexible JHarmonizer configuration with optional overlay values.
      *
      * @param topLevelTypesOrdering the optional top-level types ordering override
-     * @param formatting the optional formatting override
+     * @param formatting the optional partial formatting override
      * @param backupsEnabled the optional backups-enabled override
      * @param printProcessingStatistics the optional print-processing-statistics override
      * @param headerLine the optional header-line override
@@ -50,11 +51,19 @@ public class JHarmonizerFlexibleConfig {
      */
     public JHarmonizerFlexibleConfig(
             @Nullable @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
-            @Nullable @JsonProperty("formatting") JHarmonizerFormatting formatting,
+            @Nullable @JsonProperty("formatting") JHarmonizerFlexibleFormatting formatting,
             @Nullable @JsonProperty("backups-enabled") Boolean backupsEnabled,
             @Nullable @JsonProperty("print-processing-statistics") Boolean printProcessingStatistics,
             @Nullable @JsonProperty("header-line") JHarmonizerHeaderLine headerLine,
             @Nullable @JsonProperty("type-members-ordering") List<@NonNull JHarmonizerMemberGroup> memberGroups) {
+        Validate.isTrue(
+                topLevelTypesOrdering != null
+                        || formatting != null
+                        || backupsEnabled != null
+                        || printProcessingStatistics != null
+                        || headerLine != null
+                        || memberGroups != null,
+                "At least one field must be set in JHarmonizerFlexibleConfig");
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
@@ -65,12 +74,12 @@ public class JHarmonizerFlexibleConfig {
     }
 
     /**
-     * Returns the optional formatting override.
+     * Returns the optional partial formatting override.
      *
-     * @return the optional formatting override
+     * @return the optional partial formatting override
      */
     @NonNull
-    public Optional<JHarmonizerFormatting> getFormatting() {
+    public Optional<JHarmonizerFlexibleFormatting> getFormatting() {
         return ofNullable(formatting);
     }
 

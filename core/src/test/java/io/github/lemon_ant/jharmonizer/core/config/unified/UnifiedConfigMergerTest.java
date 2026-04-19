@@ -12,6 +12,13 @@ class UnifiedConfigMergerTest {
 
     private static final UnifiedFormatting FORMATTING =
             new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false);
+    private static final FlexibleUnifiedFormatting FLEXIBLE_FORMATTING = FlexibleUnifiedFormatting.builder()
+            .fixImports(true)
+            .formatterStyle(UnifiedFormatterStyle.PALANTIR)
+            .blankLineAfterTypeHeader(true)
+            .blankLineBeforeComment(true)
+            .blankLineBetweenFields(false)
+            .build();
     private static final UnifiedHeaderLine HEADER_LINE = new UnifiedHeaderLine('-', 2);
     private static final UnifiedMemberGroupSelectorBlock SELECTOR_BLOCK =
             UnifiedMemberGroupSelectorBlock.builder().build();
@@ -27,7 +34,8 @@ class UnifiedConfigMergerTest {
         UnifiedMemberGroup baselineFirstGroup = createGroup("Default Rule");
         UnifiedMemberGroup baselineSecondGroup = createGroup("Units");
         UnifiedConfig baselineConfig = createConfig(List.of(baselineFirstGroup, baselineSecondGroup));
-        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder().build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -154,7 +162,7 @@ class UnifiedConfigMergerTest {
         // Given
         FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)
-                .formatting(FORMATTING)
+                .formatting(FLEXIBLE_FORMATTING)
                 .backupsEnabled(true)
                 .headerLine(HEADER_LINE)
                 .rootMemberGroups(List.of(createGroup("Default Rule")))
@@ -167,7 +175,7 @@ class UnifiedConfigMergerTest {
 
         // Then
         assertThat(mergedConfig.getBackupsEnabled()).contains(false);
-        assertThat(mergedConfig.getFormatting()).contains(FORMATTING);
+        assertThat(mergedConfig.getFormatting()).contains(FLEXIBLE_FORMATTING);
         assertThat(mergedConfig.getTopLevelTypesOrdering()).contains(TOP_LEVEL_TYPES_ORDERING);
         assertThat(mergedConfig.getHeaderLine()).contains(HEADER_LINE);
         assertThat(mergedConfig.getRootMemberGroups()).contains(List.of(createGroup("Default Rule")));
@@ -241,8 +249,10 @@ class UnifiedConfigMergerTest {
     @Test
     void merge_flexibleRootGroupsMissingOnBothSides_keepsRootMemberGroupsAbsent() {
         // Given
-        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder().build();
-        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder().build();
+        FlexibleUnifiedConfig baselineConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
 
         // When
         FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
@@ -251,7 +261,50 @@ class UnifiedConfigMergerTest {
         assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
     }
 
-    @NonNull
+    @Test
+    void merge_partialFormattingOverlayApplied_overlayFieldsOverrideBaselineFormattingFields() {
+        // Given
+        UnifiedConfig baselineConfig = createConfig(List.of(createGroup("Default Rule")));
+        FlexibleUnifiedFormatting overlayFormatting =
+                FlexibleUnifiedFormatting.builder().fixImports(false).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().formatting(overlayFormatting).build();
+
+        // When
+        UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getFormatting().isFixImports()).isFalse();
+        assertThat(mergedConfig.getFormatting().getFormatterStyle()).isEqualTo(UnifiedFormatterStyle.PALANTIR);
+        assertThat(mergedConfig.getFormatting().isBlankLineAfterTypeHeader()).isTrue();
+    }
+
+    @Test
+    void merge_partialFormattingOverlayOnFlexible_mergesFormattingFieldsFromBothSides() {
+        // Given
+        FlexibleUnifiedFormatting baselineFormatting = FlexibleUnifiedFormatting.builder()
+                .fixImports(true)
+                .formatterStyle(UnifiedFormatterStyle.PALANTIR)
+                .build();
+        FlexibleUnifiedConfig baselineConfig =
+                FlexibleUnifiedConfig.builder().formatting(baselineFormatting).build();
+        FlexibleUnifiedFormatting overlayFormatting =
+                FlexibleUnifiedFormatting.builder().blankLineBetweenFields(true).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().formatting(overlayFormatting).build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getFormatting()).isPresent();
+        FlexibleUnifiedFormatting mergedFormatting =
+                mergedConfig.getFormatting().get();
+        assertThat(mergedFormatting.getFixImports()).contains(true);
+        assertThat(mergedFormatting.getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
+        assertThat(mergedFormatting.getBlankLineBetweenFields()).contains(true);
+    }
+
     private static UnifiedConfig createConfig(List<UnifiedMemberGroup> rootMemberGroups) {
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)

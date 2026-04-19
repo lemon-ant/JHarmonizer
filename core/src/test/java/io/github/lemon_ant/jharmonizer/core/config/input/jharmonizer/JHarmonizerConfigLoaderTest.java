@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
@@ -33,6 +34,10 @@ class JHarmonizerConfigLoaderTest {
             + "/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml";
     private static final String SIMPLE_WORKING_CONFIG_PATH =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/simplest-working-config.yml";
+    private static final String PARTIAL_FORMATTING_FLEX_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/partial-formatting-flex-config.yml";
+    private static final String INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-empty-formatting-flex-config.yml";
     private static final URL MIXED_GROUP_SYNTAX_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
 
@@ -108,6 +113,37 @@ class JHarmonizerConfigLoaderTest {
 
             // Then
             assertThat(thrown).isInstanceOf(MismatchedInputException.class);
+        }
+    }
+
+    @Test
+    void loadFlexibleFrom_partialFormatting_loadsOnlySpecifiedFormattingFields() throws IOException {
+        // Given
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(PARTIAL_FORMATTING_FLEX_CONFIG_PATH)) {
+
+            // When
+            JHarmonizerFlexibleConfig config = JHarmonizerConfigLoader.loadFlexibleFrom(configYaml);
+
+            // Then
+            assertThat(config.getFormatting()).isPresent();
+            assertThat(config.getFormatting().get().getFixImports()).contains(true);
+            assertThat(config.getFormatting().get().getFormatterStyle()).isEmpty();
+            assertThat(config.getFormatting().get().getBlankLineBetweenFields()).isEmpty();
+        }
+    }
+
+    @Test
+    void loadFlexibleFrom_emptyFormattingSection_throwsException() throws IOException {
+        // Given
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH)) {
+
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ValueInstantiationException.class);
         }
     }
 

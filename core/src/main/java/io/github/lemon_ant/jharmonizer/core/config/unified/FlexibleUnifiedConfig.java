@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Flexible overlay for UnifiedConfig. All fields are optional.
@@ -24,10 +25,10 @@ import lombok.Value;
 public class FlexibleUnifiedConfig {
 
     /**
-     * Cohesive formatting definition (preferred API).
+     * Partial formatting overlay (preferred API for flex configs).
      */
     @Nullable
-    UnifiedFormatting formatting;
+    FlexibleUnifiedFormatting formatting;
 
     @Nullable
     Boolean backupsEnabled;
@@ -66,11 +67,19 @@ public class FlexibleUnifiedConfig {
     @Builder
     private FlexibleUnifiedConfig(
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
-            @Nullable UnifiedFormatting formatting,
+            @Nullable FlexibleUnifiedFormatting formatting,
             @Nullable Boolean backupsEnabled,
             @Nullable Boolean printProcessingStatistics,
             @Nullable UnifiedHeaderLine headerLine,
             @Nullable List<UnifiedMemberGroup> rootMemberGroups) {
+        Validate.isTrue(
+                topLevelTypesOrdering != null
+                        || formatting != null
+                        || backupsEnabled != null
+                        || printProcessingStatistics != null
+                        || headerLine != null
+                        || rootMemberGroups != null,
+                "At least one field must be set in FlexibleUnifiedConfig");
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
@@ -81,11 +90,11 @@ public class FlexibleUnifiedConfig {
     }
 
     /**
-     * Returns the formatting.
-     * @return the formatting
+     * Returns the formatting overlay.
+     * @return the formatting overlay
      */
     @NonNull
-    public Optional<UnifiedFormatting> getFormatting() {
+    public Optional<FlexibleUnifiedFormatting> getFormatting() {
         return ofNullable(formatting);
     }
 
