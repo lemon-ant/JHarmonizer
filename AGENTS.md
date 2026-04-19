@@ -1,3 +1,9 @@
+<!--
+
+    SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+    SPDX-License-Identifier: Apache-2.0
+
+-->
 # AGENTS.md
 
 This file defines repository-wide conventions for coding agents working in this repository.
@@ -25,6 +31,13 @@ This file defines repository-wide conventions for coding agents working in this 
 
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
+- Licensing policy is mandatory for all tracked files in this repository.
+  - Every tracked text/source/config/documentation file must include SPDX metadata.
+  - Required file-level SPDX lines:
+    - `SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>`
+    - `SPDX-License-Identifier: Apache-2.0`
+  - Allowed omission: repository license body file (`LICENSE`) may keep only the canonical Apache-2.0 legal text without SPDX header.
+  - Do not introduce additional third-party license headers unless a file is truly imported from a differently licensed upstream source.
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
@@ -41,29 +54,26 @@ This file defines repository-wide conventions for coding agents working in this 
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
+  - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
+  - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
+  - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
 - If a boolean helper is always consumed through negation at its call sites, invert the helper logic and rename it so callers stay positive and direct.
 - Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `compute`, or `merge`.
 - For non-get behavior methods, start the method name with a clear verb.
   - Prefer explicit verb-led names such as `find`, `resolve`, `collect`, `compute`, `merge`, `parse`, `format`, or `render`.
   - Avoid ambiguous prefixes such as `toXxx` when a clearer verb-based name fits the method behavior.
-- Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
-    - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
-  - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave private parameters unannotated.
-  - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
 - Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
 - Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term (for example `URL`, `URI`, `ID`) or an established repository abbreviation such as the `src*` naming family.
-- Never shorten or abbreviate a variable name when a more descriptive name exists; if the type is `FileProcessingResult`, the variable must be `fileProcessingResult`, not `result`.
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
 - Do not change standard `Object` method signatures when overriding them.
-    - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
-    - Preserve standard contracts exactly, especially `equals(Object)`.
-- Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
-    - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
+  - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
+  - Preserve standard contracts exactly, especially `equals(Object)`.
+- Use `@UtilityClass` for classes that contain only static utility methods and should never be instantiated; this applies to both production code and test utilities.
 - Repository-wide convention: do not introduce Java records in production code or shared test infrastructure; use classes with Lombok instead where appropriate.
   - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record handling.
 - If a utility is shared across processing phases (for example translator and sorter), place it in a neutral package instead of under a phase-specific package.
