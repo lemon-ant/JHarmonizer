@@ -1,16 +1,18 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 /**
- * Demonstrates FieldInitializerBackwardReferenceDependencyProvider in strict forward-reference mode.
+ * Demonstrates {@code ExplicitThisInitializerFieldDependencyProvider} in strict forward-reference mode.
  *
- * <p>In relaxed mode (default), the forward reference from {@code z} to {@code zeta} is ignored
- * and pure alphabetical ordering gives: {@code z, zeta}.
+ * <p>In relaxed mode (default), the backward {@code this.b} reference in {@code a}'s initializer
+ * (where {@code b} is declared before {@code a}) does NOT create a dependency edge, so alphabetical
+ * ordering reorders the fields to: {@code a, b}.
  *
- * <p>In strict mode ({@code relaxedForwardReferences: false}), the reference {@code z = zeta + 1}
- * creates a {@code zeta → z} dependency edge even though {@code zeta} is declared after {@code z}
- * in source. The constraint overrides alphabetical ordering, placing {@code zeta} before {@code z}.
+ * <p>In strict mode ({@code relaxedForwardReferences: false}), the {@code this.b} reference in
+ * {@code a = this.b + 1} creates an {@code a → b} dependency edge even though {@code b} is already
+ * declared before {@code a}. That edge prevents alphabetical reordering: {@code b} must remain
+ * before {@code a}, so this input is already in strict-conforming order.
  */
 public class StrictFieldInitForwardRefSample {
-    int zeta = 5;
-    int z = zeta + 1;
+    int b = 5;
+    int a = this.b + 1;
 }
