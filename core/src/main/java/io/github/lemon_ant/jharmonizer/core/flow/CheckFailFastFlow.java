@@ -33,12 +33,14 @@ import spoon.reflect.declaration.CtElement;
  * {@code stopRequested = true} so the pipeline can gracefully shut down
  * while preserving all accumulated statistics.
  *
- * <p>Overrides {@link #postProcessResults} to add early termination via
- * {@code takeWhile} (using a stop flag on the result stream) and stop-flag
- * propagation via {@code peek}, so files are not processed once a
- * violation has been detected.
+ * <p>Overrides {@link #preCheckSrcFiles} to skip remaining files as soon as a violation
+ * has been detected (before the expensive mapping step), and overrides
+ * {@link #postProcessResults} to propagate the stop flag via {@code peek} after
+ * each result passes through.
  */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
+
+    private final AtomicBoolean stopFlag = new AtomicBoolean(false);
 
     /**
      * Creates a flow that signals stop at the first ordering or formatting violation in a source file.
@@ -53,19 +55,32 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     }
 
     /**
-     * Extends the result stream with early-termination logic.
-     * Results are emitted until the first result that requests stop is seen.
-     * The stop flag is set after the violating result passes through,
-     * so the violating result is included in the output but no further files are processed.
+     * Extends the base JVM-shutdown pre-check with an early stop-flag guard,
+     * so that no further source files are processed once a violation has been detected.
+     * The stop-flag is set by {@link #postProcessResults} after the first violating result passes through.
+     * The flag is reset at the start of each call so this flow instance is safe to reuse.
+     *
+     * @param srcFiles the incoming stream of source files
+     * @return a stream that skips remaining files once the stop flag is set
+     */
+    @Override
+    @NonNull
+    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
+        stopFlag.set(false);
+        return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
+    }
+
+    /**
+     * Sets the stop flag after each result that requests stop passes through,
+     * so subsequent files are skipped by the pre-check phase.
      *
      * @param results the stream of per-file results from the mapping phase
-     * @return a stream that terminates after the first violation result
+     * @return the same stream, with stop-flag propagation via {@code peek}
      */
     @Override
     @NonNull
     protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
-        AtomicBoolean stopFlag = new AtomicBoolean(false);
-        return results.takeWhile(fileProcessingResult -> !stopFlag.get()).peek(fileProcessingResult -> {
+        return results.peek(fileProcessingResult -> {
             if (fileProcessingResult.isStopRequested()) {
                 stopFlag.set(true);
             }

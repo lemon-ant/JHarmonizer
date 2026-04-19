@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
@@ -113,6 +114,42 @@ class CheckFailFastFlowIntegrationTest {
     void processStream_allCleanFiles_processesAllFilesWithoutStop() {
         // Given
         CheckFailFastFlow flow = createFlow();
+        SrcFile cleanFileA = createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
+        SrcFile cleanFileB = createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
+
+        // When
+        List<FileProcessingResult> fileProcessingResults =
+                flow.processStream(List.of(cleanFileA, cleanFileB).stream()).toList();
+
+        // Then
+        assertThat(fileProcessingResults).hasSize(2);
+        assertThat(fileProcessingResults)
+                .extracting(FileProcessingResult::isStopRequested)
+                .containsOnly(false);
+    }
+
+    @Test
+    void processStream_violationOnFirstFile_skipsSecondFileBeforeMapping() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile violatingFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
+        SrcFile secondFile = createSrcFile("public class C {\n    public void c() {}\n}\n", Path.of("C.java"));
+
+        // When
+        List<FileProcessingResult> fileProcessingResults =
+                flow.processStream(Stream.of(violatingFile, secondFile)).toList();
+
+        // Then
+        assertThat(fileProcessingResults).hasSize(1);
+        assertThat(fileProcessingResults.getFirst().isStopRequested()).isTrue();
+    }
+
+    @Test
+    void processStream_reusedInstanceAfterViolation_resetsFlagAndProcessesAllFiles() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile violatingFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
+        flow.processStream(Stream.of(violatingFile)).toList();
         SrcFile cleanFileA = createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
         SrcFile cleanFileB = createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
 
