@@ -23,7 +23,7 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.Config config) {
 
         Optional<CtElement> dependentInitializationAst = resolveDependentInitializationAst(dependentMember);
         return dependentInitializationAst

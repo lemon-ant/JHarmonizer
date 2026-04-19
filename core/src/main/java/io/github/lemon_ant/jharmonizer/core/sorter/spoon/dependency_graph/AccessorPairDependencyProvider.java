@@ -22,7 +22,7 @@ final class AccessorPairDependencyProvider implements MemberDependencyProvider {
     @NonNull
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.Config config) {
 
         if (!config.isKeepAccessorsTogether() || !(dependentMember instanceof CtMethod<?> dependentMethod)) {
             return Set.of();

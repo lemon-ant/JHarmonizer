@@ -167,6 +167,53 @@ public final class MemberDependencyGraph {
     }
 
     /**
+     * Returns whether the graph contains a cycle among {@link MemberDependencyEdgeKind#DECLARATION_DEPENDENCY} edges.
+     *
+     * <p>Only declaration-dependency edges are checked because they are the edges affected by
+     * forward-reference strictness and the only edges that can produce ordering cycles.
+     * Accessor-bundle edges do not participate in topological ordering.
+     *
+     * @return {@code true} if at least one cycle exists in the declaration-dependency subgraph
+     */
+    boolean containsDeclarationDependencyCycle() {
+        Set<MemberDependencyEdgeKind> declarationOnly = EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+        Set<CtTypeMember> allMembers = new HashSet<>();
+        allMembers.addAll(outgoingEdgesByProvider.keySet());
+        allMembers.addAll(incomingEdgesByDependent.keySet());
+
+        Set<CtTypeMember> fullyVisited = new HashSet<>();
+        Set<CtTypeMember> currentPath = new HashSet<>();
+
+        for (CtTypeMember member : allMembers) {
+            if (!fullyVisited.contains(member) && detectCycleDfs(member, fullyVisited, currentPath, declarationOnly)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean detectCycleDfs(
+            CtTypeMember current,
+            Set<CtTypeMember> fullyVisited,
+            Set<CtTypeMember> currentPath,
+            Set<MemberDependencyEdgeKind> edgeKinds) {
+        currentPath.add(current);
+
+        for (CtTypeMember neighbor : findDirectNeighbors(outgoingEdgesByProvider, current, edgeKinds)) {
+            if (currentPath.contains(neighbor)) {
+                return true;
+            }
+            if (!fullyVisited.contains(neighbor) && detectCycleDfs(neighbor, fullyVisited, currentPath, edgeKinds)) {
+                return true;
+            }
+        }
+
+        currentPath.remove(current);
+        fullyVisited.add(current);
+        return false;
+    }
+
+    /**
      * Finds the transitive dependents.
      * @param providerMember the provider member
      * @return the matching transitive dependents

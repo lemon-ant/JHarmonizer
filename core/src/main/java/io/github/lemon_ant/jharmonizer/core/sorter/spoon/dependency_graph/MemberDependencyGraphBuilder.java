@@ -1,18 +1,27 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
+import io.github.lemon_ant.jharmonizer.sorting.SortingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Builds a directed dependency graph between members of a single {@link CtType}.
+ *
+ * <p>When any member group is configured for strict forward-reference mode
+ * ({@code relaxedForwardReferences = false}) and the resulting graph contains a dependency cycle,
+ * this builder automatically retries with all groups forced to relaxed mode.  If the relaxed graph
+ * is also cyclic, a {@link SortingException} is thrown.
  */
+@Slf4j
 @UtilityClass
 public class MemberDependencyGraphBuilder {
 
@@ -30,30 +39,48 @@ public class MemberDependencyGraphBuilder {
     /**
      * Builds a dependency graph using each member's natural-group configuration.
      *
+     * <p>If any member group uses strict forward-reference mode and the resulting graph has a
+     * declaration-dependency cycle, the graph is rebuilt with all groups forced to relaxed mode.
+     * If the relaxed graph is still cyclic, a {@link SortingException} is thrown.
+     *
      * @param typeMember2NaturalMemberGroup maps each explicit source member to its natural member group
-     * @return the populated dependency graph
+     * @return the acyclic populated dependency graph
+     * @throws SortingException if a dependency cycle exists that cannot be resolved by falling back to relaxed mode
      */
     @NonNull
     public static MemberDependencyGraph buildDependencyGraph(
             @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
-        return buildDependencyGraph(typeMember2NaturalMemberGroup, false);
+
+        MemberDependencyGraph memberDependencyGraph =
+                buildDependencyGraphInternal(typeMember2NaturalMemberGroup, false);
+
+        if (!memberDependencyGraph.containsDeclarationDependencyCycle()) {
+            return memberDependencyGraph;
+        }
+
+        boolean anyGroupUsesStrictMode = typeMember2NaturalMemberGroup.values().stream()
+                .anyMatch(memberGroup -> !memberGroup.isRelaxedForwardReferences());
+        if (!anyGroupUsesStrictMode) {
+            throw new SortingException("Dependency cycle detected among members");
+        }
+
+        String typeName = resolveTypeName(typeMember2NaturalMemberGroup);
+        log.warn(
+                "Dependency cycle detected in strict forward-reference mode for type '{}'. "
+                        + "Retrying dependency analysis with relaxed forward references.",
+                typeName);
+
+        MemberDependencyGraph relaxedDependencyGraph =
+                buildDependencyGraphInternal(typeMember2NaturalMemberGroup, true);
+        if (relaxedDependencyGraph.containsDeclarationDependencyCycle()) {
+            throw new SortingException("Dependency cycle detected among members");
+        }
+
+        return relaxedDependencyGraph;
     }
 
-    /**
-     * Builds a dependency graph, optionally overriding all groups to use relaxed forward-reference mode.
-     *
-     * <p>When {@code forceRelaxedForwardReferences} is {@code true}, every member's
-     * {@link DependencyDetectorConfig#isRelaxedForwardReferences()} is forced to {@code true}
-     * regardless of its natural-group setting.  This is used as a fallback when the strict-mode
-     * graph produces a dependency cycle that would otherwise cause a {@link io.github.lemon_ant.jharmonizer.sorting.SortingException}.
-     *
-     * @param typeMember2NaturalMemberGroup  maps each explicit source member to its natural member group
-     * @param forceRelaxedForwardReferences  when {@code true}, overrides relaxed-forward-references to {@code true}
-     *                                       for every member regardless of the group configuration
-     * @return the populated dependency graph
-     */
     @NonNull
-    public static MemberDependencyGraph buildDependencyGraph(
+    private static MemberDependencyGraph buildDependencyGraphInternal(
             @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
             boolean forceRelaxedForwardReferences) {
 
@@ -64,13 +91,13 @@ public class MemberDependencyGraphBuilder {
             CompiledMemberGroup dependentNaturalGroup =
                     resolveNaturalGroupOrThrow(dependentMember, typeMember2NaturalMemberGroup);
 
-            DependencyDetectorConfig detectorConfig = new DependencyDetectorConfig(
+            MemberDependencyProvider.Config providerConfig = new MemberDependencyProvider.Config(
                     dependentNaturalGroup.isKeepAccessorsTogether(),
                     forceRelaxedForwardReferences || dependentNaturalGroup.isRelaxedForwardReferences());
 
             memberDependencyProviders.stream()
                     .flatMap(memberDependencyProvider ->
-                            memberDependencyProvider.findDirectProviderEdges(dependentMember, detectorConfig).stream())
+                            memberDependencyProvider.findDirectProviderEdges(dependentMember, providerConfig).stream())
                     .forEach(providerEdge -> memberDependencyGraph.addEdge(
                             providerEdge.getAdjacentMember(), dependentMember, providerEdge.getEdgeKind()));
         });
@@ -86,5 +113,14 @@ public class MemberDependencyGraphBuilder {
                 .orElseThrow(() -> new IllegalStateException("Natural group was not resolved for type member. "
                         + "Expected typeMember2CompiledMemberGroup to contain all explicit (source) type members. "
                         + "Missing member: " + typeMember));
+    }
+
+    @Nullable
+    private static String resolveTypeName(Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup) {
+        return typeMember2NaturalMemberGroup.keySet().stream()
+                .findFirst()
+                .map(CtTypeMember::getDeclaringType)
+                .map(CtType::getQualifiedName)
+                .orElse(null);
     }
 }

@@ -41,7 +41,7 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
     @NonNull
     @Override
     public Set<MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.Config config) {
 
         Optional<CtElement> dependentInitializationAstRoot =
                 InitializationOrderDependencyUtils.resolveInitializationAstRoot(dependentMember);

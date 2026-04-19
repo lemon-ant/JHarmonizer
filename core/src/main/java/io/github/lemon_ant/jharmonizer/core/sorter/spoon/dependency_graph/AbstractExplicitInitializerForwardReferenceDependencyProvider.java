@@ -39,7 +39,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     @NonNull
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
-            @NonNull CtTypeMember dependentMember, @NonNull DependencyDetectorConfig config) {
+            @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.Config config) {
         if (!(dependentMember instanceof CtField<?> referencedField) || !isSupportedReferencedField(referencedField)) {
             return Set.of();
         }
