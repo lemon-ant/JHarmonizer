@@ -219,7 +219,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     protected final FormattingResult formatSrcAfterModelBuildFailure(
             @NonNull SrcFile srcFile, @NonNull String failureMessage) {
         if (JvmShutdownSignal.isShuttingDown()) {
-            LOG.debug("Skipping sorting for {} because JVM is shutting down.", srcFile.getPath());
+            LOG.debug("Skipping sorting for {} after model build failure (JVM is shutting down).", srcFile.getPath());
         } else {
             LOG.warn(
                     "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
