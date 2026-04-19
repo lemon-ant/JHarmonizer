@@ -2,8 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultHelpers.buildFullyOffFileSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultHelpers.buildSyntheticParsingStatistic;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 

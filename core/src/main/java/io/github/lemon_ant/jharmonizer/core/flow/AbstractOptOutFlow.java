@@ -166,7 +166,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .orElse(false);
         if (reuseOriginalSrc) {
             JHarmonizerOptOutMode reuseMode = fileOptOutMode.orElseThrow();
-            FlowResultHelpers.logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
+            FlowResultUtils.logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
             String originalSrcCode = srcFile.getSrcCode();
             return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),

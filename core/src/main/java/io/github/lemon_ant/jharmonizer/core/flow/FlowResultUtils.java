@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @UtilityClass
-class FlowResultHelpers {
+class FlowResultUtils {
 
     /**
      * Builds a synthetic {@link ParsingStatistic} for files that were never fully parsed
