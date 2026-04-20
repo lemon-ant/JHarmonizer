@@ -29,6 +29,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
+    private static final String INPUT_FILES_GLOB = "**/" + INPUT_DIRECTORY + "/*.java";
     private static final Pattern SCENARIO_PREFIX_PATTERN = Pattern.compile("^(\\d+)-.+$");
 
     protected final void processFixtureInputFileMatchesExpectedAndCompileAfter(
@@ -111,7 +112,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(getFixturesRoot())
-                .includeGlobs(Set.of("**/" + INPUT_DIRECTORY + "/*.java"))
+                .includeGlobs(Set.of(INPUT_FILES_GLOB))
                 .build();
         List<Path> fixtureInputFiles;
         try (Stream<Path> foundPaths = GlobPathFinder.findPaths(pathQuery)) {
