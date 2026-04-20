@@ -19,6 +19,7 @@ class StartupBannerRenderer {
     private static final int LABEL_WIDTH = "Base directory:".length() + 1;
     private static final String LABEL_FORMAT = "%-" + LABEL_WIDTH + "s";
     private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH);
+    private static final char BACKSLASH = '\\';
 
     /**
      * Builds a multiline startup banner describing the active processing parameters.
@@ -63,10 +64,42 @@ class StartupBannerRenderer {
             lines.add(renderRow(label, emptyPlaceholder));
             return;
         }
-        List<String> sortedGlobs = globs.stream().sorted().toList();
+        List<String> sortedGlobs = globs.stream()
+                .map(StartupBannerRenderer::normalizeGlobSeparators)
+                .sorted()
+                .toList();
         lines.add(renderRow(label, sortedGlobs.getFirst()));
         for (int globIndex = 1; globIndex < sortedGlobs.size(); globIndex++) {
             lines.add(GLOB_CONTINUATION_INDENT + sortedGlobs.get(globIndex));
         }
+    }
+
+    /**
+     * Normalizes path-separator backslashes in a glob pattern to forward slashes for consistent
+     * display. A backslash that precedes a glob metacharacter ({@code * ? [ ] { } \}) is an
+     * escape sequence and is left unchanged; all other backslashes are treated as path separators
+     * and replaced with {@code /}.
+     *
+     * @param glob the raw glob pattern
+     * @return the pattern with path-separator backslashes replaced by forward slashes
+     */
+    @NonNull
+    private static String normalizeGlobSeparators(String glob) {
+        StringBuilder result = new StringBuilder(glob.length());
+        for (int i = 0; i < glob.length(); i++) {
+            char c = glob.charAt(i);
+            if (c == BACKSLASH && i + 1 < glob.length() && isGlobMetachar(glob.charAt(i + 1))) {
+                result.append(c);
+            } else if (c == BACKSLASH) {
+                result.append('/');
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    private static boolean isGlobMetachar(char c) {
+        return c == '*' || c == '?' || c == '[' || c == ']' || c == '{' || c == '}' || c == BACKSLASH;
     }
 }
