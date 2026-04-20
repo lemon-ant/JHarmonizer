@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -20,6 +21,7 @@ class StartupBannerRenderer {
     private static final String LABEL_FORMAT = "%-" + LABEL_WIDTH + "s";
     private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH);
     private static final char BACKSLASH = '\\';
+    private static final Set<Character> GLOB_METACHARS = Set.of('*', '?', '[', ']', '{', '}', BACKSLASH);
 
     /**
      * Builds a multiline startup banner describing the active processing parameters.
@@ -100,6 +102,6 @@ class StartupBannerRenderer {
     }
 
     private static boolean isGlobMetachar(char c) {
-        return c == '*' || c == '?' || c == '[' || c == ']' || c == '{' || c == '}' || c == BACKSLASH;
+        return GLOB_METACHARS.contains(c);
     }
 }
