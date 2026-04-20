@@ -47,6 +47,7 @@ final class ProcessingProgressReporter {
             case CHECKED -> checkedCount.increment();
             case SKIPPED -> skippedCount.increment();
             case ERROR -> errorCount.increment();
+            default -> throw new IllegalStateException("Unexpected status: " + status);
         }
     }
 
