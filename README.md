@@ -162,7 +162,7 @@ Workarounds:
 1. For inline comments: avoid long trailing `//` comments; move long notes to a standalone line (or short block comment) above the statement.
 2. For long annotation/string concatenations: prefer extracting long literals/expressions into named constants (or helper variables/methods) so formatter has fewer fragile wrap points.
 3. Keep annotation argument values and fluent/pointcut expressions shorter per line where practical to reduce wrap oscillation risk.
-4. If the file still oscillates between formatter runs, use `@jharmonizer:sort-off` (keeps formatting but disables sorting) or `@jharmonizer:fully-off` (disables harmonization) as a temporary mitigation.
+4. If the file still oscillates between formatter runs, use `// @jharmonizer:sort-off` (keeps formatting but disables sorting) or `// @jharmonizer:fully-off` (disables harmonization) as a temporary mitigation.
 
 ## Maven/archetype template placeholders (`package ${package};`)
 
