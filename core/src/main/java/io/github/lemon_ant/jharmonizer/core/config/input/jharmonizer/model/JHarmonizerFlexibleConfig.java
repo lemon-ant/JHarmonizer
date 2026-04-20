@@ -14,7 +14,7 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Flexible overlay for JHarmonizerConfig. All fields are optional.
+ * Flexible overlay for JHarmonizerConfig. Each field is individually optional, but at least one must be set.
  */
 @Value
 @SuppressWarnings("PMD.DataClass")

@@ -14,7 +14,7 @@ import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Flexible overlay for UnifiedConfig. All fields are optional.
+ * Flexible overlay for UnifiedConfig. Each field is individually optional, but at least one must be set.
  * Use UnifiedConfigMerger.merge(baseline, overlay) to produce a strict UnifiedConfig.
  * This class does NOT define defaults and does NOT invent values.
  * Root member groups are merged only at the root level when provided.
