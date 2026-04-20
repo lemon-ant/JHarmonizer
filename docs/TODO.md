@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # JHarmonizer — backlog of design & performance ideas
 
 This file is a living backlog of ideas that we intentionally postpone until **after** the first working version
@@ -1090,5 +1095,29 @@ because the return value of "spoon.reflect.reference.CtFieldReference.getDeclari
 - [ ] Create upstream Spoon issue with minimal reproducer from regression `03-string-selector-anonymous-chain-overflow`.
 - [ ] Attach captured stack trace and note no-classpath/e2e context where recursion occurs.
 - [ ] Revisit local `CtNewClass` guard scope after upstream fix is available.
+
+---
+
+
+### 6. Open upstream Palantir formatter issue for non-deterministic trailing comment/code reflow
+
+#### Status
+- [ ] Not filed yet
+- [ ] Collect minimal reproducer from the observed two-pass formatting diffs
+- [ ] File upstream issue in Palantir Java Formatter tracker
+
+#### Why this exists
+In specific wrapped-expression scenarios with long trailing `//` comments, one formatting run and the next
+formatting run can produce different output:
+- wrapped comment continuation line indentation can change;
+- adjacent wrapped code layout can also change between passes.
+
+This is an upstream formatter idempotency issue, not a JHarmonizer sorting/rendering issue, but we should track the
+upstream ticket and link it from our documentation once created.
+
+#### Follow-up actions
+- [ ] Create minimal Java snippets that reproduce both comment-reflow and code-reflow variants.
+- [ ] Open issue in `palantir/palantir-java-format` with exact formatter version and reproducers.
+- [ ] Add the upstream issue link to `docs/05-Formatter.md` and `README.md` after filing.
 
 ---
