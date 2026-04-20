@@ -63,7 +63,8 @@ class StartupBannerRenderer {
             lines.add(renderRow(label, emptyPlaceholder));
             return;
         }
-        List<String> sortedGlobs = globs.stream().sorted().toList();
+        List<String> sortedGlobs =
+                globs.stream().map(g -> g.replace('\\', '/')).sorted().toList();
         lines.add(renderRow(label, sortedGlobs.getFirst()));
         for (int globIndex = 1; globIndex < sortedGlobs.size(); globIndex++) {
             lines.add(GLOB_CONTINUATION_INDENT + sortedGlobs.get(globIndex));
