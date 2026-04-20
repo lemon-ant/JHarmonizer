@@ -75,7 +75,7 @@ This wrapper is essential to finalize formatted, readable Java source code that 
 Palantir Java Formatter has known edge cases where formatting is **not idempotent** for some wrapped constructs,
 including long trailing `//` comments on wrapped expressions.
 
-Observed behavior (matches the attached screenshots):
+Observed behavior:
 
 1. First formatter pass can wrap a long trailing comment and indent the continued comment line under the original
    comment token.
