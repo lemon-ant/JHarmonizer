@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 #  Formatter Wrapper
 
 ## Purpose
@@ -64,6 +69,101 @@ These parameters must be passed through the `Configuration` model and injected i
 ## Summary
 
 This wrapper is essential to finalize formatted, readable Java source code that adheres to a unified style. It should be executed only **after** AST transformation and serialization are complete.
+
+## Known limitation: non-deterministic line-comment reflow in Palantir formatter
+
+Palantir Java Formatter has a known edge case where formatting is **not idempotent** for some long trailing
+`//` comments on wrapped expressions.
+
+Observed behavior (matches the attached screenshots):
+
+1. First formatter pass can wrap a long trailing comment and indent the continued comment line under the original
+   comment token.
+2. Second formatter pass can realign that continued comment line under a wrapped code fragment.
+3. In more complex cases, the second pass can also reflow adjacent code differently (for example collapsing and
+   then re-expanding chained or wrapped invocations around the same trailing comment area).
+4. The resulting source differs between runs even when code semantics do not change.
+
+Concrete examples:
+
+```java
+// pass 1
+assertEquals(
+    2L,
+    recovery.getMaxTransactionId()); // transaction ID is still 2 because that's what was written to the
+                                     // journal
+
+// pass 2
+assertEquals(
+    2L,
+    recovery.getMaxTransactionId()); // transaction ID is still 2 because that's what was written to the
+// journal
+```
+
+```java
+// pass 1
+factory.setShutdownQuietPeriod(
+        Duration
+                .ZERO); // Quiet period not necessary since sending threads will have completed before shutting
+                        // down event sender
+
+// pass 2
+factory.setShutdownQuietPeriod(
+        Duration.ZERO); // Quiet period not necessary since sending threads will have completed before shutting
+        // down event sender
+```
+
+
+```java
+// pass 1
+@WritesAttribute(
+        attribute = "http.headers.XXX",
+        description =
+                "Each of the HTTP Headers that is received in the request will be added as an attribute, prefixed"
+                        + " with \"http.headers.\" For example, if the request contains an HTTP Header named"
+                        + " \"x-my-header\", then the value will be added to an attribute named"
+                        + " \"http.headers.x-my-header\""),
+
+// pass 2
+@WritesAttribute(
+        attribute = "http.headers.XXX",
+        description =
+                "Each of the HTTP Headers that is received in the request will be added as an attribute, prefixed"
+                            + " with \"http.headers.\" For example, if the request contains an HTTP Header named"
+                            + " \"x-my-header\", then the value will be added to an attribute named"
+                            + " \"http.headers.x-my-header\""),
+```
+
+```java
+// pass 1
+@Around(
+        "within(org.apache.nifi.web.dao.ProcessGroupDAO+) && execution(void enableComponents(String,"
+                + " org.apache.nifi.controller.ScheduledState, java.util.Set<String>)) && args(groupId, state,"
+                + " componentIds)")
+public void enableComponentsAdvice(
+
+// pass 2
+@Around("within(org.apache.nifi.web.dao.ProcessGroupDAO+) && execution(void enableComponents(String,"
+        + " org.apache.nifi.controller.ScheduledState, java.util.Set<String>)) && args(groupId, state,"
+        + " componentIds)")
+public void enableComponentsAdvice(
+        ProceedingJoinPoint proceedingJoinPoint, String groupId, ScheduledState state, Set<String> componentIds)
+        throws Throwable {
+```
+
+This behavior originates in the upstream formatter engine and is **not** caused by JHarmonizer sorting or rendering.
+JHarmonizer delegates formatting to Palantir formatter as-is.
+
+Practical guidance for users:
+
+- For inline comments: avoid long trailing `//` comments; move long notes to a standalone line (or short block comment)
+  above the statement.
+- For long annotation/string concatenations: prefer extracting long literals/expressions into named constants (or helper
+  variables/methods) so formatter has fewer fragile wrap points.
+- Keep annotation argument values and fluent/pointcut expressions shorter per line where practical to reduce wrap
+  oscillation risk.
+- If a file still oscillates between formatter runs, use `// @jharmonizer:sort-off` (keeps formatting but disables
+  sorting) or `// @jharmonizer:fully-off` (disables harmonization) as a temporary mitigation.
 
 ## Known limitation: template placeholders are not Java grammar
 
