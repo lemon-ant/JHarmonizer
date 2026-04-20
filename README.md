@@ -82,10 +82,11 @@ The following are intentionally unsupported and ignored with a warning:
 - `@jharmonizer:on`, `@jharmonizer:format-off`, `@jharmonizer:format-on`, and similar variants
 - directives inside method bodies or inside Javadoc
 
-## Known formatter edge case: non-deterministic trailing line-comment wrapping
+## Known formatter edge case: non-deterministic reflow across repeated runs
 
-Palantir formatter can produce non-idempotent output for some long trailing `//` comments attached to wrapped
-expressions. In observed cases this affects **both comment indentation and code layout** between consecutive runs.
+Palantir formatter can produce non-idempotent output for some long or heavily wrapped constructs. In observed
+cases this affects **both comment indentation and code layout** between consecutive runs; some cases involve
+trailing `//` comments attached to wrapped expressions, while others affect wrapped expressions more generally.
 
 Concrete examples:
 
