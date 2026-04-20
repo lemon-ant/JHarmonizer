@@ -70,10 +70,10 @@ These parameters must be passed through the `Configuration` model and injected i
 
 This wrapper is essential to finalize formatted, readable Java source code that adheres to a unified style. It should be executed only **after** AST transformation and serialization are complete.
 
-## Known limitation: non-deterministic line-comment reflow in Palantir formatter
+## Known limitation: non-deterministic wrapping and reflow in Palantir formatter
 
-Palantir Java Formatter has a known edge case where formatting is **not idempotent** for some long trailing
-`//` comments on wrapped expressions.
+Palantir Java Formatter has known edge cases where formatting is **not idempotent** for some wrapped constructs,
+including long trailing `//` comments on wrapped expressions.
 
 Observed behavior (matches the attached screenshots):
 
