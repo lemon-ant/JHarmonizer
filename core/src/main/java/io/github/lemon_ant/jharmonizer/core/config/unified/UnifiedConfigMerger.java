@@ -28,7 +28,9 @@ public class UnifiedConfigMerger {
     public static UnifiedConfig merge(@NonNull UnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
         UnifiedTopLevelTypesOrdering top =
                 overlay.getTopLevelTypesOrdering().orElse(baseline.getTopLevelTypesOrdering());
-        UnifiedFormatting formatting = overlay.getFormatting().orElse(baseline.getFormatting());
+        UnifiedFormatting formatting = overlay.getFormatting()
+                .map(flexFormatting -> mergeFormatting(baseline.getFormatting(), flexFormatting))
+                .orElse(baseline.getFormatting());
         UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
         Boolean backupsEnabled = overlay.getBackupsEnabled().orElse(baseline.isBackupsEnabled());
         Boolean printProcessingStatistics =
@@ -59,8 +61,11 @@ public class UnifiedConfigMerger {
             @NonNull FlexibleUnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
         UnifiedTopLevelTypesOrdering top = overlay.getTopLevelTypesOrdering()
                 .orElse(baseline.getTopLevelTypesOrdering().orElse(null));
-        UnifiedFormatting formatting =
-                overlay.getFormatting().orElse(baseline.getFormatting().orElse(null));
+        FlexibleUnifiedFormatting formatting = overlay.getFormatting()
+                .map(overlayFormatting -> baseline.getFormatting()
+                        .map(baselineFormatting -> mergeFlexibleFormatting(baselineFormatting, overlayFormatting))
+                        .orElse(overlayFormatting))
+                .orElse(baseline.getFormatting().orElse(null));
         UnifiedHeaderLine header =
                 overlay.getHeaderLine().orElse(baseline.getHeaderLine().orElse(null));
         Boolean backupsEnabled =
@@ -83,6 +88,33 @@ public class UnifiedConfigMerger {
             builder.rootMemberGroups(root);
         }
         return builder.build();
+    }
+
+    @NonNull
+    private static UnifiedFormatting mergeFormatting(UnifiedFormatting baseline, FlexibleUnifiedFormatting overlay) {
+        return new UnifiedFormatting(
+                overlay.getFixImports().orElse(baseline.isFixImports()),
+                overlay.getFormatterStyle().orElse(baseline.getFormatterStyle()),
+                overlay.getBlankLineAfterTypeHeader().orElse(baseline.isBlankLineAfterTypeHeader()),
+                overlay.getBlankLineBeforeComment().orElse(baseline.isBlankLineBeforeComment()),
+                overlay.getBlankLineBetweenFields().orElse(baseline.isBlankLineBetweenFields()));
+    }
+
+    @NonNull
+    private static FlexibleUnifiedFormatting mergeFlexibleFormatting(
+            FlexibleUnifiedFormatting baseline, FlexibleUnifiedFormatting overlay) {
+        return FlexibleUnifiedFormatting.builder()
+                .fixImports(
+                        overlay.getFixImports().orElse(baseline.getFixImports().orElse(null)))
+                .formatterStyle(overlay.getFormatterStyle()
+                        .orElse(baseline.getFormatterStyle().orElse(null)))
+                .blankLineAfterTypeHeader(overlay.getBlankLineAfterTypeHeader()
+                        .orElse(baseline.getBlankLineAfterTypeHeader().orElse(null)))
+                .blankLineBeforeComment(overlay.getBlankLineBeforeComment()
+                        .orElse(baseline.getBlankLineBeforeComment().orElse(null)))
+                .blankLineBetweenFields(overlay.getBlankLineBetweenFields()
+                        .orElse(baseline.getBlankLineBetweenFields().orElse(null)))
+                .build();
     }
 
     @NonNull

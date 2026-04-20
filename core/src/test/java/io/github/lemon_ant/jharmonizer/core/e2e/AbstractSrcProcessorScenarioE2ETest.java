@@ -208,8 +208,9 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     @NonNull
     private static SrcProcessor buildSrcProcessor(Path scenarioConfigPath) {
         if (scenarioConfigPath == null) {
-            return new SrcProcessor(disableProcessingStatisticsOutput(
-                    FlexibleUnifiedConfig.builder().build()));
+            return new SrcProcessor(FlexibleUnifiedConfig.builder()
+                    .printProcessingStatistics(false)
+                    .build());
         }
 
         FlexibleUnifiedConfig flexibleConfig =

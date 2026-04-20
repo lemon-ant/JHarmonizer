@@ -3,8 +3,8 @@ package io.github.lemon_ant.jharmonizer.core;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
@@ -379,7 +379,13 @@ class OptOutSrcProcessorIntegrationTest {
                 .build();
         return FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(topLevelTypesOrdering)
-                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false))
+                .formatting(FlexibleUnifiedFormatting.builder()
+                        .fixImports(true)
+                        .formatterStyle(UnifiedFormatterStyle.PALANTIR)
+                        .blankLineAfterTypeHeader(true)
+                        .blankLineBeforeComment(true)
+                        .blankLineBetweenFields(false)
+                        .build())
                 .backupsEnabled(false)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .rootMemberGroups(List.of(rootMemberGroup))
