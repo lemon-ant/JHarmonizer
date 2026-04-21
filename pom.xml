@@ -22,6 +22,7 @@
         <argLine/>
         <!-- Late-bound by Failsafe so integration-test coverage can inject its agent without unresolved placeholders. -->
         <failsafeArgLine/>
+        <glob-path-finder.version>1.0.0</glob-path-finder.version>
         <jackson.version>2.21.2</jackson.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
