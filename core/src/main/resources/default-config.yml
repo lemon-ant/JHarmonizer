@@ -36,16 +36,13 @@ type-members-ordering:
         includes: field
         groups:
           - name: JUnit Constants
-            separator: new-line
             includes: [ static, final ]
 
           - name: JUnit Static fields
-            separator: new-line
             includes: static
 
       - name: JUnit Methods
         separator: new-line
-        ordering-rules: alpha
         includes: method
         groups:
           - name: JUnit Setup Methods
@@ -57,7 +54,6 @@ type-members-ordering:
 
           - name: JUnit Test Methods
             separator: header
-            ordering-rules: alpha
             includes: '@Test'
 
           - name: JUnit Teardown Methods
@@ -70,14 +66,17 @@ type-members-ordering:
           - name: Utility Methods
             separator: header
             includes: static
-            ordering-rules: alpha
 
-# TODO Надо подумать, тесты могут содержать вложенные тесты и еще что-то, все надо предусмотреть и испытать
       - name: JUnit Test Configuration
         separator: new-line
-        ordering-rules: alpha
         includes:
           - [ static, class, '@TestConfiguration' ]
+
+      # Nested test classes annotated with @Nested (JUnit 5); sorted alphabetically after other groups.
+      - name: JUnit Nested Tests
+        separator: new-line
+        includes:
+          - [ class, '@Nested' ]
 
 
   - name: DTO and Entities
@@ -100,82 +99,76 @@ type-members-ordering:
 
       - name: Fields
         separator: new-line
-        ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
           - name: Constants
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: [ static, final ]
             groups:
               - name: Public Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: public
               - name: Protected Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: protected
               - name: Package-Private Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: package-private
               - name: Private Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: private
 
           - name: Static Fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: static
 
           - name: Final Instance Fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: final
 
       - name: Static Initializer Blocks
-        separator: none
         ordering-rules: preserve
         includes: [ static, initializer ]
 
       - name: Static Methods
-        separator: none
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
-        separator: none
         ordering-rules: preserve
         includes: [ initializer ]
 
       - name: Constructors
-        separator: none
         includes: constructor
 
-# TODO Тут можно сделать одну родительскую группу для методов инстансе
-      - name: Accessor Methods
-        separator: none
-        keepAccessorsTogether: true
-        includes: [ method, ~^(get|set|is|has).+$ ]
-
+      # Public methods first (accessors, then regular, then Object overrides), followed by non-public.
       - name: Instance Methods
-        separator: none
         includes: method
-        excludes:
-          - =toString
-          - =equals
-          - =hashCode
-          - =clone
+        groups:
+          - name: Public Methods
+            includes: [ method, public ]
+            groups:
+              - name: Accessor Methods
+                keepAccessorsTogether: true
+                includes: ~^(get|set|is|has).+$
 
-# TODO Эти методы должны попасть сразу после публичных геттеров/сеттеров и публичных произвольных методов, потому что они публичные
-      - name: Basic Object Methods
-        ordering-rules: preserve
-        includes:
-          - [ method, =toString ]
-          - [ method, =equals ]
-          - [ method, =hashCode ]
-          - [ method, =clone ]
+              - name: Other Methods
+                includes: method
+                excludes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
+
+              - name: Basic Object Methods
+                ordering-rules: preserve
+                includes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
+
+          - name: Non-Public Methods
+            includes: method
+            excludes: public
 
   - name: Default Rule
     includes: ~.*
@@ -183,14 +176,10 @@ type-members-ordering:
     groups:
       # Record components live in the record header; keep them stable.
       - name: Record components
-        separator: none
-        ordering-rules: preserve
         includes: [ record-component ]
 
       # Enum constants must stay at the top of enum bodies; keep them stable.
       - name: Enum constants
-        separator: none
-        ordering-rules: preserve
         includes: [ enum-constant ]
 
       - name: Fields
@@ -205,12 +194,10 @@ type-members-ordering:
                 includes: final
                 groups:
                   - name: serialVersionUID
-                    separator: new-line
                     ordering-rules: preserve
                     includes: [ =serialVersionUID ]
 
                   - name: Logger fields
-                    separator: new-line
                     ordering-rules: preserve
                     includes: [ '~(?i)(log|.*logger)$' ]
 
@@ -218,18 +205,15 @@ type-members-ordering:
             includes: final
 
       - name: Initializers
-        separator: none
-        ordering-rules: preserve
         includes: [ initializer ]
         groups:
           - name: Static initializers
-            includes: [ static, initializer ]
+            includes: static
 
           - name: Instance initializers
             includes: [ initializer ]
 
       - name: Methods
-        separator: none
         ordering-rules: alpha
         keepAccessorsTogether: true
         includes:
@@ -247,8 +231,21 @@ type-members-ordering:
 
               - name: Instance methods
                 includes: method
+                excludes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
 
-          # TODO Тут еще должны перекрытые методы Object, Clonable, Comparable появиться
+              - name: Basic Object Methods
+                ordering-rules: preserve
+                includes:
+                  - [ method, =toString ]
+                  - [ method, =equals ]
+                  - [ method, =hashCode ]
+                  - [ method, =clone ]
+                  - [ method, =compareTo ]
 
           - name: Protected
             includes: protected
