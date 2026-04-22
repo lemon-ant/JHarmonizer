@@ -116,7 +116,6 @@
                     -->
                     <postBuildHookScript>verify</postBuildHookScript>
                     <projectsDirectory>src/it</projectsDirectory>
-                    <settingsFile>src/it/settings.xml</settingsFile>
                     <showErrors>true</showErrors>
                     <streamLogsOnFailures>true</streamLogsOnFailures>
                 </configuration>

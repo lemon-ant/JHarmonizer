@@ -178,28 +178,9 @@ For template sources you have two supported options:
    because the formatter cannot parse the non-Java template placeholders; the file will be skipped and left unmodified.
 ## Build
 
-Default (local / IDE / CI that relies on project config):
-
 ```bash
 mvn -B -ntp verify
 ```
-
-This uses `.mvn/maven.config`, which points to `.mvn/settings.xml`.
-
-Codex/runtime mode (proxy-enabled settings override via environment variable):
-
-```bash
-export MAVEN_ARGS="--settings .mvn/settings-codex.xml"
-mvn -B -ntp verify
-```
-
-Recommended Codex env var value:
-
-```bash
-MAVEN_ARGS=--settings\ .mvn/settings-codex.xml
-```
-
-So local environments keep using `.mvn/settings.xml`, while Codex overrides settings through `MAVEN_ARGS` only.
 
 ## Sorting performance benchmark (JMH)
 
