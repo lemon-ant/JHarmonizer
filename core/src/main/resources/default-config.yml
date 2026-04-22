@@ -1,5 +1,4 @@
 formatting:
-  # Сделать более гибкое перекрытие
   fix-imports: true
   formatter-style: PALANTIR # NONE, AOSP, GOOGLE, PALANTIR
   blank-line-after-type-header: false
@@ -38,11 +37,10 @@ type-members-ordering:
         groups:
           - name: JUnit Constants
             separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: [ static, final ]
+
           - name: JUnit Static fields
             separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: static
 
       - name: JUnit Methods
@@ -74,6 +72,7 @@ type-members-ordering:
             includes: static
             ordering-rules: alpha
 
+# TODO Надо подумать, тесты могут содержать вложенные тесты и еще что-то, все надо предусмотреть и испытать
       - name: JUnit Test Configuration
         separator: new-line
         ordering-rules: alpha
@@ -143,29 +142,25 @@ type-members-ordering:
 
       - name: Static Methods
         separator: none
-        ordering-rules: [ visibility-desc, alpha ]
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
         separator: none
         ordering-rules: preserve
         includes: [ initializer ]
-        excludes: static
 
       - name: Constructors
         separator: none
-        ordering-rules: [ visibility-desc, alpha ]
         includes: constructor
 
+# TODO Тут можно сделать одну родительскую группу для методов инстансе
       - name: Accessor Methods
         separator: none
         keepAccessorsTogether: true
-        ordering-rules: [ visibility-desc, alpha ]
         includes: [ method, ~^(get|set|is|has).+$ ]
 
       - name: Instance Methods
         separator: none
-        ordering-rules: [ visibility-desc, alpha ]
         includes: method
         excludes:
           - =toString
@@ -173,6 +168,7 @@ type-members-ordering:
           - =hashCode
           - =clone
 
+# TODO Эти методы должны попасть сразу после публичных геттеров/сеттеров и публичных произвольных методов, потому что они публичные
       - name: Basic Object Methods
         ordering-rules: preserve
         includes:
@@ -231,7 +227,6 @@ type-members-ordering:
 
           - name: Instance initializers
             includes: [ initializer ]
-            excludes: static
 
       - name: Methods
         separator: none
@@ -252,6 +247,8 @@ type-members-ordering:
 
               - name: Instance methods
                 includes: method
+
+          # TODO Тут еще должны перекрытые методы Object, Clonable, Comparable появиться
 
           - name: Protected
             includes: protected
