@@ -58,7 +58,11 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @Option(
             names = {"-b", "--base-dir"},
-            description = "Base directory containing Java source files (default: current directory).")
+            description = {
+                "Base directory containing Java source files.",
+                "Defaults to the current directory when not specified."
+            })
+    @Nullable
     private Path baseDir;
 
     @Option(
@@ -155,13 +159,13 @@ abstract class BaseCommand implements Callable<Integer> {
         FlowType flowType = getFlowType();
         FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
                 commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
-        SrcProcessingResult result = new SrcProcessor(effectiveConfig)
+        SrcProcessingResult srcProcessingResult = new SrcProcessor(effectiveConfig)
                 .processSources(
                         commandOptions.getBaseDir(),
                         commandOptions.getIncludeGlobs(),
                         commandOptions.getExcludeGlobs(),
                         flowType);
-        int exitCode = result.isSuccess() ? 0 : checkFailedExitCode;
+        int exitCode = srcProcessingResult.isSuccess() ? 0 : checkFailedExitCode;
         log.info("Exit code: {}", exitCode);
         return exitCode;
     }

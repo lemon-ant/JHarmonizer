@@ -1,10 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
-import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFormatting;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
+import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
@@ -24,7 +25,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     @NonNull
     public static FlexibleUnifiedConfig convert2FlexibleUnified(@NonNull JHarmonizerFlexibleConfig vendorConfig) {
         UnifiedTopLevelTypesOrdering topLevelTypesOrdering = readTopLevelTypesOrdering(vendorConfig);
-        UnifiedFormatting formatting = readFormatting(vendorConfig);
+        FlexibleUnifiedFormatting formatting = readFormatting(vendorConfig);
         Boolean backupsEnabled = vendorConfig.getBackupsEnabled().orElse(null);
         Boolean printProcessingStatistics =
                 vendorConfig.getPrintProcessingStatistics().orElse(null);
@@ -51,10 +52,10 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @Nullable
-    private static UnifiedFormatting readFormatting(JHarmonizerFlexibleConfig vendorConfig) {
+    private static FlexibleUnifiedFormatting readFormatting(JHarmonizerFlexibleConfig vendorConfig) {
         return vendorConfig
                 .getFormatting()
-                .map(JHarmonizerFlexible2FlexibleUnifiedConverter::mapFormatting)
+                .map(JHarmonizerFlexible2FlexibleUnifiedConverter::mapFlexibleFormatting)
                 .orElse(null);
     }
 
@@ -76,12 +77,19 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
     }
 
     @NonNull
-    private static UnifiedFormatting mapFormatting(JHarmonizerFormatting vendorFormatting) {
-        return new UnifiedFormatting(
-                vendorFormatting.isFixImports(),
-                vendorFormatting.getFormatterStyle().getUnifiedFormatterStyle(),
-                vendorFormatting.isBlankLineAfterTypeHeader(),
-                vendorFormatting.isBlankLineBeforeComment(),
-                vendorFormatting.isBlankLineBetweenFields());
+    private static FlexibleUnifiedFormatting mapFlexibleFormatting(JHarmonizerFlexibleFormatting vendorFormatting) {
+        return FlexibleUnifiedFormatting.builder()
+                .fixImports(vendorFormatting.getFixImports().orElse(null))
+                .formatterStyle(vendorFormatting
+                        .getFormatterStyle()
+                        .map(FormatterStyle::getUnifiedFormatterStyle)
+                        .orElse(null))
+                .blankLineAfterTypeHeader(
+                        vendorFormatting.getBlankLineAfterTypeHeader().orElse(null))
+                .blankLineBeforeComment(
+                        vendorFormatting.getBlankLineBeforeComment().orElse(null))
+                .blankLineBetweenFields(
+                        vendorFormatting.getBlankLineBetweenFields().orElse(null))
+                .build();
     }
 }

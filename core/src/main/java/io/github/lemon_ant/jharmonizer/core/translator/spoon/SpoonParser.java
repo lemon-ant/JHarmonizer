@@ -45,7 +45,7 @@ public class SpoonParser {
         } catch (RuntimeException exception) {
             throw new SpoonModelBuildException(
                     srcFile.getPath(),
-                    "Cannot build AST model from " + srcFile.getPath() + " with error"
+                    "Cannot build AST model from " + srcFile.getPath() + " with error "
                             + describeModelBuildFailure(exception),
                     exception);
         }

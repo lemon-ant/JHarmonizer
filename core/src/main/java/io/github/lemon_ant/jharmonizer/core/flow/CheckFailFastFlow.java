@@ -2,6 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_FAIL_FAST;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
@@ -33,12 +35,14 @@ import spoon.reflect.declaration.CtElement;
  * {@code stopRequested = true} so the pipeline can gracefully shut down
  * while preserving all accumulated statistics.
  *
- * <p>Overrides {@link #processStream} to add early termination via
- * {@code takeWhile} (before processing) and stop-flag propagation via
- * {@code peek} (after processing), so files are not processed once a
- * violation has been detected.
+ * <p>Overrides {@link #preCheckSrcFiles} to skip remaining files as soon as a violation
+ * has been detected (before the expensive mapping step), and overrides
+ * {@link #postProcessResults} to propagate the stop flag via {@code peek} after
+ * each result passes through.
  */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
+
+    private final AtomicBoolean stopFlag = new AtomicBoolean(false);
 
     /**
      * Creates a flow that signals stop at the first ordering or formatting violation in a source file.
@@ -53,26 +57,34 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     }
 
     /**
-     * Extends the base stream pipeline with early termination logic.
-     * The {@code takeWhile} gate is placed before the per-file processing map
-     * so that remaining source files are not processed once a violation has
-     * been detected. The {@code peek} after processing sets the stop flag
-     * when a result requests stop.
+     * Extends the base JVM-shutdown pre-check with an early stop-flag guard,
+     * so that no further source files are processed once a violation has been detected.
+     * The stop-flag is set by {@link #postProcessResults} after the first violating result passes through.
      *
-     * @param srcFiles the stream of source files to process
-     * @return a stream that terminates early when a violation is detected
+     * @param srcFiles the incoming stream of source files
+     * @return a stream that skips remaining files once the stop flag is set
      */
     @Override
     @NonNull
-    public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
-        AtomicBoolean stopFlag = new AtomicBoolean(false);
-        return srcFiles.takeWhile(srcFile -> !stopFlag.get())
-                .map(this::processSrcSafely)
-                .peek(fileProcessingResult -> {
-                    if (fileProcessingResult.isStopRequested()) {
-                        stopFlag.set(true);
-                    }
-                });
+    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
+        return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
+    }
+
+    /**
+     * Sets the stop flag after each result that requests stop passes through,
+     * so subsequent files are skipped by the pre-check phase.
+     *
+     * @param results the stream of per-file results from the mapping phase
+     * @return the same stream, with stop-flag propagation via {@code peek}
+     */
+    @Override
+    @NonNull
+    protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
+        return results.peek(fileProcessingResult -> {
+            if (fileProcessingResult.isStopRequested()) {
+                stopFlag.set(true);
+            }
+        });
     }
 
     /**
@@ -83,7 +95,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      */
     @Override
     @NonNull
-    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -172,7 +184,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     @NonNull
     private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
-        FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
+        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, exception.getMessage());
         boolean hasFormattingChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         String srcDiff =
                 hasFormattingChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";

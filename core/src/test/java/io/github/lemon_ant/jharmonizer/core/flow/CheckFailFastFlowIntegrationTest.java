@@ -14,50 +14,31 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class CheckFailFastFlowIntegrationTest {
 
+    private static final SrcFile CLEAN_FILE_A =
+            createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
+    private static final SrcFile CLEAN_FILE_B =
+            createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
+
     @Test
-    void processSource_firstViolationDetected_returnsStopRequestedResult() {
+    void processStream_firstViolationDetected_returnsStopRequestedResult() {
         // Given
         CheckFailFastFlow flow = createFlow();
         SrcFile srcFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
 
         // When
-        FileProcessingResult result = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                flow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
-        assertThat(result.isStopRequested()).isTrue();
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
-        assertThat(result.getRelocations()).isNotEmpty();
-    }
-
-    @Test
-    void processSource_firstViolationWithStopFlag_stopsSequentialProcessing() {
-        // Given
-        CheckFailFastFlow flow = createFlow();
-        List<SrcFile> srcFiles = List.of(
-                createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java")),
-                createSrcFile("class CFormatted{int a;}", Path.of("C_Formatted.java")));
-        AtomicInteger processedSources = new AtomicInteger();
-
-        // When
-        // takeWhile stops before adding the stop-requested result, so the list
-        // contains only results processed before the first violation.
-        List<FileProcessingResult> resultsBeforeStop = srcFiles.stream()
-                .map(srcFile -> {
-                    processedSources.incrementAndGet();
-                    return flow.processSrc(srcFile);
-                })
-                .takeWhile(result -> !result.isStopRequested())
-                .toList();
-
-        // Then
-        assertThat(processedSources).hasValue(1);
-        assertThat(resultsBeforeStop).isEmpty();
+        assertThat(fileProcessingResult.isStopRequested()).isTrue();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
+        assertThat(fileProcessingResult.getRelocations()).isNotEmpty();
     }
 
     @Test
@@ -69,12 +50,12 @@ class CheckFailFastFlowIntegrationTest {
                 new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
 
         // When
-        FileProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+        FileProcessingResult fileProcessingResult = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
 
         // Then
-        assertThat(result.isStopRequested()).isTrue();
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
-        assertThat(result.getDiff()).isNotEmpty();
+        assertThat(fileProcessingResult.isStopRequested()).isTrue();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getDiff()).isNotEmpty();
     }
 
     @Test
@@ -86,23 +67,25 @@ class CheckFailFastFlowIntegrationTest {
                 new SpoonModelBuildException(srcFile.getPath(), "RuntimeException: boom", new RuntimeException("boom"));
 
         // When
-        FileProcessingResult result = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
+        FileProcessingResult fileProcessingResult = invokeFormattingOnlyFallback(flow, srcFile, modelBuildException);
 
         // Then
-        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
-        assertThat(result.isStopRequested()).isFalse();
-        assertThat(result.getSortingStatistic().getSortingTimeInNanos()).isZero();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
+        assertThat(fileProcessingResult.getSortingStatistic().getSortingTimeInNanos())
+                .isZero();
     }
 
     @Test
-    void processSrc_fullyOffOptOut_returnsSkippedResultWithNoStopRequested() {
+    void processStream_fullyOffOptOut_returnsSkippedResultWithNoStopRequested() {
         // Given
         CheckFailFastFlow flow = createFlow();
         SrcFile srcFile = createSrcFile(
                 "// @jharmonizer:fully-off\npublic class Z {\n    public void b() {}\n}\n", Path.of("Z.java"));
 
         // When
-        FileProcessingResult fileProcessingResult = flow.processSrc(srcFile);
+        FileProcessingResult fileProcessingResult =
+                flow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
@@ -113,18 +96,32 @@ class CheckFailFastFlowIntegrationTest {
     void processStream_allCleanFiles_processesAllFilesWithoutStop() {
         // Given
         CheckFailFastFlow flow = createFlow();
-        SrcFile cleanFileA = createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
-        SrcFile cleanFileB = createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
 
         // When
         List<FileProcessingResult> fileProcessingResults =
-                flow.processStream(List.of(cleanFileA, cleanFileB).stream()).toList();
+                flow.processStream(List.of(CLEAN_FILE_A, CLEAN_FILE_B).stream()).toList();
 
         // Then
         assertThat(fileProcessingResults).hasSize(2);
         assertThat(fileProcessingResults)
                 .extracting(FileProcessingResult::isStopRequested)
                 .containsOnly(false);
+    }
+
+    @Test
+    void processStream_violationOnFirstFile_skipsSecondFileBeforeMapping() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile violatingFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
+        SrcFile secondFile = createSrcFile("public class C {\n    public void c() {}\n}\n", Path.of("C.java"));
+
+        // When
+        List<FileProcessingResult> fileProcessingResults =
+                flow.processStream(Stream.of(violatingFile, secondFile)).toList();
+
+        // Then
+        assertThat(fileProcessingResults).hasSize(1);
+        assertThat(fileProcessingResults.getFirst().isStopRequested()).isTrue();
     }
 
     @Test

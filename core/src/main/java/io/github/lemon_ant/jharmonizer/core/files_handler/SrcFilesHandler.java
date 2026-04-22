@@ -22,28 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 public class SrcFilesHandler {
 
     /**
-     * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
-     * Supports mixed absolute and relative globs and removes duplicates from the result.
-     *
-     * @param baseDir the base directory to scan
-     * @param includeGlobs the include globs to apply
-     * @param excludeGlobs the exclude globs to apply
-     * @return the matching Java file paths
-     */
-    @NonNull
-    public static Stream<Path> findJavaFiles(
-            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
-        PathQuery pathQuery = PathQuery.builder()
-                .baseDir(baseDir)
-                .includeGlobs(includeGlobs)
-                .excludeGlobs(excludeGlobs)
-                .allowedExtensions(Set.of("java"))
-                .build();
-        return GlobPathFinder.findPaths(pathQuery).parallel();
-    }
-
-    /**
-     * Recursively resolves and reads all {@code .java} files matching the include and exclude globs.
+     * Recursively resolves and reads all {@code .java} files matching the include and exclude globs
+     * under the given base directory. GlobPathFinder scans the directory in parallel, so paths flow
+     * directly through the pipeline without intermediate accumulation.
      *
      * @param baseDir the base directory to scan
      * @param includeGlobs the include globs to apply
@@ -54,6 +35,27 @@ public class SrcFilesHandler {
     public static Stream<SrcFile> readJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
+    }
+
+    /**
+     * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
+     * Supports mixed absolute and relative globs and removes duplicates from the result.
+     *
+     * @param baseDir the base directory to scan
+     * @param includeGlobs the include globs to apply
+     * @param excludeGlobs the exclude globs to apply
+     * @return the matching Java file paths
+     */
+    @NonNull
+    private static Stream<Path> findJavaFiles(
+            @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
+        PathQuery pathQuery = PathQuery.builder()
+                .baseDir(baseDir)
+                .includeGlobs(includeGlobs)
+                .excludeGlobs(excludeGlobs)
+                .allowedExtensions(Set.of("java"))
+                .build();
+        return GlobPathFinder.findPaths(pathQuery).parallel();
     }
 
     /**

@@ -2,6 +2,8 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
@@ -45,7 +47,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -94,7 +96,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     @NonNull
     private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
-        FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
+        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, exception.getMessage());
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         String srcDiff = hasChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
         return FileProcessingResult.builder()

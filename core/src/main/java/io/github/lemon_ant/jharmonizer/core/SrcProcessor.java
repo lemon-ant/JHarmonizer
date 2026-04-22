@@ -18,6 +18,7 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUti
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
@@ -89,7 +90,7 @@ public final class SrcProcessor {
     }
 
     /**
-     * Processes source files found by the given globs through the specified flow type.
+     * Processes source files found under the given base directory by the specified flow type.
      * The flow itself controls stream pipeline decoration (e.g. early termination for
      * fail-fast), success determination, and completion logging.
      *
@@ -166,7 +167,12 @@ public final class SrcProcessor {
             boolean isModifyingFlow) {
         long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         List<Path> stopTriggerPaths = aggregatedProcessingStatistic.getStopTriggerPaths();
-        if (!stopTriggerPaths.isEmpty()) {
+        if (JvmShutdownSignal.isShuttingDown()) {
+            log.info(
+                    "{} interrupted (Ctrl+C). Processed {} file(s).",
+                    flowType,
+                    aggregatedProcessingStatistic.getFileCount());
+        } else if (!stopTriggerPaths.isEmpty()) {
             log.info(
                     "{} stopped early. Processed {} file(s), {} non-conforming.{}",
                     flowType,
@@ -223,7 +229,7 @@ public final class SrcProcessor {
             log.debug(
                     "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
                     flowType,
-                    baseDir.toAbsolutePath(),
+                    baseDir,
                     includeGlobs,
                     excludeGlobs,
                     config.isBackupsEnabled());

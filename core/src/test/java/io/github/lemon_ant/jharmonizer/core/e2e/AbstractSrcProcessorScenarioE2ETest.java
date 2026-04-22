@@ -3,11 +3,12 @@ package io.github.lemon_ant.jharmonizer.core.e2e;
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.globpathfinder.GlobPathFinder;
+import io.github.lemon_ant.globpathfinder.PathQuery;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
-import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -27,6 +29,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     private static final String INPUT_DIRECTORY = "input";
     private static final String EXPECTED_DIRECTORY = "expected";
+    private static final String INPUT_FILES_GLOB = "**/" + INPUT_DIRECTORY + "/*.java";
     private static final Pattern SCENARIO_PREFIX_PATTERN = Pattern.compile("^(\\d+)-.+$");
 
     protected final void processFixtureInputFileMatchesExpectedAndCompileAfter(
@@ -107,13 +110,19 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
         Comparator<Path> fixtureExecutionOrder = Comparator.comparing(
                         this::resolveScenarioDirectoryName, Comparator.reverseOrder())
                 .thenComparing(Path::getFileName, Comparator.naturalOrder());
-        return SrcFilesHandler.findJavaFiles(getFixturesRoot(), List.of("**/" + INPUT_DIRECTORY + "/*.java"), List.of())
-                .sorted(fixtureExecutionOrder)
-                .map(fixtureInputFile -> {
-                    Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
-                    Path srcFile = fixtureInputFile.getFileName();
-                    return Arguments.of(scenarioDir, srcFile);
-                });
+        PathQuery pathQuery = PathQuery.builder()
+                .baseDir(getFixturesRoot())
+                .includeGlobs(Set.of(INPUT_FILES_GLOB))
+                .build();
+        List<Path> fixtureInputFiles;
+        try (Stream<Path> foundPaths = GlobPathFinder.findPaths(pathQuery)) {
+            fixtureInputFiles = foundPaths.sorted(fixtureExecutionOrder).toList();
+        }
+        return fixtureInputFiles.stream().map(fixtureInputFile -> {
+            Path scenarioDir = fixtureInputFile.getParent().getParent().getFileName();
+            Path srcFile = fixtureInputFile.getFileName();
+            return Arguments.of(scenarioDir, srcFile);
+        });
     }
 
     @NonNull
@@ -197,8 +206,9 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     @NonNull
     private static SrcProcessor buildSrcProcessor(Path scenarioConfigPath) {
         if (scenarioConfigPath == null) {
-            return new SrcProcessor(disableProcessingStatisticsOutput(
-                    FlexibleUnifiedConfig.builder().build()));
+            return new SrcProcessor(FlexibleUnifiedConfig.builder()
+                    .printProcessingStatistics(false)
+                    .build());
         }
 
         FlexibleUnifiedConfig flexibleConfig =

@@ -1,6 +1,8 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
@@ -53,7 +55,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
      */
     @NonNull
     @Override
-    protected FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
+    FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
@@ -103,7 +105,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
     @NonNull
     private FileProcessingResult processSrcWithFormattingOnlyFallback(
             @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
-        FormattingResult formattingResult = formatSrcWithoutSorting(srcFile, exception.getMessage());
+        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, exception.getMessage());
         boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
         if (hasChanges) {
             if (backupsEnabled) {

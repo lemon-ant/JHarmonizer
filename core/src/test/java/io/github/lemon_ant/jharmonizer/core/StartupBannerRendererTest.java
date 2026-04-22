@@ -78,6 +78,26 @@ class StartupBannerRendererTest {
         }
 
         @Test
+        void render_globWithBackslashSeparator_displayedWithForwardSlashes() {
+            // When
+            String banner = StartupBannerRenderer.render(
+                    FlowType.REORDER, BASE_DIR, true, Set.of("**\\org\\example\\MyClass.java"), List.of());
+
+            // Then
+            assertThat(banner).contains("**/org/example/MyClass.java").doesNotContain("**\\org\\example\\MyClass.java");
+        }
+
+        @Test
+        void render_globWithEscapedMetachar_preservesEscapeSequence() {
+            // When
+            String banner = StartupBannerRenderer.render(
+                    FlowType.REORDER, BASE_DIR, true, Set.of("src\\main\\java\\foo\\*bar.java"), List.of());
+
+            // Then
+            assertThat(banner).contains("src/main/java/foo\\*bar.java");
+        }
+
+        @Test
         void render_multipleGlobs_sortedAscending() {
             // Given
             Set<String> excludeGlobs = Set.of("**/target/**", "**/build/**", "**/.git/**");

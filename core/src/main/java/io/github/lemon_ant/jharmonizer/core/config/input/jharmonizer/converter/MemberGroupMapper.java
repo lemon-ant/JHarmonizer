@@ -45,6 +45,7 @@ final class MemberGroupMapper {
                 .selectorBlock(selectorBlock)
                 .orderingRules(orderingRules)
                 .keepAccessorsTogether(srcMemberGroup.getKeepAccessorsTogether())
+                .relaxedForwardReferences(srcMemberGroup.getRelaxedForwardReferences())
                 .separator(Optional.ofNullable(srcMemberGroup.getSeparator())
                         .map(separator -> separator.getUnifiedSeparator())
                         .orElse(null));

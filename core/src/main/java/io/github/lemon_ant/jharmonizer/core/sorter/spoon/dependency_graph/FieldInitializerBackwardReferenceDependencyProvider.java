@@ -8,7 +8,7 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Provides declaration dependency edges caused by regular field initializer references resolved by
- * {@link DeclaringTypeFieldReferenceUtils#findReferencedFieldAccessesDeclaredBeforeMember(CtTypeMember, CtElement)}.
+ * {@link DeclaringTypeFieldReferenceUtils#findReferencedFieldAccesses(CtTypeMember, CtElement, boolean)}.
  *
  * <p>Explicit {@code this.<field>} forward-reference handling is delegated to
  * {@link ExplicitThisInitializerFieldDependencyProvider}.

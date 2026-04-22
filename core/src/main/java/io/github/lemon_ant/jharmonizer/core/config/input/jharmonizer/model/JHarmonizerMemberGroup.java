@@ -42,6 +42,9 @@ public class JHarmonizerMemberGroup implements Serializable {
     @SuppressFBWarnings("EI_EXPOSE_REP")
     List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
 
+    @Nullable
+    Boolean relaxedForwardReferences;
+
     @NonNull
     String name;
 
@@ -64,6 +67,7 @@ public class JHarmonizerMemberGroup implements Serializable {
                     List<JHarmonizerOrderingRule> orderingRules,
             @Nullable @JsonProperty(value = "separator") JHarmonizerSeparator separator,
             @Nullable @JsonProperty(value = "keepAccessorsTogether") Boolean keepAccessorsTogether,
+            @Nullable @JsonProperty(value = "relaxedForwardReferences") Boolean relaxedForwardReferences,
             @Nullable @JsonProperty(value = "groups") List<@NonNull JHarmonizerMemberGroup> memberSubGroups) {
         this.name = name;
 
@@ -78,6 +82,7 @@ public class JHarmonizerMemberGroup implements Serializable {
         this.separator = separator;
 
         this.keepAccessorsTogether = keepAccessorsTogether;
+        this.relaxedForwardReferences = relaxedForwardReferences;
 
         this.memberSubGroups =
                 ofNullable(memberSubGroups).map(Collections::unmodifiableList).orElse(List.of());

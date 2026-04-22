@@ -9,7 +9,6 @@ import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
-import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
@@ -17,6 +16,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedT
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +27,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter(AccessLevel.PROTECTED)
-@SuppressWarnings("PMD.CouplingBetweenObjects")
 abstract class AbstractOptOutFlow implements IFlow {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractOptOutFlow.class);
 
     @NonNull
     private final Formatter formatter;
@@ -65,39 +63,67 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the processing result for the source file
      */
     @NonNull
-    protected abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
+    abstract FileProcessingResult processSrc(@NonNull SrcFile srcFile);
 
     /**
-     * Processes a stream of source files with runtime-failure isolation.
-     * Subclasses may override to add pipeline steps (e.g. fail-fast termination).
+     * Processes a stream of source files through three explicit phases:
+     * <ol>
+     *   <li><b>Pre-check</b> — delegates to {@link #preCheckSrcFiles} for any flow-specific
+     *       filtering (default: skips files when a JVM shutdown signal is detected).</li>
+     *   <li><b>Mapping</b> — applies per-file processing for each source file.</li>
+     *   <li><b>Post-processing</b> — delegates to {@link #postProcessResults} for any
+     *       flow-specific result-stream transformations.</li>
+     * </ol>
      *
      * @param srcFiles the stream of source files to process
      * @return a stream of per-file processing results
      */
     @Override
     @NonNull
-    public Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
-        return srcFiles.map(this::processSrcSafely);
+    public final Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
+        Stream<SrcFile> preCheckedSrcFiles = preCheckSrcFiles(srcFiles);
+        Stream<FileProcessingResult> mappedResults = preCheckedSrcFiles.map(this::processSrcSafely);
+        return postProcessResults(mappedResults);
     }
 
     /**
-     * Processes a single source file, catching unexpected runtime exceptions
-     * and converting them into {@link FileProcessingStatus#ERROR} results.
+     * Hook for subclasses to apply pre-processing filters to the source file stream.
+     * The default implementation skips remaining files when a JVM shutdown signal is detected.
+     * Subclasses may override to add additional filtering, and should call
+     * {@code super.preCheckSrcFiles(srcFiles)} to preserve the base shutdown guard.
      *
-     * @param srcFile the source file to process
-     * @return the processing result (never throws)
+     * @param srcFiles the incoming stream of source files
+     * @return the filtered stream of source files to process
      */
     @NonNull
+    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
+        return srcFiles.takeWhile(srcFile -> !JvmShutdownSignal.isShuttingDown());
+    }
+
+    /**
+     * Hook for subclasses to apply post-mapping transformations to the result stream.
+     * The default implementation returns the stream unchanged.
+     * Subclasses may override to add steps such as early-termination signalling.
+     *
+     * @param results the stream of per-file processing results from the mapping phase
+     * @return the post-processed result stream
+     */
+    @NonNull
+    protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
+        return results;
+    }
+
+    @NonNull
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
-    protected final FileProcessingResult processSrcSafely(@NonNull SrcFile srcFile) {
+    private FileProcessingResult processSrcSafely(SrcFile srcFile) {
         try {
             return processSrc(srcFile);
         } catch (RuntimeException exception) {
-            LOG.warn(
+            log.warn(
                     "Unexpected internal processing error for file {}: {}",
                     srcFile.getPath(),
                     describeRuntimeFailure(exception));
-            LOG.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
+            log.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
                     .relocations(List.of())
@@ -140,7 +166,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                 .orElse(false);
         if (reuseOriginalSrc) {
             JHarmonizerOptOutMode reuseMode = fileOptOutMode.orElseThrow();
-            logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
+            FlowResultUtils.logFileOptOutSkip(srcFile, skippedOperationDescription, reuseMode);
             String originalSrcCode = srcFile.getSrcCode();
             return new SortingAndSerializationResult(
                     new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
@@ -195,11 +221,16 @@ abstract class AbstractOptOutFlow implements IFlow {
 
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
-    protected final FormattingResult formatSrcWithoutSorting(@NonNull SrcFile srcFile, @NonNull String failureMessage) {
-        LOG.warn(
-                "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
-                srcFile.getPath(),
-                failureMessage);
+    protected final FormattingResult formatSrcAfterModelBuildFailure(
+            @NonNull SrcFile srcFile, @NonNull String failureMessage) {
+        if (JvmShutdownSignal.isShuttingDown()) {
+            log.debug("Skipping sorting for {} after model build failure (JVM is shutting down).", srcFile.getPath());
+        } else {
+            log.warn(
+                    "Skipping sorting for {} because Spoon model creation failed ({}). Trying formatting only.",
+                    srcFile.getPath(),
+                    failureMessage);
+        }
         FormattingResult formattingResult =
                 getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
         getDebugStageRecorder()
@@ -208,44 +239,6 @@ abstract class AbstractOptOutFlow implements IFlow {
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
                         formattingResult.getFormattedSrcCode());
         return formattingResult;
-    }
-
-    @NonNull
-    protected static ParsingStatistic buildSyntheticParsingStatistic(@NonNull SrcFile srcFile) {
-        String srcCode = srcFile.getSrcCode();
-        return new ParsingStatistic(srcCode.length(), srcCode.getBytes(StandardCharsets.UTF_8).length, 0, 0, 0, 0);
-    }
-
-    @NonNull
-    protected static FileProcessingResult buildFullyOffFileSkippedResult(
-            @NonNull SrcFile srcFile,
-            @NonNull ParsingResult parsingResult,
-            @NonNull String skippedOperationDescription) {
-        logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
-        return FileProcessingResult.builder()
-                .path(srcFile.getPath())
-                .relocations(null)
-                .diff(null)
-                .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(new SortingStatistic(0))
-                .serializationStatistic(
-                        new SerializationStatistic(srcFile.getSrcCode().length(), 0))
-                .formattingStatistic(
-                        new FormattingStatistic(srcFile.getSrcCode().length(), 0))
-                .fileProcessingStatus(FileProcessingStatus.SKIPPED)
-                .build();
-    }
-
-    private static void logFileOptOutSkip(
-            SrcFile srcFile, String skippedOperationDescription, JHarmonizerOptOutMode optOutMode) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                    "Skipping {} for {} because of {} ({})",
-                    skippedOperationDescription,
-                    srcFile.getPath(),
-                    optOutMode.getDisplayName(),
-                    optOutMode.getToken());
-        }
     }
 
     @Value
