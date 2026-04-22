@@ -9,20 +9,6 @@
     <packaging>jar</packaging>
     <name>IT: check-all-violations</name>
 
-    <repositories>
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>github</id>
-            <name>GitHub Packages (lemon-ant)</name>
-            <url>https://maven.pkg.github.com/lemon-ant/glob-path-finder</url>
-        </repository>
-    </repositories>
-
     <build>
         <plugins>
             <plugin>
