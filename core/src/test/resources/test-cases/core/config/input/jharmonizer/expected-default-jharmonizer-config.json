@@ -345,9 +345,7 @@
           "orderingRules" : null
         }, {
           "name" : "Other Methods",
-          "includes" : [
-            [ "method" ]
-          ],
+          "includes" : [ ],
           "excludes" : [
             [ "=hashCode" ],
             [ "=compareTo" ],
@@ -374,7 +372,7 @@
           "keepAccessorsTogether" : null,
           "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
-          "orderingRules" : [ "PRESERVE" ]
+          "orderingRules" : [ "ALPHA" ]
         } ],
         "orderingRules" : null
       }, {
@@ -554,9 +552,7 @@
           "orderingRules" : null
         }, {
           "name" : "Instance methods",
-          "includes" : [
-            [ "method" ]
-          ],
+          "includes" : [ ],
           "excludes" : [
             [ "=hashCode" ],
             [ "=equals" ],
@@ -583,7 +579,7 @@
           "keepAccessorsTogether" : null,
           "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
-          "orderingRules" : [ "PRESERVE" ]
+          "orderingRules" : [ "ALPHA" ]
         } ],
         "orderingRules" : null
       }, {

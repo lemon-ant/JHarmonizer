@@ -160,7 +160,6 @@ type-members-ordering:
                 includes: ~^(get|set|is|has).+$
 
               - name: Other Methods
-                includes: method
                 excludes:
                   - =clone
                   - =compareTo
@@ -169,7 +168,7 @@ type-members-ordering:
                   - =toString
 
               - name: Basic Object Methods
-                ordering-rules: preserve
+                ordering-rules: alpha
                 includes:
                   - =toString
                   - =equals
@@ -237,7 +236,6 @@ type-members-ordering:
                 includes: constructor
 
               - name: Instance methods
-                includes: method
                 excludes:
                   - =toString
                   - =equals
@@ -246,7 +244,7 @@ type-members-ordering:
                   - =compareTo
 
               - name: Basic Object Methods
-                ordering-rules: preserve
+                ordering-rules: alpha
                 includes:
                   - =toString
                   - =equals

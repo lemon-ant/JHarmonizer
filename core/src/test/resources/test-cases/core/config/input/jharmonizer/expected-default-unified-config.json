@@ -617,13 +617,7 @@
                 "value" : "tostring"
               }
             } ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
-              "nameMatcher" : null
-            } ]
+            "includes" : [ ]
           },
           "separator" : null,
           "orderingRules" : null
@@ -682,7 +676,7 @@
             } ]
           },
           "separator" : null,
-          "orderingRules" : [ "PRESERVE" ]
+          "orderingRules" : [ "ALPHA" ]
         } ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
@@ -1088,13 +1082,7 @@
                 "value" : "clone"
               }
             } ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
-              "nameMatcher" : null
-            } ]
+            "includes" : [ ]
           },
           "separator" : null,
           "orderingRules" : null
@@ -1153,7 +1141,7 @@
             } ]
           },
           "separator" : null,
-          "orderingRules" : [ "PRESERVE" ]
+          "orderingRules" : [ "ALPHA" ]
         } ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
