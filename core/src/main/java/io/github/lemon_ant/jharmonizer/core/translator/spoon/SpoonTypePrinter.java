@@ -7,6 +7,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrin
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findEffectiveMemberEnd;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findExplicitTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findGroupHeader;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.hasLeadingCommentOnSeparateLine;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.hasMatchingLeadingComment;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtEnum;
@@ -30,6 +32,9 @@ import spoon.reflect.visitor.TokenWriter;
  * Prints structured type declarations while preserving original source fragments and skipped-type ranges.
  * Blank-line insertion predicates are compiled once from the supplied {@link PrinterConfig}
  * so that no per-member flag checks are needed during printing.
+ * Exception: the blank-line-before-comment feature stores {@link PrinterConfig#isBlankLineBeforeComment()}
+ * separately and applies it per-member with a per-type set of member source lines, in order to
+ * distinguish genuine leading comments from Spoon's misattributed trailing inline comments.
  */
 final class SpoonTypePrinter {
     @NonNull
@@ -54,6 +59,8 @@ final class SpoonTypePrinter {
     @NonNull
     private final Predicate<CtType<?>> needsBlankLineAfterTypeHeader;
 
+    private final boolean blankLineBeforeComment;
+
     /**
      * Creates a new SpoonTypePrinter with compiled printer predicates.
      *
@@ -71,8 +78,9 @@ final class SpoonTypePrinter {
         this.sortingSkippedTypes = sortingSkippedTypes;
         this.tokenWriter = tokenWriter;
         this.needsSeparatorAfter = compileNeedsSeparatorAfter(printerConfig);
-        this.needsSeparatorBefore = compileNeedsSeparatorBefore(printerConfig);
+        this.needsSeparatorBefore = compileNeedsSeparatorBefore();
         this.needsBlankLineAfterTypeHeader = compileNeedsBlankLineAfterTypeHeader(printerConfig);
+        this.blankLineBeforeComment = printerConfig.isBlankLineBeforeComment();
     }
 
     /**
@@ -152,11 +160,19 @@ final class SpoonTypePrinter {
 
     private void printTypeMembers(
             List<CtTypeMember> explicitTypeMembers, Map<CtTypeMember, Integer> correctedEnumMemberStarts) {
+        Set<Integer> memberSourceLines = explicitTypeMembers.stream()
+                .map(member -> member.getPosition().getLine())
+                .collect(Collectors.toUnmodifiableSet());
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
         for (CtTypeMember member : explicitTypeMembers) {
             previousElementNeedSeparatorAfter = printTypeMember(
-                    member, explicitTypeMembers, correctedEnumMemberStarts, first, previousElementNeedSeparatorAfter);
+                    member,
+                    explicitTypeMembers,
+                    correctedEnumMemberStarts,
+                    first,
+                    previousElementNeedSeparatorAfter,
+                    memberSourceLines);
             first = false;
         }
     }
@@ -166,10 +182,12 @@ final class SpoonTypePrinter {
             List<CtTypeMember> explicitTypeMembers,
             Map<CtTypeMember, Integer> correctedEnumMemberStarts,
             boolean first,
-            boolean previousElementNeedSeparatorAfter) {
+            boolean previousElementNeedSeparatorAfter,
+            Set<Integer> memberSourceLines) {
         // TODO Check Orphaned comments
 
-        boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore.test(member, first);
+        boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore.test(member, first)
+                || (blankLineBeforeComment && hasLeadingCommentOnSeparateLine(member, memberSourceLines));
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();

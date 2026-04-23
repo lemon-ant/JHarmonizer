@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import lombok.NonNull;
@@ -98,23 +99,43 @@ public class SpoonSrcPrinterUtils {
     /**
      * Compiles a bi-predicate that determines whether a separator is needed before a given member.
      * Annotation-based blank lines are always active (Palantir formatter enforces them).
+     * The blank-line-before-comment feature is handled separately in the printer via
+     * {@link #hasLeadingCommentOnSeparateLine}, because it requires per-type context
+     * (the set of member source lines) to filter out Spoon's misattributed trailing inline comments.
      *
-     * @param config the printer configuration
      * @return a bi-predicate accepting (member, isFirst) that returns {@code true} when a separator is needed
      */
     @NonNull
-    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore(@NonNull PrinterConfig config) {
+    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore() {
         BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
         BiPredicate<CtTypeMember, Boolean> annotationCheck =
                 (member, first) -> !member.getAnnotations().isEmpty();
-
-        if (config.isBlankLineBeforeComment()) {
-            BiPredicate<CtTypeMember, Boolean> commentCheck = (member, first) -> member.getComments().stream()
-                    .anyMatch(comment -> comment.getPosition().getEndLine()
-                            < member.getPosition().getLine());
-            return annotationCheck.or(basePredicate).or(commentCheck);
-        }
         return annotationCheck.or(basePredicate);
+    }
+
+    /**
+     * Returns {@code true} when the member has at least one genuine leading comment: a comment
+     * whose end line is strictly before the member's own line, and whose source line does not
+     * coincide with any other member's source line.
+     *
+     * <p>The second filter is necessary to avoid treating Spoon's misattributed trailing inline
+     * comments as leading comments. When members are reordered, Spoon sometimes attributes a
+     * trailing {@code //} comment from one member to the next element in the original source.
+     * Such a comment sits on the same source line as the field it was originally trailing, so
+     * filtering by {@code memberSourceLines} removes these spurious attributions while leaving
+     * genuine block comments (which occupy their own lines) intact.
+     *
+     * @param member the member to inspect
+     * @param memberSourceLines the set of source lines occupied by declarations in the same type
+     * @return {@code true} if the member has a genuine leading comment
+     */
+    static boolean hasLeadingCommentOnSeparateLine(
+            @NonNull CtTypeMember member, @NonNull Set<Integer> memberSourceLines) {
+        return member.getComments().stream()
+                .filter(comment ->
+                        !memberSourceLines.contains(comment.getPosition().getLine()))
+                .anyMatch(comment -> comment.getPosition().getEndLine()
+                        < member.getPosition().getLine());
     }
 
     /**
