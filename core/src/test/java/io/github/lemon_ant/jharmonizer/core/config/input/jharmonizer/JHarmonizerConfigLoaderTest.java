@@ -210,8 +210,12 @@ class JHarmonizerConfigLoaderTest {
         try (InputStream configYaml =
                 TestCaseResourceUtils.openClasspathResourceStream(EXCLUDES_ONLY_GROUP_CONFIG_PATH)) {
 
-            // When / Then
-            assertThatCode(() -> JHarmonizerConfigLoader.loadFrom(configYaml)).doesNotThrowAnyException();
+            // When
+            JHarmonizerConfig config = JHarmonizerConfigLoader.loadFrom(configYaml);
+
+            // Then
+            assertThat(config.getMemberGroups()).hasSize(1);
+            assertThat(config.getMemberGroups().get(0).getName()).isEqualTo("SkipToString");
         }
     }
 

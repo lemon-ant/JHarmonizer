@@ -72,7 +72,7 @@ public class JHarmonizerMemberGroup implements Serializable {
         this.includes = ofNullable(includes).map(Collections::unmodifiableSet).orElse(Set.of());
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
         Validate.isTrue(
-                !this.includes.isEmpty() || !this.excludes.isEmpty(),
+                !(this.includes.isEmpty() && this.excludes.isEmpty()),
                 "At least one of 'includes' or 'excludes' must be non-empty");
 
         this.orderingRules =
