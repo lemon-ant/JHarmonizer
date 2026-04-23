@@ -3,17 +3,10 @@
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class TestListener {
-    private static final int DEFAULT_WAIT_SECONDS = 5;
-    private static final AtomicInteger counter = new AtomicInteger(0);
+    private final Object config;
 
-    private final CustomConfig config;
-    private final int numWorkers;
-    private final int port;
-    private final AtomicInteger waitSeconds = new AtomicInteger(DEFAULT_WAIT_SECONDS);
-
-    private volatile Object connection; // keep volatile
+    private volatile Object conn; // keep volatile
     private volatile ExecutorService executor; // keep volatile
 }
