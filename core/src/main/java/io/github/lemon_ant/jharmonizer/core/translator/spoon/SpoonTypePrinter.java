@@ -107,7 +107,7 @@ final class SpoonTypePrinter {
         }
         printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts);
         int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                .mapToInt(SpoonTypePrinter::findEffectiveMemberEnd)
                 .max()
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute last member end from explicit type members"));
@@ -203,12 +203,27 @@ final class SpoonTypePrinter {
                         typeMember, typeMember.getPosition().getSourceStart()))
                 .filter(start -> start > member.getPosition().getSourceEnd())
                 .min()
-                .orElse(member.getPosition().getSourceEnd() + 1);
+                .orElse(findEffectiveMemberEnd(member) + 1);
         printOriginalFragment(
                 correctedEnumMemberStarts.getOrDefault(
                         member, member.getPosition().getSourceStart()),
                 nextElementStart - 1);
         return currentElementNeedsSeparatorAfter;
+    }
+
+    // Returns the source end of the last same-line trailing comment if present,
+    // or the member's own source end otherwise.
+    // This prevents trailing inline comments from being cut off when there is no next member.
+    private static int findEffectiveMemberEnd(CtTypeMember member) {
+        int memberEnd = member.getPosition().getSourceEnd();
+        int memberEndLine = member.getPosition().getEndLine();
+        return member.getComments().stream()
+                .filter(comment -> comment.getPosition().isValidPosition()
+                        && comment.getPosition().getLine() == memberEndLine
+                        && comment.getPosition().getSourceStart() > memberEnd)
+                .mapToInt(comment -> comment.getPosition().getSourceEnd())
+                .max()
+                .orElse(memberEnd);
     }
 
     private static boolean hasMatchingLeadingComment(CtTypeMember member, String groupHeader) {
