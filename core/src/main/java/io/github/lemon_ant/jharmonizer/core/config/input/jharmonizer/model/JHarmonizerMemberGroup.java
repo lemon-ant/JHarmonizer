@@ -57,9 +57,7 @@ public class JHarmonizerMemberGroup implements Serializable {
     @Builder
     private JHarmonizerMemberGroup(
             @NonNull @JsonProperty(value = "name", required = true) String name,
-            @NonNull
-                    @JsonDeserialize(using = SelectorsDeserializer.class)
-                    @JsonProperty(value = "includes", required = true)
+            @Nullable @JsonDeserialize(using = SelectorsDeserializer.class) @JsonProperty(value = "includes")
                     Set<Set<String>> includes,
             @Nullable @JsonDeserialize(using = SelectorsDeserializer.class) @JsonProperty(value = "excludes")
                     Set<Set<String>> excludes,
@@ -71,10 +69,11 @@ public class JHarmonizerMemberGroup implements Serializable {
             @Nullable @JsonProperty(value = "groups") List<@NonNull JHarmonizerMemberGroup> memberSubGroups) {
         this.name = name;
 
-        Validate.notEmpty(includes, "includes cannot be empty");
-        this.includes = Collections.unmodifiableSet(includes);
-
+        this.includes = ofNullable(includes).map(Collections::unmodifiableSet).orElse(Set.of());
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
+        Validate.isTrue(
+                !(this.includes.isEmpty() && this.excludes.isEmpty()),
+                "At least one of 'includes' or 'excludes' must be non-empty");
 
         this.orderingRules =
                 ofNullable(orderingRules).map(Collections::unmodifiableList).orElse(null);

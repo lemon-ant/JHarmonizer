@@ -26,27 +26,23 @@ type-members-ordering:
     includes:
       - [ class, '@~.*Test$' ]
       - [ class, '@ExtendWith' ]
+      - [ class, '@Nested' ]
       - [ class, '@RunWith' ]
       - [ class, ~.*Test$ ]
     ordering-rules: alpha
+    separator: new-line
     groups:
       - name: JUnit Fields
-        separator: new-line
         ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
           - name: JUnit Constants
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: [ static, final ]
+
           - name: JUnit Static fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: static
 
       - name: JUnit Methods
-        separator: new-line
-        ordering-rules: alpha
         includes: method
         groups:
           - name: JUnit Setup Methods
@@ -58,7 +54,6 @@ type-members-ordering:
 
           - name: JUnit Test Methods
             separator: header
-            ordering-rules: alpha
             includes: '@Test'
 
           - name: JUnit Teardown Methods
@@ -71,14 +66,15 @@ type-members-ordering:
           - name: Utility Methods
             separator: header
             includes: static
-            ordering-rules: alpha
 
       - name: JUnit Test Configuration
-        separator: new-line
-        ordering-rules: alpha
         includes:
           - [ static, class, '@TestConfiguration' ]
 
+      # Nested test classes annotated with @Nested (JUnit 5); sorted alphabetically after other groups.
+      - name: JUnit Nested Tests
+        includes:
+          - [ class, '@Nested' ]
 
   - name: DTO and Entities
     includes:
@@ -100,85 +96,74 @@ type-members-ordering:
 
       - name: Fields
         separator: new-line
-        ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
           - name: Constants
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: [ static, final ]
             groups:
               - name: Public Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: public
               - name: Protected Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: protected
               - name: Package-Private Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: package-private
               - name: Private Constants
-                separator: new-line
                 ordering-rules: alpha
                 includes: private
 
           - name: Static Fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: static
 
           - name: Final Instance Fields
-            separator: new-line
-            ordering-rules: [ visibility-desc, alpha ]
             includes: final
 
       - name: Static Initializer Blocks
-        separator: none
         ordering-rules: preserve
         includes: [ static, initializer ]
 
       - name: Static Methods
-        separator: none
-        ordering-rules: [ visibility-desc, alpha ]
         includes: [ static, method ]
 
       - name: Instance Initializer Blocks
-        separator: none
         ordering-rules: preserve
         includes: [ initializer ]
-        excludes: static
 
       - name: Constructors
-        separator: none
-        ordering-rules: [ visibility-desc, alpha ]
         includes: constructor
 
-      - name: Accessor Methods
-        separator: none
-        keepAccessorsTogether: true
-        ordering-rules: [ visibility-desc, alpha ]
-        includes: [ method, ~^(get|set|is|has).+$ ]
-
+      # Instance methods grouped by visibility: public first (accessors, then regular, then Object overrides), then non-public.
       - name: Instance Methods
-        separator: none
-        ordering-rules: [ visibility-desc, alpha ]
-        includes: [ method ]
-        excludes:
-          - [ method, =toString ]
-          - [ method, =equals ]
-          - [ method, =hashCode ]
-          - [ method, =clone ]
+        includes: method
+        groups:
+          - name: Public Methods
+            includes: public
+            groups:
+              - name: Accessor Methods
+                keepAccessorsTogether: true
+                includes: ~^(get|set|is|has).+$
 
-      - name: Basic Object Methods
-        ordering-rules: preserve
-        includes:
-          - [ method, =toString ]
-          - [ method, =equals ]
-          - [ method, =hashCode ]
-          - [ method, =clone ]
+              - name: Other Methods
+                excludes:
+                  - =clone
+                  - =compareTo
+                  - =equals
+                  - =hashCode
+                  - =toString
+
+              - name: Basic Object Methods
+                ordering-rules: alpha
+                includes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
+
+          - name: Non-Public Methods
+            includes: method
 
   - name: Default Rule
     includes: ~.*
@@ -186,14 +171,10 @@ type-members-ordering:
     groups:
       # Record components live in the record header; keep them stable.
       - name: Record components
-        separator: none
-        ordering-rules: preserve
         includes: [ record-component ]
 
       # Enum constants must stay at the top of enum bodies; keep them stable.
       - name: Enum constants
-        separator: none
-        ordering-rules: preserve
         includes: [ enum-constant ]
 
       - name: Fields
@@ -208,12 +189,10 @@ type-members-ordering:
                 includes: final
                 groups:
                   - name: serialVersionUID
-                    separator: new-line
                     ordering-rules: preserve
                     includes: [ =serialVersionUID ]
 
                   - name: Logger fields
-                    separator: new-line
                     ordering-rules: preserve
                     includes: [ '~(?i)(log|.*logger)$' ]
 
@@ -221,19 +200,12 @@ type-members-ordering:
             includes: final
 
       - name: Initializers
-        separator: none
-        ordering-rules: preserve
         includes: [ initializer ]
         groups:
           - name: Static initializers
-            includes: [ static, initializer ]
-
-          - name: Instance initializers
-            includes: [ initializer ]
-            excludes: static
+            includes: static
 
       - name: Methods
-        separator: none
         ordering-rules: alpha
         keepAccessorsTogether: true
         includes:
@@ -244,19 +216,24 @@ type-members-ordering:
             includes: public
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
 
               - name: Instance methods
-                includes: method
+                excludes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
 
           - name: Protected
             includes: protected
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
@@ -268,7 +245,7 @@ type-members-ordering:
             includes: package-private
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
@@ -280,7 +257,7 @@ type-members-ordering:
             includes: private
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
