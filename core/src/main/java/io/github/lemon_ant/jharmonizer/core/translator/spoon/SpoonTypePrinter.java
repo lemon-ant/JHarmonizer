@@ -1,10 +1,13 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_HEADER_METADATA;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsBlankLineAfterTypeHeader;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsSeparatorBefore;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findEffectiveMemberEnd;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findExplicitTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findGroupHeader;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.hasMatchingLeadingComment;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
@@ -107,7 +110,7 @@ final class SpoonTypePrinter {
         }
         printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts);
         int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(typeMember -> typeMember.getPosition().getSourceEnd())
+                .mapToInt(typeMember -> findEffectiveMemberEnd(typeMember))
                 .max()
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute last member end from explicit type members"));
@@ -145,17 +148,6 @@ final class SpoonTypePrinter {
                 type.getPosition().getSourceStart(), type.getPosition().getSourceEnd());
         int outputEndExclusive = tokenWriter.toString().length();
         requireSortingSkippedTypeRanges().put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
-    }
-
-    @NonNull
-    private static List<CtTypeMember> findExplicitTypeMembers(CtType<?> type) {
-        return type.getTypeMembers().stream()
-                // Spoon creates implicit constructors which don't exist in the source code
-                .filter(typeMember -> typeMember.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
-                Today implicit record fields/components still produce wrong source-printer output. */
-                .filter(typeMember -> !typeMember.isImplicit())
-                .toList();
     }
 
     private void printTypeMembers(
@@ -203,29 +195,12 @@ final class SpoonTypePrinter {
                         typeMember, typeMember.getPosition().getSourceStart()))
                 .filter(start -> start > member.getPosition().getSourceEnd())
                 .min()
-                .orElse(member.getPosition().getSourceEnd() + 1);
+                .orElse(findEffectiveMemberEnd(member) + 1);
         printOriginalFragment(
                 correctedEnumMemberStarts.getOrDefault(
                         member, member.getPosition().getSourceStart()),
                 nextElementStart - 1);
         return currentElementNeedsSeparatorAfter;
-    }
-
-    private static boolean hasMatchingLeadingComment(CtTypeMember member, String groupHeader) {
-        return member.getComments().stream()
-                .filter(comment -> comment.getPosition().getEndLine()
-                        < member.getPosition().getLine())
-                .map(comment -> comment.getContent().trim())
-                .anyMatch(groupHeader::equals);
-    }
-
-    @Nullable
-    private static String findGroupHeader(CtTypeMember member) {
-        Object groupHeaderMetadata = member.getMetadata(GROUP_HEADER_METADATA);
-        if (groupHeaderMetadata == null) {
-            return null;
-        }
-        return groupHeaderMetadata.toString();
     }
 
     @SuppressWarnings("PMD.NullAssignment")

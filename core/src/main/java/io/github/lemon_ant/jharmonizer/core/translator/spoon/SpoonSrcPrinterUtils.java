@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -12,8 +14,8 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Internal utilities shared between the custom Spoon source printer and its callers.
- * Provides helpers for detecting the dominant line separator
- * and compiled predicate factories for blank-line decisions based on {@link PrinterConfig}.
+ * Provides helpers for detecting the dominant line separator, compiled predicate factories
+ * for blank-line decisions based on {@link PrinterConfig}, and type-member inspection helpers.
  */
 @UtilityClass
 public class SpoonSrcPrinterUtils {
@@ -103,11 +105,16 @@ public class SpoonSrcPrinterUtils {
     @NonNull
     static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore(@NonNull PrinterConfig config) {
         BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
+        BiPredicate<CtTypeMember, Boolean> annotationCheck =
+                (member, first) -> !member.getAnnotations().isEmpty();
 
         if (config.isBlankLineBeforeComment()) {
-            return compileAnnotationCheck().or(basePredicate).or(compileCommentCheck());
+            BiPredicate<CtTypeMember, Boolean> commentCheck = (member, first) -> member.getComments().stream()
+                    .anyMatch(comment -> comment.getPosition().getEndLine()
+                            < member.getPosition().getLine());
+            return annotationCheck.or(basePredicate).or(commentCheck);
         }
-        return compileAnnotationCheck().or(basePredicate);
+        return annotationCheck.or(basePredicate);
     }
 
     /**
@@ -143,15 +150,68 @@ public class SpoonSrcPrinterUtils {
         };
     }
 
+    /**
+     * Returns the explicit (source-positioned, non-implicit) type members of the given type.
+     *
+     * @param type the type declaration to inspect
+     * @return the list of explicit type members
+     */
     @NonNull
-    private static BiPredicate<CtTypeMember, Boolean> compileAnnotationCheck() {
-        return (member, first) -> !member.getAnnotations().isEmpty();
+    static List<CtTypeMember> findExplicitTypeMembers(@NonNull CtType<?> type) {
+        return type.getTypeMembers().stream()
+                // Spoon creates implicit constructors which don't exist in the source code
+                .filter(typeMember -> typeMember.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
+                Today implicit record fields/components still produce wrong source-printer output. */
+                .filter(typeMember -> !typeMember.isImplicit())
+                .toList();
     }
 
-    @NonNull
-    private static BiPredicate<CtTypeMember, Boolean> compileCommentCheck() {
-        return (member, first) -> member.getComments().stream()
-                .anyMatch(comment -> comment.getPosition().getEndLine()
-                        < member.getPosition().getLine());
+    /**
+     * Returns the source end of the last trailing comment attached by Spoon to this member,
+     * or the member's own source end when no such comment exists.
+     * This prevents trailing comments from being cut off when there is no next member.
+     *
+     * @param member the type member to inspect
+     * @return the inclusive source index of the effective end of this member
+     */
+    static int findEffectiveMemberEnd(@NonNull CtTypeMember member) {
+        int memberEnd = member.getPosition().getSourceEnd();
+        return member.getComments().stream()
+                .filter(comment -> comment.getPosition().isValidPosition())
+                .filter(comment -> comment.getPosition().getSourceStart() > memberEnd)
+                .mapToInt(comment -> comment.getPosition().getSourceEnd())
+                .max()
+                .orElse(memberEnd);
+    }
+
+    /**
+     * Returns whether the member has a leading comment whose content matches the given group header.
+     *
+     * @param member      the type member to inspect
+     * @param groupHeader the expected group header text (trimmed, without comment delimiters)
+     * @return {@code true} if a matching leading comment exists
+     */
+    static boolean hasMatchingLeadingComment(@NonNull CtTypeMember member, @NonNull String groupHeader) {
+        return member.getComments().stream()
+                .filter(comment -> comment.getPosition().getEndLine()
+                        < member.getPosition().getLine())
+                .map(comment -> comment.getContent().trim())
+                .anyMatch(groupHeader::equals);
+    }
+
+    /**
+     * Returns the group-header metadata string attached to the member, or {@code null} if absent.
+     *
+     * @param member the type member to inspect
+     * @return the group header, or {@code null}
+     */
+    @Nullable
+    static String findGroupHeader(@NonNull CtTypeMember member) {
+        Object groupHeaderMetadata = member.getMetadata(GROUP_HEADER_METADATA);
+        if (groupHeaderMetadata == null) {
+            return null;
+        }
+        return groupHeaderMetadata.toString();
     }
 }
