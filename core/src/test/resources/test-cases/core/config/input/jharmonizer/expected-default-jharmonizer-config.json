@@ -18,6 +18,7 @@
       [ "~.*Test$", "class" ],
       [ "@ExtendWith", "class" ],
       [ "@RunWith", "class" ],
+      [ "@Nested", "class" ],
       [ "@~.*Test$", "class" ]
     ],
     "excludes" : [ ],
@@ -129,6 +130,21 @@
       "name" : "JUnit Nested Tests",
       "includes" : [
         [ "@Nested", "class" ]
+      ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    }, {
+      "name" : "Test Helper Types",
+      "includes" : [
+        [ "annotation" ],
+        [ "record" ],
+        [ "interface" ],
+        [ "class" ],
+        [ "enum" ]
       ],
       "excludes" : [ ],
       "separator" : "NEW_LINE",
@@ -310,7 +326,7 @@
       "memberSubGroups" : [ {
         "name" : "Public Methods",
         "includes" : [
-          [ "method", "public" ]
+          [ "public" ]
         ],
         "excludes" : [ ],
         "separator" : null,
@@ -334,10 +350,10 @@
           ],
           "excludes" : [
             [ "=hashCode" ],
-            [ "=equals" ],
             [ "=compareTo" ],
-            [ "=toString" ],
-            [ "=clone" ]
+            [ "=equals" ],
+            [ "=clone" ],
+            [ "=toString" ]
           ],
           "separator" : null,
           "keepAccessorsTogether" : null,
@@ -366,9 +382,7 @@
         "includes" : [
           [ "method" ]
         ],
-        "excludes" : [
-          [ "public" ]
-        ],
+        "excludes" : [ ],
         "separator" : null,
         "keepAccessorsTogether" : null,
         "relaxedForwardReferences" : null,
@@ -495,17 +509,6 @@
         "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
         "orderingRules" : null
-      }, {
-        "name" : "Instance initializers",
-        "includes" : [
-          [ "initializer" ]
-        ],
-        "excludes" : [ ],
-        "separator" : null,
-        "keepAccessorsTogether" : null,
-        "relaxedForwardReferences" : null,
-        "memberSubGroups" : [ ],
-        "orderingRules" : null
       } ],
       "orderingRules" : null
     }, {
@@ -530,7 +533,7 @@
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
-            [ "static", "method" ]
+            [ "static" ]
           ],
           "excludes" : [ ],
           "separator" : null,
@@ -569,11 +572,11 @@
         }, {
           "name" : "Basic Object Methods",
           "includes" : [
-            [ "method", "=toString" ],
-            [ "method", "=clone" ],
-            [ "method", "=compareTo" ],
-            [ "method", "=equals" ],
-            [ "method", "=hashCode" ]
+            [ "=hashCode" ],
+            [ "=equals" ],
+            [ "=compareTo" ],
+            [ "=toString" ],
+            [ "=clone" ]
           ],
           "excludes" : [ ],
           "separator" : null,
@@ -595,7 +598,7 @@
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
-            [ "static", "method" ]
+            [ "static" ]
           ],
           "excludes" : [ ],
           "separator" : null,
@@ -639,7 +642,7 @@
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
-            [ "static", "method" ]
+            [ "static" ]
           ],
           "excludes" : [ ],
           "separator" : null,
@@ -683,7 +686,7 @@
         "memberSubGroups" : [ {
           "name" : "Static methods",
           "includes" : [
-            [ "static", "method" ]
+            [ "static" ]
           ],
           "excludes" : [ ],
           "separator" : null,

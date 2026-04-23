@@ -218,6 +218,47 @@
       },
       "separator" : "NEW_LINE",
       "orderingRules" : null
+    }, {
+      "groupName" : "Test Helper Types",
+      "keepAccessorsTogether" : null,
+      "memberSubGroups" : [ ],
+      "relaxedForwardReferences" : null,
+      "selectorBlock" : {
+        "excludes" : [ ],
+        "includes" : [ {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_ANNOTATION" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_RECORD" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_INTERFACE" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_CLASS" ],
+          "nameMatcher" : null
+        }, {
+          "annotationMatchers" : [ ],
+          "declarationModifiers" : [ ],
+          "memberAccesses" : [ ],
+          "memberKinds" : [ "TYPE_ENUM" ],
+          "nameMatcher" : null
+        } ]
+      },
+      "separator" : "NEW_LINE",
+      "orderingRules" : null
     } ],
     "relaxedForwardReferences" : null,
     "selectorBlock" : {
@@ -244,6 +285,15 @@
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
           "value" : "runwith"
+        } ],
+        "declarationModifiers" : [ ],
+        "memberAccesses" : [ ],
+        "memberKinds" : [ "TYPE_CLASS" ],
+        "nameMatcher" : null
+      }, {
+        "annotationMatchers" : [ {
+          "matchMethod" : "EXACT",
+          "value" : "nested"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -537,15 +587,6 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "equals"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
                 "value" : "compareto"
               }
             }, {
@@ -555,7 +596,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "tostring"
+                "value" : "equals"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -565,6 +606,15 @@
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
                 "value" : "clone"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "tostring"
               }
             } ],
             "includes" : [ {
@@ -641,7 +691,7 @@
             "annotationMatchers" : [ ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ "PUBLIC" ],
-            "memberKinds" : [ "METHOD" ],
+            "memberKinds" : [ ],
             "nameMatcher" : null
           } ]
         },
@@ -653,13 +703,7 @@
         "memberSubGroups" : [ ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
-          "excludes" : [ {
-            "annotationMatchers" : [ ],
-            "declarationModifiers" : [ ],
-            "memberAccesses" : [ "PUBLIC" ],
-            "memberKinds" : [ ],
-            "nameMatcher" : null
-          } ],
+          "excludes" : [ ],
           "includes" : [ {
             "annotationMatchers" : [ ],
             "declarationModifiers" : [ ],
@@ -938,23 +982,6 @@
         },
         "separator" : null,
         "orderingRules" : null
-      }, {
-        "groupName" : "Instance initializers",
-        "keepAccessorsTogether" : null,
-        "memberSubGroups" : [ ],
-        "relaxedForwardReferences" : null,
-        "selectorBlock" : {
-          "excludes" : [ ],
-          "includes" : [ {
-            "annotationMatchers" : [ ],
-            "declarationModifiers" : [ ],
-            "memberAccesses" : [ ],
-            "memberKinds" : [ "INIT_BLOCK" ],
-            "nameMatcher" : null
-          } ]
-        },
-        "separator" : null,
-        "orderingRules" : null
       } ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
@@ -986,7 +1013,7 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ "STATIC" ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : null
             } ]
           },
@@ -1082,34 +1109,16 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "tostring"
+                "value" : "hashcode"
               }
             }, {
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "clone"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "compareto"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
                 "value" : "equals"
@@ -1118,10 +1127,28 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "hashcode"
+                "value" : "compareto"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "tostring"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "clone"
               }
             } ]
           },
@@ -1155,7 +1182,7 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ "STATIC" ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : null
             } ]
           },
@@ -1223,7 +1250,7 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ "STATIC" ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : null
             } ]
           },
@@ -1291,7 +1318,7 @@
               "annotationMatchers" : [ ],
               "declarationModifiers" : [ "STATIC" ],
               "memberAccesses" : [ ],
-              "memberKinds" : [ "METHOD" ],
+              "memberKinds" : [ ],
               "nameMatcher" : null
             } ]
           },

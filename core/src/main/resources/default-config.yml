@@ -26,6 +26,7 @@ type-members-ordering:
     includes:
       - [ class, '@~.*Test$' ]
       - [ class, '@ExtendWith' ]
+      - [ class, '@Nested' ]
       - [ class, '@RunWith' ]
       - [ class, ~.*Test$ ]
     ordering-rules: alpha
@@ -77,6 +78,16 @@ type-members-ordering:
         separator: new-line
         includes:
           - [ class, '@Nested' ]
+
+      # Unannotated inner helper types (interface implementations, helper classes, etc.)
+      - name: Test Helper Types
+        separator: new-line
+        includes:
+          - annotation
+          - class
+          - enum
+          - interface
+          - record
 
 
   - name: DTO and Entities
@@ -137,12 +148,12 @@ type-members-ordering:
       - name: Constructors
         includes: constructor
 
-      # Public methods first (accessors, then regular, then Object overrides), followed by non-public.
+      # Instance methods grouped by visibility: public first (accessors, then regular, then Object overrides), then non-public.
       - name: Instance Methods
         includes: method
         groups:
           - name: Public Methods
-            includes: [ method, public ]
+            includes: public
             groups:
               - name: Accessor Methods
                 keepAccessorsTogether: true
@@ -151,11 +162,11 @@ type-members-ordering:
               - name: Other Methods
                 includes: method
                 excludes:
-                  - =toString
-                  - =equals
-                  - =hashCode
                   - =clone
                   - =compareTo
+                  - =equals
+                  - =hashCode
+                  - =toString
 
               - name: Basic Object Methods
                 ordering-rules: preserve
@@ -168,7 +179,6 @@ type-members-ordering:
 
           - name: Non-Public Methods
             includes: method
-            excludes: public
 
   - name: Default Rule
     includes: ~.*
@@ -210,9 +220,6 @@ type-members-ordering:
           - name: Static initializers
             includes: static
 
-          - name: Instance initializers
-            includes: [ initializer ]
-
       - name: Methods
         ordering-rules: alpha
         keepAccessorsTogether: true
@@ -224,7 +231,7 @@ type-members-ordering:
             includes: public
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
@@ -241,17 +248,17 @@ type-members-ordering:
               - name: Basic Object Methods
                 ordering-rules: preserve
                 includes:
-                  - [ method, =toString ]
-                  - [ method, =equals ]
-                  - [ method, =hashCode ]
-                  - [ method, =clone ]
-                  - [ method, =compareTo ]
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
 
           - name: Protected
             includes: protected
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
@@ -263,7 +270,7 @@ type-members-ordering:
             includes: package-private
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
@@ -275,7 +282,7 @@ type-members-ordering:
             includes: private
             groups:
               - name: Static methods
-                includes: [ method, static ]
+                includes: static
 
               - name: Constructors
                 includes: constructor
