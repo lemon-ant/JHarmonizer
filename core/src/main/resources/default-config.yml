@@ -30,9 +30,9 @@ type-members-ordering:
       - [ class, '@RunWith' ]
       - [ class, ~.*Test$ ]
     ordering-rules: alpha
+    separator: new-line
     groups:
       - name: JUnit Fields
-        separator: new-line
         ordering-rules: [ visibility-desc, alpha ]
         includes: field
         groups:
@@ -43,7 +43,6 @@ type-members-ordering:
             includes: static
 
       - name: JUnit Methods
-        separator: new-line
         includes: method
         groups:
           - name: JUnit Setup Methods
@@ -69,26 +68,13 @@ type-members-ordering:
             includes: static
 
       - name: JUnit Test Configuration
-        separator: new-line
         includes:
           - [ static, class, '@TestConfiguration' ]
 
       # Nested test classes annotated with @Nested (JUnit 5); sorted alphabetically after other groups.
       - name: JUnit Nested Tests
-        separator: new-line
         includes:
           - [ class, '@Nested' ]
-
-      # Unannotated inner helper types (interface implementations, helper classes, etc.)
-      - name: Test Helper Types
-        separator: new-line
-        includes:
-          - annotation
-          - class
-          - enum
-          - interface
-          - record
-
 
   - name: DTO and Entities
     includes:
@@ -237,15 +223,6 @@ type-members-ordering:
 
               - name: Instance methods
                 excludes:
-                  - =toString
-                  - =equals
-                  - =hashCode
-                  - =clone
-                  - =compareTo
-
-              - name: Basic Object Methods
-                ordering-rules: alpha
-                includes:
                   - =toString
                   - =equals
                   - =hashCode

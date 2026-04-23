@@ -64,7 +64,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
     }, {
       "groupName" : "JUnit Methods",
@@ -176,7 +176,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "orderingRules" : null
     }, {
       "groupName" : "JUnit Test Configuration",
@@ -196,7 +196,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "orderingRules" : null
     }, {
       "groupName" : "JUnit Nested Tests",
@@ -216,48 +216,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
-      "orderingRules" : null
-    }, {
-      "groupName" : "Test Helper Types",
-      "keepAccessorsTogether" : null,
-      "memberSubGroups" : [ ],
-      "relaxedForwardReferences" : null,
-      "selectorBlock" : {
-        "excludes" : [ ],
-        "includes" : [ {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_ANNOTATION" ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_RECORD" ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_INTERFACE" ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_CLASS" ],
-          "nameMatcher" : null
-        }, {
-          "annotationMatchers" : [ ],
-          "declarationModifiers" : [ ],
-          "memberAccesses" : [ ],
-          "memberKinds" : [ "TYPE_ENUM" ],
-          "nameMatcher" : null
-        } ]
-      },
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "orderingRules" : null
     } ],
     "relaxedForwardReferences" : null,
@@ -310,7 +269,7 @@
         "nameMatcher" : null
       } ]
     },
-    "separator" : null,
+    "separator" : "NEW_LINE",
     "orderingRules" : [ "ALPHA" ]
   }, {
     "groupName" : "DTO and Entities",
@@ -1086,62 +1045,6 @@
           },
           "separator" : null,
           "orderingRules" : null
-        }, {
-          "groupName" : "Basic Object Methods",
-          "keepAccessorsTogether" : null,
-          "memberSubGroups" : [ ],
-          "relaxedForwardReferences" : null,
-          "selectorBlock" : {
-            "excludes" : [ ],
-            "includes" : [ {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "hashcode"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "equals"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "compareto"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "tostring"
-              }
-            }, {
-              "annotationMatchers" : [ ],
-              "declarationModifiers" : [ ],
-              "memberAccesses" : [ ],
-              "memberKinds" : [ ],
-              "nameMatcher" : {
-                "matchMethod" : "EXACT",
-                "value" : "clone"
-              }
-            } ]
-          },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
         } ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {

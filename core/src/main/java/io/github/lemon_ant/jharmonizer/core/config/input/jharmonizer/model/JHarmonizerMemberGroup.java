@@ -69,12 +69,11 @@ public class JHarmonizerMemberGroup implements Serializable {
             @Nullable @JsonProperty(value = "groups") List<@NonNull JHarmonizerMemberGroup> memberSubGroups) {
         this.name = name;
 
-        boolean hasIncludes = includes != null && !includes.isEmpty();
-        boolean hasExcludes = excludes != null && !excludes.isEmpty();
-        Validate.isTrue(hasIncludes || hasExcludes, "At least one of 'includes' or 'excludes' must be non-empty");
         this.includes = ofNullable(includes).map(Collections::unmodifiableSet).orElse(Set.of());
-
         this.excludes = ofNullable(excludes).map(Collections::unmodifiableSet).orElse(Set.of());
+        Validate.isTrue(
+                !this.includes.isEmpty() || !this.excludes.isEmpty(),
+                "At least one of 'includes' or 'excludes' must be non-empty");
 
         this.orderingRules =
                 ofNullable(orderingRules).map(Collections::unmodifiableList).orElse(null);

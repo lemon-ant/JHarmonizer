@@ -22,7 +22,7 @@
       [ "@~.*Test$", "class" ]
     ],
     "excludes" : [ ],
-    "separator" : null,
+    "separator" : "NEW_LINE",
     "keepAccessorsTogether" : null,
     "relaxedForwardReferences" : null,
     "memberSubGroups" : [ {
@@ -31,7 +31,7 @@
         [ "field" ]
       ],
       "excludes" : [ ],
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "keepAccessorsTogether" : null,
       "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
@@ -64,7 +64,7 @@
         [ "method" ]
       ],
       "excludes" : [ ],
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "keepAccessorsTogether" : null,
       "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
@@ -121,7 +121,7 @@
         [ "@TestConfiguration", "static", "class" ]
       ],
       "excludes" : [ ],
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "keepAccessorsTogether" : null,
       "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
@@ -132,22 +132,7 @@
         [ "@Nested", "class" ]
       ],
       "excludes" : [ ],
-      "separator" : "NEW_LINE",
-      "keepAccessorsTogether" : null,
-      "relaxedForwardReferences" : null,
-      "memberSubGroups" : [ ],
-      "orderingRules" : null
-    }, {
-      "name" : "Test Helper Types",
-      "includes" : [
-        [ "annotation" ],
-        [ "record" ],
-        [ "interface" ],
-        [ "class" ],
-        [ "enum" ]
-      ],
-      "excludes" : [ ],
-      "separator" : "NEW_LINE",
+      "separator" : null,
       "keepAccessorsTogether" : null,
       "relaxedForwardReferences" : null,
       "memberSubGroups" : [ ],
@@ -565,21 +550,6 @@
           "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
-        }, {
-          "name" : "Basic Object Methods",
-          "includes" : [
-            [ "=hashCode" ],
-            [ "=equals" ],
-            [ "=compareTo" ],
-            [ "=toString" ],
-            [ "=clone" ]
-          ],
-          "excludes" : [ ],
-          "separator" : null,
-          "keepAccessorsTogether" : null,
-          "relaxedForwardReferences" : null,
-          "memberSubGroups" : [ ],
-          "orderingRules" : [ "ALPHA" ]
         } ],
         "orderingRules" : null
       }, {
