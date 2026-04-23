@@ -4,10 +4,10 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrin
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsBlankLineAfterTypeHeader;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsSeparatorAfter;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.compileNeedsSeparatorBefore;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findEffectiveMemberEnd;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findExplicitTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findGroupHeader;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasMatchingLeadingComment;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findEffectiveMemberEnd;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findExplicitTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.findGroupHeader;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.hasMatchingLeadingComment;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
@@ -110,7 +110,7 @@ final class SpoonTypePrinter {
         }
         printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts);
         int maxMemberEnd = explicitTypeMembers.stream()
-                .mapToInt(m -> findEffectiveMemberEnd(m))
+                .mapToInt(typeMember -> findEffectiveMemberEnd(typeMember))
                 .max()
                 .orElseThrow(() ->
                         new IllegalStateException("Failed to compute last member end from explicit type members"));
