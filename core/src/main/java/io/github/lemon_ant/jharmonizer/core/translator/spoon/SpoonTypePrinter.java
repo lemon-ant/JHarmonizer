@@ -211,16 +211,14 @@ final class SpoonTypePrinter {
         return currentElementNeedsSeparatorAfter;
     }
 
-    // Returns the source end of the last same-line trailing comment if present,
-    // or the member's own source end otherwise.
-    // This prevents trailing inline comments from being cut off when there is no next member.
+    // Returns the source end of the last trailing comment attached by Spoon to this member,
+    // or the member's own source end when no such comment exists.
+    // This prevents trailing comments from being cut off when there is no next member.
     private static int findEffectiveMemberEnd(CtTypeMember member) {
         int memberEnd = member.getPosition().getSourceEnd();
-        int memberEndLine = member.getPosition().getEndLine();
         return member.getComments().stream()
-                .filter(comment -> comment.getPosition().isValidPosition()
-                        && comment.getPosition().getLine() == memberEndLine
-                        && comment.getPosition().getSourceStart() > memberEnd)
+                .filter(comment -> comment.getPosition().isValidPosition())
+                .filter(comment -> comment.getPosition().getSourceStart() > memberEnd)
                 .mapToInt(comment -> comment.getPosition().getSourceEnd())
                 .max()
                 .orElse(memberEnd);
