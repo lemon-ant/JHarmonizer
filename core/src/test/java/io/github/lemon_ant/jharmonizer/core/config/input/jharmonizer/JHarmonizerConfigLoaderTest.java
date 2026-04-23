@@ -38,6 +38,10 @@ class JHarmonizerConfigLoaderTest {
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/partial-formatting-flex-config.yml";
     private static final String INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-empty-formatting-flex-config.yml";
+    private static final String EXCLUDES_ONLY_GROUP_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/excludes-only-group-config.yml";
+    private static final String INVALID_NEITHER_INCLUDES_NOR_EXCLUDES_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-neither-includes-nor-excludes.yml";
     private static final URL MIXED_GROUP_SYNTAX_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
 
@@ -198,5 +202,36 @@ class JHarmonizerConfigLoaderTest {
                 .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
         assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+    }
+
+    @Test
+    void loadFrom_groupWithOnlyExcludes_succeeds() throws IOException {
+        // Given
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(EXCLUDES_ONLY_GROUP_CONFIG_PATH)) {
+
+            // When
+            JHarmonizerConfig config = JHarmonizerConfigLoader.loadFrom(configYaml);
+
+            // Then
+            assertThat(config.getMemberGroups()).hasSize(1);
+            assertThat(config.getMemberGroups().get(0).getName()).isEqualTo("SkipToString");
+        }
+    }
+
+    @Test
+    void loadFrom_groupWithNeitherIncludesNorExcludes_throwsValidationError() throws IOException {
+        // Given
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(INVALID_NEITHER_INCLUDES_NOR_EXCLUDES_CONFIG_PATH)) {
+
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml));
+
+            // Then
+            assertThat(thrown)
+                    .isInstanceOf(ValueInstantiationException.class)
+                    .hasMessageContaining("includes", "excludes");
+        }
     }
 }
