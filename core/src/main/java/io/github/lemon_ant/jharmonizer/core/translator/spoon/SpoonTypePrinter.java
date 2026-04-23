@@ -161,6 +161,7 @@ final class SpoonTypePrinter {
     private void printTypeMembers(
             List<CtTypeMember> explicitTypeMembers, Map<CtTypeMember, Integer> correctedEnumMemberStarts) {
         Set<Integer> memberSourceLines = explicitTypeMembers.stream()
+                .filter(member -> member.getPosition().isValidPosition())
                 .map(member -> member.getPosition().getLine())
                 .collect(Collectors.toUnmodifiableSet());
         boolean first = true;

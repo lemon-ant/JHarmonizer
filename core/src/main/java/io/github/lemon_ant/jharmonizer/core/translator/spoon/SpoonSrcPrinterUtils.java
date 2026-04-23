@@ -132,6 +132,7 @@ public class SpoonSrcPrinterUtils {
     static boolean hasLeadingCommentOnSeparateLine(
             @NonNull CtTypeMember member, @NonNull Set<Integer> memberSourceLines) {
         return member.getComments().stream()
+                .filter(comment -> comment.getPosition().isValidPosition())
                 .filter(comment ->
                         !memberSourceLines.contains(comment.getPosition().getLine()))
                 .anyMatch(comment -> comment.getPosition().getEndLine()
