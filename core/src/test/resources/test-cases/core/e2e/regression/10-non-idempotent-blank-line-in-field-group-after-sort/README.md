@@ -80,16 +80,35 @@ This affects multi-member types where:
 
 ## JHarmonizer workaround (fix location)
 
-- `io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils`
+- `io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils`
 - Method: `hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>)`
 
 Approach: when deciding whether a member has a genuine leading comment (warranting a blank line),
-filter out any comment whose start line coincides with the last source line of any other member
-declaration in the same type. Such a comment is a trailing inline comment that was misattributed
-by Spoon — not a real standalone leading comment.
+filter out any comment whose start line coincides with the **last source line** (`getEndLine()`) of
+any other member declaration in the same type. Trailing inline `// comments` always appear on the
+last line of the member declaration they are attached to — including when that declaration spans
+multiple lines (e.g., a field annotated with `@Deprecated` on its own line). Using `getEndLine()`
+rather than `getLine()` is essential for multi-line declarations: `getLine()` would give the first
+line of the declaration, missing the trailing comment that appears on the last line.
 
-Genuine leading comments occupy their own source lines (lines not used by any member declaration),
-so they are unaffected by this filter.
+Such a filtered comment is a trailing inline comment that was misattributed by Spoon — not a real
+standalone leading comment. Genuine leading comments occupy their own source lines (lines not used
+as the end line of any member declaration), so they are unaffected by this filter.
+
+## Test fixtures
+
+Two fixtures cover this scenario:
+
+### `TestListener.java` — single-line declarations
+The primary reproducer (3 fields, 1 import). All fields are single-line declarations. The bug is
+triggered and verified here.
+
+### `TestListenerMultiLine.java` — multi-line declaration with trailing comment
+Adds a `@Deprecated` annotation on a separate line before the `executor` field, making `executor`
+a two-line declaration. This fixture specifically verifies that the fix uses `getEndLine()` rather
+than `getLine()` to detect misattributed trailing inline comments. With `getLine()`, the annotation
+line would be in the filter set but the declaration's last line would not, allowing the misattributed
+comment to pass through and trigger a spurious blank line after `{`.
 
 ## Upstream Spoon issue
 
