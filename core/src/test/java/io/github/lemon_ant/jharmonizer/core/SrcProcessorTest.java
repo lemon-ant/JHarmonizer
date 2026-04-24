@@ -257,7 +257,7 @@ class SrcProcessorTest {
 
         // Then
         assertThat(logs).contains("JHarmonizer ERROR").contains("BrokenSample.java");
-        assertThat(logs).contains("Files with unexpected internal errors");
+        assertThat(logs).contains("Files with unexpected errors");
         assertThat(Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8)).isEqualTo(brokenOriginalSrcCode);
         assertThat(Files.readString(validJavaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(validOriginalSrcCode);
     }

@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ProcessingStatisticsPrintService {
 
-    private static final int METRIC_WIDTH = "Files with unexpected internal errors".length() + 1;
+    private static final int METRIC_WIDTH = "Files with unexpected errors".length() + 1;
     private static final int VALUE_WIDTH = 24;
     private static final String ELLIPSIS = "...";
     private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
@@ -69,8 +69,7 @@ public class ProcessingStatisticsPrintService {
         reportLines.add(renderRow(
                 "Average processing time",
                 formatSecondsMicrosecondsFromNanos(stats.calculateAverageProcessingTime()) + " s/file"));
-        reportLines.add(
-                renderRow("Files with unexpected internal errors", String.valueOf(sortedUnexpectedErrors.size())));
+        reportLines.add(renderRow("Files with unexpected errors", String.valueOf(sortedUnexpectedErrors.size())));
         reportLines.add(renderSeparator('-'));
         addSizeBoundaryPaths(reportLines, stats);
 

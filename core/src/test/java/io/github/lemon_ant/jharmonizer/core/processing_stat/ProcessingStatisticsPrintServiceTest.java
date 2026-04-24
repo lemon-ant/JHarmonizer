@@ -48,7 +48,7 @@ class ProcessingStatisticsPrintServiceTest {
                 .contains("| Sorting time (share)")
                 .contains("| Serialization time (share)")
                 .contains("| Formatting time (share)")
-                .contains("| Files with unexpected internal errors")
+                .contains("| Files with unexpected errors")
                 .contains("Unexpected internal error files:")
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(brokenPath, 120));
@@ -108,7 +108,7 @@ class ProcessingStatisticsPrintServiceTest {
 
         // Then
         assertThat(report)
-                .contains("| Files with unexpected internal errors")
+                .contains("| Files with unexpected errors")
                 .contains("| Min size")
                 .doesNotEndWith("=");
     }
