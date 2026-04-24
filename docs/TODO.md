@@ -1121,3 +1121,51 @@ upstream ticket and link it from our documentation once created.
 - [ ] Add the upstream issue link to `docs/05-Formatter.md` and `README.md` after filing.
 
 ---
+
+### 7. Spoon comment misattribution after member reorder (non-idempotent blank line)
+
+#### Status
+- [ ] Open investigation / upstream issue not yet created
+- [ ] Local workaround implemented and covered by regression fixture `10-non-idempotent-blank-line-in-field-group-after-sort`
+
+#### Verified current behavior
+- When a type contains a member with a trailing inline `// comment` and members are reordered,
+  Spoon misattributes the trailing comment to the next member in the **original** source order.
+- The misattributed comment has `endLine < member.getLine()` (it ends before the member it is attached to),
+  so it looks like a genuine leading comment of that member.
+- With `blank-line-before-comment: true`, this causes a spurious blank line to be inserted before
+  the first member after reorder (manifesting as a blank line directly after the type opening brace `{`).
+- On the second pass, members are already in sorted order, so misattribution no longer occurs —
+  making the output non-idempotent.
+- Reproduced by regression fixture `10-non-idempotent-blank-line-in-field-group-after-sort`
+  with a minimal 3-field 1-import class.
+
+#### Representative reproducer (minimal)
+```java
+import java.util.concurrent.ExecutorService;
+
+public abstract class TestListener {
+    private volatile ExecutorService executor; // keep volatile
+    private volatile Object conn;              // keep volatile
+    private final Object config;
+}
+```
+
+After one JHarmonizer pass on original source, Spoon attributes `// keep volatile` from `conn`
+to `config`, triggering a spurious blank line before `config` (the first member post-sort).
+
+#### Temporary workaround in code
+- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>)` filters out
+  comments whose start line coincides with the last source line of any other member declaration.
+  Trailing inline `// comments` always appear on the last source line of their original member,
+  so this filter excludes misattributed ones while keeping genuine leading comments.
+
+#### Follow-up actions
+- [ ] Create upstream Spoon issue with the minimal 3-field reproducer from
+  `core/src/test/resources/test-cases/core/e2e/regression/10-non-idempotent-blank-line-in-field-group-after-sort`.
+- [ ] Document: comment attachment rule that causes the misattribution, Spoon version observed, and
+  no-classpath parsing context.
+- [ ] Link upstream issue from `README.md` of regression test 10 once filed.
+- [ ] Re-evaluate and simplify/remove local workaround after upstream fix is available and verified.
+
+---
