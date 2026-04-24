@@ -103,12 +103,18 @@ Two fixtures cover this scenario:
 The primary reproducer (3 fields, 1 import). All fields are single-line declarations. The bug is
 triggered and verified here.
 
-### `TestListenerMultiLine.java` — multi-line declaration with trailing comment
-Adds a `@Deprecated` annotation on a separate line before the `executor` field, making `executor`
-a two-line declaration. This fixture specifically verifies that the fix uses `getEndLine()` rather
-than `getLine()` to detect misattributed trailing inline comments. With `getLine()`, the annotation
-line would be in the filter set but the declaration's last line would not, allowing the misattributed
-comment to pass through and trigger a spurious blank line after `{`.
+### `TestListenerMultiLine.java` — genuinely multi-line field declaration with trailing comment
+The `executor` field declaration spans two source lines: the field type/name/`=` on line 1, and the
+default initializer (`java.util.concurrent.Executors.newSingleThreadExecutor()`) followed by the
+trailing `// keep volatile` comment on line 2. This is a genuine multi-line declaration where
+`getLine()` (first line) ≠ `getEndLine()` (last line where the comment sits).
+
+This fixture specifically verifies that the fix uses `getEndLine()` rather than `getLine()` when
+building `memberDeclarationEndLines`. With `getLine()`, only the first line of `executor`'s
+declaration would be in the filter set, but the trailing `// keep volatile` comment is on the
+**second (last) line** — so the comment would not be filtered and would trigger a spurious blank
+line after `{`. With `getEndLine()`, the last line is included, the comment is correctly filtered,
+and no spurious blank line appears.
 
 ## Upstream Spoon issue
 

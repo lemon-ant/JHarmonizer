@@ -8,7 +8,6 @@ public abstract class TestListenerMultiLine {
     private final Object config;
 
     private volatile Object conn; // keep volatile
-
-    @Deprecated
-    private volatile ExecutorService executor; // keep volatile
+    private volatile ExecutorService executor =
+            java.util.concurrent.Executors.newSingleThreadExecutor(); // keep volatile
 }
