@@ -87,8 +87,9 @@ class SpoonTypeMemberUtils {
 
     /**
      * Returns {@code true} when the member has at least one genuine leading comment: a comment
-     * whose end line is strictly before the member's own line, and whose start line does not
-     * coincide with the last source line of any other member declaration.
+     * whose end line is strictly before the member's own line, whose start line does not
+     * coincide with the last source line of any other member declaration, and whose start line
+     * is not before the enclosing type's own declaration line.
      *
      * <p>The second filter guards against Spoon's comment misattribution after member reordering.
      * When members are reordered, Spoon sometimes attributes a trailing {@code //} comment from
@@ -98,16 +99,30 @@ class SpoonTypeMemberUtils {
      * genuine leading comments (which occupy their own lines, not the end line of a declaration)
      * intact.
      *
+     * <p>The third filter guards against a second Spoon misattribution pattern: when a nested type
+     * has no blank line between its opening brace and its first member, Spoon can attribute the
+     * enclosing type's own javadoc (which precedes the {@code interface}/{@code class} keyword) to
+     * that first inner member instead. Such a comment is guaranteed to start on a line strictly
+     * before the enclosing type's declaration line, so filtering by {@code typeBodyStartLine}
+     * removes these spurious attributions while leaving genuine leading comments inside the type
+     * body (which start on or after the type's declaration line) intact.
+     *
      * @param member the member to inspect
      * @param memberDeclarationEndLines the set of last source lines of declarations in the same type
+     * @param typeBodyStartLine the source line number of the enclosing type's declaration keyword
+     *                          (e.g. {@code interface} or {@code class}); comments starting before
+     *                          this line are outside the type body and are filtered out
      * @return {@code true} if the member has a genuine leading comment
      */
     static boolean hasLeadingCommentOnSeparateLine(
-            @NonNull CtTypeMember member, @NonNull Set<Integer> memberDeclarationEndLines) {
+            @NonNull CtTypeMember member,
+            @NonNull Set<Integer> memberDeclarationEndLines,
+            int typeBodyStartLine) {
         return member.getComments().stream()
                 .filter(comment -> comment.getPosition().isValidPosition())
                 .filter(comment -> !memberDeclarationEndLines.contains(
                         comment.getPosition().getLine()))
+                .filter(comment -> comment.getPosition().getLine() >= typeBodyStartLine)
                 .anyMatch(comment -> comment.getPosition().getEndLine()
                         < member.getPosition().getLine());
     }

@@ -116,7 +116,7 @@ final class SpoonTypePrinter {
         if (needsBlankLineAfterTypeHeader.test(type)) {
             tokenWriter.writeln();
         }
-        printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts);
+        printTypeMembers(explicitTypeMembers, correctedEnumMemberStarts, typePosition.getLine());
         int maxMemberEnd = explicitTypeMembers.stream()
                 .mapToInt(typeMember -> findEffectiveMemberEnd(typeMember))
                 .max()
@@ -159,7 +159,9 @@ final class SpoonTypePrinter {
     }
 
     private void printTypeMembers(
-            List<CtTypeMember> explicitTypeMembers, Map<CtTypeMember, Integer> correctedEnumMemberStarts) {
+            List<CtTypeMember> explicitTypeMembers,
+            Map<CtTypeMember, Integer> correctedEnumMemberStarts,
+            int typeBodyStartLine) {
         // Collect the last source line of each member declaration. Trailing inline comments (e.g. // comment)
         // are always on the last line of their member, so filtering by end line correctly identifies
         // misattributed trailing comments even when the declaration spans multiple lines.
@@ -176,7 +178,8 @@ final class SpoonTypePrinter {
                     correctedEnumMemberStarts,
                     first,
                     previousElementNeedSeparatorAfter,
-                    memberDeclarationEndLines);
+                    memberDeclarationEndLines,
+                    typeBodyStartLine);
             first = false;
         }
     }
@@ -187,11 +190,12 @@ final class SpoonTypePrinter {
             Map<CtTypeMember, Integer> correctedEnumMemberStarts,
             boolean first,
             boolean previousElementNeedSeparatorAfter,
-            Set<Integer> memberDeclarationEndLines) {
+            Set<Integer> memberDeclarationEndLines,
+            int typeBodyStartLine) {
         // TODO Check Orphaned comments
 
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore.test(member, first)
-                || (blankLineBeforeComment && hasLeadingCommentOnSeparateLine(member, memberDeclarationEndLines));
+                || (blankLineBeforeComment && hasLeadingCommentOnSeparateLine(member, memberDeclarationEndLines, typeBodyStartLine));
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();
