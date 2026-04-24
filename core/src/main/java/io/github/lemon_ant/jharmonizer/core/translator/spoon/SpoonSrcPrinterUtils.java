@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: Contributors to the jharmonizer project
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import java.util.Optional;
