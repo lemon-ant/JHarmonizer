@@ -1155,7 +1155,7 @@ After one JHarmonizer pass on original source, Spoon attributes `// keep volatil
 to `config`, triggering a spurious blank line before `config` (the first member post-sort).
 
 #### Temporary workaround in code
-- `SpoonSrcPrinterUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>)` filters out
+- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>)` filters out
   comments whose start line coincides with the last source line of any other member declaration.
   Trailing inline `// comments` always appear on the last source line of their original member,
   so this filter excludes misattributed ones while keeping genuine leading comments.
