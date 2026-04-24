@@ -115,26 +115,27 @@ public class SpoonSrcPrinterUtils {
 
     /**
      * Returns {@code true} when the member has at least one genuine leading comment: a comment
-     * whose end line is strictly before the member's own line, and whose source line does not
-     * coincide with any other member's source line.
+     * whose end line is strictly before the member's own line, and whose start line does not
+     * coincide with the last source line of any other member declaration.
      *
-     * <p>The second filter is necessary to avoid treating Spoon's misattributed trailing inline
-     * comments as leading comments. When members are reordered, Spoon sometimes attributes a
-     * trailing {@code //} comment from one member to the next element in the original source.
-     * Such a comment sits on the same source line as the field it was originally trailing, so
-     * filtering by {@code memberSourceLines} removes these spurious attributions while leaving
-     * genuine block comments (which occupy their own lines) intact.
+     * <p>The second filter guards against Spoon's comment misattribution after member reordering.
+     * When members are reordered, Spoon sometimes attributes a trailing {@code //} comment from
+     * one member to the next element in the original source order. Such a comment always sits on
+     * the last line of the member it was originally trailing (its {@code endLine}), so filtering
+     * by {@code memberDeclarationEndLines} removes these spurious attributions while leaving
+     * genuine leading comments (which occupy their own lines, not the end line of a declaration)
+     * intact.
      *
      * @param member the member to inspect
-     * @param memberSourceLines the set of source lines occupied by declarations in the same type
+     * @param memberDeclarationEndLines the set of last source lines of declarations in the same type
      * @return {@code true} if the member has a genuine leading comment
      */
     static boolean hasLeadingCommentOnSeparateLine(
-            @NonNull CtTypeMember member, @NonNull Set<Integer> memberSourceLines) {
+            @NonNull CtTypeMember member, @NonNull Set<Integer> memberDeclarationEndLines) {
         return member.getComments().stream()
                 .filter(comment -> comment.getPosition().isValidPosition())
-                .filter(comment ->
-                        !memberSourceLines.contains(comment.getPosition().getLine()))
+                .filter(comment -> !memberDeclarationEndLines.contains(
+                        comment.getPosition().getLine()))
                 .anyMatch(comment -> comment.getPosition().getEndLine()
                         < member.getPosition().getLine());
     }

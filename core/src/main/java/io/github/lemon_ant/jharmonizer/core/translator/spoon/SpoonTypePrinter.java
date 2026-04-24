@@ -160,9 +160,12 @@ final class SpoonTypePrinter {
 
     private void printTypeMembers(
             List<CtTypeMember> explicitTypeMembers, Map<CtTypeMember, Integer> correctedEnumMemberStarts) {
-        Set<Integer> memberSourceLines = explicitTypeMembers.stream()
+        // Collect the last source line of each member declaration. Trailing inline comments (e.g. // comment)
+        // are always on the last line of their member, so filtering by end line correctly identifies
+        // misattributed trailing comments even when the declaration spans multiple lines.
+        Set<Integer> memberDeclarationEndLines = explicitTypeMembers.stream()
                 .filter(member -> member.getPosition().isValidPosition())
-                .map(member -> member.getPosition().getLine())
+                .map(member -> member.getPosition().getEndLine())
                 .collect(Collectors.toUnmodifiableSet());
         boolean first = true;
         boolean previousElementNeedSeparatorAfter = false;
@@ -173,7 +176,7 @@ final class SpoonTypePrinter {
                     correctedEnumMemberStarts,
                     first,
                     previousElementNeedSeparatorAfter,
-                    memberSourceLines);
+                    memberDeclarationEndLines);
             first = false;
         }
     }
@@ -184,11 +187,11 @@ final class SpoonTypePrinter {
             Map<CtTypeMember, Integer> correctedEnumMemberStarts,
             boolean first,
             boolean previousElementNeedSeparatorAfter,
-            Set<Integer> memberSourceLines) {
+            Set<Integer> memberDeclarationEndLines) {
         // TODO Check Orphaned comments
 
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore.test(member, first)
-                || (blankLineBeforeComment && hasLeadingCommentOnSeparateLine(member, memberSourceLines));
+                || (blankLineBeforeComment && hasLeadingCommentOnSeparateLine(member, memberDeclarationEndLines));
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();
