@@ -1206,10 +1206,10 @@ After the first JHarmonizer pass, `interface Builder {` is immediately followed 
 inserted before `build()`, which manifests as a blank line directly after `interface Builder {`.
 
 #### Temporary workaround in code
-- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeDeclarationLine)`
-  filters out comments whose start line is strictly before the enclosing type's declaration line
-  (`typeDeclarationLine`). Such comments originate outside the type body and cannot be genuine leading
-  comments of any inner member.
+- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeDeclarationStartLine)`
+  filters out comments whose start line is strictly before the enclosing type's first declaration
+  line (`typeDeclarationStartLine`). Such comments originate outside the type body and cannot be
+  genuine leading comments of any inner member.
 
 #### Follow-up actions
 - [ ] Create upstream Spoon issue with the minimal `RegistryService` / `Builder` reproducer from

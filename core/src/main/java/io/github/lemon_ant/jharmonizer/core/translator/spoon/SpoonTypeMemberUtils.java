@@ -103,24 +103,28 @@ class SpoonTypeMemberUtils {
      * has no blank line between its opening brace and its first member, Spoon can attribute the
      * enclosing type's own javadoc (which precedes the {@code interface}/{@code class} keyword) to
      * that first inner member instead. Such a comment is guaranteed to start on a line strictly
-     * before the enclosing type's declaration line, so filtering by {@code typeDeclarationLine}
-     * removes these spurious attributions while leaving genuine leading comments inside the type
-     * body (which start on or after the type's declaration line) intact.
+     * before the enclosing type's declaration start line, so filtering by
+     * {@code typeDeclarationStartLine} removes these spurious attributions while leaving genuine
+     * leading comments inside the type body (which start on or after the type's first declaration
+     * line) intact.
      *
      * @param member the member to inspect
      * @param memberDeclarationEndLines the set of last source lines of declarations in the same type
-     * @param typeDeclarationLine the source line number of the enclosing type's declaration keyword
-     *                            (e.g. {@code interface} or {@code class}); comments starting before
-     *                            this line are outside the type body and are filtered out
+     * @param typeDeclarationStartLine the first source line of the enclosing type's declaration
+     *                                 (e.g. the line of the {@code interface} or {@code class}
+     *                                 keyword); comments starting before this line are outside the
+     *                                 type body and are filtered out
      * @return {@code true} if the member has a genuine leading comment
      */
     static boolean hasLeadingCommentOnSeparateLine(
-            @NonNull CtTypeMember member, @NonNull Set<Integer> memberDeclarationEndLines, int typeDeclarationLine) {
+            @NonNull CtTypeMember member,
+            @NonNull Set<Integer> memberDeclarationEndLines,
+            int typeDeclarationStartLine) {
         return member.getComments().stream()
                 .filter(comment -> comment.getPosition().isValidPosition())
                 .filter(comment -> !memberDeclarationEndLines.contains(
                         comment.getPosition().getLine()))
-                .filter(comment -> comment.getPosition().getLine() >= typeDeclarationLine)
+                .filter(comment -> comment.getPosition().getLine() >= typeDeclarationStartLine)
                 .anyMatch(comment -> comment.getPosition().getEndLine()
                         < member.getPosition().getLine());
     }
