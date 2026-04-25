@@ -9,29 +9,29 @@ import lombok.experimental.UtilityClass;
  * {@link ProcessingStatisticsPrintService}.
  */
 @UtilityClass
-public class ProcessingStatisticsTestLabels {
+class ProcessingStatisticsTestLabels {
 
     /** Label for the "files with unexpected errors" table row. */
-    public static final String FILES_WITH_UNEXPECTED_ERRORS = "Files with unexpected errors";
+    static final String FILES_WITH_UNEXPECTED_ERRORS = "Files with unexpected errors";
 
     /** Label for the "wall-clock time" table row. */
-    public static final String WALL_CLOCK_TIME = "Wall-clock time";
+    static final String WALL_CLOCK_TIME = "Wall-clock time";
 
     /** Label for the "total CPU time" table row. */
-    public static final String TOTAL_CPU_TIME = "Total CPU time";
+    static final String TOTAL_CPU_TIME = "Total CPU time";
 
     /** Label for the "serialization time (share)" table row. */
-    public static final String SERIALIZATION_TIME_SHARE = "Serialization time (share)";
+    static final String SERIALIZATION_TIME_SHARE = "Serialization time (share)";
 
     /** Label for the "formatting time (share)" table row. */
-    public static final String FORMATTING_TIME_SHARE = "Formatting time (share)";
+    static final String FORMATTING_TIME_SHARE = "Formatting time (share)";
 
     /** Section header printed before the list of unexpected error file paths. */
-    public static final String UNEXPECTED_ERROR_FILES_HEADER = "Unexpected internal error files:";
+    static final String UNEXPECTED_ERROR_FILES_HEADER = "Unexpected internal error files:";
 
     /** Prefix used for the minimum-size file in the size boundary section. */
-    public static final String MIN_SIZE_FILE_PREFIX = "Min size file:";
+    static final String MIN_SIZE_FILE_PREFIX = "Min size file:";
 
     /** Prefix used for the maximum-size file in the size boundary section. */
-    public static final String MAX_SIZE_FILE_PREFIX = "Max size file:";
+    static final String MAX_SIZE_FILE_PREFIX = "Max size file:";
 }
