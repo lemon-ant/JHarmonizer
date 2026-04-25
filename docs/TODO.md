@@ -981,43 +981,47 @@ is referenced from multiple classes across the project.
 
 **Phase 1 — private constants (low risk, actionable now)**
 
-Private constants are only referenced within the same class, so JHarmonizer can rename them safely
-using local AST rewriting:
+Private constants are only referenced within the same top-level declaration, including nested / inner
+classes, anonymous classes, and lambdas that can legally access the member, so JHarmonizer can rename
+them safely using source-local AST rewriting:
 - detect `private static final` fields whose current name does not match `UPPER_SNAKE_CASE`;
 - derive the canonical `UPPER_SNAKE_CASE` name via a configurable naming strategy
   (camelCase → UPPER_SNAKE_CASE conversion, collision resolution);
-- rewrite the field declaration and all in-class references (initializers, method bodies, annotations)
-  in a single atomic pass.
+- rewrite the field declaration and all references within that declaration scope (initializers, method
+  bodies, annotations, nested types, and lambda bodies) in a single atomic pass.
 
-**Phase 2 — package-private and protected constants (medium risk)**
+**Phase 2 — package-private constants (medium risk)**
 
 Requires cross-file analysis limited to the same compilation unit / package boundary:
 - collect all same-package call sites before rewriting;
 - apply a consistent rename across all affected files in a single pass;
 - skip when any call site is ambiguous or unresolvable in no-classpath mode.
 
-**Phase 3 — public constants (high risk, requires full project compilation)**
+**Phase 3 — protected and public constants (high risk, requires full project compilation)**
 
 Full cross-module rename requires classpath-aware symbol resolution (see the "Inter-procedural
 initializer dependencies" entry and future full-project compilation ideas):
+- `protected` members may be referenced from subclasses in other packages, so same-package-only
+  analysis is insufficient;
 - requires complete symbol information for all transitive call sites;
-- should be offered only in an explicit opt-in mode with a dry-run preview;
+- should be offered only in an explicit opt-in mode with a report-only preview;
 - deferred until JHarmonizer supports full project-wide AST analysis.
 
 #### Safety requirements
 - treat rename as a no-op when the derived `UPPER_SNAKE_CASE` name already collides with another
   field in the same type;
-- never rewrite a constant whose name is referenced via reflection, annotation attribute, or
-  configuration string literal (add heuristic guards for these cases);
+- never rewrite a constant whose name is referenced via reflection or used as a string literal
+  (including annotation string elements and configuration string literals); add heuristic guards
+  for these cases;
 - always produce a rename report listing every changed identifier and its call sites;
-- support report-only (dry-run) mode so teams can preview changes before committing;
+- support report-only mode so teams can preview changes before committing;
 - keep each phase independently toggleable in configuration.
 
 #### Implementation outline (when revisited)
 - [ ] Implement `camelCase`/`PascalCase` → `UPPER_SNAKE_CASE` name derivation utility (shared, neutral package).
 - [ ] Add collision detection within the same type for the derived name.
 - [ ] Implement Phase 1 rewriter: private constant + in-class reference rename.
-- [ ] Add configuration flags: `rename-private-constants`, `rename-package-constants`, `rename-public-constants`, `dry-run`.
+- [ ] Add configuration flags: `rename-private-constants`, `rename-package-constants`, `rename-protected-constants`, `rename-public-constants`, `report-only`.
 - [ ] Add E2E fixtures for simple rename, collision avoidance, and multi-reference scenarios.
 - [ ] Extend to Phase 2 once cross-file local analysis is proven stable.
 - [ ] Extend to Phase 3 after full project-wide AST/classpath analysis is available.
