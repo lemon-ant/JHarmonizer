@@ -1,5 +1,8 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core;
 
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FILES_WITH_UNEXPECTED_ERRORS;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -257,7 +260,7 @@ class SrcProcessorTest {
 
         // Then
         assertThat(logs).contains("JHarmonizer ERROR").contains("BrokenSample.java");
-        assertThat(logs).contains("Files with unexpected internal errors");
+        assertThat(logs).contains(FILES_WITH_UNEXPECTED_ERRORS);
         assertThat(Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8)).isEqualTo(brokenOriginalSrcCode);
         assertThat(Files.readString(validJavaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(validOriginalSrcCode);
     }

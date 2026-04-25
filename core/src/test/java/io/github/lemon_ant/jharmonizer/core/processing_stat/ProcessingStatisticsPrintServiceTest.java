@@ -1,5 +1,15 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FILES_WITH_UNEXPECTED_ERRORS;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FORMATTING_TIME_SHARE;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.MAX_SIZE_FILE_PREFIX;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.MIN_SIZE_FILE_PREFIX;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.SERIALIZATION_TIME_SHARE;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.TOTAL_CPU_TIME;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.UNEXPECTED_ERROR_FILES_HEADER;
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.WALL_CLOCK_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResultCreator;
@@ -42,19 +52,19 @@ class ProcessingStatisticsPrintServiceTest {
                 .containsPattern("(?m)^\\| JHarmonization summary\\s*\\|$")
                 .contains("| Files processed")
                 .contains("| Total size")
-                .contains("| Wall-clock time")
-                .contains("| Total CPU time")
+                .contains("| " + WALL_CLOCK_TIME)
+                .contains("| " + TOTAL_CPU_TIME)
                 .contains("| Parsing time (share)")
                 .contains("| Sorting time (share)")
-                .contains("| Serialization time (share)")
-                .contains("| Formatting time (share)")
-                .contains("| Files with unexpected internal errors")
-                .contains("Unexpected internal error files:")
+                .contains("| " + SERIALIZATION_TIME_SHARE)
+                .contains("| " + FORMATTING_TIME_SHARE)
+                .contains("| " + FILES_WITH_UNEXPECTED_ERRORS)
+                .contains(UNEXPECTED_ERROR_FILES_HEADER)
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(failurePath, 120))
                 .contains("- " + PathDisplayFormatUtil.abbreviatePathForDisplay(brokenPath, 120));
-        assertThat(report.indexOf("| Wall-clock time")).isLessThan(report.indexOf("| Total CPU time"));
-        assertThat(report.indexOf("| Serialization time (share)"))
-                .isLessThan(report.indexOf("| Formatting time (share)"));
+        assertThat(report.indexOf("| " + WALL_CLOCK_TIME)).isLessThan(report.indexOf("| " + TOTAL_CPU_TIME));
+        assertThat(report.indexOf("| " + SERIALIZATION_TIME_SHARE))
+                .isLessThan(report.indexOf("| " + FORMATTING_TIME_SHARE));
     }
 
     @Test
@@ -77,8 +87,8 @@ class ProcessingStatisticsPrintServiceTest {
         String report = ProcessingStatisticsPrintService.render(stats);
 
         // Then
-        assertThat(report).contains("Unexpected internal error files: none");
-        assertThat(report).doesNotContain("Unexpected internal error files:\n");
+        assertThat(report).contains(UNEXPECTED_ERROR_FILES_HEADER + " none");
+        assertThat(report).doesNotContain(UNEXPECTED_ERROR_FILES_HEADER + "\n");
     }
 
     @Test
@@ -108,7 +118,7 @@ class ProcessingStatisticsPrintServiceTest {
 
         // Then
         assertThat(report)
-                .contains("| Files with unexpected internal errors")
+                .contains("| " + FILES_WITH_UNEXPECTED_ERRORS)
                 .contains("| Min size")
                 .doesNotEndWith("=");
     }
@@ -171,9 +181,9 @@ class ProcessingStatisticsPrintServiceTest {
         // Then
         assertThat(report)
                 .contains("Size boundary files:")
-                .contains("Min size file:")
+                .contains(MIN_SIZE_FILE_PREFIX)
                 .contains("Small.java")
-                .contains("Max size file:")
+                .contains(MAX_SIZE_FILE_PREFIX)
                 .contains("Large.java");
     }
 
@@ -200,7 +210,7 @@ class ProcessingStatisticsPrintServiceTest {
         String report = ProcessingStatisticsPrintService.render(stats);
 
         // Then
-        assertThat(report).contains("Min size file:").contains("Tiny.java");
-        assertThat(report).doesNotContain("Max size file:");
+        assertThat(report).contains(MIN_SIZE_FILE_PREFIX).contains("Tiny.java");
+        assertThat(report).doesNotContain(MAX_SIZE_FILE_PREFIX);
     }
 }
