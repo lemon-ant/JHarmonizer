@@ -9,10 +9,10 @@ import lombok.experimental.UtilityClass;
  * {@link ProcessingStatisticsPrintService}.
  */
 @UtilityClass
-class ProcessingStatisticsTestLabels {
+public class ProcessingStatisticsTestLabels {
 
     /** Label for the "files with unexpected errors" table row. */
-    static final String FILES_WITH_UNEXPECTED_ERRORS = "Files with unexpected errors";
+    public static final String FILES_WITH_UNEXPECTED_ERRORS = "Files with unexpected errors";
 
     /** Label for the "wall-clock time" table row. */
     static final String WALL_CLOCK_TIME = "Wall-clock time";
