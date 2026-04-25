@@ -82,18 +82,19 @@ first pass (sorted output has no blank line after `{`), Spoon misattributes the 
 ## JHarmonizer workaround (fix location)
 
 - `io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils`
-- Method: `hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeBodyStartLine)`
+- Method: `hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeDeclarationLine)`
 
 Approach: when deciding whether a member has a genuine leading comment (warranting a blank line),
 filter out any comment whose start line is strictly before the enclosing type's declaration line
-(`typeBodyStartLine`). A comment that starts before the type keyword line is outside the type body
+(`typeDeclarationLine`). A comment that starts before the type keyword line is outside the type body
 and cannot be a genuine leading comment for any inner member.
 
-The `typeBodyStartLine` is `type.getPosition().getLine()`, which returns the line of the `interface`
+The `typeDeclarationLine` is `type.getPosition().getLine()`, which returns the line of the `interface`
 or `class` keyword. Comments starting before this line (outside the type body) are filtered out.
 Genuine leading comments inside the type body start on or after the type's declaration line.
 
 ## Upstream Spoon issue
 
-This bug has not yet been reported upstream. See `docs/TODO.md` §8 for the action items to file
-a minimal reproducer with the Spoon issue tracker and to link the upstream issue back here once filed.
+This bug has not yet been reported upstream. See the "Spoon javadoc misattribution across
+nested-type boundary" entry in `docs/TODO.md` for the action items to file a minimal reproducer
+with the Spoon issue tracker and to link the upstream issue back here once filed.

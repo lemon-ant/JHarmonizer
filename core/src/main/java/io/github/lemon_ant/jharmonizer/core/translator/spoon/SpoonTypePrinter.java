@@ -161,7 +161,7 @@ final class SpoonTypePrinter {
     private void printTypeMembers(
             List<CtTypeMember> explicitTypeMembers,
             Map<CtTypeMember, Integer> correctedEnumMemberStarts,
-            int typeBodyStartLine) {
+            int typeDeclarationLine) {
         // Collect the last source line of each member declaration. Trailing inline comments (e.g. // comment)
         // are always on the last line of their member, so filtering by end line correctly identifies
         // misattributed trailing comments even when the declaration spans multiple lines.
@@ -179,7 +179,7 @@ final class SpoonTypePrinter {
                     first,
                     previousElementNeedSeparatorAfter,
                     memberDeclarationEndLines,
-                    typeBodyStartLine);
+                    typeDeclarationLine);
             first = false;
         }
     }
@@ -191,11 +191,12 @@ final class SpoonTypePrinter {
             boolean first,
             boolean previousElementNeedSeparatorAfter,
             Set<Integer> memberDeclarationEndLines,
-            int typeBodyStartLine) {
+            int typeDeclarationLine) {
         // TODO Check Orphaned comments
 
         boolean needsSeparatorBeforeCurrentMember = needsSeparatorBefore.test(member, first)
-                || (blankLineBeforeComment && hasLeadingCommentOnSeparateLine(member, memberDeclarationEndLines, typeBodyStartLine));
+                || (blankLineBeforeComment
+                        && hasLeadingCommentOnSeparateLine(member, memberDeclarationEndLines, typeDeclarationLine));
         boolean hasSeparatorAlreadyPrinted = needsSeparatorBeforeCurrentMember || previousElementNeedSeparatorAfter;
         if (hasSeparatorAlreadyPrinted) {
             tokenWriter.writeln();

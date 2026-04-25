@@ -1170,7 +1170,7 @@ to `config`, triggering a spurious blank line before `config` (the first member 
 
 ---
 
-### 8. Spoon javadoc misattribution across nested-type boundary (non-idempotent blank line after `{`)
+### Spoon javadoc misattribution across nested-type boundary (non-idempotent blank line after `{`)
 
 #### Status
 - [ ] Open investigation / upstream issue not yet created
@@ -1206,9 +1206,9 @@ After the first JHarmonizer pass, `interface Builder {` is immediately followed 
 inserted before `build()`, which manifests as a blank line directly after `interface Builder {`.
 
 #### Temporary workaround in code
-- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeBodyStartLine)`
+- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeDeclarationLine)`
   filters out comments whose start line is strictly before the enclosing type's declaration line
-  (`typeBodyStartLine`). Such comments originate outside the type body and cannot be genuine leading
+  (`typeDeclarationLine`). Such comments originate outside the type body and cannot be genuine leading
   comments of any inner member.
 
 #### Follow-up actions
@@ -1217,8 +1217,8 @@ inserted before `build()`, which manifests as a blank line directly after `inter
 - [ ] Document: the exact condition (no blank line after `{` + enclosing javadoc) that triggers the
   cross-boundary misattribution, the Spoon version observed, and the no-classpath parsing context.
 - [ ] Link the upstream Spoon issue from both `README.md` of regression test 11 and this entry once filed.
-- [ ] Link this issue to the related upstream bug tracked under §7 (trailing inline comment misattribution)
-  — both share the same root cause: Spoon's comment scanner crossing AST element boundaries.
+- [ ] Link this issue to the related upstream bug in the "Spoon comment misattribution after member reorder"
+  entry above — both share the same root cause: Spoon's comment scanner crossing AST element boundaries.
 - [ ] Re-evaluate and simplify/remove local workaround after upstream fix is available and verified.
 
 ---
