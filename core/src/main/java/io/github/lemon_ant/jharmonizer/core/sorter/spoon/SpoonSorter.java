@@ -132,11 +132,13 @@ public class SpoonSorter {
                         new IllegalStateException("No matching root member group for top-level type: qualifiedName="
                                 + currentType.getQualifiedName()
                                 + ", descriptor=" + topLevelTypeDescriptor));
-        log.debug(
-                "Root group selected: file={}, class={}, group={}",
-                srcFile != null ? srcFile.getPath() : "<virtual>",
-                currentType.getQualifiedName(),
-                rootMemberGroup.getName() != null ? rootMemberGroup.getName() : "<unnamed>");
+        if (log.isDebugEnabled()) {
+            log.debug(
+                    "Root group selected: file={}, class={}, group={}",
+                    srcFile != null ? srcFile.getPath() : "<virtual>",
+                    currentType.getQualifiedName(),
+                    rootMemberGroup.getName() != null ? rootMemberGroup.getName() : "<unnamed>");
+        }
         currentType
                 .getNestedTypes()
                 .forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes, srcFile));
