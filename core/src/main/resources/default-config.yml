@@ -226,7 +226,14 @@ type-members-ordering:
                   - =clone
                   - =compareTo
 
-              # TODO Вот тут надо базовые перекрытые методы выдать toString, equals, hashCode и т.д.
+              - name: Basic Object Methods
+                ordering-rules: alpha
+                includes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
 
           - name: Protected
             includes: protected

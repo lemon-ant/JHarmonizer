@@ -96,7 +96,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "HEADER",
+        "separator" : null,
         "orderingRules" : [ "PRESERVE" ]
       }, {
         "groupName" : "JUnit Test Methods",
@@ -116,7 +116,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "HEADER",
+        "separator" : null,
         "orderingRules" : null
       }, {
         "groupName" : "JUnit Teardown Methods",
@@ -145,7 +145,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "HEADER",
+        "separator" : null,
         "orderingRules" : [ "PRESERVE" ]
       }, {
         "groupName" : "Utility Methods",
@@ -162,7 +162,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : "HEADER",
+        "separator" : null,
         "orderingRules" : null
       } ],
       "relaxedForwardReferences" : null,
@@ -176,7 +176,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
+      "separator" : "HEADER",
       "orderingRules" : null
     }, {
       "groupName" : "JUnit Test Configuration",
@@ -190,7 +190,7 @@
             "matchMethod" : "EXACT",
             "value" : "testconfiguration"
           } ],
-          "declarationModifiers" : [ "STATIC" ],
+          "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
           "memberKinds" : [ "TYPE_CLASS" ],
           "nameMatcher" : null
@@ -1045,6 +1045,62 @@
           },
           "separator" : null,
           "orderingRules" : null
+        }, {
+          "groupName" : "Basic Object Methods",
+          "keepAccessorsTogether" : null,
+          "memberSubGroups" : [ ],
+          "relaxedForwardReferences" : null,
+          "selectorBlock" : {
+            "excludes" : [ ],
+            "includes" : [ {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "hashcode"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "equals"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "compareto"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "tostring"
+              }
+            }, {
+              "annotationMatchers" : [ ],
+              "declarationModifiers" : [ ],
+              "memberAccesses" : [ ],
+              "memberKinds" : [ ],
+              "nameMatcher" : {
+                "matchMethod" : "EXACT",
+                "value" : "clone"
+              }
+            } ]
+          },
+          "separator" : null,
+          "orderingRules" : [ "ALPHA" ]
         } ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {

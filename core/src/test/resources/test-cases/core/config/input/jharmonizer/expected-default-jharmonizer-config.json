@@ -64,7 +64,7 @@
         [ "method" ]
       ],
       "excludes" : [ ],
-      "separator" : null,
+      "separator" : "HEADER",
       "keepAccessorsTogether" : null,
       "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
@@ -74,7 +74,7 @@
           [ "@BeforeEach" ]
         ],
         "excludes" : [ ],
-        "separator" : "HEADER",
+        "separator" : null,
         "keepAccessorsTogether" : null,
         "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
@@ -85,7 +85,7 @@
           [ "@Test" ]
         ],
         "excludes" : [ ],
-        "separator" : "HEADER",
+        "separator" : null,
         "keepAccessorsTogether" : null,
         "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
@@ -97,7 +97,7 @@
           [ "@AfterAll" ]
         ],
         "excludes" : [ ],
-        "separator" : "HEADER",
+        "separator" : null,
         "keepAccessorsTogether" : null,
         "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
@@ -108,7 +108,7 @@
           [ "static" ]
         ],
         "excludes" : [ ],
-        "separator" : "HEADER",
+        "separator" : null,
         "keepAccessorsTogether" : null,
         "relaxedForwardReferences" : null,
         "memberSubGroups" : [ ],
@@ -118,7 +118,7 @@
     }, {
       "name" : "JUnit Test Configuration",
       "includes" : [
-        [ "@TestConfiguration", "static", "class" ]
+        [ "@TestConfiguration", "class" ]
       ],
       "excludes" : [ ],
       "separator" : null,
@@ -550,6 +550,21 @@
           "relaxedForwardReferences" : null,
           "memberSubGroups" : [ ],
           "orderingRules" : null
+        }, {
+          "name" : "Basic Object Methods",
+          "includes" : [
+            [ "=hashCode" ],
+            [ "=equals" ],
+            [ "=compareTo" ],
+            [ "=toString" ],
+            [ "=clone" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
         } ],
         "orderingRules" : null
       }, {
