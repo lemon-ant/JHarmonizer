@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+    SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+    SPDX-License-Identifier: Apache-2.0
+-->
+<!--
     BaseCommand (cli/src/main/java/.../cli/command/BaseCommand.java) manipulates this configuration
     at runtime when the user passes the verbose flag:
       ~ Looks up the console appender by name "STDOUT"  (constant STDOUT_APPENDER_NAME)
@@ -11,7 +15,7 @@
     without updating the corresponding constants and logic in BaseCommand.
 -->
 <configuration>
-    <timestamp key="startupTimestamp" datePattern="yyyy-MM-dd_HH-mm-ss"/>
+    <timestamp key="startupTimestamp" datePattern="yyyy-MM-dd_HH-mm-ss-SSS"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -24,6 +28,7 @@
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/jharmonizer-${startupTimestamp}.log</file>
+        <append>false</append>
         <encoder>
             <pattern>%-5level [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-8.8thread] [%logger{36}] %msg%n</pattern>
         </encoder>
