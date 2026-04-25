@@ -3,23 +3,37 @@
     BaseCommand (cli/src/main/java/.../cli/command/BaseCommand.java) manipulates this configuration
     at runtime when the user passes the verbose flag:
       ~ Looks up the console appender by name "STDOUT"  (constant STDOUT_APPENDER_NAME)
-      ~ Switches the root level from INFO to DEBUG
+      ~ Lowers the STDOUT ThresholdFilter from INFO to DEBUG
       ~ Replaces the encoder pattern with VERBOSE_LOG_PATTERN (includes %logger)
-    Do not rename the appender, change the root level, or alter the encoder structure
+    The FILE appender always captures DEBUG and above into logs/jharmonizer-<timestamp>.log,
+    creating the logs/ directory automatically on first run.
+    Do not rename the appenders, change the ThresholdFilter structure, or alter the encoder structure
     without updating the corresponding constants and logic in BaseCommand.
 -->
 <configuration>
+    <timestamp key="startupTimestamp" datePattern="yyyy-MM-dd_HH-mm-ss"/>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
         <encoder>
-            <!--  <pattern>%-5level %msg%n</pattern> -->
             <pattern>%-5level %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/jharmonizer-${startupTimestamp}.log</file>
+        <encoder>
+            <pattern>%-5level [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-8.8thread] [%logger{36}] %msg%n</pattern>
         </encoder>
     </appender>
 
     <!--<logger name="spoon.reflect.factory.TypeFactory" level="ERROR"/>-->
     <logger name="spoon.Launcher" level="ERROR"/>
 
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>

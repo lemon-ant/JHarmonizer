@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -229,10 +230,29 @@ abstract class BaseCommand implements Callable<Integer> {
         if (consoleAppender == null) {
             return;
         }
+        lowerStdoutThresholdToDebug(consoleAppender);
         PatternLayoutEncoder encoder = (PatternLayoutEncoder) consoleAppender.getEncoder();
         encoder.stop();
         encoder.setPattern(VERBOSE_LOG_PATTERN);
         encoder.start();
+    }
+
+    private static void lowerStdoutThresholdToDebug(ConsoleAppender<ILoggingEvent> consoleAppender) {
+        ThresholdFilter thresholdFilter = findStdoutThresholdFilter(consoleAppender);
+        if (thresholdFilter == null) {
+            return;
+        }
+        thresholdFilter.setLevel(Level.DEBUG.toString());
+        thresholdFilter.start();
+    }
+
+    @Nullable
+    private static ThresholdFilter findStdoutThresholdFilter(ConsoleAppender<ILoggingEvent> consoleAppender) {
+        return consoleAppender.getCopyOfAttachedFiltersList().stream()
+                .filter(ThresholdFilter.class::isInstance)
+                .map(ThresholdFilter.class::cast)
+                .findFirst()
+                .orElse(null);
     }
 
     @Value
