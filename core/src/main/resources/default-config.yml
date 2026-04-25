@@ -44,32 +44,29 @@ type-members-ordering:
 
       - name: JUnit Methods
         includes: method
+        separator: header
         groups:
           - name: JUnit Setup Methods
-            separator: header
             ordering-rules: preserve
             includes:
               - '@BeforeEach'
               - '@BeforeAll'
 
           - name: JUnit Test Methods
-            separator: header
             includes: '@Test'
 
           - name: JUnit Teardown Methods
-            separator: header
             ordering-rules: preserve
             includes:
               - '@AfterEach'
               - '@AfterAll'
 
           - name: Utility Methods
-            separator: header
             includes: static
 
       - name: JUnit Test Configuration
         includes:
-          - [ static, class, '@TestConfiguration' ]
+          - [ class, '@TestConfiguration' ]
 
       # Nested test classes annotated with @Nested (JUnit 5); sorted alphabetically after other groups.
       - name: JUnit Nested Tests
@@ -223,6 +220,15 @@ type-members-ordering:
 
               - name: Instance methods
                 excludes:
+                  - =toString
+                  - =equals
+                  - =hashCode
+                  - =clone
+                  - =compareTo
+
+              - name: Basic Object Methods
+                ordering-rules: alpha
+                includes:
                   - =toString
                   - =equals
                   - =hashCode
