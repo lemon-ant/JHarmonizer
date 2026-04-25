@@ -1169,3 +1169,56 @@ to `config`, triggering a spurious blank line before `config` (the first member 
 - [ ] Re-evaluate and simplify/remove local workaround after upstream fix is available and verified.
 
 ---
+
+### 8. Spoon javadoc misattribution across nested-type boundary (non-idempotent blank line after `{`)
+
+#### Status
+- [ ] Open investigation / upstream issue not yet created
+- [ ] Local workaround implemented and covered by regression fixture `11-non-idempotent-blank-line-after-nested-interface-sort`
+
+#### Verified current behavior
+- When a nested type (e.g. `interface Builder`) has its own javadoc comment and is printed with no
+  blank line between its opening `{` and its first inner member, Spoon misattributes that javadoc
+  to the first inner member instead of to the enclosing nested type.
+- The misattributed javadoc has `endLine < member.getLine()` (it ends before the inner member it is
+  attached to), so it looks like a genuine leading comment of that inner member.
+- With `blank-line-before-comment: true`, this causes a spurious blank line to be inserted before
+  the first inner member on the **second** pass (the first pass produces the no-blank-line layout,
+  which then triggers the misattribution on re-parse).
+- Reproduced by regression fixture `11-non-idempotent-blank-line-after-nested-interface-sort`
+  with a minimal `RegistryService` / `Builder` interface pair.
+
+#### Representative reproducer (minimal)
+```java
+public interface RegistryService {
+    /**
+     * The builder.   ← javadoc of Builder; misattributed to build() when no blank line after {
+     */
+    interface Builder {
+        RegistryService build();   ← first inner member; receives spurious blank line on 2nd pass
+    }
+}
+```
+
+After the first JHarmonizer pass, `interface Builder {` is immediately followed by `RegistryService build();`
+(no blank line). On the second parse, Spoon crosses the type body boundary and attributes
+`/** The builder. */` to `build()`. With `blank-line-before-comment: true`, a blank line is then
+inserted before `build()`, which manifests as a blank line directly after `interface Builder {`.
+
+#### Temporary workaround in code
+- `SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine(CtTypeMember, Set<Integer>, int typeBodyStartLine)`
+  filters out comments whose start line is strictly before the enclosing type's declaration line
+  (`typeBodyStartLine`). Such comments originate outside the type body and cannot be genuine leading
+  comments of any inner member.
+
+#### Follow-up actions
+- [ ] Create upstream Spoon issue with the minimal `RegistryService` / `Builder` reproducer from
+  `core/src/test/resources/test-cases/core/e2e/regression/11-non-idempotent-blank-line-after-nested-interface-sort`.
+- [ ] Document: the exact condition (no blank line after `{` + enclosing javadoc) that triggers the
+  cross-boundary misattribution, the Spoon version observed, and the no-classpath parsing context.
+- [ ] Link the upstream Spoon issue from both `README.md` of regression test 11 and this entry once filed.
+- [ ] Link this issue to the related upstream bug tracked under §7 (trailing inline comment misattribution)
+  — both share the same root cause: Spoon's comment scanner crossing AST element boundaries.
+- [ ] Re-evaluate and simplify/remove local workaround after upstream fix is available and verified.
+
+---

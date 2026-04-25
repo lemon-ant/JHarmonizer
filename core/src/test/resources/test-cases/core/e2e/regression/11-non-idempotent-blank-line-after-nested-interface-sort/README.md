@@ -95,5 +95,5 @@ Genuine leading comments inside the type body start on or after the type's decla
 
 ## Upstream Spoon issue
 
-This bug has not yet been reported upstream. See `docs/TODO.md` for the action item to file
-a minimal reproducer with the Spoon issue tracker.
+This bug has not yet been reported upstream. See `docs/TODO.md` §8 for the action items to file
+a minimal reproducer with the Spoon issue tracker and to link the upstream issue back here once filed.
