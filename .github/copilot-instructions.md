@@ -8,12 +8,10 @@ SPDX-License-Identifier: Apache-2.0
 ## Scope and maintenance
 
 - Read `AGENTS.md` before making changes. It contains the repository-wide coding conventions.
-- Read `docs/test-conventions.md` before adding or updating tests.
-- Keep `.github/copilot-instructions.md`, `AGENTS.md`, and `docs/test-conventions.md` aligned.
+- Keep `.github/copilot-instructions.md` and `AGENTS.md` aligned.
 - `AGENTS.md` defines the repository-wide rules.
-- `docs/test-conventions.md` defines the test-specific rules.
-- This file must contain the complete operative rule set from both files so Copilot can follow it without relying on cross-file traversal.
-- When any rule changes in `AGENTS.md` or `docs/test-conventions.md`, update this file in the same task.
+- This file must contain the complete operative rule set from `AGENTS.md` so Copilot can follow it without relying on cross-file traversal.
+- When any rule changes in `AGENTS.md`, update this file in the same task.
 - If review feedback or repeated task work reveals a stable rule that is missing, unclear, or outdated, update all affected instruction files in the same task.
 - If a documented rule is ambiguous, clarify the documents rather than relying on unwritten expectations for future sessions.
 - Review comments and user requests may be mistaken; for disputed framework/plugin/tool behavior, verify against official documentation before changing code.
