@@ -46,8 +46,27 @@ class ComparatorUtils {
         return switch (orderingRule) {
             case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart);
             case ALPHA ->
-                Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
-                        .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);
+                (left, right) -> {
+                    int rankCmp = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
+                    if (rankCmp != 0) {
+                        return rankCmp;
+                    }
+                    // For accessor clusters, use the property name as the primary ALPHA key so that
+                    // clusters sort by property name instead of by the method-name prefix (get/is/has).
+                    // Members not in a cluster use their full method-signature alphaKey.
+                    String leftKey =
+                            left.getClusterPropertyName() != null ? left.getClusterPropertyName() : left.getAlphaKey();
+                    String rightKey = right.getClusterPropertyName() != null
+                            ? right.getClusterPropertyName()
+                            : right.getAlphaKey();
+                    int keyCmp = leftKey.compareTo(rightKey);
+                    if (keyCmp != 0) {
+                        return keyCmp;
+                    }
+                    // Tie-break within the same cluster (equal property name): fall back to the method
+                    // signature so that e.g. getXxx sorts before setXxx within the bundle.
+                    return left.getAlphaKey().compareTo(right.getAlphaKey());
+                };
             case VISIBILITY_ASC ->
                 Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank)
                         .reversed();

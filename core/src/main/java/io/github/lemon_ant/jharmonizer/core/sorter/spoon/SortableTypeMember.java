@@ -5,6 +5,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSrcStart;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -33,13 +34,37 @@ class SortableTypeMember {
         return "member=" + describeTypeMember(typeMember) + ", orderingKey=" + orderingKey;
     }
 
+    /**
+     * Creates a copy of the given member with its ordering key annotated with the specified accessor
+     * property name. The property name is used by the ALPHA comparator when ordering accessor clusters
+     * against each other: two clusters are compared by their property names, while a cluster compared
+     * against a non-cluster member falls back to the method-name {@code alphaKey}.
+     *
+     * @param original the original sortable type member
+     * @param clusterPropertyName the JavaBeans property name shared by the accessor cluster
+     * @return a new sortable member with the cluster property name recorded in its ordering key
+     */
+    @NonNull
+    static SortableTypeMember withClusterPropertyName(
+            @NonNull SortableTypeMember original, @NonNull String clusterPropertyName) {
+        OrderingKey baseKey = original.getOrderingKey();
+        OrderingKey clusterKey = new OrderingKey(
+                baseKey.getSrcStart(),
+                baseKey.getAlphaKey(),
+                baseKey.getAlphaSortingRank(),
+                baseKey.getVisibilityRank(),
+                clusterPropertyName);
+        return new SortableTypeMember(original.getTypeMember(), clusterKey);
+    }
+
     @NonNull
     private static SortableTypeMember.OrderingKey deriveOrderingKey(CtTypeMember typeMember) {
         return new SortableTypeMember.OrderingKey(
                 extractSrcStart(typeMember),
                 deriveAlphaKey(typeMember),
                 deriveAlphaSortingRank(typeMember),
-                deriveVisibilityRank(typeMember));
+                deriveVisibilityRank(typeMember),
+                null);
     }
 
     @NonNull
@@ -75,5 +100,14 @@ class SortableTypeMember {
         int alphaSortingRank;
 
         int visibilityRank;
+
+        /**
+         * The JavaBeans property name of the accessor cluster this member belongs to, or {@code null}
+         * when the member is not part of an accessor bundle. When non-null, the ALPHA comparator uses
+         * this name for cluster-vs-cluster comparison, so that accessor clusters sort by property name
+         * rather than by the method-name prefix ({@code get/is/has}).
+         */
+        @Nullable
+        String clusterPropertyName;
     }
 }

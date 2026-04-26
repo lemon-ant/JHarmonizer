@@ -16,12 +16,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -88,10 +90,26 @@ class GroupMembersOrderer {
                 .map(member -> new SortableTypeMember(member, orderingKeyProvider.apply(member)))
                 .toList();
 
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
+
+        if (compiledMemberGroup.isKeepAccessorsTogether()) {
+            Map<CtTypeMember, String> bundlePropertyNames =
+                    computeBundleMemberPropertyNames(groupMembers, groupMemberSet, memberDependencyGraph);
+            if (!bundlePropertyNames.isEmpty()) {
+                sortableTypeMembers = sortableTypeMembers.stream()
+                        .map(sortable -> {
+                            String propertyName = bundlePropertyNames.get(sortable.getTypeMember());
+                            return propertyName != null
+                                    ? SortableTypeMember.withClusterPropertyName(sortable, propertyName)
+                                    : sortable;
+                        })
+                        .toList();
+            }
+        }
+
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
         Comparator<SortableTypeMember> comparator =
                 Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
         Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
                 ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, typeMemberToSortable)
@@ -110,6 +128,48 @@ class GroupMembersOrderer {
         return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
                 .map(SortableTypeMember::getTypeMember)
                 .toList();
+    }
+
+    /**
+     * Computes the JavaBeans property name for every member that belongs to an accessor bundle.
+     * Returns a map from each bundled {@link CtTypeMember} to the shared property name of its bundle.
+     * Members not part of any bundle are excluded.
+     */
+    @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static Map<CtTypeMember, String> computeBundleMemberPropertyNames(
+            List<CtTypeMember> groupMembers,
+            Set<CtTypeMember> groupMemberSet,
+            MemberDependencyGraph memberDependencyGraph) {
+        Map<CtTypeMember, String> result = new HashMap<>();
+        Set<CtTypeMember> alreadyGrouped = new HashSet<>();
+
+        for (CtTypeMember member : groupMembers) {
+            if (alreadyGrouped.contains(member)) {
+                continue;
+            }
+            Set<CtTypeMember> bundleDependents =
+                    memberDependencyGraph.findDirectDependents(member, ACCESSOR_BUNDLE_ONLY).stream()
+                            .filter(groupMemberSet::contains)
+                            .collect(Collectors.toUnmodifiableSet());
+            if (bundleDependents.isEmpty()) {
+                continue;
+            }
+            if (!(member instanceof CtMethod<?> anchorMethod)) {
+                continue;
+            }
+            Optional<String> propertyName = SpoonTypeMemberUtils.findAccessorPropertyName(anchorMethod);
+            if (propertyName.isEmpty()) {
+                continue;
+            }
+            String name = propertyName.get();
+            result.put(member, name);
+            bundleDependents.forEach(dep -> result.put(dep, name));
+            alreadyGrouped.add(member);
+            alreadyGrouped.addAll(bundleDependents);
+        }
+
+        return Collections.unmodifiableMap(result);
     }
 
     @NonNull
