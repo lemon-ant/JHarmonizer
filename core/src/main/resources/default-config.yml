@@ -85,6 +85,10 @@ type-members-ordering:
       - '@Embeddable'
       - '@ConfigurationProperties'
       - '@Document'
+    excludes:
+      - interface
+      - enum
+      - annotation
     ordering-rules: [ visibility-desc, alpha ]
     groups:
       - name: Serializable UID
