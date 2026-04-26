@@ -108,7 +108,43 @@
           "includes" : [ {
             "annotationMatchers" : [ {
               "matchMethod" : "EXACT",
+              "value" : "ParameterizedTest"
+            } ],
+            "declarationModifiers" : [ ],
+            "memberAccesses" : [ ],
+            "memberKinds" : [ ],
+            "nameMatcher" : null
+          }, {
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "RepeatedTest"
+            } ],
+            "declarationModifiers" : [ ],
+            "memberAccesses" : [ ],
+            "memberKinds" : [ ],
+            "nameMatcher" : null
+          }, {
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "TestTemplate"
+            } ],
+            "declarationModifiers" : [ ],
+            "memberAccesses" : [ ],
+            "memberKinds" : [ ],
+            "nameMatcher" : null
+          }, {
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
               "value" : "Test"
+            } ],
+            "declarationModifiers" : [ ],
+            "memberAccesses" : [ ],
+            "memberKinds" : [ ],
+            "nameMatcher" : null
+          }, {
+            "annotationMatchers" : [ {
+              "matchMethod" : "EXACT",
+              "value" : "TestFactory"
             } ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ ],
@@ -176,7 +212,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "HEADER",
+      "separator" : null,
       "orderingRules" : null
     }, {
       "groupName" : "JUnit Test Configuration",
@@ -693,7 +729,25 @@
     } ],
     "relaxedForwardReferences" : null,
     "selectorBlock" : {
-      "excludes" : [ ],
+      "excludes" : [ {
+        "annotationMatchers" : [ ],
+        "declarationModifiers" : [ ],
+        "memberAccesses" : [ ],
+        "memberKinds" : [ "TYPE_ANNOTATION" ],
+        "nameMatcher" : null
+      }, {
+        "annotationMatchers" : [ ],
+        "declarationModifiers" : [ ],
+        "memberAccesses" : [ ],
+        "memberKinds" : [ "TYPE_INTERFACE" ],
+        "nameMatcher" : null
+      }, {
+        "annotationMatchers" : [ ],
+        "declarationModifiers" : [ ],
+        "memberAccesses" : [ ],
+        "memberKinds" : [ "TYPE_ENUM" ],
+        "nameMatcher" : null
+      } ],
       "includes" : [ {
         "annotationMatchers" : [ ],
         "declarationModifiers" : [ ],
