@@ -89,6 +89,10 @@ public class SpoonTypeMemberUtils {
         return typeMember.getPosition().getSourceStart();
     }
 
+    /**
+     * JavaBeans accessor method prefixes recognized for property-name extraction.
+     * These mirror the prefixes matched by {@code SpoonJavaBeansAccessorUtils}.
+     */
     private static final List<String> ACCESSOR_PREFIXES = List.of("get", "set", "is", "has");
 
     /**

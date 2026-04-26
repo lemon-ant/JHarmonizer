@@ -382,7 +382,8 @@ class GroupMembersOrdererOrderingRulesTest {
 
     @Test
     void
-            orderMembersInsideGroups_blankFinalWithStaticInitializerAndDependentField_fieldAndInitializerOrderedBeforeDependent() { // Given
+            orderMembersInsideGroups_blankFinalWithStaticInitializerAndDependentField_fieldAndInitializerOrderedBeforeDependent() {
+        // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "alpha-static-tie", false, List.of(OrderingRule.ALPHA));
 
