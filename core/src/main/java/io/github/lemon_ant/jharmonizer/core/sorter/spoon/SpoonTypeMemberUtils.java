@@ -109,14 +109,12 @@ public class SpoonTypeMemberUtils {
     @NonNull
     static Optional<String> findAccessorPropertyName(@NonNull CtMethod<?> method) {
         String name = method.getSimpleName();
-        for (String prefix : ACCESSOR_PREFIXES) {
-            if (name.startsWith(prefix)
-                    && name.length() > prefix.length()
-                    && Character.isUpperCase(name.charAt(prefix.length()))) {
-                return Optional.of(Introspector.decapitalize(name.substring(prefix.length())));
-            }
-        }
-        return Optional.empty();
+        return ACCESSOR_PREFIXES.stream()
+                .filter(prefix -> name.startsWith(prefix)
+                        && name.length() > prefix.length()
+                        && Character.isUpperCase(name.charAt(prefix.length())))
+                .findFirst()
+                .map(prefix -> Introspector.decapitalize(name.substring(prefix.length())));
     }
 
     /**
