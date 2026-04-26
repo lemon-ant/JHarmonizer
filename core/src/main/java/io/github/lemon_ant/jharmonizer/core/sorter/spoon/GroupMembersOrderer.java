@@ -87,6 +87,7 @@ class GroupMembersOrderer {
                 SortableTypeMember.OrderingKey.getOrderingKeyProvider();
 
         // Build sortable members in a LinkedHashMap, preserving source order.
+        // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
         // When keepAccessorsTogether is enabled, buildAccessorBundles() annotates bundled entries
         // with the cluster property name in a single traversal of the dependency graph.
         @SuppressWarnings("PMD.UseConcurrentHashMap")
@@ -162,10 +163,11 @@ class GroupMembersOrderer {
             // Annotate the sortable map entries with the cluster property name when the anchor is a
             // recognizable accessor method. Non-accessor anchors keep their original sortable entry.
             if (member instanceof CtMethod<?> anchorMethod) {
-                SpoonTypeMemberUtils.findAccessorPropertyName(anchorMethod)
-                        .ifPresent(name -> Stream.concat(Stream.of(member), bundleDependents.stream())
-                                .forEach(m -> sortableMap.put(
-                                        m, SortableTypeMember.withClusterPropertyName(sortableMap.get(m), name))));
+                SpoonTypeMemberUtils.findAccessorPropertyName(anchorMethod).ifPresent(name -> {
+                    sortableMap.put(member, SortableTypeMember.withClusterPropertyName(sortableMap.get(member), name));
+                    bundleDependents.forEach(dep -> sortableMap.put(
+                            dep, SortableTypeMember.withClusterPropertyName(sortableMap.get(dep), name)));
+                });
             }
 
             // Build the group from the (now potentially annotated) sortable members.
