@@ -65,7 +65,7 @@
         [ "method" ]
       ],
       "excludes" : [ ],
-      "separator" : "HEADER",
+      "separator" : null,
       "keepAccessorsTogether" : null,
       "relaxedForwardReferences" : null,
       "memberSubGroups" : [ {
@@ -83,7 +83,11 @@
       }, {
         "name" : "JUnit Test Methods",
         "includes" : [
-          [ "@Test" ]
+          [ "@ParameterizedTest" ],
+          [ "@RepeatedTest" ],
+          [ "@TestTemplate" ],
+          [ "@Test" ],
+          [ "@TestFactory" ]
         ],
         "excludes" : [ ],
         "separator" : null,
@@ -153,7 +157,11 @@
       [ "@MappedSuperclass" ],
       [ "@ConfigurationProperties" ]
     ],
-    "excludes" : [ ],
+    "excludes" : [
+      [ "annotation" ],
+      [ "interface" ],
+      [ "enum" ]
+    ],
     "separator" : null,
     "keepAccessorsTogether" : null,
     "relaxedForwardReferences" : null,

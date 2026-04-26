@@ -23,25 +23,21 @@ public abstract class AbstractConnectionTest {
 
     protected Object client;
 
-    // JUnit Setup Methods
     @BeforeEach
     protected void initTest() {
         // per-test setup — must come before @AfterEach under Test Classes rule
     }
 
-    // JUnit Test Methods
     @Test
     protected void verifyErrorAttributes() {
         // verify test method
     }
 
-    // JUnit Teardown Methods
     @AfterEach
     protected void doCleanup() {
         // per-test teardown — 'd' < 'i' so Default Rule puts this first (wrong for test classes)
     }
 
-    // Utility Methods
     protected static String buildErrorMessage(List<String> presentAttributes) {
         return String.join(";", presentAttributes);
     }

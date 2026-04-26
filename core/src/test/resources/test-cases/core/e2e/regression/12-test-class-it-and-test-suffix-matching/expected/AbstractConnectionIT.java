@@ -25,19 +25,16 @@ public abstract class AbstractConnectionIT {
 
     private static Object client;
 
-    // JUnit Setup Methods
     @BeforeAll
     public static void initSharedResources() {
         // one-time setup — must come before @AfterAll under Test Classes rule
     }
 
-    // JUnit Teardown Methods
     @AfterAll
     public static void doOneTimeCleanup() {
         // one-time teardown — 'd' < 'i' so Default Rule puts this first (wrong for test classes)
     }
 
-    // JUnit Methods
     protected Map<String, Object> buildRequestItems(int count, String table, boolean withPartitionKey) {
         Map<String, Object> result = new HashMap<>();
         List<Map<String, String>> keys = new ArrayList<>();

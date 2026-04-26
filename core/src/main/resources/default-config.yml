@@ -45,7 +45,6 @@ type-members-ordering:
 
       - name: JUnit Methods
         includes: method
-        separator: header
         groups:
           - name: JUnit Setup Methods
             ordering-rules: preserve
@@ -54,7 +53,12 @@ type-members-ordering:
               - '@BeforeAll'
 
           - name: JUnit Test Methods
-            includes: '@Test'
+            includes:
+              - '@Test'
+              - '@ParameterizedTest'
+              - '@RepeatedTest'
+              - '@TestFactory'
+              - '@TestTemplate'
 
           - name: JUnit Teardown Methods
             ordering-rules: preserve
