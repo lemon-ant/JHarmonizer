@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +29,21 @@ class TokenNormalizerAndTokenMapsTest {
 
         // Then
         assertThat(normalizedTokens).containsExactlyInAnyOrder("static", "initializer", "field");
+    }
+
+    @Test
+    void normalizeTokens_matcherTokens_preserveOriginalCase() {
+        // Given — name-regex, exact-name, and annotation-matcher tokens must keep their case
+        // so that patterns like ~.*Test$ and @ExtendWith match the actual source identifiers
+        Set<String> rawTokens = Set.of("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$", "class");
+
+        // When
+        Set<String> normalizedTokens = TokenNormalizer.normalizeTokens(rawTokens);
+
+        // Then
+        assertThat(normalizedTokens)
+                .contains("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$")
+                .contains("class");
     }
 
     @Test

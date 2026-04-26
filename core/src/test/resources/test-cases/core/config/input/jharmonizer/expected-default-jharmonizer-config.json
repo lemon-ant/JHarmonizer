@@ -16,6 +16,7 @@
     "name" : "Test Classes",
     "includes" : [
       [ "~.*Test$", "class" ],
+      [ "~.*IT$", "class" ],
       [ "@ExtendWith", "class" ],
       [ "@RunWith", "class" ],
       [ "@Nested", "class" ],

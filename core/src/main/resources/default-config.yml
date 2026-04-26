@@ -29,6 +29,7 @@ type-members-ordering:
       - [ class, '@Nested' ]
       - [ class, '@RunWith' ]
       - [ class, ~.*Test$ ]
+      - [ class, ~.*IT$ ]
     ordering-rules: alpha
     separator: new-line
     groups:

@@ -79,7 +79,7 @@
           "includes" : [ {
             "annotationMatchers" : [ {
               "matchMethod" : "EXACT",
-              "value" : "beforeall"
+              "value" : "BeforeAll"
             } ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ ],
@@ -88,7 +88,7 @@
           }, {
             "annotationMatchers" : [ {
               "matchMethod" : "EXACT",
-              "value" : "beforeeach"
+              "value" : "BeforeEach"
             } ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ ],
@@ -108,7 +108,7 @@
           "includes" : [ {
             "annotationMatchers" : [ {
               "matchMethod" : "EXACT",
-              "value" : "test"
+              "value" : "Test"
             } ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ ],
@@ -128,7 +128,7 @@
           "includes" : [ {
             "annotationMatchers" : [ {
               "matchMethod" : "EXACT",
-              "value" : "aftereach"
+              "value" : "AfterEach"
             } ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ ],
@@ -137,7 +137,7 @@
           }, {
             "annotationMatchers" : [ {
               "matchMethod" : "EXACT",
-              "value" : "afterall"
+              "value" : "AfterAll"
             } ],
             "declarationModifiers" : [ ],
             "memberAccesses" : [ ],
@@ -188,7 +188,7 @@
         "includes" : [ {
           "annotationMatchers" : [ {
             "matchMethod" : "EXACT",
-            "value" : "testconfiguration"
+            "value" : "TestConfiguration"
           } ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
@@ -208,7 +208,7 @@
         "includes" : [ {
           "annotationMatchers" : [ {
             "matchMethod" : "EXACT",
-            "value" : "nested"
+            "value" : "Nested"
           } ],
           "declarationModifiers" : [ ],
           "memberAccesses" : [ ],
@@ -229,12 +229,21 @@
         "memberKinds" : [ "TYPE_CLASS" ],
         "nameMatcher" : {
           "matchMethod" : "REGEX",
-          "value" : ".*test$"
+          "value" : ".*Test$"
+        }
+      }, {
+        "annotationMatchers" : [ ],
+        "declarationModifiers" : [ ],
+        "memberAccesses" : [ ],
+        "memberKinds" : [ "TYPE_CLASS" ],
+        "nameMatcher" : {
+          "matchMethod" : "REGEX",
+          "value" : ".*IT$"
         }
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "extendwith"
+          "value" : "ExtendWith"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -243,7 +252,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "runwith"
+          "value" : "RunWith"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -252,7 +261,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "nested"
+          "value" : "Nested"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -261,7 +270,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "REGEX",
-          "value" : ".*test$"
+          "value" : ".*Test$"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -288,7 +297,7 @@
           "memberKinds" : [ "FIELD" ],
           "nameMatcher" : {
             "matchMethod" : "EXACT",
-            "value" : "serialversionuid"
+            "value" : "serialVersionUID"
           }
         } ]
       },
@@ -537,7 +546,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "hashcode"
+                "value" : "hashCode"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -546,7 +555,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "compareto"
+                "value" : "compareTo"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -573,7 +582,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "tostring"
+                "value" : "toString"
               }
             } ],
             "includes" : [ ]
@@ -594,7 +603,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "hashcode"
+                "value" : "hashCode"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -612,7 +621,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "compareto"
+                "value" : "compareTo"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -621,7 +630,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "tostring"
+                "value" : "toString"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -692,12 +701,12 @@
         "memberKinds" : [ ],
         "nameMatcher" : {
           "matchMethod" : "REGEX",
-          "value" : ".*(dto|dto)$"
+          "value" : ".*(Dto|DTO)$"
         }
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "entity"
+          "value" : "Entity"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -706,7 +715,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "embeddable"
+          "value" : "Embeddable"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -715,7 +724,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "document"
+          "value" : "Document"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -724,7 +733,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "data"
+          "value" : "Data"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -737,12 +746,12 @@
         "memberKinds" : [ ],
         "nameMatcher" : {
           "matchMethod" : "REGEX",
-          "value" : ".*entity$"
+          "value" : ".*Entity$"
         }
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "value"
+          "value" : "Value"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -751,7 +760,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "mappedsuperclass"
+          "value" : "MappedSuperclass"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -760,7 +769,7 @@
       }, {
         "annotationMatchers" : [ {
           "matchMethod" : "EXACT",
-          "value" : "configurationproperties"
+          "value" : "ConfigurationProperties"
         } ],
         "declarationModifiers" : [ ],
         "memberAccesses" : [ ],
@@ -830,7 +839,7 @@
                 "memberKinds" : [ ],
                 "nameMatcher" : {
                   "matchMethod" : "EXACT",
-                  "value" : "serialversionuid"
+                  "value" : "serialVersionUID"
                 }
               } ]
             },
@@ -1002,7 +1011,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "hashcode"
+                "value" : "hashCode"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -1020,7 +1029,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "compareto"
+                "value" : "compareTo"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -1029,7 +1038,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "tostring"
+                "value" : "toString"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -1059,7 +1068,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "hashcode"
+                "value" : "hashCode"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -1077,7 +1086,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "compareto"
+                "value" : "compareTo"
               }
             }, {
               "annotationMatchers" : [ ],
@@ -1086,7 +1095,7 @@
               "memberKinds" : [ ],
               "nameMatcher" : {
                 "matchMethod" : "EXACT",
-                "value" : "tostring"
+                "value" : "toString"
               }
             }, {
               "annotationMatchers" : [ ],

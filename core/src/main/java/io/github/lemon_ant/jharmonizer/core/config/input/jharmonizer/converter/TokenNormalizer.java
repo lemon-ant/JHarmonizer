@@ -18,6 +18,12 @@ class TokenNormalizer {
 
     /**
      * Normalizes the tokens.
+     * <p>
+     * Keyword tokens (member kinds, access levels, modifiers) are lowercased to allow
+     * case-insensitive YAML authoring. Name matchers ({@code ~…}, {@code =…}) and annotation
+     * matchers ({@code @…}) preserve their original case because they are used as regex or
+     * exact-match patterns and must match the actual Java identifiers in source code.
+     *
      * @param rawTokens the raw tokens to normalize
      * @return the resulting set
      */
@@ -33,7 +39,17 @@ class TokenNormalizer {
                         return true;
                     }
                 })
-                .map(token -> token.toLowerCase(Locale.ENGLISH))
+                .map(token -> isMatcherToken(token) ? token : token.toLowerCase(Locale.ENGLISH))
                 .collect(toUnmodifiableSet());
+    }
+
+    /**
+     * Returns {@code true} for tokens that carry case-sensitive match patterns and must not be
+     * lowercased: name matchers starting with {@code ~} or {@code =}, and annotation matchers
+     * starting with {@code @}.
+     */
+    private static boolean isMatcherToken(String token) {
+        char first = token.charAt(0);
+        return first == '~' || first == '=' || first == '@';
     }
 }
