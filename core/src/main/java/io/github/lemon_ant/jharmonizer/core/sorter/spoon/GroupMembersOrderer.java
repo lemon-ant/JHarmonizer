@@ -4,7 +4,6 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
 import io.github.lemon_ant.jharmonizer.sorting.Group;
 import io.github.lemon_ant.jharmonizer.sorting.Groups;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,7 +21,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -86,20 +83,14 @@ class GroupMembersOrderer {
 
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        // Resolve cluster property names for all bundle members before building sortable members,
-        // so each SortableTypeMember is created fully initialized with its clusterPropertyName.
-        Map<CtTypeMember, String> clusterPropertyNames = compiledMemberGroup.isKeepAccessorsTogether()
-                ? resolveClusterPropertyNames(groupMembers, groupMemberSet, memberDependencyGraph)
-                : Map.of();
-
         // Build sortable members in a LinkedHashMap, preserving source order.
         // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
+        // OrderingKey.derive computes the JavaBeans property name directly from each method member,
+        // so no separate pre-pass is needed to resolve cluster property names.
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, SortableTypeMember> sortableMap = new LinkedHashMap<>(groupMembers.size() * 2);
-        groupMembers.forEach(member -> sortableMap.put(
-                member,
-                new SortableTypeMember(
-                        member, SortableTypeMember.OrderingKey.derive(member, clusterPropertyNames.get(member)))));
+        groupMembers.forEach(member ->
+                sortableMap.put(member, new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member))));
 
         Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
                 ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, sortableMap)
@@ -126,57 +117,16 @@ class GroupMembersOrderer {
     }
 
     /**
-     * Walks the accessor-bundle edges of the dependency graph once and resolves the cluster property
-     * name for every member that belongs to a bundle. The property name is determined from the anchor
-     * method using the full JavaBeans accessor contract (prefix, return type, and parameter count).
+     * Builds the accessor-bundle {@link Groups} by walking the accessor-bundle edges of the
+     * dependency graph. Cluster property names are already embedded in the {@link OrderingKey} of
+     * each {@link SortableTypeMember} (computed directly in
+     * {@link SortableTypeMember.OrderingKey#derive}), so this method only constructs the grouping
+     * structure.
      *
      * @param groupMembers list of members in the group (preserves iteration order)
      * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
      * @param memberDependencyGraph the dependency graph
-     * @return an unmodifiable map from bundled {@link CtTypeMember} to its cluster property name;
-     *         members that are not part of any bundle are absent from the map
-     */
-    @NonNull
-    private static Map<CtTypeMember, String> resolveClusterPropertyNames(
-            List<CtTypeMember> groupMembers,
-            Set<CtTypeMember> groupMemberSet,
-            MemberDependencyGraph memberDependencyGraph) {
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, String> propertyNames = new HashMap<>();
-        Set<CtTypeMember> processed = new HashSet<>();
-
-        for (CtTypeMember member : groupMembers) {
-            if (processed.contains(member) || !(member instanceof CtMethod<?> anchorMethod)) {
-                continue;
-            }
-            Set<CtTypeMember> bundleDependents =
-                    memberDependencyGraph.findDirectDependents(member, ACCESSOR_BUNDLE_ONLY).stream()
-                            .filter(groupMemberSet::contains)
-                            .collect(Collectors.toUnmodifiableSet());
-            if (bundleDependents.isEmpty()) {
-                continue;
-            }
-            processed.add(member);
-            processed.addAll(bundleDependents);
-
-            SpoonJavaBeansAccessorUtils.findAccessorPropertyName(anchorMethod).ifPresent(name -> {
-                propertyNames.put(member, name);
-                bundleDependents.forEach(dep -> propertyNames.put(dep, name));
-            });
-        }
-
-        return Collections.unmodifiableMap(propertyNames);
-    }
-
-    /**
-     * Builds the accessor-bundle {@link Groups} from the pre-annotated sortable map. Relies on
-     * {@link #resolveClusterPropertyNames} having already populated the sortable map with the correct
-     * cluster property names; this method only constructs the grouping structure.
-     *
-     * @param groupMembers list of members in the group (preserves iteration order)
-     * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
-     * @param memberDependencyGraph the dependency graph
-     * @param sortableMap the fully initialized sortable map (cluster property names already set)
+     * @param sortableMap the fully initialized sortable map
      * @return the {@link Groups} built from the bundle traversal; empty when no bundles were found
      */
     @NonNull

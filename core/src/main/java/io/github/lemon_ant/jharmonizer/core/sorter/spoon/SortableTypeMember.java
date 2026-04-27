@@ -6,6 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSrcStart;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -13,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -47,9 +49,11 @@ class SortableTypeMember {
     static class OrderingKey {
 
         /**
-         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}
-         * with no cluster property name. Intended for contexts where accessor bundling is not applied,
-         * such as top-level type ordering.
+         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
+         * The provider computes property names automatically for method members (see
+         * {@link #derive(CtTypeMember)}) so it can be used both for group-level member ordering and
+         * for top-level type ordering (where members are never methods, so property names are always
+         * {@code null}).
          *
          * @return the ordering key provider function
          */
@@ -57,26 +61,32 @@ class SortableTypeMember {
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();
-            return typeMember -> typeMember2OrderingKey.computeIfAbsent(typeMember, member -> derive(member, null));
+            return typeMember -> typeMember2OrderingKey.computeIfAbsent(typeMember, OrderingKey::derive);
         }
 
         /**
-         * Derives an {@link OrderingKey} for the given type member, optionally annotated with a
-         * cluster property name for accessor-bundle ordering.
+         * Derives an {@link OrderingKey} for the given type member. For method members, the JavaBeans
+         * property name is automatically extracted via
+         * {@link SpoonJavaBeansAccessorUtils#findAccessorPropertyName} and stored as
+         * {@link #clusterPropertyName}, so that accessor clusters sort by property name rather than
+         * by method-name prefix. Non-method members always receive {@code null} as the cluster
+         * property name.
          *
          * @param typeMember the type member to derive a key for
-         * @param clusterPropertyName the JavaBeans property name of the accessor cluster, or
-         *     {@code null} when the member is not part of a cluster
          * @return the derived ordering key
          */
         @NonNull
-        static OrderingKey derive(CtTypeMember typeMember, @Nullable String clusterPropertyName) {
+        static OrderingKey derive(@NonNull CtTypeMember typeMember) {
+            String propertyName = typeMember instanceof CtMethod<?> method
+                    ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
+                            .orElse(null)
+                    : null;
             return new OrderingKey(
                     extractSrcStart(typeMember),
                     deriveAlphaKey(typeMember),
                     deriveAlphaSortingRank(typeMember),
                     deriveVisibilityRank(typeMember),
-                    clusterPropertyName);
+                    propertyName);
         }
 
         int srcStart;
@@ -85,9 +95,10 @@ class SortableTypeMember {
         String alphaKey;
 
         /**
-         * Secondary rank applied before the alpha key in ALPHA ordering. Non-zero only for
-         * {@code CtAnonymousExecutable} (initializer blocks), which receive rank {@code 1} so that
-         * they sort after all regular named members regardless of their position in the source.
+         * Rank applied first in ALPHA ordering, before the alpha key and cluster property name.
+         * Non-zero only for {@code CtAnonymousExecutable} (initializer blocks), which receive rank
+         * {@code 1} so that they sort after all regular named members regardless of their position
+         * in the source.
          */
         int alphaSortingRank;
 
