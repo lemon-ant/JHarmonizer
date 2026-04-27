@@ -285,7 +285,9 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then
+        // Then — the {getValue, setValue} bundle compares by the full alphaKey of its anchor
+        // when compared against a non-cluster singleton: "getValue():int" (g) < "middleMethod():void" (m),
+        // so the bundle sorts before middleMethod
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
     }
@@ -315,7 +317,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_accessorBundleWithDependencyToGroupedMember_groupComesFirstDependencyIgnored() {
+    void orderMembersInsideGroups_accessorBundleWithDependencyToGroupedMember_dependencyIgnoredBundleBeforeSingleton() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessors-with-dependency", true, List.of(OrderingRule.ALPHA));
@@ -340,9 +342,44 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — accessor bundle {getValue, setValue} sorts before singleton middleMethod by alpha (g < m)
+        // Then — the {getValue, setValue} bundle compares by its anchor's alphaKey ("getValue():int", g)
+        // against the singleton middleMethod ("middleMethod():void", m); g < m so the bundle sorts first.
+        // The declaration dependency from middleMethod to setValue is ignored because setValue is grouped.
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
+    }
+
+    @Test
+    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersOrderedByPropertyNameNotMethodPrefix() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "accessor-cluster-property-name", true, List.of(OrderingRule.ALPHA));
+        CtTypeMember isActiveMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "isActive");
+        CtTypeMember setActiveMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "setActive");
+        CtTypeMember getBalanceMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "getBalance");
+        CtTypeMember setBalanceMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "setBalance");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup,
+                List.of(getBalanceMethodMember, isActiveMethodMember, setActiveMethodMember, setBalanceMethodMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                isActiveMethodMember, compiledMemberGroup,
+                setActiveMethodMember, compiledMemberGroup,
+                getBalanceMethodMember, compiledMemberGroup,
+                setBalanceMethodMember, compiledMemberGroup));
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then — clusters sort by property name: "active" (a) < "balance" (b),
+        // even though "getBalance" (g) < "isActive" (i) by raw method name
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(
+                        isActiveMethodMember, setActiveMethodMember, getBalanceMethodMember, setBalanceMethodMember);
     }
 
     @Test
@@ -608,6 +645,18 @@ class GroupMembersOrdererOrderingRulesTest {
                 EnumSet.of(MemberDependencyEdgeKind.ACCESSOR_BUNDLE);
         private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
                 EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+
+        private static final String ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleAccessorClusterPropertyNameFixture.java";
+        private static final URL ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_RESOURCE_URL =
+                GroupMembersOrdererOrderingRulesTest.class.getResource(
+                        ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_CLASSPATH_RESOURCE);
+        private static final CtType<?> ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(
+                        ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_RESOURCE_URL);
+        private static final List<CtTypeMember> ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS =
+                streamExplicitSrcTypeMembers(ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MAIN_TYPE)
+                        .toList();
 
         private Constants() {}
     }

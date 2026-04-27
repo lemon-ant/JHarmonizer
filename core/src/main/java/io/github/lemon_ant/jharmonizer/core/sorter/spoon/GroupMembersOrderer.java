@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
@@ -17,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -82,19 +82,16 @@ class GroupMembersOrderer {
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
 
-        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(member -> new SortableTypeMember(member, orderingKeyProvider.apply(member)))
+                .map(member -> new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member)))
                 .toList();
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
         Comparator<SortableTypeMember> comparator =
                 Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
-
         Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
-                ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, typeMemberToSortable)
+                ? buildAccessorBundleGroups(groupMemberSet, memberDependencyGraph, typeMemberToSortable)
                 : Groups.empty();
 
         // Collect accessor-bundle members so declaration-dependency edges involving them are skipped.
@@ -105,7 +102,7 @@ class GroupMembersOrderer {
                 .collect(Collectors.toUnmodifiableSet());
 
         Dependencies<SortableTypeMember> dependencies = buildDeclarationDependencies(
-                groupMembers, groupMemberSet, bundledMembers, memberDependencyGraph, typeMemberToSortable);
+                groupMemberSet, bundledMembers, memberDependencyGraph, typeMemberToSortable);
 
         return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
                 .map(SortableTypeMember::getTypeMember)
@@ -116,21 +113,33 @@ class GroupMembersOrderer {
     @SuppressWarnings("PMD.UseConcurrentHashMap")
     private static Map<CtTypeMember, SortableTypeMember> buildTypeMemberToSortableMap(
             List<SortableTypeMember> sortableTypeMembers) {
+        // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
         Map<CtTypeMember, SortableTypeMember> map = new HashMap<>(sortableTypeMembers.size() * 2);
         sortableTypeMembers.forEach(sortable -> map.put(sortable.getTypeMember(), sortable));
         return Collections.unmodifiableMap(map);
     }
 
+    /**
+     * Builds the accessor-bundle {@link Groups} by walking the accessor-bundle edges of the
+     * dependency graph. Cluster property names are already embedded in the {@link OrderingKey} of
+     * each {@link SortableTypeMember} (computed directly in
+     * {@link SortableTypeMember.OrderingKey#derive}), so this method only constructs the grouping
+     * structure.
+     *
+     * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
+     * @param memberDependencyGraph the dependency graph
+     * @param typeMemberToSortable the fully initialized sortable map
+     * @return the {@link Groups} built from the bundle traversal; empty when no bundles were found
+     */
     @NonNull
     private static Groups<SortableTypeMember> buildAccessorBundleGroups(
-            List<CtTypeMember> groupMembers,
             Set<CtTypeMember> groupMemberSet,
             MemberDependencyGraph memberDependencyGraph,
             Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
         Set<CtTypeMember> alreadyGrouped = new HashSet<>();
         List<Group<SortableTypeMember>> bundles = new ArrayList<>();
 
-        for (CtTypeMember member : groupMembers) {
+        for (CtTypeMember member : groupMemberSet) {
             if (alreadyGrouped.contains(member)) {
                 continue;
             }
@@ -154,14 +163,13 @@ class GroupMembersOrderer {
 
     @NonNull
     private static Dependencies<SortableTypeMember> buildDeclarationDependencies(
-            List<CtTypeMember> groupMembers,
             Set<CtTypeMember> groupMemberSet,
             Set<CtTypeMember> bundledMembers,
             MemberDependencyGraph memberDependencyGraph,
             Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
         List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();
 
-        for (CtTypeMember provider : groupMembers) {
+        for (CtTypeMember provider : groupMemberSet) {
             if (bundledMembers.contains(provider)) {
                 continue;
             }

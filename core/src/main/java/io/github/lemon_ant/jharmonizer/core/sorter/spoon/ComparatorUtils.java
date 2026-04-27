@@ -46,8 +46,29 @@ class ComparatorUtils {
         return switch (orderingRule) {
             case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart);
             case ALPHA ->
-                Comparator.comparingInt(SortableTypeMember.OrderingKey::getAlphaSortingRank)
-                        .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey);
+                (left, right) -> {
+                    // Compare the primary ALPHA pre-key first. Rank is non-zero only for
+                    // anonymous initializer blocks (rank 1), ensuring they always sort
+                    // after all named members regardless of their alphabetical position.
+                    int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
+                    if (rankComparison != 0) {
+                        return rankComparison;
+                    }
+                    // When both members expose a derived accessor property name, compare by that
+                    // shared property first so accessors sort by the underlying property
+                    // (e.g. "clientId") rather than by the method-name prefix
+                    // (get/is/has/set). If either side has no derived property name, or the
+                    // property names are equal, fall back to the full method-signature alphaKey.
+                    if (left.getClusterPropertyName() != null && right.getClusterPropertyName() != null) {
+                        int keyCmp = left.getClusterPropertyName().compareTo(right.getClusterPropertyName());
+                        if (keyCmp != 0) {
+                            return keyCmp;
+                        }
+                    }
+                    // Tie-break equal derived property names, and handle members without a
+                    // derived property name, using the full method-signature alphaKey.
+                    return left.getAlphaKey().compareTo(right.getAlphaKey());
+                };
             case VISIBILITY_ASC ->
                 Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank)
                         .reversed();
