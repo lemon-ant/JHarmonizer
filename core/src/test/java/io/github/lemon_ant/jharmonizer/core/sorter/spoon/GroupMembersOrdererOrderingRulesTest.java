@@ -350,6 +350,41 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
+    void orderMembersInsideGroups_keepAccessorsTogetherDisabledWithDifferentPropertyNames_orderByFullMethodName() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "accessors-disabled-multi-property", false, List.of(OrderingRule.ALPHA));
+        CtTypeMember isActiveMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "isActive");
+        CtTypeMember setActiveMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "setActive");
+        CtTypeMember getBalanceMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "getBalance");
+        CtTypeMember setBalanceMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS, "setBalance");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup,
+                List.of(setBalanceMethodMember, isActiveMethodMember, setActiveMethodMember, getBalanceMethodMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                isActiveMethodMember, compiledMemberGroup,
+                setActiveMethodMember, compiledMemberGroup,
+                getBalanceMethodMember, compiledMemberGroup,
+                setBalanceMethodMember, compiledMemberGroup));
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then — without accessor clustering, all methods sort by their full method name:
+        // "getBalance():int" (g) < "isActive():boolean" (i) < "setActive(boolean):void" (sA) < "setBalance(int):void"
+        // (sB).
+        // Property-name–based ordering ("active" < "balance") must NOT apply here.
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(
+                        getBalanceMethodMember, isActiveMethodMember, setActiveMethodMember, setBalanceMethodMember);
+    }
+
+    @Test
     void orderMembersInsideGroups_isAccessorClusterAlpha_clustersOrderedByPropertyNameNotMethodPrefix() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(

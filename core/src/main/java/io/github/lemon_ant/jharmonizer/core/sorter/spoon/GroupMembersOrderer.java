@@ -82,8 +82,10 @@ class GroupMembersOrderer {
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
 
+        boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(member -> new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member)))
+                .map(member -> new SortableTypeMember(
+                        member, SortableTypeMember.OrderingKey.derive(member, keepAccessorsTogether)))
                 .toList();
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
@@ -122,8 +124,9 @@ class GroupMembersOrderer {
     /**
      * Builds the accessor-bundle {@link Groups} by walking the accessor-bundle edges of the
      * dependency graph. Cluster property names are already embedded in the {@link OrderingKey} of
-     * each {@link SortableTypeMember} (computed directly in
-     * {@link SortableTypeMember.OrderingKey#derive}), so this method only constructs the grouping
+     * each {@link SortableTypeMember} (computed by
+     * {@link SortableTypeMember.OrderingKey#derive(spoon.reflect.declaration.CtTypeMember, boolean)}
+     * with {@code keepAccessorsTogether=true}), so this method only constructs the grouping
      * structure.
      *
      * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
