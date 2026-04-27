@@ -77,6 +77,8 @@ class SortableTypeMember {
          *
          * <p>When {@code keepAccessorsTogether} is {@code false}, {@link #clusterPropertyName}
          * is always {@code null}, so all members sort purely by their {@link #alphaKey}.
+         * {@link #alphaClusterKey} initially matches {@link #alphaKey}; group-level ordering may
+         * replace it later for accessor methods that need to participate in an accessor super-cluster.
          *
          * @param typeMember the type member to derive a key for
          * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for

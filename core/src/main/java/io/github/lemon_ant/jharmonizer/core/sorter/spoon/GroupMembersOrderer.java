@@ -142,6 +142,8 @@ class GroupMembersOrderer {
             return Map.of();
         }
         List<AccessorSuperCluster> superClusters = collectAccessorSuperClusters(propertyClusters);
+        // One map entry is still needed for each accessor property even when several properties merge
+        // into the same super-cluster.
         Map<String, String> propertyName2AlphaClusterKey = new HashMap<>(propertyClusters.size() * 2);
         superClusters.forEach(superCluster -> superCluster
                 .getPropertyNames()
@@ -324,9 +326,10 @@ class GroupMembersOrderer {
 
         @NonNull
         private AccessorSuperCluster merge(AccessorSuperCluster nextSuperCluster) {
-            List<String> mergedPropertyNames = Stream.concat(
-                            propertyNames.stream(), nextSuperCluster.propertyNames.stream())
-                    .toList();
+            List<String> mergedPropertyNames =
+                    new ArrayList<>(propertyNames.size() + nextSuperCluster.propertyNames.size());
+            mergedPropertyNames.addAll(propertyNames);
+            mergedPropertyNames.addAll(nextSuperCluster.propertyNames);
             return new AccessorSuperCluster(
                     mergedPropertyNames,
                     min(minAlphaKey, nextSuperCluster.minAlphaKey),
