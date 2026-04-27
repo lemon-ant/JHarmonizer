@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -83,10 +86,7 @@ class GroupMembersOrderer {
                 ComparatorUtils.buildOrderingComparator(orderingRules);
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(member -> new SortableTypeMember(
-                        member, SortableTypeMember.OrderingKey.derive(member, keepAccessorsTogether)))
-                .toList();
+        List<SortableTypeMember> sortableTypeMembers = createSortableTypeMembers(groupMembers, keepAccessorsTogether);
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
         Comparator<SortableTypeMember> comparator =
@@ -109,6 +109,40 @@ class GroupMembersOrderer {
         return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
                 .map(SortableTypeMember::getTypeMember)
                 .toList();
+    }
+
+    @NonNull
+    private static List<SortableTypeMember> createSortableTypeMembers(
+            List<CtTypeMember> groupMembers, boolean keepAccessorsTogether) {
+        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
+                .map(member -> new SortableTypeMember(
+                        member, SortableTypeMember.OrderingKey.derive(member, keepAccessorsTogether)))
+                .toList();
+        if (!keepAccessorsTogether) {
+            return sortableTypeMembers;
+        }
+
+        Optional<String> accessorSuperClusterAlphaKey = sortableTypeMembers.stream()
+                .map(SortableTypeMember::getOrderingKey)
+                .filter(orderingKey -> orderingKey.getClusterPropertyName() != null)
+                .map(SortableTypeMember.OrderingKey::getAlphaKey)
+                .min(Comparator.naturalOrder());
+        return accessorSuperClusterAlphaKey
+                .map(alphaClusterKey -> sortableTypeMembers.stream()
+                        .map(sortableTypeMember -> resolveAccessorSuperCluster(sortableTypeMember, alphaClusterKey))
+                        .toList())
+                .orElse(sortableTypeMembers);
+    }
+
+    @NonNull
+    private static SortableTypeMember resolveAccessorSuperCluster(
+            SortableTypeMember sortableTypeMember, String alphaClusterKey) {
+        SortableTypeMember.OrderingKey orderingKey = sortableTypeMember.getOrderingKey();
+        if (orderingKey.getClusterPropertyName() == null) {
+            return sortableTypeMember;
+        }
+        return new SortableTypeMember(
+                sortableTypeMember.getTypeMember(), orderingKey.resolveWithAlphaClusterKey(alphaClusterKey));
     }
 
     @NonNull

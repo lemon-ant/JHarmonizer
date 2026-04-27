@@ -89,9 +89,11 @@ class SortableTypeMember {
                     ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
                             .orElse(null)
                     : null;
+            String alphaKey = deriveAlphaKey(typeMember);
             return new OrderingKey(
                     extractSrcStart(typeMember),
-                    deriveAlphaKey(typeMember),
+                    alphaKey,
+                    alphaKey,
                     deriveAlphaSortingRank(typeMember),
                     deriveVisibilityRank(typeMember),
                     propertyName);
@@ -101,6 +103,15 @@ class SortableTypeMember {
 
         @NonNull
         String alphaKey;
+
+        /**
+         * Primary key used before per-accessor-property ordering. Non-accessors keep their
+         * {@link #alphaKey}; accessors may share the minimum alpha key from the accessor
+         * super-cluster in their group, so the whole accessor run compares consistently against
+         * non-accessor members.
+         */
+        @NonNull
+        String alphaClusterKey;
 
         /**
          * Rank applied first in ALPHA ordering, before the alpha key and cluster property name.
@@ -117,10 +128,21 @@ class SortableTypeMember {
          * (e.g. {@code getValue} → {@code value}), or {@code null} when the member is not a
          * recognized accessor method. The ALPHA comparator uses this name when both compared members
          * expose a derived property name, so that accessor methods sort by the underlying property
-         * rather than by the method-name prefix ({@code get/is/has/set}) even when compared with
-         * non-accessor members.
+         * rather than by the method-name prefix ({@code get/is/has/set}).
          */
         @Nullable
         String clusterPropertyName;
+
+        /**
+         * Returns a copy that participates in the given alpha super-cluster.
+         *
+         * @param alphaClusterKey the shared alpha key for the super-cluster
+         * @return the copied ordering key
+         */
+        @NonNull
+        OrderingKey resolveWithAlphaClusterKey(@NonNull String alphaClusterKey) {
+            return new OrderingKey(
+                    srcStart, alphaKey, alphaClusterKey, alphaSortingRank, visibilityRank, clusterPropertyName);
+        }
     }
 }

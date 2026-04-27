@@ -56,13 +56,20 @@ class ComparatorUtils {
                     if (rankComparison != 0) {
                         return rankComparison;
                     }
-                    // Compare every member through one primary alpha key so accessor-vs-accessor and
-                    // accessor-vs-non-accessor comparisons cannot disagree transitively. Accessors
-                    // use their JavaBeans property name; other members use their full alpha key.
-                    int clusterKeyComparison =
-                            resolveAlphaClusterKey(left).compareTo(resolveAlphaClusterKey(right));
+                    // Compare the accessor super-cluster as one unit against non-accessor members
+                    // before ordering individual accessor properties inside that unit. This keeps
+                    // the comparator transitive when accessor property order disagrees with full
+                    // method-name order.
+                    int clusterKeyComparison = left.getAlphaClusterKey().compareTo(right.getAlphaClusterKey());
                     if (clusterKeyComparison != 0) {
                         return clusterKeyComparison;
+                    }
+                    if (left.getClusterPropertyName() != null && right.getClusterPropertyName() != null) {
+                        int propertyComparison =
+                                left.getClusterPropertyName().compareTo(right.getClusterPropertyName());
+                        if (propertyComparison != 0) {
+                            return propertyComparison;
+                        }
                     }
                     return left.getAlphaKey().compareTo(right.getAlphaKey());
                 };
@@ -71,12 +78,5 @@ class ComparatorUtils {
                         .reversed();
             case VISIBILITY_DESC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
         };
-    }
-
-    @NonNull
-    private static String resolveAlphaClusterKey(OrderingKey orderingKey) {
-        return orderingKey.getClusterPropertyName() != null
-                ? orderingKey.getClusterPropertyName()
-                : orderingKey.getAlphaKey();
     }
 }
