@@ -41,28 +41,28 @@ class DependencyGraphUtils {
      * @param nodeCount           total number of super-nodes
      * @param dependencies        provider → dependent ordering edges
      * @param inDegree            in-degree array (mutated — incremented for each new edge)
-     * @param <TSortableItem>     the item type
+     * @param <TItem>     the item type
      * @return adjacency lists indexed by super-node, or {@code null} when there are no edges
      */
     // Array parameter is intentional: varargs would add allocation overhead in this performance path.
     @SuppressWarnings({"PMD.UseVarargs", "PMD.ReturnEmptyCollectionRatherThanNull"})
     @Nullable
-    static <TSortableItem> IntList[] buildDependencyGraph(
-            @NonNull Map<TSortableItem, Integer> itemToIndex,
+    static <TItem> IntList[] buildDependencyGraph(
+            @NonNull Map<TItem, Integer> itemToIndex,
             @NonNull int[] itemToSuperNode,
             int firstSingletonIndex,
             int nodeCount,
-            @NonNull Dependencies<TSortableItem> dependencies,
+            @NonNull Dependencies<TItem> dependencies,
             @NonNull int[] inDegree) {
-        List<Dependencies.Dependency<TSortableItem>> edges = dependencies.getEdges();
+        List<Dependencies.Dependency<TItem>> edges = dependencies.getEdges();
         if (edges.isEmpty()) {
             return null;
         }
 
         IntList[] adjacencyLists = new IntList[nodeCount];
 
-        for (Dependencies.Dependency<TSortableItem> edge : edges) {
-            SortingUtils.ResolvedEdge<TSortableItem> resolved = SortingUtils.resolveDependencyEdge(edge, itemToIndex);
+        for (Dependencies.Dependency<TItem> edge : edges) {
+            SortingUtils.ResolvedEdge<TItem> resolved = SortingUtils.resolveDependencyEdge(edge, itemToIndex);
 
             int providerSuperNode = itemToSuperNode[resolved.getProviderIndex()];
             int dependentSuperNode = itemToSuperNode[resolved.getDependentIndex()];

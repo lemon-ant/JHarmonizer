@@ -12,36 +12,36 @@ import lombok.Value;
  * Constraints form a DAG; cycles are detected at sort time and cause a
  * {@link SortingException}.
  *
- * @param <TSortableItem> the type of items
+ * @param <TItem> the type of items
  */
 @Value
-public class Dependencies<TSortableItem> {
+public class Dependencies<TItem> {
 
-    List<Dependency<TSortableItem>> edges;
+    List<Dependency<TItem>> edges;
 
     private static final Dependencies<?> EMPTY_INSTANCE = new Dependencies<>(List.of());
 
     /** Returns an empty dependency set (no ordering constraints). */
     @NonNull
     @SuppressWarnings("unchecked")
-    public static <TSortableItem> Dependencies<TSortableItem> empty() {
-        return (Dependencies<TSortableItem>) EMPTY_INSTANCE;
+    public static <TItem> Dependencies<TItem> empty() {
+        return (Dependencies<TItem>) EMPTY_INSTANCE;
     }
 
     /**
      * A single {@code provider → dependent} ordering constraint.
      *
-     * @param <TSortableItem> the type of items
+     * @param <TItem> the type of items
      * @param provider  the item that must appear first
      * @param dependent the item that must appear after its provider
      */
     @Value
-    public static class Dependency<TSortableItem> {
+    public static class Dependency<TItem> {
         @NonNull
-        TSortableItem provider;
+        TItem provider;
 
         @NonNull
-        TSortableItem dependent;
+        TItem dependent;
     }
 
     /**
@@ -53,11 +53,11 @@ public class Dependencies<TSortableItem> {
      */
     @NonNull
     @SafeVarargs
-    public static <TSortableItem> Dependencies<TSortableItem> of(@NonNull TSortableItem... pairs) {
+    public static <TItem> Dependencies<TItem> of(@NonNull TItem... pairs) {
         if (pairs.length % 2 != 0) {
             throw new IllegalArgumentException("pairs length must be even");
         }
-        List<Dependency<TSortableItem>> list = IntStream.iterate(0, i -> i + 2)
+        List<Dependency<TItem>> list = IntStream.iterate(0, i -> i + 2)
                 .limit(pairs.length / 2)
                 .mapToObj(i -> new Dependency<>(pairs[i], pairs[i + 1]))
                 .toList();
