@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,21 +83,17 @@ class GroupMembersOrderer {
 
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
 
-        // Build sortable members in a LinkedHashMap, preserving source order.
-        // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, SortableTypeMember> sortableMap = new LinkedHashMap<>(groupMembers.size() * 2);
-        groupMembers.forEach(member ->
-                sortableMap.put(member, new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member))));
+        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
+                .map(member -> new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member)))
+                .toList();
 
-        Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
-                ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, sortableMap)
-                : Groups.empty();
-
-        List<SortableTypeMember> sortableTypeMembers = List.copyOf(sortableMap.values());
-        Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = Collections.unmodifiableMap(sortableMap);
+        Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
         Comparator<SortableTypeMember> comparator =
                 Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
+
+        Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
+                ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, typeMemberToSortable)
+                : Groups.empty();
 
         // Collect accessor-bundle members so declaration-dependency edges involving them are skipped.
         // SimplifiedDependencyAwareSorter requires groups and dependencies to be mutually exclusive.
@@ -114,6 +110,16 @@ class GroupMembersOrderer {
                 .toList();
     }
 
+    @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static Map<CtTypeMember, SortableTypeMember> buildTypeMemberToSortableMap(
+            List<SortableTypeMember> sortableTypeMembers) {
+        // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
+        Map<CtTypeMember, SortableTypeMember> map = new HashMap<>(sortableTypeMembers.size() * 2);
+        sortableTypeMembers.forEach(sortable -> map.put(sortable.getTypeMember(), sortable));
+        return Collections.unmodifiableMap(map);
+    }
+
     /**
      * Builds the accessor-bundle {@link Groups} by walking the accessor-bundle edges of the
      * dependency graph. Cluster property names are already embedded in the {@link OrderingKey} of
@@ -124,7 +130,7 @@ class GroupMembersOrderer {
      * @param groupMembers list of members in the group (preserves iteration order)
      * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
      * @param memberDependencyGraph the dependency graph
-     * @param sortableMap the fully initialized sortable map
+     * @param typeMemberToSortable the fully initialized sortable map
      * @return the {@link Groups} built from the bundle traversal; empty when no bundles were found
      */
     @NonNull
@@ -132,7 +138,7 @@ class GroupMembersOrderer {
             List<CtTypeMember> groupMembers,
             Set<CtTypeMember> groupMemberSet,
             MemberDependencyGraph memberDependencyGraph,
-            Map<CtTypeMember, SortableTypeMember> sortableMap) {
+            Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
         Set<CtTypeMember> alreadyGrouped = new HashSet<>();
         List<Group<SortableTypeMember>> bundles = new ArrayList<>();
 
@@ -149,9 +155,8 @@ class GroupMembersOrderer {
             }
             alreadyGrouped.add(member);
             alreadyGrouped.addAll(bundleDependents);
-
             List<SortableTypeMember> bundleMembers = Stream.concat(Stream.of(member), bundleDependents.stream())
-                    .map(sortableMap::get)
+                    .map(typeMemberToSortable::get)
                     .toList();
             bundles.add(new Group<>(bundleMembers));
         }
