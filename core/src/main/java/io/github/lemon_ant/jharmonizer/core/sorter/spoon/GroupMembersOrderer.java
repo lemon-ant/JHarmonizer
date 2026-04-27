@@ -85,8 +85,6 @@ class GroupMembersOrderer {
 
         // Build sortable members in a LinkedHashMap, preserving source order.
         // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
-        // OrderingKey.derive computes the JavaBeans property name directly from each method member,
-        // so no separate pre-pass is needed to resolve cluster property names.
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, SortableTypeMember> sortableMap = new LinkedHashMap<>(groupMembers.size() * 2);
         groupMembers.forEach(member ->
