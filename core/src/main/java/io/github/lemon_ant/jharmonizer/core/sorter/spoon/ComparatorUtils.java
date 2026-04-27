@@ -55,10 +55,10 @@ class ComparatorUtils {
                         return rankComparison;
                     }
                     // When both members expose a derived accessor property name, compare by that
-                    // name first so accessors sort by the underlying property (e.g. "clientId")
-                    // rather than by the method-name prefix (get/is/has/set). If either side has
-                    // no derived property name, or both property names are equal, fall back to
-                    // the full method-signature alphaKey.
+                    // shared property first so accessors sort by the underlying property
+                    // (e.g. "clientId") rather than by the method-name prefix
+                    // (get/is/has/set). If either side has no derived property name, or the
+                    // property names are equal, fall back to the full method-signature alphaKey.
                     if (left.getClusterPropertyName() != null && right.getClusterPropertyName() != null) {
                         int keyCmp = left.getClusterPropertyName().compareTo(right.getClusterPropertyName());
                         if (keyCmp != 0) {
