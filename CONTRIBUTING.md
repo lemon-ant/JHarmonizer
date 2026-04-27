@@ -23,7 +23,7 @@ This document explains how to get the project running locally, what conventions 
 ## Code of Conduct
 
 All participants are expected to uphold respectful and inclusive behavior toward other contributors.
-A `CODE_OF_CONDUCT.md` file will be added in a follow-up update.
+Please read and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 
