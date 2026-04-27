@@ -36,16 +36,16 @@ class SuperNodeUtils {
      * @param itemToIndex item-to-index map
      * @param groups      group definitions
      * @param comparator  comparator for intra-group ordering
-     * @param <TItem> the item type
+     * @param <TNode> the item type
      * @return the computed super-node layout
      */
     @SuppressWarnings("unchecked")
     @NonNull
-    static <TItem> SuperNodes<TItem> buildSuperNodes(
-            @NonNull List<TItem> items,
-            @NonNull Map<TItem, Integer> itemToIndex,
-            @NonNull Groups<TItem> groups,
-            @NonNull Comparator<TItem> comparator) {
+    static <TNode> SuperNodes<TNode> buildSuperNodes(
+            @NonNull List<TNode> items,
+            @NonNull Map<TNode, Integer> itemToIndex,
+            @NonNull Groups<TNode> groups,
+            @NonNull Comparator<TNode> comparator) {
         int itemCount = items.size();
         int[] itemToSuperNode = new int[itemCount];
         Arrays.fill(itemToSuperNode, SortingUtils.UNASSIGNED);
@@ -54,9 +54,9 @@ class SuperNodeUtils {
         int[] nodeOffset = new int[itemCount];
         int[] nodeLength = new int[itemCount];
         // Safe unchecked cast: the array is only used internally; all reads go through
-        // TItem-typed fields/variables, and the array is never exposed outside this class.
+        // TNode-typed fields/variables, and the array is never exposed outside this class.
         // This is the standard pattern used by java.util.ArrayList and java.util.HashMap.
-        TItem[] nodeKeys = (TItem[]) new Object[itemCount];
+        TNode[] nodeKeys = (TNode[]) new Object[itemCount];
 
         int firstSingletonIndex = assignGroupSuperNodes(
                 groups,
@@ -92,21 +92,21 @@ class SuperNodeUtils {
      */
     // Array parameter is intentional: varargs would add allocation overhead in this performance path.
     @SuppressWarnings("PMD.UseVarargs")
-    private static <TItem> int assignGroupSuperNodes(
-            Groups<TItem> groups,
-            List<TItem> items,
-            Map<TItem, Integer> itemToIndex,
-            Comparator<TItem> comparator,
+    private static <TNode> int assignGroupSuperNodes(
+            Groups<TNode> groups,
+            List<TNode> items,
+            Map<TNode, Integer> itemToIndex,
+            Comparator<TNode> comparator,
             int[] itemToSuperNode,
             int[] memberIndices,
             int[] nodeOffset,
             int[] nodeLength,
-            TItem[] nodeKeys) {
+            TNode[] nodeKeys) {
         int superNodeCount = 0;
         int dataPosition = 0;
 
-        for (Group<TItem> group : groups.getGroups()) {
-            List<TItem> groupItems = group.getItems();
+        for (Group<TNode> group : groups.getGroups()) {
+            List<TNode> groupItems = group.getItems();
             if (groupItems.isEmpty()) {
                 continue;
             }
@@ -128,13 +128,13 @@ class SuperNodeUtils {
      * Assigns singleton super-nodes for items not assigned to any group.
      * Returns the total number of super-nodes (groups + singletons).
      */
-    private static <TItem> int assignSingletonSuperNodes(
-            List<TItem> items,
+    private static <TNode> int assignSingletonSuperNodes(
+            List<TNode> items,
             int[] itemToSuperNode,
             int[] memberIndices,
             int[] nodeOffset,
             int[] nodeLength,
-            TItem[] nodeKeys,
+            TNode[] nodeKeys,
             int superNodeCount,
             int initialDataPosition) {
         int currentSuperNodeCount = superNodeCount;
@@ -159,15 +159,15 @@ class SuperNodeUtils {
      * Resolves group item identities to indices, validates uniqueness, and populates
      * {@code itemToSuperNode} and {@code memberIndices} arrays.
      */
-    private static <TItem> void resolveGroupMembers(
-            List<TItem> groupItems,
-            Map<TItem, Integer> itemToIndex,
+    private static <TNode> void resolveGroupMembers(
+            List<TNode> groupItems,
+            Map<TNode, Integer> itemToIndex,
             int[] itemToSuperNode,
             int superNodeIndex,
             int[] memberIndices,
             int dataPosition) {
         for (int j = 0; j < groupItems.size(); j++) {
-            TItem item = groupItems.get(j);
+            TNode item = groupItems.get(j);
             int itemIndex = SortingUtils.resolveGroupMemberIndex(itemToIndex, item);
             SortingUtils.validateNotAlreadyGrouped(itemToSuperNode[itemIndex], item);
             itemToSuperNode[itemIndex] = superNodeIndex;
@@ -185,13 +185,13 @@ class SuperNodeUtils {
      * @param superNodeOrder ordered array of super-node indices
      * @param superNodes     the super-node layout
      * @param items          the original item list
-     * @param <TItem> the item type
+     * @param <TNode> the item type
      * @return the items in the computed order
      */
     @NonNull
-    static <TItem> List<TItem> expandOrder(
-            @NonNull int[] superNodeOrder, @NonNull SuperNodes<TItem> superNodes, @NonNull List<TItem> items) {
-        List<TItem> result = new ArrayList<>(items.size());
+    static <TNode> List<TNode> expandOrder(
+            @NonNull int[] superNodeOrder, @NonNull SuperNodes<TNode> superNodes, @NonNull List<TNode> items) {
+        List<TNode> result = new ArrayList<>(items.size());
         for (int nodeIndex : superNodeOrder) {
             int start = superNodes.getNodeOffset()[nodeIndex];
             int memberCount = superNodes.getNodeLength()[nodeIndex];
@@ -211,11 +211,11 @@ class SuperNodeUtils {
      * Used for intra-group ordering where groups are typically small.
      */
     @SuppressWarnings("PMD.AvoidArrayLoops")
-    private static <TItem> void insertionSortRange(
-            int[] data, int offset, int length, List<TItem> items, Comparator<TItem> comparator) {
+    private static <TNode> void insertionSortRange(
+            int[] data, int offset, int length, List<TNode> items, Comparator<TNode> comparator) {
         for (int i = 1; i < length; i++) {
             int insertedIndex = data[offset + i];
-            TItem insertedItem = items.get(insertedIndex);
+            TNode insertedItem = items.get(insertedIndex);
             int shiftPos = i - 1;
             while (shiftPos >= 0 && comparator.compare(items.get(data[offset + shiftPos]), insertedItem) > 0) {
                 data[offset + shiftPos + 1] = data[offset + shiftPos];
@@ -236,11 +236,11 @@ class SuperNodeUtils {
      * per-super-node offset/length pairs for O(1) access.  This avoids thousands of small
      * {@code int[]} allocations for singleton super-nodes.</p>
      *
-     * @param <TItem> the item type (used for the keys array)
+     * @param <TNode> the item type (used for the keys array)
      */
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    static class SuperNodes<TItem> {
+    static class SuperNodes<TNode> {
         /** Item index → super-node index. */
         int[] itemToSuperNode;
         /** Flat item-index storage, grouped by super-node. */
@@ -250,7 +250,7 @@ class SuperNodeUtils {
         /** Per-super-node item count. */
         int[] nodeLength;
         /** Per-super-node comparator-minimum item (tie-break key). */
-        TItem[] nodeKeys;
+        TNode[] nodeKeys;
         /** Total number of super-nodes. */
         int count;
         /** Index of the first singleton (non-group) super-node. */

@@ -10,17 +10,17 @@ import lombok.Value;
  *
  * <p>Within the block, items are ordered by the comparator supplied to the sorting algorithm.
  *
- * @param <TItem> the type of items in this group
+ * @param <TNode> the type of items in this group
  */
 @Value
-public class Group<TItem> {
+public class Group<TNode> {
 
-    List<TItem> items;
+    List<TNode> items;
 
     /** Convenience factory: creates a group from the given items. */
     @NonNull
     @SafeVarargs
-    public static <TItem> Group<TItem> of(@NonNull TItem... items) {
+    public static <TNode> Group<TNode> of(@NonNull TNode... items) {
         return new Group<>(List.of(items));
     }
 }
