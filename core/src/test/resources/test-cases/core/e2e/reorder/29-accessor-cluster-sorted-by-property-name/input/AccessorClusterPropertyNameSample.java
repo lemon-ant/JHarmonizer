@@ -7,27 +7,27 @@ public class AccessorClusterPropertyNameSample {
     private boolean disconnectedNodeAcknowledged;
     private String processorId;
 
-    public String getProcessorId() {
-        return processorId;
-    }
-
-    public void setProcessorId(String processorId) {
-        this.processorId = processorId;
-    }
-
     public boolean isDisconnectedNodeAcknowledged() {
         return disconnectedNodeAcknowledged;
-    }
-
-    public void setDisconnectedNodeAcknowledged(boolean disconnectedNodeAcknowledged) {
-        this.disconnectedNodeAcknowledged = disconnectedNodeAcknowledged;
     }
 
     public String getClientId() {
         return clientId;
     }
 
+    public void setProcessorId(String processorId) {
+        this.processorId = processorId;
+    }
+
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public String getProcessorId() {
+        return processorId;
+    }
+
+    public void setDisconnectedNodeAcknowledged(boolean disconnectedNodeAcknowledged) {
+        this.disconnectedNodeAcknowledged = disconnectedNodeAcknowledged;
     }
 }

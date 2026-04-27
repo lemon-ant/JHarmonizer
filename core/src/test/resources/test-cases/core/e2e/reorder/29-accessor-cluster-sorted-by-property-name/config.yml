@@ -20,13 +20,12 @@ type-members-ordering:
   - name: Methods
     includes: ~.*
     ordering-rules: preserve
+    separator: none
     groups:
       - name: Fields
-        separator: none
         ordering-rules: preserve
         includes: field
       - name: Methods
-        separator: none
         keepAccessorsTogether: true
         ordering-rules: alpha
         includes: method

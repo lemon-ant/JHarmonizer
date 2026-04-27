@@ -285,10 +285,11 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — singleton middleMethod sorts before the {getValue, setValue} bundle because
-        // the bundle compares by property name "value" (v > m for middleMethod)
+        // Then — the {getValue, setValue} bundle compares by the full alphaKey of its anchor
+        // when compared against a non-cluster singleton: "getValue():int" (g) < "middleMethod():void" (m),
+        // so the bundle sorts before middleMethod
         assertThat(orderedBlocks.getFirst().getTypeMembers())
-                .containsExactly(middleMethodMember, getValueMethodMember, setValueMethodMember);
+                .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
     }
 
     @Test
@@ -316,7 +317,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_accessorBundleWithDependencyToGroupedMember_dependencyIgnoredBundleAfterSingleton() {
+    void orderMembersInsideGroups_accessorBundleWithDependencyToGroupedMember_dependencyIgnoredBundleBeforeSingleton() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessors-with-dependency", true, List.of(OrderingRule.ALPHA));
@@ -341,10 +342,11 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — bundle {getValue, setValue} compares by property name "value" (v > m),
-        // so singleton middleMethod sorts before the bundle
+        // Then — the {getValue, setValue} bundle compares by its anchor's alphaKey ("getValue():int", g)
+        // against the singleton middleMethod ("middleMethod():void", m); g < m so the bundle sorts first.
+        // The declaration dependency from middleMethod to setValue is ignored because setValue is grouped.
         assertThat(orderedBlocks.getFirst().getTypeMembers())
-                .containsExactly(middleMethodMember, getValueMethodMember, setValueMethodMember);
+                .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
     }
 
     @Test

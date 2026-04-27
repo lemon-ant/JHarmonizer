@@ -4,6 +4,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
 import io.github.lemon_ant.jharmonizer.sorting.Group;
 import io.github.lemon_ant.jharmonizer.sorting.Groups;
@@ -12,12 +13,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -83,22 +84,25 @@ class GroupMembersOrderer {
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
 
-        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.getOrderingKeyProvider();
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
+
+        // Resolve cluster property names for all bundle members before building sortable members,
+        // so each SortableTypeMember is created fully initialized with its clusterPropertyName.
+        Map<CtTypeMember, String> clusterPropertyNames = compiledMemberGroup.isKeepAccessorsTogether()
+                ? resolveClusterPropertyNames(groupMembers, groupMemberSet, memberDependencyGraph)
+                : Map.of();
 
         // Build sortable members in a LinkedHashMap, preserving source order.
         // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
-        // When keepAccessorsTogether is enabled, buildAccessorBundles() annotates bundled entries
-        // with the cluster property name in a single traversal of the dependency graph.
         @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, SortableTypeMember> sortableMap = new LinkedHashMap<>(groupMembers.size() * 2);
-        groupMembers.forEach(
-                member -> sortableMap.put(member, new SortableTypeMember(member, orderingKeyProvider.apply(member))));
-
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
+        groupMembers.forEach(member -> sortableMap.put(
+                member,
+                new SortableTypeMember(
+                        member, SortableTypeMember.OrderingKey.derive(member, clusterPropertyNames.get(member)))));
 
         Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
-                ? buildAccessorBundles(groupMembers, groupMemberSet, memberDependencyGraph, sortableMap)
+                ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, sortableMap)
                 : Groups.empty();
 
         List<SortableTypeMember> sortableTypeMembers = List.copyOf(sortableMap.values());
@@ -122,23 +126,61 @@ class GroupMembersOrderer {
     }
 
     /**
-     * Walks the accessor-bundle edges of the dependency graph once.
-     * For each bundle (anchor + its dependents), the method:
-     * <ol>
-     *   <li>Annotates the {@code sortableMap} entries for bundled members with the cluster property
-     *       name extracted from the anchor method (when a recognized accessor prefix is detected).</li>
-     *   <li>Constructs a {@link Group} of the now-annotated {@link SortableTypeMember}s.</li>
-     * </ol>
+     * Walks the accessor-bundle edges of the dependency graph once and resolves the cluster property
+     * name for every member that belongs to a bundle. The property name is determined from the anchor
+     * method using the full JavaBeans accessor contract (prefix, return type, and parameter count).
      *
      * @param groupMembers list of members in the group (preserves iteration order)
      * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
      * @param memberDependencyGraph the dependency graph
-     * @param sortableMap mutable map from {@link CtTypeMember} to {@link SortableTypeMember};
-     *                    entries for bundled members are replaced with cluster-annotated instances
-     * @return the {@link Groups} built from this traversal; empty when no bundles were found
+     * @return an unmodifiable map from bundled {@link CtTypeMember} to its cluster property name;
+     *         members that are not part of any bundle are absent from the map
      */
     @NonNull
-    private static Groups<SortableTypeMember> buildAccessorBundles(
+    private static Map<CtTypeMember, String> resolveClusterPropertyNames(
+            List<CtTypeMember> groupMembers,
+            Set<CtTypeMember> groupMemberSet,
+            MemberDependencyGraph memberDependencyGraph) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<CtTypeMember, String> propertyNames = new HashMap<>();
+        Set<CtTypeMember> processed = new HashSet<>();
+
+        for (CtTypeMember member : groupMembers) {
+            if (processed.contains(member) || !(member instanceof CtMethod<?> anchorMethod)) {
+                continue;
+            }
+            Set<CtTypeMember> bundleDependents =
+                    memberDependencyGraph.findDirectDependents(member, ACCESSOR_BUNDLE_ONLY).stream()
+                            .filter(groupMemberSet::contains)
+                            .collect(Collectors.toUnmodifiableSet());
+            if (bundleDependents.isEmpty()) {
+                continue;
+            }
+            processed.add(member);
+            processed.addAll(bundleDependents);
+
+            SpoonJavaBeansAccessorUtils.findAccessorPropertyName(anchorMethod).ifPresent(name -> {
+                propertyNames.put(member, name);
+                bundleDependents.forEach(dep -> propertyNames.put(dep, name));
+            });
+        }
+
+        return Collections.unmodifiableMap(propertyNames);
+    }
+
+    /**
+     * Builds the accessor-bundle {@link Groups} from the pre-annotated sortable map. Relies on
+     * {@link #resolveClusterPropertyNames} having already populated the sortable map with the correct
+     * cluster property names; this method only constructs the grouping structure.
+     *
+     * @param groupMembers list of members in the group (preserves iteration order)
+     * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
+     * @param memberDependencyGraph the dependency graph
+     * @param sortableMap the fully initialized sortable map (cluster property names already set)
+     * @return the {@link Groups} built from the bundle traversal; empty when no bundles were found
+     */
+    @NonNull
+    private static Groups<SortableTypeMember> buildAccessorBundleGroups(
             List<CtTypeMember> groupMembers,
             Set<CtTypeMember> groupMemberSet,
             MemberDependencyGraph memberDependencyGraph,
@@ -160,17 +202,6 @@ class GroupMembersOrderer {
             alreadyGrouped.add(member);
             alreadyGrouped.addAll(bundleDependents);
 
-            // Annotate the sortable map entries with the cluster property name when the anchor is a
-            // recognizable accessor method. Non-accessor anchors keep their original sortable entry.
-            if (member instanceof CtMethod<?> anchorMethod) {
-                SpoonTypeMemberUtils.findAccessorPropertyName(anchorMethod).ifPresent(name -> {
-                    sortableMap.put(member, SortableTypeMember.withClusterPropertyName(sortableMap.get(member), name));
-                    bundleDependents.forEach(dep -> sortableMap.put(
-                            dep, SortableTypeMember.withClusterPropertyName(sortableMap.get(dep), name)));
-                });
-            }
-
-            // Build the group from the (now potentially annotated) sortable members.
             List<SortableTypeMember> bundleMembers = Stream.concat(Stream.of(member), bundleDependents.stream())
                     .map(sortableMap::get)
                     .toList();

@@ -1,8 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import java.beans.Introspector;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -87,34 +85,6 @@ public class SpoonTypeMemberUtils {
             return Integer.MAX_VALUE;
         }
         return typeMember.getPosition().getSourceStart();
-    }
-
-    /**
-     * JavaBeans accessor method prefixes recognized for property-name extraction.
-     * These mirror the prefixes matched by {@code SpoonJavaBeansAccessorUtils}.
-     */
-    private static final List<String> ACCESSOR_PREFIXES = List.of("get", "set", "is", "has");
-
-    /**
-     * Extracts the JavaBeans property name from an accessor method by stripping a recognized prefix
-     * ({@code get}, {@code set}, {@code is}, {@code has}) and decapitalizing the remainder.
-     *
-     * <p>This method only checks the method name; it does not validate return types or parameter
-     * counts. It is intended for use with methods already known to be accessors.</p>
-     *
-     * @param method the accessor method
-     * @return the decapitalized property name, or empty if the name does not start with a recognized
-     *         accessor prefix followed by an uppercase letter
-     */
-    @NonNull
-    static Optional<String> findAccessorPropertyName(@NonNull CtMethod<?> method) {
-        String name = method.getSimpleName();
-        return ACCESSOR_PREFIXES.stream()
-                .filter(prefix -> name.startsWith(prefix)
-                        && name.length() > prefix.length()
-                        && Character.isUpperCase(name.charAt(prefix.length())))
-                .findFirst()
-                .map(prefix -> Introspector.decapitalize(name.substring(prefix.length())));
     }
 
     /**

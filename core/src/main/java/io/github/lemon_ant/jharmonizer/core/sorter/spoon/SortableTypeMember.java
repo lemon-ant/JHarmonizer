@@ -34,39 +34,6 @@ class SortableTypeMember {
         return "member=" + describeTypeMember(typeMember) + ", orderingKey=" + orderingKey;
     }
 
-    /**
-     * Creates a copy of the given member with its ordering key annotated with the specified accessor
-     * property name. The property name is used by the ALPHA comparator when ordering accessor clusters
-     * against each other: two clusters are compared by their property names, while a cluster compared
-     * against a non-cluster member falls back to the method-name {@code alphaKey}.
-     *
-     * @param original the original sortable type member
-     * @param clusterPropertyName the JavaBeans property name shared by the accessor cluster
-     * @return a new sortable member with the cluster property name recorded in its ordering key
-     */
-    @NonNull
-    static SortableTypeMember withClusterPropertyName(
-            @NonNull SortableTypeMember original, @NonNull String clusterPropertyName) {
-        OrderingKey baseKey = original.getOrderingKey();
-        OrderingKey clusterKey = new OrderingKey(
-                baseKey.getSrcStart(),
-                baseKey.getAlphaKey(),
-                baseKey.getAlphaSortingRank(),
-                baseKey.getVisibilityRank(),
-                clusterPropertyName);
-        return new SortableTypeMember(original.getTypeMember(), clusterKey);
-    }
-
-    @NonNull
-    private static SortableTypeMember.OrderingKey deriveOrderingKey(CtTypeMember typeMember) {
-        return new SortableTypeMember.OrderingKey(
-                extractSrcStart(typeMember),
-                deriveAlphaKey(typeMember),
-                deriveAlphaSortingRank(typeMember),
-                deriveVisibilityRank(typeMember),
-                null);
-    }
-
     @NonNull
     private static String describeTypeMember(CtTypeMember typeMember) {
         return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
@@ -80,7 +47,9 @@ class SortableTypeMember {
     static class OrderingKey {
 
         /**
-         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
+         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}
+         * with no cluster property name. Intended for contexts where accessor bundling is not applied,
+         * such as top-level type ordering.
          *
          * @return the ordering key provider function
          */
@@ -88,8 +57,26 @@ class SortableTypeMember {
         static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();
-            return typeMember ->
-                    typeMember2OrderingKey.computeIfAbsent(typeMember, SortableTypeMember::deriveOrderingKey);
+            return typeMember -> typeMember2OrderingKey.computeIfAbsent(typeMember, member -> derive(member, null));
+        }
+
+        /**
+         * Derives an {@link OrderingKey} for the given type member, optionally annotated with a
+         * cluster property name for accessor-bundle ordering.
+         *
+         * @param typeMember the type member to derive a key for
+         * @param clusterPropertyName the JavaBeans property name of the accessor cluster, or
+         *     {@code null} when the member is not part of a cluster
+         * @return the derived ordering key
+         */
+        @NonNull
+        static OrderingKey derive(CtTypeMember typeMember, @Nullable String clusterPropertyName) {
+            return new OrderingKey(
+                    extractSrcStart(typeMember),
+                    deriveAlphaKey(typeMember),
+                    deriveAlphaSortingRank(typeMember),
+                    deriveVisibilityRank(typeMember),
+                    clusterPropertyName);
         }
 
         int srcStart;
@@ -97,15 +84,21 @@ class SortableTypeMember {
         @NonNull
         String alphaKey;
 
+        /**
+         * Secondary rank applied before the alpha key in ALPHA ordering. Non-zero only for
+         * {@code CtAnonymousExecutable} (initializer blocks), which receive rank {@code 1} so that
+         * they sort after all regular named members regardless of their position in the source.
+         */
         int alphaSortingRank;
 
         int visibilityRank;
 
         /**
          * The JavaBeans property name of the accessor cluster this member belongs to, or {@code null}
-         * when the member is not part of an accessor bundle. When non-null, the ALPHA comparator uses
-         * this name for cluster-vs-cluster comparison, so that accessor clusters sort by property name
-         * rather than by the method-name prefix ({@code get/is/has}).
+         * when the member is not part of an accessor bundle. When non-null and the compared member
+         * also belongs to a cluster, the ALPHA comparator uses this name for cluster-vs-cluster
+         * comparison so that accessor clusters sort by property name rather than by the method-name
+         * prefix ({@code get/is/has}).
          */
         @Nullable
         String clusterPropertyName;

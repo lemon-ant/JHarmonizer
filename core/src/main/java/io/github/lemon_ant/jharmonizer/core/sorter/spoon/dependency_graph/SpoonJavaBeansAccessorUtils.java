@@ -24,13 +24,26 @@ import spoon.reflect.reference.CtTypeReference;
  * (type erasure + boxing). Used for {@code keepAccessorsTogether}.
  */
 @UtilityClass
-class SpoonJavaBeansAccessorUtils {
+public class SpoonJavaBeansAccessorUtils {
 
     private static final List<AccessorMethodContract> ACCESSOR_METHOD_CONTRACTS = List.of(
             new AccessorMethodContract("get", AccessorKind.GET, 0, AccessorMethodReturnType.NON_VOID),
             new AccessorMethodContract("set", AccessorKind.SET, 1, AccessorMethodReturnType.VOID),
             new AccessorMethodContract("is", AccessorKind.IS, 0, AccessorMethodReturnType.BOOLEAN),
             new AccessorMethodContract("has", AccessorKind.HAS, 0, AccessorMethodReturnType.BOOLEAN));
+
+    /**
+     * Extracts the JavaBeans property name from a method using the full accessor contract
+     * (prefix match, return type, and parameter count). Returns empty when the method does
+     * not match any recognized accessor contract.
+     *
+     * @param method the method to inspect
+     * @return the decapitalized property name, or empty if the method is not a recognized accessor
+     */
+    @NonNull
+    public static Optional<String> findAccessorPropertyName(@NonNull CtMethod<?> method) {
+        return tryParseAccessorMethodDescriptor(method).map(AccessorMethodDescriptor::getPropertyName);
+    }
 
     /**
      * Returns other accessor methods from the same declaring type that target the same property.

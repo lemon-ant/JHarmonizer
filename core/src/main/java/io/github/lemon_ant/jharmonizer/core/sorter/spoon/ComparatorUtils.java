@@ -47,24 +47,25 @@ class ComparatorUtils {
             case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart);
             case ALPHA ->
                 (left, right) -> {
-                    int rankCmp = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
-                    if (rankCmp != 0) {
-                        return rankCmp;
+                    // Compare secondary rank first. Rank is non-zero only for anonymous
+                    // initializer blocks (rank 1), ensuring they always sort after all
+                    // named members regardless of their alphabetical position.
+                    int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
+                    if (rankComparison != 0) {
+                        return rankComparison;
                     }
-                    // For accessor clusters, use the property name as the primary ALPHA key so that
-                    // clusters sort by property name instead of by the method-name prefix (get/is/has).
-                    // Members not in a cluster use their full method-signature alphaKey.
-                    String leftKey =
-                            left.getClusterPropertyName() != null ? left.getClusterPropertyName() : left.getAlphaKey();
-                    String rightKey = right.getClusterPropertyName() != null
-                            ? right.getClusterPropertyName()
-                            : right.getAlphaKey();
-                    int keyCmp = leftKey.compareTo(rightKey);
-                    if (keyCmp != 0) {
-                        return keyCmp;
+                    // For two accessor clusters, compare by their shared property name so that
+                    // clusters sort by the underlying property (e.g. "clientId") rather than by
+                    // the method-name prefix (get/is/has/set). A cluster compared against a
+                    // non-cluster member always falls back to the full method-signature alphaKey.
+                    if (left.getClusterPropertyName() != null && right.getClusterPropertyName() != null) {
+                        int keyCmp = left.getClusterPropertyName().compareTo(right.getClusterPropertyName());
+                        if (keyCmp != 0) {
+                            return keyCmp;
+                        }
                     }
-                    // Tie-break within the same cluster (equal property name): fall back to the method
-                    // signature so that e.g. getXxx sorts before setXxx within the bundle.
+                    // Within the same cluster (equal property name) or between a cluster and a
+                    // non-cluster, fall back to the full method-signature alphaKey.
                     return left.getAlphaKey().compareTo(right.getAlphaKey());
                 };
             case VISIBILITY_ASC ->
