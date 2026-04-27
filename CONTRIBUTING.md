@@ -17,14 +17,13 @@ This document explains how to get the project running locally, what conventions 
 - [Creating issues](#creating-issues)
 - [Creating pull requests](#creating-pull-requests)
 - [Review process](#review-process)
-- [Release process](#release-process)
 
 ---
 
 ## Code of Conduct
 
-All participants are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-Please read it before contributing.
+All participants are expected to uphold respectful and inclusive behavior toward other contributors.
+A `CODE_OF_CONDUCT.md` file will be added in a follow-up update.
 
 ---
 
@@ -89,12 +88,9 @@ All commands must be run from the repository root unless noted otherwise.
 
 ## Creating issues
 
-Use the provided issue templates:
-
-- **Bug report** — for unexpected behavior, exceptions, or incorrect output.
-- **Feature request** — for new functionality or improvements.
-
-Before opening an issue, please search the existing issues to avoid duplicates.
+Search existing issues before opening a new one to avoid duplicates.
+When filing a bug, include the affected version, steps to reproduce, actual behavior, and expected behavior.
+For feature requests, describe the use case and the expected behavior.
 
 ---
 
@@ -110,14 +106,14 @@ Before opening an issue, please search the existing issues to avoid duplicates.
    mvn clean verify
    ```
 3. Push your branch and open a pull request against `main` on GitHub.
-4. Fill in the pull request template completely.
+4. Provide a clear description of the change, including the purpose, any testing performed, and any follow-up notes for reviewers.
 
 Each pull request should:
 
 - address a single concern (one bug fix, one feature, or one refactoring);
 - include or update tests for any changed behavior;
 - keep all quality gates green (Spotless, SortPOM, PMD, SpotBugs, JaCoCo);
-- follow the conventions documented in [`AGENTS.md`](AGENTS.md) and [`docs/test-conventions.md`](docs/test-conventions.md);
+- follow the conventions documented in [`AGENTS.md`](AGENTS.md) (general code conventions) and `docs/test-conventions.md` (test conventions, coming in a follow-up update);
 - include SPDX metadata in every new file you add:
   ```
   SPDX-FileCopyrightText: <year> <Your Name> <your@email>
@@ -139,4 +135,4 @@ Each pull request should:
 
 ## Release process
 
-See [`docs/release-process.md`](docs/release-process.md) for the full release guide.
+The release process documentation will be added in a follow-up update.

@@ -52,7 +52,7 @@ Behavior:
 
 ## Unsupported placements and tokens
 
-The following are intentionally not supported and are silently ignored (with a warning logged):
+The following are intentionally not supported and are ignored:
 
 - member-level directives for fields, methods, constructors, or initializer blocks
 - region-based `off/on` markers

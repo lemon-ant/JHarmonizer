@@ -5,7 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 # JHarmonizer
 
-[![CI](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml/badge.svg)](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/java-21-orange.svg)](https://adoptium.net/)
 
@@ -32,6 +31,7 @@ Bind the `reorder` goal to the `generate-sources` phase so sources are reordered
             <version>1.0-SNAPSHOT</version>
             <executions>
                 <execution>
+                    <phase>generate-sources</phase>
                     <goals>
                         <goal>reorder</goal>
                     </goals>
@@ -55,6 +55,7 @@ Bind `check-fast` to the `verify` phase to fail the build on the first out-of-or
             <version>1.0-SNAPSHOT</version>
             <executions>
                 <execution>
+                    <phase>verify</phase>
                     <goals>
                         <goal>check-fast</goal>
                     </goals>
@@ -65,7 +66,7 @@ Bind `check-fast` to the `verify` phase to fail the build on the first out-of-or
 </build>
 ```
 
-`check-fast` exits non-zero on the first violation. `check` reports all violations and always exits 0.
+`check-fast` exits non-zero on the first violation. `check` reports all violations and fails the build when violations are found; set `-Djharmonizer.failOnViolation=false` to make `check` non-failing.
 
 ### Manual invocation
 
@@ -146,8 +147,7 @@ See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output f
 ## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
-See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards, and [CHANGELOG.md](CHANGELOG.md) for
-what is planned.
+See [CHANGELOG.md](CHANGELOG.md) for what is planned.
 
 ## License
 

@@ -27,16 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JMH sorting performance benchmark (activate with `-Pbenchmark-sort`).
 - Support for Maven archetype template files (graceful skip on non-Java placeholders).
 - `CONTRIBUTING.md` — contributor guide covering fork/clone workflow, environment setup, build commands, code style, and review process.
-- `CODE_OF_CONDUCT.md` — Contributor Covenant v2.1.
 - `SECURITY.md` — vulnerability disclosure policy.
 - `CHANGELOG.md` — this file.
-- GitHub Actions CI workflow (`.github/workflows/ci.yml`) that builds and tests every push and pull request.
-- GitHub Actions release workflow (`.github/workflows/release.yml`) for automated Maven Central publication on version tags.
-- Issue templates for bug reports and feature requests.
-- Pull request template.
-- `CODEOWNERS` file for automatic review assignment.
-- Dependabot configuration for automated dependency and GitHub Actions updates.
-- Maven release profile with source JAR, Javadoc JAR, and GPG signing plugins.
-- Maven POM metadata: `<description>`, `<url>`, `<scm>`, `<developers>`, `<issueManagement>`.
+- `docs/directives.md` — full opt-out directives reference.
+- `docs/known-limitations.md` — known formatter edge cases and workarounds.
+- `docs/benchmark.md` — JMH sorting benchmark usage.
 
 [Unreleased]: https://github.com/lemon-ant/JHarmonizer/commits/main
