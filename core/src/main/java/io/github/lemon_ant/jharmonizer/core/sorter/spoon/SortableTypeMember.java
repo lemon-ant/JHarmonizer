@@ -49,35 +49,41 @@ class SortableTypeMember {
     static class OrderingKey {
 
         /**
-         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
-         * The provider computes property names automatically for method members (see
-         * {@link #derive(CtTypeMember)}) so it can be used both for group-level member ordering and
-         * for top-level type ordering (where members are never methods, so property names are always
-         * {@code null}).
+         * Creates a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
          *
+         * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for
+         *     recognized accessor methods; pass {@code false} when accessor clustering is not needed
+         *     (for example, when ordering top-level types)
          * @return the ordering key provider function
          */
         @NonNull
-        static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider() {
+        static Function<CtTypeMember, OrderingKey> createOrderingKeyProvider(boolean keepAccessorsTogether) {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();
-            return typeMember -> typeMember2OrderingKey.computeIfAbsent(typeMember, OrderingKey::derive);
+            return typeMember ->
+                    typeMember2OrderingKey.computeIfAbsent(typeMember, member -> derive(member, keepAccessorsTogether));
         }
 
         /**
-         * Derives an {@link OrderingKey} for the given type member. For method members, the JavaBeans
-         * property name is automatically extracted via
+         * Derives an {@link OrderingKey} for the given type member.
+         *
+         * <p>When {@code keepAccessorsTogether} is {@code true} and the member is a method that
+         * matches a JavaBeans accessor contract, the property name is extracted via
          * {@link SpoonJavaBeansAccessorUtils#findAccessorPropertyName} and stored as
-         * {@link #clusterPropertyName}, so that accessor methods sort by the underlying property name
-         * rather than by the method-name prefix. Non-method members, and method members that are not
-         * recognized accessor methods, always receive {@code null} as the cluster property name.
+         * {@link #clusterPropertyName}, so that accessor methods sort by the underlying property
+         * rather than by the method-name prefix ({@code get/is/has/set}).
+         *
+         * <p>When {@code keepAccessorsTogether} is {@code false}, {@link #clusterPropertyName}
+         * is always {@code null}, so all members sort purely by their {@link #alphaKey}.
          *
          * @param typeMember the type member to derive a key for
+         * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for
+         *     recognized accessor methods
          * @return the derived ordering key
          */
         @NonNull
-        static OrderingKey derive(@NonNull CtTypeMember typeMember) {
-            String propertyName = typeMember instanceof CtMethod<?> method
+        static OrderingKey derive(@NonNull CtTypeMember typeMember, boolean keepAccessorsTogether) {
+            String propertyName = keepAccessorsTogether && typeMember instanceof CtMethod<?> method
                     ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
                             .orElse(null)
                     : null;
