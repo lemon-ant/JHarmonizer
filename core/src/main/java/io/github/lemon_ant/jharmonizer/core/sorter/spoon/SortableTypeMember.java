@@ -68,9 +68,9 @@ class SortableTypeMember {
          * Derives an {@link OrderingKey} for the given type member. For method members, the JavaBeans
          * property name is automatically extracted via
          * {@link SpoonJavaBeansAccessorUtils#findAccessorPropertyName} and stored as
-         * {@link #clusterPropertyName}, so that accessor clusters sort by property name rather than
-         * by method-name prefix. Non-method members always receive {@code null} as the cluster
-         * property name.
+         * {@link #clusterPropertyName}, so that accessor methods sort by the underlying property name
+         * rather than by the method-name prefix. Non-method members, and method members that are not
+         * recognized accessor methods, always receive {@code null} as the cluster property name.
          *
          * @param typeMember the type member to derive a key for
          * @return the derived ordering key
@@ -105,11 +105,11 @@ class SortableTypeMember {
         int visibilityRank;
 
         /**
-         * The JavaBeans property name of the accessor cluster this member belongs to, or {@code null}
-         * when the member is not part of an accessor bundle. When non-null and the compared member
-         * also belongs to a cluster, the ALPHA comparator uses this name for cluster-vs-cluster
-         * comparison so that accessor clusters sort by property name rather than by the method-name
-         * prefix ({@code get/is/has}).
+         * The JavaBeans property name derived from this member's accessor method signature
+         * (e.g. {@code getValue} → {@code value}), or {@code null} when the member is not a
+         * recognized accessor method. The ALPHA comparator uses this name when both compared members
+         * expose a derived property name, so that accessor methods sort by the underlying property
+         * rather than by the method-name prefix ({@code get/is/has/set}).
          */
         @Nullable
         String clusterPropertyName;
