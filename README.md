@@ -5,12 +5,90 @@ SPDX-License-Identifier: Apache-2.0
 
 # JHarmonizer
 
+[![CI](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml/badge.svg)](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/java-21-orange.svg)](https://adoptium.net/)
+
 JHarmonizer is a Java source harmonization tool that keeps class member layout deterministic and readable.
 It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output.
 
+---
+
+## Quick Start
+
+The primary usage pattern is to integrate JHarmonizer into the Maven build so sources are automatically
+reordered and/or checked without manual invocation.
+
+### Auto-reorder on every build
+
+Bind the `reorder` goal to the `process-sources` phase so sources are reordered before compilation.
+`process-sources` is the standard Maven phase for reformatting existing sources (used by tools such as
+Spotless); it runs after `generate-sources` and before `compile`.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.github.lemon-ant.jharmonizer</groupId>
+            <artifactId>jharmonizer-maven-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <executions>
+                <execution>
+                    <phase>process-sources</phase>
+                    <goals>
+                        <goal>reorder</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Enforce order in CI
+
+Bind `check-fast` to the `verify` phase to fail the build on the first out-of-order file:
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.github.lemon-ant.jharmonizer</groupId>
+            <artifactId>jharmonizer-maven-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <executions>
+                <execution>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check-fast</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+`check-fast` exits non-zero on the first violation. `check` reports all violations and fails the build when violations are found; set `-Djharmonizer.failOnViolation=false` to make `check` non-failing.
+
+### Manual invocation
+
+```bash
+mvn jharmonizer:reorder      # reorder all sources
+mvn jharmonizer:check        # report all violations
+mvn jharmonizer:check-fast   # fail fast on first violation
+```
+
+### CLI
+
+JHarmonizer is also available as a standalone CLI fat JAR for use outside of Maven.
+See [`cli/README.md`](cli/README.md) for command-line usage, all options, exit codes, and CI integration examples.
+
+---
+
 ## Current status
 
-- Core pipeline is available: parse -> classify -> sort -> print -> format.
+- Core pipeline is available: parse → classify → sort → print → format.
 - Declaration-order dependency graph is implemented for direct initializer/read-write scenarios and accessor bundling.
 - Comment-based opt-out directives are supported for file scope and type scope.
 - Advanced inter-procedural dependency tracing for field initializers through called methods is **not implemented yet**.
@@ -23,196 +101,59 @@ It parses Java source, resolves grouping/sorting rules, applies dependency-safe 
 - Add support for corner-cases with explicit declaring-type instance forward references during class initialization (currently parked as known failing E2E scenario).
 - Add automatic parameter-order harmonization for overriding methods and constructors: base/forwarded parameters first, extension parameters after them.
 - Add redundant-modifier cleanup pass that removes semantically useless Java modifiers (for example implicit interface/class member modifiers) while preserving behavior.
-- Add inter-procedural initializer dependency analysis:
-  - if a field default expression calls a method, inspect method body reads/writes;
-  - recursively follow nested method calls inside the same declaring type;
-  - build declaration dependencies based on transitively accessed fields;
-  - handle recursion/cycles safely and conservatively.
+- Add inter-procedural initializer dependency analysis.
 
 Details and implementation notes are tracked in [docs/TODO.md](docs/TODO.md).
 
 ## Opt-out directives
 
-JHarmonizer supports two native comment directives:
+JHarmonizer supports two opt-out directives placed as source comments:
 
-- `@jharmonizer:fully-off`
-- `@jharmonizer:sort-off`
-
-Directive matching is case-insensitive, so variants such as `@JHarmonizer:Fully-Off` are also recognized.
-
-Supported comment forms:
-
-- line comments: `// @jharmonizer:fully-off`, `// @jharmonizer:sort-off`
-- block comments: `/* @jharmonizer:fully-off */`, `/* @jharmonizer:sort-off */`
-
-Supported scopes:
-
-- file scope
-- type scope
-
-### File scope
-
-Place a directive in the compilation-unit preamble:
-
-- before `package`
-- between `package` and `import`
-- between `import` statements and the first top-level type
-- at the beginning of a file without `package`
-
-Behavior:
-
-- `@jharmonizer:fully-off` — fully disable harmonization for the file (no sorting, no formatting, no import fixing)
-- `@jharmonizer:sort-off` — disable sorting only, but still run formatting and import fixing
-
-### Type scope
-
-Place a directive immediately before a top-level or nested type declaration.
-
-Behavior:
-
-- `@jharmonizer:fully-off` — fully disable harmonization for that type subtree and preserve its original source text
-- `@jharmonizer:sort-off` — disable sorting only for that type subtree, but still format it together with the rest of the file
-
-### Unsupported placements and tokens
-
-The following are intentionally unsupported and ignored with a warning:
-
-- member-level directives for fields, methods, constructors, or initializer blocks
-- region-based `off/on` markers
-- `@jharmonizer:on`, `@jharmonizer:format-off`, `@jharmonizer:format-on`, and similar variants
-- directives inside method bodies or inside Javadoc
-
-## Known formatter edge case: non-deterministic reflow across repeated runs
-
-Palantir formatter can produce non-idempotent output for some long or heavily wrapped constructs. In observed
-cases this affects **both comment indentation and code layout** between consecutive runs; some cases involve
-trailing `//` comments attached to wrapped expressions, while others affect wrapped expressions more generally.
-
-Concrete examples:
+- `@jharmonizer:fully-off` — disable all harmonization for the file or type
+- `@jharmonizer:sort-off` — disable sorting only; formatting still runs
 
 ```java
-// pass 1
-assertEquals(
-    2L,
-    recovery.getMaxTransactionId()); // transaction ID is still 2 because that's what was written to the
-                                     // journal
-
-// pass 2
-assertEquals(
-    2L,
-    recovery.getMaxTransactionId()); // transaction ID is still 2 because that's what was written to the
-// journal
+// @jharmonizer:fully-off
+// @jharmonizer:sort-off
 ```
 
-```java
-// pass 1
-factory.setShutdownQuietPeriod(
-        Duration
-                .ZERO); // Quiet period not necessary since sending threads will have completed before shutting
-                        // down event sender
+Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) comment forms are supported.
+Directives can be placed at **file scope** (in the compilation-unit preamble) or **type scope** (immediately
+before a type declaration).
 
-// pass 2
-factory.setShutdownQuietPeriod(
-        Duration.ZERO); // Quiet period not necessary since sending threads will have completed before shutting
-        // down event sender
-```
+For the full reference — placement rules, scope semantics, and unsupported tokens — see [`docs/directives.md`](docs/directives.md).
 
+## Known limitations
 
-```java
-// pass 1
-@WritesAttribute(
-        attribute = "http.headers.XXX",
-        description =
-                "Each of the HTTP Headers that is received in the request will be added as an attribute, prefixed"
-                        + " with \"http.headers.\" For example, if the request contains an HTTP Header named"
-                        + " \"x-my-header\", then the value will be added to an attribute named"
-                        + " \"http.headers.x-my-header\""),
+- **Non-idempotent formatter output:** Palantir formatter can produce slightly different results across
+  consecutive runs for some long or heavily wrapped constructs. This is an upstream issue unrelated to JHarmonizer.
+- **Maven archetype template files:** files containing `${package}` or similar placeholders are not valid
+  Java source and are skipped with a warning.
 
-// pass 2
-@WritesAttribute(
-        attribute = "http.headers.XXX",
-        description =
-                "Each of the HTTP Headers that is received in the request will be added as an attribute, prefixed"
-                            + " with \"http.headers.\" For example, if the request contains an HTTP Header named"
-                            + " \"x-my-header\", then the value will be added to an attribute named"
-                            + " \"http.headers.x-my-header\""),
-```
+See [`docs/known-limitations.md`](docs/known-limitations.md) for details and workarounds.
 
-```java
-// pass 1
-@Around(
-        "within(org.apache.nifi.web.dao.ProcessGroupDAO+) && execution(void enableComponents(String,"
-                + " org.apache.nifi.controller.ScheduledState, java.util.Set<String>)) && args(groupId, state,"
-                + " componentIds)")
-public void enableComponentsAdvice(
-
-// pass 2
-@Around("within(org.apache.nifi.web.dao.ProcessGroupDAO+) && execution(void enableComponents(String,"
-        + " org.apache.nifi.controller.ScheduledState, java.util.Set<String>)) && args(groupId, state,"
-        + " componentIds)")
-public void enableComponentsAdvice(
-        ProceedingJoinPoint proceedingJoinPoint, String groupId, ScheduledState state, Set<String> componentIds)
-        throws Throwable {
-```
-
-This behavior is upstream in Palantir formatter and not introduced by JHarmonizer.
-
-Workarounds:
-
-1. For inline comments: avoid long trailing `//` comments; move long notes to a standalone line (or short block comment) above the statement.
-2. For long annotation/string concatenations: prefer extracting long literals/expressions into named constants (or helper variables/methods) so formatter has fewer fragile wrap points.
-3. Keep annotation argument values and fluent/pointcut expressions shorter per line where practical to reduce wrap oscillation risk.
-4. If the file still oscillates between formatter runs, use `// @jharmonizer:sort-off` (keeps formatting but disables sorting) or `// @jharmonizer:fully-off` (disables harmonization) as a temporary mitigation.
-
-## Maven/archetype template placeholders (`package ${package};`)
-
-Files that still contain template placeholders such as `package ${package};` are not valid Java source yet. In this
-situation the Palantir formatter cannot parse them; JHarmonizer leaves such files unmodified, marks them with an
-ERROR result, and logs a warning, but the overall run continues and the CLI still exits with status 0.
-
-For template sources you have two supported options:
-
-1. Add `// @jharmonizer:fully-off` as the first line of that template file to skip harmonization for the whole file
-   (recommended when you want clean runs without formatter warnings/errors).
-2. Leave the file without opt-out and accept that each run will report a per-file ERROR and warning for that file
-   because the formatter cannot parse the non-Java template placeholders; the file will be skipped and left unmodified.
 ## Build
 
 ```bash
-mvn -B -ntp verify
+mvn clean verify
 ```
 
 ## Sorting performance benchmark (JMH)
 
-To measure **only sorting performance** (without parsing/serialization/formatting in measured time), use the
-`benchmark-sort` Maven profile in `core`.
+JHarmonizer includes a JMH benchmark that measures the sorting algorithm in isolation (without parsing,
+serialization, or formatting overhead). Activate with the `benchmark-sort` Maven profile.
 
-The benchmark:
+See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output format.
 
-- uses fixtures from `src/test/resources/test-cases/core/e2e/reorder/**/input/*.java`
-  and `src/test/resources/test-cases/core/e2e/regression/**/input/*.java`;
-- parses fixtures once during JMH setup;
-- clones AST models and runs only `SpoonSorter.sortCompilationUnitRecursively(...)` in benchmarked operations.
+---
 
-Run with defaults (4 threads, batch size 1000, warmup 2, measure 5):
+## Contributing
 
-```bash
-mvn -pl core -Pbenchmark-sort -Dskip-quality-gates -DskipTests test-compile exec:java
-```
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+See [CHANGELOG.md](CHANGELOG.md) for what is planned.
 
-Run with custom parameters (example: 4 threads, batch 200, warmup 1, measure 2):
+## License
 
-```bash
-mvn -pl core -Pbenchmark-sort \
-  -Dskip-quality-gates -DskipTests \
-  -Dbenchmark.threads=4 \
-  -Dbenchmark.measurementBatchSize=200 \
-  -Dbenchmark.warmupIterations=1 \
-  -Dbenchmark.iterations=2 \
-  test-compile exec:java
-```
+Copyright 2026 Anton Lem
 
-Output:
-
-- console summary from JMH;
-- machine-readable JSON results at `core/target/sorting-benchmark.json`.
+Licensed under the [Apache License, Version 2.0](LICENSE).
