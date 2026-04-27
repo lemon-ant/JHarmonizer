@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 [![CI](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml/badge.svg)](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/java-21-orange.svg)](https://adoptium.net/)
+[![Coverage](https://img.shields.io/codecov/c/github/lemon-ant/JHarmonizer)](https://codecov.io/gh/lemon-ant/JHarmonizer)
 
 JHarmonizer is a Java source harmonization tool that keeps class member layout deterministic and readable.
 It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output.
@@ -144,6 +145,39 @@ JHarmonizer includes a JMH benchmark that measures the sorting algorithm in isol
 serialization, or formatting overhead). Activate with the `benchmark-sort` Maven profile.
 
 See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output format.
+
+---
+
+## ⭐ Ways to support this project
+
+I'm an open-source developer building reliable, intelligent tooling for the Java community 🛠️.
+
+JHarmonizer turned out to be **significantly more complex** than I originally anticipated. There is a large backlog of
+planned features — smarter ordering rules, IDE plugins, more formatting options, and deeper static analysis
+integration — but delivering them takes a huge amount of time and effort.
+
+**This project is free for you, but it is not free for me.** Every hour spent here is an investment I make in the
+hope that it saves you many more hours maintaining clean, consistent Java code.
+
+Your support is the most direct feedback I can receive — it tells me the project matters and gives me the energy to
+keep pushing forward. And every contribution comes back to you as a smarter, more capable tool that saves you even
+more time with each new release.
+
+If this project is useful to you, please consider:
+
+- ⭐ **Star the repository** — it improves visibility and takes 2 seconds.
+- ☕ **[Buy me a coffee](https://buymeacoffee.com/antonlem)** — even a small one-time contribution makes a real
+  difference and keeps me motivated.
+- 💖 **[GitHub Sponsors](https://github.com/sponsors/AntonLem)** — recurring sponsorship directly through GitHub
+  to support ongoing development of new features.
+
+Every donation, no matter how small, directly accelerates the roadmap. Thank you 🙏
+
+---
+
+## 📖 Documentation
+
+- [Javadoc (latest)](https://javadoc.io/doc/io.github.lemon-ant/jharmonizer-core)
 
 ---
 
