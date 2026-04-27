@@ -21,7 +21,9 @@ reordered and/or checked without manual invocation.
 
 ### Auto-reorder on every build
 
-Bind the `reorder` goal to the `generate-sources` phase so sources are reordered before compilation:
+Bind the `reorder` goal to the `process-sources` phase so sources are reordered before compilation.
+`process-sources` is the standard Maven phase for reformatting existing sources (used by tools such as
+Spotless); it runs after `generate-sources` and before `compile`.
 
 ```xml
 <build>
@@ -32,7 +34,7 @@ Bind the `reorder` goal to the `generate-sources` phase so sources are reordered
             <version>1.0-SNAPSHOT</version>
             <executions>
                 <execution>
-                    <phase>generate-sources</phase>
+                    <phase>process-sources</phase>
                     <goals>
                         <goal>reorder</goal>
                     </goals>

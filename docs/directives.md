@@ -56,11 +56,11 @@ The following are intentionally not supported and are ignored:
 
 - member-level directives for fields, methods, constructors, or initializer blocks
 - region-based `off/on` markers
-- `@jharmonizer:on`, `@jharmonizer:format-off`, `@jharmonizer:format-on`, and similar variants
+- any token other than `@jharmonizer:fully-off` and `@jharmonizer:sort-off`
 - directives inside method bodies or inside Javadoc
 
-Warnings are logged for the following file-scope cases: unrecognized directive tokens (for example
-`@jharmonizer:on`), Javadoc comments containing a directive token (`/** @jharmonizer:... */`),
+Warnings are logged for the following file-scope cases: unrecognized directive tokens,
+Javadoc comments containing a directive token (`/** @jharmonizer:... */`),
 malformed directives where the token is not at the start of the comment payload, and multiple
 file-scope directives in the same file (the last one wins).
 Type-scope parsing is silent — no warnings are emitted for unrecognized or inapplicable comments
