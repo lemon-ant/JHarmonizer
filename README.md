@@ -91,12 +91,13 @@ See [`cli/README.md`](cli/README.md) for command-line usage, all options, exit c
 
 I'm an open-source developer building reliable, intelligent tooling for the Java community 🛠️.
 
-JHarmonizer turned out to be **significantly more complex** than I originally anticipated ⚙️. There is a large backlog of
-planned features — smarter ordering rules, IDE plugins, more formatting options, and deeper static analysis
-integration — but delivering them takes a huge amount of time and effort ⏳.
+The ideas behind JHarmonizer are simple, but implementing them correctly turned out to be surprisingly hard ⚙️.
+There is a large backlog of planned features — smarter ordering rules, IDE plugins, more formatting options, and
+deeper static analysis integration — but delivering them takes a huge amount of time and effort ⏳.
 
-**This project is free for you, but it is not free for me 💙.** Every hour spent here is an investment I make in the
-hope that it saves you many more hours maintaining clean, consistent Java code.
+**This project is free for you, but it is not free for me 💙.** Every hour spent here is a personal investment —
+and beyond time, I also put real money into it: AI tooling, compute credits, and the infra that powers
+development 💸. All of that goes toward making this tool better for you.
 
 Your support is the most direct feedback I can receive 💬 — it tells me the project matters and gives me the energy to
 keep pushing forward 🚀. And every contribution comes back to you as a smarter, more capable tool that saves you even
@@ -116,7 +117,9 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
 
 - Core pipeline is available: parse → group → sort → serialize → format.
 - A declaration-order dependency graph is built to ensure members are never reordered in ways that would break
-  field initialization or accessor semantics; handles direct initializer references and accessor bundling.
+  compilation or field/constant initialization — in other words, it guarantees that every reordering JHarmonizer
+  produces is still valid, compilable Java with correct initialization semantics.
+  Handles direct initializer references and accessor bundling.
 - Comment-based opt-out directives are supported for file scope and type scope.
 
 ## Roadmap (next versions)
@@ -133,16 +136,9 @@ The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.m
 
 JHarmonizer supports two opt-out directives placed as source comments.
 
-To disable all harmonization for a file or type:
-
 ```java
-// @jharmonizer:fully-off
-```
-
-To disable sorting only (formatting still runs):
-
-```java
-// @jharmonizer:sort-off
+// @jharmonizer:fully-off   // disable all harmonization for this file or type
+// @jharmonizer:sort-off    // disable sorting only; formatting still runs
 ```
 
 Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) comment forms are supported.
