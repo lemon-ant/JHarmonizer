@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
@@ -104,6 +106,7 @@ final class InitializationOrderDependencyUtils {
      * @return the candidate provider members
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
             @NonNull CtField<?> blankFinalField,

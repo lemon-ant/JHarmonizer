@@ -19,11 +19,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -36,6 +37,7 @@ import spoon.reflect.declaration.CtTypeMember;
  * then delegated to {@link SimplifiedDependencyAwareSorter}.</p>
  */
 @UtilityClass
+@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.TooManyMethods"})
 class GroupMembersOrderer {
 
     private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
@@ -122,25 +124,91 @@ class GroupMembersOrderer {
             return sortableTypeMembers;
         }
 
-        Optional<String> accessorSuperClusterAlphaKey = sortableTypeMembers.stream()
+        Map<String, String> propertyName2AlphaClusterKey = resolveAccessorAlphaClusterKeys(sortableTypeMembers);
+        if (propertyName2AlphaClusterKey.isEmpty()) {
+            return sortableTypeMembers;
+        }
+        return sortableTypeMembers.stream()
+                .map(sortableTypeMember ->
+                        resolveAccessorSuperCluster(sortableTypeMember, propertyName2AlphaClusterKey))
+                .toList();
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static Map<String, String> resolveAccessorAlphaClusterKeys(List<SortableTypeMember> sortableTypeMembers) {
+        List<AccessorPropertyCluster> propertyClusters = collectAccessorPropertyClusters(sortableTypeMembers);
+        if (propertyClusters.isEmpty()) {
+            return Map.of();
+        }
+        List<AccessorSuperCluster> superClusters = collectAccessorSuperClusters(propertyClusters);
+        Map<String, String> propertyName2AlphaClusterKey = new HashMap<>(propertyClusters.size() * 2);
+        superClusters.forEach(superCluster -> superCluster
+                .getPropertyNames()
+                .forEach(
+                        propertyName -> propertyName2AlphaClusterKey.put(propertyName, superCluster.getMinAlphaKey())));
+        return Collections.unmodifiableMap(propertyName2AlphaClusterKey);
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static List<AccessorPropertyCluster> collectAccessorPropertyClusters(
+            List<SortableTypeMember> sortableTypeMembers) {
+        Map<String, List<OrderingKey>> propertyName2OrderingKeys = new TreeMap<>();
+        sortableTypeMembers.stream()
                 .map(SortableTypeMember::getOrderingKey)
                 .filter(orderingKey -> orderingKey.getClusterPropertyName() != null)
-                .map(SortableTypeMember.OrderingKey::getAlphaKey)
-                .min(Comparator.naturalOrder());
-        return accessorSuperClusterAlphaKey
-                .map(alphaClusterKey -> sortableTypeMembers.stream()
-                        .map(sortableTypeMember -> resolveAccessorSuperCluster(sortableTypeMember, alphaClusterKey))
-                        .toList())
-                .orElse(sortableTypeMembers);
+                .forEach(orderingKey -> propertyName2OrderingKeys
+                        .computeIfAbsent(orderingKey.getClusterPropertyName(), propertyName -> new ArrayList<>())
+                        .add(orderingKey));
+
+        return propertyName2OrderingKeys.entrySet().stream()
+                .map(entry -> new AccessorPropertyCluster(
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .map(OrderingKey::getAlphaKey)
+                                .min(Comparator.naturalOrder())
+                                .orElseThrow(),
+                        entry.getValue().stream()
+                                .map(OrderingKey::getAlphaKey)
+                                .max(Comparator.naturalOrder())
+                                .orElseThrow()))
+                .toList();
+    }
+
+    @NonNull
+    private static List<AccessorSuperCluster> collectAccessorSuperClusters(
+            List<AccessorPropertyCluster> propertyClusters) {
+        List<AccessorSuperCluster> superClusters = new ArrayList<>();
+        propertyClusters.stream()
+                .map(AccessorSuperCluster::fromPropertyCluster)
+                .forEach(superCluster -> addAccessorSuperCluster(superClusters, superCluster));
+        return List.copyOf(superClusters);
+    }
+
+    private static void addAccessorSuperCluster(
+            List<AccessorSuperCluster> superClusters, AccessorSuperCluster superCluster) {
+        AccessorSuperCluster mergedSuperCluster = superCluster;
+        while (!superClusters.isEmpty()) {
+            AccessorSuperCluster previousSuperCluster = superClusters.getLast();
+            if (previousSuperCluster.getMaxAlphaKey().compareTo(mergedSuperCluster.getMinAlphaKey()) <= 0) {
+                break;
+            }
+            superClusters.removeLast();
+            mergedSuperCluster = previousSuperCluster.merge(mergedSuperCluster);
+        }
+        superClusters.add(mergedSuperCluster);
     }
 
     @NonNull
     private static SortableTypeMember resolveAccessorSuperCluster(
-            SortableTypeMember sortableTypeMember, String alphaClusterKey) {
+            SortableTypeMember sortableTypeMember, Map<String, String> propertyName2AlphaClusterKey) {
         SortableTypeMember.OrderingKey orderingKey = sortableTypeMember.getOrderingKey();
-        if (orderingKey.getClusterPropertyName() == null) {
+        String propertyName = orderingKey.getClusterPropertyName();
+        if (propertyName == null) {
             return sortableTypeMember;
         }
+        String alphaClusterKey = propertyName2AlphaClusterKey.get(propertyName);
         return new SortableTypeMember(
                 sortableTypeMember.getTypeMember(), orderingKey.resolveWithAlphaClusterKey(alphaClusterKey));
     }
@@ -221,5 +289,58 @@ class GroupMembersOrderer {
         }
 
         return edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(List.copyOf(edges));
+    }
+
+    @Value
+    private static class AccessorPropertyCluster {
+        @NonNull
+        String propertyName;
+
+        @NonNull
+        String minAlphaKey;
+
+        @NonNull
+        String maxAlphaKey;
+    }
+
+    @Value
+    private static class AccessorSuperCluster {
+        @NonNull
+        List<@NonNull String> propertyNames;
+
+        @NonNull
+        String minAlphaKey;
+
+        @NonNull
+        String maxAlphaKey;
+
+        @NonNull
+        private static AccessorSuperCluster fromPropertyCluster(AccessorPropertyCluster propertyCluster) {
+            return new AccessorSuperCluster(
+                    List.of(propertyCluster.getPropertyName()),
+                    propertyCluster.getMinAlphaKey(),
+                    propertyCluster.getMaxAlphaKey());
+        }
+
+        @NonNull
+        private AccessorSuperCluster merge(AccessorSuperCluster nextSuperCluster) {
+            List<String> mergedPropertyNames = Stream.concat(
+                            propertyNames.stream(), nextSuperCluster.propertyNames.stream())
+                    .toList();
+            return new AccessorSuperCluster(
+                    mergedPropertyNames,
+                    min(minAlphaKey, nextSuperCluster.minAlphaKey),
+                    max(maxAlphaKey, nextSuperCluster.maxAlphaKey));
+        }
+
+        @NonNull
+        private static String min(String left, String right) {
+            return left.compareTo(right) <= 0 ? left : right;
+        }
+
+        @NonNull
+        private static String max(String left, String right) {
+            return left.compareTo(right) >= 0 ? left : right;
+        }
     }
 }
