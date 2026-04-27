@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaKey;
@@ -115,7 +117,8 @@ class SortableTypeMember {
          * (e.g. {@code getValue} → {@code value}), or {@code null} when the member is not a
          * recognized accessor method. The ALPHA comparator uses this name when both compared members
          * expose a derived property name, so that accessor methods sort by the underlying property
-         * rather than by the method-name prefix ({@code get/is/has/set}).
+         * rather than by the method-name prefix ({@code get/is/has/set}) even when compared with
+         * non-accessor members.
          */
         @Nullable
         String clusterPropertyName;
