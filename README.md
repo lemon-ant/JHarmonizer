@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 [![CI](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml/badge.svg)](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/java-21-orange.svg)](https://adoptium.net/)
+[![Coverage](https://img.shields.io/codecov/c/github/lemon-ant/JHarmonizer)](https://codecov.io/gh/lemon-ant/JHarmonizer)
 
 JHarmonizer is a Java source harmonization tool that keeps class member layout deterministic and readable.
 It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output.
@@ -144,6 +145,27 @@ JHarmonizer includes a JMH benchmark that measures the sorting algorithm in isol
 serialization, or formatting overhead). Activate with the `benchmark-sort` Maven profile.
 
 See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output format.
+
+---
+
+## ⭐ Ways to support this project
+
+I'm an open-source developer who enjoys building useful and reliable tools for the Java community 🛠️.
+
+Every bit of support is a strong encouragement 🌱. It shows me that this project matters and gives me the motivation
+to keep improving, writing better documentation, and adding new features.
+
+If you like this project, please consider:
+
+- ⭐ Star the repository — it helps visibility.
+- ☕ [Buying me a coffee](https://buymeacoffee.com/antonlem) — even $5 keeps me coding with extra caffeine.
+- 💖 [GitHub Sponsors](https://github.com/sponsors/AntonLem) — recurring sponsorship directly through GitHub to support ongoing development.
+
+---
+
+## 📖 Documentation
+
+- [Javadoc (latest)](https://javadoc.io/doc/io.github.lemon-ant/jharmonizer-core)
 
 ---
 
