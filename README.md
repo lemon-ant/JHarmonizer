@@ -150,16 +150,28 @@ See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output f
 
 ## ⭐ Ways to support this project
 
-I'm an open-source developer who enjoys building useful and reliable tools for the Java community 🛠️.
+I'm an open-source developer building reliable, intelligent tooling for the Java community 🛠️.
 
-Every bit of support is a strong encouragement 🌱. It shows me that this project matters and gives me the motivation
-to keep improving, writing better documentation, and adding new features.
+JHarmonizer turned out to be **significantly more complex** than I originally anticipated. There is a large backlog of
+planned features — smarter ordering rules, IDE plugins, more formatting options, and deeper static analysis
+integration — but delivering them takes a huge amount of time and effort.
 
-If you like this project, please consider:
+**This project is free for you, but it is not free for me.** Every hour spent here is an investment I make in the
+hope that it saves you many more hours maintaining clean, consistent Java code.
 
-- ⭐ Star the repository — it helps visibility.
-- ☕ [Buying me a coffee](https://buymeacoffee.com/antonlem) — even $5 keeps me coding with extra caffeine.
-- 💖 [GitHub Sponsors](https://github.com/sponsors/AntonLem) — recurring sponsorship directly through GitHub to support ongoing development.
+Your support is the most direct feedback I can receive — it tells me the project matters and gives me the energy to
+keep pushing forward. And every contribution comes back to you as a smarter, more capable tool that saves you even
+more time with each new release.
+
+If this project is useful to you, please consider:
+
+- ⭐ **Star the repository** — it improves visibility and takes 2 seconds.
+- ☕ **[Buy me a coffee](https://buymeacoffee.com/antonlem)** — even a small one-time contribution makes a real
+  difference and keeps me motivated.
+- 💖 **[GitHub Sponsors](https://github.com/sponsors/AntonLem)** — recurring sponsorship directly through GitHub
+  to support ongoing development of new features.
+
+Every donation, no matter how small, directly accelerates the roadmap. Thank you 🙏
 
 ---
 
