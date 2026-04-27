@@ -81,7 +81,7 @@ public class SpoonSorter {
             CtType<?> mainType,
             Comparator<SortableTypeMember.OrderingKey> orderingComparator) {
         Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.getOrderingKeyProvider(false);
+                SortableTypeMember.OrderingKey.createOrderingKeyProvider(false);
         return Comparator.<CtType<?>>comparingInt(type ->
                         compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
                 .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))

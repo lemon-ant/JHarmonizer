@@ -49,7 +49,7 @@ class SortableTypeMember {
     static class OrderingKey {
 
         /**
-         * Returns a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
+         * Creates a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
          *
          * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for
          *     recognized accessor methods; pass {@code false} when accessor clustering is not needed
@@ -57,11 +57,11 @@ class SortableTypeMember {
          * @return the ordering key provider function
          */
         @NonNull
-        static Function<CtTypeMember, OrderingKey> getOrderingKeyProvider(boolean keepAccessorsTogether) {
+        static Function<CtTypeMember, OrderingKey> createOrderingKeyProvider(boolean keepAccessorsTogether) {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();
             return typeMember ->
-                    typeMember2OrderingKey.computeIfAbsent(typeMember, m -> derive(m, keepAccessorsTogether));
+                    typeMember2OrderingKey.computeIfAbsent(typeMember, member -> derive(member, keepAccessorsTogether));
         }
 
         /**
