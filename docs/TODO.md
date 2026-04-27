@@ -1028,6 +1028,66 @@ initializer dependencies" entry and future full-project compilation ideas):
 
 ---
 
+### 23. JUnit 5 test visibility normalizer (future version)
+
+#### Status
+- [ ] Not implemented (captured as a future improvement)
+- [ ] Revisit after: core rewrite passes are stable and the modifier-normalization infrastructure from item 21 is in place
+
+#### Background
+JUnit Jupiter discovers test and lifecycle methods through reflection and does not require `public`
+visibility. Keeping `public` on test classes and annotated methods is purely cosmetic — it adds noise,
+widens apparent API surface, and conflicts with the general minimal-access-level principle.
+
+The intended convention is:
+- JUnit 5 test classes → package-private by default (no modifier).
+- Methods annotated with `@Test`, `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, `@TestTemplate` → package-private.
+- Lifecycle methods annotated with `@BeforeEach`, `@AfterEach`, `@BeforeAll`, `@AfterAll` → package-private.
+- `@Nested` test classes → package-private.
+- Helper methods, constants, and helper nested classes used only inside one test class → remain `private`.
+- Shared test utilities reused across test classes in the same package → may remain package-private.
+- `public` removed from test classes and annotated methods unless a documented technical reason requires it.
+- `private` must never be applied to JUnit test or lifecycle methods; they must remain discoverable by JUnit Jupiter.
+
+#### Problem statement
+Many existing test classes and annotated methods carry redundant `public` modifiers.
+JHarmonizer should automatically normalize these in test sources to reduce noise and enforce
+the minimal-access-level convention without changing test semantics.
+
+#### Proposed solution (future)
+Introduce a dedicated test-source visibility cleanup rule that:
+- applies only to `src/test/java` sources, never to production code;
+- detects JUnit Jupiter annotations: `@Test`, `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`,
+  `@TestTemplate`, `@BeforeEach`, `@AfterEach`, `@BeforeAll`, `@AfterAll`, `@Nested`;
+- removes redundant `public` from top-level test classes and annotated test/lifecycle methods;
+- removes redundant `public` from `@Nested` inner test classes;
+- does not touch `private` helpers or non-JUnit entry points unless a separate helper-visibility rule is introduced;
+- never makes test or lifecycle methods `private`;
+- is disabled by default until the behavior is fully validated;
+- is enabled only for test sources via an explicit configuration flag.
+
+#### Scope and design options (to decide when implementing)
+- Part of the JHarmonizer restructuring pipeline as a test-only rewrite pass.
+- A dedicated test-source cleanup rule group, independently toggleable.
+- Or a separate optional rule that can be composed with the main pipeline.
+
+#### Implementation outline (when revisited)
+- [ ] Determine whether this fits best as a modifier-normalization sub-pass of item 21 restricted to test sources, or as a standalone rule.
+- [ ] Implement annotation detector for all JUnit Jupiter test and lifecycle annotations.
+- [ ] Implement visibility normalizer that removes `public` from supported declarations in test sources.
+- [ ] Add configuration flag: disabled by default; opt-in via explicit test-source-visibility cleanup flag.
+- [ ] Add E2E fixtures for:
+  - `public` test class converted to package-private;
+  - `public` `@Test` method converted to package-private;
+  - `public` lifecycle method (`@BeforeEach`, `@AfterEach`, etc.) converted to package-private;
+  - `public` `@Nested` class converted to package-private;
+  - `private` helper method left unchanged;
+  - `public` helper method without JUnit annotation not changed (unless a separate helper-visibility rule is introduced);
+  - production class not changed;
+  - invalid case not produced — JUnit entry points must not be made `private`.
+
+---
+
 ## Technical debt / stabilization backlog
 
 ### 1. Blank-final nearest-provider edge cases still not covered by active E2E

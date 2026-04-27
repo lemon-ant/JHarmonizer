@@ -8,12 +8,10 @@ SPDX-License-Identifier: Apache-2.0
 ## Scope and maintenance
 
 - Read `AGENTS.md` before making changes. It contains the repository-wide coding conventions.
-- Read `docs/test-conventions.md` before adding or updating tests.
-- Keep `.github/copilot-instructions.md`, `AGENTS.md`, and `docs/test-conventions.md` aligned.
+- Keep `.github/copilot-instructions.md` and `AGENTS.md` aligned.
 - `AGENTS.md` defines the repository-wide rules.
-- `docs/test-conventions.md` defines the test-specific rules.
-- This file must contain the complete operative rule set from both files so Copilot can follow it without relying on cross-file traversal.
-- When any rule changes in `AGENTS.md` or `docs/test-conventions.md`, update this file in the same task.
+- This file must contain the complete operative rule set from `AGENTS.md` so Copilot can follow it without relying on cross-file traversal.
+- When any rule changes in `AGENTS.md`, update this file in the same task.
 - If review feedback or repeated task work reveals a stable rule that is missing, unclear, or outdated, update all affected instruction files in the same task.
 - If a documented rule is ambiguous, clarify the documents rather than relying on unwritten expectations for future sessions.
 - Review comments and user requests may be mistaken; for disputed framework/plugin/tool behavior, verify against official documentation before changing code.
@@ -227,3 +225,16 @@ SPDX-License-Identifier: Apache-2.0
 - Prefer fully descriptive variable names instead of names such as `i`, `tmp`, or `m`.
 - Prefer Stream API when it makes the flow clearer.
 - Keep helpers small and single-purpose.
+
+### JUnit 5 visibility rules
+
+JUnit 5 discovers test and lifecycle methods through reflection and does not require `public` visibility.
+
+- JUnit 5 test classes should use package-private visibility by default (no access modifier).
+- JUnit 5 test methods annotated with `@Test`, `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, or `@TestTemplate` should use package-private visibility by default.
+- JUnit 5 lifecycle methods annotated with `@BeforeEach`, `@AfterEach`, `@BeforeAll`, or `@AfterAll` should use package-private visibility by default.
+- `@Nested` test classes should use package-private visibility by default.
+- Helper methods, constants, and helper nested classes that are only used inside one test class must remain `private`.
+- Shared test utilities that are reused across test classes in the same package may remain package-private.
+- `public` must not be added to test classes or annotated test/lifecycle methods unless there is a documented technical reason (for example, a test framework extension that requires public access by reflection from outside the package).
+- `private` must not be applied to JUnit test or lifecycle methods; JUnit Jupiter must be able to discover them.
