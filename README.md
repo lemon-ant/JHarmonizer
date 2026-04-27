@@ -116,10 +116,9 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
 ## Current status
 
 - Core pipeline is available: parse → group → sort → serialize → format.
-- A declaration-order dependency graph is built to ensure members are never reordered in ways that would break
-  compilation or field/constant initialization — in other words, it guarantees that every reordering JHarmonizer
-  produces is still valid, compilable Java with correct initialization semantics.
-  Handles direct initializer references and accessor bundling.
+- A declaration-order dependency graph is built to avoid reorderings that would break compilation or
+  field/constant initialization for the dependency cases JHarmonizer currently models.
+  Currently handles direct initializer references and accessor bundling.
 - Comment-based opt-out directives are supported for file scope and type scope.
 
 ## Roadmap (next versions)
