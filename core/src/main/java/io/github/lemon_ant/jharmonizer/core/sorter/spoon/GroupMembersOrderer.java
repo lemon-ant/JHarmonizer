@@ -125,7 +125,7 @@ class GroupMembersOrderer {
      * Builds the accessor-bundle {@link Groups} by walking the accessor-bundle edges of the
      * dependency graph. Cluster property names are already embedded in the {@link OrderingKey} of
      * each {@link SortableTypeMember} (computed by
-     * {@link SortableTypeMember.OrderingKey#derive(spoon.reflect.declaration.CtTypeMember, boolean)}
+     * {@link SortableTypeMember.OrderingKey#derive(CtTypeMember, boolean)}
      * with {@code keepAccessorsTogether=true}), so this method only constructs the grouping
      * structure.
      *
