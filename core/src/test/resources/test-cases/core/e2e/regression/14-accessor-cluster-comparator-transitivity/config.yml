@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+backups-enabled: false
+print-processing-statistics: true
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Methods
+    includes: ~.*
+    ordering-rules: preserve
+    separator: none
+    groups:
+      - name: Fields
+        ordering-rules: preserve
+        includes: field
+      # Single ALPHA group that intentionally mixes:
+      #   * unpaired single-clustered accessors of multiple properties
+      #     (each property has only a getter or only a setter, so the
+      #     accessor-bundle path never groups them);
+      #   * non-accessor methods.
+      # With the previous comparator, the ALPHA branch compared accessor pairs
+      # by their JavaBeans property name but compared accessor-vs-non-accessor
+      # by the full method-signature alphaKey. That mix is non-transitive when
+      # the property-name order disagrees with the method-name order
+      # (e.g. property "apple" < "zebra" but method "getZebra" < "setApple"),
+      # which made TimSort throw or produced non-deterministic ordering.
+      - name: All Methods
+        keepAccessorsTogether: true
+        ordering-rules: alpha
+        includes: method

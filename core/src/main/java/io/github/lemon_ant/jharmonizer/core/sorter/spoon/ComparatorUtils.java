@@ -54,19 +54,20 @@ class ComparatorUtils {
                     if (rankComparison != 0) {
                         return rankComparison;
                     }
-                    // When both members expose a derived accessor property name, compare by that
-                    // shared property first so accessors sort by the underlying property
-                    // (e.g. "clientId") rather than by the method-name prefix
-                    // (get/is/has/set). If either side has no derived property name, or the
-                    // property names are equal, fall back to the full method-signature alphaKey.
-                    if (left.getClusterPropertyName() != null && right.getClusterPropertyName() != null) {
-                        int keyCmp = left.getClusterPropertyName().compareTo(right.getClusterPropertyName());
-                        if (keyCmp != 0) {
-                            return keyCmp;
-                        }
+                    // Compare by the per-cluster representative alpha key first. For accessor
+                    // members that share the same JavaBeans property cluster (when
+                    // keepAccessorsTogether is enabled) this representative is the cluster's
+                    // minimum alphaKey, so all members of one cluster collapse to a single
+                    // primary key and sort contiguously where the alphabetically-first cluster
+                    // member would sort. For every other member the representative equals the
+                    // member's own alphaKey. This makes the comparator total and transitive
+                    // even when accessors of different properties are interleaved with
+                    // unrelated non-accessor methods in the same group.
+                    int clusterComparison = left.getClusterAlphaKey().compareTo(right.getClusterAlphaKey());
+                    if (clusterComparison != 0) {
+                        return clusterComparison;
                     }
-                    // Tie-break equal derived property names, and handle members without a
-                    // derived property name, using the full method-signature alphaKey.
+                    // Tie-break members of the same cluster by their own full alphaKey.
                     return left.getAlphaKey().compareTo(right.getAlphaKey());
                 };
             case VISIBILITY_ASC ->

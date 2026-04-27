@@ -385,7 +385,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersOrderedByPropertyNameNotMethodPrefix() {
+    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersAnchoredByClusterAlphaKey() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessor-cluster-property-name", true, List.of(OrderingRule.ALPHA));
@@ -410,11 +410,17 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — clusters sort by property name: "active" (a) < "balance" (b),
-        // even though "getBalance" (g) < "isActive" (i) by raw method name
+        // Then — each accessor cluster is anchored by the alphabetically-first member's full
+        // alphaKey. The "balance" cluster's anchor is "getBalance():int" (g) and the "active"
+        // cluster's anchor is "isActive():boolean" (i), so the balance bundle sorts first.
+        // Inside each bundle, members fall back to their own alphaKey:
+        // "getBalance" < "setBalance"; "isActive" < "setActive".
+        // Property-name comparison (which would have placed "active" before "balance") is
+        // intentionally not used: it produced a non-transitive comparator when accessors of
+        // different properties were mixed with non-accessor methods in the same group.
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(
-                        isActiveMethodMember, setActiveMethodMember, getBalanceMethodMember, setBalanceMethodMember);
+                        getBalanceMethodMember, setBalanceMethodMember, isActiveMethodMember, setActiveMethodMember);
     }
 
     @Test

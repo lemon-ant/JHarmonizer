@@ -5,9 +5,10 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSrcStart;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.AccessLevel;
@@ -51,48 +52,99 @@ class SortableTypeMember {
         /**
          * Creates a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
          *
-         * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for
-         *     recognized accessor methods; pass {@code false} when accessor clustering is not needed
-         *     (for example, when ordering top-level types)
+         * <p>This single-member overload is intended for callers that do not need accessor clustering
+         * (for example, top-level types). It always derives keys with no cluster context, so each
+         * member's {@link #clusterAlphaKey} equals its own {@link #alphaKey}.
+         *
          * @return the ordering key provider function
          */
         @NonNull
-        static Function<CtTypeMember, OrderingKey> createOrderingKeyProvider(boolean keepAccessorsTogether) {
+        static Function<CtTypeMember, OrderingKey> createOrderingKeyProvider() {
             @SuppressWarnings("PMD.UseConcurrentHashMap")
             Map<CtTypeMember, OrderingKey> typeMember2OrderingKey = new HashMap<>();
             return typeMember ->
-                    typeMember2OrderingKey.computeIfAbsent(typeMember, member -> derive(member, keepAccessorsTogether));
+                    typeMember2OrderingKey.computeIfAbsent(typeMember, OrderingKey::deriveWithoutClustering);
         }
 
         /**
-         * Derives an {@link OrderingKey} for the given type member.
+         * Derives an {@link OrderingKey} for each member in the given group, computing per-cluster
+         * representative alpha keys when {@code keepAccessorsTogether} is {@code true}.
          *
-         * <p>When {@code keepAccessorsTogether} is {@code true} and the member is a method that
-         * matches a JavaBeans accessor contract, the property name is extracted via
-         * {@link SpoonJavaBeansAccessorUtils#findAccessorPropertyName} and stored as
-         * {@link #clusterPropertyName}, so that accessor methods sort by the underlying property
-         * rather than by the method-name prefix ({@code get/is/has/set}).
+         * <p>Conceptually, every member belongs to exactly one cluster:
+         * <ul>
+         *   <li>When {@code keepAccessorsTogether} is {@code true} and the member is a recognized
+         *       JavaBeans accessor (see
+         *       {@link SpoonJavaBeansAccessorUtils#findAccessorPropertyName}), it joins the cluster
+         *       identified by the underlying property name. All accessors of the same property
+         *       therefore share one cluster.</li>
+         *   <li>Every other member (non-accessors, and accessors when
+         *       {@code keepAccessorsTogether} is {@code false}) is its own singleton cluster.</li>
+         * </ul>
          *
-         * <p>When {@code keepAccessorsTogether} is {@code false}, {@link #clusterPropertyName}
-         * is always {@code null}, so all members sort purely by their {@link #alphaKey}.
+         * <p>The resulting {@link #clusterAlphaKey} is the minimum {@link #alphaKey} across all
+         * members of a cluster. The ALPHA comparator orders members primarily by
+         * {@link #clusterAlphaKey} and only secondarily by their own {@link #alphaKey}, which
+         * yields a totally ordered, transitive comparator: members of the same accessor cluster
+         * always appear contiguously, positioned where the cluster's alphabetically-first member
+         * would sort, and non-accessors are interleaved deterministically by their own alpha key.
          *
-         * @param typeMember the type member to derive a key for
-         * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for
-         *     recognized accessor methods
-         * @return the derived ordering key
+         * @param groupMembers the members to derive ordering keys for
+         * @param keepAccessorsTogether whether to cluster recognized JavaBeans accessor methods by
+         *     their underlying property name
+         * @return an immutable map from each input member to its derived {@link OrderingKey}
          */
         @NonNull
-        static OrderingKey derive(@NonNull CtTypeMember typeMember, boolean keepAccessorsTogether) {
-            String propertyName = keepAccessorsTogether && typeMember instanceof CtMethod<?> method
-                    ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
-                            .orElse(null)
-                    : null;
+        @SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
+        static Map<CtTypeMember, OrderingKey> deriveAll(
+                @NonNull List<? extends CtTypeMember> groupMembers, boolean keepAccessorsTogether) {
+            int memberCount = groupMembers.size();
+            // Capacity * 2 ensures no resize at the default 0.75 load factor.
+            Map<CtTypeMember, String> memberToAlphaKey = new HashMap<>(memberCount * 2);
+            Map<CtTypeMember, String> memberToPropertyName = new HashMap<>(memberCount * 2);
+            Map<String, String> propertyNameToClusterAlphaKey = new HashMap<>(memberCount * 2);
+
+            for (CtTypeMember groupMember : groupMembers) {
+                String alphaKey = deriveAlphaKey(groupMember);
+                memberToAlphaKey.put(groupMember, alphaKey);
+
+                if (keepAccessorsTogether && groupMember instanceof CtMethod<?> method) {
+                    SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method).ifPresent(propertyName -> {
+                        memberToPropertyName.put(groupMember, propertyName);
+                        propertyNameToClusterAlphaKey.merge(
+                                propertyName,
+                                alphaKey,
+                                (existing, candidate) -> existing.compareTo(candidate) <= 0 ? existing : candidate);
+                    });
+                }
+            }
+
+            Map<CtTypeMember, OrderingKey> memberToOrderingKey = new HashMap<>(memberCount * 2);
+            for (CtTypeMember groupMember : groupMembers) {
+                String alphaKey = memberToAlphaKey.get(groupMember);
+                String propertyName = memberToPropertyName.get(groupMember);
+                String clusterAlphaKey =
+                        propertyName == null ? alphaKey : propertyNameToClusterAlphaKey.get(propertyName);
+                memberToOrderingKey.put(
+                        groupMember,
+                        new OrderingKey(
+                                extractSrcStart(groupMember),
+                                alphaKey,
+                                deriveAlphaSortingRank(groupMember),
+                                deriveVisibilityRank(groupMember),
+                                clusterAlphaKey));
+            }
+            return Collections.unmodifiableMap(memberToOrderingKey);
+        }
+
+        @NonNull
+        private static OrderingKey deriveWithoutClustering(@NonNull CtTypeMember typeMember) {
+            String alphaKey = deriveAlphaKey(typeMember);
             return new OrderingKey(
                     extractSrcStart(typeMember),
-                    deriveAlphaKey(typeMember),
+                    alphaKey,
                     deriveAlphaSortingRank(typeMember),
                     deriveVisibilityRank(typeMember),
-                    propertyName);
+                    alphaKey);
         }
 
         int srcStart;
@@ -101,7 +153,7 @@ class SortableTypeMember {
         String alphaKey;
 
         /**
-         * Rank applied first in ALPHA ordering, before the alpha key and cluster property name.
+         * Rank applied first in ALPHA ordering, before the alpha key and cluster alpha key.
          * Non-zero only for {@code CtAnonymousExecutable} (initializer blocks), which receive rank
          * {@code 1} so that they sort after all regular named members regardless of their position
          * in the source.
@@ -111,13 +163,20 @@ class SortableTypeMember {
         int visibilityRank;
 
         /**
-         * The JavaBeans property name derived from this member's accessor method signature
-         * (e.g. {@code getValue} → {@code value}), or {@code null} when the member is not a
-         * recognized accessor method. The ALPHA comparator uses this name when both compared members
-         * expose a derived property name, so that accessor methods sort by the underlying property
-         * rather than by the method-name prefix ({@code get/is/has/set}).
+         * Representative alpha key of the accessor cluster this member belongs to, used as the
+         * primary key by the ALPHA comparator.
+         *
+         * <p>For members that participate in a multi-member accessor cluster (recognized JavaBeans
+         * accessors of the same underlying property when {@code keepAccessorsTogether} is enabled),
+         * this is the minimum {@link #alphaKey} across all members of that cluster. For every other
+         * member it equals the member's own {@link #alphaKey}.
+         *
+         * <p>Using a single representative key per cluster, rather than comparing accessors by
+         * their property name and non-accessors by their full alpha key, ensures the resulting
+         * comparator is total and transitive: it is impossible for any three members to form a
+         * comparison cycle, regardless of how property names and method names interleave.
          */
-        @Nullable
-        String clusterPropertyName;
+        @NonNull
+        String clusterAlphaKey;
     }
 }
