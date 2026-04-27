@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
@@ -81,8 +82,6 @@ class GroupMembersOrderer {
         Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
                 ComparatorUtils.buildOrderingComparator(orderingRules);
 
-        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
-
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
                 .map(member -> new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member)))
                 .toList();
@@ -90,9 +89,9 @@ class GroupMembersOrderer {
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
         Comparator<SortableTypeMember> comparator =
                 Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
-
+        Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
         Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
-                ? buildAccessorBundleGroups(groupMembers, groupMemberSet, memberDependencyGraph, typeMemberToSortable)
+                ? buildAccessorBundleGroups(groupMemberSet, memberDependencyGraph, typeMemberToSortable)
                 : Groups.empty();
 
         // Collect accessor-bundle members so declaration-dependency edges involving them are skipped.
@@ -103,7 +102,7 @@ class GroupMembersOrderer {
                 .collect(Collectors.toUnmodifiableSet());
 
         Dependencies<SortableTypeMember> dependencies = buildDeclarationDependencies(
-                groupMembers, groupMemberSet, bundledMembers, memberDependencyGraph, typeMemberToSortable);
+                groupMemberSet, bundledMembers, memberDependencyGraph, typeMemberToSortable);
 
         return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
                 .map(SortableTypeMember::getTypeMember)
@@ -127,7 +126,6 @@ class GroupMembersOrderer {
      * {@link SortableTypeMember.OrderingKey#derive}), so this method only constructs the grouping
      * structure.
      *
-     * @param groupMembers list of members in the group (preserves iteration order)
      * @param groupMemberSet set view of {@code groupMembers} for fast membership checks
      * @param memberDependencyGraph the dependency graph
      * @param typeMemberToSortable the fully initialized sortable map
@@ -135,14 +133,13 @@ class GroupMembersOrderer {
      */
     @NonNull
     private static Groups<SortableTypeMember> buildAccessorBundleGroups(
-            List<CtTypeMember> groupMembers,
             Set<CtTypeMember> groupMemberSet,
             MemberDependencyGraph memberDependencyGraph,
             Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
         Set<CtTypeMember> alreadyGrouped = new HashSet<>();
         List<Group<SortableTypeMember>> bundles = new ArrayList<>();
 
-        for (CtTypeMember member : groupMembers) {
+        for (CtTypeMember member : groupMemberSet) {
             if (alreadyGrouped.contains(member)) {
                 continue;
             }
@@ -166,14 +163,13 @@ class GroupMembersOrderer {
 
     @NonNull
     private static Dependencies<SortableTypeMember> buildDeclarationDependencies(
-            List<CtTypeMember> groupMembers,
             Set<CtTypeMember> groupMemberSet,
             Set<CtTypeMember> bundledMembers,
             MemberDependencyGraph memberDependencyGraph,
             Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
         List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();
 
-        for (CtTypeMember provider : groupMembers) {
+        for (CtTypeMember provider : groupMemberSet) {
             if (bundledMembers.contains(provider)) {
                 continue;
             }
