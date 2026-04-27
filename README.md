@@ -11,9 +11,8 @@ SPDX-License-Identifier: Apache-2.0
 [![Coverage](https://img.shields.io/codecov/c/github/lemon-ant/JHarmonizer)](https://codecov.io/gh/lemon-ant/JHarmonizer)
 
 JHarmonizer is a Java source harmonization tool that keeps class member layout deterministic and readable.
-It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output.
-
----
+It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output
+using [Palantir Java Format](https://github.com/palantir/palantir-java-format).
 
 ## Quick Start
 
@@ -70,7 +69,10 @@ Bind `check-fast` to the `verify` phase to fail the build on the first out-of-or
 </build>
 ```
 
-`check-fast` exits non-zero on the first violation. `check` reports all violations and fails the build when violations are found; set `-Djharmonizer.failOnViolation=false` to make `check` non-failing.
+`check-fast` immediately halts the build pipeline the moment it detects an out-of-order or unformatted file —
+no further processing happens. `check` scans all files, collects every violation, and only then interrupts the
+build with the full report; set `-Djharmonizer.failOnViolation=false` to make `check` report violations without
+failing the build.
 
 ### Manual invocation
 
@@ -85,37 +87,57 @@ mvn jharmonizer:check-fast   # fail fast on first violation
 JHarmonizer is also available as a standalone CLI fat JAR for use outside of Maven.
 See [`cli/README.md`](cli/README.md) for command-line usage, all options, exit codes, and CI integration examples.
 
----
+## ⭐ Ways to support this project
+
+I'm an open-source developer building reliable, intelligent tooling for the Java community 🛠️.
+
+The ideas behind JHarmonizer are simple, but implementing them correctly turned out to be surprisingly hard ⚙️.
+There is a large backlog of planned features — smarter ordering rules, IDE plugins, more formatting options, and
+deeper static analysis integration — but delivering them takes a huge amount of time and effort ⏳.
+
+**This project is free for you, but it is not free for me 💙.** Every hour spent here is a personal investment —
+and beyond time, I also put real money into it: AI tooling, compute credits, and the infra that powers
+development 💸. All of that goes toward making this tool better for you.
+
+Your support is the most direct feedback I can receive 💬 — it tells me the project matters and gives me the energy to
+keep pushing forward 🚀. And every contribution comes back to you as a smarter, more capable tool that saves you even
+more time with each new release.
+
+If this project is useful to you, please consider:
+
+- ⭐ **Star the repository** — it improves visibility and takes 2 seconds.
+- ☕ **[Buy me a coffee](https://buymeacoffee.com/antonlem)** — even a small one-time contribution makes a real
+  difference and keeps me motivated.
+- 💖 **[GitHub Sponsors](https://github.com/sponsors/AntonLem)** — recurring sponsorship directly through GitHub
+  to support ongoing development of new features.
+
+Every donation, no matter how small, directly accelerates the roadmap 🙏. Thank you!
 
 ## Current status
 
-- Core pipeline is available: parse → classify → sort → print → format.
-- Declaration-order dependency graph is implemented for direct initializer/read-write scenarios and accessor bundling.
+- Core pipeline is available: parse → group → sort → serialize → format.
+- A declaration-order dependency graph is built to avoid reorderings that would break compilation or
+  field/constant initialization for the dependency cases JHarmonizer currently models.
+  Currently handles direct initializer references and accessor bundling.
 - Comment-based opt-out directives are supported for file scope and type scope.
-- Advanced inter-procedural dependency tracing for field initializers through called methods is **not implemented yet**.
 
 ## Roadmap (next versions)
 
-- Compile sorting behavior once per group and precompute reusable sort keys in member descriptors.
 - Add selector matching by type (field type / method return type).
 - Add explicit enum constant ordering strategies.
-- Add support for corner-cases with explicit declaring-type instance forward references during class initialization (currently parked as known failing E2E scenario).
 - Add automatic parameter-order harmonization for overriding methods and constructors: base/forwarded parameters first, extension parameters after them.
 - Add redundant-modifier cleanup pass that removes semantically useless Java modifiers (for example implicit interface/class member modifiers) while preserving behavior.
 - Add inter-procedural initializer dependency analysis.
 
-Details and implementation notes are tracked in [docs/TODO.md](docs/TODO.md).
+The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.md) for the complete list.
 
 ## Opt-out directives
 
-JHarmonizer supports two opt-out directives placed as source comments:
-
-- `@jharmonizer:fully-off` — disable all harmonization for the file or type
-- `@jharmonizer:sort-off` — disable sorting only; formatting still runs
+JHarmonizer supports two opt-out directives placed as source comments.
 
 ```java
-// @jharmonizer:fully-off
-// @jharmonizer:sort-off
+// @jharmonizer:fully-off   // disable all harmonization for this file or type
+// @jharmonizer:sort-off    // disable sorting only; formatting still runs
 ```
 
 Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) comment forms are supported.
@@ -146,40 +168,9 @@ serialization, or formatting overhead). Activate with the `benchmark-sort` Maven
 
 See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output format.
 
----
-
-## ⭐ Ways to support this project
-
-I'm an open-source developer building reliable, intelligent tooling for the Java community 🛠️.
-
-JHarmonizer turned out to be **significantly more complex** than I originally anticipated. There is a large backlog of
-planned features — smarter ordering rules, IDE plugins, more formatting options, and deeper static analysis
-integration — but delivering them takes a huge amount of time and effort.
-
-**This project is free for you, but it is not free for me.** Every hour spent here is an investment I make in the
-hope that it saves you many more hours maintaining clean, consistent Java code.
-
-Your support is the most direct feedback I can receive — it tells me the project matters and gives me the energy to
-keep pushing forward. And every contribution comes back to you as a smarter, more capable tool that saves you even
-more time with each new release.
-
-If this project is useful to you, please consider:
-
-- ⭐ **Star the repository** — it improves visibility and takes 2 seconds.
-- ☕ **[Buy me a coffee](https://buymeacoffee.com/antonlem)** — even a small one-time contribution makes a real
-  difference and keeps me motivated.
-- 💖 **[GitHub Sponsors](https://github.com/sponsors/AntonLem)** — recurring sponsorship directly through GitHub
-  to support ongoing development of new features.
-
-Every donation, no matter how small, directly accelerates the roadmap. Thank you 🙏
-
----
-
 ## 📖 Documentation
 
 - [Javadoc (latest)](https://javadoc.io/doc/io.github.lemon-ant/jharmonizer-core)
-
----
 
 ## Contributing
 
