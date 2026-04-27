@@ -67,7 +67,7 @@ public class SimplifiedDependencyAwareSorter {
      * detection, dependency/group resolution, and error messages.
      * Two items must not be equal.
      *
-     * @param <TSortableItem>        the item type
+     * @param <TNode>        the item type
      * @param items             items to sort (input order is irrelevant)
      * @param groups          group definitions; use {@link Groups#empty()} if none
      * @param dependencies      provider → dependent ordering edges; use
@@ -77,17 +77,17 @@ public class SimplifiedDependencyAwareSorter {
      * @throws SortingException if the input is invalid or violates simplified preconditions
      */
     @NonNull
-    public static <TSortableItem> List<TSortableItem> sort(
-            @NonNull Collection<TSortableItem> items,
-            @NonNull Groups<TSortableItem> groups,
-            @NonNull Dependencies<TSortableItem> dependencies,
-            @NonNull Comparator<TSortableItem> comparator) {
+    public static <TNode> List<TNode> sort(
+            @NonNull Collection<TNode> items,
+            @NonNull Groups<TNode> groups,
+            @NonNull Dependencies<TNode> dependencies,
+            @NonNull Comparator<TNode> comparator) {
         if (items.isEmpty()) {
             return List.of();
         }
-        List<TSortableItem> itemList = new ArrayList<>(items);
+        List<TNode> itemList = new ArrayList<>(items);
 
-        Map<TSortableItem, Integer> itemToIndex = SortingUtils.buildItemIndex(itemList);
+        Map<TNode, Integer> itemToIndex = SortingUtils.buildItemIndex(itemList);
 
         // Fast path: no constraints at all — just sort by comparator, skip all super-node machinery
         if (groups.getGroups().isEmpty() && dependencies.getEdges().isEmpty()) {
@@ -95,7 +95,7 @@ public class SimplifiedDependencyAwareSorter {
             return Collections.unmodifiableList(itemList);
         }
 
-        SuperNodeUtils.SuperNodes<TSortableItem> superNodes =
+        SuperNodeUtils.SuperNodes<TNode> superNodes =
                 SuperNodeUtils.buildSuperNodes(itemList, itemToIndex, groups, comparator);
 
         int[] inDegree = new int[superNodes.getCount()];
@@ -112,7 +112,7 @@ public class SimplifiedDependencyAwareSorter {
 
         int[] finalOrder = providerLiftRepair(superNodes.getCount(), inDegree, adjacencyLists, nodeKeyComparator);
 
-        List<TSortableItem> result = SuperNodeUtils.expandOrder(finalOrder, superNodes, itemList);
+        List<TNode> result = SuperNodeUtils.expandOrder(finalOrder, superNodes, itemList);
         return Collections.unmodifiableList(result);
     }
 

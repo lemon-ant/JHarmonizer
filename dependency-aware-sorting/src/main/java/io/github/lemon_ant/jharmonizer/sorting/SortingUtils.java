@@ -28,16 +28,16 @@ class SortingUtils {
      * Builds a mapping from each item to its positional index in the list.
      *
      * @param items           the ordered list of items
-     * @param <TSortableItem> the item type
+     * @param <TNode> the item type
      * @return an item-to-index map
      * @throws SortingException if two items are equal (duplicates)
      */
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
-    static <TSortableItem> Map<TSortableItem, Integer> buildItemIndex(@NonNull List<TSortableItem> items) {
-        Map<TSortableItem, Integer> itemToIndex = new HashMap<>(items.size() * 2);
+    static <TNode> Map<TNode, Integer> buildItemIndex(@NonNull List<TNode> items) {
+        Map<TNode, Integer> itemToIndex = new HashMap<>(items.size() * 2);
         for (int i = 0; i < items.size(); i++) {
-            TSortableItem item = items.get(i);
+            TNode item = items.get(i);
             if (itemToIndex.put(item, i) != null) {
                 throw new SortingException("Duplicate item: \"" + item + "\"");
             }
@@ -54,12 +54,11 @@ class SortingUtils {
      *
      * @param itemToIndex     the item-to-index map
      * @param member          the group member item
-     * @param <TSortableItem> the item type
+     * @param <TNode> the item type
      * @return the item index
      * @throws SortingException if the item is not found in the index
      */
-    static <TSortableItem> int resolveGroupMemberIndex(
-            @NonNull Map<TSortableItem, Integer> itemToIndex, @NonNull TSortableItem member) {
+    static <TNode> int resolveGroupMemberIndex(@NonNull Map<TNode, Integer> itemToIndex, @NonNull TNode member) {
         Integer index = itemToIndex.get(member);
         if (index == null) {
             throw new SortingException("Group references unknown member: \"" + member + "\"");
@@ -89,18 +88,18 @@ class SortingUtils {
      * Holds the resolved endpoints of a dependency edge: provider and dependent item indices
      * together with the original items (retained for error messages in subsequent checks).
      *
-     * @param <TSortableItem> the item type
+     * @param <TNode> the item type
      */
     @Value
-    static class ResolvedEdge<TSortableItem> {
+    static class ResolvedEdge<TNode> {
         int providerIndex;
         int dependentIndex;
 
         @NonNull
-        TSortableItem provider;
+        TNode provider;
 
         @NonNull
-        TSortableItem dependent;
+        TNode dependent;
     }
 
     /**
@@ -109,15 +108,15 @@ class SortingUtils {
      *
      * @param edge            the raw dependency edge
      * @param itemToIndex     item-to-index map built from the input items
-     * @param <TSortableItem> the item type
+     * @param <TNode> the item type
      * @return a {@link ResolvedEdge} with validated item indices and original items
      * @throws SortingException if the provider or dependent is unknown, or it is a self-dependency
      */
     @NonNull
-    static <TSortableItem> ResolvedEdge<TSortableItem> resolveDependencyEdge(
-            @NonNull Dependencies.Dependency<TSortableItem> edge, @NonNull Map<TSortableItem, Integer> itemToIndex) {
-        TSortableItem provider = edge.getProvider();
-        TSortableItem dependent = edge.getDependent();
+    static <TNode> ResolvedEdge<TNode> resolveDependencyEdge(
+            @NonNull Dependencies.Dependency<TNode> edge, @NonNull Map<TNode, Integer> itemToIndex) {
+        TNode provider = edge.getProvider();
+        TNode dependent = edge.getDependent();
 
         Integer providerIndex = itemToIndex.get(provider);
         if (providerIndex == null) {
