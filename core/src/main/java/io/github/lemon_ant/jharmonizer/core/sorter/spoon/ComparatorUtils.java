@@ -47,9 +47,9 @@ class ComparatorUtils {
             case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart);
             case ALPHA ->
                 (left, right) -> {
-                    // Compare secondary rank first. Rank is non-zero only for anonymous
-                    // initializer blocks (rank 1), ensuring they always sort after all
-                    // named members regardless of their alphabetical position.
+                    // Compare the primary ALPHA pre-key first. Rank is non-zero only for
+                    // anonymous initializer blocks (rank 1), ensuring they always sort
+                    // after all named members regardless of their alphabetical position.
                     int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
                     if (rankComparison != 0) {
                         return rankComparison;
