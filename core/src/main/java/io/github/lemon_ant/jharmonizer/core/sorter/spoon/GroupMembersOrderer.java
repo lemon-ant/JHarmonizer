@@ -88,7 +88,7 @@ class GroupMembersOrderer {
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
         Map<CtTypeMember, SortableTypeMember.OrderingKey> memberToOrderingKey =
-                SortableTypeMember.OrderingKey.deriveAll(groupMembers, keepAccessorsTogether, orderingRules);
+                OrderingKeyFactory.deriveAll(groupMembers, keepAccessorsTogether, orderingRules);
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
                 .map(member -> new SortableTypeMember(member, memberToOrderingKey.get(member)))
                 .toList();
@@ -135,7 +135,7 @@ class GroupMembersOrderer {
      *
      * <p>Per-property cluster ordering (and the choice of cluster representative inside the
      * super-group) is purely a comparator concern; see
-     * {@link SortableTypeMember.OrderingKey#deriveAll(List, boolean, List)} and
+     * {@link OrderingKeyFactory#deriveAll(List, boolean, List)} and
      * {@link ComparatorUtils#buildOrderingComparator(List)}.
      *
      * @param sortableTypeMembers all sortable members of the group

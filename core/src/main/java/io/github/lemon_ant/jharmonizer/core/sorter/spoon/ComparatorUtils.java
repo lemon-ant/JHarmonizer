@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
  *       the member's own attributes.</li>
  *   <li>{@link #buildMemberOnlyOrderingComparator(List)} — the same comparator with cluster
  *       substitutions disabled; used internally by
- *       {@link OrderingKey#deriveAll(List, boolean, List)} to discover each cluster's top
+ *       {@link OrderingKeyFactory#deriveAll(List, boolean, List)} to discover each cluster's top
  *       member.</li>
  * </ul>
  */
@@ -43,7 +43,7 @@ class ComparatorUtils {
     /**
      * Builds a member-only comparator from the given ordering rules: the cluster-aware comparator
      * with cross-cluster substitutions disabled. Used by
-     * {@link OrderingKey#deriveAll(List, boolean, List)} for discovering each cluster's top member.
+     * {@link OrderingKeyFactory#deriveAll(List, boolean, List)} for discovering each cluster's top member.
      *
      * @param orderingRules the ordering rules to apply, in priority order
      * @return the member-only ordering key comparator
