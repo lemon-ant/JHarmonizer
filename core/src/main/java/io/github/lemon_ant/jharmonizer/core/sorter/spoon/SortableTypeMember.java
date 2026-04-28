@@ -91,17 +91,20 @@ class SortableTypeMember {
                     ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
                             .orElse(null)
                     : null;
+            int srcStart = extractSrcStart(typeMember);
             String alphaKey = deriveAlphaKey(typeMember);
+            int alphaSortingRank = deriveAlphaSortingRank(typeMember);
+            int visibilityRank = deriveVisibilityRank(typeMember);
             return new OrderingKey(
-                    extractSrcStart(typeMember),
+                    srcStart,
                     alphaKey,
-                    deriveAlphaSortingRank(typeMember),
-                    deriveVisibilityRank(typeMember),
+                    alphaSortingRank,
+                    visibilityRank,
                     propertyName,
-                    extractSrcStart(typeMember),
+                    srcStart,
                     alphaKey,
-                    deriveAlphaSortingRank(typeMember),
-                    deriveVisibilityRank(typeMember));
+                    alphaSortingRank,
+                    visibilityRank);
         }
 
         int srcStart;

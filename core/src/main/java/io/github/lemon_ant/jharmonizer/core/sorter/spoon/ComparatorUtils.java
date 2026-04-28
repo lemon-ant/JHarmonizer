@@ -15,6 +15,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class ComparatorUtils {
 
+    private static final Comparator<OrderingKey> DEFAULT_ORDERING_COMPARATOR = buildOrderingComparatorForOrderingRule(
+                    OrderingRule.PRESERVE)
+            .thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA));
+
     /**
      * Builds the comparator used to order sortable type members by their ordering keys.
      *
@@ -27,8 +31,7 @@ class ComparatorUtils {
         Comparator<SortableTypeMember.OrderingKey> configuredComparator = orderingRules.stream()
                 .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE)
-                        .thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA)));
+                .orElse(DEFAULT_ORDERING_COMPARATOR);
 
         // Deterministic tie-breakers regardless of configured keys.
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
