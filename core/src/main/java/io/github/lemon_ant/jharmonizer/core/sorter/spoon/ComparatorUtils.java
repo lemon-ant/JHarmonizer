@@ -81,52 +81,58 @@ class ComparatorUtils {
     private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(
             OrderingRule orderingRule, boolean clusterAware) {
         return switch (orderingRule) {
-            case PRESERVE ->
-                (left, right) -> {
-                    boolean cross = clusterAware && isCrossCluster(left, right);
-                    return Integer.compare(
-                            cross ? left.getClusterSrcStart() : left.getSrcStart(),
-                            cross ? right.getClusterSrcStart() : right.getSrcStart());
-                };
-            case ALPHA ->
-                (left, right) -> {
-                    boolean cross = clusterAware && isCrossCluster(left, right);
-                    // Compare the alpha sorting rank first. Rank is non-zero only for anonymous
-                    // initializer blocks (rank 1), ensuring they always sort after all regular
-                    // named members. For cross-cluster accessor pairs we use the cluster's top
-                    // member's rank (which equals 0 in practice, since accessor methods are not
-                    // anonymous initializers, but the substitution preserves the same semantics).
-                    int rankComparison = Integer.compare(
-                            cross ? left.getClusterAlphaSortingRank() : left.getAlphaSortingRank(),
-                            cross ? right.getClusterAlphaSortingRank() : right.getAlphaSortingRank());
-                    if (rankComparison != 0) {
-                        return rankComparison;
-                    }
-                    if (cross) {
-                        // Cross-cluster ALPHA compares property names; both sides are guaranteed
-                        // non-null by isCrossCluster.
-                        return left.getPropertyName().compareTo(right.getPropertyName());
-                    }
-                    // Same cluster, or at least one non-accessor: compare full method-signature
-                    // alphaKeys. Inside a single cluster this orders members by their natural
-                    // method names (e.g. getValue < setValue); against non-accessors this lets
-                    // the super-cluster's representative member compete on its own alphaKey.
-                    return left.getAlphaKey().compareTo(right.getAlphaKey());
-                };
-            case VISIBILITY_ASC ->
-                (left, right) -> {
-                    boolean cross = clusterAware && isCrossCluster(left, right);
-                    return Integer.compare(
-                            cross ? right.getClusterVisibilityRank() : right.getVisibilityRank(),
-                            cross ? left.getClusterVisibilityRank() : left.getVisibilityRank());
-                };
-            case VISIBILITY_DESC ->
-                (left, right) -> {
-                    boolean cross = clusterAware && isCrossCluster(left, right);
-                    return Integer.compare(
-                            cross ? left.getClusterVisibilityRank() : left.getVisibilityRank(),
-                            cross ? right.getClusterVisibilityRank() : right.getVisibilityRank());
-                };
+            case PRESERVE -> buildPreserveComparator(clusterAware);
+            case ALPHA -> buildAlphaComparator(clusterAware);
+            case VISIBILITY_ASC -> buildVisibilityComparator(clusterAware, true);
+            case VISIBILITY_DESC -> buildVisibilityComparator(clusterAware, false);
+        };
+    }
+
+    @NonNull
+    private static Comparator<OrderingKey> buildPreserveComparator(boolean clusterAware) {
+        return (left, right) -> {
+            boolean cross = clusterAware && isCrossCluster(left, right);
+            return Integer.compare(
+                    cross ? left.getClusterSrcStart() : left.getSrcStart(),
+                    cross ? right.getClusterSrcStart() : right.getSrcStart());
+        };
+    }
+
+    @NonNull
+    private static Comparator<OrderingKey> buildAlphaComparator(boolean clusterAware) {
+        return (left, right) -> {
+            boolean cross = clusterAware && isCrossCluster(left, right);
+            // Compare the alpha sorting rank first. Rank is non-zero only for anonymous
+            // initializer blocks (rank 1), ensuring they always sort after all regular
+            // named members. For cross-cluster accessor pairs we use the cluster's top
+            // member's rank (which equals 0 in practice, since accessor methods are not
+            // anonymous initializers, but the substitution preserves the same semantics).
+            int rankComparison = Integer.compare(
+                    cross ? left.getClusterAlphaSortingRank() : left.getAlphaSortingRank(),
+                    cross ? right.getClusterAlphaSortingRank() : right.getAlphaSortingRank());
+            if (rankComparison != 0) {
+                return rankComparison;
+            }
+            if (cross) {
+                // Cross-cluster ALPHA compares property names; both sides are guaranteed
+                // non-null by isCrossCluster.
+                return left.getPropertyName().compareTo(right.getPropertyName());
+            }
+            // Same cluster, or at least one non-accessor: compare full method-signature
+            // alphaKeys. Inside a single cluster this orders members by their natural
+            // method names (e.g. getValue < setValue); against non-accessors this lets
+            // the super-cluster's representative member compete on its own alphaKey.
+            return left.getAlphaKey().compareTo(right.getAlphaKey());
+        };
+    }
+
+    @NonNull
+    private static Comparator<OrderingKey> buildVisibilityComparator(boolean clusterAware, boolean ascending) {
+        return (left, right) -> {
+            boolean cross = clusterAware && isCrossCluster(left, right);
+            int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
+            int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
+            return ascending ? Integer.compare(rightRank, leftRank) : Integer.compare(leftRank, rightRank);
         };
     }
 
