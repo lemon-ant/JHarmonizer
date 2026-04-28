@@ -51,10 +51,10 @@ class SortableTypeMember {
      *
      * <p>Each accessor method that participates in the JavaBeans accessor super-cluster (when
      * {@code keepAccessorsTogether} is enabled) carries a non-null {@link #propertyName} that
-     * identifies its property cluster, plus three "cluster" representative attributes derived
+     * identifies its property cluster, plus two "cluster" representative attributes derived
      * from the cluster's <em>top member</em> (the one that sorts first inside the cluster under
      * the configured ordering rules applied to member-own keys):
-     * {@link #clusterSrcStart}, {@link #clusterAlphaSortingRank}, {@link #clusterVisibilityRank}.
+     * {@link #clusterSrcStart} and {@link #clusterVisibilityRank}.
      * For non-accessors and for accessors when clustering is disabled, {@link #propertyName} is
      * {@code null} and the cluster attributes equal the member's own attributes.
      *
@@ -97,7 +97,7 @@ class SortableTypeMember {
          * non-null {@link #propertyName}. All accessors sharing the same property name form one
          * cluster. For each cluster the <em>top member</em> is chosen as the minimum under the
          * member-only comparator built from {@code orderingRules}, and its
-         * {@link #srcStart} / {@link #alphaSortingRank} / {@link #visibilityRank} become the
+         * {@link #srcStart} / {@link #visibilityRank} become the
          * cluster's representative attributes for every member of that cluster. For non-accessor
          * members and for accessors when clustering is disabled, {@link #propertyName} is
          * {@code null} and cluster attributes equal the member's own attributes.
@@ -173,7 +173,6 @@ class SortableTypeMember {
                                 ownKey.getVisibilityRank(),
                                 propertyName,
                                 clusterTopKey.getSrcStart(),
-                                clusterTopKey.getAlphaSortingRank(),
                                 clusterTopKey.getVisibilityRank()));
             }
             return Collections.unmodifiableMap(memberToOrderingKey);
@@ -197,7 +196,6 @@ class SortableTypeMember {
                     visibilityRank,
                     propertyName,
                     srcStart,
-                    alphaSortingRank,
                     visibilityRank);
         }
 
@@ -232,13 +230,6 @@ class SortableTypeMember {
          * the cluster-aware comparator detects a cross-cluster accessor pair.
          */
         int clusterSrcStart;
-
-        /**
-         * Alpha sorting rank of the cluster's top member; equals {@link #alphaSortingRank} when
-         * this member is not part of a multi-member accessor cluster. Used by the ALPHA rule
-         * when the cluster-aware comparator detects a cross-cluster accessor pair.
-         */
-        int clusterAlphaSortingRank;
 
         /**
          * Visibility rank of the cluster's top member; equals {@link #visibilityRank} when this

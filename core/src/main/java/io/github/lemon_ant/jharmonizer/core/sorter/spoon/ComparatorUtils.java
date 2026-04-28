@@ -15,8 +15,8 @@ import lombok.experimental.UtilityClass;
  *   <li>{@link #buildOrderingComparator(List)} — the cluster-aware comparator used to order
  *       group members and to compare accessor super-clusters against non-accessors. For two
  *       accessors of <em>different</em> property clusters it substitutes per-cluster
- *       representative attributes (top member's {@code srcStart} / {@code visibilityRank} /
- *       {@code alphaSortingRank}) and, for the ALPHA rule, compares {@code propertyName} instead
+ *       representative attributes (top member's {@code srcStart} / {@code visibilityRank})
+ *       and, for the ALPHA rule, compares {@code propertyName} instead
  *       of the full method-signature {@code alphaKey}. Every other comparison falls through to
  *       the member's own attributes.</li>
  *   <li>{@link #buildMemberOnlyOrderingComparator(List)} — the same comparator with cluster
@@ -112,12 +112,9 @@ class ComparatorUtils {
             boolean cross = clusterAware && isCrossCluster(left, right);
             // Compare the alpha sorting rank first. Rank is non-zero only for anonymous
             // initializer blocks (rank 1), ensuring they always sort after all regular
-            // named members. For cross-cluster accessor pairs we use the cluster's top
-            // member's rank (which equals 0 in practice, since accessor methods are not
-            // anonymous initializers, but the substitution preserves the same semantics).
-            int rankComparison = Integer.compare(
-                    cross ? left.getClusterAlphaSortingRank() : left.getAlphaSortingRank(),
-                    cross ? right.getClusterAlphaSortingRank() : right.getAlphaSortingRank());
+            // named members. Cross-cluster accessor pairs are always methods, so their rank
+            // remains the regular member-own rank (0) and does not need a cluster-level copy.
+            int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
             if (rankComparison != 0) {
                 return rankComparison;
             }
