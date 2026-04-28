@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # JHarmonizer
 
-[![CI](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml/badge.svg)](https://github.com/lemon-ant/JHarmonizer/actions/workflows/ci.yml)
+[![Verify](https://github.com/lemon-ant/JHarmonizer/actions/workflows/verify.yml/badge.svg)](https://github.com/lemon-ant/JHarmonizer/actions/workflows/verify.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/java-21-orange.svg)](https://adoptium.net/)
 [![Coverage](https://img.shields.io/codecov/c/github/lemon-ant/JHarmonizer)](https://codecov.io/gh/lemon-ant/JHarmonizer)
