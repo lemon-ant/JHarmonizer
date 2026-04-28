@@ -53,8 +53,7 @@ class ComparatorUtils {
                 (left, right) -> Integer.compare(resolveSrcStart(left, right), resolveSrcStart(right, left));
             case ALPHA ->
                 (left, right) -> {
-                    int rankComparison =
-                            Integer.compare(resolveAlphaSortingRank(left, right), resolveAlphaSortingRank(right, left));
+                    int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
                     if (rankComparison != 0) {
                         return rankComparison;
                     }
@@ -80,12 +79,6 @@ class ComparatorUtils {
         return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
                 ? orderingKey.getClusterAlphaKey()
                 : orderingKey.getAlphaKey();
-    }
-
-    private static int resolveAlphaSortingRank(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
-        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
-                ? orderingKey.getClusterAlphaSortingRank()
-                : orderingKey.getAlphaSortingRank();
     }
 
     private static int resolveVisibilityRank(OrderingKey orderingKey, OrderingKey otherOrderingKey) {

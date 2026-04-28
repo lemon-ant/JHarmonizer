@@ -8,6 +8,8 @@ import static java.util.Objects.requireNonNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,7 +55,6 @@ public class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
@@ -64,11 +65,13 @@ public class SpoonJavaBeansAccessorUtils {
                 accessorMethod.getDeclaringType(),
                 "Expected CtMethod to have a declaring type, but it is detached from the Spoon model. methodName="
                         + accessorMethod.getSimpleName());
+        Set<CtMethod<?>> excludedAccessorMethods = Collections.newSetFromMap(new IdentityHashMap<>());
+        excludedAccessorMethods.add(accessorMethod);
 
         return streamExplicitSrcTypeMembers(declaringType)
                 .filter(typeMember -> typeMember instanceof CtMethod<?>)
                 .map(typeMember -> (CtMethod<?>) typeMember)
-                .filter(candidateMethod -> candidateMethod != accessorMethod)
+                .filter(candidateMethod -> !excludedAccessorMethods.contains(candidateMethod))
                 .flatMap(
                         candidateMethod -> tryParseAccessorMethodDescriptor(candidateMethod)
                                 .map(candidateDescriptor -> Pair.of(candidateMethod, candidateDescriptor))

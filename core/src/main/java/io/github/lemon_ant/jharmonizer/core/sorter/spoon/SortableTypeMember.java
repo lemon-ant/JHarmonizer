@@ -103,7 +103,6 @@ class SortableTypeMember {
                     propertyName,
                     srcStart,
                     alphaKey,
-                    alphaSortingRank,
                     visibilityRank);
         }
 
@@ -137,8 +136,6 @@ class SortableTypeMember {
         @NonNull
         String clusterAlphaKey;
 
-        int clusterAlphaSortingRank;
-
         int clusterVisibilityRank;
 
         /**
@@ -159,7 +156,6 @@ class SortableTypeMember {
                     clusterPropertyName,
                     representativeOrderingKey.getSrcStart(),
                     propertyName,
-                    representativeOrderingKey.getAlphaSortingRank(),
                     representativeOrderingKey.getVisibilityRank());
         }
     }

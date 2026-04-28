@@ -6,6 +6,8 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireDeclaringType;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSrcStart;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -106,7 +108,6 @@ final class InitializationOrderDependencyUtils {
      * @return the candidate provider members
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
             @NonNull CtField<?> blankFinalField,
@@ -115,9 +116,11 @@ final class InitializationOrderDependencyUtils {
 
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         boolean blankFinalFieldIsStatic = blankFinalField.getModifiers().contains(ModifierKind.STATIC);
+        Set<CtTypeMember> excludedDependentMembers = Collections.newSetFromMap(new IdentityHashMap<>());
+        excludedDependentMembers.add(dependentMember);
 
         return streamExplicitSrcTypeMembers(declaringType)
-                .filter(typeMember -> typeMember != dependentMember)
+                .filter(typeMember -> !excludedDependentMembers.contains(typeMember))
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->
                         new ProviderCandidate(candidateProviderMember, requireSrcStart(candidateProviderMember)))
