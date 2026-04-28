@@ -385,7 +385,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersAnchoredByClusterAlphaKey() {
+    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersOrderedByPropertyName() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessor-cluster-property-name", true, List.of(OrderingRule.ALPHA));
@@ -410,17 +410,14 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — each accessor cluster is anchored by the alphabetically-first member's full
-        // alphaKey. The "balance" cluster's anchor is "getBalance():int" (g) and the "active"
-        // cluster's anchor is "isActive():boolean" (i), so the balance bundle sorts first.
-        // Inside each bundle, members fall back to their own alphaKey:
-        // "getBalance" < "setBalance"; "isActive" < "setActive".
-        // Property-name comparison (which would have placed "active" before "balance") is
-        // intentionally not used: it produced a non-transitive comparator when accessors of
-        // different properties were mixed with non-accessor methods in the same group.
+        // Then — both accessor pairs join the indivisible accessor super-cluster. Inside the
+        // super-cluster the two property clusters ("active", "balance") are compared by ALPHA;
+        // the cross-cluster ALPHA branch compares property names ("active" < "balance"), so
+        // the active cluster comes before the balance cluster. Within each cluster the members
+        // fall back to their own alphaKey: "isActive" < "setActive"; "getBalance" < "setBalance".
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(
-                        getBalanceMethodMember, setBalanceMethodMember, isActiveMethodMember, setActiveMethodMember);
+                        isActiveMethodMember, setActiveMethodMember, getBalanceMethodMember, setBalanceMethodMember);
     }
 
     @Test

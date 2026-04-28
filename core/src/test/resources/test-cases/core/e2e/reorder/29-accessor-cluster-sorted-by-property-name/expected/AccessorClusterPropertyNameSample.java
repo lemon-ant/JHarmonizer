@@ -15,19 +15,19 @@ public class AccessorClusterPropertyNameSample {
         this.clientId = clientId;
     }
 
-    public String getProcessorId() {
-        return processorId;
-    }
-
-    public void setProcessorId(String processorId) {
-        this.processorId = processorId;
-    }
-
     public boolean isDisconnectedNodeAcknowledged() {
         return disconnectedNodeAcknowledged;
     }
 
     public void setDisconnectedNodeAcknowledged(boolean disconnectedNodeAcknowledged) {
         this.disconnectedNodeAcknowledged = disconnectedNodeAcknowledged;
+    }
+
+    public String getProcessorId() {
+        return processorId;
+    }
+
+    public void setProcessorId(String processorId) {
+        this.processorId = processorId;
     }
 }

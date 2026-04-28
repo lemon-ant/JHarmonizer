@@ -30,12 +30,23 @@ type-members-ordering:
       #     (each property has only a getter or only a setter, so the
       #     accessor-bundle path never groups them);
       #   * non-accessor methods.
-      # With the previous comparator, the ALPHA branch compared accessor pairs
-      # by their JavaBeans property name but compared accessor-vs-non-accessor
-      # by the full method-signature alphaKey. That mix is non-transitive when
-      # the property-name order disagrees with the method-name order
-      # (e.g. property "apple" < "zebra" but method "getZebra" < "setApple"),
-      # which made TimSort throw or produced non-deterministic ordering.
+      # Regression: with the previous comparator the ALPHA branch compared
+      # accessor pairs by their JavaBeans property name but compared
+      # accessor-vs-non-accessor by the full method-signature alphaKey, which
+      # was non-transitive (e.g. property "apple" < "zebra" but method
+      # "getZebra" < "setApple") and made TimSort throw or produced
+      # nondeterministic ordering.
+      #
+      # New contract: every accessor joins one indivisible super-cluster.
+      # Non-accessor methods can never sort between two property clusters of
+      # the super-cluster — they go either entirely above or entirely below
+      # it. Inside the super-cluster, property clusters are compared by
+      # propertyName for the ALPHA rule. Here that yields:
+      # apple < bravo < charlie < xray < yankee < zebra (one member each),
+      # and the super-cluster's representative member (the alphabetically
+      # first cluster's only member, setApple) is compared against
+      # middle()'s own alphaKey: "middle():void" < "setApple(...):void", so
+      # middle() sorts BEFORE the super-cluster.
       - name: All Methods
         keepAccessorsTogether: true
         ordering-rules: alpha
