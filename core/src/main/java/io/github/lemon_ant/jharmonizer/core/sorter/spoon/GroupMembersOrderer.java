@@ -83,11 +83,10 @@ class GroupMembersOrderer {
         }
 
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
-        Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator =
-                ComparatorUtils.buildOrderingComparator(orderingRules);
+        Comparator<ClusteredOrderingKey> orderingKeyComparator = ComparatorUtils.buildOrderingComparator(orderingRules);
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        Map<CtTypeMember, SortableTypeMember.OrderingKey> memberToOrderingKey =
+        Map<CtTypeMember, ClusteredOrderingKey> memberToOrderingKey =
                 OrderingKeyFactory.deriveAll(groupMembers, keepAccessorsTogether, orderingRules);
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
                 .map(member -> new SortableTypeMember(member, memberToOrderingKey.get(member)))

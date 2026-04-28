@@ -1,7 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
@@ -10,116 +9,138 @@ import lombok.experimental.UtilityClass;
 /**
  * Internal factory methods for comparators used to order type members within member groups.
  *
- * <p>Two related comparators are produced:
+ * <p>Two comparator families are provided, distinguished by the key type they operate on:
  * <ul>
- *   <li>{@link #buildOrderingComparator(List)} — the cluster-aware comparator used to order
- *       group members and to compare accessor super-clusters against non-accessors. For two
- *       accessors of <em>different</em> property clusters it substitutes per-cluster
- *       representative attributes (top member's {@code srcStart} / {@code visibilityRank})
- *       and, for the ALPHA rule, compares {@code propertyName} instead
- *       of the full method-signature {@code alphaKey}. Every other comparison falls through to
- *       the member's own attributes.</li>
- *   <li>{@link #buildMemberOnlyOrderingComparator(List)} — the same comparator with cluster
- *       substitutions disabled; used internally by
+ *   <li>{@link #buildOrderingComparator(List)} — returns a {@code Comparator<ClusteredOrderingKey>}
+ *       that is cluster-aware: for two accessors of <em>different</em> property clusters it
+ *       substitutes per-cluster representative attributes (top member's {@code srcStart} /
+ *       {@code visibilityRank}) and, for the ALPHA rule, compares {@code propertyName} instead
+ *       of the full method-signature {@code alphaKey}. Every other comparison uses the member's
+ *       own attributes.</li>
+ *   <li>{@link #buildMemberOnlyOrderingComparator(List)} — returns a
+ *       {@code Comparator<MemberOrderingKey>} that operates solely on member-own attributes
+ *       (no cluster substitutions). Used internally by
  *       {@link OrderingKeyFactory#deriveAll(List, boolean, List)} to discover each cluster's top
- *       member.</li>
+ *       member, and for top-level type ordering where accessor clustering never applies.</li>
  * </ul>
  */
 @UtilityClass
 class ComparatorUtils {
 
     /**
-     * Builds the cluster-aware comparator used to order sortable type members by their ordering
-     * keys.
+     * Builds the cluster-aware comparator for ordering sortable type members by their
+     * {@link ClusteredOrderingKey}s.
      *
      * @param orderingRules the ordering rules to apply, in priority order
      * @return the cluster-aware ordering key comparator
      */
     @NonNull
-    static Comparator<OrderingKey> buildOrderingComparator(@NonNull List<OrderingRule> orderingRules) {
-        return buildOrderingComparator(orderingRules, true);
+    static Comparator<ClusteredOrderingKey> buildOrderingComparator(@NonNull List<OrderingRule> orderingRules) {
+        Comparator<ClusteredOrderingKey> configured = orderingRules.stream()
+                .map(ComparatorUtils::buildClusteredComparatorForRule)
+                .reduce(Comparator::thenComparing)
+                .orElseGet(() -> Comparator.<ClusteredOrderingKey>comparingInt(ClusteredOrderingKey::getSrcStart)
+                        .thenComparing(ClusteredOrderingKey::getAlphaKey));
+        return appendClusteredTieBreakers(configured, orderingRules);
     }
 
     /**
-     * Builds a member-only comparator from the given ordering rules: the cluster-aware comparator
-     * with cross-cluster substitutions disabled. Used by
-     * {@link OrderingKeyFactory#deriveAll(List, boolean, List)} for discovering each cluster's top member.
+     * Builds a member-only comparator from the given ordering rules, operating solely on
+     * member-own attributes with no cross-cluster substitutions. Used by
+     * {@link OrderingKeyFactory#deriveAll(List, boolean, List)} for discovering each
+     * cluster's top member, and for top-level type ordering.
      *
      * @param orderingRules the ordering rules to apply, in priority order
      * @return the member-only ordering key comparator
      */
     @NonNull
-    static Comparator<OrderingKey> buildMemberOnlyOrderingComparator(@NonNull List<OrderingRule> orderingRules) {
-        return buildOrderingComparator(orderingRules, false);
-    }
-
-    @NonNull
-    private static Comparator<OrderingKey> buildOrderingComparator(
-            List<OrderingRule> orderingRules, boolean clusterAware) {
-        Comparator<OrderingKey> configuredComparator = orderingRules.stream()
-                .map(orderingRule -> buildOrderingComparatorForOrderingRule(orderingRule, clusterAware))
+    static Comparator<MemberOrderingKey> buildMemberOnlyOrderingComparator(@NonNull List<OrderingRule> orderingRules) {
+        Comparator<MemberOrderingKey> configured = orderingRules.stream()
+                .map(ComparatorUtils::buildMemberOnlyComparatorForRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() ->
-                        Comparator.comparingInt(OrderingKey::getSrcStart).thenComparing(OrderingKey::getAlphaKey));
-
-        return appendDeterministicTieBreakers(configuredComparator, orderingRules);
+                .orElseGet(() -> Comparator.<MemberOrderingKey>comparingInt(MemberOrderingKey::getSrcStart)
+                        .thenComparing(MemberOrderingKey::getAlphaKey));
+        return appendMemberOnlyTieBreakers(configured, orderingRules);
     }
 
     /**
-     * Appends deterministic PRESERVE/ALPHA tie-breakers to the configured comparator so that
-     * residual nondeterminism after the configured rules is removed. Tie-breakers always use
-     * each member's own attributes (cluster substitutions disabled): they exist purely to
-     * decide ties that the configured rules left unresolved and must not depend on the
-     * super-cluster representative.
+     * Appends deterministic PRESERVE/ALPHA tie-breakers (using member-own attributes only)
+     * to the configured clustered comparator so that residual nondeterminism after the
+     * configured rules is eliminated.
      */
     @NonNull
-    private static Comparator<OrderingKey> appendDeterministicTieBreakers(
-            Comparator<OrderingKey> configuredComparator, List<OrderingRule> orderingRules) {
-        Comparator<OrderingKey> result = configuredComparator;
+    private static Comparator<ClusteredOrderingKey> appendClusteredTieBreakers(
+            Comparator<ClusteredOrderingKey> configured, List<OrderingRule> orderingRules) {
+        Comparator<ClusteredOrderingKey> result = configured;
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
-            result = result.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE, false));
+            // Tie-breaker always uses own srcStart; cluster substitution must not apply here.
+            result = result.thenComparing(buildMemberOnlyComparatorForRule(OrderingRule.PRESERVE));
         }
         if (!orderingRules.contains(OrderingRule.ALPHA)) {
-            result = result.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA, false));
+            result = result.thenComparing(buildMemberOnlyComparatorForRule(OrderingRule.ALPHA));
+        }
+        return result;
+    }
+
+    /**
+     * Appends deterministic PRESERVE/ALPHA tie-breakers to the configured member-only
+     * comparator so that residual nondeterminism after the configured rules is eliminated.
+     */
+    @NonNull
+    private static Comparator<MemberOrderingKey> appendMemberOnlyTieBreakers(
+            Comparator<MemberOrderingKey> configured, List<OrderingRule> orderingRules) {
+        Comparator<MemberOrderingKey> result = configured;
+        if (!orderingRules.contains(OrderingRule.PRESERVE)) {
+            result = result.thenComparing(buildMemberOnlyComparatorForRule(OrderingRule.PRESERVE));
+        }
+        if (!orderingRules.contains(OrderingRule.ALPHA)) {
+            result = result.thenComparing(buildMemberOnlyComparatorForRule(OrderingRule.ALPHA));
         }
         return result;
     }
 
     @NonNull
-    private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(
-            OrderingRule orderingRule, boolean clusterAware) {
+    private static Comparator<ClusteredOrderingKey> buildClusteredComparatorForRule(OrderingRule orderingRule) {
         return switch (orderingRule) {
-            case PRESERVE -> buildPreserveComparator(clusterAware);
-            case ALPHA -> buildAlphaComparator(clusterAware);
-            case VISIBILITY_ASC -> buildVisibilityComparator(clusterAware, true);
-            case VISIBILITY_DESC -> buildVisibilityComparator(clusterAware, false);
+            case PRESERVE ->
+                (left, right) -> {
+                    boolean cross = isCrossCluster(left, right);
+                    return Integer.compare(
+                            cross ? left.getClusterSrcStart() : left.getSrcStart(),
+                            cross ? right.getClusterSrcStart() : right.getSrcStart());
+                };
+            case ALPHA -> buildClusteredAlphaComparator();
+            case VISIBILITY_ASC ->
+                (left, right) -> {
+                    boolean cross = isCrossCluster(left, right);
+                    int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
+                    int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
+                    return Integer.compare(rightRank, leftRank);
+                };
+            case VISIBILITY_DESC ->
+                (left, right) -> {
+                    boolean cross = isCrossCluster(left, right);
+                    int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
+                    int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
+                    return Integer.compare(leftRank, rightRank);
+                };
         };
     }
 
     @NonNull
-    private static Comparator<OrderingKey> buildPreserveComparator(boolean clusterAware) {
-        if (!clusterAware) {
-            return Comparator.comparingInt(OrderingKey::getSrcStart);
-        }
-        return (left, right) -> {
-            boolean cross = isCrossCluster(left, right);
-            return Integer.compare(
-                    cross ? left.getClusterSrcStart() : left.getSrcStart(),
-                    cross ? right.getClusterSrcStart() : right.getSrcStart());
+    private static Comparator<MemberOrderingKey> buildMemberOnlyComparatorForRule(OrderingRule orderingRule) {
+        return switch (orderingRule) {
+            case PRESERVE -> Comparator.comparingInt(MemberOrderingKey::getSrcStart);
+            case ALPHA -> buildMemberOnlyAlphaComparator();
+            case VISIBILITY_ASC ->
+                (left, right) -> Integer.compare(right.getVisibilityRank(), left.getVisibilityRank());
+            case VISIBILITY_DESC ->
+                (left, right) -> Integer.compare(left.getVisibilityRank(), right.getVisibilityRank());
         };
     }
 
     @NonNull
-    private static Comparator<OrderingKey> buildAlphaComparator(boolean clusterAware) {
-        if (!clusterAware) {
-            return (left, right) -> {
-                int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
-                if (rankComparison != 0) {
-                    return rankComparison;
-                }
-                return left.getAlphaKey().compareTo(right.getAlphaKey());
-            };
-        }
+    private static Comparator<ClusteredOrderingKey> buildClusteredAlphaComparator() {
         // Compare the alpha sorting rank first. Rank is non-zero only for anonymous
         // initializer blocks (rank 1), ensuring they always sort after all regular
         // named members. Cross-cluster accessor pairs are always methods, so their rank
@@ -135,40 +156,27 @@ class ComparatorUtils {
                 return left.getPropertyName().compareTo(right.getPropertyName());
             }
             // Same cluster, or at least one non-accessor: compare full method-signature
-            // alphaKeys. Inside a single cluster this orders members by their natural
-            // method names (e.g. getValue < setValue); against non-accessors this lets
-            // the super-cluster's representative member compete on its own alphaKey.
+            // alphaKeys.
             return left.getAlphaKey().compareTo(right.getAlphaKey());
         };
     }
 
     @NonNull
-    private static Comparator<OrderingKey> buildVisibilityComparator(boolean clusterAware, boolean ascending) {
-        if (!clusterAware) {
-            return ascending
-                    ? (left, right) -> Integer.compare(right.getVisibilityRank(), left.getVisibilityRank())
-                    : (left, right) -> Integer.compare(left.getVisibilityRank(), right.getVisibilityRank());
-        }
-        return ascending
-                ? (left, right) -> {
-                    boolean cross = isCrossCluster(left, right);
-                    int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
-                    int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
-                    return Integer.compare(rightRank, leftRank);
-                }
-                : (left, right) -> {
-                    boolean cross = isCrossCluster(left, right);
-                    int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
-                    int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
-                    return Integer.compare(leftRank, rightRank);
-                };
+    private static Comparator<MemberOrderingKey> buildMemberOnlyAlphaComparator() {
+        return (left, right) -> {
+            int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
+            if (rankComparison != 0) {
+                return rankComparison;
+            }
+            return left.getAlphaKey().compareTo(right.getAlphaKey());
+        };
     }
 
     /**
      * Returns {@code true} when both keys belong to <em>different</em> non-null accessor
      * property clusters. This is the only case where cluster-key substitutions apply.
      */
-    private static boolean isCrossCluster(OrderingKey left, OrderingKey right) {
+    private static boolean isCrossCluster(ClusteredOrderingKey left, ClusteredOrderingKey right) {
         String leftPropertyName = left.getPropertyName();
         String rightPropertyName = right.getPropertyName();
         return leftPropertyName != null && rightPropertyName != null && !leftPropertyName.equals(rightPropertyName);
