@@ -98,8 +98,11 @@ class ComparatorUtils {
 
     @NonNull
     private static Comparator<OrderingKey> buildPreserveComparator(boolean clusterAware) {
+        if (!clusterAware) {
+            return Comparator.comparingInt(OrderingKey::getSrcStart);
+        }
         return (left, right) -> {
-            boolean cross = clusterAware && isCrossCluster(left, right);
+            boolean cross = isCrossCluster(left, right);
             return Integer.compare(
                     cross ? left.getClusterSrcStart() : left.getSrcStart(),
                     cross ? right.getClusterSrcStart() : right.getSrcStart());
@@ -108,17 +111,25 @@ class ComparatorUtils {
 
     @NonNull
     private static Comparator<OrderingKey> buildAlphaComparator(boolean clusterAware) {
+        if (!clusterAware) {
+            return (left, right) -> {
+                int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
+                if (rankComparison != 0) {
+                    return rankComparison;
+                }
+                return left.getAlphaKey().compareTo(right.getAlphaKey());
+            };
+        }
+        // Compare the alpha sorting rank first. Rank is non-zero only for anonymous
+        // initializer blocks (rank 1), ensuring they always sort after all regular
+        // named members. Cross-cluster accessor pairs are always methods, so their rank
+        // remains the regular member-own rank (0) and does not need a cluster-level copy.
         return (left, right) -> {
-            boolean cross = clusterAware && isCrossCluster(left, right);
-            // Compare the alpha sorting rank first. Rank is non-zero only for anonymous
-            // initializer blocks (rank 1), ensuring they always sort after all regular
-            // named members. Cross-cluster accessor pairs are always methods, so their rank
-            // remains the regular member-own rank (0) and does not need a cluster-level copy.
             int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
             if (rankComparison != 0) {
                 return rankComparison;
             }
-            if (cross) {
+            if (isCrossCluster(left, right)) {
                 // Cross-cluster ALPHA compares property names; both sides are guaranteed
                 // non-null by isCrossCluster.
                 return left.getPropertyName().compareTo(right.getPropertyName());
@@ -133,12 +144,24 @@ class ComparatorUtils {
 
     @NonNull
     private static Comparator<OrderingKey> buildVisibilityComparator(boolean clusterAware, boolean ascending) {
-        return (left, right) -> {
-            boolean cross = clusterAware && isCrossCluster(left, right);
-            int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
-            int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
-            return ascending ? Integer.compare(rightRank, leftRank) : Integer.compare(leftRank, rightRank);
-        };
+        if (!clusterAware) {
+            return ascending
+                    ? (left, right) -> Integer.compare(right.getVisibilityRank(), left.getVisibilityRank())
+                    : (left, right) -> Integer.compare(left.getVisibilityRank(), right.getVisibilityRank());
+        }
+        return ascending
+                ? (left, right) -> {
+                    boolean cross = isCrossCluster(left, right);
+                    int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
+                    int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
+                    return Integer.compare(rightRank, leftRank);
+                }
+                : (left, right) -> {
+                    boolean cross = isCrossCluster(left, right);
+                    int leftRank = cross ? left.getClusterVisibilityRank() : left.getVisibilityRank();
+                    int rightRank = cross ? right.getClusterVisibilityRank() : right.getVisibilityRank();
+                    return Integer.compare(leftRank, rightRank);
+                };
     }
 
     /**
