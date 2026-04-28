@@ -14,14 +14,14 @@ public interface RegistryService extends Closeable {
     Object getBucketReader();
 
     /**
-     * @return the bucket reader with options
-     */
-    Object getBucketReader(Object options);
-
-    /**
      * @return the token client
      */
     Object getTokenClient();
+
+    /**
+     * @return the bucket reader with options
+     */
+    Object getBucketReader(Object options);
 
     // -------------------------------------------------------------------------------------------
 

@@ -77,8 +77,8 @@ class SortableTypeMember {
          *
          * <p>When {@code keepAccessorsTogether} is {@code false}, {@link #clusterPropertyName}
          * is always {@code null}, so all members sort purely by their {@link #alphaKey}.
-         * {@link #alphaClusterKey} initially matches {@link #alphaKey}; group-level ordering may
-         * replace it later for accessor methods that need to participate in an accessor super-cluster.
+         * Cluster-level keys initially match member-level keys; group-level ordering may replace
+         * them later for accessor methods that need to participate in an accessor property cluster.
          *
          * @param typeMember the type member to derive a key for
          * @param keepAccessorsTogether whether to populate {@link #clusterPropertyName} for
@@ -95,25 +95,19 @@ class SortableTypeMember {
             return new OrderingKey(
                     extractSrcStart(typeMember),
                     alphaKey,
-                    alphaKey,
                     deriveAlphaSortingRank(typeMember),
                     deriveVisibilityRank(typeMember),
-                    propertyName);
+                    propertyName,
+                    extractSrcStart(typeMember),
+                    alphaKey,
+                    deriveAlphaSortingRank(typeMember),
+                    deriveVisibilityRank(typeMember));
         }
 
         int srcStart;
 
         @NonNull
         String alphaKey;
-
-        /**
-         * Primary key used before per-accessor-property ordering. Non-accessors keep their
-         * {@link #alphaKey}; accessors may share the minimum alpha key from the accessor
-         * super-cluster in their group, so the whole accessor run compares consistently against
-         * non-accessor members.
-         */
-        @NonNull
-        String alphaClusterKey;
 
         /**
          * Rank applied first in ALPHA ordering, before the alpha key and cluster property name.
@@ -128,23 +122,42 @@ class SortableTypeMember {
         /**
          * The JavaBeans property name derived from this member's accessor method signature
          * (e.g. {@code getValue} → {@code value}), or {@code null} when the member is not a
-         * recognized accessor method. The ALPHA comparator uses this name when both compared members
-         * expose a derived property name, so that accessor methods sort by the underlying property
-         * rather than by the method-name prefix ({@code get/is/has/set}).
+         * recognized accessor method. The ALPHA comparator uses the property name when comparing
+         * different accessor property clusters, so those clusters sort by the underlying property
+         * rather than by the top method-name prefix ({@code get/is/has/set}).
          */
         @Nullable
         String clusterPropertyName;
 
+        int clusterSrcStart;
+
+        @NonNull
+        String clusterAlphaKey;
+
+        int clusterAlphaSortingRank;
+
+        int clusterVisibilityRank;
+
         /**
-         * Returns a copy that participates in the given alpha super-cluster.
+         * Returns a copy that participates in an accessor property cluster represented by the given top member.
          *
-         * @param alphaClusterKey the shared alpha key for the super-cluster
+         * @param representativeOrderingKey the top method key for the accessor property cluster
+         * @param propertyName the property name used as the cluster alpha key
          * @return the copied ordering key
          */
         @NonNull
-        OrderingKey resolveWithAlphaClusterKey(@NonNull String alphaClusterKey) {
+        OrderingKey resolveWithAccessorClusterRepresentative(
+                @NonNull OrderingKey representativeOrderingKey, @NonNull String propertyName) {
             return new OrderingKey(
-                    srcStart, alphaKey, alphaClusterKey, alphaSortingRank, visibilityRank, clusterPropertyName);
+                    srcStart,
+                    alphaKey,
+                    alphaSortingRank,
+                    visibilityRank,
+                    clusterPropertyName,
+                    representativeOrderingKey.getSrcStart(),
+                    propertyName,
+                    representativeOrderingKey.getAlphaSortingRank(),
+                    representativeOrderingKey.getVisibilityRank());
         }
     }
 }

@@ -285,9 +285,7 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — the {getValue, setValue} bundle compares by the full alphaKey of its anchor
-        // when compared against a non-cluster singleton: "getValue():int" (g) < "middleMethod():void" (m),
-        // so the bundle sorts before middleMethod
+        // Then
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
     }
@@ -317,7 +315,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_accessorBundleWithDependencyToGroupedMember_dependencyIgnoredBundleBeforeSingleton() {
+    void orderMembersInsideGroups_accessorSuperClusterWithDependencyToGroupedMember_dependencyIgnoredBeforeSingleton() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessors-with-dependency", true, List.of(OrderingRule.ALPHA));
@@ -327,7 +325,7 @@ class GroupMembersOrdererOrderingRulesTest {
         MemberGroupBlock inputBlock = new MemberGroupBlock(
                 compiledMemberGroup, List.of(middleMethodMember, setValueMethodMember, getValueMethodMember));
         MemberDependencyGraph dependencyGraph = mock(MemberDependencyGraph.class);
-        // getValue and setValue form an accessor bundle; middleMethod is a standalone singleton
+        // getValue and setValue form an accessor super-cluster; middleMethod is a standalone singleton
         doReturn(Set.of(setValueMethodMember))
                 .when(dependencyGraph)
                 .findDirectDependents(getValueMethodMember, Constants.ACCESSOR_BUNDLE_ONLY);
@@ -342,9 +340,7 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — the {getValue, setValue} bundle compares by its anchor's alphaKey ("getValue():int", g)
-        // against the singleton middleMethod ("middleMethod():void", m); g < m so the bundle sorts first.
-        // The declaration dependency from middleMethod to setValue is ignored because setValue is grouped.
+        // Then
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(getValueMethodMember, setValueMethodMember, middleMethodMember);
     }
@@ -415,6 +411,52 @@ class GroupMembersOrdererOrderingRulesTest {
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(
                         isActiveMethodMember, setActiveMethodMember, getBalanceMethodMember, setBalanceMethodMember);
+    }
+
+    @Test
+    void orderMembersInsideGroups_accessorSuperClusterWithVisibilityAlpha_usesTopAccessorClusterRepresentative() {
+        // Given
+        CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
+                "accessor-super-cluster-visibility-alpha",
+                true,
+                List.of(OrderingRule.VISIBILITY_ASC, OrderingRule.ALPHA));
+        CtTypeMember getAlphaMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_SUPER_CLUSTER_FIXTURE_MEMBERS, "getAlpha");
+        CtTypeMember setAlphaMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_SUPER_CLUSTER_FIXTURE_MEMBERS, "setAlpha");
+        CtTypeMember getBetaMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_SUPER_CLUSTER_FIXTURE_MEMBERS, "getBeta");
+        CtTypeMember setBetaMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_SUPER_CLUSTER_FIXTURE_MEMBERS, "setBeta");
+        CtTypeMember middleMethodMember = SpoonTestCaseUtils.requireTypeMemberBySimpleName(
+                Constants.ACCESSOR_SUPER_CLUSTER_FIXTURE_MEMBERS, "middleMethod");
+        MemberGroupBlock inputBlock = new MemberGroupBlock(
+                compiledMemberGroup,
+                List.of(
+                        setAlphaMethodMember,
+                        middleMethodMember,
+                        getAlphaMethodMember,
+                        setBetaMethodMember,
+                        getBetaMethodMember));
+        MemberDependencyGraph dependencyGraph = MemberDependencyGraphBuilder.buildDependencyGraph(Map.of(
+                getAlphaMethodMember, compiledMemberGroup,
+                setAlphaMethodMember, compiledMemberGroup,
+                getBetaMethodMember, compiledMemberGroup,
+                setBetaMethodMember, compiledMemberGroup,
+                middleMethodMember, compiledMemberGroup));
+
+        // When
+        List<MemberGroupBlock> orderedBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
+
+        // Then
+        assertThat(orderedBlocks.getFirst().getTypeMembers())
+                .containsExactly(
+                        getBetaMethodMember,
+                        setBetaMethodMember,
+                        getAlphaMethodMember,
+                        setAlphaMethodMember,
+                        middleMethodMember);
     }
 
     @Test
@@ -692,6 +734,17 @@ class GroupMembersOrdererOrderingRulesTest {
         private static final List<CtTypeMember> ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MEMBERS =
                 streamExplicitSrcTypeMembers(ACCESSOR_CLUSTER_PROPERTY_NAME_FIXTURE_MAIN_TYPE)
                         .toList();
+
+        private static final String ACCESSOR_SUPER_CLUSTER_FIXTURE_CLASSPATH_RESOURCE = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleAccessorSuperClusterFixture.java";
+        private static final URL ACCESSOR_SUPER_CLUSTER_FIXTURE_RESOURCE_URL =
+                GroupMembersOrdererOrderingRulesTest.class.getResource(
+                        ACCESSOR_SUPER_CLUSTER_FIXTURE_CLASSPATH_RESOURCE);
+        private static final CtType<?> ACCESSOR_SUPER_CLUSTER_FIXTURE_MAIN_TYPE =
+                SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(ACCESSOR_SUPER_CLUSTER_FIXTURE_RESOURCE_URL);
+        private static final List<CtTypeMember> ACCESSOR_SUPER_CLUSTER_FIXTURE_MEMBERS = streamExplicitSrcTypeMembers(
+                        ACCESSOR_SUPER_CLUSTER_FIXTURE_MAIN_TYPE)
+                .toList();
 
         private Constants() {}
     }

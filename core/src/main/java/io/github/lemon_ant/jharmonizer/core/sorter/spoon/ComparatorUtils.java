@@ -27,8 +27,8 @@ class ComparatorUtils {
         Comparator<SortableTypeMember.OrderingKey> configuredComparator = orderingRules.stream()
                 .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart)
-                        .thenComparing(SortableTypeMember.OrderingKey::getAlphaKey));
+                .orElseGet(() -> buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE)
+                        .thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA)));
 
         // Deterministic tie-breakers regardless of configured keys.
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
@@ -46,37 +46,54 @@ class ComparatorUtils {
     @NonNull
     private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(OrderingRule orderingRule) {
         return switch (orderingRule) {
-            case PRESERVE -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getSrcStart);
+            case PRESERVE ->
+                (left, right) -> Integer.compare(resolveSrcStart(left, right), resolveSrcStart(right, left));
             case ALPHA ->
                 (left, right) -> {
-                    // Compare the primary ALPHA pre-key first. Rank is non-zero only for
-                    // anonymous initializer blocks (rank 1), ensuring they always sort
-                    // after all named members regardless of their alphabetical position.
-                    int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
+                    int rankComparison =
+                            Integer.compare(resolveAlphaSortingRank(left, right), resolveAlphaSortingRank(right, left));
                     if (rankComparison != 0) {
                         return rankComparison;
                     }
-                    // Compare the accessor super-cluster as one unit against non-accessor members
-                    // before ordering individual accessor properties inside that unit. This keeps
-                    // the comparator transitive when accessor property order disagrees with full
-                    // method-name order.
-                    int clusterKeyComparison = left.getAlphaClusterKey().compareTo(right.getAlphaClusterKey());
-                    if (clusterKeyComparison != 0) {
-                        return clusterKeyComparison;
-                    }
-                    if (left.getClusterPropertyName() != null && right.getClusterPropertyName() != null) {
-                        int propertyComparison =
-                                left.getClusterPropertyName().compareTo(right.getClusterPropertyName());
-                        if (propertyComparison != 0) {
-                            return propertyComparison;
-                        }
-                    }
-                    return left.getAlphaKey().compareTo(right.getAlphaKey());
+                    return resolveAlphaKey(left, right).compareTo(resolveAlphaKey(right, left));
                 };
             case VISIBILITY_ASC ->
-                Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank)
-                        .reversed();
-            case VISIBILITY_DESC -> Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
+                (left, right) ->
+                        Integer.compare(resolveVisibilityRank(right, left), resolveVisibilityRank(left, right));
+            case VISIBILITY_DESC ->
+                (left, right) ->
+                        Integer.compare(resolveVisibilityRank(left, right), resolveVisibilityRank(right, left));
         };
+    }
+
+    private static int resolveSrcStart(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
+                ? orderingKey.getClusterSrcStart()
+                : orderingKey.getSrcStart();
+    }
+
+    @NonNull
+    private static String resolveAlphaKey(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
+                ? orderingKey.getClusterAlphaKey()
+                : orderingKey.getAlphaKey();
+    }
+
+    private static int resolveAlphaSortingRank(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
+                ? orderingKey.getClusterAlphaSortingRank()
+                : orderingKey.getAlphaSortingRank();
+    }
+
+    private static int resolveVisibilityRank(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
+                ? orderingKey.getClusterVisibilityRank()
+                : orderingKey.getVisibilityRank();
+    }
+
+    private static boolean shouldCompareByAccessorCluster(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        return orderingKey.getClusterPropertyName() != null
+                && otherOrderingKey.getClusterPropertyName() != null
+                && !orderingKey.getClusterPropertyName().equals(otherOrderingKey.getClusterPropertyName());
     }
 }

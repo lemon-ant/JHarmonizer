@@ -6,6 +6,8 @@ public class AccessorClusterConsistencySample {
     private String alpha;
     private String beta;
 
+    public void process() {}
+
     public void setAlpha(String alpha) {
         this.alpha = alpha;
     }
@@ -13,6 +15,4 @@ public class AccessorClusterConsistencySample {
     public String getBeta() {
         return beta;
     }
-
-    public void process() {}
 }
