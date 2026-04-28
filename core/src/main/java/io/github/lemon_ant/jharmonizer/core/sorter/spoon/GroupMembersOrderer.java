@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
@@ -40,12 +42,12 @@ class GroupMembersOrderer {
     private static final int ONE = 1;
 
     /**
-     * The accessor super-group is built only when the group contains at least two recognized
+     * The accessor super-cluster is built only when the group contains at least two recognized
      * JavaBeans accessors. With a single accessor the cross-cluster comparator path is never
      * triggered (no second cluster exists), so wrapping it in a single-member group is
      * unnecessary.
      */
-    private static final int MIN_ACCESSORS_FOR_SUPER_GROUP = 2;
+    private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = 2;
 
     /**
      * Orders the members inside each group block according to the group's ordering rules.
@@ -83,10 +85,11 @@ class GroupMembersOrderer {
         }
 
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
-        Comparator<ClusteredOrderingKey> orderingKeyComparator = ComparatorUtils.buildOrderingComparator(orderingRules);
+        Comparator<MemberOrderingKey> orderingKeyComparator =
+                ComparatorUtils.buildClusteredOrderingComparator(orderingRules);
 
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        Map<CtTypeMember, ClusteredOrderingKey> memberToOrderingKey =
+        Map<CtTypeMember, MemberOrderingKey> memberToOrderingKey =
                 OrderingKeyFactory.deriveAll(groupMembers, keepAccessorsTogether, orderingRules);
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
                 .map(member -> new SortableTypeMember(member, memberToOrderingKey.get(member)))
@@ -96,12 +99,12 @@ class GroupMembersOrderer {
         Comparator<SortableTypeMember> comparator =
                 Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
-        Groups<SortableTypeMember> groups =
-                keepAccessorsTogether ? buildAccessorSuperGroup(sortableTypeMembers) : Groups.empty();
+        Groups<SortableTypeMember> accessorSuperCluster =
+                keepAccessorsTogether ? buildAccessorSuperCluster(sortableTypeMembers) : Groups.empty();
 
         // Collect accessor-bundle members so declaration-dependency edges involving them are skipped.
         // SimplifiedDependencyAwareSorter requires groups and dependencies to be mutually exclusive.
-        Set<CtTypeMember> bundledMembers = groups.getGroups().stream()
+        Set<CtTypeMember> bundledMembers = accessorSuperCluster.getGroups().stream()
                 .flatMap(group -> group.getItems().stream())
                 .map(SortableTypeMember::getTypeMember)
                 .collect(Collectors.toUnmodifiableSet());
@@ -109,7 +112,8 @@ class GroupMembersOrderer {
         Dependencies<SortableTypeMember> dependencies = buildDeclarationDependencies(
                 groupMemberSet, bundledMembers, memberDependencyGraph, typeMemberToSortable);
 
-        return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
+        return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, accessorSuperCluster, dependencies, comparator)
+                .stream()
                 .map(SortableTypeMember::getTypeMember)
                 .toList();
     }
@@ -125,17 +129,17 @@ class GroupMembersOrderer {
     }
 
     /**
-     * Bundles every recognized JavaBeans accessor of the group into one indivisible super-cluster
-     * {@link Group}. This guarantees that the accessor super-cluster is treated as a single
-     * super-node by {@link SimplifiedDependencyAwareSorter}, so non-accessor methods can never be
-     * interleaved between two property clusters of the super-cluster — they are placed either
-     * entirely above or entirely below the super-cluster, as decided by the cluster-aware
-     * comparator on the super-cluster's representative member.
+     * Bundles every recognized JavaBeans accessor of the group into one indivisible accessor
+     * super-cluster {@link Group}. This guarantees that the accessor super-cluster is treated as
+     * a single super-node by {@link SimplifiedDependencyAwareSorter}, so non-accessor methods can
+     * never be interleaved between two property clusters of the accessor super-cluster — they are
+     * placed either entirely above or entirely below the accessor super-cluster, as decided by the
+     * cluster-aware comparator on the super-cluster's representative member.
      *
      * <p>Per-property cluster ordering (and the choice of cluster representative inside the
-     * super-group) is purely a comparator concern; see
+     * accessor super-cluster) is purely a comparator concern; see
      * {@link OrderingKeyFactory#deriveAll(List, boolean, List)} and
-     * {@link ComparatorUtils#buildOrderingComparator(List)}.
+     * {@link ComparatorUtils#buildClusteredOrderingComparator(List)}.
      *
      * @param sortableTypeMembers all sortable members of the group
      * @return a single-{@link Group} {@link Groups} bundling every accessor; {@link Groups#empty()}
@@ -143,11 +147,11 @@ class GroupMembersOrderer {
      *     the cross-cluster comparator path is never triggered without a second accessor cluster)
      */
     @NonNull
-    private static Groups<SortableTypeMember> buildAccessorSuperGroup(List<SortableTypeMember> sortableTypeMembers) {
+    private static Groups<SortableTypeMember> buildAccessorSuperCluster(List<SortableTypeMember> sortableTypeMembers) {
         List<SortableTypeMember> accessors = sortableTypeMembers.stream()
                 .filter(sortable -> isAccessor(sortable.getTypeMember()))
                 .toList();
-        if (accessors.size() < MIN_ACCESSORS_FOR_SUPER_GROUP) {
+        if (accessors.size() < MIN_ACCESSORS_FOR_SUPER_CLUSTER) {
             return Groups.empty();
         }
         return new Groups<>(List.of(new Group<>(accessors)));

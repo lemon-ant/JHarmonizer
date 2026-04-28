@@ -4,10 +4,9 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaKey;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaSortingRank;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveSrcStart;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.extractSrcStart;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import java.util.ArrayList;
@@ -57,7 +56,7 @@ class OrderingKeyFactory {
     }
 
     /**
-     * Derives a {@link ClusteredOrderingKey} for each member in the given group.
+     * Derives a {@link MemberOrderingKey} for each member in the given group.
      *
      * <p>Key derivation proceeds in three phases:
      * <ol>
@@ -66,16 +65,14 @@ class OrderingKeyFactory {
      *   <li>Phase 2 — when {@code keepAccessorsTogether} is {@code true}, find each
      *       property cluster's <em>top member</em> (the minimum under the member-only
      *       comparator built from {@code orderingRules}).</li>
-     *   <li>Phase 3 — assemble a {@link ClusteredOrderingKey} for every member from the
-     *       base {@link MemberOrderingKey} plus the resolved cluster top attributes.</li>
+     *   <li>Phase 3 — for recognized accessor members, upgrade the base key to a
+     *       {@link ClusteredOrderingKey} carrying the resolved cluster top attributes;
+     *       non-accessor members keep their plain {@link MemberOrderingKey}.</li>
      * </ol>
      *
-     * <p>For non-accessor members and for accessors when clustering is disabled,
-     * {@link ClusteredOrderingKey#getPropertyName()} is {@code null} and cluster attributes
-     * equal the member's own attributes.
-     *
      * <p>The downstream cluster-aware comparator (see
-     * {@link ComparatorUtils#buildOrderingComparator(List)}) uses these cluster attributes
+     * {@link ComparatorUtils#buildClusteredOrderingComparator(List)}) recognizes
+     * {@link ClusteredOrderingKey} instances and uses their cluster attributes
      * <em>only</em> when comparing two accessors of different property clusters; in that case
      * ALPHA additionally compares {@link ClusteredOrderingKey#getPropertyName()} instead of
      * the full method {@link MemberOrderingKey#getAlphaKey()}.
@@ -84,11 +81,13 @@ class OrderingKeyFactory {
      * @param keepAccessorsTogether whether to cluster recognized JavaBeans accessor methods
      * @param orderingRules the configured ordering rules used to choose each cluster's top
      *     member; the same rules drive the final comparator (with cross-cluster substitutions)
-     * @return an immutable map from each input member to its derived {@link ClusteredOrderingKey}
+     * @return an immutable map from each input member to its derived {@link MemberOrderingKey}
+     *     (which may be a {@link ClusteredOrderingKey} for accessor members when clustering is
+     *     enabled)
      */
     @NonNull
     @SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
-    static Map<CtTypeMember, ClusteredOrderingKey> deriveAll(
+    static Map<CtTypeMember, MemberOrderingKey> deriveAll(
             @NonNull List<? extends CtTypeMember> groupMembers,
             boolean keepAccessorsTogether,
             @NonNull List<OrderingRule> orderingRules) {
@@ -130,22 +129,26 @@ class OrderingKeyFactory {
             propertyToTopKey.put(clusterEntry.getKey(), topKey);
         }
 
-        // Phase 3: assemble ClusteredOrderingKey for every member.
-        Map<CtTypeMember, ClusteredOrderingKey> result = new HashMap<>(memberCount * 2);
+        // Phase 3: upgrade accessor members to ClusteredOrderingKey; non-accessors keep baseKey.
+        Map<CtTypeMember, MemberOrderingKey> result = new HashMap<>(memberCount * 2);
         for (CtTypeMember groupMember : groupMembers) {
             MemberOrderingKey baseKey = memberToBaseKey.get(groupMember);
-            @Nullable String propertyName = memberToPropertyName.get(groupMember);
-            MemberOrderingKey clusterTopKey = propertyName == null ? baseKey : propertyToTopKey.get(propertyName);
-            result.put(
-                    groupMember,
-                    new ClusteredOrderingKey(
-                            baseKey.getSrcStart(),
-                            baseKey.getAlphaKey(),
-                            baseKey.getAlphaSortingRank(),
-                            baseKey.getVisibilityRank(),
-                            propertyName,
-                            clusterTopKey.getSrcStart(),
-                            clusterTopKey.getVisibilityRank()));
+            String propertyName = memberToPropertyName.get(groupMember);
+            if (propertyName != null) {
+                MemberOrderingKey clusterTopKey = propertyToTopKey.get(propertyName);
+                result.put(
+                        groupMember,
+                        new ClusteredOrderingKey(
+                                baseKey.getSrcStart(),
+                                baseKey.getAlphaKey(),
+                                baseKey.getAlphaSortingRank(),
+                                baseKey.getVisibilityRank(),
+                                propertyName,
+                                clusterTopKey.getSrcStart(),
+                                clusterTopKey.getVisibilityRank()));
+            } else {
+                result.put(groupMember, baseKey);
+            }
         }
         return Collections.unmodifiableMap(result);
     }
@@ -153,7 +156,7 @@ class OrderingKeyFactory {
     @NonNull
     private static MemberOrderingKey deriveMemberKey(CtTypeMember typeMember) {
         return new MemberOrderingKey(
-                extractSrcStart(typeMember),
+                deriveSrcStart(typeMember),
                 deriveAlphaKey(typeMember),
                 deriveAlphaSortingRank(typeMember),
                 deriveVisibilityRank(typeMember));

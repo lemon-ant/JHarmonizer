@@ -8,7 +8,7 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * A sortable wrapper around a Spoon {@code CtTypeMember} that caches the
- * {@link ClusteredOrderingKey} used to compare and sort members within a member group.
+ * {@link MemberOrderingKey} used to compare and sort members within a member group.
  */
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -18,7 +18,7 @@ class SortableTypeMember {
     CtTypeMember typeMember;
 
     @NonNull
-    ClusteredOrderingKey orderingKey;
+    MemberOrderingKey orderingKey;
 
     @Override
     public String toString() {

@@ -2,65 +2,65 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Extended ordering key that inherits {@link MemberOrderingKey}'s member-own attributes and
- * additionally carries JavaBeans accessor cluster information.
+ * additionally carries JavaBeans accessor cluster information for a recognized accessor member.
  *
- * <p>When {@code keepAccessorsTogether} is enabled and a member is a recognized accessor,
- * {@link #propertyName} is non-null and the cluster-representative attributes
- * ({@link #clusterSrcStart}, {@link #clusterVisibilityRank}) reflect the <em>top member</em>
- * of the property cluster (the one that sorts first under the member-only comparator). For
- * all other members the cluster attributes equal the member's own attributes.
+ * <p>A {@link ClusteredOrderingKey} is only created for members that are recognized as JavaBeans
+ * accessors when {@code keepAccessorsTogether} is enabled. Non-accessor members and accessors
+ * when clustering is disabled keep a plain {@link MemberOrderingKey}.
  *
- * <p>The cluster-aware comparator ({@link ComparatorUtils#buildOrderingComparator(java.util.List)})
+ * <p>{@link #propertyName} identifies the property cluster this accessor belongs to.
+ * The cluster-representative attributes ({@link #clusterSrcStart},
+ * {@link #clusterVisibilityRank}) reflect the <em>top member</em> of the property cluster
+ * (the one that sorts first under the member-only comparator). Two accessors share a cluster
+ * iff their {@link #propertyName}s are equal.
+ *
+ * <p>The cluster-aware comparator ({@link ComparatorUtils#buildClusteredOrderingComparator(java.util.List)})
  * substitutes cluster attributes for own attributes only when comparing two accessors of
  * different property clusters ({@link ComparatorUtils#isCrossCluster}).
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class ClusteredOrderingKey extends MemberOrderingKey {
 
     /**
-     * The JavaBeans property name identifying this member's accessor cluster, or {@code null}
-     * when the member is not a recognized accessor or accessor clustering is disabled. Two
-     * members share a cluster iff both have a non-null property name and the names are equal.
-     * The cluster-aware comparator uses this name as the ALPHA key when comparing accessors
-     * of different property clusters.
+     * The JavaBeans property name identifying this member's accessor cluster. Two members share
+     * a cluster iff their property names are equal. The cluster-aware comparator uses this name
+     * as the ALPHA key when comparing accessors of different property clusters.
      */
-    @Nullable
-    private final String propertyName;
+    @NonNull
+    String propertyName;
 
     /**
-     * Source-start position of the cluster's top member; equals {@link #getSrcStart()} when
-     * this member is not part of a multi-member accessor cluster. Used by the PRESERVE rule
-     * when the cluster-aware comparator detects a cross-cluster accessor pair.
+     * Source-start position of the cluster's top member. Used by the PRESERVE rule when the
+     * cluster-aware comparator detects a cross-cluster accessor pair.
      */
-    private final int clusterSrcStart;
+    int clusterSrcStart;
 
     /**
-     * Visibility rank of the cluster's top member; equals {@link #getVisibilityRank()} when
-     * this member is not part of a multi-member accessor cluster. Used by the
-     * {@code VISIBILITY_*} rules when the cluster-aware comparator detects a cross-cluster
-     * accessor pair.
+     * Visibility rank of the cluster's top member. Used by the {@code VISIBILITY_*} rules when
+     * the cluster-aware comparator detects a cross-cluster accessor pair.
      */
-    private final int clusterVisibilityRank;
+    int clusterVisibilityRank;
 
     /**
-     * Creates a new clustered ordering key.
+     * Creates a new clustered ordering key for a recognized accessor member.
      *
      * @param srcStart source-start position of this member
      * @param alphaKey alphabetical sort key for this member
      * @param alphaSortingRank rank used before the alpha key in ALPHA comparisons
      * @param visibilityRank visibility rank for this member
-     * @param propertyName JavaBeans property name identifying this member's accessor cluster,
-     *     or {@code null} when the member is not part of a cluster
+     * @param propertyName JavaBeans property name identifying this member's accessor cluster
      * @param clusterSrcStart source-start position of the cluster's top member
      * @param clusterVisibilityRank visibility rank of the cluster's top member
      */
@@ -69,7 +69,7 @@ class ClusteredOrderingKey extends MemberOrderingKey {
             @NonNull String alphaKey,
             int alphaSortingRank,
             int visibilityRank,
-            @Nullable String propertyName,
+            @NonNull String propertyName,
             int clusterSrcStart,
             int clusterVisibilityRank) {
         super(srcStart, alphaKey, alphaSortingRank, visibilityRank);
