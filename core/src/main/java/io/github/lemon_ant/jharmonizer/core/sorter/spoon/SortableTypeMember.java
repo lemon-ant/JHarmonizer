@@ -123,7 +123,9 @@ class SortableTypeMember {
             int memberCount = groupMembers.size();
             // Capacity * 2 ensures no resize at the default 0.75 load factor.
             Map<CtTypeMember, OrderingKey> memberToOwnKey = new HashMap<>(memberCount * 2);
-            Map<String, List<CtTypeMember>> propertyToMembers = new HashMap<>(memberCount * 2);
+            // Number of unique property clusters is bounded by memberCount and is typically
+            // much smaller; use the default initial capacity to avoid over-allocation.
+            Map<String, List<CtTypeMember>> propertyToMembers = new HashMap<>();
 
             for (CtTypeMember groupMember : groupMembers) {
                 String propertyName = null;
@@ -147,7 +149,7 @@ class SortableTypeMember {
             // member-only variant so this method is independent of the cluster-key wiring.
             Comparator<OrderingKey> memberOnlyComparator =
                     ComparatorUtils.buildMemberOnlyOrderingComparator(orderingRules);
-            Map<String, OrderingKey> propertyToTopMemberKey = new HashMap<>(propertyToMembers.size() * 2);
+            Map<String, OrderingKey> propertyToTopMemberKey = new HashMap<>();
             for (Map.Entry<String, List<CtTypeMember>> clusterEntry : propertyToMembers.entrySet()) {
                 OrderingKey topMemberKey = clusterEntry.getValue().stream()
                         .map(memberToOwnKey::get)

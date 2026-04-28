@@ -38,7 +38,14 @@ class GroupMembersOrderer {
             EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
     private static final int ONE = 1;
-    private static final int TWO = 2;
+
+    /**
+     * The accessor super-group is built only when the group contains at least two recognized
+     * JavaBeans accessors. With a single accessor the cross-cluster comparator path is never
+     * triggered (no second cluster exists), so wrapping it in a single-member group is
+     * unnecessary.
+     */
+    private static final int MIN_ACCESSORS_FOR_SUPER_GROUP = 2;
 
     /**
      * Orders the members inside each group block according to the group's ordering rules.
@@ -141,7 +148,7 @@ class GroupMembersOrderer {
         List<SortableTypeMember> accessors = sortableTypeMembers.stream()
                 .filter(sortable -> isAccessor(sortable.getTypeMember()))
                 .toList();
-        if (accessors.size() < TWO) {
+        if (accessors.size() < MIN_ACCESSORS_FOR_SUPER_GROUP) {
             return Groups.empty();
         }
         return new Groups<>(List.of(new Group<>(accessors)));

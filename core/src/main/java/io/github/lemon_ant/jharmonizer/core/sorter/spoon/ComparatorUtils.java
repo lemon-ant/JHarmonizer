@@ -62,19 +62,27 @@ class ComparatorUtils {
                 .orElseGet(() ->
                         Comparator.comparingInt(OrderingKey::getSrcStart).thenComparing(OrderingKey::getAlphaKey));
 
-        // Deterministic tie-breakers regardless of configured keys. Tie-breakers always use the
-        // member's own attributes (cluster substitutions disabled): they exist purely to remove
-        // residual nondeterminism after the configured rules have decided cluster placement.
+        return appendDeterministicTieBreakers(configuredComparator, orderingRules);
+    }
+
+    /**
+     * Appends deterministic PRESERVE/ALPHA tie-breakers to the configured comparator so that
+     * residual nondeterminism after the configured rules is removed. Tie-breakers always use
+     * each member's own attributes (cluster substitutions disabled): they exist purely to
+     * decide ties that the configured rules left unresolved and must not depend on the
+     * super-cluster representative.
+     */
+    @NonNull
+    private static Comparator<OrderingKey> appendDeterministicTieBreakers(
+            Comparator<OrderingKey> configuredComparator, List<OrderingRule> orderingRules) {
+        Comparator<OrderingKey> result = configuredComparator;
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
-            configuredComparator = configuredComparator.thenComparing(
-                    buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE, false));
+            result = result.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE, false));
         }
         if (!orderingRules.contains(OrderingRule.ALPHA)) {
-            configuredComparator = configuredComparator.thenComparing(
-                    buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA, false));
+            result = result.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA, false));
         }
-
-        return configuredComparator;
+        return result;
     }
 
     @NonNull
