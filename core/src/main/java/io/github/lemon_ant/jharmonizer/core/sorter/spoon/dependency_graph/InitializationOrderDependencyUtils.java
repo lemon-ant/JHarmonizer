@@ -6,8 +6,6 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireDeclaringType;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSrcStart;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -116,11 +114,10 @@ final class InitializationOrderDependencyUtils {
 
         CtType<?> declaringType = requireDeclaringType(dependentMember);
         boolean blankFinalFieldIsStatic = blankFinalField.getModifiers().contains(ModifierKind.STATIC);
-        Set<CtTypeMember> excludedDependentMembers = Collections.newSetFromMap(new IdentityHashMap<>());
-        excludedDependentMembers.add(dependentMember);
 
         return streamExplicitSrcTypeMembers(declaringType)
-                .filter(typeMember -> !excludedDependentMembers.contains(typeMember))
+                .filter(typeMember ->
+                        typeMember != dependentMember) // NOPMD - Spoon members are matched by model identity.
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->
                         new ProviderCandidate(candidateProviderMember, requireSrcStart(candidateProviderMember)))
