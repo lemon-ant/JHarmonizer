@@ -80,10 +80,8 @@ public class SpoonSorter {
             CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
             CtType<?> mainType,
             Comparator<SortableTypeMember.OrderingKey> orderingComparator) {
-        // keepAccessorsTogether=false: top-level types are not members of a group,
-        // so accessor clustering never applies at this level.
         Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.createOrderingKeyProvider(false);
+                SortableTypeMember.OrderingKey.createOrderingKeyProvider();
         return Comparator.<CtType<?>>comparingInt(type ->
                         compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
                 .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))

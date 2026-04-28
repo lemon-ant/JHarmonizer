@@ -106,6 +106,7 @@ final class InitializationOrderDependencyUtils {
      * @return the candidate provider members
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
             @NonNull CtField<?> blankFinalField,
@@ -116,8 +117,7 @@ final class InitializationOrderDependencyUtils {
         boolean blankFinalFieldIsStatic = blankFinalField.getModifiers().contains(ModifierKind.STATIC);
 
         return streamExplicitSrcTypeMembers(declaringType)
-                .filter(typeMember ->
-                        typeMember != dependentMember) // NOPMD - Spoon members are matched by model identity.
+                .filter(typeMember -> typeMember != dependentMember)
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->
                         new ProviderCandidate(candidateProviderMember, requireSrcStart(candidateProviderMember)))

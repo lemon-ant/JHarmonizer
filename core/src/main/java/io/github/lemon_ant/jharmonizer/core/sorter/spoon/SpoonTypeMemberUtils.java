@@ -76,11 +76,11 @@ public class SpoonTypeMemberUtils {
     }
 
     /**
-     * Performs the extract source start.
+     * Performs the derive source start.
      * @param typeMember the type member
      * @return the result
      */
-    static int extractSrcStart(@NonNull CtTypeMember typeMember) {
+    static int deriveSrcStart(@NonNull CtTypeMember typeMember) {
         if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
             return Integer.MAX_VALUE;
         }
@@ -128,7 +128,7 @@ public class SpoonTypeMemberUtils {
             }
             default -> {
                 // Defensive fallback for any unexpected Spoon CtTypeMember implementation.
-                return typeMember.getClass().getSimpleName() + ":" + extractSrcStart(typeMember);
+                return typeMember.getClass().getSimpleName() + ":" + deriveSrcStart(typeMember);
             }
         }
     }

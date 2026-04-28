@@ -41,17 +41,17 @@ final class ProcessingProgressReporter {
         }
     }
 
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FileProcessingStatus status) {
-        LongAdder statusCounter =
-                switch (status) {
-                    case REORDERED -> reorderedCount;
-                    case FORMATTED -> formattedCount;
-                    case UNCHANGED -> unchangedCount;
-                    case CHECKED -> checkedCount;
-                    case SKIPPED -> skippedCount;
-                    case ERROR -> errorCount;
-                };
-        statusCounter.increment();
+        switch (status) {
+            case REORDERED -> reorderedCount.increment();
+            case FORMATTED -> formattedCount.increment();
+            case UNCHANGED -> unchangedCount.increment();
+            case CHECKED -> checkedCount.increment();
+            case SKIPPED -> skippedCount.increment();
+            case ERROR -> errorCount.increment();
+            default -> throw new IllegalStateException("Unexpected status: " + status);
+        }
     }
 
     @SuppressWarnings("PMD.GuardLogStatement")

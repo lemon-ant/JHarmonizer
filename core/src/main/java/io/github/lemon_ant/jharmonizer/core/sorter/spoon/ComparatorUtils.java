@@ -4,8 +4,11 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey.AccessorClusterOrderingKey;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -14,10 +17,6 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 class ComparatorUtils {
-
-    private static final Comparator<OrderingKey> DEFAULT_ORDERING_COMPARATOR = buildOrderingComparatorForOrderingRule(
-                    OrderingRule.PRESERVE)
-            .thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA));
 
     /**
      * Builds the comparator used to order sortable type members by their ordering keys.
@@ -28,68 +27,137 @@ class ComparatorUtils {
     @NonNull
     static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(
             @NonNull List<OrderingRule> orderingRules) {
+        return buildOrderingComparator(orderingRules, false);
+    }
+
+    /**
+     * Builds the comparator used when accessor-cluster metadata is available.
+     *
+     * @param orderingRules the ordering rules to apply
+     * @return the accessor-aware ordering key comparator
+     */
+    @NonNull
+    static Comparator<SortableTypeMember.OrderingKey> buildAccessorClusterOrderingComparator(
+            @NonNull List<OrderingRule> orderingRules) {
+        Comparator<OrderingKey> memberComparator = buildOrderingComparator(orderingRules, false);
+        Comparator<OrderingKey> accessorClusterRepresentativeComparator =
+                buildOrderingComparator(orderingRules, true, false);
+        Comparator<OrderingKey> accessorPropertyClusterComparator = buildOrderingComparator(orderingRules, true, true);
+        return (left, right) -> selectAccessorOrderingComparator(
+                        left,
+                        right,
+                        memberComparator,
+                        accessorClusterRepresentativeComparator,
+                        accessorPropertyClusterComparator)
+                .compare(left, right);
+    }
+
+    @NonNull
+    private static Comparator<OrderingKey> selectAccessorOrderingComparator(
+            OrderingKey left,
+            OrderingKey right,
+            Comparator<OrderingKey> memberComparator,
+            Comparator<OrderingKey> accessorClusterRepresentativeComparator,
+            Comparator<OrderingKey> accessorPropertyClusterComparator) {
+        if (shouldCompareByAccessorPropertyCluster(left, right)) {
+            return accessorPropertyClusterComparator;
+        }
+        return shouldCompareByAccessorSuperCluster(left, right)
+                ? accessorClusterRepresentativeComparator
+                : memberComparator;
+    }
+
+    @NonNull
+    private static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(
+            List<OrderingRule> orderingRules, boolean useAccessorClusterKeys) {
+        return buildOrderingComparator(orderingRules, useAccessorClusterKeys, false);
+    }
+
+    @NonNull
+    private static Comparator<SortableTypeMember.OrderingKey> buildOrderingComparator(
+            List<OrderingRule> orderingRules, boolean useAccessorClusterKeys, boolean useAccessorPropertyClusterKeys) {
         Comparator<SortableTypeMember.OrderingKey> configuredComparator = orderingRules.stream()
-                .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
+                .map(orderingRule -> buildOrderingComparatorForOrderingRule(
+                        orderingRule, useAccessorClusterKeys, useAccessorPropertyClusterKeys))
                 .reduce(Comparator::thenComparing)
-                .orElse(DEFAULT_ORDERING_COMPARATOR);
+                .orElse(buildDefaultOrderingComparator(useAccessorClusterKeys, useAccessorPropertyClusterKeys));
 
         // Deterministic tie-breakers regardless of configured keys.
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
-            configuredComparator =
-                    configuredComparator.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE));
+            configuredComparator = configuredComparator.thenComparing(buildOrderingComparatorForOrderingRule(
+                    OrderingRule.PRESERVE, useAccessorClusterKeys, useAccessorPropertyClusterKeys));
         }
         if (!orderingRules.contains(OrderingRule.ALPHA)) {
-            configuredComparator =
-                    configuredComparator.thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA));
+            configuredComparator = configuredComparator.thenComparing(buildOrderingComparatorForOrderingRule(
+                    OrderingRule.ALPHA, useAccessorClusterKeys, useAccessorPropertyClusterKeys));
         }
 
         return configuredComparator;
     }
 
     @NonNull
-    private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(OrderingRule orderingRule) {
+    private static Comparator<OrderingKey> buildDefaultOrderingComparator(
+            boolean useAccessorClusterKeys, boolean useAccessorPropertyClusterKeys) {
+        return buildOrderingComparatorForOrderingRule(
+                        OrderingRule.PRESERVE, useAccessorClusterKeys, useAccessorPropertyClusterKeys)
+                .thenComparing(buildOrderingComparatorForOrderingRule(
+                        OrderingRule.ALPHA, useAccessorClusterKeys, useAccessorPropertyClusterKeys));
+    }
+
+    @NonNull
+    private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(
+            OrderingRule orderingRule, boolean useAccessorClusterKeys, boolean useAccessorPropertyClusterKeys) {
+        ToIntFunction<OrderingKey> srcStartResolver;
+        Function<OrderingKey, String> alphaKeyResolver;
+        ToIntFunction<OrderingKey> visibilityRankResolver;
+        if (!useAccessorClusterKeys) {
+            srcStartResolver = OrderingKey::getSrcStart;
+            alphaKeyResolver = OrderingKey::getAlphaKey;
+            visibilityRankResolver = OrderingKey::getVisibilityRank;
+        } else if (useAccessorPropertyClusterKeys) {
+            srcStartResolver = OrderingKey::resolveAccessorPropertySrcStart;
+            alphaKeyResolver = OrderingKey::resolveAccessorPropertyAlphaKey;
+            visibilityRankResolver = OrderingKey::resolveAccessorPropertyVisibilityRank;
+        } else {
+            srcStartResolver = OrderingKey::resolveClusterSrcStart;
+            alphaKeyResolver = OrderingKey::resolveClusterAlphaKey;
+            visibilityRankResolver = OrderingKey::resolveClusterVisibilityRank;
+        }
         return switch (orderingRule) {
             case PRESERVE ->
-                (left, right) -> Integer.compare(resolveSrcStart(left, right), resolveSrcStart(right, left));
+                (left, right) -> Integer.compare(srcStartResolver.applyAsInt(left), srcStartResolver.applyAsInt(right));
             case ALPHA ->
                 (left, right) -> {
                     int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
                     if (rankComparison != 0) {
                         return rankComparison;
                     }
-                    return resolveAlphaKey(left, right).compareTo(resolveAlphaKey(right, left));
+                    return alphaKeyResolver.apply(left).compareTo(alphaKeyResolver.apply(right));
                 };
             case VISIBILITY_ASC ->
-                (left, right) ->
-                        Integer.compare(resolveVisibilityRank(right, left), resolveVisibilityRank(left, right));
+                (left, right) -> Integer.compare(
+                        visibilityRankResolver.applyAsInt(right), visibilityRankResolver.applyAsInt(left));
             case VISIBILITY_DESC ->
-                (left, right) ->
-                        Integer.compare(resolveVisibilityRank(left, right), resolveVisibilityRank(right, left));
+                (left, right) -> Integer.compare(
+                        visibilityRankResolver.applyAsInt(left), visibilityRankResolver.applyAsInt(right));
         };
     }
 
-    private static int resolveSrcStart(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
-        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
-                ? orderingKey.getClusterSrcStart()
-                : orderingKey.getSrcStart();
+    private static boolean shouldCompareByAccessorPropertyCluster(
+            OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        if (orderingKey instanceof AccessorClusterOrderingKey leftClusterKey
+                && otherOrderingKey instanceof AccessorClusterOrderingKey rightClusterKey) {
+            return !leftClusterKey.getClusterPropertyName().equals(rightClusterKey.getClusterPropertyName());
+        }
+        return false;
     }
 
-    @NonNull
-    private static String resolveAlphaKey(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
-        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
-                ? orderingKey.getClusterAlphaKey()
-                : orderingKey.getAlphaKey();
-    }
-
-    private static int resolveVisibilityRank(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
-        return shouldCompareByAccessorCluster(orderingKey, otherOrderingKey)
-                ? orderingKey.getClusterVisibilityRank()
-                : orderingKey.getVisibilityRank();
-    }
-
-    private static boolean shouldCompareByAccessorCluster(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
-        return orderingKey.getClusterPropertyName() != null
-                && otherOrderingKey.getClusterPropertyName() != null
-                && !orderingKey.getClusterPropertyName().equals(otherOrderingKey.getClusterPropertyName());
+    private static boolean shouldCompareByAccessorSuperCluster(OrderingKey orderingKey, OrderingKey otherOrderingKey) {
+        if (orderingKey instanceof AccessorClusterOrderingKey
+                && otherOrderingKey instanceof AccessorClusterOrderingKey) {
+            return false;
+        }
+        return orderingKey instanceof AccessorClusterOrderingKey
+                || otherOrderingKey instanceof AccessorClusterOrderingKey;
     }
 }
