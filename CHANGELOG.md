@@ -32,6 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/directives.md` — full opt-out directives reference.
 - `docs/known-limitations.md` — known formatter edge cases and workarounds.
 - `docs/benchmark.md` — JMH sorting benchmark usage.
-- GitHub Actions CI workflow (`.github/workflows/ci.yml`) that builds and tests every push and pull request.
+- GitHub Actions Verify workflow (`.github/workflows/verify.yml`) that builds and tests every push and pull request.
 
 [Unreleased]: https://github.com/lemon-ant/JHarmonizer/commits/main
