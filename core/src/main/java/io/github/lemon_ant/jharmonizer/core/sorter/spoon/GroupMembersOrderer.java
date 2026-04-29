@@ -42,6 +42,7 @@ class GroupMembersOrderer {
             EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
 
     private static final int ONE = 1;
+    private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = 2;
 
     /**
      * Orders the members inside each group block according to the group's ordering rules.
@@ -124,11 +125,11 @@ class GroupMembersOrderer {
 
         Map<SortableTypeMember, String> sortableTypeMember2PropertyName =
                 buildSortableTypeMember2PropertyNameMap(sortableTypeMembers);
-        Map<String, SortableTypeMember.OrderingKey> propertyName2Representative =
-                resolveAccessorPropertyClusterRepresentatives(sortableTypeMember2PropertyName, orderingKeyComparator);
-        if (propertyName2Representative.isEmpty()) {
+        if (sortableTypeMember2PropertyName.size() < MIN_ACCESSORS_FOR_SUPER_CLUSTER) {
             return sortableTypeMembers;
         }
+        Map<String, SortableTypeMember.OrderingKey> propertyName2Representative =
+                resolveAccessorPropertyClusterRepresentatives(sortableTypeMember2PropertyName, orderingKeyComparator);
         SortableTypeMember.OrderingKey accessorSuperClusterRepresentative =
                 resolveAccessorSuperClusterRepresentative(sortableTypeMember2PropertyName, orderingKeyComparator);
         return sortableTypeMembers.stream()
@@ -148,7 +149,7 @@ class GroupMembersOrderer {
      */
     @NonNull
     private static SortableTypeMember createSortableTypeMember(CtTypeMember typeMember) {
-        SortableTypeMember.OrderingKey orderingKey = SortableTypeMember.OrderingKey.derive(typeMember);
+        SortableTypeMember.OrderingKey orderingKey = OrderingKeyFactory.derive(typeMember);
         return new SortableTypeMember(typeMember, orderingKey, orderingKey, orderingKey);
     }
 
@@ -194,7 +195,7 @@ class GroupMembersOrderer {
                             "Accessor property cluster should contain at least one member: " + propertyName));
             propertyName2Representative.put(
                     propertyName,
-                    SortableTypeMember.OrderingKey.deriveAccessorPropertyRepresentative(
+                    OrderingKeyFactory.deriveAccessorPropertyRepresentative(
                             propertyClusterTopOrderingKey, propertyName));
         });
         return Collections.unmodifiableMap(propertyName2Representative);
@@ -209,6 +210,8 @@ class GroupMembersOrderer {
                 .min(orderingKeyComparator)
                 .orElseThrow(
                         () -> new IllegalStateException("Accessor super-cluster should contain at least one member"));
+        // The super-cluster sorts against non-accessors by the earliest accessor own key, not by the property key,
+        // so an accessor cluster cannot be interleaved by a method that sorts after its first accessor.
         return superClusterTopOrderingKey;
     }
 
