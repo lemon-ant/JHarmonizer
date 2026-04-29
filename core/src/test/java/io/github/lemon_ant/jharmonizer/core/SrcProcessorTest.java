@@ -443,8 +443,11 @@ class SrcProcessorTest {
         String logs = collectLogMessages(listAppender);
 
         // Then
-        assertThat(logs).contains("ordering violations").contains("ViolatingOrder.java");
-        assertThat(logs).containsAnyOf("UP", "DOWN");
+        assertThat(logs)
+                .contains("ordering violations")
+                .contains("ViolatingOrder.java")
+                .containsAnyOf("UP", "DOWN")
+                .contains("position(s)");
     }
 
     @Test
