@@ -42,6 +42,13 @@ class SortableTypeMember {
     @NonNull
     OrderingKey propertyClusterRepresentative;
 
+    /**
+     * Creates a standalone sortable member whose super-cluster and property-cluster representatives both point to its
+     * own ordering key.
+     *
+     * @param typeMember the wrapped type member
+     * @param orderingKey the member's own ordering key
+     */
     private SortableTypeMember(@NonNull CtTypeMember typeMember, @NonNull OrderingKey orderingKey) {
         this(typeMember, orderingKey, orderingKey, orderingKey);
     }
@@ -94,6 +101,12 @@ class SortableTypeMember {
         return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
     }
 
+    /**
+     * Formats an ordering key with its identity hash so shared representatives are visible in diagnostics.
+     *
+     * @param orderingKey the ordering key to describe
+     * @return the ordering key diagnostic description
+     */
     @NonNull
     private static String describeOrderingKey(OrderingKey orderingKey) {
         return orderingKey + "@" + System.identityHashCode(orderingKey);

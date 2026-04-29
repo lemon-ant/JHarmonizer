@@ -54,12 +54,23 @@ class ComparatorUtils {
         return (left, right) -> compareByRepresentatives(left, right, orderingKeyComparator);
     }
 
+    /**
+     * Builds the fallback comparator used when no explicit ordering rules are configured.
+     *
+     * @return the default ordering key comparator
+     */
     @NonNull
     private static Comparator<OrderingKey> buildDefaultOrderingComparator() {
         return buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE)
                 .thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA));
     }
 
+    /**
+     * Builds a comparator for one configured ordering rule.
+     *
+     * @param orderingRule the ordering rule to apply
+     * @return the ordering key comparator for the rule
+     */
     @NonNull
     private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(OrderingRule orderingRule) {
         return switch (orderingRule) {
@@ -79,6 +90,14 @@ class ComparatorUtils {
         };
     }
 
+    /**
+     * Compares sortable members by super-cluster representative, then property-cluster representative, then own key.
+     *
+     * @param left the left sortable member
+     * @param right the right sortable member
+     * @param orderingKeyComparator the comparator for representative and own ordering keys
+     * @return the comparison result
+     */
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember left, SortableTypeMember right, Comparator<OrderingKey> orderingKeyComparator) {
