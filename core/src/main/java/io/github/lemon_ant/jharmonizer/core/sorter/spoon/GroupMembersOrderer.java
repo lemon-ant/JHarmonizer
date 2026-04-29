@@ -85,19 +85,12 @@ class GroupMembersOrderer {
         }
 
         List<OrderingRule> orderingRules = compiledMemberGroup.getOrderingRules();
-        Comparator<MemberOrderingKey> orderingKeyComparator =
-                ComparatorUtils.buildClusteredOrderingComparator(orderingRules);
-
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
-        Map<CtTypeMember, MemberOrderingKey> memberToOrderingKey =
-                OrderingKeyFactory.deriveAll(groupMembers, keepAccessorsTogether, orderingRules);
-        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(member -> new SortableTypeMember(member, memberToOrderingKey.get(member)))
-                .toList();
+        List<SortableTypeMember> sortableTypeMembers =
+                OrderingKeyFactory.createSortableMembers(groupMembers, keepAccessorsTogether, orderingRules);
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
-        Comparator<SortableTypeMember> comparator =
-                Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
+        Comparator<SortableTypeMember> comparator = ComparatorUtils.buildSortableTypeMemberComparator(orderingRules);
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
         Groups<SortableTypeMember> accessorSuperCluster =
                 keepAccessorsTogether ? buildAccessorSuperCluster(sortableTypeMembers) : Groups.empty();
@@ -138,8 +131,8 @@ class GroupMembersOrderer {
      *
      * <p>Per-property cluster ordering (and the choice of cluster representative inside the
      * accessor super-cluster) is purely a comparator concern; see
-     * {@link OrderingKeyFactory#deriveAll(List, boolean, List)} and
-     * {@link ComparatorUtils#buildClusteredOrderingComparator(List)}.
+     * {@link OrderingKeyFactory#createSortableMembers(List, boolean, List)} and
+     * {@link ComparatorUtils#buildSortableTypeMemberComparator(List)}.
      *
      * @param sortableTypeMembers all sortable members of the group
      * @return a single-{@link Group} {@link Groups} bundling every accessor; {@link Groups#empty()}
