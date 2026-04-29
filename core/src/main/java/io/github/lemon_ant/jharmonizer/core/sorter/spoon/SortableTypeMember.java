@@ -6,7 +6,6 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveAlphaSortingRank;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveSrcStart;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
-import static java.util.Objects.requireNonNull;
 
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import java.util.HashMap;
@@ -37,14 +36,67 @@ class SortableTypeMember {
     @NonNull
     OrderingKey orderingKey;
 
+    @NonNull
+    OrderingKey superClusterRepresentative;
+
+    @NonNull
+    OrderingKey propertyClusterRepresentative;
+
+    private SortableTypeMember(@NonNull CtTypeMember typeMember, @NonNull OrderingKey orderingKey) {
+        this(typeMember, orderingKey, orderingKey, orderingKey);
+    }
+
+    /**
+     * Creates a sortable member whose representatives initially point to its own ordering key.
+     *
+     * @param typeMember the type member to wrap
+     * @return the sortable member
+     */
+    @NonNull
+    static SortableTypeMember create(@NonNull CtTypeMember typeMember) {
+        return new SortableTypeMember(typeMember, OrderingKey.derive(typeMember));
+    }
+
+    /**
+     * Returns a copy that shares the resolved accessor super-cluster and property-cluster representatives.
+     *
+     * @param superClusterRepresentative the shared representative for all accessors in the super-cluster
+     * @param propertyClusterRepresentative the shared representative for accessors of one property
+     * @return the accessor-clustered sortable member
+     */
+    @NonNull
+    SortableTypeMember withAccessorClusterRepresentatives(
+            @NonNull OrderingKey superClusterRepresentative, @NonNull OrderingKey propertyClusterRepresentative) {
+        return new SortableTypeMember(
+                typeMember, orderingKey, superClusterRepresentative, propertyClusterRepresentative);
+    }
+
+    /**
+     * Returns whether this member belongs to an accessor cluster.
+     *
+     * @return {@code true} when at least one representative is not this member's own ordering key
+     */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    boolean isClustered() {
+        return orderingKey != superClusterRepresentative || orderingKey != propertyClusterRepresentative;
+    }
+
     @Override
     public String toString() {
-        return "member=" + describeTypeMember(typeMember) + ", orderingKey=" + orderingKey;
+        return "member=" + describeTypeMember(typeMember)
+                + ", orderingKey=" + orderingKey
+                + ", superClusterRepresentative=" + describeOrderingKey(superClusterRepresentative)
+                + ", propertyClusterRepresentative=" + describeOrderingKey(propertyClusterRepresentative);
     }
 
     @NonNull
     private static String describeTypeMember(CtTypeMember typeMember) {
         return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
+    }
+
+    @NonNull
+    private static String describeOrderingKey(OrderingKey orderingKey) {
+        return orderingKey + "@" + System.identityHashCode(orderingKey);
     }
 
     /**
@@ -96,6 +148,38 @@ class SortableTypeMember {
                     deriveVisibilityRank(typeMember));
         }
 
+        /**
+         * Derives a distinct representative key from an existing member ordering key.
+         *
+         * @param orderingKey the source ordering key
+         * @return the representative ordering key
+         */
+        @NonNull
+        static OrderingKey deriveRepresentative(@NonNull OrderingKey orderingKey) {
+            return new OrderingKey(
+                    orderingKey.getSrcStart(),
+                    orderingKey.getAlphaKey(),
+                    orderingKey.getAlphaSortingRank(),
+                    orderingKey.getVisibilityRank());
+        }
+
+        /**
+         * Derives a distinct accessor property representative key using the property name as its alpha key.
+         *
+         * @param orderingKey the top member ordering key in the property cluster
+         * @param propertyName the JavaBeans property name
+         * @return the property representative ordering key
+         */
+        @NonNull
+        static OrderingKey deriveAccessorPropertyRepresentative(
+                @NonNull OrderingKey orderingKey, @NonNull String propertyName) {
+            return new OrderingKey(
+                    orderingKey.getSrcStart(),
+                    propertyName,
+                    orderingKey.getAlphaSortingRank(),
+                    orderingKey.getVisibilityRank());
+        }
+
         final int srcStart;
 
         @NonNull
@@ -110,162 +194,5 @@ class SortableTypeMember {
         final int alphaSortingRank;
 
         final int visibilityRank;
-
-        /**
-         * Returns a clustered copy represented by the given top accessor member.
-         *
-         * @param propertyRepresentativeOrderingKey the top method key for the accessor property cluster
-         * @param superClusterRepresentativeOrderingKey the top method key for the whole accessor super-cluster
-         * @param propertyName the property name used when comparing different accessor property clusters
-         * @return the clustered ordering key
-         */
-        @NonNull
-        AccessorClusterOrderingKey resolveWithAccessorClusterRepresentative(
-                @NonNull OrderingKey propertyRepresentativeOrderingKey,
-                @NonNull OrderingKey superClusterRepresentativeOrderingKey,
-                @NonNull String propertyName) {
-            return new AccessorClusterOrderingKey(
-                    srcStart,
-                    alphaKey,
-                    alphaSortingRank,
-                    visibilityRank,
-                    propertyName,
-                    superClusterRepresentativeOrderingKey.getSrcStart(),
-                    superClusterRepresentativeOrderingKey.getAlphaKey(),
-                    superClusterRepresentativeOrderingKey.getVisibilityRank(),
-                    propertyRepresentativeOrderingKey.getSrcStart(),
-                    propertyRepresentativeOrderingKey.getVisibilityRank());
-        }
-
-        /**
-         * Resolves the source-start key to use when comparing accessor clusters against other members.
-         *
-         * @return the effective source-start key
-         */
-        int resolveClusterSrcStart() {
-            return srcStart;
-        }
-
-        /**
-         * Resolves the alpha key to use when comparing accessor clusters against other members.
-         *
-         * @return the effective alpha key
-         */
-        @NonNull
-        String resolveClusterAlphaKey() {
-            return alphaKey;
-        }
-
-        /**
-         * Resolves the alpha key to use when comparing different accessor property clusters.
-         *
-         * @return the accessor property alpha key
-         */
-        @NonNull
-        String resolveAccessorPropertyAlphaKey() {
-            return alphaKey;
-        }
-
-        /**
-         * Resolves the visibility key to use when comparing accessor clusters against other members.
-         *
-         * @return the effective visibility key
-         */
-        int resolveClusterVisibilityRank() {
-            return visibilityRank;
-        }
-
-        /**
-         * Resolves the source-start key to use when comparing different accessor property clusters.
-         *
-         * @return the accessor property source-start key
-         */
-        int resolveAccessorPropertySrcStart() {
-            return srcStart;
-        }
-
-        /**
-         * Resolves the visibility key to use when comparing different accessor property clusters.
-         *
-         * @return the accessor property visibility key
-         */
-        int resolveAccessorPropertyVisibilityRank() {
-            return visibilityRank;
-        }
-
-        /**
-         * An {@link OrderingKey} with complete accessor-cluster metadata.
-         */
-        @Getter
-        @EqualsAndHashCode(callSuper = true)
-        @ToString(callSuper = true)
-        static final class AccessorClusterOrderingKey extends OrderingKey {
-
-            @NonNull
-            final String clusterPropertyName;
-
-            final int clusterSrcStart;
-
-            @NonNull
-            final String clusterAlphaKey;
-
-            final int clusterVisibilityRank;
-
-            final int propertyClusterSrcStart;
-
-            final int propertyClusterVisibilityRank;
-
-            private AccessorClusterOrderingKey(
-                    int srcStart,
-                    String alphaKey,
-                    int alphaSortingRank,
-                    int visibilityRank,
-                    String clusterPropertyName,
-                    int clusterSrcStart,
-                    String clusterAlphaKey,
-                    int clusterVisibilityRank,
-                    int propertyClusterSrcStart,
-                    int propertyClusterVisibilityRank) {
-                super(srcStart, alphaKey, alphaSortingRank, visibilityRank);
-                this.clusterPropertyName = requireNonNull(clusterPropertyName, "clusterPropertyName");
-                this.clusterSrcStart = clusterSrcStart;
-                this.clusterAlphaKey = requireNonNull(clusterAlphaKey, "clusterAlphaKey");
-                this.clusterVisibilityRank = clusterVisibilityRank;
-                this.propertyClusterSrcStart = propertyClusterSrcStart;
-                this.propertyClusterVisibilityRank = propertyClusterVisibilityRank;
-            }
-
-            @Override
-            int resolveClusterSrcStart() {
-                return clusterSrcStart;
-            }
-
-            @Override
-            @NonNull
-            String resolveClusterAlphaKey() {
-                return clusterAlphaKey;
-            }
-
-            @Override
-            @NonNull
-            String resolveAccessorPropertyAlphaKey() {
-                return clusterPropertyName;
-            }
-
-            @Override
-            int resolveClusterVisibilityRank() {
-                return clusterVisibilityRank;
-            }
-
-            @Override
-            int resolveAccessorPropertySrcStart() {
-                return propertyClusterSrcStart;
-            }
-
-            @Override
-            int resolveAccessorPropertyVisibilityRank() {
-                return propertyClusterVisibilityRank;
-            }
-        }
     }
 }

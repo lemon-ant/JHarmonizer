@@ -4,7 +4,6 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey.AccessorClusterOrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyEdgeKind;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
@@ -83,13 +82,11 @@ class GroupMembersOrderer {
         boolean keepAccessorsTogether = compiledMemberGroup.isKeepAccessorsTogether();
         List<SortableTypeMember> sortableTypeMembers =
                 createSortableTypeMembers(groupMembers, keepAccessorsTogether, memberOrderingKeyComparator);
-        Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator = keepAccessorsTogether
+        Comparator<SortableTypeMember> comparator = keepAccessorsTogether
                 ? ComparatorUtils.buildAccessorClusterOrderingComparator(orderingRules)
-                : memberOrderingKeyComparator;
+                : Comparator.comparing(SortableTypeMember::getOrderingKey, memberOrderingKeyComparator);
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
-        Comparator<SortableTypeMember> comparator =
-                Comparator.comparing(SortableTypeMember::getOrderingKey, orderingKeyComparator);
         Set<CtTypeMember> groupMemberSet = Set.copyOf(groupMembers);
         Groups<SortableTypeMember> groups = compiledMemberGroup.isKeepAccessorsTogether()
                 ? buildAccessorSuperClusterGroup(sortableTypeMembers)
@@ -115,9 +112,8 @@ class GroupMembersOrderer {
             List<CtTypeMember> groupMembers,
             boolean keepAccessorsTogether,
             Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
-                .map(member -> new SortableTypeMember(member, SortableTypeMember.OrderingKey.derive(member)))
-                .toList();
+        List<SortableTypeMember> sortableTypeMembers =
+                groupMembers.stream().map(SortableTypeMember::create).toList();
         if (!keepAccessorsTogether) {
             return sortableTypeMembers;
         }
@@ -125,7 +121,7 @@ class GroupMembersOrderer {
         Map<SortableTypeMember, String> sortableTypeMember2PropertyName =
                 buildSortableTypeMember2PropertyNameMap(sortableTypeMembers);
         Map<String, SortableTypeMember.OrderingKey> propertyName2Representative =
-                resolveAccessorClusterRepresentatives(sortableTypeMember2PropertyName, orderingKeyComparator);
+                resolveAccessorPropertyClusterRepresentatives(sortableTypeMember2PropertyName, orderingKeyComparator);
         if (propertyName2Representative.isEmpty()) {
             return sortableTypeMembers;
         }
@@ -153,7 +149,7 @@ class GroupMembersOrderer {
 
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private static Map<String, SortableTypeMember.OrderingKey> resolveAccessorClusterRepresentatives(
+    private static Map<String, SortableTypeMember.OrderingKey> resolveAccessorPropertyClusterRepresentatives(
             Map<SortableTypeMember, String> sortableTypeMember2PropertyName,
             Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
         Map<String, List<SortableTypeMember.OrderingKey>> propertyName2OrderingKeys = new HashMap<>();
@@ -163,12 +159,16 @@ class GroupMembersOrderer {
 
         Map<String, SortableTypeMember.OrderingKey> propertyName2Representative =
                 new HashMap<>(propertyName2OrderingKeys.size() * 2);
-        propertyName2OrderingKeys.forEach((propertyName, orderingKeys) -> propertyName2Representative.put(
-                propertyName,
-                orderingKeys.stream()
-                        .min(orderingKeyComparator)
-                        .orElseThrow(() -> new IllegalStateException(
-                                "Accessor property cluster should contain at least one member: " + propertyName))));
+        propertyName2OrderingKeys.forEach((propertyName, orderingKeys) -> {
+            SortableTypeMember.OrderingKey propertyClusterTopOrderingKey = orderingKeys.stream()
+                    .min(orderingKeyComparator)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Accessor property cluster should contain at least one member: " + propertyName));
+            propertyName2Representative.put(
+                    propertyName,
+                    SortableTypeMember.OrderingKey.deriveAccessorPropertyRepresentative(
+                            propertyClusterTopOrderingKey, propertyName));
+        });
         return Collections.unmodifiableMap(propertyName2Representative);
     }
 
@@ -176,11 +176,12 @@ class GroupMembersOrderer {
     private static SortableTypeMember.OrderingKey resolveAccessorSuperClusterRepresentative(
             Map<SortableTypeMember, String> sortableTypeMember2PropertyName,
             Comparator<SortableTypeMember.OrderingKey> orderingKeyComparator) {
-        return sortableTypeMember2PropertyName.keySet().stream()
+        SortableTypeMember.OrderingKey superClusterTopOrderingKey = sortableTypeMember2PropertyName.keySet().stream()
                 .map(SortableTypeMember::getOrderingKey)
                 .min(orderingKeyComparator)
                 .orElseThrow(
                         () -> new IllegalStateException("Accessor super-cluster should contain at least one member"));
+        return SortableTypeMember.OrderingKey.deriveRepresentative(superClusterTopOrderingKey);
     }
 
     @NonNull
@@ -189,23 +190,21 @@ class GroupMembersOrderer {
             Map<SortableTypeMember, String> sortableTypeMember2PropertyName,
             Map<String, SortableTypeMember.OrderingKey> propertyName2Representative,
             SortableTypeMember.OrderingKey accessorSuperClusterRepresentative) {
-        SortableTypeMember.OrderingKey orderingKey = sortableTypeMember.getOrderingKey();
         String propertyName = sortableTypeMember2PropertyName.get(sortableTypeMember);
         if (propertyName == null) {
             return sortableTypeMember;
         }
-        SortableTypeMember.OrderingKey representativeOrderingKey = propertyName2Representative.get(propertyName);
-        return new SortableTypeMember(
-                sortableTypeMember.getTypeMember(),
-                orderingKey.resolveWithAccessorClusterRepresentative(
-                        representativeOrderingKey, accessorSuperClusterRepresentative, propertyName));
+        SortableTypeMember.OrderingKey propertyRepresentativeOrderingKey =
+                propertyName2Representative.get(propertyName);
+        return sortableTypeMember.withAccessorClusterRepresentatives(
+                accessorSuperClusterRepresentative, propertyRepresentativeOrderingKey);
     }
 
     @NonNull
     private static Groups<SortableTypeMember> buildAccessorSuperClusterGroup(
             List<SortableTypeMember> sortableTypeMembers) {
         List<SortableTypeMember> accessorMembers = sortableTypeMembers.stream()
-                .filter(sortableTypeMember -> sortableTypeMember.getOrderingKey() instanceof AccessorClusterOrderingKey)
+                .filter(SortableTypeMember::isClustered)
                 .toList();
         return accessorMembers.isEmpty() ? Groups.empty() : new Groups<>(List.of(new Group<>(accessorMembers)));
     }

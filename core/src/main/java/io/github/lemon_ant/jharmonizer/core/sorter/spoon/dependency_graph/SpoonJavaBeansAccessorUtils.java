@@ -53,7 +53,6 @@ public class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
