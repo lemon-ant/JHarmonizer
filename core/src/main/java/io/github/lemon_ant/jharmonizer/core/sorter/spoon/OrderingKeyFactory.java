@@ -78,12 +78,12 @@ class OrderingKeyFactory {
      *             property name and whose {@code srcStart} / {@code visibilityRank} come from
      *             the property top member; share that instance among every accessor of the
      *             property.</li>
-     *         <li>The super-cluster representative is the own key of the top accessor of the
-     *             top property cluster (the property cluster whose property representative is
-     *             smallest under the base comparator). Sharing this own key as the super-cluster
-     *             representative for every accessor makes the accessor super-cluster sort
-     *             relative to non-accessors as if it sat at the position of the first accessor
-     *             that would emerge from the intra-super-cluster sort.</li>
+     *         <li>The super-cluster representative is the global minimum own key among
+     *             <em>all</em> accessor methods, across all property clusters, as determined by
+     *             {@link ComparatorUtils#buildOrderingKeyComparator(List)}. Sharing this own key
+     *             as the super-cluster representative for every accessor makes the super-cluster
+     *             sort relative to non-accessors at the position of the very first accessor by
+     *             the configured comparator, regardless of property-cluster structure.</li>
      *       </ul></li>
      *   <li>Phase 3 — assemble {@link SortableTypeMember}s. Non-accessors and accessors that do
      *       not belong to a multi-member super-cluster keep their own key as both
@@ -126,10 +126,8 @@ class OrderingKeyFactory {
         Map<CtTypeMember, OrderingKey> memberToPropertyRep = new HashMap<>();
         if (allAccessors.size() >= MIN_ACCESSORS_FOR_SUPER_CLUSTER) {
             Comparator<OrderingKey> orderingKeyComparator = ComparatorUtils.buildOrderingKeyComparator(orderingRules);
-            // Per property cluster: pick the top own key (used both as the cluster representative's
-            // srcStart/visibilityRank source and, for the top property cluster, as the super-cluster
-            // representative).
-            Map<String, OrderingKey> propertyToTopOwnKey = new HashMap<>();
+            // Per property cluster: pick the top own key (used as the cluster representative's
+            // srcStart/visibilityRank source) and synthesize the property representative key.
             for (Map.Entry<String, List<CtTypeMember>> clusterEntry : propertyToAccessors.entrySet()) {
                 String propertyName = clusterEntry.getKey();
                 List<CtTypeMember> propertyMembers = clusterEntry.getValue();
@@ -138,7 +136,6 @@ class OrderingKeyFactory {
                         .min(orderingKeyComparator)
                         .orElseThrow(() ->
                                 new IllegalStateException("Empty accessor cluster for property: " + propertyName));
-                propertyToTopOwnKey.put(propertyName, propertyTopOwnKey);
                 OrderingKey propertyRepresentativeKey = new OrderingKey(
                         propertyTopOwnKey.getSrcStart(),
                         propertyName,
@@ -148,16 +145,14 @@ class OrderingKeyFactory {
                     memberToPropertyRep.put(accessor, propertyRepresentativeKey);
                 }
             }
-            // Super-cluster top = top member of the top property cluster (ordered by property
-            // representative under the base comparator). Its own key represents the super-cluster
-            // when comparing the super-cluster against non-accessors.
-            String topPropertyName = propertyToAccessors.keySet().stream()
-                    .min(Comparator.comparing(
-                            propertyName -> memberToPropertyRep.get(
-                                    propertyToAccessors.get(propertyName).get(0)),
-                            orderingKeyComparator))
+            // Super-cluster representative = global minimum own-key among all accessor methods,
+            // regardless of property-cluster structure. This ensures the super-cluster sorts
+            // relative to non-accessors at the position of the very first accessor by the
+            // configured comparator.
+            OrderingKey superClusterTopOwnKey = allAccessors.stream()
+                    .map(memberToOwnKey::get)
+                    .min(orderingKeyComparator)
                     .orElseThrow(() -> new IllegalStateException("Empty accessor super-cluster"));
-            OrderingKey superClusterTopOwnKey = propertyToTopOwnKey.get(topPropertyName);
             for (CtTypeMember accessor : allAccessors) {
                 memberToSuperRep.put(accessor, superClusterTopOwnKey);
             }

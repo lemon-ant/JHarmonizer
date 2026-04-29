@@ -42,11 +42,12 @@ type-members-ordering:
       # the super-cluster — they go either entirely above or entirely below
       # it. Inside the super-cluster, property clusters are compared by
       # propertyName for the ALPHA rule. Here that yields:
-      # apple < bravo < charlie < xray < yankee < zebra (one member each),
-      # and the super-cluster's representative member (the alphabetically
-      # first cluster's only member, setApple) is compared against
-      # middle()'s own alphaKey: "middle():void" < "setApple(...):void", so
-      # middle() sorts BEFORE the super-cluster.
+      # apple < bravo < charlie < xray < yankee < zebra (one member each).
+      # The super-cluster's representative is the global minimum own-key
+      # among all accessor methods (across all property clusters):
+      # getXray's alphaKey ("getXray():java.lang.String") is first among all
+      # six accessor alphaKeys (g < m < s). Since getXray < middle() in alpha
+      # order, the entire super-cluster sorts BEFORE middle().
       - name: All Methods
         keepAccessorsTogether: true
         ordering-rules: alpha
