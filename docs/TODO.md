@@ -1343,3 +1343,49 @@ inserted before `build()`, which manifests as a blank line directly after `inter
 - [ ] Re-evaluate and simplify/remove local workaround after upstream fix is available and verified.
 
 ---
+
+### 8. Review and optimize sorting/comparator/accessor-cluster algorithms and architecture
+
+#### Status
+- [ ] Open architectural review item (captured for follow-up cleanup pass)
+- [ ] Revisit after: current accessor super-cluster ordering fix lands and stabilizes on `dev`
+
+#### Background
+The Spoon-based sorter currently composes ordering through several cooperating pieces:
+- `OrderingKey` (member-own ordering values: `srcStart`, `alphaKey`, `alphaSortingRank`, `visibilityRank`).
+- `OrderingKeyFactory` (derives own keys, builds accessor super-cluster and per-property representative keys).
+- `SortableTypeMember` (carries `ownKey`, `propertyClusterRepresentativeKey`, `superClusterRepresentativeKey`,
+  with shared instances for cluster members and self-references for non-clustered members).
+- `ComparatorUtils` (precomputed comparator constants; `buildSortableTypeMemberComparator` dispatches by
+  representative reference identity; tie-breakers chained via `appendTieBreakers`).
+- `GroupMembersOrderer` (decides when to form an accessor super-cluster, using
+  `OrderingKeyFactory.MIN_ACCESSORS_FOR_SUPER_CLUSTER`).
+
+This already fixes the original ALPHA non-transitivity bug, but the design grew incrementally and is worth a
+dedicated review pass.
+
+#### Review goals
+- [ ] Re-examine the accessor super-cluster + property-cluster representative-key approach end-to-end and confirm
+  it is the simplest model that preserves transitivity for all comparator combinations
+  (PRESERVE / ALPHA / VISIBILITY_ASC / VISIBILITY_DESC / SIGNATURE).
+- [ ] Re-check the split between `OrderingKey`, `SortableTypeMember`, `OrderingKeyFactory`, and `ComparatorUtils`.
+  Look for opportunities to collapse responsibilities, remove indirections, or align with the descriptor-first
+  direction described in "Planned future features → 1. Compile group sorting once".
+- [ ] Reconsider whether reference-identity dispatch on representative keys is the right primitive long-term, or
+  whether an explicit cluster-id field on the descriptor would be clearer and equally correct.
+- [ ] Audit `appendTieBreakers` and the empty-`orderingRules` short-circuit to make sure no comparator chain
+  duplicates work on hot paths.
+- [ ] Centralize all clustering thresholds (currently `MIN_ACCESSORS_FOR_SUPER_CLUSTER`) and any future tuning
+  knobs in one place to prevent silent divergence.
+- [ ] Look for redundant per-group comparator construction and per-member key recomputation (overlap with the
+  planned descriptor-first refactor).
+
+#### Follow-up actions
+- [ ] Schedule an architectural review of `core/src/main/java/io/github/lemon_ant/jharmonizer/core/sorter/spoon/`
+  after the current PR stack lands.
+- [ ] Capture concrete refactor tasks from the review as separate sub-items here (or promote them into
+  "Planned future features → 1. Compile group sorting once" if they fit that track).
+- [ ] Add micro-benchmarks for large groups (many accessors + many non-accessors) before/after any algorithmic
+  change to guard against regressions.
+
+---
