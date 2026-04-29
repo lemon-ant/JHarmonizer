@@ -79,6 +79,7 @@ class ComparatorUtils {
         };
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static int compareByRepresentatives(
             SortableTypeMember left, SortableTypeMember right, Comparator<OrderingKey> orderingKeyComparator) {
         if (left.getSuperClusterRepresentative() != right.getSuperClusterRepresentative()) {
