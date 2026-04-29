@@ -19,6 +19,26 @@ permissions:
   actions: read
 
 jobs:
+  # When 01-Build Artifacts was triggered by a release event, save the tag name and commit SHA
+  # so that 03-Publish Release can detect and trace back to the original release ref without
+  # having to re-examine the event chain (workflow_run does not propagate the original event
+  # through more than one hop in the chain).
+  save-release-info:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'release' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    steps:
+      - name: Write release tag and SHA
+        run: |
+          echo "tag=${{ github.event.workflow_run.head_branch }}" > release-info.txt
+          echo "sha=${{ github.event.workflow_run.head_sha }}" >> release-info.txt
+
+      - name: Upload release info artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-tag-info
+          path: release-info.txt
+          if-no-files-found: error
+
   compat-matrix:
     # Run only if 01 succeeded and base event was push(main) or release.
     if: ${{ github.event.workflow_run.conclusion == 'success' && ((github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') || github.event.workflow_run.event == 'release') }}

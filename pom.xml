@@ -445,7 +445,7 @@
              Attaches sources and javadoc, GPG-signs all artifacts, and deploys via
              central-publishing-maven-plugin. Activate with: mvn deploy -Prelease
              Requires MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_TOKEN in settings.xml (server id: central)
-             and GPG_PASSPHRASE env variable set for the signer. -->
+             and MAVEN_GPG_PASSPHRASE env variable set for the signer. -->
         <profile>
             <id>release</id>
             <build>
@@ -486,6 +486,7 @@
                                 <phase>verify</phase>
                                 <configuration>
                                     <!-- Allow non-interactive passphrase supply via env MAVEN_GPG_PASSPHRASE. -->
+                                    <passphraseEnvName>MAVEN_GPG_PASSPHRASE</passphraseEnvName>
                                     <gpgArguments>
                                         <arg>--pinentry-mode</arg>
                                         <arg>loopback</arg>
