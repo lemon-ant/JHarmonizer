@@ -118,17 +118,16 @@ public class RelocationDetector {
     public static String printRelocations(
             @NonNull Path path, @NonNull Collection<Pair<CtElement, Integer>> relocations) {
         return String.format(
-                "Scanning finished with a sorting failure on file: %s%n%s",
+                "Detected member ordering violations in '%s':%n%s",
                 path.getFileName(),
                 relocations.stream()
                         .map(relocation -> {
-                            // TODO: Implement more human friendly output for relocations printout
                             CtElement member = relocation.getLeft();
+                            int offset = relocation.getRight();
+                            String direction = offset < 0 ? "UP" : "DOWN";
                             return String.format(
-                                    "%s expected to relocate %s by %d",
-                                    computeParentSimpleName(member),
-                                    relocation.getRight() < 0 ? "UP" : "DOWN",
-                                    relocation.getRight());
+                                    "  - %s: needs to move %s by %d position(s)",
+                                    computeParentSimpleName(member), direction, Math.abs(offset));
                         })
                         .collect(joining(lineSeparator())));
     }
@@ -142,20 +141,21 @@ public class RelocationDetector {
      */
     @NonNull
     private static String computeParentSimpleName(CtElement element) {
-        if (element instanceof CtTypeMember member) {
-            var nonBlankName = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
-            if (member instanceof CtConstructor<?> constructor) {
-                return constructor.getSignature();
-            }
-            if (member instanceof CtMethod<?> method) {
-                nonBlankName = method.getSignature();
-            }
-            if (member.getDeclaringType() == null) {
-                return nonBlankName;
-            }
-            return member.getDeclaringType().getQualifiedName() + "$" + nonBlankName;
+        if (!(element instanceof CtTypeMember member)) {
+            return "<nameless>";
         }
-        return "<nameless>";
+        String memberSignature;
+        if (member instanceof CtConstructor<?> constructor) {
+            memberSignature = constructor.getSignature();
+        } else if (member instanceof CtMethod<?> method) {
+            memberSignature = method.getSignature();
+        } else {
+            memberSignature = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
+        }
+        if (member.getDeclaringType() == null) {
+            return memberSignature;
+        }
+        return member.getDeclaringType().getQualifiedName() + "." + memberSignature;
     }
 
     // TODO Create a dedicated type instead of Map

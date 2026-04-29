@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckAllFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
+import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.flow.IFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.ReorderFlow;
@@ -18,6 +19,7 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUti
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -122,6 +124,7 @@ public final class SrcProcessor {
                 })
                 .peek(fileProcessingResult ->
                         progressReporter.recordProcessedFile(fileProcessingResult.getFileProcessingStatus()))
+                .peek(SrcProcessor::logNonConformingFileDetails)
                 .collect(FlowProcessingStats.statsCollector());
 
         if (config.isPrintProcessingStatistics()) {
@@ -224,6 +227,18 @@ public final class SrcProcessor {
     private static String formatSingleFileLogMessage(Path path, String status) {
         String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH);
         return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;
+    }
+
+    private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
+        if (fileProcessingResult.getRelocations() != null
+                && !fileProcessingResult.getRelocations().isEmpty()) {
+            log.warn(RelocationDetector.printRelocations(
+                    fileProcessingResult.getPath(), fileProcessingResult.getRelocations()));
+        }
+        String diff = fileProcessingResult.getDiff();
+        if (diff != null && !diff.isEmpty()) {
+            log.warn("Formatting violations in '{}' (diff):\n{}", fileProcessingResult.getPath(), diff);
+        }
     }
 
     private void logStartupBanner(
