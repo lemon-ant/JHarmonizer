@@ -385,7 +385,7 @@ class GroupMembersOrdererOrderingRulesTest {
     }
 
     @Test
-    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersOrderedByPropertyNameNotMethodPrefix() {
+    void orderMembersInsideGroups_isAccessorClusterAlpha_clustersOrderedByPropertyName() {
         // Given
         CompiledMemberGroup compiledMemberGroup = CompiledMemberGroupTestCreator.createCompiledMemberGroup(
                 "accessor-cluster-property-name", true, List.of(OrderingRule.ALPHA));
@@ -410,8 +410,11 @@ class GroupMembersOrdererOrderingRulesTest {
         List<MemberGroupBlock> orderedBlocks =
                 GroupMembersOrderer.orderMembersInsideGroups(List.of(inputBlock), dependencyGraph);
 
-        // Then — clusters sort by property name: "active" (a) < "balance" (b),
-        // even though "getBalance" (g) < "isActive" (i) by raw method name
+        // Then — both accessor pairs join the indivisible accessor super-cluster. Inside the
+        // super-cluster the two property clusters ("active", "balance") are compared by ALPHA;
+        // the cross-cluster ALPHA branch compares property names ("active" < "balance"), so
+        // the active cluster comes before the balance cluster. Within each cluster the members
+        // fall back to their own alphaKey: "isActive" < "setActive"; "getBalance" < "setBalance".
         assertThat(orderedBlocks.getFirst().getTypeMembers())
                 .containsExactly(
                         isActiveMethodMember, setActiveMethodMember, getBalanceMethodMember, setBalanceMethodMember);

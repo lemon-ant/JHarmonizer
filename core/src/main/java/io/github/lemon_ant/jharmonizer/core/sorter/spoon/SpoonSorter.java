@@ -5,6 +5,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
@@ -65,8 +66,8 @@ public class SpoonSorter {
 
         CtType<?> mainType =
                 compiledTopLevelTypesOrdering.isMainTypeFirst() ? SpoonTypeUtils.findMainType(compilationUnit) : null;
-        Comparator<SortableTypeMember.OrderingKey> orderingComparator =
-                ComparatorUtils.buildOrderingComparator(compiledTopLevelTypesOrdering.getOrderingRules());
+        Comparator<OrderingKey> orderingComparator =
+                ComparatorUtils.buildOrderingKeyComparator(compiledTopLevelTypesOrdering.getOrderingRules());
         Comparator<CtType<?>> declaredTypeComparator =
                 createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
@@ -79,11 +80,10 @@ public class SpoonSorter {
     private static Comparator<CtType<?>> createTopLevelTypesComparator(
             CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
             CtType<?> mainType,
-            Comparator<SortableTypeMember.OrderingKey> orderingComparator) {
-        // keepAccessorsTogether=false: top-level types are not members of a group,
-        // so accessor clustering never applies at this level.
-        Function<CtTypeMember, SortableTypeMember.OrderingKey> orderingKeyProvider =
-                SortableTypeMember.OrderingKey.createOrderingKeyProvider(false);
+            Comparator<OrderingKey> orderingComparator) {
+        // Top-level types are not members of a group, so accessor clustering never applies
+        // at this level: we use a simple memoizing key provider.
+        Function<CtTypeMember, OrderingKey> orderingKeyProvider = OrderingKeyFactory.createOrderingKeyProvider();
         return Comparator.<CtType<?>>comparingInt(type ->
                         compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
                 .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))
