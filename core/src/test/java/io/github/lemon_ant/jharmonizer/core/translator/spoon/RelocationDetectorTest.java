@@ -99,6 +99,7 @@ class RelocationDetectorTest {
     }
 
     @NonNull
+    @NonNull
     private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(
             @NonNull SpoonAstModel spoonAstModel) {
         List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()

@@ -10,8 +10,8 @@ import spoon.reflect.declaration.CtElement;
 /**
  * Captures a single member-ordering violation detected during a check flow.
  *
- * <p>In addition to the violating element and its displacement offset, this record holds the
- * immediate predecessor and successor of the element in the correct sorted order, so that
+ * <p>In addition to the violating element and its displacement offset, this immutable value class
+ * holds the immediate predecessor and successor of the element in the correct sorted order, so that
  * diagnostic messages can tell the user exactly where the element should appear.
  *
  * <p>Offset semantics (mirroring {@link RelocationDetector#findRelocations}):
