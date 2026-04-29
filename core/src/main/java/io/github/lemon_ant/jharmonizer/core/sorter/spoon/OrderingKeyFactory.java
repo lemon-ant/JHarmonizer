@@ -10,7 +10,6 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -22,140 +21,161 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
- * Factory methods for deriving {@link MemberOrderingKey} and {@link ClusteredOrderingKey}
- * instances from {@link CtTypeMember}s.
+ * Factory methods for {@link OrderingKey} instances and for assembling
+ * {@link SortableTypeMember} lists with their own and representative ordering keys.
  *
  * <p>Two entry points are provided:
  * <ul>
  *   <li>{@link #createOrderingKeyProvider()} — a memoizing function suitable for callers that
  *       have no accessor clustering context (for example, top-level type ordering).</li>
- *   <li>{@link #deriveAll(List, boolean, List)} — derives keys for all members of a group,
- *       optionally computing per-property-cluster representative attributes when
- *       {@code keepAccessorsTogether} is {@code true}.</li>
+ *   <li>{@link #createSortableMembers(List, boolean, List)} — derives a {@link SortableTypeMember}
+ *       per input member, with each member's own key, its property-cluster representative key and
+ *       its super-cluster representative key.</li>
  * </ul>
  */
 @UtilityClass
 class OrderingKeyFactory {
 
     /**
-     * Creates a memoizing provider that maps each {@link CtTypeMember} to its
-     * {@link MemberOrderingKey}.
+     * The accessor super-cluster only matters when the group contains at least two recognized
+     * JavaBeans accessors. With a single accessor there is no super-cluster, so the accessor
+     * keeps its own key as both representatives (self-reference).
+     */
+    private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = 2;
+
+    /**
+     * Creates a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
      *
      * <p>Intended for callers that do not need accessor clustering (for example, top-level
-     * types). The returned keys carry only member-own attributes and can be compared with a
-     * {@link Comparator} returned by
-     * {@link ComparatorUtils#buildMemberOnlyOrderingComparator(List)}.
+     * types). The returned keys carry the member's own attributes; they can be compared with a
+     * {@link Comparator} returned by {@link ComparatorUtils#buildOrderingKeyComparator(List)}.
      *
      * @return the ordering key provider function
      */
     @NonNull
-    static Function<CtTypeMember, MemberOrderingKey> createOrderingKeyProvider() {
+    static Function<CtTypeMember, OrderingKey> createOrderingKeyProvider() {
         @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, MemberOrderingKey> typeMember2OrderingKey = new HashMap<>();
-        return typeMember -> typeMember2OrderingKey.computeIfAbsent(typeMember, OrderingKeyFactory::deriveMemberKey);
+        Map<CtTypeMember, OrderingKey> typeMemberToOwnKey = new HashMap<>();
+        return typeMember -> typeMemberToOwnKey.computeIfAbsent(typeMember, OrderingKeyFactory::deriveOwnKey);
     }
 
     /**
-     * Derives a {@link MemberOrderingKey} for each member in the given group.
+     * Builds a {@link SortableTypeMember} per input member, populating the member's own ordering
+     * key, its property-cluster representative key and its super-cluster representative key.
      *
      * <p>Key derivation proceeds in three phases:
      * <ol>
-     *   <li>Phase 1 — derive a {@link MemberOrderingKey} (member-own attributes) for every
-     *       member, and record recognized accessor property names separately.</li>
-     *   <li>Phase 2 — when {@code keepAccessorsTogether} is {@code true}, find each
-     *       property cluster's <em>top member</em> (the minimum under the member-only
-     *       comparator built from {@code orderingRules}).</li>
-     *   <li>Phase 3 — for recognized accessor members, upgrade the base key to a
-     *       {@link ClusteredOrderingKey} carrying the resolved cluster top attributes;
-     *       non-accessor members keep their plain {@link MemberOrderingKey}.</li>
+     *   <li>Phase 1 — derive each member's own {@link OrderingKey} and record recognized
+     *       accessor property names separately.</li>
+     *   <li>Phase 2 — when {@code keepAccessorsTogether} is {@code true} and the group has at
+     *       least two recognized accessors:
+     *       <ul>
+     *         <li>For each property cluster, pick the property cluster's <em>top</em> accessor as
+     *             the minimum own key under
+     *             {@link ComparatorUtils#buildOrderingKeyComparator(List)} and synthesize a
+     *             property representative {@link OrderingKey} whose {@code alphaKey} is the
+     *             property name and whose {@code srcStart} / {@code visibilityRank} come from
+     *             the property top member; share that instance among every accessor of the
+     *             property.</li>
+     *         <li>The super-cluster representative is the own key of the top accessor of the
+     *             top property cluster (the property cluster whose property representative is
+     *             smallest under the base comparator). Sharing this own key as the super-cluster
+     *             representative for every accessor makes the accessor super-cluster sort
+     *             relative to non-accessors as if it sat at the position of the first accessor
+     *             that would emerge from the intra-super-cluster sort.</li>
+     *       </ul></li>
+     *   <li>Phase 3 — assemble {@link SortableTypeMember}s. Non-accessors and accessors that do
+     *       not belong to a multi-member super-cluster keep their own key as both
+     *       representatives (self-reference).</li>
      * </ol>
-     *
-     * <p>The downstream cluster-aware comparator (see
-     * {@link ComparatorUtils#buildClusteredOrderingComparator(List)}) recognizes
-     * {@link ClusteredOrderingKey} instances and uses their cluster attributes
-     * <em>only</em> when comparing two accessors of different property clusters; in that case
-     * ALPHA additionally compares {@link ClusteredOrderingKey#getPropertyName()} instead of
-     * the full method {@link MemberOrderingKey#getAlphaKey()}.
      *
      * @param groupMembers the members to derive ordering keys for
      * @param keepAccessorsTogether whether to cluster recognized JavaBeans accessor methods
-     * @param orderingRules the configured ordering rules used to choose each cluster's top
-     *     member; the same rules drive the final comparator (with cross-cluster substitutions)
-     * @return an immutable map from each input member to its derived {@link MemberOrderingKey}
-     *     (which may be a {@link ClusteredOrderingKey} for accessor members when clustering is
-     *     enabled)
+     * @param orderingRules the ordering rules used to choose each cluster's top member
+     * @return one {@link SortableTypeMember} per input member, in the input order
      */
     @NonNull
     @SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
-    static Map<CtTypeMember, MemberOrderingKey> deriveAll(
+    static List<SortableTypeMember> createSortableMembers(
             @NonNull List<? extends CtTypeMember> groupMembers,
             boolean keepAccessorsTogether,
             @NonNull List<OrderingRule> orderingRules) {
         int memberCount = groupMembers.size();
         // Capacity * 2 ensures no resize at the default 0.75 load factor.
-        Map<CtTypeMember, MemberOrderingKey> memberToBaseKey = new HashMap<>(memberCount * 2);
-        // Property name per accessor member; null entries are simply absent from this map.
-        Map<CtTypeMember, String> memberToPropertyName = new HashMap<>();
-        // Number of unique property clusters is bounded by memberCount and is typically
-        // much smaller; use the default initial capacity to avoid over-allocation.
-        Map<String, List<CtTypeMember>> propertyToMembers = new HashMap<>();
+        Map<CtTypeMember, OrderingKey> memberToOwnKey = new HashMap<>(memberCount * 2);
+        Map<String, List<CtTypeMember>> propertyToAccessors = new HashMap<>();
+        List<CtTypeMember> allAccessors = new ArrayList<>();
 
-        // Phase 1: derive MemberOrderingKey for every member; track accessor property names.
+        // Phase 1: derive each member's own OrderingKey; track accessor property names.
         for (CtTypeMember groupMember : groupMembers) {
-            memberToBaseKey.put(groupMember, deriveMemberKey(groupMember));
+            memberToOwnKey.put(groupMember, deriveOwnKey(groupMember));
             if (keepAccessorsTogether && groupMember instanceof CtMethod<?> method) {
                 SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method).ifPresent(propertyName -> {
-                    memberToPropertyName.put(groupMember, propertyName);
-                    propertyToMembers
+                    propertyToAccessors
                             .computeIfAbsent(propertyName, ignored -> new ArrayList<>())
                             .add(groupMember);
+                    allAccessors.add(groupMember);
                 });
             }
         }
 
-        // Phase 2: discover the top member of every cluster using the member-only comparator.
-        // Within a single cluster every member shares the same propertyName, so the
-        // cross-cluster guard is naturally false for any pair, but we use the explicit
-        // member-only variant so this method is independent of the cluster-key wiring.
-        Comparator<MemberOrderingKey> memberOnlyComparator =
-                ComparatorUtils.buildMemberOnlyOrderingComparator(orderingRules);
-        Map<String, MemberOrderingKey> propertyToTopKey = new HashMap<>();
-        for (Map.Entry<String, List<CtTypeMember>> clusterEntry : propertyToMembers.entrySet()) {
-            MemberOrderingKey topKey = clusterEntry.getValue().stream()
-                    .map(memberToBaseKey::get)
-                    .min(memberOnlyComparator)
-                    .orElseThrow(() ->
-                            new IllegalStateException("Empty accessor cluster for property: " + clusterEntry.getKey()));
-            propertyToTopKey.put(clusterEntry.getKey(), topKey);
-        }
-
-        // Phase 3: upgrade accessor members to ClusteredOrderingKey; non-accessors keep baseKey.
-        Map<CtTypeMember, MemberOrderingKey> result = new HashMap<>(memberCount * 2);
-        for (CtTypeMember groupMember : groupMembers) {
-            MemberOrderingKey baseKey = memberToBaseKey.get(groupMember);
-            String propertyName = memberToPropertyName.get(groupMember);
-            if (propertyName != null) {
-                MemberOrderingKey clusterTopKey = propertyToTopKey.get(propertyName);
-                result.put(
-                        groupMember,
-                        new ClusteredOrderingKey(
-                                baseKey.getSrcStart(),
-                                baseKey.getAlphaKey(),
-                                baseKey.getAlphaSortingRank(),
-                                baseKey.getVisibilityRank(),
-                                propertyName,
-                                clusterTopKey.getSrcStart(),
-                                clusterTopKey.getVisibilityRank()));
-            } else {
-                result.put(groupMember, baseKey);
+        // Phase 2: build super-cluster + property-cluster representatives only when the
+        // super-cluster actually contains at least two accessors.
+        Map<CtTypeMember, OrderingKey> memberToSuperRep = new HashMap<>();
+        Map<CtTypeMember, OrderingKey> memberToPropertyRep = new HashMap<>();
+        if (allAccessors.size() >= MIN_ACCESSORS_FOR_SUPER_CLUSTER) {
+            Comparator<OrderingKey> orderingKeyComparator = ComparatorUtils.buildOrderingKeyComparator(orderingRules);
+            // Per property cluster: pick the top own key (used both as the cluster representative's
+            // srcStart/visibilityRank source and, for the top property cluster, as the super-cluster
+            // representative).
+            Map<String, OrderingKey> propertyToTopOwnKey = new HashMap<>();
+            for (Map.Entry<String, List<CtTypeMember>> clusterEntry : propertyToAccessors.entrySet()) {
+                String propertyName = clusterEntry.getKey();
+                List<CtTypeMember> propertyMembers = clusterEntry.getValue();
+                OrderingKey propertyTopOwnKey = propertyMembers.stream()
+                        .map(memberToOwnKey::get)
+                        .min(orderingKeyComparator)
+                        .orElseThrow(() ->
+                                new IllegalStateException("Empty accessor cluster for property: " + propertyName));
+                propertyToTopOwnKey.put(propertyName, propertyTopOwnKey);
+                OrderingKey propertyRepresentativeKey = new OrderingKey(
+                        propertyTopOwnKey.getSrcStart(),
+                        propertyName,
+                        propertyTopOwnKey.getAlphaSortingRank(),
+                        propertyTopOwnKey.getVisibilityRank());
+                for (CtTypeMember accessor : propertyMembers) {
+                    memberToPropertyRep.put(accessor, propertyRepresentativeKey);
+                }
+            }
+            // Super-cluster top = top member of the top property cluster (ordered by property
+            // representative under the base comparator). Its own key represents the super-cluster
+            // when comparing the super-cluster against non-accessors.
+            String topPropertyName = propertyToAccessors.keySet().stream()
+                    .min(Comparator.comparing(
+                            propertyName -> memberToPropertyRep.get(
+                                    propertyToAccessors.get(propertyName).get(0)),
+                            orderingKeyComparator))
+                    .orElseThrow(() -> new IllegalStateException("Empty accessor super-cluster"));
+            OrderingKey superClusterTopOwnKey = propertyToTopOwnKey.get(topPropertyName);
+            for (CtTypeMember accessor : allAccessors) {
+                memberToSuperRep.put(accessor, superClusterTopOwnKey);
             }
         }
-        return Collections.unmodifiableMap(result);
+
+        // Phase 3: assemble sortable members; both representatives default to own key.
+        return groupMembers.stream()
+                .map(groupMember -> {
+                    OrderingKey ownKey = memberToOwnKey.get(groupMember);
+                    OrderingKey propertyRep = memberToPropertyRep.getOrDefault(groupMember, ownKey);
+                    OrderingKey superRep = memberToSuperRep.getOrDefault(groupMember, ownKey);
+                    return new SortableTypeMember(groupMember, ownKey, propertyRep, superRep);
+                })
+                .toList();
     }
 
     @NonNull
-    private static MemberOrderingKey deriveMemberKey(CtTypeMember typeMember) {
-        return new MemberOrderingKey(
+    private static OrderingKey deriveOwnKey(CtTypeMember typeMember) {
+        return new OrderingKey(
                 deriveSrcStart(typeMember),
                 deriveAlphaKey(typeMember),
                 deriveAlphaSortingRank(typeMember),
