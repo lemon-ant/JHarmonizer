@@ -8,6 +8,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import java.util.ArrayList;
 import java.util.Comparator;

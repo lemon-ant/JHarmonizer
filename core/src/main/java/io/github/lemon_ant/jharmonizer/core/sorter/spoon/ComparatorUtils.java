@@ -3,6 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
@@ -23,6 +24,15 @@ import lombok.experimental.UtilityClass;
 class ComparatorUtils {
 
     /**
+     * Default fallback comparator used when no ordering rules are configured: PRESERVE
+     * (source position) followed by ALPHA (alpha key). Tie-breakers are applied on top by
+     * {@link #appendTieBreakers(Comparator, List)} when needed, but with no rules at all this
+     * default already provides a deterministic ordering.
+     */
+    private static final Comparator<OrderingKey> DEFAULT_COMPARATOR =
+            Comparator.<OrderingKey>comparingInt(OrderingKey::getSrcStart).thenComparing(OrderingKey::getAlphaKey);
+
+    /**
      * Builds a comparator over {@link OrderingKey} from the given ordering rules. Tie-breakers
      * (PRESERVE then ALPHA) are appended to ensure deterministic ordering.
      *
@@ -34,8 +44,7 @@ class ComparatorUtils {
         Comparator<OrderingKey> configured = orderingRules.stream()
                 .map(ComparatorUtils::buildComparatorForRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(() -> Comparator.<OrderingKey>comparingInt(OrderingKey::getSrcStart)
-                        .thenComparing(OrderingKey::getAlphaKey));
+                .orElse(DEFAULT_COMPARATOR);
         return appendTieBreakers(configured, orderingRules);
     }
 
@@ -89,9 +98,8 @@ class ComparatorUtils {
             case PRESERVE -> Comparator.comparingInt(OrderingKey::getSrcStart);
             case ALPHA -> buildAlphaComparator();
             case VISIBILITY_ASC ->
-                (left, right) -> Integer.compare(right.getVisibilityRank(), left.getVisibilityRank());
-            case VISIBILITY_DESC ->
-                (left, right) -> Integer.compare(left.getVisibilityRank(), right.getVisibilityRank());
+                Comparator.comparingInt(OrderingKey::getVisibilityRank).reversed();
+            case VISIBILITY_DESC -> Comparator.comparingInt(OrderingKey::getVisibilityRank);
         };
     }
 
