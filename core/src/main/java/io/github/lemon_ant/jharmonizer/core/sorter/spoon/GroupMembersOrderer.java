@@ -140,6 +140,12 @@ class GroupMembersOrderer {
                 .toList();
     }
 
+    /**
+     * Creates a standalone sortable member whose representatives initially point to its own ordering key.
+     *
+     * @param typeMember the type member to wrap
+     * @return the sortable member
+     */
     @NonNull
     private static SortableTypeMember createSortableTypeMember(CtTypeMember typeMember) {
         SortableTypeMember.OrderingKey orderingKey = SortableTypeMember.OrderingKey.derive(typeMember);
@@ -156,6 +162,12 @@ class GroupMembersOrderer {
         return Collections.unmodifiableMap(sortableTypeMember2PropertyName);
     }
 
+    /**
+     * Finds the JavaBeans accessor property name for a member when it is a recognized accessor method.
+     *
+     * @param typeMember the type member to inspect
+     * @return the accessor property name, or empty when the member is not a recognized accessor
+     */
     @NonNull
     private static Optional<String> findAccessorPropertyName(CtTypeMember typeMember) {
         return typeMember instanceof CtMethod<?> method
@@ -228,6 +240,12 @@ class GroupMembersOrderer {
         return accessorMembers.isEmpty() ? Groups.empty() : new Groups<>(List.of(new Group<>(accessorMembers)));
     }
 
+    /**
+     * Returns whether this member belongs to an accessor cluster.
+     *
+     * @param sortableTypeMember the sortable member to inspect
+     * @return {@code true} when at least one representative is not this member's own ordering key
+     */
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static boolean isClustered(SortableTypeMember sortableTypeMember) {
         return sortableTypeMember.getOrderingKey() != sortableTypeMember.getSuperClusterRepresentative()
