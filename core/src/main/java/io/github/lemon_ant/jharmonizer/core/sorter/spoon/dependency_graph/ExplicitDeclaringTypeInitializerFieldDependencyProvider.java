@@ -55,7 +55,11 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static boolean isExplicitDeclaringTypeQualifiedAccess(
             CtFieldAccess<?> fieldAccess, CtType<?> declaringType) {
-        if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?> typeAccess) || typeAccess.isImplicit()) {
+        if (!(fieldAccess.getTarget() instanceof CtTypeAccess<?>)) {
+            return false;
+        }
+        CtTypeAccess<?> typeAccess = (CtTypeAccess<?>) fieldAccess.getTarget();
+        if (typeAccess.isImplicit()) {
             return false;
         }
 

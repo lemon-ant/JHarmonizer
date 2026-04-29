@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
@@ -29,7 +30,7 @@ public class SpoonTypeUtils {
     public static List<CtTypeMember> getAllTypeMembers(@NonNull CtCompilationUnit compilationUnit) {
         return getAllTypes(compilationUnit).stream()
                 .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
-                .toList();
+                .collect(toUnmodifiableList());
     }
 
     /**
@@ -41,7 +42,7 @@ public class SpoonTypeUtils {
     public static List<CtType<?>> getAllTypes(@NonNull CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit)
                 .flatMap(SpoonTypeUtils::streamTypesTree)
-                .toList();
+                .collect(toUnmodifiableList());
     }
 
     /**
@@ -81,7 +82,7 @@ public class SpoonTypeUtils {
     public static CtType<?> findMainType(@NonNull CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {
-            return declaredTypes.getFirst();
+            return declaredTypes.get(0);
         }
 
         String baseName = stripExtension(compilationUnit.getFile().getName());
@@ -115,7 +116,8 @@ public class SpoonTypeUtils {
         Stream<CtElement> self = Stream.of(ownerType);
         Stream<CtElement> membersAndNested = streamExplicitSrcTypeMembers(ownerType)
                 .flatMap(member -> {
-                    if (member instanceof CtType<?> nestedType) {
+                    if (member instanceof CtType<?>) {
+                        CtType<?> nestedType = (CtType<?>) member;
                         // include the nested type declaration, then descend into its own members
                         return streamTypeAndNestedElements(nestedType);
                     }

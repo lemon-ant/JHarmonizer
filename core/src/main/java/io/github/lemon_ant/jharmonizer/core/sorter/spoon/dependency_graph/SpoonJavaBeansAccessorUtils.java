@@ -136,14 +136,18 @@ public class SpoonJavaBeansAccessorUtils {
 
         String returnTypeQualifiedName = returnTypeReference.getQualifiedName();
 
-        return switch (accessorMethodReturnType) {
-            case VOID -> "void".equals(returnTypeQualifiedName);
-            case NON_VOID -> !"void".equals(returnTypeQualifiedName);
-            case BOOLEAN ->
-                "java.lang.Boolean"
+        switch (accessorMethodReturnType) {
+            case VOID:
+                return "void".equals(returnTypeQualifiedName);
+            case NON_VOID:
+                return !"void".equals(returnTypeQualifiedName);
+            case BOOLEAN:
+                return "java.lang.Boolean"
                         .equals(SpoonTypeMemberUtils.normalizeTypeReferenceByErasureAndBoxing(returnTypeReference)
                                 .getQualifiedName());
-        };
+            default:
+                throw new IllegalStateException("Unexpected accessor return type: " + accessorMethodReturnType);
+        }
     }
 
     @Nullable
@@ -172,13 +176,18 @@ public class SpoonJavaBeansAccessorUtils {
     private static CtTypeReference<?> extractPropertyTypeReference(
             CtMethod<?> candidateMethod, AccessorKind accessorKind) {
         // For getters/is/has the property type is the return type; for setters it is the single parameter type.
-        return switch (accessorKind) {
-            case GET, IS, HAS -> candidateMethod.getType();
-            case SET ->
-                candidateMethod.getParameters().isEmpty()
+        switch (accessorKind) {
+            case GET:
+            case IS:
+            case HAS:
+                return candidateMethod.getType();
+            case SET:
+                return candidateMethod.getParameters().isEmpty()
                         ? null
-                        : candidateMethod.getParameters().getFirst().getType();
-        };
+                        : candidateMethod.getParameters().get(0).getType();
+            default:
+                throw new IllegalStateException("Unexpected accessor kind: " + accessorKind);
+        }
     }
 
     private enum AccessorKind {

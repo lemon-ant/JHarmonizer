@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
@@ -46,7 +48,7 @@ public class SpoonSorter {
     private static List<CtTypeMember> flattenMembers(List<MemberGroupBlock> memberGroupBlocks) {
         return memberGroupBlocks.stream()
                 .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream())
-                .toList();
+                .collect(toUnmodifiableList());
     }
 
     public void sortCompilationUnitRecursively(
@@ -71,7 +73,7 @@ public class SpoonSorter {
                 createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
         List<CtType<?>> sortedDeclaredTypes =
-                declaredTypes.stream().sorted(declaredTypeComparator).toList();
+                declaredTypes.stream().sorted(declaredTypeComparator).collect(toUnmodifiableList());
         compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
     }
 

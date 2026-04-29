@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
@@ -43,7 +44,7 @@ class TopLevelTypesOrderingCompiler {
                                     memberKinds, Set.of(), Set.of());
                             return RuleAtomPredicates.createMaskContainsAny(requiredDeclarationFlagsMask);
                         })
-                        .toList();
+                        .collect(toUnmodifiableList());
 
         return new CompiledTopLevelTypesOrdering(
                 unifiedTopLevelTypesOrdering.isMainTypeFirst(),

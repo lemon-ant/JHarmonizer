@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -52,9 +54,10 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
     @Override
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
-        if (!(dependentMember instanceof CtField<?> dependentField)) {
+        if (!(dependentMember instanceof CtField<?>)) {
             return Set.of();
         }
+        CtField<?> dependentField = (CtField<?>) dependentMember;
 
         if (!dependentField.hasModifier(ModifierKind.STATIC)) {
             return Set.of();
@@ -84,7 +87,7 @@ final class CrossTypeConstantBackRefDependencyProvider implements MemberDependen
                 .flatMap(
                         fieldRead -> Optional.ofNullable(fieldRead.getVariable().getDeclaration()).stream())
                 .<CtField<?>>map(fieldDecl -> fieldDecl)
-                .toList();
+                .collect(toUnmodifiableList());
 
         Set<CtField<?>> providerFields = new HashSet<>();
         for (CtField<?> crossTypeField : crossTypeFieldCandidates) {

@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+
+name: 03-Publish Release
+
+on:
+  release:
+    types: [ published ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    # Guard: only run for version tags (e.g. v1.0.0); skip accidental triggers.
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # Expose credentials at job level so setup-java can embed them in ~/.m2/settings.xml
+    # and the Maven deploy step can authenticate against Maven Central.
+    env:
+      MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 with Maven Central server credentials
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          # Generates ~/.m2/settings.xml with <server id="central"> populated from the env vars above.
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_TOKEN
+
+      - name: Import GPG key
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Build, sign, and publish to Maven Central
+        # -Prelease activates: maven-source-plugin, maven-javadoc-plugin,
+        #                       maven-gpg-plugin (sign), central-publishing-maven-plugin (deploy).
+        # -Ddoclint=none avoids failing the build on non-critical Javadoc warnings.
+        # -Dci=true disables local-dev-only profiles (reformat-poms, reformat-sources).
+        run: mvn -B -ntp -Dci=true -Prelease -Ddoclint=none clean deploy

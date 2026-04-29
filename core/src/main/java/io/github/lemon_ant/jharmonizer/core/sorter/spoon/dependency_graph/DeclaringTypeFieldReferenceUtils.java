@@ -160,9 +160,10 @@ class DeclaringTypeFieldReferenceUtils {
         }
 
         CtElement parent = fieldAccess.getParent();
-        if (!(parent instanceof CtAssignment<?, ?> assignment) || parent instanceof CtOperatorAssignment<?, ?>) {
+        if (!(parent instanceof CtAssignment<?, ?>) || parent instanceof CtOperatorAssignment<?, ?>) {
             return false;
         }
+        CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) parent;
 
         return assignment.getAssigned() == fieldAccess;
     }
@@ -212,8 +213,11 @@ class DeclaringTypeFieldReferenceUtils {
 
             // An access inside an anonymous or inner class body belongs to a different class scope
             // and is never a forward-reference restriction for the enclosing declaring type.
-            if (currentParent instanceof CtType<?> parentType && parentType != declaringType) {
-                return false;
+            if (currentParent instanceof CtType<?>) {
+                CtType<?> parentType = (CtType<?>) currentParent;
+                if (parentType != declaringType) {
+                    return false;
+                }
             }
 
             // Reached the root of the initializer subtree being scanned — the access is in scope.

@@ -2,6 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.EXACT;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.REGEX;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
@@ -70,7 +71,7 @@ class MemberGroupRuleLineCompiler {
 
         List<Predicate<MemberDescriptor>> compiledPredicates = annotationMatchers.stream()
                 .map(MemberGroupRuleLineCompiler::createPredicateForAnnotationMatcher)
-                .toList();
+                .collect(toUnmodifiableList());
 
         return descriptor -> compiledPredicates.stream().allMatch(predicate -> predicate.test(descriptor));
     }

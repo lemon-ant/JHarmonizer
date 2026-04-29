@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.SequencedSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -192,7 +191,7 @@ public final class MemberDependencyGraph {
         Set<CtTypeMember> membersWithOutgoingEdges = outgoingEdgesByProvider.keySet();
 
         Set<CtTypeMember> fullyVisited = new HashSet<>();
-        SequencedSet<CtTypeMember> currentPath = new LinkedHashSet<>();
+        LinkedHashSet<CtTypeMember> currentPath = new LinkedHashSet<>();
 
         for (CtTypeMember member : membersWithOutgoingEdges) {
             if (!fullyVisited.contains(member)) {
@@ -207,7 +206,7 @@ public final class MemberDependencyGraph {
 
     @NonNull
     private List<CtTypeMember> detectCyclePathDfs(
-            CtTypeMember current, Set<CtTypeMember> fullyVisited, SequencedSet<CtTypeMember> currentPath) {
+            CtTypeMember current, Set<CtTypeMember> fullyVisited, LinkedHashSet<CtTypeMember> currentPath) {
         currentPath.add(current);
 
         for (CtTypeMember neighbor :
@@ -231,7 +230,7 @@ public final class MemberDependencyGraph {
     @NonNull
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private static List<CtTypeMember> extractCyclePath(
-            CtTypeMember cycleStart, SequencedSet<CtTypeMember> currentPath) {
+            CtTypeMember cycleStart, LinkedHashSet<CtTypeMember> currentPath) {
         List<CtTypeMember> cycle = new ArrayList<>();
         boolean collecting = false;
         for (CtTypeMember pathMember : currentPath) {

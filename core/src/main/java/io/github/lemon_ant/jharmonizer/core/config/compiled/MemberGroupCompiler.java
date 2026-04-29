@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
@@ -93,10 +95,10 @@ class MemberGroupCompiler {
             UnifiedMemberGroupSelectorBlock selectorBlock) {
         List<Predicate<MemberDescriptor>> includes = selectorBlock.getIncludes().stream()
                 .map(MemberGroupRuleLineCompiler::compileRuleLine)
-                .toList();
+                .collect(toUnmodifiableList());
         List<Predicate<MemberDescriptor>> excludes = selectorBlock.getExcludes().stream()
                 .map(MemberGroupRuleLineCompiler::compileRuleLine)
-                .toList();
+                .collect(toUnmodifiableList());
         return new CompiledMemberGroupSelectorBlock(includes, excludes);
     }
 

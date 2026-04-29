@@ -94,43 +94,43 @@ public class SpoonTypeMemberUtils {
      */
     @NonNull
     static String deriveAlphaKey(@NonNull CtTypeMember typeMember) {
-        switch (typeMember) {
-            case CtMethod<?> method -> {
-                String methodName = method.getSimpleName();
-                String parameters = deriveParameterTypeList(method.getParameters());
-                String returnType =
-                        method.getType() == null ? "" : method.getType().getQualifiedName();
-                return methodName + "(" + parameters + "):" + returnType;
-            }
-            case CtConstructor<?> constructor -> {
-                String parameters = deriveParameterTypeList(constructor.getParameters());
-                return "<init>(" + parameters + ")";
-            }
-            case CtField<?> field -> {
-                String fieldName = field.getSimpleName();
-                String fieldType =
-                        field.getType() == null ? "" : field.getType().getQualifiedName();
-                return fieldName + ":" + fieldType;
-            }
-            case CtAnonymousExecutable anonymousExecutable -> {
-                boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
-                return isStaticInitializer ? "<clinit>" : "<init>";
-            }
-            case CtRecordComponent recordComponent -> {
-                String componentName = recordComponent.getSimpleName();
-                String componentType = recordComponent.getType() == null
-                        ? ""
-                        : recordComponent.getType().getQualifiedName();
-                return componentName + ":" + componentType;
-            }
-            case CtType<?> nestedType -> {
-                return nestedType.getQualifiedName();
-            }
-            default -> {
-                // Defensive fallback for any unexpected Spoon CtTypeMember implementation.
-                return typeMember.getClass().getSimpleName() + ":" + extractSrcStart(typeMember);
-            }
+        if (typeMember instanceof CtMethod<?>) {
+            CtMethod<?> method = (CtMethod<?>) typeMember;
+            String methodName = method.getSimpleName();
+            String parameters = deriveParameterTypeList(method.getParameters());
+            String returnType = method.getType() == null ? "" : method.getType().getQualifiedName();
+            return methodName + "(" + parameters + "):" + returnType;
         }
+        if (typeMember instanceof CtConstructor<?>) {
+            CtConstructor<?> constructor = (CtConstructor<?>) typeMember;
+            String parameters = deriveParameterTypeList(constructor.getParameters());
+            return "<init>(" + parameters + ")";
+        }
+        if (typeMember instanceof CtField<?>) {
+            CtField<?> field = (CtField<?>) typeMember;
+            String fieldName = field.getSimpleName();
+            String fieldType = field.getType() == null ? "" : field.getType().getQualifiedName();
+            return fieldName + ":" + fieldType;
+        }
+        if (typeMember instanceof CtAnonymousExecutable) {
+            CtAnonymousExecutable anonymousExecutable = (CtAnonymousExecutable) typeMember;
+            boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
+            return isStaticInitializer ? "<clinit>" : "<init>";
+        }
+        if (typeMember instanceof CtRecordComponent) {
+            CtRecordComponent recordComponent = (CtRecordComponent) typeMember;
+            String componentName = recordComponent.getSimpleName();
+            String componentType = recordComponent.getType() == null
+                    ? ""
+                    : recordComponent.getType().getQualifiedName();
+            return componentName + ":" + componentType;
+        }
+        if (typeMember instanceof CtType<?>) {
+            CtType<?> nestedType = (CtType<?>) typeMember;
+            return nestedType.getQualifiedName();
+        }
+        // Defensive fallback for any unexpected Spoon CtTypeMember implementation.
+        return typeMember.getClass().getSimpleName() + ":" + extractSrcStart(typeMember);
     }
 
     @NonNull

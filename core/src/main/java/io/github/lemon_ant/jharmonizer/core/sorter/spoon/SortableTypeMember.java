@@ -83,10 +83,12 @@ class SortableTypeMember {
          */
         @NonNull
         static OrderingKey derive(@NonNull CtTypeMember typeMember, boolean keepAccessorsTogether) {
-            String propertyName = keepAccessorsTogether && typeMember instanceof CtMethod<?> method
-                    ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
-                            .orElse(null)
-                    : null;
+            String propertyName = null;
+            if (keepAccessorsTogether && typeMember instanceof CtMethod<?>) {
+                CtMethod<?> method = (CtMethod<?>) typeMember;
+                propertyName = SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
+                        .orElse(null);
+            }
             return new OrderingKey(
                     extractSrcStart(typeMember),
                     deriveAlphaKey(typeMember),

@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
@@ -50,7 +52,7 @@ public final class JHarmonizer2UnifiedConverter {
 
         // 5) root member groups
         List<UnifiedMemberGroup> root =
-                vendor.getMemberGroups().stream().map(MemberGroupMapper::map).toList();
+                vendor.getMemberGroups().stream().map(MemberGroupMapper::map).collect(toUnmodifiableList());
 
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)

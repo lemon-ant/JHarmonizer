@@ -41,13 +41,26 @@ final class ProcessingProgressReporter {
 
     private void incrementStatusCounter(FileProcessingStatus status) {
         switch (status) {
-            case REORDERED -> reorderedCount.increment();
-            case FORMATTED -> formattedCount.increment();
-            case UNCHANGED -> unchangedCount.increment();
-            case CHECKED -> checkedCount.increment();
-            case SKIPPED -> skippedCount.increment();
-            case ERROR -> errorCount.increment();
-            default -> throw new IllegalStateException("Unexpected status: " + status);
+            case REORDERED:
+                reorderedCount.increment();
+                break;
+            case FORMATTED:
+                formattedCount.increment();
+                break;
+            case UNCHANGED:
+                unchangedCount.increment();
+                break;
+            case CHECKED:
+                checkedCount.increment();
+                break;
+            case SKIPPED:
+                skippedCount.increment();
+                break;
+            case ERROR:
+                errorCount.increment();
+                break;
+            default:
+                throw new IllegalStateException("Unexpected status: " + status);
         }
     }
 

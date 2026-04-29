@@ -3,6 +3,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
 import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.nio.file.Path;
@@ -80,7 +81,7 @@ public class RelocationDetector {
                             .map(offset -> Pair.of(element, offset));
                 })
                 .flatMap(Optional::stream)
-                .toList();
+                .collect(toUnmodifiableList());
     }
 
     /**
@@ -142,12 +143,15 @@ public class RelocationDetector {
      */
     @NonNull
     private static String computeParentSimpleName(CtElement element) {
-        if (element instanceof CtTypeMember member) {
-            var nonBlankName = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
-            if (member instanceof CtConstructor<?> constructor) {
+        if (element instanceof CtTypeMember) {
+            CtTypeMember member = (CtTypeMember) element;
+            String nonBlankName = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
+            if (member instanceof CtConstructor<?>) {
+                CtConstructor<?> constructor = (CtConstructor<?>) member;
                 return constructor.getSignature();
             }
-            if (member instanceof CtMethod<?> method) {
+            if (member instanceof CtMethod<?>) {
+                CtMethod<?> method = (CtMethod<?>) member;
                 nonBlankName = method.getSignature();
             }
             if (member.getDeclaringType() == null) {

@@ -107,13 +107,21 @@ public final class SrcProcessor {
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
         logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
-        IFlow flow =
-                // TODO Move it into the flow factory
-                switch (flowType) {
-                    case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
-                    case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
-                    case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
-                };
+        // TODO Move it into the flow factory
+        IFlow flow;
+        switch (flowType) {
+            case REORDER:
+                flow = new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
+                break;
+            case CHECK_ALL:
+                flow = new CheckAllFlow(formatter, sorter, printerConfig);
+                break;
+            case CHECK_FAIL_FAST:
+                flow = new CheckFailFastFlow(formatter, sorter, printerConfig);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected flow type: " + flowType);
+        }
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
 

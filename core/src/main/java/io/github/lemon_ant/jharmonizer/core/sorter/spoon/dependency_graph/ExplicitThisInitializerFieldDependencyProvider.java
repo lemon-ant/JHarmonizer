@@ -47,6 +47,10 @@ final class ExplicitThisInitializerFieldDependencyProvider
     }
 
     private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess, CtType<?> ignoredDeclaringType) {
-        return fieldAccess.getTarget() instanceof CtThisAccess<?> thisAccess && !thisAccess.isImplicit();
+        if (!(fieldAccess.getTarget() instanceof CtThisAccess<?>)) {
+            return false;
+        }
+        CtThisAccess<?> thisAccess = (CtThisAccess<?>) fieldAccess.getTarget();
+        return !thisAccess.isImplicit();
     }
 }

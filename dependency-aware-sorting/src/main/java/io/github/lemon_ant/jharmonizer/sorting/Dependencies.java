@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.NonNull;
@@ -60,7 +62,7 @@ public class Dependencies<TNode> {
         List<Dependency<TNode>> list = IntStream.iterate(0, i -> i + 2)
                 .limit(pairs.length / 2)
                 .mapToObj(i -> new Dependency<>(pairs[i], pairs[i + 1]))
-                .toList();
+                .collect(toUnmodifiableList());
         return new Dependencies<>(list);
     }
 }

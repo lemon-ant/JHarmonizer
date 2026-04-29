@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils;
 import java.util.List;
 import java.util.Optional;
@@ -24,20 +23,27 @@ class GroupBoundaryMarker {
     void markGroupBoundaries(@NonNull List<@NonNull MemberGroupBlock> orderedBlocks) {
         orderedBlocks.stream()
                 .filter(memberGroupBlock -> !memberGroupBlock.getTypeMembers().isEmpty())
-                .map(memberGroupBlock -> Pair.of(
-                        memberGroupBlock.getTypeMembers().getFirst(),
-                        switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
-                            case UnifiedSeparator.NEW_LINE -> SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
-                            case UnifiedSeparator.HEADER ->
-                                Optional.ofNullable(memberGroupBlock
-                                                .getCompiledMemberGroup()
-                                                .getName())
-                                        .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
-                            case UnifiedSeparator.NONE -> null;
-                        }))
+                .map(memberGroupBlock ->
+                        Pair.of(memberGroupBlock.getTypeMembers().get(0), resolveSeparatorText(memberGroupBlock)))
                 .filter(firstMemberAndSeparatorText -> firstMemberAndSeparatorText.getValue() != null)
                 .forEach(firstMemberAndSeparatorText -> writeGroupBoundaryMetadata(
                         firstMemberAndSeparatorText.getKey(), firstMemberAndSeparatorText.getValue()));
+    }
+
+    private static String resolveSeparatorText(MemberGroupBlock memberGroupBlock) {
+        switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
+            case NEW_LINE:
+                return SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
+            case HEADER:
+                return Optional.ofNullable(
+                                memberGroupBlock.getCompiledMemberGroup().getName())
+                        .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
+            case NONE:
+                return null;
+            default:
+                throw new IllegalStateException("Unexpected separator: "
+                        + memberGroupBlock.getCompiledMemberGroup().getSeparator());
+        }
     }
 
     private static void writeGroupBoundaryMetadata(CtTypeMember firstMember, String separatorText) {

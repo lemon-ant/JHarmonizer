@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,6 +36,6 @@ class TypeMemberGrouper {
         return membersByGroup.entrySet().stream()
                 .sorted(Comparator.comparingInt(entry -> entry.getKey().getOrderIndex()))
                 .map(entry -> new MemberGroupBlock(entry.getKey(), entry.getValue()))
-                .toList();
+                .collect(toUnmodifiableList());
     }
 }
