@@ -107,12 +107,7 @@ public final class SrcProcessor {
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
         logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
-        IFlow flow =
-                switch (flowType) {
-                    case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
-                    case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
-                    case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
-                };
+        IFlow flow = createFlow(flowType);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
 
@@ -140,6 +135,20 @@ public final class SrcProcessor {
         long nonConformingFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         boolean success = flow.isSuccessful(nonConformingFileCount > 0);
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
+    }
+
+    @NonNull
+    private IFlow createFlow(FlowType flowType) {
+        switch (flowType) {
+            case REORDER:
+                return new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
+            case CHECK_ALL:
+                return new CheckAllFlow(formatter, sorter, printerConfig);
+            case CHECK_FAIL_FAST:
+                return new CheckFailFastFlow(formatter, sorter, printerConfig);
+            default:
+                throw new IllegalStateException("Unexpected flow type: " + flowType);
+        }
     }
 
     private static void logDebugProcessingCompletionSummary(
