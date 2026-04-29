@@ -137,7 +137,14 @@ public final class SrcProcessor {
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
     }
 
+    /**
+     * Creates the processing flow for the requested processing strategy.
+     *
+     * @param flowType the flow strategy to instantiate
+     * @return the matching processing flow
+     */
     @NonNull
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private IFlow createFlow(FlowType flowType) {
         switch (flowType) {
             case REORDER:
@@ -147,6 +154,7 @@ public final class SrcProcessor {
             case CHECK_FAIL_FAST:
                 return new CheckFailFastFlow(formatter, sorter, printerConfig);
             default:
+                // Keep this defensive fallback so a future FlowType cannot silently skip flow construction.
                 throw new IllegalStateException("Unexpected flow type: " + flowType);
         }
     }
