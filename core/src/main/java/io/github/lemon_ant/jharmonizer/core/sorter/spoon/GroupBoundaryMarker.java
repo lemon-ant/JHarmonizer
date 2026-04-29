@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils;
 import java.util.List;
 import java.util.Optional;
@@ -25,15 +24,15 @@ class GroupBoundaryMarker {
         orderedBlocks.stream()
                 .filter(memberGroupBlock -> !memberGroupBlock.getTypeMembers().isEmpty())
                 .map(memberGroupBlock -> Pair.of(
-                        memberGroupBlock.getTypeMembers().getFirst(),
+                        memberGroupBlock.getTypeMembers().get(0),
                         switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
-                            case UnifiedSeparator.NEW_LINE -> SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
-                            case UnifiedSeparator.HEADER ->
+                            case NEW_LINE -> SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
+                            case HEADER ->
                                 Optional.ofNullable(memberGroupBlock
                                                 .getCompiledMemberGroup()
                                                 .getName())
                                         .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
-                            case UnifiedSeparator.NONE -> null;
+                            case NONE -> null;
                         }))
                 .filter(firstMemberAndSeparatorText -> firstMemberAndSeparatorText.getValue() != null)
                 .forEach(firstMemberAndSeparatorText -> writeGroupBoundaryMetadata(

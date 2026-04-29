@@ -81,7 +81,7 @@ public class SpoonTypeUtils {
     public static CtType<?> findMainType(@NonNull CtCompilationUnit compilationUnit) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() == ONE_ROOT_TYPE) {
-            return declaredTypes.getFirst();
+            return declaredTypes.get(0);
         }
 
         String baseName = stripExtension(compilationUnit.getFile().getName());

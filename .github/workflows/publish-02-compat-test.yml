@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+
+name: 02-Compatibility Test
+
+on:
+  workflow_run:
+    workflows: ["01-Build Artifacts"]
+    types: [ completed ]
+
+# workflow_run always runs on the default branch; use the triggering
+# run's head_branch to distinguish a push-to-main run from a release run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  # When 01-Build Artifacts was triggered by a release event, save the tag name and commit SHA
+  # so that 03-Publish Release can detect and trace back to the original release ref without
+  # having to re-examine the event chain (workflow_run does not propagate the original event
+  # through more than one hop in the chain).
+  save-release-info:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'release' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    steps:
+      - name: Write release tag and SHA
+        run: |
+          echo "tag=${{ github.event.workflow_run.head_branch }}" > release-info.txt
+          echo "sha=${{ github.event.workflow_run.head_sha }}" >> release-info.txt
+
+      - name: Upload release info artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-tag-info
+          path: release-info.txt
+          if-no-files-found: error
+
+  compat-matrix:
+    # Run only if 01 succeeded and base event was push(main) or release.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && ((github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') || github.event.workflow_run.event == 'release') }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vendor: [ temurin, microsoft ]
+        java: [ 17, 21, 23 ]
+        exclude:
+          - vendor: microsoft
+            java: 23
+    steps:
+      - name: Download dist, deps, and runner from 01
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist deps runner
+          RID=${{ github.event.workflow_run.id }}
+          gh run download "$RID" -R ${{ github.event.workflow_run.repository.full_name }} --name "jharmonizer-dist" --dir dist
+          gh run download "$RID" -R ${{ github.event.workflow_run.repository.full_name }} --name "jharmonizer-deps-runtime" --dir deps
+          gh run download "$RID" -R ${{ github.event.workflow_run.repository.full_name }} --name "jharmonizer-runner" --dir runner
+          echo "Distribution:" && ls -l dist
+          echo "Dependencies:" && ls -l deps || true
+          echo "Runner:" && ls -l runner
+
+      - name: Pick artifacts
+        id: pick
+        run: |
+          CORE=$(ls dist/jharmonizer-core-*.jar | grep -v -- '-sources.jar' | grep -v -- '-javadoc.jar' | head -n1)
+          SORTING=$(ls dist/dependency-aware-sorting-*.jar | grep -v -- '-sources.jar' | grep -v -- '-javadoc.jar' | head -n1)
+          CLI=$(ls dist/jharmonizer-cli.jar | head -n1)
+          echo "core=$CORE" >> "$GITHUB_OUTPUT"
+          echo "sorting=$SORTING" >> "$GITHUB_OUTPUT"
+          echo "cli=$CLI" >> "$GITHUB_OUTPUT"
+          echo "Core: $CORE"
+          echo "Sorting: $SORTING"
+          echo "CLI: $CLI"
+
+      - name: Set up Java ${{ matrix.java }} (${{ matrix.vendor }})
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ matrix.vendor }}
+          java-version: ${{ matrix.java }}
+          cache: maven
+
+      - name: Show java -version
+        run: java -version
+
+      - name: Run precompiled core runner on this JVM
+        run: java -cp "${{ steps.pick.outputs.core }}:${{ steps.pick.outputs.sorting }}:deps/*:runner" Runner
+
+      - name: Run CLI help on this JVM
+        run: java -jar "${{ steps.pick.outputs.cli }}" --help

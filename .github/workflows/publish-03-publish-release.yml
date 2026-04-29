@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+
+name: 03-Publish Release
+
+# Trigger only after 02-Compatibility Test completes so that publishing is always gated on
+# a successful build (01-Build Artifacts) and a successful compatibility matrix (02).
+# The release-tag-info artifact uploaded by 02 is used to detect that the original trigger
+# was a release event and to retrieve the exact tag and SHA to deploy.
+on:
+  workflow_run:
+    workflows: ["02-Compatibility Test"]
+    types: [ completed ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  # Determine whether this workflow_run completion corresponds to a release tag.
+  # Downloads the release-tag-info artifact that 02-Compatibility Test uploads only when
+  # the original trigger was a release event on a version tag.
+  check-release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      is_release: ${{ steps.load-info.outputs.is_release }}
+      tag: ${{ steps.load-info.outputs.tag }}
+      sha: ${{ steps.load-info.outputs.sha }}
+    steps:
+      - name: Download release info artifact from 02 run
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: release-tag-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse release info
+        id: load-info
+        run: |
+          if [[ -f release-info.txt ]]; then
+            tag=$(grep '^tag=' release-info.txt | cut -d= -f2-)
+            sha=$(grep '^sha=' release-info.txt | cut -d= -f2-)
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish-release:
+    needs: check-release
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-release.outputs.is_release == 'true' }}
+    # Expose credentials at job level so setup-java can embed them in ~/.m2/settings.xml
+    # and the Maven deploy step can authenticate against Maven Central.
+    env:
+      MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check-release.outputs.sha }}
+
+      - name: Set up Java 21 with Maven Central server credentials
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          # Generates ~/.m2/settings.xml with <server id="central"> populated from the env vars above.
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_TOKEN
+
+      - name: Import GPG key
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Build, sign, and publish to Maven Central
+        # -Prelease activates: maven-source-plugin, maven-javadoc-plugin,
+        #                       maven-gpg-plugin (sign), central-publishing-maven-plugin (deploy).
+        # -Ddoclint=none avoids failing the build on non-critical Javadoc warnings.
+        # -Dci=true disables local-dev-only profiles (reformat-poms, reformat-sources).
+        run: mvn -B -ntp -Dci=true -Prelease -Ddoclint=none clean deploy
