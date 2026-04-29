@@ -23,6 +23,18 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class ComparatorUtils {
 
+    private static final Comparator<OrderingKey> PRESERVE_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getSrcStart);
+
+    private static final Comparator<OrderingKey> ALPHA_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getAlphaSortingRank).thenComparing(OrderingKey::getAlphaKey);
+
+    private static final Comparator<OrderingKey> VISIBILITY_ASC_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getVisibilityRank).reversed();
+
+    private static final Comparator<OrderingKey> VISIBILITY_DESC_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getVisibilityRank);
+
     /**
      * Default fallback comparator used when no ordering rules are configured: PRESERVE
      * (source position) followed by ALPHA (alpha key). Tie-breakers are applied on top by
@@ -30,7 +42,7 @@ class ComparatorUtils {
      * default already provides a deterministic ordering.
      */
     private static final Comparator<OrderingKey> DEFAULT_COMPARATOR =
-            Comparator.<OrderingKey>comparingInt(OrderingKey::getSrcStart).thenComparing(OrderingKey::getAlphaKey);
+            PRESERVE_COMPARATOR.thenComparing(ALPHA_COMPARATOR);
 
     /**
      * Builds a comparator over {@link OrderingKey} from the given ordering rules. Tie-breakers
@@ -95,24 +107,10 @@ class ComparatorUtils {
     @NonNull
     private static Comparator<OrderingKey> buildComparatorForRule(OrderingRule orderingRule) {
         return switch (orderingRule) {
-            case PRESERVE -> Comparator.comparingInt(OrderingKey::getSrcStart);
-            case ALPHA -> buildAlphaComparator();
-            case VISIBILITY_ASC ->
-                Comparator.comparingInt(OrderingKey::getVisibilityRank).reversed();
-            case VISIBILITY_DESC -> Comparator.comparingInt(OrderingKey::getVisibilityRank);
-        };
-    }
-
-    @NonNull
-    private static Comparator<OrderingKey> buildAlphaComparator() {
-        // Compare the alpha sorting rank first. Rank is non-zero only for anonymous initializer
-        // blocks (rank 1), ensuring they always sort after all regular named members.
-        return (left, right) -> {
-            int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
-            if (rankComparison != 0) {
-                return rankComparison;
-            }
-            return left.getAlphaKey().compareTo(right.getAlphaKey());
+            case PRESERVE -> PRESERVE_COMPARATOR;
+            case ALPHA -> ALPHA_COMPARATOR;
+            case VISIBILITY_ASC -> VISIBILITY_ASC_COMPARATOR;
+            case VISIBILITY_DESC -> VISIBILITY_DESC_COMPARATOR;
         };
     }
 }

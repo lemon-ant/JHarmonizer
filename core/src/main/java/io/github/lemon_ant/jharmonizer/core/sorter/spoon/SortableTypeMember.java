@@ -62,13 +62,26 @@ class SortableTypeMember {
     public String toString() {
         return "member=" + describeTypeMember(typeMember)
                 + ", ownKey=" + ownKey
-                + ", propertyClusterRepresentativeKey=" + propertyClusterRepresentativeKey
-                + ", superClusterRepresentativeKey=" + superClusterRepresentativeKey;
+                + ", propertyClusterRepresentativeKey=" + describeOrderingKey(propertyClusterRepresentativeKey)
+                + ", superClusterRepresentativeKey=" + describeOrderingKey(superClusterRepresentativeKey);
     }
 
     @NonNull
     private static String describeTypeMember(CtTypeMember typeMember) {
         return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
+    }
+
+    /**
+     * Formats an ordering key with its identity hash so shared representative instances are
+     * visible in diagnostics (cluster members share one representative; non-clustered members
+     * use a self-reference).
+     *
+     * @param orderingKey the ordering key to describe
+     * @return the diagnostic description
+     */
+    @NonNull
+    private static String describeOrderingKey(OrderingKey orderingKey) {
+        return orderingKey + "@" + System.identityHashCode(orderingKey);
     }
 
     /**
