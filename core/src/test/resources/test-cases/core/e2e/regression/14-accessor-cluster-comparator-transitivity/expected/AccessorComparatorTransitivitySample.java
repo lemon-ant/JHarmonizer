@@ -11,12 +11,6 @@ public class AccessorComparatorTransitivitySample {
     private String yankee;
     private String zebra;
 
-    public void middle() {
-        // non-accessor method whose alphaKey ("middle():void") falls between the
-        // accessors' alphaKeys; this is the third element of the inconsistent
-        // comparator triple together with any get* / set* unpaired accessor.
-    }
-
     public void setApple(String apple) {
         this.apple = apple;
     }
@@ -39,5 +33,11 @@ public class AccessorComparatorTransitivitySample {
 
     public String getZebra() {
         return zebra;
+    }
+
+    public void middle() {
+        // non-accessor method whose alphaKey ("middle():void") falls between the
+        // accessors' alphaKeys; this is the third element of the inconsistent
+        // comparator triple together with any get* / set* unpaired accessor.
     }
 }
