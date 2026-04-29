@@ -15,6 +15,17 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class ComparatorUtils {
 
+    private static final Comparator<OrderingKey> PRESERVE_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getSrcStart);
+    private static final Comparator<OrderingKey> ALPHA_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getAlphaSortingRank).thenComparing(OrderingKey::getAlphaKey);
+    private static final Comparator<OrderingKey> VISIBILITY_ASC_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getVisibilityRank).reversed();
+    private static final Comparator<OrderingKey> VISIBILITY_DESC_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getVisibilityRank);
+    private static final Comparator<OrderingKey> DEFAULT_ORDERING_COMPARATOR =
+            PRESERVE_COMPARATOR.thenComparing(ALPHA_COMPARATOR);
+
     /**
      * Builds the comparator used to order sortable type members by their ordering keys.
      *
@@ -26,7 +37,7 @@ class ComparatorUtils {
         Comparator<OrderingKey> configuredComparator = orderingRules.stream()
                 .map(ComparatorUtils::buildOrderingComparatorForOrderingRule)
                 .reduce(Comparator::thenComparing)
-                .orElseGet(ComparatorUtils::buildDefaultOrderingComparator);
+                .orElse(DEFAULT_ORDERING_COMPARATOR);
 
         // Deterministic tie-breakers regardless of configured keys.
         if (!orderingRules.contains(OrderingRule.PRESERVE)) {
@@ -55,17 +66,6 @@ class ComparatorUtils {
     }
 
     /**
-     * Builds the fallback comparator used when no explicit ordering rules are configured.
-     *
-     * @return the default ordering key comparator
-     */
-    @NonNull
-    private static Comparator<OrderingKey> buildDefaultOrderingComparator() {
-        return buildOrderingComparatorForOrderingRule(OrderingRule.PRESERVE)
-                .thenComparing(buildOrderingComparatorForOrderingRule(OrderingRule.ALPHA));
-    }
-
-    /**
      * Builds a comparator for one configured ordering rule.
      *
      * @param orderingRule the ordering rule to apply
@@ -74,19 +74,10 @@ class ComparatorUtils {
     @NonNull
     private static Comparator<OrderingKey> buildOrderingComparatorForOrderingRule(OrderingRule orderingRule) {
         return switch (orderingRule) {
-            case PRESERVE -> (left, right) -> Integer.compare(left.getSrcStart(), right.getSrcStart());
-            case ALPHA ->
-                (left, right) -> {
-                    int rankComparison = Integer.compare(left.getAlphaSortingRank(), right.getAlphaSortingRank());
-                    if (rankComparison != 0) {
-                        return rankComparison;
-                    }
-                    return left.getAlphaKey().compareTo(right.getAlphaKey());
-                };
-            case VISIBILITY_ASC ->
-                (left, right) -> Integer.compare(right.getVisibilityRank(), left.getVisibilityRank());
-            case VISIBILITY_DESC ->
-                (left, right) -> Integer.compare(left.getVisibilityRank(), right.getVisibilityRank());
+            case PRESERVE -> PRESERVE_COMPARATOR;
+            case ALPHA -> ALPHA_COMPARATOR;
+            case VISIBILITY_ASC -> VISIBILITY_ASC_COMPARATOR;
+            case VISIBILITY_DESC -> VISIBILITY_DESC_COMPARATOR;
         };
     }
 

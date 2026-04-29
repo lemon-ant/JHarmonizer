@@ -7,10 +7,8 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveSrcStart;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.deriveVisibilityRank;
 
-import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.SpoonJavaBeansAccessorUtils;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,7 +17,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.Value;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -41,52 +38,6 @@ class SortableTypeMember {
 
     @NonNull
     OrderingKey propertyClusterRepresentative;
-
-    /**
-     * Creates a standalone sortable member whose super-cluster and property-cluster representatives both point to its
-     * own ordering key.
-     *
-     * @param typeMember the wrapped type member
-     * @param orderingKey the member's own ordering key
-     */
-    private SortableTypeMember(@NonNull CtTypeMember typeMember, @NonNull OrderingKey orderingKey) {
-        this(typeMember, orderingKey, orderingKey, orderingKey);
-    }
-
-    /**
-     * Creates a sortable member whose representatives initially point to its own ordering key.
-     *
-     * @param typeMember the type member to wrap
-     * @return the sortable member
-     */
-    @NonNull
-    static SortableTypeMember create(@NonNull CtTypeMember typeMember) {
-        return new SortableTypeMember(typeMember, OrderingKey.derive(typeMember));
-    }
-
-    /**
-     * Returns a copy that shares the resolved accessor super-cluster and property-cluster representatives.
-     *
-     * @param superClusterRepresentative the shared representative for all accessors in the super-cluster
-     * @param propertyClusterRepresentative the shared representative for accessors of one property
-     * @return the accessor-clustered sortable member
-     */
-    @NonNull
-    SortableTypeMember withAccessorClusterRepresentatives(
-            @NonNull OrderingKey superClusterRepresentative, @NonNull OrderingKey propertyClusterRepresentative) {
-        return new SortableTypeMember(
-                typeMember, orderingKey, superClusterRepresentative, propertyClusterRepresentative);
-    }
-
-    /**
-     * Returns whether this member belongs to an accessor cluster.
-     *
-     * @return {@code true} when at least one representative is not this member's own ordering key
-     */
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    boolean isClustered() {
-        return orderingKey != superClusterRepresentative || orderingKey != propertyClusterRepresentative;
-    }
 
     @Override
     public String toString() {
@@ -110,19 +61,6 @@ class SortableTypeMember {
     @NonNull
     private static String describeOrderingKey(OrderingKey orderingKey) {
         return orderingKey + "@" + System.identityHashCode(orderingKey);
-    }
-
-    /**
-     * Finds the JavaBeans accessor property name for a member when it is a recognized accessor method.
-     *
-     * @param typeMember the type member to inspect
-     * @return the accessor property name, or empty when the member is not a recognized accessor
-     */
-    @NonNull
-    static Optional<String> findAccessorPropertyName(@NonNull CtTypeMember typeMember) {
-        return typeMember instanceof CtMethod<?> method
-                ? SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method)
-                : Optional.empty();
     }
 
     /**
@@ -159,21 +97,6 @@ class SortableTypeMember {
                     deriveAlphaKey(typeMember),
                     deriveAlphaSortingRank(typeMember),
                     deriveVisibilityRank(typeMember));
-        }
-
-        /**
-         * Derives a distinct representative key from an existing member ordering key.
-         *
-         * @param orderingKey the source ordering key
-         * @return the representative ordering key
-         */
-        @NonNull
-        static OrderingKey deriveRepresentative(@NonNull OrderingKey orderingKey) {
-            return new OrderingKey(
-                    orderingKey.getSrcStart(),
-                    orderingKey.getAlphaKey(),
-                    orderingKey.getAlphaSortingRank(),
-                    orderingKey.getVisibilityRank());
         }
 
         /**
