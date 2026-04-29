@@ -1,0 +1,36 @@
+{
+  "description": "Two groups and one singleton, no dependencies. Blocks ordered by group key: {alpha,beta} < charlie < {delta,echo}.",
+  "items": [
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "echo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "beta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [
+    [
+      "delta",
+      "echo"
+    ],
+    [
+      "alpha",
+      "beta"
+    ]
+  ],
+  "dependencies": []
+}

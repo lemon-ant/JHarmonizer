@@ -4,12 +4,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.antonlem.jharmonizer</groupId>
+        <groupId>io.github.lemon-ant.jharmonizer</groupId>
         <artifactId>jharmonizer-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>jharmonizer-core</artifactId>
     <name>JHarmonizer Core</name>
+
+    <properties>
+        <!-- Minimum module branch coverage threshold. -->
+        <jacoco.minimum.branch.coverage>0.70</jacoco.minimum.branch.coverage>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -20,26 +25,67 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.19.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.19.1</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.lemon-ant</groupId>
+            <artifactId>glob-path-finder</artifactId>
+            <version>${glob-path-finder.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.java-diff-utils</groupId>
             <artifactId>java-diff-utils</artifactId>
-            <version>4.15</version>
+            <version>4.16</version>
         </dependency>
         <dependency>
             <groupId>fr.inria.gforge.spoon</groupId>
             <artifactId>spoon-core</artifactId>
             <version>11.2.1</version>
+            <exclusions>
+                <!-- Maven model support — not used by JHarmonizer -->
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-model</artifactId>
+                </exclusion>
+                <!-- Maven invoker support — not used by JHarmonizer -->
+                <exclusion>
+                    <groupId>org.apache.maven.shared</groupId>
+                    <artifactId>maven-invoker</artifactId>
+                </exclusion>
+                <!--
+                    commons-compress is a transitive dependency of spoon-core, but JHarmonizer does not use the
+                    Spoon functionality that requires it. The project's former direct basename usage was migrated
+                    from commons-compress FileNameUtils.getBaseName to commons-io FilenameUtils.
+                -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.github.lemon-ant.jharmonizer</groupId>
+            <artifactId>dependency-aware-sorting</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -50,37 +96,68 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
-                        <argLine>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                        <!-- Keep the javac module opens while letting JaCoCo inject its late-bound test agent. -->
+                        <argLine>@{argLine} ${mockito.agent.argLine}
+                        --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
                         --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
                         --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
                         --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
                         --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argLine>
                     </configuration>
                 </plugin>
-
             </plugins>
         </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-java-test-cases</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <phase>process-test-resources</phase>
+                        <configuration>
+                            <!-- Compile ONLY test-cases Java fixtures -->
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/test/resources/test-cases</compileSourceRoot>
+                            </compileSourceRoots>
+                            <testIncludes>
+                                <include>**/valid/**/*.java</include>
+                            </testIncludes>
+                            <outputDirectory>${project.build.directory}/test-cases-compile-check-classes</outputDirectory>
+                            <!-- Use same release as tests/project (or set explicitly) -->
+                            <testRelease>${maven.compiler.release}</testRelease>
+                            <!-- Suppress 'strictfp' deprecation warnings from test fixtures -->
+                            <compilerArgs>
+                                <arg>-Xlint:-strictfp</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
-                <!-- Актуальная версия на 2025 год; проверь на maven.apache.org если нужно обновить -->
+                <version>${maven-assembly-plugin.version}</version>
+                <!-- Keep this plugin aligned with the latest stable release used by the project -->
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/project-zip.xml</descriptor>
-                        <!-- Ссылка на дескриптор; создадим его ниже -->
+                        <!-- Assembly descriptor location -->
                     </descriptors>
                     <outputDirectory>${project.basedir}</outputDirectory>
                     <finalName>${project.artifactId}-${project.version}-sources</finalName>
-                    <!-- Имя ZIP: например, myproject-1.0-sources.zip -->
+                    <!-- Output ZIP name, e.g. myproject-1.0-sources.zip -->
                     <appendAssemblyId>false</appendAssemblyId>
-                    <!-- Не добавлять суффикс к имени файла -->
+                    <!-- Do not append the assembly id suffix to the filename -->
                 </configuration>
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <!-- Привязка к фазе package: после компиляции и тестов, но перед установкой -->
+                        <!-- Bind to package phase: after compilation/tests, before install -->
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -90,4 +167,57 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>benchmark-sort</id>
+            <properties>
+                <benchmark.forks>0</benchmark.forks>
+                <benchmark.iterations>10</benchmark.iterations>
+                <benchmark.measurementBatchSize>1000</benchmark.measurementBatchSize>
+                <benchmark.threads>4</benchmark.threads>
+                <benchmark.warmupIterations>5</benchmark.warmupIterations>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <configuration>
+                            <classpathScope>test</classpathScope>
+                            <mainClass>org.openjdk.jmh.Main</mainClass>
+                            <arguments>
+                                <argument>.*SortingAlgorithmBenchmark.*</argument>
+                                <argument>-foe</argument>
+                                <argument>true</argument>
+                                <argument>-tu</argument>
+                                <argument>ms</argument>
+                                <argument>-bm</argument>
+                                <argument>avgt</argument>
+                                <argument>-wi</argument>
+                                <argument>${benchmark.warmupIterations}</argument>
+                                <argument>-i</argument>
+                                <argument>${benchmark.iterations}</argument>
+                                <argument>-f</argument>
+                                <argument>${benchmark.forks}</argument>
+                                <argument>-jvmArgsAppend</argument>
+                                <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>-jvmArgsAppend</argument>
+                                <argument>--add-opens=java.base/java.util=ALL-UNNAMED</argument>
+                                <argument>-t</argument>
+                                <argument>${benchmark.threads}</argument>
+                                <argument>-p</argument>
+                                <argument>measurementBatchSize=${benchmark.measurementBatchSize}</argument>
+                                <argument>-rf</argument>
+                                <argument>json</argument>
+                                <argument>-rff</argument>
+                                <argument>${project.basedir}/sorting-benchmark.json</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -1,0 +1,40 @@
+{
+  "description": "Diamond dependency: delta must precede both charlie and bravo; both must precede alpha. Topo order with lex tie-break: delta (only root), then bravo < charlie (both become available after delta), then alpha.",
+  "items": [
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "delta",
+      "dependent": "charlie"
+    },
+    {
+      "provider": "delta",
+      "dependent": "bravo"
+    },
+    {
+      "provider": "charlie",
+      "dependent": "alpha"
+    },
+    {
+      "provider": "bravo",
+      "dependent": "alpha"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [class]
+  ordering-rules: [alpha]
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+backups-enabled: true
+print-processing-statistics: true
+header-line:
+  character: "-"
+  left-padding: 2
+type-members-ordering:
+  - includes:
+      - [field]
+    ordering-rules: [alpha]

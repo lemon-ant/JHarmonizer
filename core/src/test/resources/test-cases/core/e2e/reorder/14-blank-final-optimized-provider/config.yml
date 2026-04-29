@@ -1,0 +1,39 @@
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+backups-enabled: false
+print-processing-statistics: true
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Blank-final optimized provider
+    includes: ~.*
+    ordering-rules: preserve
+    groups:
+      - name: Static fields
+        separator: none
+        ordering-rules: alpha
+        includes: [ static, field ]
+      - name: Static initializers
+        separator: none
+        ordering-rules: preserve
+        includes: [ static, initializer ]
+      - name: Instance fields
+        separator: none
+        ordering-rules: alpha
+        includes: field
+        excludes: [ static ]
+      - name: Instance initializers
+        separator: none
+        ordering-rules: preserve
+        includes: initializer
+        excludes: [ static ]

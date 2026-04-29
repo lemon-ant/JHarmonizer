@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.lemon-ant.jharmonizer</groupId>
+        <artifactId>jharmonizer-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>jharmonizer-cli</artifactId>
+    <name>JHarmonizer CLI</name>
+
+    <properties>
+        <!-- Branch coverage is currently at ~94 %; threshold is kept at 85 % to provide headroom
+             for future code changes without requiring immediate test additions. -->
+        <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.lemon-ant.jharmonizer</groupId>
+            <artifactId>jharmonizer-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.7.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>jharmonizer-cli</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <!--
+                        The shade goal consumes this module's main jar and then replaces that original artifact with the
+                        shaded one. On a follow-up local `mvn package`, the target jar may therefore already be the shaded
+                        output from the previous build. Forcing jar recreation makes Maven rebuild a fresh plain CLI jar
+                        before shading, so the shade step always starts from clean classes/resources instead of re-shading
+                        yesterday's uber-jar and reporting self-overlap warnings.
+                    -->
+                    <forceCreation>true</forceCreation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Keep the javac module opens while letting JaCoCo inject its late-bound test agent. -->
+                    <argLine>@{argLine} ${mockito.agent.argLine}
+                    --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                    --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
+                    --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                    --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+                    --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.5.5</version>
+                <configuration>
+                    <!-- Populated by JaCoCo's integration-test agent so Failsafe runs can contribute coverage data. -->
+                    <argLine>@{failsafeArgLine}</argLine>
+                    <systemPropertyVariables>
+                        <jharmonizer.cli.executableJar>${project.build.directory}/${project.build.finalName}.jar</jharmonizer.cli.executableJar>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>packaged-jar-it</id>
+                        <!--
+                            Failsafe participates in the lifecycle with two separate goals: `integration-test` executes the
+                            packaged-JAR integration tests, while `verify` only reads their reports and fails the build if any
+                            of those tests failed. Keeping both goals inside one named execution makes the binding explicit and
+                            avoids the misleading `(default)` execution label in Maven logs.
+                        -->
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <minimizeJar>true</minimizeJar>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>.api_description</exclude>
+                                        <exclude>about.html</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/DEPENDENCIES</exclude>
+                                        <exclude>META-INF/eclipse.inf</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/versions/**/module-info.class</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <!--
+                                    Palantir Java Format loads its Java-version-specific visitor
+                                    (e.g. Java21InputAstVisitor) via ServiceLoader at runtime.
+                                    Without this filter the minimizer strips those reflectively
+                                    loaded classes, causing a LinkageError.
+                                -->
+                                <filter>
+                                    <artifact>com.palantir.javaformat:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!--
+                                    Logback is wired via SLF4J's ServiceLoader mechanism
+                                    (SLF4JServiceProvider). The minimizer does not trace SPI
+                                    bindings, so the provider and its supporting classes must
+                                    be kept explicitly.
+                                -->
+                                <filter>
+                                    <artifact>ch.qos.logback:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>io.github.lemon_ant.jharmonizer.cli.command.JHarmonizerCliApplication</mainClass>
+                                    <manifestEntries>
+                                        <!--
+                                            These manifest entries preserve the JVM module flags inside the packaged shaded CLI JAR.
+                                            The formatter and parser stack used by the CLI reaches into non-exported `jdk.compiler`
+                                            javac internals at runtime, so plain `java -jar cli/target/jharmonizer-cli.jar ...`
+                                            would fail without the equivalent JVM add-exports and add-opens options.
+                                            Keeping them in the manifest ensures the delivered executable artifact behaves the same
+                                            in the packaged-JAR E2E tests and for end users launching the CLI directly.
+                                        -->
+                                        <Add-Exports>jdk.compiler/com.sun.tools.javac.api jdk.compiler/com.sun.tools.javac.file jdk.compiler/com.sun.tools.javac.parser jdk.compiler/com.sun.tools.javac.tree jdk.compiler/com.sun.tools.javac.util</Add-Exports>
+                                        <Add-Opens>jdk.compiler/com.sun.tools.javac.api jdk.compiler/com.sun.tools.javac.file jdk.compiler/com.sun.tools.javac.parser jdk.compiler/com.sun.tools.javac.tree jdk.compiler/com.sun.tools.javac.util</Add-Opens>
+                                    </manifestEntries>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

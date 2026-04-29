@@ -2,7 +2,7 @@
 
 ## Purpose
 
-In **check mode**, a dedicated component — `DiffReporter` — is required to compare the **original Java source code with the restructured version**. It serves two key purposes:
+In **check mode**, a dedicated component — `DiffReporter` — is required to compare the **original Java source code with the reordered version**. It serves two key purposes:
 
 1. **Comparison**: Determines whether the original and transformed code are identical.
 2. **Diagnostics**: If differences exist, generates a readable **diff output** suitable for terminal or log output, highlighting the changes clearly.
@@ -10,7 +10,7 @@ In **check mode**, a dedicated component — `DiffReporter` — is required to c
 ## Usage
 
 `DiffReporter` is invoked from within the `check(...)` method to:
-- Validate whether restructuring is necessary.
+- Validate whether reordering is necessary.
 - Raise an exception when mismatches are found, including a detailed diff report.
 
 ## Possible Implementations

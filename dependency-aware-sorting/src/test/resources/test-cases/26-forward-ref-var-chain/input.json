@@ -1,0 +1,21 @@
+{
+  "description": "Models the FieldInitializerVarRefChainSample E2E case. Two independent provider chains: h->d->b and g->f,g->i. Free items a,c,e sit alphabetically between provider keys. Expected: each chain starts at its root, free items fill the remaining slots.",
+  "items": [
+    {"name": "a", "numeration": "STATIC"},
+    {"name": "b", "numeration": "STATIC"},
+    {"name": "c", "numeration": "STATIC"},
+    {"name": "d", "numeration": "STATIC"},
+    {"name": "e", "numeration": "STATIC"},
+    {"name": "f", "numeration": "STATIC"},
+    {"name": "g", "numeration": "STATIC"},
+    {"name": "h", "numeration": "STATIC"},
+    {"name": "i", "numeration": "STATIC"}
+  ],
+  "groups": [],
+  "dependencies": [
+    {"provider": "h", "dependent": "d"},
+    {"provider": "d", "dependent": "b"},
+    {"provider": "g", "dependent": "f"},
+    {"provider": "g", "dependent": "i"}
+  ]
+}

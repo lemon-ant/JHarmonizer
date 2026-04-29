@@ -1,0 +1,35 @@
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+public enum EnumMembersTrailingCommaSemicolonScenario {
+    GAMMA(3),
+    ALPHA(1),
+    BETA(2),
+    ;
+
+    private final int code;
+
+    private EnumMembersTrailingCommaSemicolonScenario(int code) {
+        this.code = code;
+    }
+
+    static String zUtility() {
+        return "utility";
+    }
+
+    int bCode() {
+        return code;
+    }
+
+    String aLabel() {
+        return name().toLowerCase();
+    }
+
+    public static void main(String[] args) {
+        if (GAMMA.bCode() != 3 || ALPHA.bCode() != 1 || BETA.bCode() != 2) {
+            throw new IllegalStateException("Unexpected enum code values:"
+                    + " GAMMA=" + GAMMA.bCode()
+                    + ", ALPHA=" + ALPHA.bCode()
+                    + ", BETA=" + BETA.bCode());
+        }
+    }
+}

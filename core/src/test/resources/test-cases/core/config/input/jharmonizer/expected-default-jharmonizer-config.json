@@ -1,0 +1,888 @@
+{
+  "formatting" : {
+    "fixImports" : true,
+    "formatterStyle" : "PALANTIR",
+    "blankLineAfterTypeHeader" : false,
+    "blankLineBeforeComment" : true,
+    "blankLineBetweenFields" : false
+  },
+  "backupsEnabled" : true,
+  "printProcessingStatistics" : true,
+  "headerLine" : {
+    "character" : "-",
+    "leftPadding" : 3
+  },
+  "memberGroups" : [ {
+    "name" : "Test Classes",
+    "includes" : [
+      [ "~.*Test$", "class" ],
+      [ "~.*IT$", "class" ],
+      [ "@ExtendWith", "class" ],
+      [ "@RunWith", "class" ],
+      [ "@Nested", "class" ],
+      [ "@~.*Test$", "class" ]
+    ],
+    "excludes" : [ ],
+    "separator" : "NEW_LINE",
+    "keepAccessorsTogether" : null,
+    "relaxedForwardReferences" : null,
+    "memberSubGroups" : [ {
+      "name" : "JUnit Fields",
+      "includes" : [
+        [ "field" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "JUnit Constants",
+        "includes" : [
+          [ "static", "final" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      }, {
+        "name" : "JUnit Static fields",
+        "includes" : [
+          [ "static" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+    }, {
+      "name" : "JUnit Methods",
+      "includes" : [
+        [ "method" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "JUnit Setup Methods",
+        "includes" : [
+          [ "@BeforeAll" ],
+          [ "@BeforeEach" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : [ "PRESERVE" ]
+      }, {
+        "name" : "JUnit Test Methods",
+        "includes" : [
+          [ "@ParameterizedTest" ],
+          [ "@RepeatedTest" ],
+          [ "@TestTemplate" ],
+          [ "@Test" ],
+          [ "@TestFactory" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      }, {
+        "name" : "JUnit Teardown Methods",
+        "includes" : [
+          [ "@AfterEach" ],
+          [ "@AfterAll" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : [ "PRESERVE" ]
+      }, {
+        "name" : "Utility Methods",
+        "includes" : [
+          [ "static" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : null
+    }, {
+      "name" : "JUnit Test Configuration",
+      "includes" : [
+        [ "@TestConfiguration", "class" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    }, {
+      "name" : "JUnit Nested Tests",
+      "includes" : [
+        [ "@Nested", "class" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    } ],
+    "orderingRules" : [ "ALPHA" ]
+  }, {
+    "name" : "DTO and Entities",
+    "includes" : [
+      [ "~.*(Dto|DTO)$" ],
+      [ "@Entity" ],
+      [ "@Embeddable" ],
+      [ "@Document" ],
+      [ "@Data" ],
+      [ "~.*Entity$" ],
+      [ "@Value" ],
+      [ "@MappedSuperclass" ],
+      [ "@ConfigurationProperties" ]
+    ],
+    "excludes" : [
+      [ "annotation" ],
+      [ "interface" ],
+      [ "enum" ]
+    ],
+    "separator" : null,
+    "keepAccessorsTogether" : null,
+    "relaxedForwardReferences" : null,
+    "memberSubGroups" : [ {
+      "name" : "Serializable UID",
+      "includes" : [
+        [ "=serialVersionUID", "static", "field", "final" ]
+      ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : [ "PRESERVE" ]
+    }, {
+      "name" : "Fields",
+      "includes" : [
+        [ "field" ]
+      ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "Constants",
+        "includes" : [
+          [ "static", "final" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Public Constants",
+          "includes" : [
+            [ "public" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
+        }, {
+          "name" : "Protected Constants",
+          "includes" : [
+            [ "protected" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
+        }, {
+          "name" : "Package-Private Constants",
+          "includes" : [
+            [ "package-private" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
+        }, {
+          "name" : "Private Constants",
+          "includes" : [
+            [ "private" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Static Fields",
+        "includes" : [
+          [ "static" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      }, {
+        "name" : "Final Instance Fields",
+        "includes" : [
+          [ "final" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : null
+    }, {
+      "name" : "Static Initializer Blocks",
+      "includes" : [
+        [ "static", "initializer" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : [ "PRESERVE" ]
+    }, {
+      "name" : "Static Methods",
+      "includes" : [
+        [ "static", "method" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    }, {
+      "name" : "Instance Initializer Blocks",
+      "includes" : [
+        [ "initializer" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : [ "PRESERVE" ]
+    }, {
+      "name" : "Constructors",
+      "includes" : [
+        [ "constructor" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    }, {
+      "name" : "Instance Methods",
+      "includes" : [
+        [ "method" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "Public Methods",
+        "includes" : [
+          [ "public" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Accessor Methods",
+          "includes" : [
+            [ "~^(get|set|is|has).+$" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : true,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Other Methods",
+          "includes" : [ ],
+          "excludes" : [
+            [ "=hashCode" ],
+            [ "=compareTo" ],
+            [ "=equals" ],
+            [ "=clone" ],
+            [ "=toString" ]
+          ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Basic Object Methods",
+          "includes" : [
+            [ "=hashCode" ],
+            [ "=equals" ],
+            [ "=compareTo" ],
+            [ "=toString" ],
+            [ "=clone" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Non-Public Methods",
+        "includes" : [
+          [ "method" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : null
+    } ],
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+  }, {
+    "name" : "Default Rule",
+    "includes" : [
+      [ "~.*" ]
+    ],
+    "excludes" : [ ],
+    "separator" : null,
+    "keepAccessorsTogether" : null,
+    "relaxedForwardReferences" : null,
+    "memberSubGroups" : [ {
+      "name" : "Record components",
+      "includes" : [
+        [ "record-component" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    }, {
+      "name" : "Enum constants",
+      "includes" : [
+        [ "enum-constant" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ ],
+      "orderingRules" : null
+    }, {
+      "name" : "Fields",
+      "includes" : [
+        [ "field" ]
+      ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "Static fields",
+        "includes" : [
+          [ "static" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static final fields",
+          "includes" : [
+            [ "final" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ {
+            "name" : "serialVersionUID",
+            "includes" : [
+              [ "=serialVersionUID" ]
+            ],
+            "excludes" : [ ],
+            "separator" : null,
+            "keepAccessorsTogether" : null,
+            "relaxedForwardReferences" : null,
+            "memberSubGroups" : [ ],
+            "orderingRules" : [ "PRESERVE" ]
+          }, {
+            "name" : "Logger fields",
+            "includes" : [
+              [ "~(?i)(log|.*logger)$" ]
+            ],
+            "excludes" : [ ],
+            "separator" : null,
+            "keepAccessorsTogether" : null,
+            "relaxedForwardReferences" : null,
+            "memberSubGroups" : [ ],
+            "orderingRules" : [ "PRESERVE" ]
+          } ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Instance final fields",
+        "includes" : [
+          [ "final" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+    }, {
+      "name" : "Initializers",
+      "includes" : [
+        [ "initializer" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "Static initializers",
+        "includes" : [
+          [ "static" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : null
+    }, {
+      "name" : "Methods",
+      "includes" : [
+        [ "method" ],
+        [ "constructor" ]
+      ],
+      "excludes" : [ ],
+      "separator" : null,
+      "keepAccessorsTogether" : true,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "Public",
+        "includes" : [
+          [ "public" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [
+            [ "static" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Constructors",
+          "includes" : [
+            [ "constructor" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Instance methods",
+          "includes" : [ ],
+          "excludes" : [
+            [ "=hashCode" ],
+            [ "=equals" ],
+            [ "=compareTo" ],
+            [ "=toString" ],
+            [ "=clone" ]
+          ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Basic Object Methods",
+          "includes" : [
+            [ "=hashCode" ],
+            [ "=equals" ],
+            [ "=compareTo" ],
+            [ "=toString" ],
+            [ "=clone" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ]
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Protected",
+        "includes" : [
+          [ "protected" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [
+            [ "static" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Constructors",
+          "includes" : [
+            [ "constructor" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Instance methods",
+          "includes" : [
+            [ "method" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Package-private",
+        "includes" : [
+          [ "package-private" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [
+            [ "static" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Constructors",
+          "includes" : [
+            [ "constructor" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Instance methods",
+          "includes" : [
+            [ "method" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Private",
+        "includes" : [
+          [ "private" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Static methods",
+          "includes" : [
+            [ "static" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Constructors",
+          "includes" : [
+            [ "constructor" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Instance methods",
+          "includes" : [
+            [ "method" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : [ "ALPHA" ]
+    }, {
+      "name" : "Nested types",
+      "includes" : [
+        [ "annotation" ],
+        [ "record" ],
+        [ "interface" ],
+        [ "class" ],
+        [ "enum" ]
+      ],
+      "excludes" : [ ],
+      "separator" : "NEW_LINE",
+      "keepAccessorsTogether" : null,
+      "relaxedForwardReferences" : null,
+      "memberSubGroups" : [ {
+        "name" : "Public",
+        "includes" : [
+          [ "public" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Protected",
+        "includes" : [
+          [ "protected" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Package-private",
+        "includes" : [
+          [ "package-private" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      }, {
+        "name" : "Private",
+        "includes" : [
+          [ "private" ]
+        ],
+        "excludes" : [ ],
+        "separator" : null,
+        "keepAccessorsTogether" : null,
+        "relaxedForwardReferences" : null,
+        "memberSubGroups" : [ {
+          "name" : "Annotations and Interfaces",
+          "includes" : [
+            [ "annotation" ],
+            [ "interface" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        }, {
+          "name" : "Classes, Enums, and Records",
+          "includes" : [
+            [ "record" ],
+            [ "class" ],
+            [ "enum" ]
+          ],
+          "excludes" : [ ],
+          "separator" : null,
+          "keepAccessorsTogether" : null,
+          "relaxedForwardReferences" : null,
+          "memberSubGroups" : [ ],
+          "orderingRules" : null
+        } ],
+        "orderingRules" : null
+      } ],
+      "orderingRules" : [ "ALPHA" ]
+    } ],
+    "orderingRules" : [ "PRESERVE" ]
+  } ],
+  "topLevelTypesOrdering" : {
+    "mainTypeFirst" : true,
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],
+    "topLevelTypeSelectors" : [ {
+      "typeKinds" : [ "CLASS", "RECORD" ]
+    }, {
+      "typeKinds" : [ "INTERFACE" ]
+    }, {
+      "typeKinds" : [ "ENUM" ]
+    }, {
+      "typeKinds" : [ "ANNOTATION" ]
+    } ]
+  }
+}

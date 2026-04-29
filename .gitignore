@@ -3,3 +3,4 @@
 **/*-sources.zip
 **/*.iml
 /.idea
+**/debug/

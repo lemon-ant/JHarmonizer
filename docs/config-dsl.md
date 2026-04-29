@@ -140,6 +140,22 @@ Supported flags:
 
 * `keepAccessorsTogether`: Places getters/setters in the same group, even if named differently.
 
+### Group option inheritance (`type-members-ordering`)
+
+For nested member groups, the following options are inherited from the nearest parent that defines them:
+
+* `keepAccessorsTogether`
+* `separator`
+* `ordering-rules`
+
+Inheritance is resolved top-down in the group tree:
+
+* if a child omits an option, it inherits the parent's resolved value;
+* if a child defines an option explicitly, it overrides the inherited value for its subtree.
+
+For `ordering-rules`, an explicit child value fully replaces the inherited list.
+An empty `ordering-rules: []` is allowed and means “no explicit sort keys at this level”.
+
 ---
 
 ## 🔹 Example: Full Configuration
@@ -218,6 +234,19 @@ type-sort:
 * `rest` is optional but recommended.
 * The `fallback` rule (instead of `default`) avoids clashing with the Java `default` keyword.
 * Aliases improve maintainability and reduce duplication.
+
+### Merging custom `type-members-ordering` with the default model
+
+When a custom configuration is applied on top of the embedded default configuration, root groups from
+`type-members-ordering` are merged by **exact root-group name**:
+
+* if the custom root-group name matches a default root-group name, the default root group is fully replaced;
+* the replacement stays on the original default position, even if the custom file defines it in another place;
+* if the custom root-group name is new, that root group is inserted before all default root groups;
+* several new custom root groups keep their relative order from the custom file;
+* nested `groups:` blocks are not merged recursively — replacing a root group replaces its whole subtree.
+
+This means you can override only one named root group and keep the rest of the default model unchanged.
 
 ---
 

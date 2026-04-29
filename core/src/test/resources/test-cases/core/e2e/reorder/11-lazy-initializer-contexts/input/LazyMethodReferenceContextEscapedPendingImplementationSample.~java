@@ -1,0 +1,25 @@
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+import java.util.function.IntSupplier;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Reason: method-reference dependency extraction is not implemented yet
+// (current dependency providers scan direct CtFieldAccess only, without call-chain traversal).
+public class LazyMethodReferenceContextEscapedPendingImplementationSample {
+    static int zProvider = 7;
+    static IntSupplier aDependent = LazyMethodReferenceContextEscapedPendingImplementationSample::resolveProvider;
+    static int bIndependent = 3;
+
+    static int resolveProvider() {
+        return LazyMethodReferenceContextEscapedPendingImplementationSample.zProvider;
+    }
+
+    public static void main(String[] args) {
+        if (aDependent.getAsInt() != 7 || bIndependent != 3 || zProvider != 7) {
+            throw new IllegalStateException("Unexpected values: "
+                    + "aDependent=" + aDependent.getAsInt()
+                    + ", bIndependent=" + bIndependent
+                    + ", zProvider=" + zProvider);
+        }
+    }
+}

@@ -1,0 +1,32 @@
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+backups-enabled: false
+print-processing-statistics: true
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Initializers
+    includes: ~.*
+    ordering-rules: preserve
+    groups:
+      - name: Static initializers
+        separator: none
+        ordering-rules: preserve
+        includes: [ static, initializer ]
+      - name: Instance initializers
+        separator: none
+        ordering-rules: preserve
+        includes: [ initializer ]
+        excludes: [ static ]
+      # Fields are not explicitly grouped here and fall back to the root bucket,
+      # but dependency-aware ordering may still pull provider fields before dependent initializers.

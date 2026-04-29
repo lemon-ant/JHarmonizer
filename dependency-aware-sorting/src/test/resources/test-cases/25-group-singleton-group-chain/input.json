@@ -1,0 +1,19 @@
+{
+  "description": "Group-singleton-group chain: Group2={kiwi,lemon}->cherry->Group1={apple,banana}->mango(free). The middle link is a singleton (cherry), unlike 08-groups-dep-chain where all links are groups. Lex tie-break: Group2(key=kiwi) < mango, so Group2 first.",
+  "items": [
+    {"name": "mango",  "numeration": "STATIC"},
+    {"name": "apple",  "numeration": "STATIC"},
+    {"name": "lemon",  "numeration": "STATIC"},
+    {"name": "cherry", "numeration": "STATIC"},
+    {"name": "banana", "numeration": "STATIC"},
+    {"name": "kiwi",   "numeration": "STATIC"}
+  ],
+  "groups": [
+    ["apple", "banana"],
+    ["lemon", "kiwi"]
+  ],
+  "dependencies": [
+    {"provider": "lemon",  "dependent": "cherry"},
+    {"provider": "cherry", "dependent": "apple"}
+  ]
+}

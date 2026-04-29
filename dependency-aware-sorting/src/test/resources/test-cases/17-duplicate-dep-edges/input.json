@@ -1,0 +1,32 @@
+{
+  "description": "The same charlie->alpha dependency edge is declared three times. The algorithm must deduplicate edges so in-degree is 1, not 3. bravo is unconstrained; natural order puts bravo before charlie, then alpha follows.",
+  "items": [
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "charlie",
+      "dependent": "alpha"
+    },
+    {
+      "provider": "charlie",
+      "dependent": "alpha"
+    },
+    {
+      "provider": "charlie",
+      "dependent": "alpha"
+    }
+  ]
+}
