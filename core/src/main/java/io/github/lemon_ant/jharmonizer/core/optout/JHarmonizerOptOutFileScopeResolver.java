@@ -1,12 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +64,7 @@ final class JHarmonizerOptOutFileScopeResolver {
                         .map(comment -> new FileScopeOptOutCandidate(
                                 JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(comment),
                                 JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, comment.getPosition())))
-                        .collect(toUnmodifiableList());
+                        .toList();
         return resolveFromCandidates(fileComments);
     }
 
@@ -80,7 +77,7 @@ final class JHarmonizerOptOutFileScopeResolver {
                                         rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset(), srcFile),
                                 JHarmonizerOptOutCommentUtilities.formatLocation(
                                         srcFile, rawCommentMatch.getCommentOffset())))
-                        .collect(toUnmodifiableList());
+                        .toList();
         return resolveFromCandidates(rawFileComments);
     }
 
@@ -96,10 +93,8 @@ final class JHarmonizerOptOutFileScopeResolver {
             if (fileOptOutMode != null) {
                 JHarmonizerOptOutCommentUtilities.logIgnoredFileOptOutAtLocation(
                         optOutCandidate.getLocation(),
-                        String.format(
-                                        Locale.ROOT,
-                                        "Later file-scope opt-out replaces the previously parsed one from %s; the last applicable",
-                                        previousCandidate.getLocation())
+                        "Later file-scope opt-out replaces the previously parsed one from %s; the last applicable"
+                                        .formatted(previousCandidate.getLocation())
                                 + " file-scope opt-out wins");
             }
 

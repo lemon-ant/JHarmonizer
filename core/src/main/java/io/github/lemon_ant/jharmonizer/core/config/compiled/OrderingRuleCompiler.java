@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
 import java.util.List;
 import lombok.NonNull;
@@ -24,21 +22,16 @@ class OrderingRuleCompiler {
         // Unified model guarantees non-empty list; preserve order and map 1:1.
         return unifiedOrderingRules.stream()
                 .map(OrderingRuleCompiler::compileOrderingRule)
-                .collect(toUnmodifiableList());
+                .toList();
     }
 
     @NonNull
     private static OrderingRule compileOrderingRule(UnifiedOrderingRule unifiedOrderingRule) {
-        switch (unifiedOrderingRule) {
-            case ALPHA:
-                return OrderingRule.ALPHA;
-            case PRESERVE:
-                return OrderingRule.PRESERVE;
-            case VISIBILITY_ASC:
-                return OrderingRule.VISIBILITY_ASC;
-            case VISIBILITY_DESC:
-                return OrderingRule.VISIBILITY_DESC;
-        }
-        throw new IllegalStateException("Unexpected ordering rule: " + unifiedOrderingRule);
+        return switch (unifiedOrderingRule) {
+            case ALPHA -> OrderingRule.ALPHA;
+            case PRESERVE -> OrderingRule.PRESERVE;
+            case VISIBILITY_ASC -> OrderingRule.VISIBILITY_ASC;
+            case VISIBILITY_DESC -> OrderingRule.VISIBILITY_DESC;
+        };
     }
 }

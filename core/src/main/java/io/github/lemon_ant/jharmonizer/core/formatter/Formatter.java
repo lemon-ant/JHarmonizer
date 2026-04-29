@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.formatter;
 
 import static java.util.Comparator.comparingInt;
 import static java.util.Map.entry;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 import com.google.common.collect.Range;
 import com.palantir.javaformat.java.FormatterException;
@@ -109,7 +108,7 @@ public final class Formatter {
         List<SrcCharacterRange> normalizedRanges = excludedRanges.stream()
                 .sorted(comparingInt(SrcCharacterRange::getStartInclusive)
                         .thenComparingInt(SrcCharacterRange::getEndExclusive))
-                .collect(toUnmodifiableList());
+                .toList();
         List<Range<Integer>> includedRanges = new ArrayList<>();
         int nextStart = 0;
 

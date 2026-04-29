@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import java.io.Serial;
 import lombok.experimental.StandardException;
 
 /**
@@ -9,5 +10,6 @@ import lombok.experimental.StandardException;
 @StandardException
 public class SortingException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

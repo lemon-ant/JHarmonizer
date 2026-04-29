@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.OrderingRule;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
@@ -58,7 +56,7 @@ class GroupMembersOrderer {
             @NonNull MemberDependencyGraph memberDependencyGraph) {
         return unorderedMemberGroupBlocks.stream()
                 .map(memberGroupBlock -> orderMembersInsideGroup(memberGroupBlock, memberDependencyGraph))
-                .collect(toUnmodifiableList());
+                .toList();
     }
 
     @NonNull
@@ -88,7 +86,7 @@ class GroupMembersOrderer {
         List<SortableTypeMember> sortableTypeMembers = groupMembers.stream()
                 .map(member -> new SortableTypeMember(
                         member, SortableTypeMember.OrderingKey.derive(member, keepAccessorsTogether)))
-                .collect(toUnmodifiableList());
+                .toList();
 
         Map<CtTypeMember, SortableTypeMember> typeMemberToSortable = buildTypeMemberToSortableMap(sortableTypeMembers);
         Comparator<SortableTypeMember> comparator =
@@ -110,7 +108,7 @@ class GroupMembersOrderer {
 
         return SimplifiedDependencyAwareSorter.sort(sortableTypeMembers, groups, dependencies, comparator).stream()
                 .map(SortableTypeMember::getTypeMember)
-                .collect(toUnmodifiableList());
+                .toList();
     }
 
     @NonNull
@@ -159,7 +157,7 @@ class GroupMembersOrderer {
             alreadyGrouped.addAll(bundleDependents);
             List<SortableTypeMember> bundleMembers = Stream.concat(Stream.of(member), bundleDependents.stream())
                     .map(typeMemberToSortable::get)
-                    .collect(toUnmodifiableList());
+                    .toList();
             bundles.add(new Group<>(bundleMembers));
         }
 

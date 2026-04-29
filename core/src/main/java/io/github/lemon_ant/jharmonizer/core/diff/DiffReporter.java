@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.diff;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.Patch;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -31,8 +29,7 @@ public class DiffReporter {
     @NonNull
     public static String computeDiff(@NonNull String originalText, @NonNull String generatedText) {
         Patch<String> diff = DiffUtils.diff(
-                originalText.lines().collect(toUnmodifiableList()),
-                generatedText.lines().collect(toUnmodifiableList()));
+                originalText.lines().toList(), generatedText.lines().toList());
         return format(diff);
     }
 

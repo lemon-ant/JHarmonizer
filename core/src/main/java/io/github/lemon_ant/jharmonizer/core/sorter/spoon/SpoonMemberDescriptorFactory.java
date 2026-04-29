@@ -108,8 +108,7 @@ class SpoonMemberDescriptorFactory {
         if (typeMember instanceof CtAnonymousExecutable) {
             return MemberKind.INIT_BLOCK;
         }
-        if (typeMember instanceof CtType<?>) {
-            CtType<?> nestedType = (CtType<?>) typeMember;
+        if (typeMember instanceof CtType<?> nestedType) {
             return resolveNestedTypeKind(nestedType);
         }
 

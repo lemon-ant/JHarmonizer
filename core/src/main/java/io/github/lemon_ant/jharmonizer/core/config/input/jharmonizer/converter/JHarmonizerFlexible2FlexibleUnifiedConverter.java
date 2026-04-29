@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
@@ -74,7 +72,7 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
         return vendorConfig
                 .getMemberGroups()
                 .map(memberGroups ->
-                        memberGroups.stream().map(MemberGroupMapper::map).collect(toUnmodifiableList()))
+                        memberGroups.stream().map(MemberGroupMapper::map).toList())
                 .orElse(null);
     }
 

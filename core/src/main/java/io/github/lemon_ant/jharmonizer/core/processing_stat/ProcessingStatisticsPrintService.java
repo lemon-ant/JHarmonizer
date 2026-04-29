@@ -6,7 +6,6 @@ import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadable
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatHmsMillisFromNanos;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.HumanReadableFormatsUtils.formatSecondsMicrosecondsFromNanos;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
@@ -41,7 +40,7 @@ public class ProcessingStatisticsPrintService {
     public static String render(@NonNull AggregatedProcessingStatistic stats) {
         List<Path> sortedUnexpectedErrors = stats.getFilesWithUnexpectedErrors().stream()
                 .sorted(Comparator.comparing(Path::toString))
-                .collect(toUnmodifiableList());
+                .toList();
         List<String> reportLines = new ArrayList<>();
 
         reportLines.add("");

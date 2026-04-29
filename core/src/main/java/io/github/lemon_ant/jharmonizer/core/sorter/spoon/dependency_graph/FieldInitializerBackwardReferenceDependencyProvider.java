@@ -24,10 +24,9 @@ final class FieldInitializerBackwardReferenceDependencyProvider
     @NonNull
     @Override
     protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
-        if (!(dependentMember instanceof CtField<?>)) {
+        if (!(dependentMember instanceof CtField<?> dependentField)) {
             return Optional.empty();
         }
-        CtField<?> dependentField = (CtField<?>) dependentMember;
 
         return Optional.ofNullable(dependentField.getDefaultExpression());
     }

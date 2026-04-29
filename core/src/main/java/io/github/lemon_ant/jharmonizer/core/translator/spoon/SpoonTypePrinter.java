@@ -213,8 +213,7 @@ final class SpoonTypePrinter {
             tokenWriter.writeCodeSnippet("// " + groupHeader).writeln();
         }
 
-        if (member instanceof CtType<?>) {
-            CtType<?> typeMember = (CtType<?>) member;
+        if (member instanceof CtType<?> typeMember) {
             printType(typeMember);
             return currentElementNeedsSeparatorAfter;
         }

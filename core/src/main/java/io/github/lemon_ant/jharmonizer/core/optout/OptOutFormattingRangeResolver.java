@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils;
@@ -34,7 +32,7 @@ public class OptOutFormattingRangeResolver {
                 .map(Map.Entry::getKey)
                 .map(sortingSkippedTypeRanges::get)
                 .filter(Objects::nonNull)
-                .collect(toUnmodifiableList());
+                .toList();
     }
 
     /**

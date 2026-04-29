@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -127,7 +125,7 @@ public class UnifiedConfigMerger {
         List<UnifiedMemberGroup> prependedNewRootGroups = collectPrependedNewRootGroups(
                 overlayRootGroups, mergedBaselineRootGroups, baselineRootGroupIndicesByName);
         return Stream.concat(prependedNewRootGroups.stream(), mergedBaselineRootGroups.stream())
-                .collect(toUnmodifiableList());
+                .toList();
     }
 
     @NonNull

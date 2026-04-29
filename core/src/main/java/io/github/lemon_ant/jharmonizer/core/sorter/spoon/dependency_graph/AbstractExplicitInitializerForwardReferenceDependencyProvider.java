@@ -40,11 +40,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     @Override
     public final Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
-        if (!(dependentMember instanceof CtField<?>)) {
-            return Set.of();
-        }
-        CtField<?> referencedField = (CtField<?>) dependentMember;
-        if (!isSupportedReferencedField(referencedField)) {
+        if (!(dependentMember instanceof CtField<?> referencedField) || !isSupportedReferencedField(referencedField)) {
             return Set.of();
         }
 
@@ -155,9 +151,7 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
 
     @NonNull
     private static <T> Optional<CtLiteral<T>> castLiteralExpression(CtExpression<T> expression) {
-        if (expression instanceof CtLiteral<?>) {
-            @SuppressWarnings("unchecked")
-            CtLiteral<T> literalExpression = (CtLiteral<T>) expression;
+        if (expression instanceof CtLiteral<T> literalExpression) {
             return Optional.of(literalExpression);
         }
 
@@ -173,37 +167,23 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     }
 
     private static boolean isDefaultPrimitiveLiteralValue(String primitiveTypeName, Object literalValue) {
-        switch (primitiveTypeName) {
-            case "boolean":
-                return Objects.equals(Boolean.FALSE, literalValue);
-            case "char":
-                return literalValue instanceof Character && ((Character) literalValue) == 0;
-            case "byte":
-            case "short":
-            case "int":
-            case "long":
-            case "float":
-            case "double":
-                return isNumericZeroLiteral(literalValue);
-            default:
-                return false;
-        }
+        return switch (primitiveTypeName) {
+            case "boolean" -> Objects.equals(Boolean.FALSE, literalValue);
+            case "char" -> literalValue instanceof Character characterValue && characterValue == 0;
+            case "byte", "short", "int", "long", "float", "double" -> isNumericZeroLiteral(literalValue);
+            default -> false;
+        };
     }
 
     private static boolean isNumericZeroLiteral(Object literalValue) {
-        return literalValue instanceof Number && ((Number) literalValue).doubleValue() == 0D;
+        return literalValue instanceof Number numericLiteral && numericLiteral.doubleValue() == 0D;
     }
 
     private static boolean isUnaryMinusZeroLiteral(CtExpression<?> expression) {
-        if (!(expression instanceof CtUnaryOperator<?>)) {
-            return false;
-        }
-        CtUnaryOperator<?> unaryOperator = (CtUnaryOperator<?>) expression;
-        if (unaryOperator.getKind() != UnaryOperatorKind.NEG || !(unaryOperator.getOperand() instanceof CtLiteral<?>)) {
-            return false;
-        }
-        CtLiteral<?> operandLiteral = (CtLiteral<?>) unaryOperator.getOperand();
-        return isNumericZeroLiteral(operandLiteral.getValue());
+        return expression instanceof CtUnaryOperator<?> unaryOperator
+                && unaryOperator.getKind() == UnaryOperatorKind.NEG
+                && unaryOperator.getOperand() instanceof CtLiteral<?> operandLiteral
+                && isNumericZeroLiteral(operandLiteral.getValue());
     }
 
     /**

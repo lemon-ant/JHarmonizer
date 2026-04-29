@@ -24,10 +24,9 @@ final class AccessorPairDependencyProvider implements MemberDependencyProvider {
     public Set<@NonNull MemberDependencyArc> findDirectProviderEdges(
             @NonNull CtTypeMember dependentMember, @NonNull MemberDependencyProvider.ProviderConfig providerConfig) {
 
-        if (!providerConfig.isKeepAccessorsTogether() || !(dependentMember instanceof CtMethod<?>)) {
+        if (!providerConfig.isKeepAccessorsTogether() || !(dependentMember instanceof CtMethod<?> dependentMethod)) {
             return Set.of();
         }
-        CtMethod<?> dependentMethod = (CtMethod<?>) dependentMember;
 
         return SpoonJavaBeansAccessorUtils.findPairedAccessorMethods(dependentMethod).stream()
                 .map(pairedAccessorMethod ->

@@ -23,26 +23,20 @@ class GroupBoundaryMarker {
     void markGroupBoundaries(@NonNull List<@NonNull MemberGroupBlock> orderedBlocks) {
         orderedBlocks.stream()
                 .filter(memberGroupBlock -> !memberGroupBlock.getTypeMembers().isEmpty())
-                .map(memberGroupBlock ->
-                        Pair.of(memberGroupBlock.getTypeMembers().get(0), resolveSeparatorText(memberGroupBlock)))
+                .map(memberGroupBlock -> Pair.of(
+                        memberGroupBlock.getTypeMembers().get(0),
+                        switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
+                            case NEW_LINE -> SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
+                            case HEADER ->
+                                Optional.ofNullable(memberGroupBlock
+                                                .getCompiledMemberGroup()
+                                                .getName())
+                                        .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
+                            case NONE -> null;
+                        }))
                 .filter(firstMemberAndSeparatorText -> firstMemberAndSeparatorText.getValue() != null)
                 .forEach(firstMemberAndSeparatorText -> writeGroupBoundaryMetadata(
                         firstMemberAndSeparatorText.getKey(), firstMemberAndSeparatorText.getValue()));
-    }
-
-    private static String resolveSeparatorText(MemberGroupBlock memberGroupBlock) {
-        switch (memberGroupBlock.getCompiledMemberGroup().getSeparator()) {
-            case NEW_LINE:
-                return SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE;
-            case HEADER:
-                return Optional.ofNullable(
-                                memberGroupBlock.getCompiledMemberGroup().getName())
-                        .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
-            case NONE:
-                return null;
-        }
-        throw new IllegalStateException("Unexpected separator: "
-                + memberGroupBlock.getCompiledMemberGroup().getSeparator());
     }
 
     private static void writeGroupBoundaryMetadata(CtTypeMember firstMember, String separatorText) {

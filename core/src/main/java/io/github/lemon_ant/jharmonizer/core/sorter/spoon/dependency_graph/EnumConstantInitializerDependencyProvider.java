@@ -23,10 +23,9 @@ final class EnumConstantInitializerDependencyProvider extends AbstractReferenced
     @NonNull
     @Override
     protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
-        if (!(dependentMember instanceof CtEnumValue<?>)) {
+        if (!(dependentMember instanceof CtEnumValue<?> dependentEnumValue)) {
             return Optional.empty();
         }
-        CtEnumValue<?> dependentEnumValue = (CtEnumValue<?>) dependentMember;
 
         return Optional.ofNullable(dependentEnumValue.getDefaultExpression());
     }

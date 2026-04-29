@@ -39,13 +39,11 @@ final class InitializationOrderDependencyUtils {
      */
     @NonNull
     static Optional<CtElement> resolveInitializationAstRoot(@NonNull CtTypeMember typeMember) {
-        if (typeMember instanceof CtField<?>) {
-            CtField<?> fieldWithPotentialInitializer = (CtField<?>) typeMember;
+        if (typeMember instanceof CtField<?> fieldWithPotentialInitializer) {
             return Optional.ofNullable(fieldWithPotentialInitializer.getDefaultExpression());
         }
 
-        if (typeMember instanceof CtAnonymousExecutable) {
-            CtAnonymousExecutable initializerBlock = (CtAnonymousExecutable) typeMember;
+        if (typeMember instanceof CtAnonymousExecutable initializerBlock) {
             return Optional.ofNullable(initializerBlock.getBody());
         }
 

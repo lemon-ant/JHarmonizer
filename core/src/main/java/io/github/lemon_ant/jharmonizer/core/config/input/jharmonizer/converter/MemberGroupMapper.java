@@ -1,7 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
@@ -39,7 +37,7 @@ final class MemberGroupMapper {
         List<UnifiedOrderingRule> orderingRules = Optional.ofNullable(srcMemberGroup.getOrderingRules())
                 .map(rawRules -> rawRules.stream()
                         .map(JHarmonizerOrderingRule::getUnifiedOrderingRule)
-                        .collect(toUnmodifiableList()))
+                        .toList())
                 .orElse(null);
 
         UnifiedMemberGroupBuilder unifiedMemberGroupBuilder = UnifiedMemberGroup.builder()

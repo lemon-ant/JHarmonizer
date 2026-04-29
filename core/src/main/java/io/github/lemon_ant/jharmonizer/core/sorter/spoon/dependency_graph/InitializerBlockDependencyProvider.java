@@ -21,10 +21,9 @@ final class InitializerBlockDependencyProvider extends AbstractReferencedFieldsD
     @NonNull
     @Override
     protected Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember) {
-        if (!(dependentMember instanceof CtAnonymousExecutable)) {
+        if (!(dependentMember instanceof CtAnonymousExecutable dependentInitializerBlock)) {
             return Optional.empty();
         }
-        CtAnonymousExecutable dependentInitializerBlock = (CtAnonymousExecutable) dependentMember;
 
         return Optional.ofNullable(dependentInitializerBlock.getBody());
     }

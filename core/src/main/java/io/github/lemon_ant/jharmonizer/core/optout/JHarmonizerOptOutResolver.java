@@ -1,14 +1,11 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -92,12 +89,11 @@ public final class JHarmonizerOptOutResolver {
             if (typeOptOutMode != null) {
                 JHarmonizerOptOutCommentUtilities.logIgnoredTypeOptOut(
                         leadingTypeComment,
-                        String.format(
-                                        Locale.ROOT,
-                                        "Later opt-out comment for type '%s' replaces the previously parsed one from %s; the last",
-                                        currentType.getQualifiedName(),
-                                        JHarmonizerOptOutCommentUtilities.formatLocation(
-                                                srcFile, previousTypeComment.getPosition()))
+                        "Later opt-out comment for type '%s' replaces the previously parsed one from %s; the last"
+                                        .formatted(
+                                                currentType.getQualifiedName(),
+                                                JHarmonizerOptOutCommentUtilities.formatLocation(
+                                                        srcFile, previousTypeComment.getPosition()))
                                 + " applicable type-level opt-out wins",
                         srcFile);
             }
@@ -117,6 +113,6 @@ public final class JHarmonizerOptOutResolver {
                 .filter(comment -> comment.getPosition().getEndLine()
                         < currentType.getPosition().getLine())
                 .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
-                .collect(toUnmodifiableList());
+                .toList();
     }
 }

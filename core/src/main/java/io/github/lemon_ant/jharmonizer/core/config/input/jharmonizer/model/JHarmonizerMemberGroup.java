@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.apache.commons.lang3.Validate;
 @Value
 public class JHarmonizerMemberGroup implements Serializable {
 
+    @Serial
     // TODO We need it while we pass JHarmonizerMemberGroup to the Comparator as a constructor parameter
     private static final long serialVersionUID = 3113522117531985752L;
 

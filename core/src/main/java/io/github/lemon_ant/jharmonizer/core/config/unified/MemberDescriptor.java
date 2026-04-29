@@ -231,10 +231,9 @@ public class MemberDescriptor {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof MemberDescriptor)) {
+        if (!(other instanceof MemberDescriptor that)) {
             return false;
         }
-        MemberDescriptor that = (MemberDescriptor) other;
         // featureMask covers: memberKind + memberAccess + declarationModifiers
         return this.featureMask == that.featureMask
                 && Objects.equals(this.name, that.name)

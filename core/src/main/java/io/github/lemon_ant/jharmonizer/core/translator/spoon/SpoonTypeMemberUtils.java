@@ -3,7 +3,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_HEADER_METADATA;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
@@ -35,7 +34,7 @@ class SpoonTypeMemberUtils {
                 /* TODO(RECORDS_DISABLED): Remove this guard when record headers/components are printed correctly.
                 Today implicit record fields/components still produce wrong source-printer output. */
                 .filter(typeMember -> !typeMember.isImplicit())
-                .collect(toUnmodifiableList());
+                .toList();
     }
 
     /**

@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerOrderingRule;
@@ -31,11 +30,11 @@ class TopLevelTypesOrderingMapper {
                         .map(typeGroup -> new UnifiedTopLevelTypeSelector(typeGroup.getTypeKinds().stream()
                                 .map(JHarmonizerTypeKind::getUnifiedTypeKind)
                                 .collect(toUnmodifiableSet())))
-                        .collect(toUnmodifiableList());
+                        .toList();
 
         List<UnifiedOrderingRule> orderingRules = srcTopLevelTypesOrdering.getOrderingRules().stream()
                 .map(JHarmonizerOrderingRule::getUnifiedOrderingRule)
-                .collect(toUnmodifiableList());
+                .toList();
 
         return UnifiedTopLevelTypesOrdering.builder()
                 .mainTypeFirst(srcTopLevelTypesOrdering.isMainTypeFirst())
