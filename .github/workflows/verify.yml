@@ -10,12 +10,12 @@ on:
     branches: ["**"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   detect-changes:
@@ -27,9 +27,11 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
     steps:
       - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
 
       - name: Detect relevant changes
         id: filter
+        if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v3
         with:
           filters: |
@@ -56,19 +58,18 @@ jobs:
     if: needs.detect-changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: "21"
-          distribution: "temurin"
+          java-version: '21'
+          distribution: 'temurin'
           cache: maven
 
       - name: Build and test
-        run: mvn -B -ntp verify
+        run: mvn -B -ntp verify -Dci=true
 
       - name: Upload coverage to Codecov
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
