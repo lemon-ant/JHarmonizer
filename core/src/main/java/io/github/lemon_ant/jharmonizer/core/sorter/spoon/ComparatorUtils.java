@@ -53,10 +53,14 @@ class ComparatorUtils {
      */
     @NonNull
     static Comparator<OrderingKey> buildOrderingKeyComparator(@NonNull List<OrderingRule> orderingRules) {
+        if (orderingRules.isEmpty()) {
+            // DEFAULT_COMPARATOR already covers both tie-breakers (PRESERVE then ALPHA).
+            return DEFAULT_COMPARATOR;
+        }
         Comparator<OrderingKey> configured = orderingRules.stream()
                 .map(ComparatorUtils::buildComparatorForRule)
                 .reduce(Comparator::thenComparing)
-                .orElse(DEFAULT_COMPARATOR);
+                .orElseThrow();
         return appendTieBreakers(configured, orderingRules);
     }
 

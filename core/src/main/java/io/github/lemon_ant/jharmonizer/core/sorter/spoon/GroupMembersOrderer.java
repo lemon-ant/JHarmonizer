@@ -45,8 +45,7 @@ class GroupMembersOrderer {
      * Shared accessor super-cluster threshold; kept in sync with representative-key derivation by
      * centralizing the value in {@link OrderingKeyFactory}.
      */
-    private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER =
-            OrderingKeyFactory.MIN_ACCESSORS_FOR_SUPER_CLUSTER;
+    private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = OrderingKeyFactory.MIN_ACCESSORS_FOR_SUPER_CLUSTER;
 
     /**
      * Orders the members inside each group block according to the group's ordering rules.

@@ -42,7 +42,7 @@ class OrderingKeyFactory {
      * JavaBeans accessors. With a single accessor there is no super-cluster, so the accessor
      * keeps its own key as both representatives (self-reference).
      */
-    private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = 2;
+    static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = 2;
 
     /**
      * Creates a memoizing provider that maps each {@link CtTypeMember} to its {@link OrderingKey}.
