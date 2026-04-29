@@ -139,7 +139,6 @@ public final class SrcProcessor {
 
     @NonNull
     private IFlow createFlow(FlowType flowType) {
-        // TODO Move it into the flow factory
         switch (flowType) {
             case REORDER:
                 return new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);

@@ -18,13 +18,7 @@ import spoon.support.compiler.VirtualFile;
 @UtilityClass
 public class SpoonParser {
 
-    /*
-     * Spoon 10.x keeps the runtime Java 11-compatible, but its embedded parser does not recognize
-     * newer compliance flags such as Java 20 or 21. Keep the parser on a Java level supported by that
-     * runtime-compatible Spoon line; revisit this only if a future Spoon release supports both Java 11
-     * runtime and newer compliance levels.
-     */
-    private static final int JAVA_VERSION = 17;
+    private static final int JAVA_VERSION = 21;
 
     /**
      * Parses the java source resource.

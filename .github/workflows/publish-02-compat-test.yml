@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         vendor: [ temurin, microsoft ]
-        java: [ 11, 17, 21, 23 ]
+        java: [ 17, 21, 23 ]
         exclude:
           - vendor: microsoft
             java: 23

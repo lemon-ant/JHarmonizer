@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -23,8 +22,6 @@ class DefaultConfigOrderingIntegrationTest {
     @TempDir
     Path temporaryDirectory;
 
-    @Disabled(
-            "Spoon 10.x is required for Java 11 runtime compatibility and does not parse Java 21 compliance fixtures.")
     @Test
     void applyEmbeddedDefaultConfig_sampleAllJava21FeaturesList_matchExpectedOrdering() throws Exception {
         // Given

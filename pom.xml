@@ -79,7 +79,7 @@
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
         <maven.compiler.testRelease>21</maven.compiler.testRelease>
         <!-- Default local repository base; can still be overridden via -Dmaven.repo.local. -->
         <maven.repo.local>${settings.localRepository}</maven.repo.local>
@@ -94,7 +94,7 @@
         <pmd.version>7.23.0</pmd.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <spoon.version>10.4.2</spoon.version>
+        <spoon.version>11.2.1</spoon.version>
         <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
         <spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
@@ -383,7 +383,7 @@
                         <configuration>
                             <rules>
                                 <enforceBytecodeVersion>
-                                    <maxJdkVersion>11</maxJdkVersion>
+                                    <maxJdkVersion>17</maxJdkVersion>
                                     <ignoredScopes>
                                         <ignoredScope>provided</ignoredScope>
                                         <ignoredScope>test</ignoredScope>

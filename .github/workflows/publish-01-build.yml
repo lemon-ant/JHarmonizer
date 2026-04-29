@@ -79,7 +79,7 @@ jobs:
           JAVA
           CORE_JAR=$(ls dist/jharmonizer-core-*.jar | grep -v -- '-sources.jar' | grep -v -- '-javadoc.jar' | head -n1)
           SORTING_JAR=$(ls dist/dependency-aware-sorting-*.jar | grep -v -- '-sources.jar' | grep -v -- '-javadoc.jar' | head -n1)
-          javac --release 11 -cp "$CORE_JAR:$SORTING_JAR:deps/*:runner" -d runner runner/Runner.java
+          javac --release 17 -cp "$CORE_JAR:$SORTING_JAR:deps/*:runner" -d runner runner/Runner.java
           echo "Runner compiled:" && ls -l runner
 
       - name: Upload dist
