@@ -65,8 +65,8 @@ public class SpoonSorter {
 
         CtType<?> mainType =
                 compiledTopLevelTypesOrdering.isMainTypeFirst() ? SpoonTypeUtils.findMainType(compilationUnit) : null;
-        Comparator<OrderingKey> orderingComparator =
-                ComparatorUtils.buildOrderingKeyComparator(compiledTopLevelTypesOrdering.getOrderingRules());
+        Comparator<MemberOrderingKey> orderingComparator =
+                ComparatorUtils.buildMemberOnlyOrderingComparator(compiledTopLevelTypesOrdering.getOrderingRules());
         Comparator<CtType<?>> declaredTypeComparator =
                 createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
@@ -79,10 +79,10 @@ public class SpoonSorter {
     private static Comparator<CtType<?>> createTopLevelTypesComparator(
             CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
             CtType<?> mainType,
-            Comparator<OrderingKey> orderingComparator) {
+            Comparator<MemberOrderingKey> orderingComparator) {
         // Top-level types are not members of a group, so accessor clustering never applies
-        // at this level: we use a simple memoizing key provider.
-        Function<CtTypeMember, OrderingKey> orderingKeyProvider = OrderingKeyFactory.createOrderingKeyProvider();
+        // at this level: we use the member-only comparator and a simple memoizing key provider.
+        Function<CtTypeMember, MemberOrderingKey> orderingKeyProvider = OrderingKeyFactory.createOrderingKeyProvider();
         return Comparator.<CtType<?>>comparingInt(type ->
                         compareMainTypePriority(type, mainType, compiledTopLevelTypesOrdering.isMainTypeFirst()))
                 .thenComparingInt(type -> findTopLevelTypeGroupIndex(type, compiledTopLevelTypesOrdering))
