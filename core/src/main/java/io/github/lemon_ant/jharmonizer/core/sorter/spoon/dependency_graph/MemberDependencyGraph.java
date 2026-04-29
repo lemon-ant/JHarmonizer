@@ -191,7 +191,7 @@ public final class MemberDependencyGraph {
         Set<CtTypeMember> membersWithOutgoingEdges = outgoingEdgesByProvider.keySet();
 
         Set<CtTypeMember> fullyVisited = new HashSet<>();
-        LinkedHashSet<CtTypeMember> currentPath = new LinkedHashSet<>();
+        Set<CtTypeMember> currentPath = new LinkedHashSet<>();
 
         for (CtTypeMember member : membersWithOutgoingEdges) {
             if (!fullyVisited.contains(member)) {
@@ -206,7 +206,7 @@ public final class MemberDependencyGraph {
 
     @NonNull
     private List<CtTypeMember> detectCyclePathDfs(
-            CtTypeMember current, Set<CtTypeMember> fullyVisited, LinkedHashSet<CtTypeMember> currentPath) {
+            CtTypeMember current, Set<CtTypeMember> fullyVisited, Set<CtTypeMember> currentPath) {
         currentPath.add(current);
 
         for (CtTypeMember neighbor :
@@ -229,8 +229,7 @@ public final class MemberDependencyGraph {
 
     @NonNull
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static List<CtTypeMember> extractCyclePath(
-            CtTypeMember cycleStart, LinkedHashSet<CtTypeMember> currentPath) {
+    private static List<CtTypeMember> extractCyclePath(CtTypeMember cycleStart, Set<CtTypeMember> currentPath) {
         List<CtTypeMember> cycle = new ArrayList<>();
         boolean collecting = false;
         for (CtTypeMember pathMember : currentPath) {

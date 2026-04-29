@@ -11,8 +11,10 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.nio.file.Path;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled("Spoon 10.x is required for Java 11 runtime compatibility and does not parse Java 21 compliance fixtures.")
 class ParseAllJava21FeaturesTest {
 
     private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);

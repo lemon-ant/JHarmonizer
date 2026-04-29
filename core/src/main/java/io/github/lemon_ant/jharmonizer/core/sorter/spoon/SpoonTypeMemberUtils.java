@@ -22,6 +22,7 @@ import spoon.reflect.reference.CtTypeReference;
  * such as alpha keys, visibility ranks, and source-position starts.
  */
 @UtilityClass
+@SuppressWarnings("PMD.TooManyMethods")
 public class SpoonTypeMemberUtils {
 
     /**
@@ -95,35 +96,19 @@ public class SpoonTypeMemberUtils {
     @NonNull
     static String deriveAlphaKey(@NonNull CtTypeMember typeMember) {
         if (typeMember instanceof CtMethod<?>) {
-            CtMethod<?> method = (CtMethod<?>) typeMember;
-            String methodName = method.getSimpleName();
-            String parameters = deriveParameterTypeList(method.getParameters());
-            String returnType = method.getType() == null ? "" : method.getType().getQualifiedName();
-            return methodName + "(" + parameters + "):" + returnType;
+            return deriveMethodAlphaKey((CtMethod<?>) typeMember);
         }
         if (typeMember instanceof CtConstructor<?>) {
-            CtConstructor<?> constructor = (CtConstructor<?>) typeMember;
-            String parameters = deriveParameterTypeList(constructor.getParameters());
-            return "<init>(" + parameters + ")";
+            return deriveConstructorAlphaKey((CtConstructor<?>) typeMember);
         }
         if (typeMember instanceof CtField<?>) {
-            CtField<?> field = (CtField<?>) typeMember;
-            String fieldName = field.getSimpleName();
-            String fieldType = field.getType() == null ? "" : field.getType().getQualifiedName();
-            return fieldName + ":" + fieldType;
+            return deriveFieldAlphaKey((CtField<?>) typeMember);
         }
         if (typeMember instanceof CtAnonymousExecutable) {
-            CtAnonymousExecutable anonymousExecutable = (CtAnonymousExecutable) typeMember;
-            boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
-            return isStaticInitializer ? "<clinit>" : "<init>";
+            return deriveAnonymousExecutableAlphaKey((CtAnonymousExecutable) typeMember);
         }
         if (typeMember instanceof CtRecordComponent) {
-            CtRecordComponent recordComponent = (CtRecordComponent) typeMember;
-            String componentName = recordComponent.getSimpleName();
-            String componentType = recordComponent.getType() == null
-                    ? ""
-                    : recordComponent.getType().getQualifiedName();
-            return componentName + ":" + componentType;
+            return deriveRecordComponentAlphaKey((CtRecordComponent) typeMember);
         }
         if (typeMember instanceof CtType<?>) {
             CtType<?> nestedType = (CtType<?>) typeMember;
@@ -131,6 +116,42 @@ public class SpoonTypeMemberUtils {
         }
         // Defensive fallback for any unexpected Spoon CtTypeMember implementation.
         return typeMember.getClass().getSimpleName() + ":" + extractSrcStart(typeMember);
+    }
+
+    @NonNull
+    private static String deriveMethodAlphaKey(CtMethod<?> method) {
+        String methodName = method.getSimpleName();
+        String parameters = deriveParameterTypeList(method.getParameters());
+        String returnType = method.getType() == null ? "" : method.getType().getQualifiedName();
+        return methodName + "(" + parameters + "):" + returnType;
+    }
+
+    @NonNull
+    private static String deriveConstructorAlphaKey(CtConstructor<?> constructor) {
+        String parameters = deriveParameterTypeList(constructor.getParameters());
+        return "<init>(" + parameters + ")";
+    }
+
+    @NonNull
+    private static String deriveFieldAlphaKey(CtField<?> field) {
+        String fieldName = field.getSimpleName();
+        String fieldType = field.getType() == null ? "" : field.getType().getQualifiedName();
+        return fieldName + ":" + fieldType;
+    }
+
+    @NonNull
+    private static String deriveAnonymousExecutableAlphaKey(CtAnonymousExecutable anonymousExecutable) {
+        boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
+        return isStaticInitializer ? "<clinit>" : "<init>";
+    }
+
+    @NonNull
+    private static String deriveRecordComponentAlphaKey(CtRecordComponent recordComponent) {
+        String componentName = recordComponent.getSimpleName();
+        String componentType = recordComponent.getType() == null
+                ? ""
+                : recordComponent.getType().getQualifiedName();
+        return componentName + ":" + componentType;
     }
 
     @NonNull

@@ -59,8 +59,6 @@ final class ProcessingProgressReporter {
             case ERROR:
                 errorCount.increment();
                 break;
-            default:
-                throw new IllegalStateException("Unexpected status: " + status);
         }
     }
 

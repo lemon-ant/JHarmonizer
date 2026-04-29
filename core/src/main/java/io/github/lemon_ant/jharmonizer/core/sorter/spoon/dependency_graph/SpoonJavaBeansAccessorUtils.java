@@ -51,6 +51,7 @@ public class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
@@ -145,9 +146,8 @@ public class SpoonJavaBeansAccessorUtils {
                 return "java.lang.Boolean"
                         .equals(SpoonTypeMemberUtils.normalizeTypeReferenceByErasureAndBoxing(returnTypeReference)
                                 .getQualifiedName());
-            default:
-                throw new IllegalStateException("Unexpected accessor return type: " + accessorMethodReturnType);
         }
+        throw new IllegalStateException("Unexpected accessor return type: " + accessorMethodReturnType);
     }
 
     @Nullable
@@ -185,9 +185,8 @@ public class SpoonJavaBeansAccessorUtils {
                 return candidateMethod.getParameters().isEmpty()
                         ? null
                         : candidateMethod.getParameters().get(0).getType();
-            default:
-                throw new IllegalStateException("Unexpected accessor kind: " + accessorKind);
         }
+        throw new IllegalStateException("Unexpected accessor kind: " + accessorKind);
     }
 
     private enum AccessorKind {

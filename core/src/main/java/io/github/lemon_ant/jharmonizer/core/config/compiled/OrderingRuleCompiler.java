@@ -38,8 +38,7 @@ class OrderingRuleCompiler {
                 return OrderingRule.VISIBILITY_ASC;
             case VISIBILITY_DESC:
                 return OrderingRule.VISIBILITY_DESC;
-            default:
-                throw new IllegalStateException("Unexpected ordering rule: " + unifiedOrderingRule);
         }
+        throw new IllegalStateException("Unexpected ordering rule: " + unifiedOrderingRule);
     }
 }

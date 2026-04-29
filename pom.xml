@@ -80,6 +80,7 @@
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
         <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.testRelease>21</maven.compiler.testRelease>
         <!-- Default local repository base; can still be overridden via -Dmaven.repo.local. -->
         <maven.repo.local>${settings.localRepository}</maven.repo.local>
         <!--
@@ -243,6 +244,7 @@
                     <version>3.15.0</version>
                     <configuration>
                         <proc>full</proc>
+                        <testRelease>${maven.compiler.testRelease}</testRelease>
                     </configuration>
                 </plugin>
                 <plugin>

@@ -40,10 +40,9 @@ class GroupBoundaryMarker {
                         .orElse(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
             case NONE:
                 return null;
-            default:
-                throw new IllegalStateException("Unexpected separator: "
-                        + memberGroupBlock.getCompiledMemberGroup().getSeparator());
         }
+        throw new IllegalStateException("Unexpected separator: "
+                + memberGroupBlock.getCompiledMemberGroup().getSeparator());
     }
 
     private static void writeGroupBoundaryMetadata(CtTypeMember firstMember, String separatorText) {

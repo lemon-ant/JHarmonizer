@@ -53,9 +53,8 @@ class ComparatorUtils {
                         .reversed();
             case VISIBILITY_DESC:
                 return Comparator.comparingInt(SortableTypeMember.OrderingKey::getVisibilityRank);
-            default:
-                throw new IllegalStateException("Unexpected ordering rule: " + orderingRule);
         }
+        throw new IllegalStateException("Unexpected ordering rule: " + orderingRule);
     }
 
     private static int compareAlphaOrderingKeys(OrderingKey left, OrderingKey right) {
