@@ -20,14 +20,13 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import lombok.NonNull;
-import org.apache.commons.lang3.tuple.Pair;
-import spoon.reflect.declaration.CtElement;
 
 /**
  * Flow that signals pipeline stop when the first ordering or formatting violation is detected.
@@ -111,7 +110,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
-        List<Pair<CtElement, Integer>> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
+        List<MemberRelocation> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
                 : findRelocations(
                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),

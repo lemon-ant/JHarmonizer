@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
@@ -37,8 +36,7 @@ class RelocationDetectorTest {
         Map<SourcePosition, Integer> originalOrderIndices = indexElementsByOrder(spoonAstModel.getCompilationUnit());
 
         // When
-        List<Pair<CtElement, Integer>> relocations =
-                findRelocations(originalOrderIndices, spoonAstModel.getCompilationUnit());
+        List<MemberRelocation> relocations = findRelocations(originalOrderIndices, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations).isEmpty();
@@ -52,7 +50,7 @@ class RelocationDetectorTest {
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
 
         // When
-        List<Pair<CtElement, Integer>> relocations = findRelocations(Map.of(), spoonAstModel.getCompilationUnit());
+        List<MemberRelocation> relocations = findRelocations(Map.of(), spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations).isEmpty();
@@ -84,28 +82,34 @@ class RelocationDetectorTest {
     }
 
     @Test
-    void printRelocations_withMethodRelocation_includesMethodInOutput() {
+    void printRelocations_withMethodRelocation_includesNeighborContext() {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        List<Pair<CtElement, Integer>> fakeRelocations = buildMethodsWithFakeOffset(spoonAstModel, 1);
+        List<MemberRelocation> fakeRelocations = buildMethodRelocationsWithFakeNeighbors(spoonAstModel);
 
         // When
         String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), fakeRelocations);
 
         // Then
         assertThat(printedRelocations).contains("Sample.java");
-        assertThat(printedRelocations).containsAnyOf("DOWN", "UP");
+        assertThat(printedRelocations).containsAnyOf("should be between", "should be before", "should be after");
     }
 
     @NonNull
-    private static List<Pair<CtElement, Integer>> buildMethodsWithFakeOffset(
-            @NonNull SpoonAstModel spoonAstModel, int fakeOffset) {
-        return spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+    private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(
+            @NonNull SpoonAstModel spoonAstModel) {
+        List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
-                .map(method -> Pair.<CtElement, Integer>of(method, fakeOffset))
+                .map(CtElement.class::cast)
                 .toList();
+        if (methods.size() < 2) {
+            return methods.stream()
+                    .map(method -> new MemberRelocation(method, null, null, 1))
+                    .toList();
+        }
+        return List.of(new MemberRelocation(methods.get(0), null, methods.get(1), 1));
     }
 }

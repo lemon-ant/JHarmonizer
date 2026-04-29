@@ -5,8 +5,11 @@ import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +18,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtConstructor;
@@ -48,7 +50,10 @@ public class RelocationDetector {
      *       {@code offset = currentIndex - originalIndex}.</li>
      *   <li>Elements not present in the original snapshot (newly added) are ignored.</li>
      *   <li>Only non-zero offsets are reported (unchanged elements are skipped).</li>
-     *   <li>Runs in a single pass; no intermediate "current index" map is created.</li>
+     *   <li>For each relocated element, the immediately preceding and following elements in the
+     *       sorted order are captured as {@link MemberRelocation#getSortedPredecessor()} and
+     *       {@link MemberRelocation#getSortedSuccessor()}, so diagnostic messages can show the user
+     *       exactly where the member should appear.</li>
      * </ul>
      *
      * <p>Notes:
@@ -61,26 +66,32 @@ public class RelocationDetector {
      *
      * @param originalOrderIndices original encounter indices keyed by source position
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return list of pairs {@code (element, offset)} for all moved elements (offset ≠ 0), in current encounter order
+     * @return list of relocations for all moved elements (offset ≠ 0), in current encounter order
      */
     @NonNull
-    public static List<Pair<CtElement, Integer>> findRelocations(
+    public static List<MemberRelocation> findRelocations(
             /*TODO Create a dedicated type*/ @NonNull Map<SourcePosition, Integer> originalOrderIndices,
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        AtomicInteger runningIndex = new AtomicInteger(0);
-
-        return streamDeclaredHierarchy(reorderedCompilationUnit)
-                // compute offset on the fly using the running encounter index
-                .map(element -> {
-                    int current = runningIndex.getAndIncrement();
-                    return Optional.ofNullable(originalOrderIndices.get(element.getPosition()))
-                            .map(orig -> current - orig)
-                            .filter(offset -> offset != 0)
-                            .map(offset -> Pair.of(element, offset));
-                })
-                .flatMap(Optional::stream)
-                .toList();
+        List<CtElement> sortedElements =
+                streamDeclaredHierarchy(reorderedCompilationUnit).toList();
+        List<MemberRelocation> relocations = new ArrayList<>();
+        for (int currentIndex = 0; currentIndex < sortedElements.size(); currentIndex++) {
+            CtElement element = sortedElements.get(currentIndex);
+            Integer originalIndex = originalOrderIndices.get(element.getPosition());
+            if (originalIndex == null) {
+                continue;
+            }
+            int offset = currentIndex - originalIndex;
+            if (offset == 0) {
+                continue;
+            }
+            CtElement predecessor = currentIndex > 0 ? sortedElements.get(currentIndex - 1) : null;
+            CtElement successor =
+                    currentIndex < sortedElements.size() - 1 ? sortedElements.get(currentIndex + 1) : null;
+            relocations.add(new MemberRelocation(element, predecessor, successor, offset));
+        }
+        return Collections.unmodifiableList(relocations);
     }
 
     /**
@@ -109,27 +120,42 @@ public class RelocationDetector {
 
     /**
      * Formats the relocations into a human-readable string.
+     * For each violation the message shows where the member should be placed by naming
+     * its immediate predecessor and successor in the correct sorted order.
      *
      * @param path        the path of the file where the relocations were detected
      * @param relocations the collection of relocations to format
      * @return a formatted string representing the relocations
      */
     @NonNull
-    public static String printRelocations(
-            @NonNull Path path, @NonNull Collection<Pair<CtElement, Integer>> relocations) {
+    public static String printRelocations(@NonNull Path path, @NonNull Collection<MemberRelocation> relocations) {
         return String.format(
                 "Detected member ordering violations in '%s':%n%s",
                 path.getFileName(),
                 relocations.stream()
                         .map(relocation -> {
-                            CtElement member = relocation.getLeft();
-                            int offset = relocation.getRight();
-                            String direction = offset < 0 ? "UP" : "DOWN";
-                            return String.format(
-                                    "  - %s: needs to move %s by %d position(s)",
-                                    computeParentSimpleName(member), direction, Math.abs(offset));
+                            String memberName = computeParentSimpleName(relocation.getViolatingElement());
+                            String placement = computePlacementDescription(
+                                    relocation.getSortedPredecessor(), relocation.getSortedSuccessor());
+                            return String.format("  - %s: %s", memberName, placement);
                         })
                         .collect(joining(lineSeparator())));
+    }
+
+    @NonNull
+    private static String computePlacementDescription(@Nullable CtElement predecessor, @Nullable CtElement successor) {
+        if (predecessor != null && successor != null) {
+            return String.format(
+                    "should be between [%s] and [%s]",
+                    computeParentSimpleName(predecessor), computeParentSimpleName(successor));
+        }
+        if (predecessor != null) {
+            return String.format("should be after [%s] (as last member)", computeParentSimpleName(predecessor));
+        }
+        if (successor != null) {
+            return String.format("should be before [%s] (as first member)", computeParentSimpleName(successor));
+        }
+        return "should be the only member";
     }
 
     /**

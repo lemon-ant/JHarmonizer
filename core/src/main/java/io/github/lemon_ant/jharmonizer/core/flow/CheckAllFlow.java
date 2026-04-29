@@ -19,12 +19,11 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import lombok.NonNull;
-import org.apache.commons.lang3.tuple.Pair;
-import spoon.reflect.declaration.CtElement;
 
 public class CheckAllFlow extends AbstractOptOutFlow {
 
@@ -68,7 +67,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
 
         boolean hasChanges =
                 !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
-        List<Pair<CtElement, Integer>> elementRelocations = List.of();
+        List<MemberRelocation> elementRelocations = List.of();
         String srcDiff = "";
         if (hasChanges) {
             if (!sortingAndSerializationResult.isSortingSkipped()) {
