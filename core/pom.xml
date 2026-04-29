@@ -44,7 +44,7 @@
         <dependency>
             <groupId>fr.inria.gforge.spoon</groupId>
             <artifactId>spoon-core</artifactId>
-            <version>11.2.1</version>
+            <version>${spoon.version}</version>
             <exclusions>
                 <!-- Maven model support — not used by JHarmonizer -->
                 <exclusion>
@@ -127,8 +127,8 @@
                                 <include>**/valid/**/*.java</include>
                             </testIncludes>
                             <outputDirectory>${project.build.directory}/test-cases-compile-check-classes</outputDirectory>
-                            <!-- Use same release as tests/project (or set explicitly) -->
-                            <testRelease>${maven.compiler.release}</testRelease>
+                            <!-- Use the test release level; fixtures intentionally include newer Java syntax. -->
+                            <testRelease>${maven.compiler.testRelease}</testRelease>
                             <!-- Suppress 'strictfp' deprecation warnings from test fixtures -->
                             <compilerArgs>
                                 <arg>-Xlint:-strictfp</arg>

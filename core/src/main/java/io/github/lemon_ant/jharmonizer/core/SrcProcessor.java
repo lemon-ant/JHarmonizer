@@ -107,13 +107,7 @@ public final class SrcProcessor {
             @NonNull Collection<String> excludeGlobs,
             @NonNull FlowType flowType) {
         logStartupBanner(flowType, baseDir, includeGlobs, excludeGlobs);
-        IFlow flow =
-                // TODO Move it into the flow factory
-                switch (flowType) {
-                    case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
-                    case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
-                    case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
-                };
+        IFlow flow = createFlow(flowType);
 
         ProcessingProgressReporter progressReporter = new ProcessingProgressReporter();
 
@@ -141,6 +135,21 @@ public final class SrcProcessor {
         long nonConformingFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         boolean success = flow.isSuccessful(nonConformingFileCount > 0);
         return new SrcProcessingResult(aggregatedProcessingStatistic, success);
+    }
+
+    /**
+     * Creates the processing flow for the requested processing strategy.
+     *
+     * @param flowType the flow strategy to instantiate
+     * @return the matching processing flow
+     */
+    @NonNull
+    private IFlow createFlow(FlowType flowType) {
+        return switch (flowType) {
+            case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
+            case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
+            case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
+        };
     }
 
     private static void logDebugProcessingCompletionSummary(

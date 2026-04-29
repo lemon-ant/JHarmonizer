@@ -177,7 +177,7 @@ public class SpoonJavaBeansAccessorUtils {
             case SET ->
                 candidateMethod.getParameters().isEmpty()
                         ? null
-                        : candidateMethod.getParameters().getFirst().getType();
+                        : candidateMethod.getParameters().get(0).getType();
         };
     }
 
