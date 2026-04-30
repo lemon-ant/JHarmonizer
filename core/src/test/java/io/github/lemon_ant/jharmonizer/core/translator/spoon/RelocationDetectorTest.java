@@ -104,6 +104,35 @@ class RelocationDetectorTest {
         assertThat(printedRelocations).contains("        public void b() { ... }");
     }
 
+    @Test
+    void printRelocations_moreViolationsThanLimit_showsFooterWithTotalCount() {
+        // Given
+        SrcFile srcFile = createSrcFile(
+                "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+                .flatMap(ctType -> ctType.getMethods().stream())
+                .map(CtElement.class::cast)
+                .toList();
+        CtElement firstMethod = methods.get(0);
+        List<MemberRelocation> relocationsExceedingLimit = List.of(
+                new MemberRelocation(firstMethod, null, null, 1),
+                new MemberRelocation(firstMethod, null, null, 2),
+                new MemberRelocation(firstMethod, null, null, 3),
+                new MemberRelocation(firstMethod, null, null, 4),
+                new MemberRelocation(firstMethod, null, null, 5),
+                new MemberRelocation(firstMethod, null, null, 6));
+
+        // When
+        String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), relocationsExceedingLimit);
+
+        // Then
+        assertThat(printedRelocations).contains("  [5]");
+        assertThat(printedRelocations).doesNotContain("  [6]");
+        assertThat(printedRelocations).contains("  ... 6 violations total");
+    }
+
     @NonNull
     private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(
             @NonNull SpoonAstModel spoonAstModel) {
