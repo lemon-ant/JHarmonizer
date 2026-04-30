@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtCompilationUnit;
@@ -81,19 +82,24 @@ public class RelocationDetector {
     /**
      * Returns whether any declared element has moved within its scope.
      *
+     * <p>Compares the pre-sort {@code originalMemberOrder} snapshot with the flat member order
+     * of {@code reorderedCompilationUnit} element by element. Any positional mismatch indicates
+     * that at least one member was relocated.
+     *
      * @param originalMemberOrder flat list of all type members in their original source order,
      *                            as produced by {@link #snapshotOriginalMemberOrder}
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return {@code true} if any scope's sorted order is not strictly increasing in original
-     *         source-position rank; otherwise {@code false}
+     * @return {@code true} if any element is at a different position in the sorted order;
+     *         otherwise {@code false}
      */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        Map<CtTypeMember, Integer> originalIndex = buildOriginalIndexMap(originalMemberOrder);
-        List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
-        return hasScopeRelocation(rootTypes, originalIndex)
-                || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalIndex));
+        List<CtTypeMember> sortedMemberOrder = snapshotOriginalMemberOrder(reorderedCompilationUnit);
+        return originalMemberOrder.size() != sortedMemberOrder.size()
+                || IntStream.range(0, originalMemberOrder.size())
+                        .anyMatch(index -> originalMemberOrder.get(index) != sortedMemberOrder.get(index));
     }
 
     /**
@@ -280,48 +286,6 @@ public class RelocationDetector {
     }
 
     /**
-     * Returns {@code true} if the original-source-rank sequence of {@code scopeMembers} is not
-     * strictly increasing, i.e. at least one tracked member has been moved relative to the
-     * original order.
-     *
-     * @param scopeMembers   the ordered members of one scope
-     * @param originalIndex  map from type member to its position in the flat original-order snapshot
-     * @return {@code true} if a descent was found; otherwise {@code false}
-     */
-    private static boolean hasScopeRelocation(
-            List<? extends CtTypeMember> scopeMembers, Map<CtTypeMember, Integer> originalIndex) {
-        int previousIndex = -1;
-        for (CtTypeMember member : scopeMembers) {
-            Integer idx = originalIndex.get(member);
-            if (idx == null) {
-                continue;
-            }
-            if (idx < previousIndex) {
-                return true;
-            }
-            previousIndex = idx;
-        }
-        return false;
-    }
-
-    /**
-     * Returns {@code true} if any direct member of {@code type} or any nested type member has
-     * moved relative to the original source order.
-     *
-     * @param type           the type whose member scope to check recursively
-     * @param originalIndex  map from type member to its position in the flat original-order snapshot
-     * @return {@code true} if any descent was found; otherwise {@code false}
-     */
-    private static boolean hasTypeMemberRelocation(CtType<?> type, Map<CtTypeMember, Integer> originalIndex) {
-        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
-        return hasScopeRelocation(members, originalIndex)
-                || members.stream()
-                        .filter(typeMember -> typeMember instanceof CtType<?>)
-                        .map(typeMember -> (CtType<?>) typeMember)
-                        .anyMatch(nestedType -> hasTypeMemberRelocation(nestedType, originalIndex));
-    }
-
-    /**
      * Builds a flat snapshot of all type members declared in the compilation unit,
      * in source-code order (DFS: each type node followed by its own members recursively).
      *
@@ -335,9 +299,7 @@ public class RelocationDetector {
      */
     @NonNull
     static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
-        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit)
-                .map(element -> (CtTypeMember) element)
-                .toList();
+        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit).toList();
     }
 
     /**

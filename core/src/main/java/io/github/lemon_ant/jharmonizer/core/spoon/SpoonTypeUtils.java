@@ -8,7 +8,6 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.ModifierKind;
@@ -68,7 +67,7 @@ public class SpoonTypeUtils {
      * Current order for a whole compilation unit: declared types as-is.
      */
     @NonNull
-    public static Stream<CtElement> streamDeclaredHierarchy(@NonNull CtCompilationUnit compilationUnit) {
+    public static Stream<CtTypeMember> streamDeclaredHierarchy(@NonNull CtCompilationUnit compilationUnit) {
         return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
@@ -111,9 +110,9 @@ public class SpoonTypeUtils {
      * Current order for a type: the type, then its members as they are in lists; recurse for nested types.
      */
     @NonNull
-    private static Stream<CtElement> streamTypeAndNestedElements(CtType<?> ownerType) {
-        Stream<CtElement> self = Stream.of(ownerType);
-        Stream<CtElement> membersAndNested = streamExplicitSrcTypeMembers(ownerType)
+    private static Stream<CtTypeMember> streamTypeAndNestedElements(CtType<?> ownerType) {
+        Stream<CtTypeMember> self = Stream.<CtTypeMember>of(ownerType);
+        Stream<CtTypeMember> membersAndNested = streamExplicitSrcTypeMembers(ownerType)
                 .flatMap(member -> {
                     if (member instanceof CtType<?> nestedType) {
                         // include the nested type declaration, then descend into its own members
