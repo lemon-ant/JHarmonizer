@@ -110,7 +110,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
-        List<MemberRelocation> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
+        List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
                 : findRelocations(
                         sortedSpoonAstModel.getOriginalElements2OrderIndices(),
@@ -122,10 +122,10 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
                         sortingAndSerializationResult.getSerializedSrcCode());
 
-        if (!elementRelocations.isEmpty()) {
+        if (!memberRelocations.isEmpty()) {
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
-                    .relocations(elementRelocations)
+                    .memberRelocations(memberRelocations)
                     .diff("")
                     .parsingStatistic(parsingResult.getParsingStatistic())
                     .sortingStatistic(
@@ -154,7 +154,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
             String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
-                    .relocations(List.of())
+                    .memberRelocations(List.of())
                     .diff(srcDiff)
                     .parsingStatistic(parsingResult.getParsingStatistic())
                     .sortingStatistic(
@@ -168,7 +168,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(null)
+                .memberRelocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(
@@ -189,7 +189,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 hasFormattingChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(List.of())
+                .memberRelocations(List.of())
                 .diff(srcDiff)
                 .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
                 .sortingStatistic(new SortingStatistic(0))

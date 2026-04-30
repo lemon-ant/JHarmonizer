@@ -45,7 +45,7 @@ public class FileProcessingResult {
 
     // TODO Make it non null
     @Nullable
-    Collection<MemberRelocation> relocations;
+    Collection<MemberRelocation> memberRelocations;
 
     @NonNull
     SerializationStatistic serializationStatistic;

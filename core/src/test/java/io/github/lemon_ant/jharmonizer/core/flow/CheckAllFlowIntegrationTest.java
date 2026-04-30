@@ -32,7 +32,7 @@ class CheckAllFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
         assertThat(fileProcessingResult.getDiff()).isNull();
-        assertThat(fileProcessingResult.getRelocations()).isNull();
+        assertThat(fileProcessingResult.getMemberRelocations()).isNull();
     }
 
     @Test
@@ -47,7 +47,7 @@ class CheckAllFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.CHECKED);
         assertThat(fileProcessingResult.getDiff()).isEmpty();
-        assertThat(fileProcessingResult.getRelocations()).isEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
     }
 
     @Test
@@ -62,7 +62,7 @@ class CheckAllFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
         assertThat(fileProcessingResult.getDiff()).isNotEmpty();
-        assertThat(fileProcessingResult.getRelocations()).isNotEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
     }
 
     @Test
@@ -77,7 +77,7 @@ class CheckAllFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
         assertThat(fileProcessingResult.getDiff()).isNotEmpty();
-        assertThat(fileProcessingResult.getRelocations()).isEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
     }
 
     @Test
@@ -94,7 +94,7 @@ class CheckAllFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus())
                 .isIn(FileProcessingStatus.FORMATTED, FileProcessingStatus.CHECKED);
-        assertThat(fileProcessingResult.getRelocations()).isEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
     }
 
     @Test

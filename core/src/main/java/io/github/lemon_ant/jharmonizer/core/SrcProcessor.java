@@ -230,10 +230,10 @@ public final class SrcProcessor {
     }
 
     private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
-        if (fileProcessingResult.getRelocations() != null
-                && !fileProcessingResult.getRelocations().isEmpty()) {
+        if (fileProcessingResult.getMemberRelocations() != null
+                && !fileProcessingResult.getMemberRelocations().isEmpty()) {
             log.warn(RelocationDetector.printRelocations(
-                    fileProcessingResult.getPath(), fileProcessingResult.getRelocations()));
+                    fileProcessingResult.getPath(), fileProcessingResult.getMemberRelocations()));
         }
         String diff = fileProcessingResult.getDiff();
         if (diff != null && !diff.isEmpty()) {

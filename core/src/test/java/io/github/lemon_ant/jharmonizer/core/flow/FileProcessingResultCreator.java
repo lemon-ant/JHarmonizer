@@ -40,7 +40,7 @@ public class FileProcessingResultCreator {
                 .sortingStatistic(new SortingStatistic(0))
                 .serializationStatistic(new SerializationStatistic(0, 0))
                 .formattingStatistic(new FormattingStatistic(0, 0))
-                .relocations(null)
+                .memberRelocations(null)
                 .diff("")
                 .stopRequested(stopRequested)
                 .build();
