@@ -4,7 +4,6 @@ import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.Serial;
 import java.io.Serializable;
@@ -15,6 +14,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Deserialization model for a single member-group entry in a JHarmonizer YAML config.

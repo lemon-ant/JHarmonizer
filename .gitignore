@@ -1,6 +1,5 @@
 **/target/
 **/dependency-reduced-pom.xml
-**/*-sources.zip
 **/*.iml
 /.idea
 **/debug/

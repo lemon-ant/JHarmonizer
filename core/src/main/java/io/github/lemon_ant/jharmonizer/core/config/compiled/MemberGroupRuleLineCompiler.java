@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.EXACT;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMatchMethod.REGEX;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
@@ -21,6 +20,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Compiles ONE rule-line into ONE predicate: mask AND (optional name) AND (optional annotations).

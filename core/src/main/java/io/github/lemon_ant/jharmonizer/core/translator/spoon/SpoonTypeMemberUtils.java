@@ -4,11 +4,11 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_HEADER_METADATA;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 

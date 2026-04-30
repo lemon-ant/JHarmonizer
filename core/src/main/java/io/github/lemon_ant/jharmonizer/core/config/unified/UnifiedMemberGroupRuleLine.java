@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -8,6 +7,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 
 /**
  * One rule line is a conjunction (AND) of atomic constraints.

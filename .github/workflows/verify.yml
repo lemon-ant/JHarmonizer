@@ -40,7 +40,6 @@ jobs:
               - '**/pom.xml'
               - '**/src/**/resources/**'
               - 'quality-gates/**'
-              - 'assembly/**'
               - '.github/workflows/*.yml'
 
   no-build:

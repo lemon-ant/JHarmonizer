@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
@@ -13,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Aggregated result of processing one source file through a flow.

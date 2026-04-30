@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.diff;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.Patch;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -10,6 +9,7 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Utility for computing and formatting a human-readable unified diff between two Java source strings.

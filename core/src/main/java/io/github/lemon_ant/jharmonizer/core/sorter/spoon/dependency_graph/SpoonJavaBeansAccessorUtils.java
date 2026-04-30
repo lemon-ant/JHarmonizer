@@ -4,7 +4,6 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static java.beans.Introspector.decapitalize;
 import static java.util.Objects.requireNonNull;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +14,7 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;

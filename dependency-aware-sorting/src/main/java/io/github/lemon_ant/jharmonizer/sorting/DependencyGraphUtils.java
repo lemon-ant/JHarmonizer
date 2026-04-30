@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.sorting;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntComparator;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Graph construction and structural utilities used by {@link SimplifiedDependencyAwareSorter}.

@@ -67,7 +67,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term (for example `URL`, `URI`, `ID`) or an established repository abbreviation such as the `src*` naming family.
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
-- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
+- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull` or `org.jspecify.annotations.Nullable`.
 - Do not change standard `Object` method signatures when overriding them.
   - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
   - Preserve standard contracts exactly, especially `equals(Object)`.

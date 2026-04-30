@@ -137,34 +137,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven-assembly-plugin.version}</version>
-                <!-- Keep this plugin aligned with the latest stable release used by the project -->
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly/project-zip.xml</descriptor>
-                        <!-- Assembly descriptor location -->
-                    </descriptors>
-                    <outputDirectory>${project.basedir}</outputDirectory>
-                    <finalName>${project.artifactId}-${project.version}-sources</finalName>
-                    <!-- Output ZIP name, e.g. myproject-1.0-sources.zip -->
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <!-- Do not append the assembly id suffix to the filename -->
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <!-- Bind to package phase: after compilation/tests, before install -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 

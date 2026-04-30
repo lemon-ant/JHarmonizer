@@ -2,11 +2,11 @@ package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
