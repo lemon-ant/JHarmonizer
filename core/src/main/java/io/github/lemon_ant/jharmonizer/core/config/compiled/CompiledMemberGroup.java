@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.List;
@@ -9,6 +8,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Tree node with precompiled include/exclude blocks and children.

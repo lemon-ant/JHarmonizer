@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -12,6 +11,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Java AST translator-agnostic descriptor for selection and sorting rules.

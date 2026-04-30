@@ -4,7 +4,6 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static java.util.Optional.ofNullable;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,6 +11,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Partial formatting overlay. All fields are optional; at least one must be set.

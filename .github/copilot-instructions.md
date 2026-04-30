@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
   - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
   - This repository-wide rule also applies to private helper methods in tests.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
-- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull`, `edu.umd.cs.findbugs.annotations.Nullable`, or the accepted legacy `javax.annotation` nullability annotations already present in the codebase.
+- Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull` or `org.jspecify.annotations.Nullable`.
 - Do not change standard `Object` method signatures when overriding them.
   - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
   - Preserve standard contracts exactly, especially `equals(Object)`.

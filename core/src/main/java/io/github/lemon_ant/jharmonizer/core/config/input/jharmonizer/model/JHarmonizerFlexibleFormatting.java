@@ -5,13 +5,13 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Partial formatting overlay for a JHarmonizer flexible YAML config.

@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
 import java.nio.file.Path;
@@ -19,6 +18,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Collector-based aggregation of per-file processing statistics into a single summary.

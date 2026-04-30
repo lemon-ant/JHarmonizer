@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
