@@ -36,7 +36,7 @@ public class SpoonAstModel {
     CtType<?> mainType;
 
     @NonNull
-    Map<SourcePosition, Integer> originalElements2OrderIndices;
+    Map<SourcePosition, SourcePosition> originalMemberSuccessors;
 
     @NonNull
     Path path;

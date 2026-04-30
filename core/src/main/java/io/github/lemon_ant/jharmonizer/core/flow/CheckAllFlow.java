@@ -72,8 +72,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         if (hasChanges) {
             if (!sortingAndSerializationResult.isSortingSkipped()) {
                 memberRelocations = findRelocations(
-                        sortedSpoonAstModel.getOriginalElements2OrderIndices(),
-                        sortedSpoonAstModel.getCompilationUnit());
+                        sortedSpoonAstModel.getOriginalMemberSuccessors(), sortedSpoonAstModel.getCompilationUnit());
             }
             srcDiff = computeDiff(srcFile.getSrcCode(), sortingSerializationAndFormattingResult.getFormattedSrcCode());
         }

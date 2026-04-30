@@ -10,15 +10,9 @@ import spoon.reflect.declaration.CtElement;
 /**
  * Captures a single member-ordering violation detected during a check flow.
  *
- * <p>In addition to the violating element and its displacement offset, this immutable value class
- * holds the immediate predecessor and successor of the element in the correct sorted order, so that
- * diagnostic messages can tell the user exactly where the element should appear.
- *
- * <p>Offset semantics (mirroring {@link RelocationDetector#findRelocations}):
- * <ul>
- *   <li>Positive offset — element moved <em>down</em> (appears later than expected).</li>
- *   <li>Negative offset — element moved <em>up</em> (appears earlier than expected).</li>
- * </ul>
+ * <p>This immutable value class holds the violating element and its immediate predecessor and
+ * successor in the correct sorted order, so that diagnostic messages can tell the user exactly
+ * where the element should appear.
  *
  * <p>{@code sortedPredecessor} is {@code null} when the element should be the very first member
  * of its scope. {@code sortedSuccessor} is {@code null} when it should be the very last.
@@ -43,10 +37,4 @@ public class MemberRelocation {
      */
     @Nullable
     CtElement sortedSuccessor;
-
-    /**
-     * Displacement of the element relative to its original position.
-     * Positive means it moved down; negative means it moved up.
-     */
-    int offset;
 }

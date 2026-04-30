@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
@@ -35,59 +36,53 @@ public class RelocationDetector {
     private static final int INITIAL_OUTPUT_BUFFER_CAPACITY = 256;
 
     /**
-     * Computes relocations of declared elements by comparing their current within-scope position
-     * against the previously captured original within-scope position.
+     * Computes relocations by comparing consecutive-pair relationships in the sorted order
+     * against the original source order captured in {@code originalSuccessors}.
      *
      * <p>Semantics:
      * <ul>
-     *   <li>For each scope (file root, type body), the current position of each element within
-     *       that scope is compared with its original within-scope position from
-     *       {@code originalOrderIndices}.</li>
-     *   <li>Elements not present in the original snapshot (newly added) are ignored.</li>
-     *   <li>Only elements whose within-scope position changed are reported; elements that merely
-     *       moved because their enclosing type changed position are not flagged.</li>
-     *   <li>For each relocated element, the immediately preceding and following elements in the
-     *       sorted order within the same scope are captured as {@link MemberRelocation#getSortedPredecessor()} and
-     *       {@link MemberRelocation#getSortedSuccessor()}, so diagnostic messages can show the user
-     *       exactly where the member should appear.</li>
+     *   <li>For each scope (file root, type body), the method walks consecutive pairs in the
+     *       sorted member list and checks whether the original source had the same consecutive
+     *       relationship.</li>
+     *   <li>A break is reported when the element that follows a given member in the sorted order
+     *       differs from the element that followed it in the original source.</li>
+     *   <li>This means that moving one contiguous block generates only the two seam breaks at
+     *       the insertion and extraction points, regardless of how many members are in the block.</li>
+     *   <li>For each break, the element appearing in the unexpected position is reported as
+     *       {@link MemberRelocation#getViolatingElement()}, with its sorted predecessor and
+     *       successor captured for diagnostic messages.</li>
      * </ul>
      *
-     * <p>Notes:
-     * <ul>
-     *   <li>Positive offset means the element moved down (appears later) within its scope;
-     *       negative offset means it moved up (appears earlier).</li>
-     * </ul>
-     *
-     * @param originalOrderIndices original within-scope encounter indices keyed by source position
+     * @param originalSuccessors original within-scope successor positions keyed by source position
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return list of relocations for all moved elements (within-scope offset ≠ 0), in current encounter order
+     * @return list of relocations for all break points, in current encounter order
      */
     @NonNull
     public static List<MemberRelocation> findRelocations(
-            /*TODO Create a dedicated type*/ @NonNull Map<SourcePosition, Integer> originalOrderIndices,
+            @NonNull Map<SourcePosition, SourcePosition> originalSuccessors,
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
         List<MemberRelocation> relocations = new ArrayList<>();
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
-        collectScopeRelocations(rootTypes, originalOrderIndices, relocations);
-        rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalOrderIndices, relocations));
+        collectScopeRelocations(new ArrayList<>(rootTypes), originalSuccessors, relocations);
+        rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalSuccessors, relocations));
         return List.copyOf(relocations);
     }
 
     /**
      * Returns whether any declared element has moved within its scope.
      *
-     * @param originalOrderIndices the original within-scope order indices by source position
+     * @param originalSuccessors the original within-scope successor positions by source position
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return {@code true} if any element moved within its scope; otherwise {@code false}
+     * @return {@code true} if any consecutive-pair relationship changed; otherwise {@code false}
      */
     public static boolean isRelocated(
-            @NonNull Map<SourcePosition, Integer> originalOrderIndices,
+            @NonNull Map<SourcePosition, SourcePosition> originalSuccessors,
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
-        return hasScopeRelocation(rootTypes, originalOrderIndices)
-                || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalOrderIndices));
+        return hasScopeRelocation(new ArrayList<>(rootTypes), originalSuccessors)
+                || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalSuccessors));
     }
 
     /**
@@ -152,67 +147,75 @@ public class RelocationDetector {
     }
 
     /**
-     * Scans {@code scopeMembers} for elements whose current within-scope index differs from their
-     * original within-scope index, and adds a {@link MemberRelocation} for each such element.
+     * Scans {@code scopeMembers} for consecutive pairs whose relationship in the sorted order
+     * differs from the original source order, and adds a {@link MemberRelocation} for each
+     * such break point.
+     *
+     * <p>A break is reported when the element at position {@code i+1} in the sorted list is not
+     * the element that originally followed the element at position {@code i}. The element at
+     * {@code i+1} is reported as the violating element, with {@code i} as its sorted predecessor
+     * and {@code i+2} (if present) as its sorted successor.
      *
      * @param scopeMembers         the ordered members of one scope (file root or a type body)
-     * @param originalOrderIndices original within-scope index map keyed by source position
+     * @param originalSuccessors   original within-scope successor position map keyed by source position
      * @param relocations          accumulator for detected relocations
      */
     private static void collectScopeRelocations(
             List<? extends CtTypeMember> scopeMembers,
-            Map<SourcePosition, Integer> originalOrderIndices,
+            Map<SourcePosition, SourcePosition> originalSuccessors,
             List<MemberRelocation> relocations) {
-        for (int i = 0; i < scopeMembers.size(); i++) {
-            CtTypeMember member = scopeMembers.get(i);
-            if (!member.getPosition().isValidPosition()) {
+        for (int i = 0; i < scopeMembers.size() - 1; i++) {
+            CtTypeMember current = scopeMembers.get(i);
+            CtTypeMember actualNext = scopeMembers.get(i + 1);
+            if (!current.getPosition().isValidPosition()) {
                 continue;
             }
-            Integer originalIdx = originalOrderIndices.get(member.getPosition());
-            if (originalIdx == null || i == originalIdx) {
-                continue;
+            SourcePosition expectedNextPos = originalSuccessors.get(current.getPosition());
+            if (!Objects.equals(expectedNextPos, actualNext.getPosition())) {
+                CtTypeMember successor = i + 2 < scopeMembers.size() ? scopeMembers.get(i + 2) : null;
+                relocations.add(new MemberRelocation(actualNext, current, successor));
             }
-            CtTypeMember predecessor = i > 0 ? scopeMembers.get(i - 1) : null;
-            CtTypeMember successor = i < scopeMembers.size() - 1 ? scopeMembers.get(i + 1) : null;
-            relocations.add(new MemberRelocation(member, predecessor, successor, i - originalIdx));
         }
     }
 
     /**
-     * Checks the direct members of {@code type} for within-scope relocations, then recurses
-     * into any nested types.
+     * Checks the direct members of {@code type} for consecutive-pair relocation breaks, then
+     * recurses into any nested types.
      *
      * @param type                 the type whose member scope to check
-     * @param originalOrderIndices original within-scope index map keyed by source position
+     * @param originalSuccessors   original within-scope successor position map keyed by source position
      * @param relocations          accumulator for detected relocations
      */
     private static void collectTypeMemberRelocations(
-            CtType<?> type, Map<SourcePosition, Integer> originalOrderIndices, List<MemberRelocation> relocations) {
+            CtType<?> type,
+            Map<SourcePosition, SourcePosition> originalSuccessors,
+            List<MemberRelocation> relocations) {
         List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
-        collectScopeRelocations(members, originalOrderIndices, relocations);
+        collectScopeRelocations(members, originalSuccessors, relocations);
         members.stream()
                 .filter(m -> m instanceof CtType<?>)
                 .map(m -> (CtType<?>) m)
-                .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalOrderIndices, relocations));
+                .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalSuccessors, relocations));
     }
 
     /**
-     * Returns {@code true} if any element in {@code scopeMembers} moved to a later within-scope
-     * position than its original index.
+     * Returns {@code true} if any consecutive-pair relationship in {@code scopeMembers} differs
+     * from the original source order.
      *
      * @param scopeMembers         the ordered members of one scope
-     * @param originalOrderIndices original within-scope index map keyed by source position
-     * @return {@code true} if a later-position relocation was found; otherwise {@code false}
+     * @param originalSuccessors   original within-scope successor position map keyed by source position
+     * @return {@code true} if a break point was found; otherwise {@code false}
      */
     private static boolean hasScopeRelocation(
-            List<? extends CtTypeMember> scopeMembers, Map<SourcePosition, Integer> originalOrderIndices) {
-        for (int i = 0; i < scopeMembers.size(); i++) {
-            CtTypeMember member = scopeMembers.get(i);
-            if (!member.getPosition().isValidPosition()) {
+            List<? extends CtTypeMember> scopeMembers, Map<SourcePosition, SourcePosition> originalSuccessors) {
+        for (int i = 0; i < scopeMembers.size() - 1; i++) {
+            CtTypeMember current = scopeMembers.get(i);
+            CtTypeMember actualNext = scopeMembers.get(i + 1);
+            if (!current.getPosition().isValidPosition()) {
                 continue;
             }
-            Integer orig = originalOrderIndices.get(member.getPosition());
-            if (orig != null && i > orig) {
+            SourcePosition expectedNextPos = originalSuccessors.get(current.getPosition());
+            if (!Objects.equals(expectedNextPos, actualNext.getPosition())) {
                 return true;
             }
         }
@@ -220,65 +223,72 @@ public class RelocationDetector {
     }
 
     /**
-     * Returns {@code true} if any direct member of {@code type} or any nested type member moved
-     * to a later within-scope position.
+     * Returns {@code true} if any direct member of {@code type} or any nested type member has a
+     * break in the consecutive-pair order.
      *
      * @param type                 the type whose member scope to check recursively
-     * @param originalOrderIndices original within-scope index map keyed by source position
-     * @return {@code true} if a relocation was found; otherwise {@code false}
+     * @param originalSuccessors   original within-scope successor position map keyed by source position
+     * @return {@code true} if a break point was found; otherwise {@code false}
      */
-    private static boolean hasTypeMemberRelocation(CtType<?> type, Map<SourcePosition, Integer> originalOrderIndices) {
+    private static boolean hasTypeMemberRelocation(
+            CtType<?> type, Map<SourcePosition, SourcePosition> originalSuccessors) {
         List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
-        return hasScopeRelocation(members, originalOrderIndices)
+        return hasScopeRelocation(members, originalSuccessors)
                 || members.stream()
                         .filter(m -> m instanceof CtType<?>)
                         .map(m -> (CtType<?>) m)
-                        .anyMatch(nestedType -> hasTypeMemberRelocation(nestedType, originalOrderIndices));
+                        .anyMatch(nestedType -> hasTypeMemberRelocation(nestedType, originalSuccessors));
     }
 
     // TODO Create a dedicated type instead of Map
     /**
-     * Indexes each element in the compilation unit by its <em>within-scope</em> position.
+     * Builds a snapshot of the original consecutive-sibling relationships in the compilation unit.
      *
-     * <p>Root types are indexed by their position in the file's declared-type list.
-     * Direct members of each type are indexed by their position within that type's member list.
-     * Nested types are recursed into.
+     * <p>For each scope (file root declared-type list, each type's member list), records the
+     * source position of each element's immediate next sibling. The resulting map is used after
+     * sorting to detect breaks where the consecutive-pair relationship changed, rather than
+     * comparing absolute positions (which over-counts when a single block move shifts many indices).
      *
-     * @param compilationUnit the compilation unit to inspect
-     * @return map from each element's source position to its within-scope sequential index
+     * @param compilationUnit the compilation unit to snapshot
+     * @return map from each element's source position to its original next sibling's source position;
+     *         elements with no next sibling in their scope are absent from the map
      */
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
-    static Map<SourcePosition, Integer> indexElementsByOrder(@NonNull CtCompilationUnit compilationUnit) {
-        Map<SourcePosition, Integer> result = new HashMap<>();
+    static Map<SourcePosition, SourcePosition> snapshotOriginalSuccessors(@NonNull CtCompilationUnit compilationUnit) {
+        Map<SourcePosition, SourcePosition> result = new HashMap<>();
         List<CtType<?>> rootTypes = compilationUnit.getDeclaredTypes();
-        for (int i = 0; i < rootTypes.size(); i++) {
-            CtType<?> rootType = rootTypes.get(i);
-            if (rootType.getPosition().isValidPosition()) {
-                result.put(rootType.getPosition(), i);
+        List<CtTypeMember> rootMembers = new ArrayList<>(rootTypes);
+        for (int i = 0; i < rootMembers.size() - 1; i++) {
+            CtTypeMember current = rootMembers.get(i);
+            CtTypeMember next = rootMembers.get(i + 1);
+            if (current.getPosition().isValidPosition() && next.getPosition().isValidPosition()) {
+                result.put(current.getPosition(), next.getPosition());
             }
-            indexTypeMembersInScope(rootType, result);
         }
+        rootTypes.forEach(type -> recordTypeMemberSuccessors(type, result));
         return Map.copyOf(result);
     }
 
     /**
-     * Assigns within-scope indices to the direct members of {@code type}, then recurses into
-     * any nested types.
+     * Records next-sibling relationships for the direct members of {@code type}, then recurses
+     * into any nested types.
      *
-     * @param type   the type whose members to index
+     * @param type   the type whose members to record
      * @param result accumulator map
      */
-    private static void indexTypeMembersInScope(CtType<?> type, Map<SourcePosition, Integer> result) {
+    private static void recordTypeMemberSuccessors(CtType<?> type, Map<SourcePosition, SourcePosition> result) {
         List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
-        for (int i = 0; i < members.size(); i++) {
-            CtTypeMember member = members.get(i);
-            if (member.getPosition().isValidPosition()) {
-                result.put(member.getPosition(), i);
-            }
-            if (member instanceof CtType<?> nestedType) {
-                indexTypeMembersInScope(nestedType, result);
+        for (int i = 0; i < members.size() - 1; i++) {
+            CtTypeMember current = members.get(i);
+            CtTypeMember next = members.get(i + 1);
+            if (current.getPosition().isValidPosition() && next.getPosition().isValidPosition()) {
+                result.put(current.getPosition(), next.getPosition());
             }
         }
+        members.stream()
+                .filter(m -> m instanceof CtType<?>)
+                .map(m -> (CtType<?>) m)
+                .forEach(nestedType -> recordTypeMemberSuccessors(nestedType, result));
     }
 }

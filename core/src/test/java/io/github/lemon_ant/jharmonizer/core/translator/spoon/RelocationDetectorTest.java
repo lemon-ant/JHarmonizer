@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.indexElementsByOrder;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.snapshotOriginalSuccessors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
@@ -37,17 +37,18 @@ class RelocationDetectorTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        Map<SourcePosition, Integer> originalOrderIndices = indexElementsByOrder(spoonAstModel.getCompilationUnit());
+        Map<SourcePosition, SourcePosition> originalSuccessors =
+                snapshotOriginalSuccessors(spoonAstModel.getCompilationUnit());
 
         // When
-        List<MemberRelocation> relocations = findRelocations(originalOrderIndices, spoonAstModel.getCompilationUnit());
+        List<MemberRelocation> relocations = findRelocations(originalSuccessors, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations).isEmpty();
     }
 
     @Test
-    void findRelocations_withEmptyOriginalIndices_returnsEmptyList() {
+    void findRelocations_withEmptyOriginalSuccessors_returnsEmptyList() {
         // Given
         SrcFile srcFile = createSrcFile("public class Sample {\n    public void a() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
@@ -67,17 +68,18 @@ class RelocationDetectorTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        Map<SourcePosition, Integer> originalOrderIndices = indexElementsByOrder(spoonAstModel.getCompilationUnit());
+        Map<SourcePosition, SourcePosition> originalSuccessors =
+                snapshotOriginalSuccessors(spoonAstModel.getCompilationUnit());
 
         // When
-        boolean isRelocated = RelocationDetector.isRelocated(originalOrderIndices, spoonAstModel.getCompilationUnit());
+        boolean isRelocated = RelocationDetector.isRelocated(originalSuccessors, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(isRelocated).isFalse();
     }
 
     @Test
-    void indexElementsByOrder_multiRootTypeFile_assignsWithinScopeIndices() {
+    void snapshotOriginalSuccessors_multiRootTypeFile_recordsNextSiblingPositions() {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
@@ -88,12 +90,12 @@ class RelocationDetectorTest {
         CtMethod<?> labelMethod = alpha.getMethods().iterator().next();
 
         // When
-        Map<SourcePosition, Integer> indices = indexElementsByOrder(spoonAstModel.getCompilationUnit());
+        Map<SourcePosition, SourcePosition> successors = snapshotOriginalSuccessors(spoonAstModel.getCompilationUnit());
 
         // Then
-        assertThat(indices.get(alpha.getPosition())).isEqualTo(0);
-        assertThat(indices.get(beta.getPosition())).isEqualTo(1);
-        assertThat(indices.get(labelMethod.getPosition())).isEqualTo(0);
+        assertThat(successors.get(alpha.getPosition())).isEqualTo(beta.getPosition());
+        assertThat(successors).doesNotContainKey(beta.getPosition());
+        assertThat(successors).doesNotContainKey(labelMethod.getPosition());
     }
 
     @Test
@@ -106,15 +108,13 @@ class RelocationDetectorTest {
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
         CtMethod<?> labelMethod = alpha.getMethods().iterator().next();
-        // Simulate original order: Beta first (index 0), Alpha second (index 1); label stays at within-Alpha index 0.
-        Map<SourcePosition, Integer> simulatedOriginalIndices = new HashMap<>();
-        simulatedOriginalIndices.put(beta.getPosition(), 0);
-        simulatedOriginalIndices.put(alpha.getPosition(), 1);
-        simulatedOriginalIndices.put(labelMethod.getPosition(), 0);
+        // Simulate original order: Beta first, Alpha second; label stays as Alpha's only member.
+        Map<SourcePosition, SourcePosition> simulatedOriginalSuccessors = new HashMap<>();
+        simulatedOriginalSuccessors.put(beta.getPosition(), alpha.getPosition());
 
         // When
         List<MemberRelocation> relocations =
-                findRelocations(simulatedOriginalIndices, spoonAstModel.getCompilationUnit());
+                findRelocations(simulatedOriginalSuccessors, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations)
@@ -141,7 +141,7 @@ class RelocationDetectorTest {
                 .map(CtElement.class::cast)
                 .toList();
         List<MemberRelocation> relocations =
-                List.of(new MemberRelocation(topLevelTypes.get(0), null, topLevelTypes.get(1), 1));
+                List.of(new MemberRelocation(topLevelTypes.get(0), null, topLevelTypes.get(1)));
 
         // When
         String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), relocations);
@@ -183,12 +183,12 @@ class RelocationDetectorTest {
                 .toList();
         CtElement firstMethod = methods.get(0);
         List<MemberRelocation> relocationsExceedingLimit = List.of(
-                new MemberRelocation(firstMethod, null, null, 1),
-                new MemberRelocation(firstMethod, null, null, 2),
-                new MemberRelocation(firstMethod, null, null, 3),
-                new MemberRelocation(firstMethod, null, null, 4),
-                new MemberRelocation(firstMethod, null, null, 5),
-                new MemberRelocation(firstMethod, null, null, 6));
+                new MemberRelocation(firstMethod, null, null),
+                new MemberRelocation(firstMethod, null, null),
+                new MemberRelocation(firstMethod, null, null),
+                new MemberRelocation(firstMethod, null, null),
+                new MemberRelocation(firstMethod, null, null),
+                new MemberRelocation(firstMethod, null, null));
 
         // When
         String printedRelocations =
@@ -198,6 +198,50 @@ class RelocationDetectorTest {
         assertThat(printedRelocations).contains("  [5]");
         assertThat(printedRelocations).doesNotContain("  [6]");
         assertThat(printedRelocations).contains("  ... 6 violations total");
+    }
+
+    @Test
+    void findRelocations_oneMemberMovedFromLastToFirst_reportsSingleBreak() {
+        // Given — compilation unit has the "sorted" order [d, a, b, c] (d was last, now first)
+        SrcFile srcFile = createSrcFile(
+                "public class Sample {\n"
+                        + "    public void d() {}\n\n"
+                        + "    public void a() {}\n\n"
+                        + "    public void b() {}\n\n"
+                        + "    public void c() {}\n"
+                        + "}\n",
+                Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        CtType<?> sampleType =
+                spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
+        CtMethod<?> methodD = requireMethodByName(sampleType, "d");
+        CtMethod<?> methodA = requireMethodByName(sampleType, "a");
+        CtMethod<?> methodB = requireMethodByName(sampleType, "b");
+        CtMethod<?> methodC = requireMethodByName(sampleType, "c");
+        // Simulate original order: [a, b, c, d] — d was last, c→d successor, d has no successor
+        Map<SourcePosition, SourcePosition> originalSuccessors = new HashMap<>();
+        originalSuccessors.put(methodA.getPosition(), methodB.getPosition()); // a→b
+        originalSuccessors.put(methodB.getPosition(), methodC.getPosition()); // b→c
+        originalSuccessors.put(methodC.getPosition(), methodD.getPosition()); // c→d
+
+        // When
+        List<MemberRelocation> relocations = findRelocations(originalSuccessors, spoonAstModel.getCompilationUnit());
+
+        // Then — only 1 break even though 4 members exist; a follows d unexpectedly
+        assertThat(relocations).hasSize(1);
+        assertThat(relocations.get(0).getViolatingElement()).isEqualTo(methodA);
+        assertThat(relocations.get(0).getSortedPredecessor()).isEqualTo(methodD);
+        assertThat(relocations.get(0).getSortedSuccessor()).isEqualTo(methodB);
+    }
+
+    @NonNull
+    private static CtMethod<?> requireMethodByName(@NonNull CtType<?> type, @NonNull String name) {
+        return type.getMethods().stream()
+                .filter(m -> m.getSimpleName().equals(name))
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException("No method named '" + name + "' in " + type.getSimpleName()));
     }
 
     @NonNull
@@ -210,9 +254,9 @@ class RelocationDetectorTest {
                 .toList();
         if (methods.size() < 2) {
             return methods.stream()
-                    .map(method -> new MemberRelocation(method, null, null, 1))
+                    .map(method -> new MemberRelocation(method, null, null))
                     .toList();
         }
-        return List.of(new MemberRelocation(methods.get(0), null, methods.get(1), 1));
+        return List.of(new MemberRelocation(methods.get(0), null, methods.get(1)));
     }
 }
