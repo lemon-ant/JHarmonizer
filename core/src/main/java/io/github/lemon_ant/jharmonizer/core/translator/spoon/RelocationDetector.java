@@ -17,6 +17,7 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -29,11 +30,14 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @UtilityClass
 @Deprecated
+@SuppressWarnings("PMD.TooManyMethods")
 // TODO Combine with ElementsFlatOrderIndexer
 public class RelocationDetector {
 
     private static final int MAX_PATH_DISPLAY_LENGTH = 120;
     private static final int MAX_DISPLAYED_VIOLATIONS = 5;
+    private static final int MAX_DISPLAYED_CHUNK_MEMBERS = 3;
+    private static final String CHUNK_OMISSION_MARKER = "    ⋮";
     private static final int INITIAL_OUTPUT_BUFFER_CAPACITY = 256;
 
     /**
@@ -47,17 +51,18 @@ public class RelocationDetector {
      *       relationship.</li>
      *   <li>A break is reported when the element that follows a given member in the sorted order
      *       differs from the element that followed it in the original source.</li>
-     *   <li>This means that moving one contiguous block generates only the two seam breaks at
-     *       the insertion and extraction points, regardless of how many members are in the block.</li>
-     *   <li>For each break, the element appearing in the unexpected position is reported as
-     *       {@link MemberRelocation#getViolatingElement()}, with its sorted predecessor and
-     *       successor captured for diagnostic messages.</li>
+     *   <li>Consecutive elements in the sorted list that maintain their original relationships
+     *       are grouped into a single {@link MemberRelocation} as a contiguous chunk.</li>
+     *   <li>This means that moving one contiguous block generates a single relocation entry
+     *       regardless of how many members are in the block.</li>
+     *   <li>For each detected chunk, the predecessor and successor captured for diagnostic
+     *       messages come from the sorted order at the chunk boundaries.</li>
      * </ul>
      *
      * @param originalMemberOrder flat list of all type members in their original source order,
      *                            as produced by {@link #snapshotOriginalMemberOrder}
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return list of relocations for all break points, in current encounter order
+     * @return list of relocations for all detected chunks, in current encounter order
      */
     @NonNull
     public static List<MemberRelocation> findRelocations(
@@ -132,32 +137,46 @@ public class RelocationDetector {
     }
 
     private static void appendRelocationEntry(StringBuilder sb, MemberRelocation relocation, int index) {
-        String typeName =
-                relocation.getViolatingElement() instanceof CtTypeMember member && member.getDeclaringType() != null
-                        ? member.getDeclaringType().getQualifiedName()
-                        : "<file root>";
+        CtElement firstMember = relocation.getRelocatedMembers().get(0);
+        String typeName = firstMember instanceof CtTypeMember member && member.getDeclaringType() != null
+                ? member.getDeclaringType().getQualifiedName()
+                : "<file root>";
         sb.append(String.format("  [%d] %s:", index, typeName));
         if (relocation.getSortedPredecessor() != null) {
             sb.append(lineSeparator())
                     .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedPredecessor())));
         }
-        sb.append(lineSeparator())
-                .append(String.format("    --> %s", renderDeclarationHeader(relocation.getViolatingElement())));
+        appendChunkLines(sb, relocation.getRelocatedMembers());
         if (relocation.getSortedSuccessor() != null) {
             sb.append(lineSeparator())
                     .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedSuccessor())));
         }
     }
 
+    private static void appendChunkLines(StringBuilder sb, List<CtElement> members) {
+        if (members.size() <= MAX_DISPLAYED_CHUNK_MEMBERS) {
+            for (CtElement member : members) {
+                sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member)));
+            }
+        } else {
+            sb.append(lineSeparator())
+                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(0))))
+                    .append(lineSeparator())
+                    .append(CHUNK_OMISSION_MARKER)
+                    .append(lineSeparator())
+                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(members.size() - 1))));
+        }
+    }
+
     /**
      * Scans {@code scopeMembers} for consecutive pairs whose relationship in the sorted order
      * differs from the original source order, and adds a {@link MemberRelocation} for each
-     * such break point.
+     * detected contiguous chunk of displaced members.
      *
-     * <p>A break is reported when the element at position {@code i+1} in the sorted list is not
-     * the element that originally followed the element at position {@code i}. The element at
-     * {@code i+1} is reported as the violating element, with {@code i} as its sorted predecessor
-     * and {@code i+2} (if present) as its sorted successor.
+     * <p>When a break is detected at position {@code i} (i.e. the element at {@code i+1} is not
+     * the expected original successor of the element at {@code i}), the algorithm extends the
+     * chunk forward as long as consecutive sorted elements maintain their original consecutive
+     * relationship. All such elements are grouped into a single {@link MemberRelocation}.
      *
      * @param scopeMembers         the ordered members of one scope (file root or a type body)
      * @param originalSuccessors   original within-scope successor position map keyed by source position
@@ -167,18 +186,57 @@ public class RelocationDetector {
             List<? extends CtTypeMember> scopeMembers,
             Map<SourcePosition, SourcePosition> originalSuccessors,
             List<MemberRelocation> relocations) {
-        for (int i = 0; i < scopeMembers.size() - 1; i++) {
+        int i = 0;
+        while (i < scopeMembers.size() - 1) {
             CtTypeMember current = scopeMembers.get(i);
             CtTypeMember actualNext = scopeMembers.get(i + 1);
             if (!current.getPosition().isValidPosition()) {
+                i++;
                 continue;
             }
             SourcePosition expectedNextPos = originalSuccessors.get(current.getPosition());
             if (!Objects.equals(expectedNextPos, actualNext.getPosition())) {
-                CtTypeMember successor = i + 2 < scopeMembers.size() ? scopeMembers.get(i + 2) : null;
-                relocations.add(new MemberRelocation(actualNext, current, successor));
+                int chunkEnd = findChunkEndInScope(scopeMembers, originalSuccessors, i + 1);
+                List<CtElement> chunk = scopeMembers.subList(i + 1, chunkEnd + 1).stream()
+                        .map(CtElement.class::cast)
+                        .toList();
+                CtTypeMember successor = chunkEnd + 1 < scopeMembers.size() ? scopeMembers.get(chunkEnd + 1) : null;
+                relocations.add(new MemberRelocation(chunk, current, successor));
+                i = chunkEnd + 1;
+            } else {
+                i++;
             }
         }
+    }
+
+    /**
+     * Finds the last index of a contiguous chunk starting at {@code chunkStart} in
+     * {@code scopeMembers}, where consecutive elements maintain their original consecutive
+     * relationship recorded in {@code originalSuccessors}.
+     *
+     * @param scopeMembers       the ordered members of one scope
+     * @param originalSuccessors original within-scope successor position map
+     * @param chunkStart         starting index of the chunk (inclusive)
+     * @return the last index of the chunk (inclusive)
+     */
+    private static int findChunkEndInScope(
+            List<? extends CtTypeMember> scopeMembers,
+            Map<SourcePosition, SourcePosition> originalSuccessors,
+            int chunkStart) {
+        int chunkEnd = chunkStart;
+        while (chunkEnd + 1 < scopeMembers.size()) {
+            CtTypeMember chunkTail = scopeMembers.get(chunkEnd);
+            CtTypeMember chunkTailNext = scopeMembers.get(chunkEnd + 1);
+            if (!chunkTail.getPosition().isValidPosition()) {
+                break;
+            }
+            SourcePosition expectedAfterChunkTail = originalSuccessors.get(chunkTail.getPosition());
+            if (!Objects.equals(expectedAfterChunkTail, chunkTailNext.getPosition())) {
+                break;
+            }
+            chunkEnd++;
+        }
+        return chunkEnd;
     }
 
     /**

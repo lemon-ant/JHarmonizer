@@ -111,7 +111,7 @@ class RelocationDetectorTest {
 
         // Then
         assertThat(relocations)
-                .noneMatch(relocation -> relocation.getViolatingElement().equals(labelMethod));
+                .noneMatch(relocation -> relocation.getRelocatedMembers().contains(labelMethod));
     }
 
     @Test
@@ -134,7 +134,7 @@ class RelocationDetectorTest {
                 .map(CtElement.class::cast)
                 .toList();
         List<MemberRelocation> relocations =
-                List.of(new MemberRelocation(topLevelTypes.get(0), null, topLevelTypes.get(1)));
+                List.of(new MemberRelocation(List.of(topLevelTypes.get(0)), null, topLevelTypes.get(1)));
 
         // When
         String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), relocations);
@@ -176,12 +176,12 @@ class RelocationDetectorTest {
                 .toList();
         CtElement firstMethod = methods.get(0);
         List<MemberRelocation> relocationsExceedingLimit = List.of(
-                new MemberRelocation(firstMethod, null, null),
-                new MemberRelocation(firstMethod, null, null),
-                new MemberRelocation(firstMethod, null, null),
-                new MemberRelocation(firstMethod, null, null),
-                new MemberRelocation(firstMethod, null, null),
-                new MemberRelocation(firstMethod, null, null));
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null));
 
         // When
         String printedRelocations =
@@ -194,7 +194,7 @@ class RelocationDetectorTest {
     }
 
     @Test
-    void findRelocations_oneMemberMovedFromLastToFirst_reportsSingleBreak() {
+    void findRelocations_oneMemberMovedFromLastToFirst_reportsSingleRelocationForRemainingChunk() {
         // Given — compilation unit has the "sorted" order [d, a, b, c] (d was last, now first)
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n"
@@ -219,11 +219,78 @@ class RelocationDetectorTest {
         List<MemberRelocation> relocations =
                 findRelocations(simulatedOriginalOrder, spoonAstModel.getCompilationUnit());
 
-        // Then — only 1 break even though 4 members exist; a follows d unexpectedly
+        // Then — [a, b, c] form one contiguous chunk after d; single relocation with no successor
         assertThat(relocations).hasSize(1);
-        assertThat(relocations.get(0).getViolatingElement()).isEqualTo(methodA);
+        assertThat(relocations.get(0).getRelocatedMembers()).containsExactly(methodA, methodB, methodC);
         assertThat(relocations.get(0).getSortedPredecessor()).isEqualTo(methodD);
-        assertThat(relocations.get(0).getSortedSuccessor()).isEqualTo(methodB);
+        assertThat(relocations.get(0).getSortedSuccessor()).isNull();
+    }
+
+    @Test
+    void findRelocations_contiguousChunkMoved_reportsSingleRelocationWithWholeChunk() {
+        // Given — sorted order is [a, b, c, d] but original was [c, d, a, b]
+        // (chunk [c, d] moved from first to last)
+        SrcFile srcFile = createSrcFile(
+                "public class Sample {\n"
+                        + "    public void a() {}\n\n"
+                        + "    public void b() {}\n\n"
+                        + "    public void c() {}\n\n"
+                        + "    public void d() {}\n"
+                        + "}\n",
+                Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        CtType<?> sampleType =
+                spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
+        CtMethod<?> methodA = requireMethodByName(sampleType, "a");
+        CtMethod<?> methodB = requireMethodByName(sampleType, "b");
+        CtMethod<?> methodC = requireMethodByName(sampleType, "c");
+        CtMethod<?> methodD = requireMethodByName(sampleType, "d");
+        // Simulate original order: [c, d, a, b] — chunk [a, b] is being sorted after [c, d]
+        List<CtTypeMember> simulatedOriginalOrder = List.of(methodC, methodD, methodA, methodB);
+
+        // When
+        List<MemberRelocation> relocations =
+                findRelocations(simulatedOriginalOrder, spoonAstModel.getCompilationUnit());
+
+        // Then — chunk [a, b] detected as one relocation (they maintain their original relationship)
+        assertThat(relocations).hasSize(1);
+        assertThat(relocations.get(0).getRelocatedMembers()).containsExactly(methodC, methodD);
+        assertThat(relocations.get(0).getSortedPredecessor()).isEqualTo(methodB);
+        assertThat(relocations.get(0).getSortedSuccessor()).isNull();
+    }
+
+    @Test
+    void printRelocations_chunkOfFourOrMoreMembers_showsFirstOmissionMarkerAndLast() {
+        // Given
+        SrcFile srcFile = createSrcFile(
+                "public class Sample {\n"
+                        + "    public void a() {}\n\n"
+                        + "    public void b() {}\n\n"
+                        + "    public void c() {}\n\n"
+                        + "    public void d() {}\n"
+                        + "}\n",
+                Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        CtType<?> sampleType =
+                spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
+        CtMethod<?> methodA = requireMethodByName(sampleType, "a");
+        CtMethod<?> methodB = requireMethodByName(sampleType, "b");
+        CtMethod<?> methodC = requireMethodByName(sampleType, "c");
+        CtMethod<?> methodD = requireMethodByName(sampleType, "d");
+        List<MemberRelocation> relocation =
+                List.of(new MemberRelocation(List.of(methodA, methodB, methodC, methodD), null, null));
+
+        // When
+        String output = RelocationDetector.printRelocations(Path.of("Sample.java"), relocation);
+
+        // Then — first and last are shown with -->, hidden middle elements indicated by ⋮
+        assertThat(output).contains("    --> public void a() { ... }");
+        assertThat(output).contains("    ⋮");
+        assertThat(output).contains("    --> public void d() { ... }");
+        assertThat(output).doesNotContain("    --> public void b() { ... }");
+        assertThat(output).doesNotContain("    --> public void c() { ... }");
     }
 
     @NonNull
@@ -245,9 +312,9 @@ class RelocationDetectorTest {
                 .toList();
         if (methods.size() < 2) {
             return methods.stream()
-                    .map(method -> new MemberRelocation(method, null, null))
+                    .map(method -> new MemberRelocation(List.of(method), null, null))
                     .toList();
         }
-        return List.of(new MemberRelocation(methods.get(0), null, methods.get(1)));
+        return List.of(new MemberRelocation(List.of(methods.get(0)), null, methods.get(1)));
     }
 }

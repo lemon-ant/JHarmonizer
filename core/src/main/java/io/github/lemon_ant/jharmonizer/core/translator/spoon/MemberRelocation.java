@@ -3,37 +3,42 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.List;
 import lombok.NonNull;
 import lombok.Value;
 import spoon.reflect.declaration.CtElement;
 
 /**
- * Captures a single member-ordering violation detected during a check flow.
+ * Captures a member-ordering violation detected during a check flow.
  *
- * <p>This immutable value class holds the violating element and its immediate predecessor and
- * successor in the correct sorted order, so that diagnostic messages can tell the user exactly
- * where the element should appear.
+ * <p>This immutable value class holds a contiguous group of members that are being relocated
+ * together and their immediate predecessor and successor in the correct sorted order, so that
+ * diagnostic messages can tell the user exactly where the group should appear.
  *
- * <p>{@code sortedPredecessor} is {@code null} when the element should be the very first member
- * of its scope. {@code sortedSuccessor} is {@code null} when it should be the very last.
+ * <p>{@code sortedPredecessor} is {@code null} when the relocated group should be the very first
+ * in its scope. {@code sortedSuccessor} is {@code null} when it should be the very last.
  */
 @Value
 public class MemberRelocation {
 
-    /** The member that is in the wrong position in the original source. */
+    /**
+     * The contiguous group of type members that are in the wrong position in the original source.
+     * Contains at least one element. When the members form a consecutive sequence in the original
+     * source order, they are reported as a single chunk rather than individual violations.
+     */
     @NonNull
-    CtElement violatingElement;
+    List<CtElement> relocatedMembers;
 
     /**
-     * The element that immediately precedes the violating element in the correct sorted order,
-     * or {@code null} if the violating element should be first.
+     * The element that immediately precedes the relocated group in the correct sorted order,
+     * or {@code null} if the group should be first.
      */
     @Nullable
     CtElement sortedPredecessor;
 
     /**
-     * The element that immediately follows the violating element in the correct sorted order,
-     * or {@code null} if the violating element should be last.
+     * The element that immediately follows the relocated group in the correct sorted order,
+     * or {@code null} if the group should be last.
      */
     @Nullable
     CtElement sortedSuccessor;
