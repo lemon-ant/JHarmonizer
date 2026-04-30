@@ -82,7 +82,7 @@ class RelocationDetectorTest {
     }
 
     @Test
-    void printRelocations_withMethodRelocation_includesNeighborContext() {
+    void printRelocations_withMethodRelocation_showsDeclarationHeaderSnippet() {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
@@ -95,7 +95,7 @@ class RelocationDetectorTest {
 
         // Then
         assertThat(printedRelocations).contains("Sample.java");
-        assertThat(printedRelocations).containsAnyOf("should be between", "should be before", "should be after");
+        assertThat(printedRelocations).contains("►");
     }
 
     @NonNull

@@ -5,25 +5,33 @@ import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnum;
+import spoon.reflect.declaration.CtEnumValue;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
 
 /**
  * Utility class to detect relocations of type members in a reordered Spoon compilation unit.
@@ -120,8 +128,19 @@ public class RelocationDetector {
 
     /**
      * Formats the relocations into a human-readable string.
-     * For each violation the message shows where the member should be placed by naming
-     * its immediate predecessor and successor in the correct sorted order.
+     *
+     * <p>For each violation, a compact snippet is rendered showing the immediate predecessor
+     * and successor in the correct sorted order together with the violating member itself,
+     * so the developer can see at a glance how those declarations should appear one after another.
+     * The violating member is highlighted with a {@code ►} marker.
+     *
+     * <p>Example output for a class where {@code void b()} should come after {@code void a()}:
+     * <pre>
+     * Detected member ordering violations in 'Sample.java':
+     *   [1] Ordering violation in com.example.Sample:
+     *         public void a() { ...
+     *       ► public void b() { ...
+     * </pre>
      *
      * @param path        the path of the file where the relocations were detected
      * @param relocations the collection of relocations to format
@@ -129,59 +148,112 @@ public class RelocationDetector {
      */
     @NonNull
     public static String printRelocations(@NonNull Path path, @NonNull Collection<MemberRelocation> relocations) {
-        return String.format(
-                "Detected member ordering violations in '%s':%n%s",
-                path.getFileName(),
-                relocations.stream()
-                        .map(relocation -> {
-                            String memberName = computeParentSimpleName(relocation.getViolatingElement());
-                            String placement = computePlacementDescription(
-                                    relocation.getSortedPredecessor(), relocation.getSortedSuccessor());
-                            return String.format("  - %s: %s", memberName, placement);
-                        })
-                        .collect(joining(lineSeparator())));
+        List<MemberRelocation> relocationList = List.copyOf(relocations);
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Detected member ordering violations in '%s':", path.getFileName()));
+        for (int i = 0; i < relocationList.size(); i++) {
+            sb.append(lineSeparator());
+            appendRelocationEntry(sb, relocationList.get(i), i + 1);
+        }
+        return sb.toString();
     }
 
-    @NonNull
-    private static String computePlacementDescription(@Nullable CtElement predecessor, @Nullable CtElement successor) {
-        if (predecessor != null && successor != null) {
-            return String.format(
-                    "should be between [%s] and [%s]",
-                    computeParentSimpleName(predecessor), computeParentSimpleName(successor));
+    private static void appendRelocationEntry(StringBuilder sb, MemberRelocation relocation, int index) {
+        sb.append(String.format(
+                "  [%d] Ordering violation in %s:", index, resolveDeclaringTypeName(relocation.getViolatingElement())));
+        if (relocation.getSortedPredecessor() != null) {
+            sb.append(lineSeparator());
+            sb.append(String.format("        %s", renderDeclarationHeader(relocation.getSortedPredecessor())));
         }
-        if (predecessor != null) {
-            return String.format("should be after [%s] (as last member)", computeParentSimpleName(predecessor));
+        sb.append(lineSeparator());
+        sb.append(String.format("      ► %s", renderDeclarationHeader(relocation.getViolatingElement())));
+        if (relocation.getSortedSuccessor() != null) {
+            sb.append(lineSeparator());
+            sb.append(String.format("        %s", renderDeclarationHeader(relocation.getSortedSuccessor())));
         }
-        if (successor != null) {
-            return String.format("should be before [%s] (as first member)", computeParentSimpleName(successor));
-        }
-        return "should be the only member";
     }
 
     /**
-     * Recursively constructs the deep parent simple name of a type element.
-     * This method traverses up the hierarchy of declaring types to build a fully qualified name.
+     * Renders a compact declaration header for a type member, omitting bodies and initializers.
      *
-     * @param element the type element whose deep parent simple name is to be constructed
-     * @return the deep parent simple name of the type element
+     * <p>Format by member kind:
+     * <ul>
+     *   <li>Field: {@code [modifiers] [type] [name]}</li>
+     *   <li>Method: {@code [modifiers] [returnType] [name]() { ...} or {@code [modifiers] [returnType] [name](...) { ...}</li>
+     *   <li>Constructor: {@code [modifiers] [name]() { ...} or {@code [modifiers] [name](...) { ...}</li>
+     *   <li>Nested type: {@code [modifiers] class|interface|enum|@interface [name] { ...}</li>
+     *   <li>Enum value: {@code [name]}</li>
+     *   <li>Initializer block: {@code { ...} or {@code static { ...}</li>
+     * </ul>
+     *
+     * @param element the element to render
+     * @return a compact single-line declaration header
      */
     @NonNull
-    private static String computeParentSimpleName(CtElement element) {
+    private static String renderDeclarationHeader(CtElement element) {
         if (!(element instanceof CtTypeMember member)) {
             return "<nameless>";
         }
-        String memberSignature;
+        // Initializer blocks — getSimpleName() is blank and they are not a CtType
+        if (isBlank(member.getSimpleName()) && !(member instanceof CtType<?>)) {
+            return member.getModifiers().contains(ModifierKind.STATIC) ? "static { ..." : "{ ...";
+        }
+        // Enum constants — no modifiers, no type prefix
+        if (member instanceof CtEnumValue<?> enumValue) {
+            return enumValue.getSimpleName();
+        }
+        String modifiers = renderModifiers(member);
+        if (member instanceof CtField<?> field) {
+            return joinNonBlank(modifiers, field.getType().getSimpleName(), field.getSimpleName());
+        }
+        if (member instanceof CtMethod<?> method) {
+            String params = method.getParameters().isEmpty() ? "()" : "(...)";
+            return joinNonBlank(modifiers, method.getType().getSimpleName(), method.getSimpleName() + params)
+                    + " { ...";
+        }
         if (member instanceof CtConstructor<?> constructor) {
-            memberSignature = constructor.getSignature();
-        } else if (member instanceof CtMethod<?> method) {
-            memberSignature = method.getSignature();
-        } else {
-            memberSignature = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
+            String params = constructor.getParameters().isEmpty() ? "()" : "(...)";
+            return joinNonBlank(modifiers, constructor.getSimpleName() + params) + " { ...";
         }
-        if (member.getDeclaringType() == null) {
-            return memberSignature;
+        if (member instanceof CtType<?> nestedType) {
+            return joinNonBlank(modifiers, resolveTypeKeyword(nestedType), nestedType.getSimpleName()) + " { ...";
         }
-        return member.getDeclaringType().getQualifiedName() + "." + memberSignature;
+        return isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
+    }
+
+    @NonNull
+    private static String renderModifiers(CtTypeMember member) {
+        return member.getModifiers().stream()
+                .sorted(Comparator.comparingInt(ModifierKind::ordinal))
+                .map(ModifierKind::toString)
+                .collect(joining(" "));
+    }
+
+    @NonNull
+    private static String joinNonBlank(String... parts) {
+        return Stream.of(parts).filter(s -> !isBlank(s)).collect(joining(" "));
+    }
+
+    @NonNull
+    private static String resolveDeclaringTypeName(CtElement element) {
+        if (element instanceof CtTypeMember member && member.getDeclaringType() != null) {
+            return member.getDeclaringType().getQualifiedName();
+        }
+        return "<unknown>";
+    }
+
+    @NonNull
+    private static String resolveTypeKeyword(CtType<?> type) {
+        if (type instanceof CtAnnotationType<?>) {
+            return "@interface";
+        }
+        if (type instanceof CtEnum<?>) {
+            return "enum";
+        }
+        if (type instanceof CtInterface<?>) {
+            return "interface";
+        }
+        return "class";
     }
 
     // TODO Create a dedicated type instead of Map

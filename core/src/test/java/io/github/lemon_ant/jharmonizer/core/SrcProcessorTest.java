@@ -446,7 +446,7 @@ class SrcProcessorTest {
         assertThat(logs)
                 .contains("ordering violations")
                 .contains("ViolatingOrder.java")
-                .containsAnyOf("should be between", "should be before", "should be after");
+                .contains("►");
     }
 
     @Test
