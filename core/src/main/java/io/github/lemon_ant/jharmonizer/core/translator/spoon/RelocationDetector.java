@@ -1,37 +1,23 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.DeclarationHeaderRenderer.renderDeclarationHeader;
 import static java.lang.System.lineSeparator;
-import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
-import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtEnum;
-import spoon.reflect.declaration.CtEnumValue;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtInterface;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
-import spoon.reflect.declaration.ModifierKind;
 
 /**
  * Utility class to detect relocations of type members in a reordered Spoon compilation unit.
@@ -99,7 +85,7 @@ public class RelocationDetector {
                     currentIndex < sortedElements.size() - 1 ? sortedElements.get(currentIndex + 1) : null;
             relocations.add(new MemberRelocation(element, predecessor, successor, offset));
         }
-        return Collections.unmodifiableList(relocations);
+        return List.copyOf(relocations);
     }
 
     /**
@@ -119,9 +105,8 @@ public class RelocationDetector {
                 // compute offset on the fly using the running encounter index
                 .mapToInt(element -> {
                     int current = runningIndex.getAndIncrement();
-                    return Optional.ofNullable(originalOrderIndices.get(element.getPosition()))
-                            .map(orig -> current - orig)
-                            .orElse(0);
+                    Integer orig = originalOrderIndices.get(element.getPosition());
+                    return orig != null ? current - orig : 0;
                 })
                 .anyMatch(offs -> offs > 0);
     }
@@ -132,14 +117,14 @@ public class RelocationDetector {
      * <p>For each violation, a compact snippet is rendered showing the immediate predecessor
      * and successor in the correct sorted order together with the violating member itself,
      * so the developer can see at a glance how those declarations should appear one after another.
-     * The violating member is highlighted with a {@code ►} marker.
+     * The violating member is highlighted with a {@code -->} marker.
      *
      * <p>Example output for a class where {@code void b()} should come after {@code void a()}:
      * <pre>
      * Detected member ordering violations in 'Sample.java':
      *   [1] Ordering violation in com.example.Sample:
-     *         public void a() { ...
-     *       ► public void b() { ...
+     *         public void a() { ... }
+     *     --> public void b() { ... }
      * </pre>
      *
      * @param path        the path of the file where the relocations were detected
@@ -159,101 +144,21 @@ public class RelocationDetector {
     }
 
     private static void appendRelocationEntry(StringBuilder sb, MemberRelocation relocation, int index) {
-        sb.append(String.format(
-                "  [%d] Ordering violation in %s:", index, resolveDeclaringTypeName(relocation.getViolatingElement())));
+        String typeName =
+                relocation.getViolatingElement() instanceof CtTypeMember member && member.getDeclaringType() != null
+                        ? member.getDeclaringType().getQualifiedName()
+                        : "<unknown>";
+        sb.append(String.format("  [%d] Ordering violation in %s:", index, typeName));
         if (relocation.getSortedPredecessor() != null) {
-            sb.append(lineSeparator());
-            sb.append(String.format("        %s", renderDeclarationHeader(relocation.getSortedPredecessor())));
+            sb.append(lineSeparator())
+                    .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedPredecessor())));
         }
-        sb.append(lineSeparator());
-        sb.append(String.format("      ► %s", renderDeclarationHeader(relocation.getViolatingElement())));
+        sb.append(lineSeparator())
+                .append(String.format("    --> %s", renderDeclarationHeader(relocation.getViolatingElement())));
         if (relocation.getSortedSuccessor() != null) {
-            sb.append(lineSeparator());
-            sb.append(String.format("        %s", renderDeclarationHeader(relocation.getSortedSuccessor())));
+            sb.append(lineSeparator())
+                    .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedSuccessor())));
         }
-    }
-
-    /**
-     * Renders a compact declaration header for a type member, omitting bodies and initializers.
-     *
-     * <p>Format by member kind:
-     * <ul>
-     *   <li>Field: {@code [modifiers] [type] [name]}</li>
-     *   <li>Method: {@code [modifiers] [returnType] [name]() { ...} or {@code [modifiers] [returnType] [name](...) { ...}</li>
-     *   <li>Constructor: {@code [modifiers] [name]() { ...} or {@code [modifiers] [name](...) { ...}</li>
-     *   <li>Nested type: {@code [modifiers] class|interface|enum|@interface [name] { ...}</li>
-     *   <li>Enum value: {@code [name]}</li>
-     *   <li>Initializer block: {@code { ...} or {@code static { ...}</li>
-     * </ul>
-     *
-     * @param element the element to render
-     * @return a compact single-line declaration header
-     */
-    @NonNull
-    private static String renderDeclarationHeader(CtElement element) {
-        if (!(element instanceof CtTypeMember member)) {
-            return "<nameless>";
-        }
-        // Initializer blocks — getSimpleName() is blank and they are not a CtType
-        if (isBlank(member.getSimpleName()) && !(member instanceof CtType<?>)) {
-            return member.getModifiers().contains(ModifierKind.STATIC) ? "static { ..." : "{ ...";
-        }
-        // Enum constants — no modifiers, no type prefix
-        if (member instanceof CtEnumValue<?> enumValue) {
-            return enumValue.getSimpleName();
-        }
-        String modifiers = renderModifiers(member);
-        if (member instanceof CtField<?> field) {
-            return joinNonBlank(modifiers, field.getType().getSimpleName(), field.getSimpleName());
-        }
-        if (member instanceof CtMethod<?> method) {
-            String params = method.getParameters().isEmpty() ? "()" : "(...)";
-            return joinNonBlank(modifiers, method.getType().getSimpleName(), method.getSimpleName() + params)
-                    + " { ...";
-        }
-        if (member instanceof CtConstructor<?> constructor) {
-            String params = constructor.getParameters().isEmpty() ? "()" : "(...)";
-            return joinNonBlank(modifiers, constructor.getSimpleName() + params) + " { ...";
-        }
-        if (member instanceof CtType<?> nestedType) {
-            return joinNonBlank(modifiers, resolveTypeKeyword(nestedType), nestedType.getSimpleName()) + " { ...";
-        }
-        return isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
-    }
-
-    @NonNull
-    private static String renderModifiers(CtTypeMember member) {
-        return member.getModifiers().stream()
-                .sorted(Comparator.comparingInt(ModifierKind::ordinal))
-                .map(ModifierKind::toString)
-                .collect(joining(" "));
-    }
-
-    @NonNull
-    private static String joinNonBlank(String... parts) {
-        return Stream.of(parts).filter(s -> !isBlank(s)).collect(joining(" "));
-    }
-
-    @NonNull
-    private static String resolveDeclaringTypeName(CtElement element) {
-        if (element instanceof CtTypeMember member && member.getDeclaringType() != null) {
-            return member.getDeclaringType().getQualifiedName();
-        }
-        return "<unknown>";
-    }
-
-    @NonNull
-    private static String resolveTypeKeyword(CtType<?> type) {
-        if (type instanceof CtAnnotationType<?>) {
-            return "@interface";
-        }
-        if (type instanceof CtEnum<?>) {
-            return "enum";
-        }
-        if (type instanceof CtInterface<?>) {
-            return "interface";
-        }
-        return "class";
     }
 
     // TODO Create a dedicated type instead of Map

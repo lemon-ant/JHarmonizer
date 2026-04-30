@@ -95,7 +95,7 @@ class RelocationDetectorTest {
 
         // Then
         assertThat(printedRelocations).contains("Sample.java");
-        assertThat(printedRelocations).contains("►");
+        assertThat(printedRelocations).contains("-->");
     }
 
     @NonNull
