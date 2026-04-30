@@ -21,7 +21,7 @@ import spoon.reflect.declaration.CtElement;
  * in its scope. {@code sortedSuccessor} is {@code null} when it should be the very last.
  */
 @Value
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class MemberRelocation {
 
     /**
@@ -45,4 +45,20 @@ public class MemberRelocation {
      */
     @Nullable
     CtElement sortedSuccessor;
+
+    /**
+     * Creates a new {@link MemberRelocation} instance.
+     *
+     * @param relocatedMembers contiguous group of members in the wrong position; must not be empty
+     * @param sortedPredecessor element immediately before the group in sorted order, or {@code null}
+     * @param sortedSuccessor element immediately after the group in sorted order, or {@code null}
+     * @return a new immutable relocation value
+     */
+    @NonNull
+    static MemberRelocation create(
+            @NonNull List<CtElement> relocatedMembers,
+            @Nullable CtElement sortedPredecessor,
+            @Nullable CtElement sortedSuccessor) {
+        return new MemberRelocation(relocatedMembers, sortedPredecessor, sortedSuccessor);
+    }
 }

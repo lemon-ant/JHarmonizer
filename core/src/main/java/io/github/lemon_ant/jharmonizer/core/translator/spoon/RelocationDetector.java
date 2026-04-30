@@ -264,7 +264,7 @@ public class RelocationDetector {
         List<CtElement> chunk = scopeMembers.subList(chunkStart, chunkEndExclusive).stream()
                 .map(CtElement.class::cast)
                 .toList();
-        relocations.add(new MemberRelocation(chunk, predecessor, successor));
+        relocations.add(MemberRelocation.create(chunk, predecessor, successor));
     }
 
     /**
