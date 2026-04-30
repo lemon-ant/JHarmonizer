@@ -194,7 +194,7 @@ class RelocationDetectorTest {
     }
 
     @Test
-    void findRelocations_oneMemberMovedFromLastToFirst_reportsSingleRelocationForRemainingChunk() {
+    void findRelocations_oneMemberMovedFromLastToFirst_reportsSingleRelocationForMovedMember() {
         // Given — compilation unit has the "sorted" order [d, a, b, c] (d was last, now first)
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n"
@@ -219,17 +219,17 @@ class RelocationDetectorTest {
         List<MemberRelocation> relocations =
                 findRelocations(simulatedOriginalOrder, spoonAstModel.getCompilationUnit());
 
-        // Then — [a, b, c] form one contiguous chunk after d; single relocation with no successor
+        // Then — minimal moved set is just {d}; [a, b, c] remain stable as the longest increasing subsequence
         assertThat(relocations).hasSize(1);
-        assertThat(relocations.get(0).getRelocatedMembers()).containsExactly(methodA, methodB, methodC);
-        assertThat(relocations.get(0).getSortedPredecessor()).isEqualTo(methodD);
-        assertThat(relocations.get(0).getSortedSuccessor()).isNull();
+        assertThat(relocations.get(0).getRelocatedMembers()).containsExactly(methodD);
+        assertThat(relocations.get(0).getSortedPredecessor()).isNull();
+        assertThat(relocations.get(0).getSortedSuccessor()).isEqualTo(methodA);
     }
 
     @Test
-    void findRelocations_contiguousChunkMoved_reportsSingleRelocationWithWholeChunk() {
+    void findRelocations_contiguousChunkMoved_reportsSingleRelocationWithMinimalMovedChunk() {
         // Given — sorted order is [a, b, c, d] but original was [c, d, a, b]
-        // (chunk [c, d] moved from first to last)
+        // (chunk [a, b] moved to the front; equivalently [c, d] moved to the back)
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n"
                         + "    public void a() {}\n\n"
@@ -246,18 +246,19 @@ class RelocationDetectorTest {
         CtMethod<?> methodB = requireMethodByName(sampleType, "b");
         CtMethod<?> methodC = requireMethodByName(sampleType, "c");
         CtMethod<?> methodD = requireMethodByName(sampleType, "d");
-        // Simulate original order: [c, d, a, b] — chunk [a, b] is being sorted after [c, d]
+        // Simulate original order: [c, d, a, b]
         List<CtTypeMember> simulatedOriginalOrder = List.of(methodC, methodD, methodA, methodB);
 
         // When
         List<MemberRelocation> relocations =
                 findRelocations(simulatedOriginalOrder, spoonAstModel.getCompilationUnit());
 
-        // Then — chunk [a, b] detected as one relocation (they maintain their original relationship)
+        // Then — patience-sort LIS keeps the latest-finishing increasing run [c, d] stable;
+        // [a, b] is reported as the single moved chunk inserted before c
         assertThat(relocations).hasSize(1);
-        assertThat(relocations.get(0).getRelocatedMembers()).containsExactly(methodC, methodD);
-        assertThat(relocations.get(0).getSortedPredecessor()).isEqualTo(methodB);
-        assertThat(relocations.get(0).getSortedSuccessor()).isNull();
+        assertThat(relocations.get(0).getRelocatedMembers()).containsExactly(methodA, methodB);
+        assertThat(relocations.get(0).getSortedPredecessor()).isNull();
+        assertThat(relocations.get(0).getSortedSuccessor()).isEqualTo(methodC);
     }
 
     @Test
