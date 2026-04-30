@@ -1,5 +1,6 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.DeclarationHeaderRenderer.renderDeclarationHeader;
 import static java.lang.System.lineSeparator;
@@ -33,6 +34,9 @@ import spoon.reflect.declaration.CtTypeMember;
 @Deprecated
 // TODO Combine with ElementsFlatOrderIndexer
 public class RelocationDetector {
+
+    private static final int MAX_PATH_DISPLAY_LENGTH = 120;
+    private static final int INITIAL_OUTPUT_BUFFER_CAPACITY = 256;
 
     /**
      * Computes relocations of declared elements by comparing their current encounter order
@@ -119,15 +123,16 @@ public class RelocationDetector {
     /**
      * Formats the relocations into a human-readable string.
      *
-     * <p>For each violation, a compact snippet is rendered showing the immediate predecessor
-     * and successor in the correct sorted order together with the violating member itself,
-     * so the developer can see at a glance how those declarations should appear one after another.
-     * The violating member is highlighted with a {@code -->} marker.
+     * <p>The path is placed on its own indented line after the header, abbreviated to
+     * at most {@value MAX_PATH_DISPLAY_LENGTH} characters. Each numbered entry shows
+     * only the declaring type name (no repeated "ordering violation" label), then the
+     * predecessor, violating member (marked with {@code -->}), and successor snippets.
      *
      * <p>Example output for a class where {@code void b()} should come after {@code void a()}:
      * <pre>
-     * Detected member ordering violations in 'Sample.java':
-     *   [1] Ordering violation in com.example.Sample:
+     * Detected member ordering violations in:
+     *   Sample.java
+     *   [1] com.example.Sample:
      *         public void a() { ... }
      *     --> public void b() { ... }
      * </pre>
@@ -139,8 +144,11 @@ public class RelocationDetector {
     @NonNull
     public static String printRelocations(@NonNull Path path, @NonNull Collection<MemberRelocation> relocations) {
         List<MemberRelocation> relocationList = List.copyOf(relocations);
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Detected member ordering violations in '%s':", path.getFileName()));
+        StringBuilder sb = new StringBuilder(INITIAL_OUTPUT_BUFFER_CAPACITY);
+        sb.append("Detected member ordering violations in:")
+                .append(lineSeparator())
+                .append("  ")
+                .append(abbreviatePathForDisplay(path, MAX_PATH_DISPLAY_LENGTH));
         for (int i = 0; i < relocationList.size(); i++) {
             sb.append(lineSeparator());
             appendRelocationEntry(sb, relocationList.get(i), i + 1);
@@ -153,7 +161,7 @@ public class RelocationDetector {
                 relocation.getViolatingElement() instanceof CtTypeMember member && member.getDeclaringType() != null
                         ? member.getDeclaringType().getQualifiedName()
                         : "<unknown>";
-        sb.append(String.format("  [%d] Ordering violation in %s:", index, typeName));
+        sb.append(String.format("  [%d] %s:", index, typeName));
         if (relocation.getSortedPredecessor() != null) {
             sb.append(lineSeparator())
                     .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedPredecessor())));

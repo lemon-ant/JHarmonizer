@@ -80,6 +80,7 @@ class RelocationDetectorTest {
         String printedRelocations = RelocationDetector.printRelocations(Path.of("dir/Sample.java"), List.of());
 
         // Then
+        assertThat(printedRelocations).contains("Detected member ordering violations in:");
         assertThat(printedRelocations).contains("Sample.java");
     }
 
@@ -96,7 +97,9 @@ class RelocationDetectorTest {
         String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), fakeRelocations);
 
         // Then
-        assertThat(printedRelocations).contains("Sample.java");
+        assertThat(printedRelocations).contains("Detected member ordering violations in:");
+        assertThat(printedRelocations).contains("  Sample.java");
+        assertThat(printedRelocations).doesNotContain("Ordering violation in");
         assertThat(printedRelocations).contains("    --> public void a() { ... }");
         assertThat(printedRelocations).contains("        public void b() { ... }");
     }
