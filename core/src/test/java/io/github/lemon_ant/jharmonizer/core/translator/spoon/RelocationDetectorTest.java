@@ -103,7 +103,7 @@ class RelocationDetectorTest {
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
         CtTypeMember labelMethod = alpha.getMethods().iterator().next();
         // Simulate original order: Beta first, Alpha second; label stays as Alpha's only member.
-        List<CtTypeMember> simulatedOriginalOrder = List.of((CtTypeMember) beta, alpha, labelMethod);
+        List<CtTypeMember> simulatedOriginalOrder = List.of(beta, alpha, labelMethod);
 
         // When
         List<MemberRelocation> relocations =
