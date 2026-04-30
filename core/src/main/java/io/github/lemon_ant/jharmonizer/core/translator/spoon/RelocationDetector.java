@@ -5,6 +5,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.DeclarationHeaderRenderer.renderDeclarationHeader;
 import static java.lang.System.lineSeparator;
 
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,7 +38,7 @@ public class RelocationDetector {
 
     /**
      * Computes relocations by comparing consecutive-pair relationships in the sorted order
-     * against the original source order captured in {@code originalSuccessors}.
+     * against the original source order captured in {@code originalMemberOrder}.
      *
      * <p>Semantics:
      * <ul>
@@ -53,15 +54,16 @@ public class RelocationDetector {
      *       successor captured for diagnostic messages.</li>
      * </ul>
      *
-     * @param originalSuccessors original within-scope successor positions keyed by source position
+     * @param originalMemberOrder flat list of all type members in their original source order,
+     *                            as produced by {@link #snapshotOriginalMemberOrder}
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
      * @return list of relocations for all break points, in current encounter order
      */
     @NonNull
     public static List<MemberRelocation> findRelocations(
-            @NonNull Map<SourcePosition, SourcePosition> originalSuccessors,
-            @NonNull CtCompilationUnit reorderedCompilationUnit) {
+            @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
+        Map<SourcePosition, SourcePosition> originalSuccessors = buildScopeSuccessorMap(originalMemberOrder);
         List<MemberRelocation> relocations = new ArrayList<>();
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
         collectScopeRelocations(rootTypes, originalSuccessors, relocations);
@@ -72,14 +74,15 @@ public class RelocationDetector {
     /**
      * Returns whether any declared element has moved within its scope.
      *
-     * @param originalSuccessors the original within-scope successor positions by source position
+     * @param originalMemberOrder flat list of all type members in their original source order,
+     *                            as produced by {@link #snapshotOriginalMemberOrder}
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
      * @return {@code true} if any consecutive-pair relationship changed; otherwise {@code false}
      */
     public static boolean isRelocated(
-            @NonNull Map<SourcePosition, SourcePosition> originalSuccessors,
-            @NonNull CtCompilationUnit reorderedCompilationUnit) {
+            @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
+        Map<SourcePosition, SourcePosition> originalSuccessors = buildScopeSuccessorMap(originalMemberOrder);
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
         return hasScopeRelocation(rootTypes, originalSuccessors)
                 || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalSuccessors));
@@ -240,55 +243,56 @@ public class RelocationDetector {
                         .anyMatch(nestedType -> hasTypeMemberRelocation(nestedType, originalSuccessors));
     }
 
-    // TODO Create a dedicated type instead of Map
     /**
-     * Builds a snapshot of the original consecutive-sibling relationships in the compilation unit.
+     * Builds a flat snapshot of all type members declared in the compilation unit,
+     * in source-code order (DFS: each type node followed by its own members recursively).
      *
-     * <p>For each scope (file root declared-type list, each type's member list), records the
-     * source position of each element's immediate next sibling. The resulting map is used after
-     * sorting to detect breaks where the consecutive-pair relationship changed, rather than
-     * comparing absolute positions (which over-counts when a single block move shifts many indices).
+     * <p>The returned list contains both the root type declarations and all their nested
+     * members, interleaved in the order they appear in source code. The position of each
+     * element in this list reflects its order in the original code. This snapshot can be
+     * compared against the member order after sorting to detect relocations.
      *
      * @param compilationUnit the compilation unit to snapshot
-     * @return map from each element's source position to its original next sibling's source position;
-     *         elements with no next sibling in their scope are absent from the map
+     * @return immutable flat list of all type members in their original source order
      */
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
-    static Map<SourcePosition, SourcePosition> snapshotOriginalSuccessors(@NonNull CtCompilationUnit compilationUnit) {
-        Map<SourcePosition, SourcePosition> result = new HashMap<>();
-        List<CtType<?>> rootTypes = compilationUnit.getDeclaredTypes();
-        List<CtTypeMember> rootMembers = new ArrayList<>(rootTypes);
-        for (int i = 0; i < rootMembers.size() - 1; i++) {
-            CtTypeMember current = rootMembers.get(i);
-            CtTypeMember next = rootMembers.get(i + 1);
-            if (current.getPosition().isValidPosition() && next.getPosition().isValidPosition()) {
-                result.put(current.getPosition(), next.getPosition());
-            }
-        }
-        rootTypes.forEach(type -> recordTypeMemberSuccessors(type, result));
-        return Map.copyOf(result);
+    static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
+        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit)
+                .map(element -> (CtTypeMember) element)
+                .toList();
     }
 
     /**
-     * Records next-sibling relationships for the direct members of {@code type}, then recurses
-     * into any nested types.
+     * Derives a within-scope successor map from the given flat member order.
      *
-     * @param type   the type whose members to record
-     * @param result accumulator map
+     * <p>For each element in {@code memberOrder}, the map records its source position mapped to
+     * the source position of the next element that belongs to the same declaring scope (same
+     * declaring type, or both root-level). Elements with no in-scope successor, or with invalid
+     * positions, are absent from the map.
+     *
+     * @param memberOrder the flat member order snapshot
+     * @return map from each element's source position to its original in-scope next sibling's
+     *         source position
      */
-    private static void recordTypeMemberSuccessors(CtType<?> type, Map<SourcePosition, SourcePosition> result) {
-        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
-        for (int i = 0; i < members.size() - 1; i++) {
-            CtTypeMember current = members.get(i);
-            CtTypeMember next = members.get(i + 1);
-            if (current.getPosition().isValidPosition() && next.getPosition().isValidPosition()) {
-                result.put(current.getPosition(), next.getPosition());
+    @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static Map<SourcePosition, SourcePosition> buildScopeSuccessorMap(List<CtTypeMember> memberOrder) {
+        Map<SourcePosition, SourcePosition> result = new HashMap<>();
+        for (int i = 0; i < memberOrder.size(); i++) {
+            CtTypeMember current = memberOrder.get(i);
+            if (!current.getPosition().isValidPosition()) {
+                continue;
+            }
+            CtType<?> currentScope = current.getDeclaringType();
+            for (int j = i + 1; j < memberOrder.size(); j++) {
+                CtTypeMember candidate = memberOrder.get(j);
+                if (Objects.equals(candidate.getDeclaringType(), currentScope)
+                        && candidate.getPosition().isValidPosition()) {
+                    result.put(current.getPosition(), candidate.getPosition());
+                    break;
+                }
             }
         }
-        members.stream()
-                .filter(m -> m instanceof CtType<?>)
-                .map(m -> (CtType<?>) m)
-                .forEach(nestedType -> recordTypeMemberSuccessors(nestedType, result));
+        return result;
     }
 }

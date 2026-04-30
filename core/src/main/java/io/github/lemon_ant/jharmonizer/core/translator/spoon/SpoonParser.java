@@ -62,7 +62,7 @@ public class SpoonParser {
             return printer.serializeCompilationUnit(compilationUnit);
         };
         return SpoonAstModel.builder()
-                .originalMemberSuccessors(RelocationDetector.snapshotOriginalSuccessors(compilationUnit))
+                .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .serializedSrcCode(serializedSrcCode)

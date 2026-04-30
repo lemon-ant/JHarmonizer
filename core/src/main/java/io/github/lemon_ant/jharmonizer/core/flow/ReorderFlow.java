@@ -95,7 +95,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .fileProcessingStatus(defineFileProcessingStatus(
                         !sortingAndSerializationResult.isSortingSkipped()
                                 && isRelocated(
-                                        sortedSpoonAstModel.getOriginalMemberSuccessors(),
+                                        sortedSpoonAstModel.getOriginalMemberOrder(),
                                         sortedSpoonAstModel.getCompilationUnit()),
                         hasChanges,
                         false))

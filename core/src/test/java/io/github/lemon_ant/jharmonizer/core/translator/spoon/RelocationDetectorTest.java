@@ -2,7 +2,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.snapshotOriginalSuccessors;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.snapshotOriginalMemberOrder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
@@ -12,15 +12,13 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
 
 class RelocationDetectorTest {
 
@@ -37,25 +35,24 @@ class RelocationDetectorTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        Map<SourcePosition, SourcePosition> originalSuccessors =
-                snapshotOriginalSuccessors(spoonAstModel.getCompilationUnit());
+        List<CtTypeMember> originalMemberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
 
         // When
-        List<MemberRelocation> relocations = findRelocations(originalSuccessors, spoonAstModel.getCompilationUnit());
+        List<MemberRelocation> relocations = findRelocations(originalMemberOrder, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations).isEmpty();
     }
 
     @Test
-    void findRelocations_withEmptyOriginalSuccessors_returnsEmptyList() {
+    void findRelocations_withEmptyOriginalMemberOrder_returnsEmptyList() {
         // Given
         SrcFile srcFile = createSrcFile("public class Sample {\n    public void a() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
 
         // When
-        List<MemberRelocation> relocations = findRelocations(Map.of(), spoonAstModel.getCompilationUnit());
+        List<MemberRelocation> relocations = findRelocations(List.of(), spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations).isEmpty();
@@ -68,18 +65,17 @@ class RelocationDetectorTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        Map<SourcePosition, SourcePosition> originalSuccessors =
-                snapshotOriginalSuccessors(spoonAstModel.getCompilationUnit());
+        List<CtTypeMember> originalMemberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
 
         // When
-        boolean isRelocated = RelocationDetector.isRelocated(originalSuccessors, spoonAstModel.getCompilationUnit());
+        boolean isRelocated = RelocationDetector.isRelocated(originalMemberOrder, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(isRelocated).isFalse();
     }
 
     @Test
-    void snapshotOriginalSuccessors_multiRootTypeFile_recordsNextSiblingPositions() {
+    void snapshotOriginalMemberOrder_multiRootTypeFile_collectsMembersInSourceOrder() {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
@@ -87,15 +83,13 @@ class RelocationDetectorTest {
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
-        CtMethod<?> labelMethod = alpha.getMethods().iterator().next();
+        CtTypeMember labelMethod = alpha.getMethods().iterator().next();
 
         // When
-        Map<SourcePosition, SourcePosition> successors = snapshotOriginalSuccessors(spoonAstModel.getCompilationUnit());
+        List<CtTypeMember> memberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
 
-        // Then
-        assertThat(successors.get(alpha.getPosition())).isEqualTo(beta.getPosition());
-        assertThat(successors).doesNotContainKey(beta.getPosition());
-        assertThat(successors).doesNotContainKey(labelMethod.getPosition());
+        // Then — DFS source order: Alpha, Alpha.label, Beta
+        assertThat(memberOrder).containsExactly(alpha, labelMethod, beta);
     }
 
     @Test
@@ -107,14 +101,13 @@ class RelocationDetectorTest {
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
-        CtMethod<?> labelMethod = alpha.getMethods().iterator().next();
+        CtTypeMember labelMethod = alpha.getMethods().iterator().next();
         // Simulate original order: Beta first, Alpha second; label stays as Alpha's only member.
-        Map<SourcePosition, SourcePosition> simulatedOriginalSuccessors = new HashMap<>();
-        simulatedOriginalSuccessors.put(beta.getPosition(), alpha.getPosition());
+        List<CtTypeMember> simulatedOriginalOrder = List.of((CtTypeMember) beta, alpha, labelMethod);
 
         // When
         List<MemberRelocation> relocations =
-                findRelocations(simulatedOriginalSuccessors, spoonAstModel.getCompilationUnit());
+                findRelocations(simulatedOriginalOrder, spoonAstModel.getCompilationUnit());
 
         // Then
         assertThat(relocations)
@@ -219,14 +212,12 @@ class RelocationDetectorTest {
         CtMethod<?> methodA = requireMethodByName(sampleType, "a");
         CtMethod<?> methodB = requireMethodByName(sampleType, "b");
         CtMethod<?> methodC = requireMethodByName(sampleType, "c");
-        // Simulate original order: [a, b, c, d] — d was last, c→d successor, d has no successor
-        Map<SourcePosition, SourcePosition> originalSuccessors = new HashMap<>();
-        originalSuccessors.put(methodA.getPosition(), methodB.getPosition()); // a→b
-        originalSuccessors.put(methodB.getPosition(), methodC.getPosition()); // b→c
-        originalSuccessors.put(methodC.getPosition(), methodD.getPosition()); // c→d
+        // Simulate original order: [a, b, c, d] — d was last
+        List<CtTypeMember> simulatedOriginalOrder = List.of(methodA, methodB, methodC, methodD);
 
         // When
-        List<MemberRelocation> relocations = findRelocations(originalSuccessors, spoonAstModel.getCompilationUnit());
+        List<MemberRelocation> relocations =
+                findRelocations(simulatedOriginalOrder, spoonAstModel.getCompilationUnit());
 
         // Then — only 1 break even though 4 members exist; a follows d unexpectedly
         assertThat(relocations).hasSize(1);

@@ -113,7 +113,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
                 : findRelocations(
-                        sortedSpoonAstModel.getOriginalMemberSuccessors(), sortedSpoonAstModel.getCompilationUnit());
+                        sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
 
         getDebugStageRecorder()
                 .recordSrcStage(
