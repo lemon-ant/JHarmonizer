@@ -1,6 +1,5 @@
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Collections;
 import java.util.Map;
@@ -9,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtType;
 
 @Value

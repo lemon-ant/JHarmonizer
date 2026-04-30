@@ -2,13 +2,13 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static java.util.Optional.ofNullable;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A group node in the classification tree. Children are ordered. Includes/Excludes carry OR semantics across rule lines.

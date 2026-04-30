@@ -1,9 +1,9 @@
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Utilities for encoding member declaration flags into a single 32-bit integer mask

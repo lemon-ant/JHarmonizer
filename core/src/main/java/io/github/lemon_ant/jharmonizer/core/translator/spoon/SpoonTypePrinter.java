@@ -10,7 +10,6 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMem
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasMatchingLeadingComment;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils;
 import java.util.Collections;
@@ -22,6 +21,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtEnum;
 import spoon.reflect.declaration.CtType;

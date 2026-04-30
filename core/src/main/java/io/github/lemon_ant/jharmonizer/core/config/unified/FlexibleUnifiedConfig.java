@@ -2,7 +2,6 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static java.util.Optional.ofNullable;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +11,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Flexible overlay for UnifiedConfig. Each field is individually optional, but at least one must be set.
