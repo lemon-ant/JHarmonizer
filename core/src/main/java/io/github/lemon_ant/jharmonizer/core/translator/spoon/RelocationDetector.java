@@ -1,25 +1,20 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil.abbreviatePathForDisplay;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.DeclarationHeaderRenderer.renderDeclarationHeader;
 import static java.lang.System.lineSeparator;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -40,85 +35,59 @@ public class RelocationDetector {
     private static final int INITIAL_OUTPUT_BUFFER_CAPACITY = 256;
 
     /**
-     * Computes relocations of declared elements by comparing their current encounter order
-     * against the previously captured original order indices.
+     * Computes relocations of declared elements by comparing their current within-scope position
+     * against the previously captured original within-scope position.
      *
      * <p>Semantics:
      * <ul>
-     *   <li>Traverses the current Spoon model using {@code streamDeclaredHierarchy(...)} —
-     *       i.e., top-level types, nested types, and all declarative members in encounter order.</li>
-     *   <li>For each encountered element, looks up its original sequential index from
-     *       {@code originalOrderIndices} and computes
-     *       {@code offset = currentIndex - originalIndex}.</li>
+     *   <li>For each scope (file root, type body), the current position of each element within
+     *       that scope is compared with its original within-scope position from
+     *       {@code originalOrderIndices}.</li>
      *   <li>Elements not present in the original snapshot (newly added) are ignored.</li>
-     *   <li>Only non-zero offsets are reported (unchanged elements are skipped).</li>
+     *   <li>Only elements whose within-scope position changed are reported; elements that merely
+     *       moved because their enclosing type changed position are not flagged.</li>
      *   <li>For each relocated element, the immediately preceding and following elements in the
-     *       sorted order are captured as {@link MemberRelocation#getSortedPredecessor()} and
+     *       sorted order within the same scope are captured as {@link MemberRelocation#getSortedPredecessor()} and
      *       {@link MemberRelocation#getSortedSuccessor()}, so diagnostic messages can show the user
      *       exactly where the member should appear.</li>
      * </ul>
      *
      * <p>Notes:
      * <ul>
-     *   <li>Positive offset means the element moved down (appears later) relative to the original order;
+     *   <li>Positive offset means the element moved down (appears later) within its scope;
      *       negative offset means it moved up (appears earlier).</li>
-     *   <li>If elements were replaced with new instances, ensure the original index snapshot
-     *       used the same {@code CtElement} identities, or switch to a stable ID mapping.</li>
      * </ul>
      *
-     * @param originalOrderIndices original encounter indices keyed by source position
+     * @param originalOrderIndices original within-scope encounter indices keyed by source position
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return list of relocations for all moved elements (offset ≠ 0), in current encounter order
+     * @return list of relocations for all moved elements (within-scope offset ≠ 0), in current encounter order
      */
     @NonNull
     public static List<MemberRelocation> findRelocations(
             /*TODO Create a dedicated type*/ @NonNull Map<SourcePosition, Integer> originalOrderIndices,
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        List<CtElement> sortedElements =
-                streamDeclaredHierarchy(reorderedCompilationUnit).toList();
         List<MemberRelocation> relocations = new ArrayList<>();
-        for (int currentIndex = 0; currentIndex < sortedElements.size(); currentIndex++) {
-            CtElement element = sortedElements.get(currentIndex);
-            Integer originalIndex = originalOrderIndices.get(element.getPosition());
-            if (originalIndex == null) {
-                continue;
-            }
-            int offset = currentIndex - originalIndex;
-            if (offset == 0) {
-                continue;
-            }
-            if (!(element instanceof CtTypeMember violatingMember)) {
-                continue;
-            }
-            CtTypeMember predecessor = findScopePredecessor(sortedElements, currentIndex, violatingMember);
-            CtTypeMember successor = findScopeSuccessor(sortedElements, currentIndex, violatingMember);
-            relocations.add(new MemberRelocation(violatingMember, predecessor, successor, offset));
-        }
+        List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
+        collectScopeRelocations(rootTypes, originalOrderIndices, relocations);
+        rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalOrderIndices, relocations));
         return List.copyOf(relocations);
     }
 
     /**
-     * Returns whether is relocated.
-     * @param originalOrderIndices the original order indices by source position
+     * Returns whether any declared element has moved within its scope.
+     *
+     * @param originalOrderIndices the original within-scope order indices by source position
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return {@code true} if is relocated; otherwise {@code false}
+     * @return {@code true} if any element moved within its scope; otherwise {@code false}
      */
     public static boolean isRelocated(
             @NonNull Map<SourcePosition, Integer> originalOrderIndices,
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        AtomicInteger runningIndex = new AtomicInteger(0);
-
-        return streamDeclaredHierarchy(reorderedCompilationUnit)
-                .filter(element -> element.getPosition().isValidPosition())
-                // compute offset on the fly using the running encounter index
-                .mapToInt(element -> {
-                    int current = runningIndex.getAndIncrement();
-                    Integer orig = originalOrderIndices.get(element.getPosition());
-                    return orig != null ? current - orig : 0;
-                })
-                .anyMatch(offs -> offs > 0);
+        List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
+        return hasScopeRelocation(rootTypes, originalOrderIndices)
+                || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalOrderIndices));
     }
 
     /**
@@ -183,62 +152,133 @@ public class RelocationDetector {
     }
 
     /**
-     * Scans backward from {@code fromIndex} in {@code elements} and returns the nearest
-     * {@link CtTypeMember} that belongs to the same declaring scope as {@code member}.
+     * Scans {@code scopeMembers} for elements whose current within-scope index differs from their
+     * original within-scope index, and adds a {@link MemberRelocation} for each such element.
      *
-     * @param elements  the flat sorted element list
-     * @param fromIndex the index to start scanning from (exclusive)
-     * @param member    the member whose declaring scope defines the target scope
-     * @return the nearest same-scope predecessor, or {@code null} if none exists
+     * @param scopeMembers         the ordered members of one scope (file root or a type body)
+     * @param originalOrderIndices original within-scope index map keyed by source position
+     * @param relocations          accumulator for detected relocations
      */
-    @Nullable
-    private static CtTypeMember findScopePredecessor(List<CtElement> elements, int fromIndex, CtTypeMember member) {
-        CtType<?> scope = member.getDeclaringType();
-        for (int i = fromIndex - 1; i >= 0; i--) {
-            CtElement candidate = elements.get(i);
-            if (candidate instanceof CtTypeMember m && Objects.equals(m.getDeclaringType(), scope)) {
-                return m;
+    private static void collectScopeRelocations(
+            List<? extends CtTypeMember> scopeMembers,
+            Map<SourcePosition, Integer> originalOrderIndices,
+            List<MemberRelocation> relocations) {
+        for (int i = 0; i < scopeMembers.size(); i++) {
+            CtTypeMember member = scopeMembers.get(i);
+            if (!member.getPosition().isValidPosition()) {
+                continue;
             }
+            Integer originalIdx = originalOrderIndices.get(member.getPosition());
+            if (originalIdx == null || i == originalIdx) {
+                continue;
+            }
+            CtTypeMember predecessor = i > 0 ? scopeMembers.get(i - 1) : null;
+            CtTypeMember successor = i < scopeMembers.size() - 1 ? scopeMembers.get(i + 1) : null;
+            relocations.add(new MemberRelocation(member, predecessor, successor, i - originalIdx));
         }
-        return null;
     }
 
     /**
-     * Scans forward from {@code fromIndex} in {@code elements} and returns the nearest
-     * {@link CtTypeMember} that belongs to the same declaring scope as {@code member}.
+     * Checks the direct members of {@code type} for within-scope relocations, then recurses
+     * into any nested types.
      *
-     * @param elements  the flat sorted element list
-     * @param fromIndex the index to start scanning from (exclusive)
-     * @param member    the member whose declaring scope defines the target scope
-     * @return the nearest same-scope successor, or {@code null} if none exists
+     * @param type                 the type whose member scope to check
+     * @param originalOrderIndices original within-scope index map keyed by source position
+     * @param relocations          accumulator for detected relocations
      */
-    @Nullable
-    private static CtTypeMember findScopeSuccessor(List<CtElement> elements, int fromIndex, CtTypeMember member) {
-        CtType<?> scope = member.getDeclaringType();
-        for (int i = fromIndex + 1; i < elements.size(); i++) {
-            CtElement candidate = elements.get(i);
-            if (candidate instanceof CtTypeMember m && Objects.equals(m.getDeclaringType(), scope)) {
-                return m;
+    private static void collectTypeMemberRelocations(
+            CtType<?> type, Map<SourcePosition, Integer> originalOrderIndices, List<MemberRelocation> relocations) {
+        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
+        collectScopeRelocations(members, originalOrderIndices, relocations);
+        members.stream()
+                .filter(m -> m instanceof CtType<?>)
+                .map(m -> (CtType<?>) m)
+                .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalOrderIndices, relocations));
+    }
+
+    /**
+     * Returns {@code true} if any element in {@code scopeMembers} moved to a later within-scope
+     * position than its original index.
+     *
+     * @param scopeMembers         the ordered members of one scope
+     * @param originalOrderIndices original within-scope index map keyed by source position
+     * @return {@code true} if a later-position relocation was found; otherwise {@code false}
+     */
+    private static boolean hasScopeRelocation(
+            List<? extends CtTypeMember> scopeMembers, Map<SourcePosition, Integer> originalOrderIndices) {
+        for (int i = 0; i < scopeMembers.size(); i++) {
+            CtTypeMember member = scopeMembers.get(i);
+            if (!member.getPosition().isValidPosition()) {
+                continue;
+            }
+            Integer orig = originalOrderIndices.get(member.getPosition());
+            if (orig != null && i > orig) {
+                return true;
             }
         }
-        return null;
+        return false;
+    }
+
+    /**
+     * Returns {@code true} if any direct member of {@code type} or any nested type member moved
+     * to a later within-scope position.
+     *
+     * @param type                 the type whose member scope to check recursively
+     * @param originalOrderIndices original within-scope index map keyed by source position
+     * @return {@code true} if a relocation was found; otherwise {@code false}
+     */
+    private static boolean hasTypeMemberRelocation(CtType<?> type, Map<SourcePosition, Integer> originalOrderIndices) {
+        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
+        return hasScopeRelocation(members, originalOrderIndices)
+                || members.stream()
+                        .filter(m -> m instanceof CtType<?>)
+                        .map(m -> (CtType<?>) m)
+                        .anyMatch(nestedType -> hasTypeMemberRelocation(nestedType, originalOrderIndices));
     }
 
     // TODO Create a dedicated type instead of Map
     /**
-     * Indexes the elements by order.
+     * Indexes each element in the compilation unit by its <em>within-scope</em> position.
+     *
+     * <p>Root types are indexed by their position in the file's declared-type list.
+     * Direct members of each type are indexed by their position within that type's member list.
+     * Nested types are recursed into.
+     *
      * @param compilationUnit the compilation unit to inspect
-     * @return the index of elements by order
+     * @return map from each element's source position to its within-scope sequential index
      */
     @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
     static Map<SourcePosition, Integer> indexElementsByOrder(@NonNull CtCompilationUnit compilationUnit) {
-        AtomicInteger runningIndex = new AtomicInteger(0);
-        return streamDeclaredHierarchy(compilationUnit)
-                .map(CtElement::getPosition)
-                .filter(SourcePosition::isValidPosition)
-                .collect(Collectors.toMap(
-                        Function.identity(), // key: the source position
-                        position -> runningIndex.getAndIncrement() // value: the element's sequential index
-                        ));
+        Map<SourcePosition, Integer> result = new HashMap<>();
+        List<CtType<?>> rootTypes = compilationUnit.getDeclaredTypes();
+        for (int i = 0; i < rootTypes.size(); i++) {
+            CtType<?> rootType = rootTypes.get(i);
+            if (rootType.getPosition().isValidPosition()) {
+                result.put(rootType.getPosition(), i);
+            }
+            indexTypeMembersInScope(rootType, result);
+        }
+        return Map.copyOf(result);
+    }
+
+    /**
+     * Assigns within-scope indices to the direct members of {@code type}, then recurses into
+     * any nested types.
+     *
+     * @param type   the type whose members to index
+     * @param result accumulator map
+     */
+    private static void indexTypeMembersInScope(CtType<?> type, Map<SourcePosition, Integer> result) {
+        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
+        for (int i = 0; i < members.size(); i++) {
+            CtTypeMember member = members.get(i);
+            if (member.getPosition().isValidPosition()) {
+                result.put(member.getPosition(), i);
+            }
+            if (member instanceof CtType<?> nestedType) {
+                indexTypeMembersInScope(nestedType, result);
+            }
+        }
     }
 }

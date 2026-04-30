@@ -12,6 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 
 class RelocationDetectorTest {
 
@@ -72,6 +74,51 @@ class RelocationDetectorTest {
 
         // Then
         assertThat(isRelocated).isFalse();
+    }
+
+    @Test
+    void indexElementsByOrder_multiRootTypeFile_assignsWithinScopeIndices() {
+        // Given
+        SrcFile srcFile =
+                createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
+        CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
+        CtMethod<?> labelMethod = alpha.getMethods().iterator().next();
+
+        // When
+        Map<SourcePosition, Integer> indices = indexElementsByOrder(spoonAstModel.getCompilationUnit());
+
+        // Then
+        assertThat(indices.get(alpha.getPosition())).isEqualTo(0);
+        assertThat(indices.get(beta.getPosition())).isEqualTo(1);
+        assertThat(indices.get(labelMethod.getPosition())).isEqualTo(0);
+    }
+
+    @Test
+    void findRelocations_memberBelongingToRelocatedType_notFlaggedAsMemberViolation() {
+        // Given
+        SrcFile srcFile =
+                createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
+        CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
+        CtMethod<?> labelMethod = alpha.getMethods().iterator().next();
+        // Simulate original order: Beta first (index 0), Alpha second (index 1); label stays at within-Alpha index 0.
+        Map<SourcePosition, Integer> simulatedOriginalIndices = new HashMap<>();
+        simulatedOriginalIndices.put(beta.getPosition(), 0);
+        simulatedOriginalIndices.put(alpha.getPosition(), 1);
+        simulatedOriginalIndices.put(labelMethod.getPosition(), 0);
+
+        // When
+        List<MemberRelocation> relocations =
+                findRelocations(simulatedOriginalIndices, spoonAstModel.getCompilationUnit());
+
+        // Then
+        assertThat(relocations)
+                .noneMatch(relocation -> relocation.getViolatingElement().equals(labelMethod));
     }
 
     @Test
