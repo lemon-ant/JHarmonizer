@@ -4,11 +4,13 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDe
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.DeclarationHeaderRenderer.renderDeclarationHeader;
 import static java.lang.System.lineSeparator;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,6 +19,7 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -80,10 +83,12 @@ public class RelocationDetector {
             if (offset == 0) {
                 continue;
             }
-            CtElement predecessor = currentIndex > 0 ? sortedElements.get(currentIndex - 1) : null;
-            CtElement successor =
-                    currentIndex < sortedElements.size() - 1 ? sortedElements.get(currentIndex + 1) : null;
-            relocations.add(new MemberRelocation(element, predecessor, successor, offset));
+            if (!(element instanceof CtTypeMember violatingMember)) {
+                continue;
+            }
+            CtTypeMember predecessor = findScopePredecessor(sortedElements, currentIndex, violatingMember);
+            CtTypeMember successor = findScopeSuccessor(sortedElements, currentIndex, violatingMember);
+            relocations.add(new MemberRelocation(violatingMember, predecessor, successor, offset));
         }
         return List.copyOf(relocations);
     }
@@ -159,6 +164,48 @@ public class RelocationDetector {
             sb.append(lineSeparator())
                     .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedSuccessor())));
         }
+    }
+
+    /**
+     * Scans backward from {@code fromIndex} in {@code elements} and returns the nearest
+     * {@link CtTypeMember} that belongs to the same declaring scope as {@code member}.
+     *
+     * @param elements  the flat sorted element list
+     * @param fromIndex the index to start scanning from (exclusive)
+     * @param member    the member whose declaring scope defines the target scope
+     * @return the nearest same-scope predecessor, or {@code null} if none exists
+     */
+    @Nullable
+    private static CtTypeMember findScopePredecessor(List<CtElement> elements, int fromIndex, CtTypeMember member) {
+        CtType<?> scope = member.getDeclaringType();
+        for (int i = fromIndex - 1; i >= 0; i--) {
+            CtElement candidate = elements.get(i);
+            if (candidate instanceof CtTypeMember m && Objects.equals(m.getDeclaringType(), scope)) {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Scans forward from {@code fromIndex} in {@code elements} and returns the nearest
+     * {@link CtTypeMember} that belongs to the same declaring scope as {@code member}.
+     *
+     * @param elements  the flat sorted element list
+     * @param fromIndex the index to start scanning from (exclusive)
+     * @param member    the member whose declaring scope defines the target scope
+     * @return the nearest same-scope successor, or {@code null} if none exists
+     */
+    @Nullable
+    private static CtTypeMember findScopeSuccessor(List<CtElement> elements, int fromIndex, CtTypeMember member) {
+        CtType<?> scope = member.getDeclaringType();
+        for (int i = fromIndex + 1; i < elements.size(); i++) {
+            CtElement candidate = elements.get(i);
+            if (candidate instanceof CtTypeMember m && Objects.equals(m.getDeclaringType(), scope)) {
+                return m;
+            }
+        }
+        return null;
     }
 
     // TODO Create a dedicated type instead of Map

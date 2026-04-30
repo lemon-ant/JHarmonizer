@@ -11,12 +11,14 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtMethod;
 
 class RelocationDetectorTest {
 
@@ -95,15 +97,16 @@ class RelocationDetectorTest {
 
         // Then
         assertThat(printedRelocations).contains("Sample.java");
-        assertThat(printedRelocations).contains("-->");
+        assertThat(printedRelocations).contains("    --> public void a() { ... }");
+        assertThat(printedRelocations).contains("        public void b() { ... }");
     }
 
-    @NonNull
     @NonNull
     private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(
             @NonNull SpoonAstModel spoonAstModel) {
         List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
+                .sorted(Comparator.comparing(CtMethod::getSimpleName))
                 .map(CtElement.class::cast)
                 .toList();
         if (methods.size() < 2) {
