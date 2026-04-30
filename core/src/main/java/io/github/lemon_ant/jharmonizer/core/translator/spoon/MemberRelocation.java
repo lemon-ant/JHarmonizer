@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtElement;
 
 /**
@@ -19,6 +21,7 @@ import spoon.reflect.declaration.CtElement;
  * in its scope. {@code sortedSuccessor} is {@code null} when it should be the very last.
  */
 @Value
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class MemberRelocation {
 
     /**
