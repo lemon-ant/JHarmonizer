@@ -303,8 +303,7 @@ class RelocationDetectorTest {
     }
 
     @NonNull
-    private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(
-            @NonNull SpoonAstModel spoonAstModel) {
+    private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(SpoonAstModel spoonAstModel) {
         List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
                 .sorted(Comparator.comparing(CtMethod::getSimpleName))
