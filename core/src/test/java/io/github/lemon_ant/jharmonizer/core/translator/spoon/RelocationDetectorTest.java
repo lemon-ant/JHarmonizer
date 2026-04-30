@@ -134,7 +134,7 @@ class RelocationDetectorTest {
                 .map(CtElement.class::cast)
                 .toList();
         List<MemberRelocation> relocations =
-                List.of(MemberRelocation.create(List.of(topLevelTypes.get(0)), null, topLevelTypes.get(1)));
+                List.of(new MemberRelocation(List.of(topLevelTypes.get(0)), null, topLevelTypes.get(1)));
 
         // When
         String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), relocations);
@@ -176,12 +176,12 @@ class RelocationDetectorTest {
                 .toList();
         CtElement firstMethod = methods.get(0);
         List<MemberRelocation> relocationsExceedingLimit = List.of(
-                MemberRelocation.create(List.of(firstMethod), null, null),
-                MemberRelocation.create(List.of(firstMethod), null, null),
-                MemberRelocation.create(List.of(firstMethod), null, null),
-                MemberRelocation.create(List.of(firstMethod), null, null),
-                MemberRelocation.create(List.of(firstMethod), null, null),
-                MemberRelocation.create(List.of(firstMethod), null, null));
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null),
+                new MemberRelocation(List.of(firstMethod), null, null));
 
         // When
         String printedRelocations =
@@ -281,7 +281,7 @@ class RelocationDetectorTest {
         CtMethod<?> methodC = requireMethodByName(sampleType, "c");
         CtMethod<?> methodD = requireMethodByName(sampleType, "d");
         List<MemberRelocation> relocation =
-                List.of(MemberRelocation.create(List.of(methodA, methodB, methodC, methodD), null, null));
+                List.of(new MemberRelocation(List.of(methodA, methodB, methodC, methodD), null, null));
 
         // When
         String output = RelocationDetector.printRelocations(Path.of("Sample.java"), relocation);
@@ -312,9 +312,9 @@ class RelocationDetectorTest {
                 .toList();
         if (methods.size() < 2) {
             return methods.stream()
-                    .map(method -> MemberRelocation.create(List.of(method), null, null))
+                    .map(method -> new MemberRelocation(List.of(method), null, null))
                     .toList();
         }
-        return List.of(MemberRelocation.create(List.of(methods.get(0)), null, methods.get(1)));
+        return List.of(new MemberRelocation(List.of(methods.get(0)), null, methods.get(1)));
     }
 }

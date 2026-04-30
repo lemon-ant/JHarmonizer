@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
@@ -71,7 +70,7 @@ public class RelocationDetector {
     public static List<MemberRelocation> findRelocations(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        Map<SourcePosition, Integer> originalIndex = buildOriginalIndexMap(originalMemberOrder);
+        Map<CtTypeMember, Integer> originalIndex = buildOriginalIndexMap(originalMemberOrder);
         List<MemberRelocation> relocations = new ArrayList<>();
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
         collectScopeRelocations(rootTypes, originalIndex, relocations);
@@ -91,7 +90,7 @@ public class RelocationDetector {
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        Map<SourcePosition, Integer> originalIndex = buildOriginalIndexMap(originalMemberOrder);
+        Map<CtTypeMember, Integer> originalIndex = buildOriginalIndexMap(originalMemberOrder);
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
         return hasScopeRelocation(rootTypes, originalIndex)
                 || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalIndex));
@@ -182,12 +181,12 @@ public class RelocationDetector {
      * instructions a developer needs to apply to recover the sorted order from the original.
      *
      * @param scopeMembers   the ordered members of one scope (file root or a type body)
-     * @param originalIndex  map from source position to its position in the flat original-order snapshot
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
      * @param relocations    accumulator for detected relocations
      */
     private static void collectScopeRelocations(
             List<? extends CtTypeMember> scopeMembers,
-            Map<SourcePosition, Integer> originalIndex,
+            Map<CtTypeMember, Integer> originalIndex,
             List<MemberRelocation> relocations) {
         int[] origIdx = computeOriginalIndices(scopeMembers, originalIndex);
         boolean[] inLis = computeLisMask(origIdx);
@@ -200,20 +199,16 @@ public class RelocationDetector {
      * represented by {@link #UNTRACKED}.
      *
      * @param scopeMembers   the ordered members of one scope
-     * @param originalIndex  map from source position to its position in the flat original-order snapshot
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
      * @return original-order index per scope position, or {@link #UNTRACKED} when not mapped
      */
     @NonNull
     private static int[] computeOriginalIndices(
-            List<? extends CtTypeMember> scopeMembers, Map<SourcePosition, Integer> originalIndex) {
+            List<? extends CtTypeMember> scopeMembers, Map<CtTypeMember, Integer> originalIndex) {
         int[] origIdx = new int[scopeMembers.size()];
         Arrays.fill(origIdx, UNTRACKED);
         for (int i = 0; i < scopeMembers.size(); i++) {
-            SourcePosition position = scopeMembers.get(i).getPosition();
-            if (!position.isValidPosition()) {
-                continue;
-            }
-            Integer idx = originalIndex.get(position);
+            Integer idx = originalIndex.get(scopeMembers.get(i));
             if (idx != null) {
                 origIdx[i] = idx;
             }
@@ -264,23 +259,23 @@ public class RelocationDetector {
         List<CtElement> chunk = scopeMembers.subList(chunkStart, chunkEndExclusive).stream()
                 .map(CtElement.class::cast)
                 .toList();
-        relocations.add(MemberRelocation.create(chunk, predecessor, successor));
+        relocations.add(new MemberRelocation(chunk, predecessor, successor));
     }
 
     /**
      * Checks the direct members of {@code type} for relocations, then recurses into nested types.
      *
      * @param type           the type whose member scope to check
-     * @param originalIndex  map from source position to its position in the flat original-order snapshot
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
      * @param relocations    accumulator for detected relocations
      */
     private static void collectTypeMemberRelocations(
-            CtType<?> type, Map<SourcePosition, Integer> originalIndex, List<MemberRelocation> relocations) {
+            CtType<?> type, Map<CtTypeMember, Integer> originalIndex, List<MemberRelocation> relocations) {
         List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
         collectScopeRelocations(members, originalIndex, relocations);
         members.stream()
-                .filter(m -> m instanceof CtType<?>)
-                .map(m -> (CtType<?>) m)
+                .filter(typeMember -> typeMember instanceof CtType<?>)
+                .map(typeMember -> (CtType<?>) typeMember)
                 .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalIndex, relocations));
     }
 
@@ -290,18 +285,14 @@ public class RelocationDetector {
      * original order.
      *
      * @param scopeMembers   the ordered members of one scope
-     * @param originalIndex  map from source position to its position in the flat original-order snapshot
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
      * @return {@code true} if a descent was found; otherwise {@code false}
      */
     private static boolean hasScopeRelocation(
-            List<? extends CtTypeMember> scopeMembers, Map<SourcePosition, Integer> originalIndex) {
+            List<? extends CtTypeMember> scopeMembers, Map<CtTypeMember, Integer> originalIndex) {
         int previousIndex = -1;
         for (CtTypeMember member : scopeMembers) {
-            SourcePosition position = member.getPosition();
-            if (!position.isValidPosition()) {
-                continue;
-            }
-            Integer idx = originalIndex.get(position);
+            Integer idx = originalIndex.get(member);
             if (idx == null) {
                 continue;
             }
@@ -318,15 +309,15 @@ public class RelocationDetector {
      * moved relative to the original source order.
      *
      * @param type           the type whose member scope to check recursively
-     * @param originalIndex  map from source position to its position in the flat original-order snapshot
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
      * @return {@code true} if any descent was found; otherwise {@code false}
      */
-    private static boolean hasTypeMemberRelocation(CtType<?> type, Map<SourcePosition, Integer> originalIndex) {
+    private static boolean hasTypeMemberRelocation(CtType<?> type, Map<CtTypeMember, Integer> originalIndex) {
         List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
         return hasScopeRelocation(members, originalIndex)
                 || members.stream()
-                        .filter(m -> m instanceof CtType<?>)
-                        .map(m -> (CtType<?>) m)
+                        .filter(typeMember -> typeMember instanceof CtType<?>)
+                        .map(typeMember -> (CtType<?>) typeMember)
                         .anyMatch(nestedType -> hasTypeMemberRelocation(nestedType, originalIndex));
     }
 
@@ -350,20 +341,20 @@ public class RelocationDetector {
     }
 
     /**
-     * Builds a map from each tracked member's source position to its index in the flat original
-     * member-order snapshot. Members with invalid positions are skipped.
+     * Builds a map from each tracked member to its index in the flat original member-order snapshot.
+     * Members with invalid positions are skipped.
      *
      * @param memberOrder the flat member order snapshot
-     * @return map from source position to original-order index
+     * @return map from type member to original-order index
      */
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private static Map<SourcePosition, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
-        Map<SourcePosition, Integer> result = new HashMap<>();
+    private static Map<CtTypeMember, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
+        Map<CtTypeMember, Integer> result = new HashMap<>();
         for (int i = 0; i < memberOrder.size(); i++) {
             CtTypeMember member = memberOrder.get(i);
             if (member.getPosition().isValidPosition()) {
-                result.put(member.getPosition(), i);
+                result.put(member, i);
             }
         }
         return result;
