@@ -168,7 +168,7 @@ public class RelocationDetector {
         String typeName =
                 relocation.getViolatingElement() instanceof CtTypeMember member && member.getDeclaringType() != null
                         ? member.getDeclaringType().getQualifiedName()
-                        : "<unknown>";
+                        : "<file root>";
         sb.append(String.format("  [%d] %s:", index, typeName));
         if (relocation.getSortedPredecessor() != null) {
             sb.append(lineSeparator())

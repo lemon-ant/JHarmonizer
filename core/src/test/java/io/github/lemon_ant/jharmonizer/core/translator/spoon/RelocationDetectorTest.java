@@ -85,6 +85,25 @@ class RelocationDetectorTest {
     }
 
     @Test
+    void printRelocations_withTopLevelTypeRelocation_showsFileRootAsTypeName() {
+        // Given
+        SrcFile srcFile = createSrcFile("class Alpha {}\nclass Beta {}\n", Path.of("Sample.java"));
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
+        List<CtElement> topLevelTypes = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+                .map(CtElement.class::cast)
+                .toList();
+        List<MemberRelocation> relocations =
+                List.of(new MemberRelocation(topLevelTypes.get(0), null, topLevelTypes.get(1), 1));
+
+        // When
+        String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), relocations);
+
+        // Then
+        assertThat(printedRelocations).contains("[1] <file root>:");
+    }
+
+    @Test
     void printRelocations_withMethodRelocation_showsDeclarationHeaderSnippet() {
         // Given
         SrcFile srcFile = createSrcFile(
