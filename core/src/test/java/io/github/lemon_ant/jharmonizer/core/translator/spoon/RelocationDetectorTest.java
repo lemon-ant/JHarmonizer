@@ -236,7 +236,7 @@ class RelocationDetectorTest {
     }
 
     @NonNull
-    private static CtMethod<?> requireMethodByName(@NonNull CtType<?> type, @NonNull String name) {
+    private static CtMethod<?> requireMethodByName(CtType<?> type, String name) {
         return type.getMethods().stream()
                 .filter(m -> m.getSimpleName().equals(name))
                 .findFirst()

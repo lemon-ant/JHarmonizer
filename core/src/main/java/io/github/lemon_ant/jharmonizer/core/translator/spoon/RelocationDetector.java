@@ -64,7 +64,7 @@ public class RelocationDetector {
 
         List<MemberRelocation> relocations = new ArrayList<>();
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
-        collectScopeRelocations(new ArrayList<>(rootTypes), originalSuccessors, relocations);
+        collectScopeRelocations(rootTypes, originalSuccessors, relocations);
         rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalSuccessors, relocations));
         return List.copyOf(relocations);
     }
@@ -81,7 +81,7 @@ public class RelocationDetector {
             @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
-        return hasScopeRelocation(new ArrayList<>(rootTypes), originalSuccessors)
+        return hasScopeRelocation(rootTypes, originalSuccessors)
                 || rootTypes.stream().anyMatch(type -> hasTypeMemberRelocation(type, originalSuccessors));
     }
 
