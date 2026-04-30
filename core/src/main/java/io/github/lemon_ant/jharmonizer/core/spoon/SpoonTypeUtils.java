@@ -111,7 +111,7 @@ public class SpoonTypeUtils {
      */
     @NonNull
     private static Stream<CtTypeMember> streamTypeAndNestedElements(CtType<?> ownerType) {
-        Stream<CtTypeMember> self = Stream.<CtTypeMember>of(ownerType);
+        Stream<CtTypeMember> self = Stream.of(ownerType);
         Stream<CtTypeMember> membersAndNested = streamExplicitSrcTypeMembers(ownerType)
                 .flatMap(member -> {
                     if (member instanceof CtType<?> nestedType) {
