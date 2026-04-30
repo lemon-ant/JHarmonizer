@@ -286,9 +286,9 @@ class RelocationDetectorTest {
         // When
         String output = RelocationDetector.printRelocations(Path.of("Sample.java"), relocation);
 
-        // Then — first and last are shown with -->, hidden middle elements indicated by ⋮
+        // Then — first and last are shown with -->, hidden middle elements indicated by count
         assertThat(output).contains("    --> public void a() { ... }");
-        assertThat(output).contains("    ⋮");
+        assertThat(output).contains("    ... (2 members omitted)");
         assertThat(output).contains("    --> public void d() { ... }");
         assertThat(output).doesNotContain("    --> public void b() { ... }");
         assertThat(output).doesNotContain("    --> public void c() { ... }");

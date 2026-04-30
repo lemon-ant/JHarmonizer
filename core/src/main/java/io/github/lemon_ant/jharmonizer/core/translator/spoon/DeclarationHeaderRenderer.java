@@ -98,7 +98,8 @@ class DeclarationHeaderRenderer {
     @NonNull
     private static String renderConstructorHeader(String modifiers, CtConstructor<?> constructor) {
         String params = constructor.getParameters().isEmpty() ? EMPTY_PARAMS : VARARGS_PARAMS;
-        return joinNonBlank(modifiers, constructor.getSimpleName() + params) + BODY_PLACEHOLDER;
+        String name = constructor.getDeclaringType().getSimpleName();
+        return joinNonBlank(modifiers, name + params) + BODY_PLACEHOLDER;
     }
 
     @NonNull

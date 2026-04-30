@@ -39,7 +39,6 @@ public class RelocationDetector {
     private static final int MAX_PATH_DISPLAY_LENGTH = 120;
     private static final int MAX_DISPLAYED_VIOLATIONS = 5;
     private static final int MAX_DISPLAYED_CHUNK_MEMBERS = 3;
-    private static final String CHUNK_OMISSION_MARKER = "    ⋮";
     private static final int INITIAL_OUTPUT_BUFFER_CAPACITY = 256;
 
     /**
@@ -164,10 +163,11 @@ public class RelocationDetector {
                 sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member)));
             }
         } else {
+            int omittedCount = members.size() - 2;
             sb.append(lineSeparator())
                     .append(String.format("    --> %s", renderDeclarationHeader(members.get(0))))
                     .append(lineSeparator())
-                    .append(CHUNK_OMISSION_MARKER)
+                    .append(String.format("    ... (%d members omitted)", omittedCount))
                     .append(lineSeparator())
                     .append(String.format("    --> %s", renderDeclarationHeader(members.get(members.size() - 1))));
         }
