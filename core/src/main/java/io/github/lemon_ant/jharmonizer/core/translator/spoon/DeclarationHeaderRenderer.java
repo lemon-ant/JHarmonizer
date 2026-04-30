@@ -89,20 +89,20 @@ class DeclarationHeaderRenderer {
     }
 
     @NonNull
-    private static String renderMethodHeader(@NonNull String modifiers, @NonNull CtMethod<?> method) {
+    private static String renderMethodHeader(String modifiers, CtMethod<?> method) {
         String params = method.getParameters().isEmpty() ? EMPTY_PARAMS : VARARGS_PARAMS;
         return joinNonBlank(modifiers, method.getType().getSimpleName(), method.getSimpleName() + params)
                 + BODY_PLACEHOLDER;
     }
 
     @NonNull
-    private static String renderConstructorHeader(@NonNull String modifiers, @NonNull CtConstructor<?> constructor) {
+    private static String renderConstructorHeader(String modifiers, CtConstructor<?> constructor) {
         String params = constructor.getParameters().isEmpty() ? EMPTY_PARAMS : VARARGS_PARAMS;
         return joinNonBlank(modifiers, constructor.getSimpleName() + params) + BODY_PLACEHOLDER;
     }
 
     @NonNull
-    private static String renderModifiers(@NonNull CtTypeMember member) {
+    private static String renderModifiers(CtTypeMember member) {
         return member.getModifiers().stream()
                 .sorted(Comparator.comparingInt(ModifierKind::ordinal))
                 .map(ModifierKind::toString)
@@ -115,7 +115,7 @@ class DeclarationHeaderRenderer {
     }
 
     @NonNull
-    private static String resolveTypeKeyword(@NonNull CtType<?> type) {
+    private static String resolveTypeKeyword(CtType<?> type) {
         if (type instanceof CtAnnotationType<?>) {
             return "@interface";
         }
