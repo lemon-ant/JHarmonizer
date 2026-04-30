@@ -159,8 +159,7 @@ public class RelocationDetector {
             appendRelocationEntry(sb, relocationList.get(i), i + 1);
         }
         if (totalCount > MAX_DISPLAYED_VIOLATIONS) {
-            sb.append(lineSeparator())
-                    .append(String.format("  ... %d violations total", totalCount));
+            sb.append(lineSeparator()).append(String.format("  ... %d violations total", totalCount));
         }
         return sb.toString();
     }

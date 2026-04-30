@@ -185,7 +185,7 @@ public final class SrcProcessor {
                     flowType,
                     aggregatedProcessingStatistic.getFileCount());
         } else if (!stopTriggerPaths.isEmpty()) {
-            log.info(
+            log.warn(
                     "{} stopped early. Processed {} file(s), {} non-conforming.{}",
                     flowType,
                     aggregatedProcessingStatistic.getFileCount(),

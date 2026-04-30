@@ -125,7 +125,8 @@ class RelocationDetectorTest {
                 new MemberRelocation(firstMethod, null, null, 6));
 
         // When
-        String printedRelocations = RelocationDetector.printRelocations(Path.of("Sample.java"), relocationsExceedingLimit);
+        String printedRelocations =
+                RelocationDetector.printRelocations(Path.of("Sample.java"), relocationsExceedingLimit);
 
         // Then
         assertThat(printedRelocations).contains("  [5]");
