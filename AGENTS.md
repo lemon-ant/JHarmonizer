@@ -12,6 +12,27 @@ This file defines repository-wide conventions for coding agents working in this 
 
 - Applies to the whole repository unless a more specific convention document says otherwise.
 
+## Known upstream issues
+
+### Spoon: `CtTypeMember` broken `equals` / `hashCode` contract
+
+- **Status**: needs a bug report filed on the Spoon issue tracker (https://github.com/INRIA/spoon/issues).
+- **Symptom**: Two distinct `CtTypeMember` objects that live in *different* positions in the type hierarchy
+  (e.g., `void alpha()` in the outer class and `void alpha()` in a nested class) report the same
+  `hashCode()` and are considered equal by `equals()` (`CtElementImpl` delegates to `EqualsVisitor`,
+  which performs a purely structural comparison without considering the owning type or source position).
+  As a result, any `HashMap<CtTypeMember, …>` keyed on such members silently overwrites the earlier
+  entry with the later one, producing wrong index lookups.
+- **Current workaround**: wherever `RelocationDetector` (or any similar utility) needs to map
+  `CtTypeMember` instances to positions or data, use `IdentityHashMap` instead of `HashMap`/`LinkedHashMap`.
+  Identity-based maps bypass `equals`/`hashCode` entirely and compare keys by object reference (`==`),
+  which is the correct semantics for live Spoon AST nodes.
+- **Why this matters**: the bug caused `RelocationDetector.findRelocations` to return false-positive
+  relocations for files containing nested types with same-named members, breaking the idempotency /
+  determinism check in `AbstractSrcProcessorScenarioE2ETest.assertFileProcessingIsDeterministic`.
+- **Action item**: file an upstream Spoon issue describing the contract violation so it can be fixed in
+  a future Spoon release. When fixed, the `IdentityHashMap` workaround and this note can be removed.
+
 ## Convention maintenance
 
 - During every task, look for stable conventions that become clear from review feedback or repeated user guidance.
