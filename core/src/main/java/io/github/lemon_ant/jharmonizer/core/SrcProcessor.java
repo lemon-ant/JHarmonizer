@@ -38,7 +38,7 @@ import org.jspecify.annotations.Nullable;
  */
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@SuppressWarnings("PMD.GuardLogStatement")
+@SuppressWarnings({"PMD.GuardLogStatement", "PMD.ExcessiveImports"})
 public final class SrcProcessor {
 
     private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
