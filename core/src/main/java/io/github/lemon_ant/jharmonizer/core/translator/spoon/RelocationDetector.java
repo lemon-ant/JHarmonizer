@@ -26,8 +26,6 @@ import spoon.reflect.declaration.CtTypeMember;
  * @deprecated This is a primitive utility to satisfy the basic needs of the Fail Fast processing. More verbose detector needed.
  */
 @UtilityClass
-@Deprecated
-// TODO Combine with ElementsFlatOrderIndexer
 public class RelocationDetector {
 
     /**
