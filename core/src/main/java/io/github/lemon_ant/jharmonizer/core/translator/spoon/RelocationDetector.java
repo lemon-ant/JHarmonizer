@@ -81,7 +81,6 @@ public class RelocationDetector {
     // Identity comparison (!=) is intentional: after sorting the Spoon model the elements are
     // the same Java object references, just at different positions. We want reference equality
     // to detect positional changes, not structural equality.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
