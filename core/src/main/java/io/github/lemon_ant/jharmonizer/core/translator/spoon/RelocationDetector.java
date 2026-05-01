@@ -7,7 +7,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncre
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -112,12 +112,7 @@ public class RelocationDetector {
             Map<CtTypeMember, Integer> originalIndex,
             List<MemberRelocation> relocations) {
         int[] origIdx = computeOriginalIndices(scopeMembers, originalIndex);
-        System.err.println("DEBUG scope: "
-                + scopeMembers.stream()
-                        .map(m -> m.getSimpleName() + "[" + origIdx[scopeMembers.indexOf(m)] + "]")
-                        .toList());
         boolean[] inLis = computeLisMask(origIdx);
-        System.err.println("DEBUG  inLis: " + java.util.Arrays.toString(inLis));
         emitMovedChunks(scopeMembers, origIdx, inLis, relocations);
     }
 
@@ -228,13 +223,19 @@ public class RelocationDetector {
      * Builds a map from each tracked member to its index in the flat original member-order snapshot.
      * Members with invalid positions are skipped.
      *
+     * <p>Uses {@link IdentityHashMap} so that two distinct {@code CtTypeMember} objects with
+     * structurally identical content (e.g. {@code void alpha()} in an outer class and the same
+     * signature in a nested type) are never confused with each other. Spoon's
+     * {@code CtElementImpl.equals} performs a structural comparison via {@code EqualsVisitor},
+     * so a plain {@code HashMap} would overwrite the outer member's index with the nested
+     * member's index whenever their structure happens to match.
+     *
      * @param memberOrder the flat member order snapshot
-     * @return map from type member to original-order index
+     * @return identity-keyed map from type member to original-order index
      */
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
     private static Map<CtTypeMember, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
-        Map<CtTypeMember, Integer> result = new HashMap<>();
+        Map<CtTypeMember, Integer> result = new IdentityHashMap<>();
         for (int i = 0; i < memberOrder.size(); i++) {
             CtTypeMember member = memberOrder.get(i);
             if (member.getPosition().isValidPosition()) {
