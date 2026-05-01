@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtCompilationUnit;
@@ -95,14 +95,17 @@ public class RelocationDetector {
     // Identity comparison (!=) is intentional: after sorting the Spoon model the elements are
     // the same Java object references, just at different positions. We want reference equality
     // to detect positional changes, not structural equality.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        List<CtTypeMember> sortedMemberOrder = snapshotOriginalMemberOrder(reorderedCompilationUnit);
-        return originalMemberOrder.size() != sortedMemberOrder.size()
-                || IntStream.range(0, originalMemberOrder.size())
-                        .anyMatch(index -> originalMemberOrder.get(index) != sortedMemberOrder.get(index));
+        AtomicInteger index = new AtomicInteger(0);
+        boolean mismatchFound = SpoonTypeUtils.streamDeclaredHierarchy(reorderedCompilationUnit)
+                .anyMatch(member -> {
+                    int currentIndex = index.getAndIncrement();
+                    return currentIndex >= originalMemberOrder.size()
+                            || originalMemberOrder.get(currentIndex) != member;
+                });
+        return mismatchFound || index.get() != originalMemberOrder.size();
     }
 
     /**
