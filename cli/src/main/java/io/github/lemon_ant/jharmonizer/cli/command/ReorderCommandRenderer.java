@@ -60,7 +60,7 @@ class ReorderCommandRenderer {
     @NonNull
     private static String quoteArg(String value) {
         return "\""
-                + value.replace("\\", "\\\\")
+                + value.replace("\\", "/")
                         .replace("\"", "\\\"")
                         .replace("$", "\\$")
                         .replace("`", "\\`")
