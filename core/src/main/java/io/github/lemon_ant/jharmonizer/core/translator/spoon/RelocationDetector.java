@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
@@ -14,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -80,6 +81,7 @@ public class RelocationDetector {
     // Identity comparison (!=) is intentional: after sorting the Spoon model the elements are
     // the same Java object references, just at different positions. We want reference equality
     // to detect positional changes, not structural equality.
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
@@ -177,9 +179,7 @@ public class RelocationDetector {
             List<MemberRelocation> relocations) {
         CtTypeMember predecessor = chunkStart > 0 ? scopeMembers.get(chunkStart - 1) : null;
         CtTypeMember successor = chunkEndExclusive < scopeMembers.size() ? scopeMembers.get(chunkEndExclusive) : null;
-        List<CtElement> chunk = scopeMembers.subList(chunkStart, chunkEndExclusive).stream()
-                .map(CtElement.class::cast)
-                .toList();
+        List<CtTypeMember> chunk = List.copyOf(scopeMembers.subList(chunkStart, chunkEndExclusive));
         relocations.add(new MemberRelocation(chunk, predecessor, successor));
     }
 

@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
-import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Captures a member-ordering violation detected during a check flow.
@@ -30,19 +30,19 @@ public class MemberRelocation {
      * source order, they are reported as a single chunk rather than individual violations.
      */
     @NonNull
-    List<CtElement> relocatedMembers;
+    List<CtTypeMember> relocatedMembers;
 
     /**
-     * The element that immediately precedes the relocated group in the correct sorted order,
+     * The type member that immediately precedes the relocated group in the correct sorted order,
      * or {@code null} if the group should be first.
      */
     @Nullable
-    CtElement sortedPredecessor;
+    CtTypeMember sortedPredecessor;
 
     /**
-     * The element that immediately follows the relocated group in the correct sorted order,
+     * The type member that immediately follows the relocated group in the correct sorted order,
      * or {@code null} if the group should be last.
      */
     @Nullable
-    CtElement sortedSuccessor;
+    CtTypeMember sortedSuccessor;
 }

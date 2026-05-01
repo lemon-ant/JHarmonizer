@@ -15,9 +15,9 @@ import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
 
 class MemberRelocationPrinterTest {
 
@@ -43,8 +43,8 @@ class MemberRelocationPrinterTest {
         SrcFile srcFile = createSrcFile("class Alpha {}\nclass Beta {}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        List<CtElement> topLevelTypes = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
-                .map(CtElement.class::cast)
+        List<CtTypeMember> topLevelTypes = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+                .map(CtTypeMember.class::cast)
                 .toList();
         List<MemberRelocation> relocations =
                 List.of(new MemberRelocation(List.of(topLevelTypes.get(0)), null, topLevelTypes.get(1)));
@@ -83,11 +83,11 @@ class MemberRelocationPrinterTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+        List<CtTypeMember> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
-                .map(CtElement.class::cast)
+                .map(CtTypeMember.class::cast)
                 .toList();
-        CtElement firstMethod = methods.get(0);
+        CtTypeMember firstMethod = methods.get(0);
         List<MemberRelocation> relocationsExceedingLimit = List.of(
                 new MemberRelocation(List.of(firstMethod), null, null),
                 new MemberRelocation(List.of(firstMethod), null, null),
@@ -149,10 +149,10 @@ class MemberRelocationPrinterTest {
 
     @NonNull
     private static List<MemberRelocation> buildMethodRelocationsWithFakeNeighbors(SpoonAstModel spoonAstModel) {
-        List<CtElement> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+        List<CtTypeMember> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
                 .sorted(Comparator.comparing(CtMethod::getSimpleName))
-                .map(CtElement.class::cast)
+                .map(CtTypeMember.class::cast)
                 .toList();
         if (methods.size() < 2) {
             return methods.stream()

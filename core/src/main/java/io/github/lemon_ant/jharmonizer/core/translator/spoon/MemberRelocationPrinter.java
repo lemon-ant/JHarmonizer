@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
@@ -73,9 +72,9 @@ public class MemberRelocationPrinter {
     }
 
     private static void appendRelocationEntry(StringBuilder sb, MemberRelocation relocation, int index) {
-        CtElement firstMember = relocation.getRelocatedMembers().get(0);
-        String typeName = firstMember instanceof CtTypeMember member && member.getDeclaringType() != null
-                ? member.getDeclaringType().getQualifiedName()
+        CtTypeMember firstMember = relocation.getRelocatedMembers().get(0);
+        String typeName = firstMember.getDeclaringType() != null
+                ? firstMember.getDeclaringType().getQualifiedName()
                 : "<file root>";
         sb.append(String.format("  [%d] %s:", index, typeName));
         if (relocation.getSortedPredecessor() != null) {
@@ -89,9 +88,9 @@ public class MemberRelocationPrinter {
         }
     }
 
-    private static void appendChunkLines(StringBuilder sb, List<CtElement> members) {
+    private static void appendChunkLines(StringBuilder sb, List<CtTypeMember> members) {
         if (members.size() <= MAX_DISPLAYED_CHUNK_MEMBERS) {
-            for (CtElement member : members) {
+            for (CtTypeMember member : members) {
                 sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member)));
             }
         } else {
