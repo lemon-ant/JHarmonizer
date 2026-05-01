@@ -137,7 +137,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         SrcProcessingResult srcProcessingResult =
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
 
-        if (!srcProcessingResult.isSuccess()) {
+        if (!srcProcessingResult.isSuccess() && isCheckFlow(getFlowType())) {
             getLog().warn("To automatically fix these violations, run: mvn jharmonizer:reorder");
             if (failOnViolation) {
                 long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
@@ -153,6 +153,10 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     @NonNull
     private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
         return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
+    }
+
+    private static boolean isCheckFlow(FlowType flowType) {
+        return flowType == FlowType.CHECK_ALL || flowType == FlowType.CHECK_FAIL_FAST;
     }
 
     @NonNull
