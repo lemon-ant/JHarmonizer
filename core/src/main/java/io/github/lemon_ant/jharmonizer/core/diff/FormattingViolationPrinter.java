@@ -18,7 +18,7 @@ import lombok.experimental.UtilityClass;
  *
  * <p>Example output:
  * <pre>
- * Formatting violations in:
+ * Detected formatting violations in:
  *   Sample.java
  * {@literal @}@ -1,1 +1,3 @@
  * -|class·CFormatted{int·a;}¶
@@ -44,7 +44,7 @@ public class FormattingViolationPrinter {
      */
     @NonNull
     public static String printFormattingViolation(@NonNull Path path, @NonNull String diff) {
-        return "Formatting violations in:"
+        return "Detected formatting violations in:"
                 + lineSeparator()
                 + "  "
                 + abbreviatePathForDisplay(path, MAX_PATH_DISPLAY_LENGTH)

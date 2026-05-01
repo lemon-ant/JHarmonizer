@@ -467,7 +467,7 @@ class SrcProcessorTest {
         String logs = collectLogMessages(listAppender);
 
         // Then
-        assertThat(logs).contains("Formatting violations in:").contains("FormattedOnly.java");
+        assertThat(logs).contains("Detected formatting violations in:").contains("FormattedOnly.java");
         assertThat(listAppender.list)
                 .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
     }
