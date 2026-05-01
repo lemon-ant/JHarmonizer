@@ -85,7 +85,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
 
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(null)
+                .memberRelocations(null)
                 .diff(null)
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(
@@ -95,7 +95,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .fileProcessingStatus(defineFileProcessingStatus(
                         !sortingAndSerializationResult.isSortingSkipped()
                                 && isRelocated(
-                                        sortedSpoonAstModel.getOriginalElements2OrderIndices(),
+                                        sortedSpoonAstModel.getOriginalMemberOrder(),
                                         sortedSpoonAstModel.getCompilationUnit()),
                         hasChanges,
                         false))
@@ -115,7 +115,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
         }
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(null)
+                .memberRelocations(null)
                 .diff(null)
                 .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
                 .sortingStatistic(new SortingStatistic(0))

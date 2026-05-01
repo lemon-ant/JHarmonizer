@@ -1,178 +1,243 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
-import static java.lang.System.lineSeparator;
-import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils.UNTRACKED;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils.computeLisMask;
 
-import java.nio.file.Path;
-import java.util.Collection;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.tuple.Pair;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Utility class to detect relocations of type members in a reordered Spoon compilation unit.
  * This class identifies declared elements whose encounter order changed relative to the
  * original source snapshot captured before sorting.
- *
- * @deprecated This is a primitive utility to satisfy the basic needs of the Fail Fast processing. More verbose detector needed.
  */
 @UtilityClass
-@Deprecated
-// TODO Combine with ElementsFlatOrderIndexer
 public class RelocationDetector {
 
     /**
-     * Computes relocations of declared elements by comparing their current encounter order
-     * against the previously captured original order indices.
+     * Computes the minimal set of member relocations needed to transform the original source
+     * order into the sorted order of {@code reorderedCompilationUnit}.
      *
      * <p>Semantics:
      * <ul>
-     *   <li>Traverses the current Spoon model using {@code streamDeclaredHierarchy(...)} —
-     *       i.e., top-level types, nested types, and all declarative members in encounter order.</li>
-     *   <li>For each encountered element, looks up its original sequential index from
-     *       {@code originalOrderIndices} and computes
-     *       {@code offset = currentIndex - originalIndex}.</li>
-     *   <li>Elements not present in the original snapshot (newly added) are ignored.</li>
-     *   <li>Only non-zero offsets are reported (unchanged elements are skipped).</li>
-     *   <li>Runs in a single pass; no intermediate "current index" map is created.</li>
+     *   <li>For each scope (file root, type body), the algorithm computes a Longest Increasing
+     *       Subsequence (LIS) over the original-source indices of the sorted scope members.
+     *       Members that participate in the LIS are considered <em>stable</em>; the remaining
+     *       members are the minimal set that must be relocated to recover the sorted order from
+     *       the original source.</li>
+     *   <li>Consecutive moved members in the sorted order are glued into a single
+     *       {@link MemberRelocation} chunk, so a developer reading the report sees exactly one
+     *       insertion instruction per contiguous run.</li>
+     *   <li>For each chunk, the predecessor and successor come from the sorted order at the
+     *       chunk boundaries; either is {@code null} when the chunk sits at the start or end of
+     *       its scope.</li>
+     *   <li>Members with invalid source positions, or members not present in
+     *       {@code originalMemberOrder}, are treated as stable and never reported as moved.</li>
      * </ul>
      *
-     * <p>Notes:
-     * <ul>
-     *   <li>Positive offset means the element moved down (appears later) relative to the original order;
-     *       negative offset means it moved up (appears earlier).</li>
-     *   <li>If elements were replaced with new instances, ensure the original index snapshot
-     *       used the same {@code CtElement} identities, or switch to a stable ID mapping.</li>
-     * </ul>
-     *
-     * @param originalOrderIndices original encounter indices keyed by source position
+     * @param originalMemberOrder flat list of all type members in their original source order,
+     *                            as produced by {@link #snapshotOriginalMemberOrder}
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return list of pairs {@code (element, offset)} for all moved elements (offset ≠ 0), in current encounter order
+     * @return list of relocations for all detected chunks, in current encounter order
      */
     @NonNull
-    public static List<Pair<CtElement, Integer>> findRelocations(
-            /*TODO Create a dedicated type*/ @NonNull Map<SourcePosition, Integer> originalOrderIndices,
-            @NonNull CtCompilationUnit reorderedCompilationUnit) {
+    public static List<MemberRelocation> findRelocations(
+            @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        AtomicInteger runningIndex = new AtomicInteger(0);
-
-        return streamDeclaredHierarchy(reorderedCompilationUnit)
-                // compute offset on the fly using the running encounter index
-                .map(element -> {
-                    int current = runningIndex.getAndIncrement();
-                    return Optional.ofNullable(originalOrderIndices.get(element.getPosition()))
-                            .map(orig -> current - orig)
-                            .filter(offset -> offset != 0)
-                            .map(offset -> Pair.of(element, offset));
-                })
-                .flatMap(Optional::stream)
-                .toList();
+        Map<CtTypeMember, Integer> originalIndex = buildOriginalIndexMap(originalMemberOrder);
+        List<MemberRelocation> relocations = new ArrayList<>();
+        List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
+        collectScopeRelocations(rootTypes, originalIndex, relocations);
+        rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalIndex, relocations));
+        return Collections.unmodifiableList(relocations);
     }
 
     /**
-     * Returns whether is relocated.
-     * @param originalOrderIndices the original order indices by source position
+     * Returns whether any declared element has moved within its scope.
+     *
+     * <p>Compares the pre-sort {@code originalMemberOrder} snapshot with the flat member order
+     * of {@code reorderedCompilationUnit} element by element. Any positional mismatch indicates
+     * that at least one member was relocated.
+     *
+     * @param originalMemberOrder flat list of all type members in their original source order,
+     *                            as produced by {@link #snapshotOriginalMemberOrder}
      * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return {@code true} if is relocated; otherwise {@code false}
+     * @return {@code true} if any element is at a different position in the sorted order;
+     *         otherwise {@code false}
      */
     public static boolean isRelocated(
-            @NonNull Map<SourcePosition, Integer> originalOrderIndices,
-            @NonNull CtCompilationUnit reorderedCompilationUnit) {
+            @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
-        AtomicInteger runningIndex = new AtomicInteger(0);
-
-        return streamDeclaredHierarchy(reorderedCompilationUnit)
-                .filter(element -> element.getPosition().isValidPosition())
-                // compute offset on the fly using the running encounter index
-                .mapToInt(element -> {
-                    int current = runningIndex.getAndIncrement();
-                    return Optional.ofNullable(originalOrderIndices.get(element.getPosition()))
-                            .map(orig -> current - orig)
-                            .orElse(0);
-                })
-                .anyMatch(offs -> offs > 0);
+        AtomicInteger index = new AtomicInteger(0);
+        boolean mismatchFound = SpoonTypeUtils.streamDeclaredHierarchy(reorderedCompilationUnit)
+                .anyMatch(member -> {
+                    int currentIndex = index.getAndIncrement();
+                    return currentIndex >= originalMemberOrder.size()
+                            || originalMemberOrder.get(currentIndex) != member;
+                });
+        return mismatchFound || index.get() != originalMemberOrder.size();
     }
 
     /**
-     * Formats the relocations into a human-readable string.
+     * Computes the minimal moved set for {@code scopeMembers} via Longest Increasing Subsequence
+     * over their original-source indices, then groups consecutive moved members in the sorted
+     * order into a single {@link MemberRelocation} chunk.
      *
-     * @param path        the path of the file where the relocations were detected
-     * @param relocations the collection of relocations to format
-     * @return a formatted string representing the relocations
+     * <p>This produces the smallest possible number of "insert this group between X and Y"
+     * instructions a developer needs to apply to recover the sorted order from the original.
+     *
+     * @param scopeMembers   the ordered members of one scope (file root or a type body)
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
+     * @param relocations    accumulator for detected relocations
      */
-    @NonNull
-    public static String printRelocations(
-            @NonNull Path path, @NonNull Collection<Pair<CtElement, Integer>> relocations) {
-        return String.format(
-                "Scanning finished with a sorting failure on file: %s%n%s",
-                path.getFileName(),
-                relocations.stream()
-                        .map(relocation -> {
-                            // TODO: Implement more human friendly output for relocations printout
-                            CtElement member = relocation.getLeft();
-                            return String.format(
-                                    "%s expected to relocate %s by %d",
-                                    computeParentSimpleName(member),
-                                    relocation.getRight() < 0 ? "UP" : "DOWN",
-                                    relocation.getRight());
-                        })
-                        .collect(joining(lineSeparator())));
+    private static void collectScopeRelocations(
+            List<? extends CtTypeMember> scopeMembers,
+            Map<CtTypeMember, Integer> originalIndex,
+            List<MemberRelocation> relocations) {
+        int[] origIdx = computeOriginalIndices(scopeMembers, originalIndex);
+        boolean[] inLis = computeLisMask(origIdx);
+        emitMovedChunks(scopeMembers, origIdx, inLis, relocations);
     }
 
     /**
-     * Recursively constructs the deep parent simple name of a type element.
-     * This method traverses up the hierarchy of declaring types to build a fully qualified name.
+     * Builds an array of original-order indices for the given scope members.
+     * Untracked positions (invalid source position or not present in the snapshot) are
+     * represented by {@link #UNTRACKED}.
      *
-     * @param element the type element whose deep parent simple name is to be constructed
-     * @return the deep parent simple name of the type element
+     * @param scopeMembers   the ordered members of one scope
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
+     * @return original-order index per scope position, or {@link #UNTRACKED} when not mapped
      */
     @NonNull
-    private static String computeParentSimpleName(CtElement element) {
-        if (element instanceof CtTypeMember member) {
-            var nonBlankName = isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
-            if (member instanceof CtConstructor<?> constructor) {
-                return constructor.getSignature();
+    private static int[] computeOriginalIndices(
+            List<? extends CtTypeMember> scopeMembers, Map<CtTypeMember, Integer> originalIndex) {
+        int[] origIdx = new int[scopeMembers.size()];
+        Arrays.fill(origIdx, UNTRACKED);
+        for (int i = 0; i < scopeMembers.size(); i++) {
+            Integer idx = originalIndex.get(scopeMembers.get(i));
+            if (idx != null) {
+                origIdx[i] = idx;
             }
-            if (member instanceof CtMethod<?> method) {
-                nonBlankName = method.getSignature();
-            }
-            if (member.getDeclaringType() == null) {
-                return nonBlankName;
-            }
-            return member.getDeclaringType().getQualifiedName() + "$" + nonBlankName;
         }
-        return "<nameless>";
+        return origIdx;
     }
 
-    // TODO Create a dedicated type instead of Map
     /**
-     * Indexes the elements by order.
-     * @param compilationUnit the compilation unit to inspect
-     * @return the index of elements by order
+     * Walks {@code origIdx} grouping consecutive tracked positions whose entry is not in the LIS
+     * into one chunk per run, and emits a {@link MemberRelocation} for each chunk.
+     *
+     * @param scopeMembers  the ordered members of one scope
+     * @param origIdx       original-order indices per scope position; {@link #UNTRACKED} for skip
+     * @param inLis         mask marking scope positions that participate in the chosen LIS
+     * @param relocations   accumulator for detected relocations
+     */
+    private static void emitMovedChunks(
+            List<? extends CtTypeMember> scopeMembers,
+            int[] origIdx,
+            boolean[] inLis,
+            List<MemberRelocation> relocations) {
+        int n = origIdx.length;
+        int i = 0;
+        while (i < n) {
+            if (!isMoved(origIdx, inLis, i)) {
+                i++;
+                continue;
+            }
+            int chunkStart = i;
+            do {
+                i++;
+            } while (i < n && isMoved(origIdx, inLis, i));
+            addMovedChunk(scopeMembers, chunkStart, i, relocations);
+        }
+    }
+
+    private static boolean isMoved(int[] origIdx, boolean[] inLis, int position) {
+        return origIdx[position] != UNTRACKED && !inLis[position];
+    }
+
+    private static void addMovedChunk(
+            List<? extends CtTypeMember> scopeMembers,
+            int chunkStart,
+            int chunkEndExclusive,
+            List<MemberRelocation> relocations) {
+        CtTypeMember predecessor = chunkStart > 0 ? scopeMembers.get(chunkStart - 1) : null;
+        CtTypeMember successor = chunkEndExclusive < scopeMembers.size() ? scopeMembers.get(chunkEndExclusive) : null;
+        List<CtTypeMember> chunk = List.copyOf(scopeMembers.subList(chunkStart, chunkEndExclusive));
+        relocations.add(new MemberRelocation(chunk, predecessor, successor));
+    }
+
+    /**
+     * Checks the direct members of {@code type} for relocations, then recurses into nested types.
+     *
+     * @param type           the type whose member scope to check
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
+     * @param relocations    accumulator for detected relocations
+     */
+    private static void collectTypeMemberRelocations(
+            CtType<?> type, Map<CtTypeMember, Integer> originalIndex, List<MemberRelocation> relocations) {
+        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
+        collectScopeRelocations(members, originalIndex, relocations);
+        members.stream()
+                .filter(typeMember -> typeMember instanceof CtType<?>)
+                .map(typeMember -> (CtType<?>) typeMember)
+                .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalIndex, relocations));
+    }
+
+    /**
+     * Builds a flat snapshot of all type members declared in the compilation unit,
+     * in source-code order (DFS: each type node followed by its own members recursively).
+     *
+     * <p>The returned list contains both the root type declarations and all their nested
+     * members, interleaved in the order they appear in source code. The position of each
+     * element in this list reflects its order in the original code. This snapshot can be
+     * compared against the member order after sorting to detect relocations.
+     *
+     * @param compilationUnit the compilation unit to snapshot
+     * @return immutable flat list of all type members in their original source order
      */
     @NonNull
-    static Map<SourcePosition, Integer> indexElementsByOrder(@NonNull CtCompilationUnit compilationUnit) {
-        AtomicInteger runningIndex = new AtomicInteger(0);
-        return streamDeclaredHierarchy(compilationUnit)
-                .map(CtElement::getPosition)
-                .filter(SourcePosition::isValidPosition)
-                .collect(Collectors.toMap(
-                        Function.identity(), // key: the source position
-                        position -> runningIndex.getAndIncrement() // value: the element's sequential index
-                        ));
+    static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
+        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit).toList();
+    }
+
+    /**
+     * Builds a map from each tracked member to its index in the flat original member-order snapshot.
+     * Members with invalid positions are skipped.
+     *
+     * <p>Uses {@link IdentityHashMap} so that two distinct {@code CtTypeMember} objects with
+     * structurally identical content (e.g. {@code void alpha()} in an outer class and the same
+     * signature in a nested type) are never confused with each other. Spoon's
+     * {@code CtElementImpl.equals} performs a structural comparison via {@code EqualsVisitor},
+     * so a plain {@code HashMap} would overwrite the outer member's index with the nested
+     * member's index whenever their structure happens to match.
+     *
+     * @param memberOrder the flat member order snapshot
+     * @return identity-keyed map from type member to original-order index
+     */
+    @NonNull
+    private static Map<CtTypeMember, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<CtTypeMember, Integer> result = new IdentityHashMap<>();
+        for (int i = 0; i < memberOrder.size(); i++) {
+            CtTypeMember member = memberOrder.get(i);
+            if (member.getPosition().isValidPosition()) {
+                result.put(member, i);
+            }
+        }
+        return result;
     }
 }

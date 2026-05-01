@@ -126,7 +126,7 @@ abstract class AbstractOptOutFlow implements IFlow {
             log.debug("Stack trace for processing error in file {}", srcFile.getPath(), exception);
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
-                    .relocations(List.of())
+                    .memberRelocations(List.of())
                     .diff("")
                     .parsingStatistic(new ParsingStatistic(
                             srcFile.getSrcCode().length(),

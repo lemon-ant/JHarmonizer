@@ -20,14 +20,13 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import lombok.NonNull;
-import org.apache.commons.lang3.tuple.Pair;
-import spoon.reflect.declaration.CtElement;
 
 /**
  * Flow that signals pipeline stop when the first ordering or formatting violation is detected.
@@ -111,22 +110,20 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
-        List<Pair<CtElement, Integer>> elementRelocations = sortingAndSerializationResult.isSortingSkipped()
-                ? List.of()
-                : findRelocations(
-                        sortedSpoonAstModel.getOriginalElements2OrderIndices(),
-                        sortedSpoonAstModel.getCompilationUnit());
-
         getDebugStageRecorder()
                 .recordSrcStage(
                         srcFile.getPath(),
                         FlowDebugStageRecorder.SrcFlowStage.SORTED,
                         sortingAndSerializationResult.getSerializedSrcCode());
 
-        if (!elementRelocations.isEmpty()) {
+        List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
+                ? List.of()
+                : findRelocations(
+                        sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
+        if (!memberRelocations.isEmpty()) {
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
-                    .relocations(elementRelocations)
+                    .memberRelocations(memberRelocations)
                     .diff("")
                     .parsingStatistic(parsingResult.getParsingStatistic())
                     .sortingStatistic(
@@ -155,7 +152,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
             String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
-                    .relocations(List.of())
+                    .memberRelocations(List.of())
                     .diff(srcDiff)
                     .parsingStatistic(parsingResult.getParsingStatistic())
                     .sortingStatistic(
@@ -169,7 +166,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
 
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(null)
+                .memberRelocations(null)
                 .diff("")
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(
@@ -190,7 +187,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 hasFormattingChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(List.of())
+                .memberRelocations(List.of())
                 .diff(srcDiff)
                 .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
                 .sortingStatistic(new SortingStatistic(0))

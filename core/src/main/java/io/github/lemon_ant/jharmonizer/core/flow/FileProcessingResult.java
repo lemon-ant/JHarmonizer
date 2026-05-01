@@ -1,9 +1,12 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import java.nio.file.Path;
 import java.util.Collection;
 import lombok.AccessLevel;
@@ -11,9 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jspecify.annotations.Nullable;
-import spoon.reflect.declaration.CtElement;
 
 /**
  * Aggregated result of processing one source file through a flow.
@@ -46,7 +47,7 @@ public class FileProcessingResult {
 
     // TODO Make it non null
     @Nullable
-    Collection<Pair<CtElement, Integer>> relocations;
+    Collection<MemberRelocation> memberRelocations;
 
     @NonNull
     SerializationStatistic serializationStatistic;

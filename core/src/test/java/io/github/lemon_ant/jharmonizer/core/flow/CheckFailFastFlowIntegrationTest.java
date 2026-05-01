@@ -38,7 +38,7 @@ class CheckFailFastFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.isStopRequested()).isTrue();
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
-        assertThat(fileProcessingResult.getRelocations()).isNotEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
     }
 
     @Test

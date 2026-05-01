@@ -7,7 +7,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
@@ -15,9 +15,9 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
 
 @Value
 // TODO Remove builder
@@ -36,7 +36,7 @@ public class SpoonAstModel {
     CtType<?> mainType;
 
     @NonNull
-    Map<SourcePosition, Integer> originalElements2OrderIndices;
+    List<CtTypeMember> originalMemberOrder;
 
     @NonNull
     Path path;

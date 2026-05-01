@@ -65,6 +65,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
 - Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term (for example `URL`, `URI`, `ID`) or an established repository abbreviation such as the `src*` naming family.
+- Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
 - Every non-private production method and constructor must have concise JavaDoc that states the purpose, documents parameters, and documents the return value when applicable.
   - Exception: do not add JavaDoc to standard `Object` overrides such as `equals`, `hashCode`, and `toString`.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull` or `org.jspecify.annotations.Nullable`.

@@ -52,7 +52,7 @@ class FlowResultUtils {
         logFileOptOutSkip(srcFile, skippedOperationDescription, JHarmonizerOptOutMode.FULLY_OFF);
         return FileProcessingResult.builder()
                 .path(srcFile.getPath())
-                .relocations(null)
+                .memberRelocations(null)
                 .diff(null)
                 .parsingStatistic(parsingResult.getParsingStatistic())
                 .sortingStatistic(new SortingStatistic(0))
