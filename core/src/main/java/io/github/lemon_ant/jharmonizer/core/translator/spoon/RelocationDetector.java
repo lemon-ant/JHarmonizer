@@ -233,6 +233,7 @@ public class RelocationDetector {
      */
     @NonNull
     private static Map<CtTypeMember, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
         Map<CtTypeMember, Integer> result = new IdentityHashMap<>();
         for (int i = 0; i < memberOrder.size(); i++) {
             CtTypeMember member = memberOrder.get(i);
