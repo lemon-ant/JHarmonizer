@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Utility for computing and formatting a human-readable unified diff between two Java source strings.
@@ -146,7 +145,7 @@ public class DiffReporter {
 
     @NonNull
     private static String visualizeWhitespace(String line) {
-        if (StringUtils.isBlank(line)) {
+        if (line.isEmpty()) {
             return "¶";
         }
         return line.replace(" ", "·") // spaces
