@@ -1,0 +1,33 @@
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+context-before-1
+context-before-2
+context-before-3
+original-block-1
+original-block-2
+original-block-3
+original-block-4
+original-block-5
+original-block-6
+original-block-7
+original-block-8
+original-block-9
+original-block-10
+original-block-11
+original-block-12
+original-block-13
+original-block-14
+original-block-15
+original-block-16
+original-block-17
+original-block-18
+original-block-19
+original-block-20
+original-block-21
+original-block-22
+original-block-23
+original-block-24
+original-block-25
+context-after-1
+context-after-2
+context-after-3

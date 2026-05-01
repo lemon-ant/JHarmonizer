@@ -162,11 +162,11 @@ class CheckFailFastFlowIntegrationTest {
             @NonNull SrcFile srcFile,
             @NonNull SpoonModelBuildException modelBuildException)
             throws Exception {
-        Method method = CheckFailFastFlow.class.getDeclaredMethod(
-                "processSrcWithFormattingOnlyFallback", SrcFile.class, SpoonModelBuildException.class);
+        Method method = AbstractOptOutFlow.class.getDeclaredMethod(
+                "processSrcWithFormattingOnlyFallback", SrcFile.class, String.class);
         method.setAccessible(true);
         try {
-            return (FileProcessingResult) method.invoke(flow, srcFile, modelBuildException);
+            return (FileProcessingResult) method.invoke(flow, srcFile, modelBuildException.getMessage());
         } catch (InvocationTargetException exception) {
             if (exception.getCause() instanceof RuntimeException runtimeException) {
                 throw runtimeException;
