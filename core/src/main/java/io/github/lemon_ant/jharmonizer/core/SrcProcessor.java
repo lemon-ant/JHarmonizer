@@ -17,8 +17,8 @@ import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocationPrinter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -232,7 +232,7 @@ public final class SrcProcessor {
     private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
         if (fileProcessingResult.getMemberRelocations() != null
                 && !fileProcessingResult.getMemberRelocations().isEmpty()) {
-            log.warn(RelocationDetector.printRelocations(
+            log.warn(MemberRelocationPrinter.printRelocations(
                     fileProcessingResult.getPath(), fileProcessingResult.getMemberRelocations()));
         }
         String diff = fileProcessingResult.getDiff();
