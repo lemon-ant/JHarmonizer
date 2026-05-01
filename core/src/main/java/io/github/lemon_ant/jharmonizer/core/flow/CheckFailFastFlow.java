@@ -110,17 +110,16 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
+        getDebugStageRecorder()
+            .recordSrcStage(
+                srcFile.getPath(),
+                FlowDebugStageRecorder.SrcFlowStage.SORTED,
+                sortingAndSerializationResult.getSerializedSrcCode());
+
         List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
                 : findRelocations(
                         sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult.getSerializedSrcCode());
-
         if (!memberRelocations.isEmpty()) {
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
