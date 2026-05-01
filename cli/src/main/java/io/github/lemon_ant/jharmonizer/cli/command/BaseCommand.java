@@ -166,38 +166,22 @@ abstract class BaseCommand implements Callable<Integer> {
                         commandOptions.getIncludeGlobs(),
                         commandOptions.getExcludeGlobs(),
                         flowType);
-        if (!srcProcessingResult.isSuccess() && isCheckFlow(flowType)) {
-            log.info("To automatically fix these violations, run: {}", buildReorderCommand(commandOptions));
+        if (!srcProcessingResult.isSuccess()
+                && (flowType == FlowType.CHECK_ALL || flowType == FlowType.CHECK_FAIL_FAST)
+                && log.isInfoEnabled()) {
+            log.info(
+                    "To automatically fix these violations, run: {}",
+                    ReorderCommandRenderer.render(
+                            commandOptions.getBaseDir(),
+                            commandOptions.getIncludeGlobs(),
+                            commandOptions.getExcludeGlobs(),
+                            commandOptions.getConfigFilePath(),
+                            commandOptions.isNoBackup(),
+                            commandOptions.isNoStatistics()));
         }
         int exitCode = srcProcessingResult.isSuccess() ? 0 : checkFailedExitCode;
         log.info("Exit code: {}", exitCode);
         return exitCode;
-    }
-
-    private static boolean isCheckFlow(FlowType flowType) {
-        return flowType == FlowType.CHECK_ALL || flowType == FlowType.CHECK_FAIL_FAST;
-    }
-
-    @NonNull
-    private static String buildReorderCommand(CommandOptions commandOptions) {
-        StringBuilder command = new StringBuilder("jharmonizer reorder --base-dir ");
-        command.append(commandOptions.getBaseDir());
-        for (String includeGlob : commandOptions.getIncludeGlobs()) {
-            command.append(" --include ").append(includeGlob);
-        }
-        for (String excludeGlob : commandOptions.getExcludeGlobs()) {
-            command.append(" --exclude ").append(excludeGlob);
-        }
-        if (commandOptions.getConfigFilePath() != null) {
-            command.append(" --config ").append(commandOptions.getConfigFilePath());
-        }
-        if (commandOptions.isNoBackup()) {
-            command.append(" --no-backup");
-        }
-        if (commandOptions.isNoStatistics()) {
-            command.append(" --no-statistics");
-        }
-        return command.toString();
     }
 
     @Nullable
