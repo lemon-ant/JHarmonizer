@@ -138,7 +138,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
 
         if (!srcProcessingResult.isSuccess() && isCheckFlow(getFlowType())) {
-            getLog().warn("To automatically fix these violations, run: mvn jharmonizer:reorder");
+            getLog().warn("To automatically fix these violations, run:\nmvn jharmonizer:reorder");
             if (failOnViolation) {
                 long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
                 throw new MojoFailureException("JHarmonizer: "
