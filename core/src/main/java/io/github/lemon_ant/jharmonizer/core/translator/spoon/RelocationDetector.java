@@ -112,7 +112,12 @@ public class RelocationDetector {
             Map<CtTypeMember, Integer> originalIndex,
             List<MemberRelocation> relocations) {
         int[] origIdx = computeOriginalIndices(scopeMembers, originalIndex);
+        System.err.println("DEBUG scope: "
+                + scopeMembers.stream()
+                        .map(m -> m.getSimpleName() + "[" + origIdx[scopeMembers.indexOf(m)] + "]")
+                        .toList());
         boolean[] inLis = computeLisMask(origIdx);
+        System.err.println("DEBUG  inLis: " + java.util.Arrays.toString(inLis));
         emitMovedChunks(scopeMembers, origIdx, inLis, relocations);
     }
 
