@@ -145,10 +145,10 @@ class DiffReporterTest {
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
             long removedLineCount = java.util.Arrays.stream(diffLines)
-                    .filter(diffLine -> diffLine.startsWith("-") && !diffLine.startsWith("---"))
+                    .filter(diffLine -> diffLine.startsWith("-"))
                     .count();
             long addedLineCount = java.util.Arrays.stream(diffLines)
-                    .filter(diffLine -> diffLine.startsWith("+") && !diffLine.startsWith("+++"))
+                    .filter(diffLine -> diffLine.startsWith("+"))
                     .count();
             assertThat(removedLineCount).isLessThanOrEqualTo(20);
             assertThat(addedLineCount).isLessThanOrEqualTo(20);
