@@ -169,15 +169,14 @@ abstract class BaseCommand implements Callable<Integer> {
         if (!srcProcessingResult.isSuccess()
                 && (flowType == FlowType.CHECK_ALL || flowType == FlowType.CHECK_FAIL_FAST)
                 && log.isInfoEnabled()) {
-            log.info(
-                    "To automatically fix these violations, run: {}",
-                    ReorderCommandRenderer.render(
-                            commandOptions.getBaseDir(),
-                            commandOptions.getIncludeGlobs(),
-                            commandOptions.getExcludeGlobs(),
-                            commandOptions.getConfigFilePath(),
-                            commandOptions.isNoBackup(),
-                            commandOptions.isNoStatistics()));
+            log.info("To automatically fix these violations, run:");
+            log.info(ReorderCommandRenderer.render(
+                    commandOptions.getBaseDir(),
+                    commandOptions.getIncludeGlobs(),
+                    commandOptions.getExcludeGlobs(),
+                    commandOptions.getConfigFilePath(),
+                    commandOptions.isNoBackup(),
+                    commandOptions.isNoStatistics()));
         }
         int exitCode = srcProcessingResult.isSuccess() ? 0 : checkFailedExitCode;
         log.info("Exit code: {}", exitCode);
