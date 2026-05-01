@@ -7,9 +7,12 @@ import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -70,5 +73,25 @@ class CheckAllCommandTest {
 
         // Then
         assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void checkCommand_nonConformingFiles_logsReorderFixHint() throws Exception {
+        // Given
+        List<ILoggingEvent> capturedLogs = new ArrayList<>();
+
+        // When
+        try (AutoCloseable logCapture = CommandTestUtils.captureBaseCommandLogEvents(capturedLogs);
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenReturn(CommandTestUtils.buildFailedResult());
+                })) {
+            commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(capturedLogs)
+                .extracting(ILoggingEvent::getFormattedMessage)
+                .anyMatch(message -> message.contains("jharmonizer reorder"));
     }
 }

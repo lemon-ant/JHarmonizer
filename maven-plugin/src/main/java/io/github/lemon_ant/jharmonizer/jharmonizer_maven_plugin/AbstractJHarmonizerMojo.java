@@ -137,13 +137,16 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         SrcProcessingResult srcProcessingResult =
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
 
-        if (!srcProcessingResult.isSuccess() && failOnViolation) {
-            long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
-            throw new MojoFailureException("JHarmonizer: "
-                    + nonConformingCount
-                    + " source file(s) do not conform to the configured ordering."
-                    + " To suppress this failure, set -Djharmonizer.failOnViolation=false"
-                    + " or configure <failOnViolation>false</failOnViolation> in the plugin configuration.");
+        if (!srcProcessingResult.isSuccess()) {
+            getLog().warn("To automatically fix these violations, run: mvn jharmonizer:reorder");
+            if (failOnViolation) {
+                long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
+                throw new MojoFailureException("JHarmonizer: "
+                        + nonConformingCount
+                        + " source file(s) do not conform to the configured ordering."
+                        + " To suppress this failure, set -Djharmonizer.failOnViolation=false"
+                        + " or configure <failOnViolation>false</failOnViolation> in the plugin configuration.");
+            }
         }
     }
 
