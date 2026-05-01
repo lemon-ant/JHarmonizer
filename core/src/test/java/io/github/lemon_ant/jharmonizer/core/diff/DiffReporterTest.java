@@ -42,14 +42,15 @@ class DiffReporterTest {
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
-            String[] lines = result.split(System.lineSeparator(), -1);
-            assertThat(lines).anySatisfy(line -> assertThat(line).startsWith("--- a/" + FILE_PATH));
-            assertThat(lines).anySatisfy(line -> assertThat(line).startsWith("+++ b/" + FILE_PATH));
-            assertThat(lines).anySatisfy(line -> assertThat(line).startsWith("@@ "));
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).startsWith("--- a/" + FILE_PATH));
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).startsWith("+++ b/" + FILE_PATH));
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).startsWith("@@ "));
             // Each header must be its own line and not merged with content
-            assertThat(lines)
-                    .filteredOn(line -> line.startsWith("@@ "))
-                    .allSatisfy(line -> assertThat(line).doesNotContain("·").doesNotContain("→→→→"));
+            assertThat(diffLines)
+                    .filteredOn(diffLine -> diffLine.startsWith("@@ "))
+                    .allSatisfy(
+                            diffLine -> assertThat(diffLine).doesNotContain("·").doesNotContain("→→→→"));
         }
     }
 
@@ -66,26 +67,30 @@ class DiffReporterTest {
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
-            String[] lines = result.split(System.lineSeparator(), -1);
+            String[] diffLines = result.split(System.lineSeparator(), -1);
             // Removed line: spaces → ·
-            assertThat(lines)
-                    .anySatisfy(line ->
-                            assertThat(line).startsWith("-").contains("····").endsWith("¶"));
+            assertThat(diffLines)
+                    .anySatisfy(diffLine -> assertThat(diffLine)
+                            .startsWith("-")
+                            .contains("····")
+                            .endsWith("¶"));
             // Added line: tab → →→→→
-            assertThat(lines)
-                    .anySatisfy(line ->
-                            assertThat(line).startsWith("+").contains("→→→→").endsWith("¶"));
+            assertThat(diffLines)
+                    .anySatisfy(diffLine -> assertThat(diffLine)
+                            .startsWith("+")
+                            .contains("→→→→")
+                            .endsWith("¶"));
             // @@ header must not contain whitespace visualization markers
-            assertThat(lines)
-                    .filteredOn(line -> line.startsWith("@@ "))
-                    .allSatisfy(line -> assertThat(line)
+            assertThat(diffLines)
+                    .filteredOn(diffLine -> diffLine.startsWith("@@ "))
+                    .allSatisfy(diffLine -> assertThat(diffLine)
                             .doesNotContain("·")
                             .doesNotContain("→→→→")
                             .doesNotEndWith("¶"));
             // --- and +++ headers must not contain visualization markers
-            assertThat(lines)
-                    .filteredOn(line -> line.startsWith("--- ") || line.startsWith("+++ "))
-                    .allSatisfy(line -> assertThat(line)
+            assertThat(diffLines)
+                    .filteredOn(diffLine -> diffLine.startsWith("--- ") || diffLine.startsWith("+++ "))
+                    .allSatisfy(diffLine -> assertThat(diffLine)
                             .doesNotContain("·")
                             .doesNotContain("→→→→")
                             .doesNotEndWith("¶"));
@@ -107,9 +112,9 @@ class DiffReporterTest {
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
-            String[] lines = result.split(System.lineSeparator(), -1);
-            long hunkHeaderCount = java.util.Arrays.stream(lines)
-                    .filter(line -> line.startsWith("@@ "))
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            long hunkHeaderCount = java.util.Arrays.stream(diffLines)
+                    .filter(diffLine -> diffLine.startsWith("@@ "))
                     .count();
             assertThat(hunkHeaderCount).isEqualTo(3);
             assertThat(result).contains("more changed hunks omitted");
@@ -127,12 +132,12 @@ class DiffReporterTest {
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
-            String[] lines = result.split(System.lineSeparator(), -1);
-            long removedLineCount = java.util.Arrays.stream(lines)
-                    .filter(line -> line.startsWith("-") && !line.startsWith("---"))
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            long removedLineCount = java.util.Arrays.stream(diffLines)
+                    .filter(diffLine -> diffLine.startsWith("-") && !diffLine.startsWith("---"))
                     .count();
-            long addedLineCount = java.util.Arrays.stream(lines)
-                    .filter(line -> line.startsWith("+") && !line.startsWith("+++"))
+            long addedLineCount = java.util.Arrays.stream(diffLines)
+                    .filter(diffLine -> diffLine.startsWith("+") && !diffLine.startsWith("+++"))
                     .count();
             assertThat(removedLineCount).isLessThanOrEqualTo(20);
             assertThat(addedLineCount).isLessThanOrEqualTo(20);

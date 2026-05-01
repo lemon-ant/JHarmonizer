@@ -98,10 +98,12 @@ public class DiffReporter {
         contentLines.subList(0, truncationPoint).forEach(line -> appendVisualizedLine(sb, line));
         if (truncationPoint < contentLines.size()) {
             List<String> remaining = contentLines.subList(truncationPoint, contentLines.size());
-            int omittedRemoved = (int)
-                    remaining.stream().filter(line -> line.startsWith("-")).count();
-            int omittedAdded = (int)
-                    remaining.stream().filter(line -> line.startsWith("+")).count();
+            int omittedRemoved = (int) remaining.stream()
+                    .filter(diffLine -> diffLine.startsWith("-"))
+                    .count();
+            int omittedAdded = (int) remaining.stream()
+                    .filter(diffLine -> diffLine.startsWith("+"))
+                    .count();
             sb.append(buildOmissionSummary(omittedRemoved, omittedAdded)).append(System.lineSeparator());
         }
     }
