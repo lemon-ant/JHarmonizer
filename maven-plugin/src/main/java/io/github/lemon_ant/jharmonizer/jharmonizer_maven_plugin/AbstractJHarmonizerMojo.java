@@ -137,19 +137,26 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         SrcProcessingResult srcProcessingResult =
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
 
-        if (!srcProcessingResult.isSuccess() && failOnViolation) {
-            long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
-            throw new MojoFailureException("JHarmonizer: "
-                    + nonConformingCount
-                    + " source file(s) do not conform to the configured ordering."
-                    + " To suppress this failure, set -Djharmonizer.failOnViolation=false"
-                    + " or configure <failOnViolation>false</failOnViolation> in the plugin configuration.");
+        if (!srcProcessingResult.isSuccess() && isCheckFlow(getFlowType())) {
+            getLog().warn("To automatically fix these violations, run:\nmvn jharmonizer:reorder");
+            if (failOnViolation) {
+                long nonConformingCount = srcProcessingResult.getStatistics().computeNonConformingFileCount();
+                throw new MojoFailureException("JHarmonizer: "
+                        + nonConformingCount
+                        + " source file(s) do not conform to the configured ordering."
+                        + " To suppress this failure, set -Djharmonizer.failOnViolation=false"
+                        + " or configure <failOnViolation>false</failOnViolation> in the plugin configuration.");
+            }
         }
     }
 
     @NonNull
     private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
         return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
+    }
+
+    private static boolean isCheckFlow(FlowType flowType) {
+        return flowType == FlowType.CHECK_ALL || flowType == FlowType.CHECK_FAIL_FAST;
     }
 
     @NonNull

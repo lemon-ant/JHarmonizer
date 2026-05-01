@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockConstruction;
@@ -12,6 +13,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.core.filter.Filter;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
@@ -380,6 +382,46 @@ class BaseCommandTest {
         // Then
         assertThat(Files.exists(missingDir)).isFalse();
         assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    void call_reorderFlowWithNonSuccessResult_returnsNonZeroExitCode() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildFailedResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(1);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void call_verboseOptionWithNoThresholdFilter_completesNormally() {
+        // Given
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        ConsoleAppender<ILoggingEvent> stdoutAppender =
+                (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
+        assumeThat(stdoutAppender)
+                .as("STDOUT appender must be present to run this test")
+                .isNotNull();
+        List<Filter<ILoggingEvent>> savedFilters = stdoutAppender.getCopyOfAttachedFiltersList();
+        stdoutAppender.clearAllFilters();
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute("--base-dir", "src", "--verbose");
+        } finally {
+            savedFilters.forEach(stdoutAppender::addFilter);
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
     }
 
     private static final class TestCommand extends BaseCommand {
