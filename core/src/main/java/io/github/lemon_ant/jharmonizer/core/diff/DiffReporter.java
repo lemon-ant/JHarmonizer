@@ -17,12 +17,14 @@ import org.apache.commons.lang3.StringUtils;
  *
  * <p>The output follows git-style unified diff format with:
  * <ul>
- *   <li>File headers on separate lines ({@code --- a/path} and {@code +++ b/path})</li>
  *   <li>Hunk headers on separate lines ({@code @@ -start,len +start,len @@})</li>
  *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
  * </ul>
+ *
+ * <p>File header lines ({@code --- a/path} and {@code +++ b/path}) are intentionally omitted
+ * because the file path is already reported by the caller before the diff output.
  */
 @UtilityClass
 public class DiffReporter {
@@ -35,7 +37,7 @@ public class DiffReporter {
     /**
      * Computes a truncated, human-readable unified diff between two versions of a source file.
      *
-     * @param filePath the path of the source file, used in the diff file headers
+     * @param filePath the path of the source file, passed to the underlying diff library
      * @param originalText the original source text
      * @param revisedText the revised source text
      * @return a formatted unified diff string, or an empty string if the texts are identical
@@ -59,12 +61,8 @@ public class DiffReporter {
         int totalHunks = hunkStarts.size();
         int keptHunkCount = Math.min(MAX_HUNKS_PER_FILE, totalHunks);
         int omittedHunkCount = totalHunks - keptHunkCount;
-        int fileHeaderEnd = hunkStarts.isEmpty() ? unifiedLines.size() : hunkStarts.get(0);
 
         StringBuilder sb = new StringBuilder(1024);
-        for (int lineIndex = 0; lineIndex < fileHeaderEnd; lineIndex++) {
-            sb.append(unifiedLines.get(lineIndex)).append(System.lineSeparator());
-        }
         for (int hunkIndex = 0; hunkIndex < keptHunkCount; hunkIndex++) {
             int hunkStart = hunkStarts.get(hunkIndex);
             int hunkEnd = hunkIndex + 1 < totalHunks ? hunkStarts.get(hunkIndex + 1) : unifiedLines.size();
@@ -147,7 +145,7 @@ public class DiffReporter {
     @NonNull
     private static String visualizeWhitespace(String line) {
         if (StringUtils.isBlank(line)) {
-            return "[blank line]";
+            return "¶";
         }
         return line.replace(" ", "·") // spaces
                         .replace("\t", "→→→→") // tabs

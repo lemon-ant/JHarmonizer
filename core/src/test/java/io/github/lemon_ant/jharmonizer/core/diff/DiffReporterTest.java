@@ -33,7 +33,7 @@ class DiffReporterTest {
     class SingleHunk {
 
         @Test
-        void computeDiff_singleChange_producesGitStyleHeaderLinesOnSeparateLines() {
+        void computeDiff_singleChange_producesHunkHeaderWithoutFileHeaders() {
             // Given
             String original = "class A {\n    void a() {}\n    void b() {}\n}\n";
             String revised = "class A {\n    void b() {}\n    void a() {}\n}\n";
@@ -43,10 +43,10 @@ class DiffReporterTest {
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).startsWith("--- a/" + FILE_PATH));
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).startsWith("+++ b/" + FILE_PATH));
             assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).startsWith("@@ "));
-            // Each header must be its own line and not merged with content
+            assertThat(diffLines).noneSatisfy(diffLine -> assertThat(diffLine).startsWith("--- "));
+            assertThat(diffLines).noneSatisfy(diffLine -> assertThat(diffLine).startsWith("+++ "));
+            // @@ header must not contain visualization markers
             assertThat(diffLines)
                     .filteredOn(diffLine -> diffLine.startsWith("@@ "))
                     .allSatisfy(
@@ -87,13 +87,24 @@ class DiffReporterTest {
                             .doesNotContain("·")
                             .doesNotContain("→→→→")
                             .doesNotEndWith("¶"));
-            // --- and +++ headers must not contain visualization markers
-            assertThat(diffLines)
-                    .filteredOn(diffLine -> diffLine.startsWith("--- ") || diffLine.startsWith("+++ "))
-                    .allSatisfy(diffLine -> assertThat(diffLine)
-                            .doesNotContain("·")
-                            .doesNotContain("→→→→")
-                            .doesNotEndWith("¶"));
+        }
+    }
+
+    @Nested
+    class BlankLineVisualization {
+
+        @Test
+        void computeDiff_blankLineRemoved_visualizesAsParagraphMark() {
+            // Given
+            String original = "class A {\n\n    void a() {}\n}\n";
+            String revised = "class A {\n    void a() {}\n}\n";
+
+            // When
+            String result = computeDiff(FILE_PATH, original, revised);
+
+            // Then
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-¶"));
         }
     }
 
