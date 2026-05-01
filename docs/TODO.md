@@ -1344,7 +1344,43 @@ inserted before `build()`, which manifests as a blank line directly after `inter
 
 ---
 
-### 8. Review and optimize sorting/comparator/accessor-cluster algorithms and architecture
+### 8. File upstream Spoon issue: broken `equals` / `hashCode` contract on `CtTypeMember`
+
+#### Status
+- [ ] Open — upstream issue not yet filed
+- [ ] See workaround already applied: `RelocationDetector.buildOriginalIndexMap` uses `IdentityHashMap`
+
+#### Problem
+Two distinct `CtTypeMember` objects that live in *different* positions in the type hierarchy
+(e.g., `void alpha()` in the outer class and `void alpha()` in a nested class) report the same
+`hashCode()` and are considered equal by `equals()`.
+`CtElementImpl` delegates to `EqualsVisitor`, which performs a purely structural comparison without
+considering the owning type or source position.
+As a result, any `HashMap<CtTypeMember, …>` keyed on such members silently overwrites the earlier
+entry with the later one, producing wrong index lookups.
+
+This caused `RelocationDetector.findRelocations` to return false-positive relocations for files
+containing nested types with same-named members, breaking the idempotency check in
+`AbstractSrcProcessorScenarioE2ETest.assertFileProcessingIsDeterministic`.
+
+#### Current workaround in JHarmonizer
+`RelocationDetector.buildOriginalIndexMap` uses `IdentityHashMap<CtTypeMember, Integer>` instead of
+`HashMap` / `LinkedHashMap`. Identity-based maps compare keys by reference (`==`), bypassing the
+broken `equals`/`hashCode`, which is correct semantics for live Spoon AST nodes.
+
+#### Follow-up actions
+- [ ] Create upstream Spoon issue at https://github.com/INRIA/spoon/issues with a minimal reproducer:
+  two nested classes each declaring a method with the same signature — verify that `equals()` returns
+  `true` and `hashCode()` collides for the two distinct `CtTypeMember` instances.
+- [ ] Attach the root-cause note: `CtElementImpl` → `EqualsVisitor` performs structural-only comparison.
+- [ ] Once the upstream fix is released and validated, remove the `IdentityHashMap` workaround in
+  `RelocationDetector.buildOriginalIndexMap` and update the comment there.
+- [ ] Remove or simplify the "Known upstream issues — Spoon `CtTypeMember`" note from `AGENTS.md` /
+  `.github/copilot-instructions.md` once the fix lands.
+
+---
+
+### 9. Review and optimize sorting/comparator/accessor-cluster algorithms and architecture
 
 #### Status
 - [ ] Open architectural review item (captured for follow-up cleanup pass)

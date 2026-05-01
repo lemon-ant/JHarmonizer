@@ -30,8 +30,8 @@ This file defines repository-wide conventions for coding agents working in this 
 - **Why this matters**: the bug caused `RelocationDetector.findRelocations` to return false-positive
   relocations for files containing nested types with same-named members, breaking the idempotency /
   determinism check in `AbstractSrcProcessorScenarioE2ETest.assertFileProcessingIsDeterministic`.
-- **Action item**: file an upstream Spoon issue describing the contract violation so it can be fixed in
-  a future Spoon release. When fixed, the `IdentityHashMap` workaround and this note can be removed.
+- **Action item**: tracked in `docs/TODO.md` — file an upstream Spoon issue describing the contract
+  violation. When fixed, the `IdentityHashMap` workaround and this note can be removed.
 
 ## Convention maintenance
 
