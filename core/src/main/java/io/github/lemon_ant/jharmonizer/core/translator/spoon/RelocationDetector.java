@@ -9,6 +9,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncre
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class RelocationDetector {
         List<CtType<?>> rootTypes = reorderedCompilationUnit.getDeclaredTypes();
         collectScopeRelocations(rootTypes, originalIndex, relocations);
         rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalIndex, relocations));
-        return List.copyOf(relocations);
+        return Collections.unmodifiableList(relocations);
     }
 
     /**
@@ -81,6 +82,7 @@ public class RelocationDetector {
     // Identity comparison (!=) is intentional: after sorting the Spoon model the elements are
     // the same Java object references, just at different positions. We want reference equality
     // to detect positional changes, not structural equality.
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
