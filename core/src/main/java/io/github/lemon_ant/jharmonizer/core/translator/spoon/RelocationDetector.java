@@ -22,8 +22,6 @@ import spoon.reflect.declaration.CtTypeMember;
  * Utility class to detect relocations of type members in a reordered Spoon compilation unit.
  * This class identifies declared elements whose encounter order changed relative to the
  * original source snapshot captured before sorting.
- *
- * @deprecated This is a primitive utility to satisfy the basic needs of the Fail Fast processing. More verbose detector needed.
  */
 @UtilityClass
 public class RelocationDetector {
