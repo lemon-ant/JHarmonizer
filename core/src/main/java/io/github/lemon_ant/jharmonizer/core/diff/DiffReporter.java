@@ -18,6 +18,8 @@ import org.apache.commons.lang3.StringUtils;
  * <p>The output follows git-style unified diff format with:
  * <ul>
  *   <li>Hunk headers on separate lines ({@code @@ -start,len +start,len @@})</li>
+ *   <li>A {@code |} separator between the diff prefix ({@code +}, {@code -}, or space) and the
+ *       line content, to make it clear that the prefix is a marker and not part of the source</li>
  *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
@@ -128,7 +130,7 @@ public class DiffReporter {
         }
         char prefix = line.charAt(0);
         String content = line.substring(1);
-        sb.append(prefix).append(visualizeWhitespace(content)).append(System.lineSeparator());
+        sb.append(prefix).append('|').append(visualizeWhitespace(content)).append(System.lineSeparator());
     }
 
     @NonNull

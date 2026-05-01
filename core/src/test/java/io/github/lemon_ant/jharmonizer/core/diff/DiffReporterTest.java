@@ -104,7 +104,7 @@ class DiffReporterTest {
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-¶"));
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|¶"));
         }
     }
 
