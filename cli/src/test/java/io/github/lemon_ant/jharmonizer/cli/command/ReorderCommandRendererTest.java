@@ -17,7 +17,7 @@ class ReorderCommandRendererTest {
     void render_noOptionalArguments_returnsBaseCommand() {
         // When / Then
         assertThat(ReorderCommandRenderer.render(BASE_DIR, Set.of(), Set.of(), null, false, false))
-                .isEqualTo("jharmonizer reorder --base-dir " + BASE_DIR);
+                .isEqualTo("jharmonizer reorder --base-dir \"" + BASE_DIR + "\"");
     }
 
     @Test
@@ -31,11 +31,31 @@ class ReorderCommandRendererTest {
 
         // Then
         assertThat(command)
-                .startsWith("jharmonizer reorder --base-dir " + BASE_DIR)
-                .contains("--include **/*.java")
-                .contains("--exclude **/excluded/**")
-                .contains("--config " + configFilePath)
+                .startsWith("jharmonizer reorder --base-dir \"" + BASE_DIR + "\"")
+                .contains("--include \"**/*.java\"")
+                .contains("--exclude \"**/excluded/**\"")
+                .contains("--config \"" + configFilePath + "\"")
                 .contains("--no-backup")
                 .contains("--no-statistics");
+    }
+
+    @Test
+    void render_baseDirWithSpaces_quotesArgumentsCorrectly() {
+        // Given
+        Path dirWithSpaces = Path.of("/my projects/my app");
+
+        // When / Then
+        assertThat(ReorderCommandRenderer.render(dirWithSpaces, Set.of(), Set.of(), null, false, false))
+                .isEqualTo("jharmonizer reorder --base-dir \"/my projects/my app\"");
+    }
+
+    @Test
+    void render_baseDirWithShellMetacharacters_escapesMetacharacters() {
+        // Given
+        Path dirWithMetachars = Path.of("/projects/$build");
+
+        // When / Then
+        assertThat(ReorderCommandRenderer.render(dirWithMetachars, Set.of(), Set.of(), null, false, false))
+                .isEqualTo("jharmonizer reorder --base-dir \"/projects/\\$build\"");
     }
 }

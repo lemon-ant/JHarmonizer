@@ -38,15 +38,15 @@ class ReorderCommandRenderer {
             boolean noBackup,
             boolean noStatistics) {
         StringBuilder command = new StringBuilder(INITIAL_COMMAND_CAPACITY);
-        command.append("jharmonizer reorder --base-dir ").append(baseDir);
+        command.append("jharmonizer reorder --base-dir ").append(quoteArg(baseDir.toString()));
         for (String includeGlob : includeGlobs) {
-            command.append(" --include ").append(includeGlob);
+            command.append(" --include ").append(quoteArg(includeGlob));
         }
         for (String excludeGlob : excludeGlobs) {
-            command.append(" --exclude ").append(excludeGlob);
+            command.append(" --exclude ").append(quoteArg(excludeGlob));
         }
         if (configFilePath != null) {
-            command.append(" --config ").append(configFilePath);
+            command.append(" --config ").append(quoteArg(configFilePath.toString()));
         }
         if (noBackup) {
             command.append(" --no-backup");
@@ -55,5 +55,16 @@ class ReorderCommandRenderer {
             command.append(" --no-statistics");
         }
         return command.toString();
+    }
+
+    @NonNull
+    private static String quoteArg(String value) {
+        return "\""
+                + value.replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("$", "\\$")
+                        .replace("`", "\\`")
+                        .replace("!", "\\!")
+                + "\"";
     }
 }

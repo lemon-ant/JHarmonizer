@@ -1,6 +1,7 @@
 package io.github.lemon_ant.jharmonizer.cli.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockConstruction;
@@ -405,6 +406,9 @@ class BaseCommandTest {
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         ConsoleAppender<ILoggingEvent> stdoutAppender =
                 (ConsoleAppender<ILoggingEvent>) rootLogger.getAppender(STDOUT_APPENDER_NAME);
+        assumeThat(stdoutAppender)
+                .as("STDOUT appender must be present to run this test")
+                .isNotNull();
         List<Filter<ILoggingEvent>> savedFilters = stdoutAppender.getCopyOfAttachedFiltersList();
         stdoutAppender.clearAllFilters();
 
