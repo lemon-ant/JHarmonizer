@@ -4,6 +4,7 @@ import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
+import io.github.lemon_ant.jharmonizer.core.diff.FormattingViolationPrinter;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckAllFlow;
 import io.github.lemon_ant.jharmonizer.core.flow.CheckFailFastFlow;
@@ -37,7 +38,7 @@ import org.jspecify.annotations.Nullable;
  */
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@SuppressWarnings("PMD.GuardLogStatement")
+@SuppressWarnings({"PMD.GuardLogStatement", "PMD.ExcessiveImports"})
 public final class SrcProcessor {
 
     private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
@@ -232,12 +233,12 @@ public final class SrcProcessor {
     private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
         if (fileProcessingResult.getMemberRelocations() != null
                 && !fileProcessingResult.getMemberRelocations().isEmpty()) {
-            log.warn(MemberRelocationPrinter.printRelocations(
+            log.error(MemberRelocationPrinter.printRelocations(
                     fileProcessingResult.getPath(), fileProcessingResult.getMemberRelocations()));
         }
         String diff = fileProcessingResult.getDiff();
         if (diff != null && !diff.isEmpty()) {
-            log.warn("Formatting violations in '{}' (diff):\n{}", fileProcessingResult.getPath(), diff);
+            log.error(FormattingViolationPrinter.printFormattingViolation(fileProcessingResult.getPath(), diff));
         }
     }
 

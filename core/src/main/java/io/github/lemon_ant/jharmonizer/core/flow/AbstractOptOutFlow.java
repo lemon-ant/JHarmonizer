@@ -1,5 +1,7 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
+import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFormattingOnlyFallbackResult;
+
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
@@ -9,7 +11,6 @@ import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
-import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
@@ -17,7 +18,6 @@ import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -128,13 +128,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                     .path(srcFile.getPath())
                     .memberRelocations(List.of())
                     .diff("")
-                    .parsingStatistic(new ParsingStatistic(
-                            srcFile.getSrcCode().length(),
-                            srcFile.getSrcCode().getBytes(StandardCharsets.UTF_8).length,
-                            0,
-                            0,
-                            0,
-                            0))
+                    .parsingStatistic(FlowResultUtils.buildSyntheticParsingStatistic(srcFile))
                     .sortingStatistic(new SortingStatistic(0))
                     .serializationStatistic(new SerializationStatistic(0, 0))
                     .formattingStatistic(new FormattingStatistic(0, 0))
@@ -239,6 +233,33 @@ abstract class AbstractOptOutFlow implements IFlow {
                         FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
                         formattingResult.getFormattedSrcCode());
         return formattingResult;
+    }
+
+    /**
+     * Builds a fallback processing result when Spoon model creation fails and only formatting can be applied.
+     * Subclasses that must signal a stop at the first violation should override
+     * {@link #isStopRequestedOnFormattingChange()} to return {@code true}.
+     *
+     * @param srcFile the source file whose model build failed
+     * @param failureMessage the failure message from the model-build exception
+     * @return the formatting-only fallback processing result
+     */
+    @NonNull
+    protected final FileProcessingResult processSrcWithFormattingOnlyFallback(
+            @NonNull SrcFile srcFile, @NonNull String failureMessage) {
+        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, failureMessage);
+        return buildFormattingOnlyFallbackResult(srcFile, formattingResult, isStopRequestedOnFormattingChange());
+    }
+
+    /**
+     * Returns whether the stop-requested flag should be set when a formatting-only fallback detects changes.
+     * The default is {@code false}; override to return {@code true} in flows that must
+     * signal a stop at the first violation.
+     *
+     * @return {@code true} if the stop-requested flag should be set when formatting changes are detected
+     */
+    protected boolean isStopRequestedOnFormattingChange() {
+        return false;
     }
 
     @Value

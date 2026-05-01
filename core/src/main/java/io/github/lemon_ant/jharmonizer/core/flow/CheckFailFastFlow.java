@@ -3,7 +3,6 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_FAIL_FAST;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
@@ -15,9 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
@@ -99,8 +96,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         ParsingResult parsingResult;
         try {
             parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
-        } catch (SpoonModelBuildException exception) {
-            return processSrcWithFormattingOnlyFallback(srcFile, exception);
+        } catch (SpoonModelBuildException modelBuildException) {
+            return processSrcWithFormattingOnlyFallback(srcFile, modelBuildException.getMessage());
         }
         SpoonAstModel parsedSpoonAstModel = parsingResult.getSpoonAstModel();
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
@@ -149,7 +146,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                         formattingResult.getFormattedSrcCode());
 
         if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
-            String srcDiff = computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
+            String srcDiff = computeDiff(
+                    srcFile.getPath().toString(), srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
                     .memberRelocations(List.of())
@@ -178,25 +176,9 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 .build();
     }
 
-    @NonNull
-    private FileProcessingResult processSrcWithFormattingOnlyFallback(
-            @NonNull SrcFile srcFile, @NonNull SpoonModelBuildException exception) {
-        FormattingResult formattingResult = formatSrcAfterModelBuildFailure(srcFile, exception.getMessage());
-        boolean hasFormattingChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
-        String srcDiff =
-                hasFormattingChanges ? computeDiff(srcFile.getSrcCode(), formattingResult.getFormattedSrcCode()) : "";
-        return FileProcessingResult.builder()
-                .path(srcFile.getPath())
-                .memberRelocations(List.of())
-                .diff(srcDiff)
-                .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
-                .sortingStatistic(new SortingStatistic(0))
-                .serializationStatistic(
-                        new SerializationStatistic(srcFile.getSrcCode().length(), 0))
-                .formattingStatistic(formattingResult.getFormattingStatistic())
-                .fileProcessingStatus(defineFileProcessingStatus(false, hasFormattingChanges, true))
-                .stopRequested(hasFormattingChanges)
-                .build();
+    @Override
+    protected boolean isStopRequestedOnFormattingChange() {
+        return true;
     }
 
     @Override

@@ -1,6 +1,10 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
+import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
+import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
+
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
@@ -8,6 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +38,37 @@ class FlowResultUtils {
     static ParsingStatistic buildSyntheticParsingStatistic(@NonNull SrcFile srcFile) {
         String srcCode = srcFile.getSrcCode();
         return new ParsingStatistic(srcCode.length(), srcCode.getBytes(StandardCharsets.UTF_8).length, 0, 0, 0, 0);
+    }
+
+    /**
+     * Builds a {@link FileProcessingResult} for the formatting-only fallback path,
+     * used when Spoon model creation fails and only formatting can be applied.
+     *
+     * @param srcFile the source file being processed
+     * @param formattingResult the result of the formatting-only pass
+     * @param stopOnChanges whether to set the stop-requested flag if formatting changes are detected
+     * @return the fallback processing result
+     */
+    @NonNull
+    static FileProcessingResult buildFormattingOnlyFallbackResult(
+            @NonNull SrcFile srcFile, @NonNull FormattingResult formattingResult, boolean stopOnChanges) {
+        boolean hasChanges = !srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode());
+        String srcDiff = hasChanges
+                ? computeDiff(
+                        srcFile.getPath().toString(), srcFile.getSrcCode(), formattingResult.getFormattedSrcCode())
+                : "";
+        return FileProcessingResult.builder()
+                .path(srcFile.getPath())
+                .memberRelocations(List.of())
+                .diff(srcDiff)
+                .parsingStatistic(buildSyntheticParsingStatistic(srcFile))
+                .sortingStatistic(new SortingStatistic(0))
+                .serializationStatistic(
+                        new SerializationStatistic(srcFile.getSrcCode().length(), 0))
+                .formattingStatistic(formattingResult.getFormattingStatistic())
+                .fileProcessingStatus(defineFileProcessingStatus(false, hasChanges, true))
+                .stopRequested(hasChanges && stopOnChanges)
+                .build();
     }
 
     /**

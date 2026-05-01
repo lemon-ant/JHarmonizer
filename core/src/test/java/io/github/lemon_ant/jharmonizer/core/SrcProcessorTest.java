@@ -467,7 +467,51 @@ class SrcProcessorTest {
         String logs = collectLogMessages(listAppender);
 
         // Then
-        assertThat(logs).contains("Formatting violations").contains("FormattedOnly.java");
+        assertThat(logs).contains("Detected formatting violations in:").contains("FormattedOnly.java");
+        assertThat(listAppender.list)
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+    }
+
+    @Test
+    void processSources_checkAllWithManyFormattingHunks_logsDiffHunkOmissionSummary() throws Exception {
+        // Given
+        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "diff-truncation");
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(scenarioRoot, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("more changed hunks omitted");
+        assertThat(listAppender.list)
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+    }
+
+    @Test
+    void processSources_checkAllWithLargeFormattingHunk_logsDiffLineOmissionSummary() throws Exception {
+        // Given
+        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "large-hunk");
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(scenarioRoot, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("lines omitted");
+        assertThat(listAppender.list)
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
     }
 
     @NonNull
