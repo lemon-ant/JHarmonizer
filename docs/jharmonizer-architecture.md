@@ -1,84 +1,49 @@
-## 📌 Problem Statement
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-JHarmonizer must implement an efficient and extensible internal architecture for processing `.java` files.
-The tool supports three primary workflows:
+# JHarmonizer Architecture
 
-1. **Reorder** — reorganize code and write changes to disk.
-2. **Check (fail-fast)** — validate structure, stop on the first mismatch.
-3. **Check (collect)** — validate all files, collect mismatches and statistics.
+## Modules
 
-File traversal must be **recursive and parallel**. All stages (parse, sort, format, compare, write) should emit **stage-wise statistics**, be **deterministic, loggable, and profiled**.
+| Module | Responsibility |
+|---|---|
+| `dependency-aware-sorting` | Generic ordering utilities for applying desired order while respecting dependency constraints. |
+| `core` | Configuration, source discovery, Spoon translation, sorting, serialization, formatting, diffs, opt-outs, and processing statistics. |
+| `cli` | picocli command-line wrapper around `core`. |
+| `maven-plugin` | Maven goal wrapper around `core`. |
 
----
+## Core pipeline
 
-## 🔁 Architectural Options
+```text
+configuration overlay
+    ↓
+CompiledConfig
+    ↓
+source discovery by base directory and globs
+    ↓
+Spoon parse + opt-out metadata
+    ↓
+member/top-level-type sorting
+    ↓
+Spoon serialization
+    ↓
+formatter/import pass
+    ↓
+flow result and statistics
+```
 
-### 🅰️ Option A: Stream-based pipeline
+## Flow architecture
 
-Each file is processed in `processFile(...)`, implemented as an internal stream of `.map()` / `.filter()` / `.peek()` stages passing a `FileContext` object.
+`SrcProcessor` selects an `IFlow` implementation from `FlowType`:
 
-**Pros:**
-- High modularity.
-- Functional style.
-- Easy to unit test individual stages.
+- `ReorderFlow` writes changed files and optionally creates backups;
+- `CheckAllFlow` collects diagnostics for all changed files;
+- `CheckFailFastFlow` requests stream stop after the first violation.
 
-**Cons:**
-- Stats collection is cumbersome (state must be threaded through the pipeline).
-- Debugging and logging are nontrivial.
-- Error handling lacks context.
-- Increased GC pressure due to intermediate objects.
+All flows share common opt-out handling, sorting/serialization helpers, formatting fallback behavior, and per-file error isolation through `AbstractOptOutFlow`.
 
----
+## Diagnostics
 
-### 🅱️ Option B: Procedural `WorkflowRunner`
-
-The function `processFile(path)` invokes `WorkflowRunner.run(path)`, which runs all processing steps sequentially (`parse`, `sort`, `format`, `diff`, `write`, etc.).
-Intermediate results are stored in local variables.
-
-**Pros:**
-- Minimal allocations, optimal GC behavior.
-- Clear and debuggable step-by-step logic.
-- Simple and robust logging.
-- Straightforward and accurate stats collection.
-- High performance under load.
-
-**Cons:**
-- Slightly more boilerplate.
-- Testing requires extracting steps into methods.
-
----
-
-## ✅ Recommended Hybrid Strategy
-
-Use a **hybrid architecture**:
-
-- **Outside**: `Files.walk(...).parallel().map(path -> WorkflowRunner.run(path))`
-- **Inside**: `WorkflowRunner` performs **procedural** file processing, gathering all metrics and diagnostics.
-
-This offers:
-- 🔥 **Maximum performance**
-- 🧠 **Full control over logic and error paths**
-- 🧰 **Extensibility for logging, reporting, and CI integration**
-- 📈 **Reliable and reproducible statistics**
-
----
-
-## 📊 Final Comparison Table
-
-| Criteria                  | Stream Pipeline | Procedural `WorkflowRunner` |
-|---------------------------|------------------|-------------------------------|
-| Raw performance           | ❌               | ✅                            |
-| Parallel execution        | ✅ (external)     | ✅ (external)                  |
-| Logging                   | ⚠️ Complex        | ✅ Straightforward             |
-| Debugging                 | ⚠️ Limited        | ✅ IDE-friendly                |
-| Error handling            | ⚠️ Fragile        | ✅ Fully controlled            |
-| Stats aggregation         | ⚠️ Tedious        | ✅ Local and explicit          |
-| Workflow extensibility    | ⚠️ Rigid          | ✅ Flexible                    |
-
----
-
-## 🧩 Next Steps
-
-1. Implement `WorkflowRunner.run(Path path)` as the per-file processor.
-2. Define `FileProcessingReport` and `StepStats` data models.
-3. Use `parallelStream().map(...)` to invoke runner and aggregate into a global `ProcessingReport`.
+Ordering diagnostics are reported as member relocations computed from the original member-order snapshot and the sorted Spoon model. Formatting-only diagnostics are reported through `DiffReporter`, which emits compact unified hunks with whitespace visualization and truncation.

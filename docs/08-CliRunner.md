@@ -1,46 +1,39 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # CLI Runner
 
-> **Draft Proposal**  
-> This document outlines a preliminary sketch for adding command-line capabilities to the reordering tool.  
-> It is not a finalized design and should be refined during implementation.
+The CLI is implemented in the `cli` module as a picocli-based fat JAR. It delegates to `jharmonizer-core` and exposes three subcommands: `reorder`, `check-all`, and `check-fast`.
 
-## Purpose
+## Commands
 
-Introduce a lightweight, console-invocable entry point that allows triggering the entire reordering pipeline via standard terminal commands.  
-This CLI component is aimed at:
-- Supporting quick local testing and debugging
-- Allowing integration into CI/CD and automation workflows
-- Providing a developer-friendly way to validate or reorder files without needing to embed the tool into another Java application
+| Command | Flow | Behavior |
+|---|---|---|
+| `reorder` | `REORDER` | Rewrites matching Java files in place. If backups are enabled, changed files are first renamed to `.bak`. |
+| `check-all` | `CHECK_ALL` | Processes every matching Java file, logs all ordering/formatting violations, and does not rewrite files. |
+| `check-fast` | `CHECK_FAIL_FAST` | Stops after the first ordering or formatting violation and does not rewrite files. |
 
-## Responsibilities
+## Common options
 
-- Parse CLI arguments
-- Prepare and trigger configuration resolution
-- Instantiate the main Processor and call either `reorder` or `check` flow
-- Report outcome via terminal messages and exit codes
+| Option | Short | Meaning |
+|---|---|---|
+| `--base-dir` | `-b` | Directory to scan. Defaults to the current directory. |
+| `--include` | `-i` | Glob include patterns. May be repeated or comma-separated. |
+| `--exclude` | `-e` | Glob exclude patterns. May be repeated or comma-separated. |
+| `--config` | `-c` | YAML overlay merged over the embedded default config. |
+| `--verbose` | `-v` | Switch root logging to DEBUG and print detailed runtime failures. |
+| `--no-backup` | `-B` | Override configuration to disable `.bak` backup creation. |
+| `--no-statistics` | `-S` | Override configuration to suppress the final statistics report. |
 
-## Preliminary Argument Set (Subject to Change)
+## Exit codes
 
-| Argument            | Description                                               |
-|---------------------|-----------------------------------------------------------|
-| `--mode=`           | Operation mode: `reorder` or `check`                  |
-| `--input=`          | File or directory path to be processed                    |
-| `--config=`         | Path to configuration file(s)                             |
-| `--flags=`          | Optional override flags (e.g. `parser1:on,parser2:off`)   |
+| Code | Meaning |
+|---|---|
+| `0` | Command completed successfully. For `reorder`, this includes files that were modified. |
+| `1` | Invalid base/config path, unexpected command-level runtime failure, or `check-all` detected ordering/formatting violations. |
+| `2` | Invalid CLI arguments reported by picocli. |
+| `3` | `check-fast` detected the first ordering/formatting violation. |
 
-## Expected Exit Codes
-
-| Code | Meaning                                          |
-|------|--------------------------------------------------|
-| 0    | Success (no changes needed or reorder done)  |
-| 1    | Failure (e.g. check mode failed due to mismatch) |
-| 2+   | Errors: invalid args, IO issues, internal crash  |
-
-## Implementation Notes
-
-- Prefer lightweight CLI parsers (e.g. `picocli`, `JCommander`) for ease of maintenance.
-- It should stay thin: focus only on delegation, logging, and error handling.
-
-## Note
-
-> Further design will evolve once configuration bootstrapping and Processor contracts are finalized.
+Per-file unexpected processing errors are logged and counted as `ERROR` file results; they do not by themselves change the check-flow success flag unless an ordering or formatting violation is also detected.

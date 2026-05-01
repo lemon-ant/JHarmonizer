@@ -1,82 +1,48 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Sorter
 
 ## Purpose
 
-This document describes the design and responsibilities of the member sorting component in the JHarmonizer tool.
-The purpose of the sorter is to provide consistent, configurable ordering of all class members in a Java source file,
-to ensure readability, maintainability, and stability of diffs.
+The sorter applies the compiled JHarmonizer configuration to Spoon AST models so top-level types and type members appear in deterministic, readable order without violating modeled declaration-order dependencies.
 
-## What Gets Sorted
+## What gets sorted
 
-The sorter is responsible for ordering the following elements within a Java class:
+The default configuration covers:
 
-- Fields
-- Initializer blocks (static and instance)
-- Constructors
-- Methods (static and instance)
-- Inner classes and interfaces
+- top-level classes, records, interfaces, enums, and annotations;
+- record components;
+- enum constants;
+- fields;
+- static and instance initializer blocks;
+- constructors;
+- methods;
+- nested classes, records, interfaces, enums, and annotations.
 
-## Input
+## Configuration model
 
-The sorter operates on:
+Sorting is driven by `type-members-ordering` root groups. A root group first selects which types it applies to, then nested member groups classify members by selectors such as kind, visibility, modifier, annotation, name, or regular expression. Group options can define separators, accessor clustering, forward-reference strictness, and ordering rules.
 
-- An **AST model** of a parsed Java class (produced by a separate parser step).
-- A **Configuration** object containing:
-  - Expected member ordering (e.g. fields → constructors → methods)
-  - Visibility ordering (e.g. public → protected → package-private → private)
-  - Sorting rules within categories (e.g. alphabetical)
-  - Options for nested class processing
-  - Special cases: getter/setter pairs, constructors, initialization blocks
+Top-level type sorting is configured separately under `top-level-types-ordering`.
 
-## Algorithm Overview
+## Ordering rules
 
-1. **Group Members by Type**:
-   All members are classified (fields, methods, etc.) and grouped accordingly.
+Current YAML ordering rules are:
 
-2. **Recursive Processing of Inner Classes**:
-   The sorter recursively applies itself to inner classes using the same configuration.
+- `preserve` — source order;
+- `alpha` — computed alphabetical/signature key;
+- `visibility-desc` — public → protected → package-private → private;
+- `visibility-asc` — private → package-private → protected → public.
 
-3. **Sort All Categories Except Fields**:
-   Standard sorting is applied:
-   - First by visibility
-   - Then by alphabetic name (if configured)
+## Accessor clustering
 
-4. **Special Handling for Fields**:
-   Fields may depend on each other:
-   ```java
-   int b = 42;
-   int a = b + 1;
-   ```
-   In this case, `b` must appear **before** `a`, regardless of alphabetical or visibility preferences.
+When `keepAccessorsTogether` is enabled for a group subtree, JavaBean-style accessors are clustered by property. The comparator uses cluster representative keys before falling back to each member's own key, so related getters/setters stay together while the group remains deterministic.
 
-   The algorithm must:
-   - Build a **dependency graph** of fields
-   - Attempt to apply desired order **without violating dependency constraints**
-   - If conflicts arise, prioritize correctness and preserve original order as fallback
+## Dependency safety
 
-5. **Output**:
-   - An updated AST with members sorted according to the resolved order.
+After the preferred visual order is computed, declaration-order dependency handling protects modeled provider-before-dependent relationships. The dependency model covers direct initializer-style references and related forward-reference cases represented by the current provider chain. If a preferred order conflicts with these constraints, dependency safety wins.
 
-## Design Considerations
-
-- **Field Dependencies** are the most complex challenge.
-- The algorithm must be **deterministic** and repeatable.
-
-## Testing Strategy for Fields Resorting
-
-Even before final parser selection, the sorting logic can be prototyped using in-memory mock models that simulate
-class members and their relationships. This allows testing of:
-
-- Sorting correctness
-- Dependency resolution
-- Corner cases like:
-  - Circular dependencies
-  - Annotated fields/methods
-  - Static and non-static member interleaving
-
-## Requirements
-
-- Recursively support nested classes
-- Fully configurable via `Configuration`
-- Operate on an AST model (from JavaParser or Spoon, etc.)
-- Compatible with Java 21 constructs
+Cycle handling and strict/relaxed forward-reference behavior are part of the dependency-aware ordering pipeline and are exercised by the end-to-end fixture tests under `core/src/test/resources/test-cases/core/e2e/reorder/**`.

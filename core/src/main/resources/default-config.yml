@@ -1,6 +1,6 @@
 formatting:
   fix-imports: true
-  formatter-style: PALANTIR # NONE, AOSP, GOOGLE, PALANTIR
+  formatter-style: PALANTIR # NONE, AOP (Palantir AOSP), GOOGLE, PALANTIR
   blank-line-after-type-header: false
   blank-line-before-comment: true
   blank-line-between-fields: false

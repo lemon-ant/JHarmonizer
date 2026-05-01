@@ -1,37 +1,22 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DiffReporter
 
-## Purpose
+`DiffReporter` is the current check-flow formatter-difference diagnostic utility. It compares the original source text with the formatted/reordered source text and returns an empty string when the two versions are identical.
 
-In **check mode**, a dedicated component — `DiffReporter` — is required to compare the **original Java source code with the reordered version**. It serves two key purposes:
+## Output format
 
-1. **Comparison**: Determines whether the original and transformed code are identical.
-2. **Diagnostics**: If differences exist, generates a readable **diff output** suitable for terminal or log output, highlighting the changes clearly.
+The reporter uses `java-diff-utils` to build unified hunks, then renders a compact terminal-oriented format:
 
-## Usage
+- hunk headers are kept as `@@ -start,len +start,len @@` lines;
+- file headers such as `--- a/path` and `+++ b/path` are intentionally omitted because callers already log the file path;
+- every diff content line is rendered as `<prefix>|<content>`, where the prefix is `+`, `-`, or a space;
+- whitespace is visualized on rendered lines: space as `·`, tab as `→→→→`, and end of line as `¶`;
+- output is truncated to at most 3 hunks per file and at most 20 changed lines per hunk, with omission summaries for hidden content.
 
-`DiffReporter` is invoked from within the `check(...)` method to:
-- Validate whether reordering is necessary.
-- Raise an exception when mismatches are found, including a detailed diff report.
+## Where it is used
 
-## Possible Implementations
-
-1. **Existing Java libraries**:
-   - [`google-diff-match-patch`](https://github.com/google/diff-match-patch)
-   - [`java-diff-utils`](https://github.com/java-diff-utils/java-diff-utils)
-
-2. **Reviewing Palantir Java Formatter**:
-   - Although `palantir-java-format` does not expose a standalone diff component, its internal logic in **`check` 
-   mode** can serve as a valuable **source of inspiration**. Investigating how it compares the formatted output
-   with the original may offer reusable strategies.
-
-3. **Custom implementation**:
-   - Line-by-line comparison with highlighted differences;
-   - Optional highlighting at the character level;
-   - Configurable verbosity (e.g., control display of whitespace-only differences or empty lines).
-
-## Next Steps
-
-- Conduct a technical research sweep:
-  - Benchmark available libraries in terms of performance, Unicode support, and diff quality.
-  - Explore the comparison logic used in `palantir-java-format`.
-  - If necessary, implement a minimal internal `DiffReporter` prioritizing readability and extensibility.
+`CHECK_ALL` computes both member relocations and a diff for every changed file. `CHECK_FAIL_FAST` first reports member relocations; if ordering is already valid but formatting changes are detected, it computes a diff and stops the pipeline after that file.

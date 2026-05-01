@@ -1,5 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 ### Comprehensive Order Dependency List in Java
 **Elements that require declaration order** (must be declared before use):
+
+This document is a Java language reference checklist, not a claim that every listed pattern is fully modeled by the current JHarmonizer dependency providers. See `order-dependency-filter.md` for implemented graph construction and `known-unhandled-patterns.md` for known gaps.
+
 
 1. **Field Initializers**
     - Depend on: *Fields* declared above

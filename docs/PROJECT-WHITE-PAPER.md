@@ -1,83 +1,38 @@
-# 📄 Java Code Reorderer - Project White Paper
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-## 🎯 Project Goal
+# JHarmonizer Project White Paper
 
-Develop a **cross-platform, embeddable Java code formatter** that:
+## Project goal
 
-- ✅ Sorts class members (constants, fields, constructors, methods, etc.) according to a defined structure.
-- 🧹 Formats code using an external formatter (e.g., Palantir Java Format).
-- 🧰 Works independently of any IDE, CI platform, or editor.
-- 🔌 Can be embedded as a CLI tool, Maven/Gradle plugin, Docker job, etc.
+JHarmonizer is an IDE-independent Java source harmonization tool. It provides deterministic class/member layout, dependency-aware reordering, formatter/import cleanup, and check modes suitable for CI.
 
----
+## Current capabilities
 
-## 🧩 Why Existing Solutions Don’t Work
+- Parses Java source with Spoon.
+- Sorts top-level types and type members using YAML-defined group trees.
+- Preserves modeled declaration-order dependencies so provider members stay before dependent members where the current dependency model can detect that relationship.
+- Clusters JavaBean-style accessors when `keepAccessorsTogether` is enabled.
+- Serializes the transformed model and delegates final formatting/import cleanup to Palantir Java Format.
+- Supports file-level and type-level opt-out directives.
+- Provides CLI and Maven plugin integrations.
 
-### ❌ JetBrains IDEA Code Style
-- Works only inside IntelliJ IDEA.
-- Requires manual formatting by the developer.
-- Cannot be enforced via CI.
-- Configuration is not portable across environments.
+## Supported execution modes
 
-### ❌ Qodana
-- Can validate member order only in the paid Ultimate edition.
-- Does not auto-correct or sort code — just flags violations.
-- Requires Docker, token management, and separate pipeline configuration.
-- Not suitable for local development; overkill for simple CI enforcement.
+| Mode | CLI | Maven | Effect |
+|---|---|---|---|
+| Reorder | `reorder` | `jharmonizer:reorder` | Rewrite changed files in place. |
+| Check all | `check-all` | `jharmonizer:check` | Report every non-conforming file without rewriting. |
+| Check fast | `check-fast` | `jharmonizer:check-fast` | Stop at the first non-conforming file without rewriting. |
 
-### ❌ Google Java Format / Palantir Java Format
-- Great for formatting code layout (indentation, spacing).
-- ❗ Do not sort class members by structure or visibility.
+There is no separate formatter-only public mode in the current CLI or Maven plugin. Formatting is part of the reorder/check pipelines.
 
-### ❌ Spotless + Checkstyle
-- Allow partial rule enforcement via custom checks.
-- Do not perform actual reordering of code.
-- Complex to configure, not scalable across teams.
+## Configuration
 
----
+The embedded default YAML file is the baseline for behavior. Project-specific YAML files and wrapper parameters are overlays. Current root configuration areas are formatting, backup/statistics flags, header-line settings, top-level type ordering, and type-member ordering.
 
-## 💡 What Our Tool Will Do
+## Why this matters
 
-### 🔧 Functionality
-
-- Parses `.java` source files into an **AST** (Abstract Syntax Tree) using JavaParser or a similar library.
-- Builds a **dependency graph for constants**, ensuring correct declaration order.
-- Sorts class members based on configuration:
-  - Grouping: `static final` constants, fields, constructors, getters/setters, methods.
-  - Sorting inside groups: by **visibility** (public → private), optionally by type, name, annotations.
-- Applies external formatter (e.g., **Palantir Java Format**) after sorting.
-
-### 🧪 Supported Modes
-
-- `sort`: reorder and rewrite files.
-- `check`: validate correct order (for CI).
-- `format`: apply external formatter only.
-- `fix`: full sort + format in one pass.
-
----
-
-## ⚙️ Configuration Sources
-
-- Built-in default config.
-- Exported IDE configs (e.g., `.editorconfig`, XML).
-- Custom YAML config file (e.g., `sorter-config.yml`).
-- Inline config via CLI or plugin params.
-
----
-
-## 🧱 Integration Options
-
-- CLI tool (local & CI use).
-- Maven/Gradle plugin.
-- Docker image.
-- Optional: IDE plugin in the future.
-
----
-
-## ✅ Why This Matters
-
-- 💻 **IDE-independent**: works with any editor or environment.
-- 🔒 Enables CI Quality Gates (e.g., GitLab).
-- 📉 Reduces noisy diffs, improves PR readability.
-- ⚙️ Fully automatable — no manual effort.
-- 🌍 Can be released as open-source to represent **UBS engineering excellence**.
+JHarmonizer reduces noisy diffs, makes source layout repeatable across IDEs and machines, and gives teams a build-enforceable way to keep Java member organization consistent.

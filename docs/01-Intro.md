@@ -1,31 +1,40 @@
-# JHarmonizer: Java Class Reordering Tool
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# JHarmonizer: Java Source Harmonization Tool
 
 ## Overview
 
-**JHarmonizer** is a modular tool for reordering Java source code. Its main purpose is to automatically reorder and
-format members of Java classes (fields, constructors, methods, blocks, etc.) to ensure a consistent and readable
-structure based on configurable rules.
+JHarmonizer keeps Java source layout deterministic by parsing source files, applying configurable member-ordering rules, preserving declaration-order constraints that the current dependency model understands, serializing the resulting Spoon model, and running a final formatter/import pass.
 
-This tool is especially useful in environments where large teams work on shared codebases and consistency of structure
-is important for code reviews, quality checks, or compliance with internal style guides.
+The codebase currently provides:
 
-## Key Advantages
+- `jharmonizer-core` — core parser, sorter, formatter, diff, opt-out, and source-processing flows;
+- `jharmonizer-cli` — a standalone picocli fat JAR;
+- `jharmonizer-maven-plugin` — Maven goals for rewrite and check flows;
+- `dependency-aware-sorting` — reusable dependency-aware ordering utilities used by the core sorter.
 
-- **Automated Reordering**: Eliminates the manual effort of sorting class members.
-- **Highly Configurable**: Supports a wide range of rules to control the sorting and formatting logic.
-- **Check Mode**: Validates whether source files conform to the desired structure without modifying them.
-- **AST-based Manipulation**: Uses abstract syntax trees to ensure syntactic correctness.
-- **Extensible Architecture**: Designed for integration with Maven, Gradle, and CI/CD pipelines.
+## Main flows
 
-## Main Flow of the Tool
+| Flow | Public wrappers | Behavior |
+|---|---|---|
+| Reorder | CLI `reorder`, Maven `jharmonizer:reorder` | Rewrites changed files in place and optionally creates `.bak` backups. |
+| Check all | CLI `check-all`, Maven `jharmonizer:check` | Reports all files that would change and leaves sources untouched. |
+| Check fast | CLI `check-fast`, Maven `jharmonizer:check-fast` | Stops after the first ordering or formatting violation and leaves sources untouched. |
 
-The main flow of JHarmonizer can be summarized as:
+## Pipeline
 
-1. **Configuration Resolution**: Load user-defined configuration (inline, file, or environment).
-2. **Parsing**: Convert Java source into AST using selected parser (e.g., JavaParser, Spoon).
-3. **Sorting**: Apply reordering rules to reorder class members.
-4. **Formatting**: Clean up code using an external formatter (e.g., Palantir Java Format).
-5. **Diffing (optional)**: In check mode, compare original and modified version for consistency.
-6. **Writing (optional)**: In reorder mode, save updated source code to disk or return as string.
+1. Resolve the embedded default YAML configuration with any external overlay.
+2. Discover Java files under the selected base directory using include/exclude globs.
+3. Parse each source file with the Spoon-based translator.
+4. Apply file/type opt-out directives.
+5. Sort top-level types and type members according to the compiled group tree and dependency constraints.
+6. Serialize the Spoon model back to Java source.
+7. Run the configured formatter/import pass.
+8. In check flows, log member relocations and/or formatting diffs; in reorder flow, write changed files.
 
-Each of these steps is handled by dedicated components, described in detail in the corresponding documentation modules.
+## User-facing configuration
+
+The supported YAML root keys are documented in [`config-dsl.md`](config-dsl.md). The embedded default configuration is the executable reference for default behavior: `core/src/main/resources/default-config.yml`.

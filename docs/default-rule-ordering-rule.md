@@ -1,4 +1,9 @@
-# JHarmonizer default rule — member ordering specification (draft)
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# JHarmonizer default rule — member ordering specification
 
 ## Tree view (single hierarchy)
 
@@ -127,4 +132,4 @@ The same inheritance mechanism applies to group `separator` and `ordering-rules`
 ## Notes
 
 - This spec intentionally focuses only on the Default Rule (fallback root group).
-- Specialized root groups (tests, DTO/entities, etc.) are out of scope for this draft.
+- Specialized root groups (tests, DTO/entities, etc.) are documented by the embedded default configuration.

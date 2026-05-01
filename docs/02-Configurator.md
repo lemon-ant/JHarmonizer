@@ -1,160 +1,55 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Configurator
 
 ## Purpose
 
-To construct a validated, immutable configuration model (`Configuration`) by:
+The configuration layer loads the embedded JHarmonizer YAML defaults, parses optional external YAML overlays, merges them, and converts the result into the compiled model consumed by the sorter, formatter, and processor.
 
-- loading internal defaults from resources,
-- overlaying with external configuration sources (IDE (IDEA, possibly Eclipse), configuration file, passed model from external wrapper),
-- resolving priority and applying overrides in sequence.
+## Current configuration sources
 
-## Configuration Assembly Flow
+| Source | Used by | Behavior |
+|---|---|---|
+| Embedded `default-config.yml` | Core, CLI, Maven plugin | Always loaded as the baseline. |
+| YAML file passed to CLI `--config` | CLI | Parsed as a flexible overlay and merged over defaults. |
+| Maven `configFile` / `jharmonizer.configFile` | Maven plugin | Defaults to `${project.basedir}/jharmonizer.yml`; if the file does not exist, no file overlay is applied. |
+| Programmatic `FlexibleUnifiedConfig` | Core constructor and wrappers | Optional direct overlay. |
+| CLI/Maven booleans | CLI, Maven plugin | Override selected config values such as backups/statistics output. |
 
-1. Load default configuration from embedded resource file  
-   → `Configuration defaultConfig`
+IDE configuration parsers and XML project configuration are not part of the current implementation.
 
-2. Optionally overlay:
-   - IDE configuration (optional) - it must be IDEA and possibly Eclipse
-   - Custom file configuration (optional)
-   - External override (optional)
+## Main components
 
-3. Each overlay produces a merged intermediate:  
-   `defaultConfig → mergedConfig1 → mergedConfig2 → ... → finalConfig`
+| Component | Responsibility |
+|---|---|
+| `JHarmonizerConfigLoader` | Reads YAML from files/resources into strict or flexible input models. |
+| `JHarmonizerConfigurationManager` | Loads default/flexible configs and exposes parse helpers. |
+| `ConfigurationManager` | Builds default or overridden `CompiledConfig` instances. |
+| `UnifiedConfigMerger` | Merges strict/flexible unified configuration objects. |
+| `JHarmonizer2UnifiedConverter` and flexible converter | Convert YAML input models into unified config models. |
 
-## Key Components (suggested interfaces only)
+## Merge semantics
 
-| Component                 | Responsibility                                                                   |
-|---------------------------|----------------------------------------------------------------------------------|
-| `DefaultConfigLoader`     | Loads embedded default configuration from `resources/`.                          |
-| `IDEConfigParser`         | Parses IDE-specific configuration formats (e.g. `.editorconfig`, `.idea/*.xml`). |
-| `ProjectFileConfigParser` | Reads XML configuration from project sources.                                    |
-| `Configurator`            | Coordinates the full assembly process; returns validated `Configuration`.        |
+External root groups from `type-members-ordering` are merged by exact root-group `name`:
 
-These additional configuration parsers can implement a unified interface `OverridingConfigurationProvider` to be 
-processed as a sequence in a unified stream/cycle algorithm. 
+1. A matching external root group fully replaces the default root group with the same name.
+2. The replacement keeps the matched default group's original position.
+3. New external root groups are inserted before the remaining default root groups.
+4. Multiple new external root groups preserve their order from the external file.
+5. Nested `groups:` blocks are not merged recursively.
 
-## Proposed Core Types
+Scalar and formatting options are normal overlay values: an explicitly provided external value replaces the baseline value, while an omitted field keeps the baseline value.
 
-All code snippets given only as illustrations of the idea
+## Nested group inheritance
 
-### 1. `OverridingConfiguration`
-
-A nullable, non-validated DTO representing raw configuration input.
-
-Used as intermediary for loading from:
-
-- default resource file
-- IDE settings (JetBrains, Eclipse)
-- project configuration file (XML/YAML)
-- external override models (e.g. plugin input)
-
-```java
-@Data
-public class OverridingConfiguration {
-    private List<String> memberOrder;
-    private List<String> accessLevelOrder;
-    private Integer maxLineLength;
-    private Boolean reorderImports;
-}
-```
-
-## 2. `Configuration`
-
-Final, validated, immutable model for internal use.
-
-```java
-@Value
-@Builder
-public class Configuration {
-    List<String> memberOrder;
-    List<String> accessLevelOrder;
-    int maxLineLength;
-    boolean reorderImports;
-}
-```
-
-## Proposed method contracts
-
-All code snippets given only as illustrations of the idea
-
-### Resolve Signature
-
-```java
-public interface Configurator {
-    Configuration resolve(
-        List<OverridingConfiguration> externalConfigs,
-        List<Path> configFiles
-    );
-}
-```
-
-### Merge Signature
-
-```java
-public interface Configurator {
-   Configuration merge(Configuration baseConfig, OverridingConfiguration overridingConfiguration);
-}
-```
-
-## Notes
-
-- `OverridingConfiguration` can be reused across all stages as the universal nullable intermediate.
-- Merging logic should handle null fields safely, always preserving previous values unless explicitly overridden.
-- Multiple `merge()` calls are expected in sequence.
-- Final `Configuration` must be fully initialized and validated (non-null + correct values).
-
-## Root member groups merge semantics
-
-When an external model overrides `type-members-ordering`, JHarmonizer does not replace the whole default root-group list anymore.
-The merge is performed only for the **root member groups**, without recursive subgroup merging:
-
-1. If an external root group has a `name` that exactly matches a default root-group name, the default root group is removed.
-2. The external root group is inserted into the **same position** where the matched default group originally was.
-3. If an external root group name does not exist in the default configuration, that external group is treated as new.
-4. All new external root groups are inserted **before** the default root groups, preserving their order from the external model.
-5. Nested `groups:` blocks are not merged by name. Once a root group matches, its whole subtree from the external model replaces the default subtree as-is.
-
-This allows users to redefine only selected default root groups while keeping all untouched default groups and their original ordering.
-
-## Nested group inheritance semantics
-
-Inside a single `type-members-ordering` tree, nested groups inherit these options from their nearest parent when omitted:
+Inside a single `type-members-ordering` tree, nested groups inherit these options from the nearest parent that defines them:
 
 - `keepAccessorsTogether`
 - `separator`
 - `ordering-rules`
+- `relaxedForwardReferences`
 
-If a child declares one of these options explicitly, that value overrides the inherited value for that child subtree.
-For `ordering-rules`, override is replace-based (the child list fully replaces inherited rules).
-
-## Optional Configuration Sources Control
-
-For advanced usage, the configurator supports **optional control over which sources to include** when resolving the final configuration.
-
-By default, all sources are enabled:
-- IDE configuration (e.g. IntelliJ, Eclipse)
-- Project-level configuration files (XML/YAML)
-- External override inputs (e.g. plugin parameters)
-
-However, users can pass boolean flags (e.g. `disableIDEA`, `disableFileConfig`) to suppress specific sources.
-
-Additionally, for full flexibility, it is proposed that the configurator exposes a method accepting a **custom sequence of configuration parsers**, each implementing a common interface (e.g. `RawConfigProvider`).
-
-This allows advanced consumers (e.g. plugins, test suites) to **control exactly which parsers participate** in the configuration resolution process.
-
-```java
-public interface OverridingConfigurationProvider {
-    OverridingConfiguration load();
-}
-```
-
-Suggested method for customized merging:
-
-```java
-public Configuration resolve(List<OverridingConfigurationProvider> customProviders);
-```
-
-This approach makes it possible to:
-- Test specific parsers in isolation
-- Apply only trusted configuration layers (e.g. CI pipelines)
-- Extend or replace default parsing logic
+A child value replaces the inherited value for that child subtree. For `ordering-rules`, replacement is list-based; an explicit empty list is allowed and means no explicit ordering keys at that level.

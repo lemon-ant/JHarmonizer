@@ -1,253 +1,156 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Java Sorter Configuration DSL
 
-This document describes the structure and semantics of the YAML-based DSL used to define rules for sorting Java class members and file-level elements. The goal is to provide a clear, flexible, and declarative way to enforce consistent class structures across Java projects.
+This document describes the YAML configuration model consumed by the current JHarmonizer code. The built-in defaults live in `core/src/main/resources/default-config.yml`, and external YAML files are parsed as partial overlays on top of those defaults.
 
----
+## Root keys
 
-## 🔹 File-Level Configuration
+A complete default configuration contains these root keys:
 
 ```yaml
-java-file:
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+
+backups-enabled: true
+print-processing-statistics: true
+
+header-line:
+  character: '-'
+  left-padding: 3
+
+top-level-types-ordering:
   main-type-first: true
-  type-order:
-    - public-class
-    - class
+  type-groups:
+    - [ class, record ]
     - interface
     - enum
-    - record
+    - annotation
+  ordering-rules: [ visibility-desc, alpha ]
+
+type-members-ordering:
+  - name: Default Rule
+    includes: ~.*
+    ordering-rules: preserve
+    groups: []
 ```
 
-### Parameters:
+External config files used by the CLI and Maven plugin are flexible overlays: they may contain any non-empty subset of these root keys. Missing values continue to come from the embedded defaults.
 
-* `main-type-first`: If `true`, the public type matching the filename is placed first.
-* `type-order`: Defines the order of top-level types in the `.java` file.
+## Formatting
 
-Values can be:
+`formatting` controls the final formatter/import pass and printer-specific blank-line options.
 
-* `public-class`
-* `class`
-* `interface`
-* `enum`
-* `record`
+| Key | Meaning |
+|---|---|
+| `fix-imports` | If `true`, the final Palantir formatter pass also fixes imports. |
+| `formatter-style` | Formatter style token. Current YAML tokens are `PALANTIR`, `GOOGLE`, `NONE`, and `AOP`; `AOP` maps to Palantir's AOSP style in code. Values are case-insensitive and may use hyphens where enum names use underscores. |
+| `blank-line-after-type-header` | Insert a blank line after a type header before its first member. |
+| `blank-line-before-comment` | Insert a blank line before members that have leading comments. |
+| `blank-line-between-fields` | Insert a blank line between consecutive field declarations. |
 
----
+`formatter-style: NONE` disables source formatting but still allows import fixing when `fix-imports: true`.
 
-## 🔹 Selector Aliases
+## Top-level type ordering
+
+`top-level-types-ordering` controls ordering of top-level types inside a compilation unit.
+
+| Key | Meaning |
+|---|---|
+| `main-type-first` | If `true`, the type whose name matches the file name is kept first. |
+| `type-groups` | Ordered type-kind groups. Each entry may be a scalar such as `interface` or a flow list such as `[ class, record ]`. |
+| `ordering-rules` | Rules applied within top-level groups. |
+
+Supported type kinds are `class`, `record`, `interface`, `enum`, and `annotation`. Each kind may appear only once across `type-groups`.
+
+## Member groups
+
+`type-members-ordering` is an ordered list of root member groups. The first root group whose selectors match a type defines the ordering tree for that type.
+
+Each group supports:
+
+| Key | Required | Meaning |
+|---|---:|---|
+| `name` | yes | Group name. Root group names are also used when merging external overlays with defaults. |
+| `includes` | one of includes/excludes | Selector expression describing members/types included in the group. |
+| `excludes` | one of includes/excludes | Selector expression describing members/types excluded from the group. |
+| `ordering-rules` | no | String or list of ordering rules. |
+| `separator` | no | Separator style: `new-line`, `header`, or `none`. |
+| `keepAccessorsTogether` | no | If `true`, JavaBean-style accessors are clustered by property before member ordering is applied. |
+| `relaxedForwardReferences` | no | If `true`, forward-reference dependency protection is relaxed for this group subtree. |
+| `groups` | no | Nested member groups. |
+
+At least one of `includes` or `excludes` must be non-empty for every group.
+
+## Selector syntax
+
+Selectors deserialize into OR-of-AND token sets.
+
+| YAML form | Meaning |
+|---|---|
+| `includes: field` | One AND group with one token. |
+| `includes: field, static` | One AND group: both `field` and `static` must match. |
+| `includes: [ field, static ]` | One AND group when written as a one-line flow list. |
+| Block list with scalar entries | OR alternatives: each line is its own selector group. |
+| Block list with nested flow lists | OR alternatives where each nested list is an AND group. |
+
+Example:
 
 ```yaml
-selector-aliases:
-  object-methods: '~^(toString\(\)|equals\(\)|hashCode\(\)|clone\(\)|finalize\(\))$'
-  junit-init:
-    - '@BeforeEach'
-    - '@BeforeAll'
-  junit-cleanup:
-    - '@AfterEach'
-    - '@AfterAll'
-  test-class: "~.*Test$"
+includes:
+  - [ field, static, final ]
+  - [ method, '@Test' ]
 ```
 
-### Purpose:
+Selector tokens used by the default config include:
 
-Defines reusable shortcuts for commonly used patterns, annotations, or regular expressions.
+- member/type kind tokens: `field`, `method`, `constructor`, `initializer`, `record-component`, `enum-constant`, `class`, `record`, `interface`, `enum`, `annotation`;
+- modifier/visibility tokens: `public`, `protected`, `package-private`, `private`, `static`, `final`;
+- annotation selectors prefixed with `@`, for example `@Test` or `@~.*Test$`;
+- exact-name selectors prefixed with `=`, for example `=toString`;
+- regular-expression selectors prefixed with `~`, for example `~.*Test$`.
 
-* Regular expressions must be quoted and prefixed with `~`.
-* Aliases can be a string or list.
+## Ordering rules
 
----
+`ordering-rules` accepts either a single string or a YAML list. Comma-separated strings are also accepted.
 
-## 🔹 Type-Specific Sorting Rules
+Supported values are:
 
-```yaml
-type-sort:
-  <rule-name>:
-    match: <selector-map> | <selector-alias> | [list-of-selectors]
-    behavior: <optional-behavior>
-    sort:
-      <member-type>:
-        <selector>: <strategy>
-        rest: <strategy>
-```
+| Value | Meaning |
+|---|---|
+| `preserve` | Preserve source order for this group. |
+| `alpha` | Sort by the computed alphabetical key. |
+| `visibility-desc` | Sort from most visible to least visible: public → protected → package-private → private. |
+| `visibility-asc` | Sort from least visible to most visible: private → package-private → protected → public. |
 
-### Example
+Values are case-insensitive and hyphenated YAML values map to enum names with underscores.
 
-```yaml
-  test:
-    match: test-class
-    sort:
-      method:
-        junit-init: orig
-        '@Test': alpha
-        junit-cleanup: orig
-        rest: orig
-```
+## Option inheritance
 
-### Match Block
+For nested member groups, these options are inherited from the nearest parent that defines them:
 
-* **Map form (AND)**:
+- `keepAccessorsTogether`
+- `separator`
+- `ordering-rules`
+- `relaxedForwardReferences`
 
-```yaml
-match:
-  modifiers: [final, static]
-  name: "~.*Util$"
-```
+Inheritance is resolved top-down. If a child defines an option explicitly, it replaces the inherited value for that child subtree. For `ordering-rules`, an explicit child value fully replaces the inherited list; `ordering-rules: []` is allowed and means no explicit sort keys at that level.
 
-All conditions must match.
+## Overlay merge semantics
 
-* **List form (OR)**:
+When a custom configuration is applied over the embedded defaults, root groups from `type-members-ordering` are merged by exact root-group `name`:
 
-```yaml
-match:
-  - modifiers: [final, static]
-  - name: "~.*Util$"
-```
+- if a custom root group name matches a default root group name, that default root group is fully replaced;
+- the replacement stays at the original default position;
+- if a custom root group name is new, that group is inserted before all default root groups;
+- multiple new custom root groups keep their relative order from the custom file;
+- nested `groups:` blocks are not merged recursively.
 
-At least one condition must match.
-
-You can also use a **single selector alias**:
-
-```yaml
-match: test-class
-```
-
----
-
-### Member Types
-
-Under `sort`, you can define rules per member type:
-
-* `field`
-* `method`
-* `constructor`
-* `initializer`
-* `type` (for inner classes/enums/interfaces)
-
-### Sorting Strategy Values
-
-* `alpha`: Alphabetical order
-* `orig`: Preserve original source code order (origin)
-* `rest`: Fallback bucket for unmatched elements
-
----
-
-### Optional Behavior Block
-
-```yaml
-behavior:
-  keepAccessorsTogether: true
-```
-
-Supported flags:
-
-* `keepAccessorsTogether`: Places getters/setters in the same group, even if named differently.
-
-### Group option inheritance (`type-members-ordering`)
-
-For nested member groups, the following options are inherited from the nearest parent that defines them:
-
-* `keepAccessorsTogether`
-* `separator`
-* `ordering-rules`
-
-Inheritance is resolved top-down in the group tree:
-
-* if a child omits an option, it inherits the parent's resolved value;
-* if a child defines an option explicitly, it overrides the inherited value for its subtree.
-
-For `ordering-rules`, an explicit child value fully replaces the inherited list.
-An empty `ordering-rules: []` is allowed and means “no explicit sort keys at this level”.
-
----
-
-## 🔹 Example: Full Configuration
-
-```yaml
-java-file:
-  main-type-first: true
-  type-order:
-    - public-class
-    - class
-    - interface
-    - enum
-    - record
-
-selector-aliases:
-  object-methods: '~^(toString\(\)|equals\(\)|hashCode\(\)|clone\(\)|finalize\(\))$'
-  junit-init:
-    - '@BeforeEach'
-    - '@BeforeAll'
-  junit-cleanup:
-    - '@AfterEach'
-    - '@AfterAll'
-  test-class: "~.*Test$"
-
-type-sort:
-  test:
-    match: test-class
-    sort:
-      method:
-        junit-init: orig
-        '@Test': alpha
-        junit-cleanup: orig
-        rest: orig
-
-  utility:
-    match:
-      - [final, static]
-      - "~.*Utils?$"
-    sort:
-      field:
-        static: alpha
-        instance: alpha
-      method: alpha
-
-  dto:
-    match: [final, "~.*Dto$"]
-    behavior:
-      keepAccessorsTogether: true
-    sort:
-      field:
-        instance: alpha
-      method: alpha
-
-  fallback:
-    behavior:
-      keepAccessorsTogether: true
-    sort:
-      field:
-        static:
-          public: alpha
-          private: orig
-        instance:
-          public: alpha
-          private: orig
-      method:
-        '@Override': orig
-        object-methods: orig
-        rest: alpha
-```
-
----
-
-## 🧠 Notes
-
-* Rule order in `type-sort` matters. First matching rule wins.
-* `rest` is optional but recommended.
-* The `fallback` rule (instead of `default`) avoids clashing with the Java `default` keyword.
-* Aliases improve maintainability and reduce duplication.
-
-### Merging custom `type-members-ordering` with the default model
-
-When a custom configuration is applied on top of the embedded default configuration, root groups from
-`type-members-ordering` are merged by **exact root-group name**:
-
-* if the custom root-group name matches a default root-group name, the default root group is fully replaced;
-* the replacement stays on the original default position, even if the custom file defines it in another place;
-* if the custom root-group name is new, that root group is inserted before all default root groups;
-* several new custom root groups keep their relative order from the custom file;
-* nested `groups:` blocks are not merged recursively — replacing a root group replaces its whole subtree.
-
-This means you can override only one named root group and keep the rest of the default model unchanged.
-
----
-
-For questions or feature suggestions, open an issue or contact the maintainer.
+This lets a project override one named root group while keeping the rest of the default model unchanged.

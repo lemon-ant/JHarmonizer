@@ -1,129 +1,37 @@
-# Documentation
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-This section defines the expected structure of the documentation and repository layout for the project.
-It is a non-functional but **mandatory** requirement aimed at ensuring clarity, consistency, and ease of collaboration
-within the team.
+# Documentation Map
 
-## Repository Structure
+This repository keeps user-facing and design documentation in Markdown under the repository root, module directories, and `docs/`. PDF files under `docs/` are generated or externally maintained artifacts and are not updated by automated documentation synchronization tasks.
 
-```bash
-my-project/
-+-- core/                  # Core utility
-|   \-- README-CORE.md     # Core documentation
-+-- maven-plugin/          # Maven plugin
-|   \-- README-MAVEN.md    # Plugin documentation
-+-- gradle-plugin/         # Gradle plugin (optional)
-|   \-- README-GRADLE.md
-+-- examples/              # Example setups
-|   +-- jenkins/           # Jenkins example
-|   |   \-- EXAMPLE.md     # Description and usage
-|   \-- gitlab-ci.yml      # GitLab CI config
-+-- docs/                  # Global documentation
-|   +-- CONFIG.md          # Configuration
-|   +-- TROUBLESHOOTING.md
-|   \-- CHANGELOG.md
-\-- README.md              # Main entry point
-```
+## Primary user documents
 
-## Required Markdown Documents
+| Document | Purpose |
+|---|---|
+| `README.md` | Project overview, Maven quick start, CLI pointer, limitations, and build command. |
+| `cli/README.md` | Standalone CLI build, commands, options, exit codes, and logging. |
+| `docs/config-dsl.md` | Current YAML configuration syntax and merge semantics. |
+| `docs/directives.md` | Supported opt-out comment directives and placement rules. |
+| `docs/known-limitations.md` | Known runtime/formatter limitations and workarounds. |
+| `docs/known-unhandled-patterns.md` | Dependency patterns intentionally not handled or not currently modeled. |
+| `docs/09-Maven-plugin.md` | Current Maven plugin goals and parameters. |
 
-### `README.md` (root level)
+## Component documents
 
-Contains:
-- Project description: _"Code formatting tool + plugins"_
-- Module links:
-  ```markdown
-  - [Core Utility](/core/README-CORE.md)
-  - [Maven Plugin](/maven-plugin/README-MAVEN.md)
-  - [Examples](/examples/)
-  ```
-- Quick start:
-  ```bash
-  git clone https://github.com/your/project.git
-  cd project
-  mvn install
-  ```
+| Document | Component |
+|---|---|
+| `docs/02-Configurator.md` | Configuration loading, overlays, and merging. |
+| `docs/03-Parser.md` | Spoon parser/translator role. |
+| `docs/04-Sorter.md` | Sorting responsibilities and dependency safety. |
+| `docs/05-Formatter.md` | Formatter/import wrapper behavior. |
+| `docs/06-Processor.md` | `SrcProcessor` flows and result semantics. |
+| `docs/07-DiffReporter.md` | Check-flow diff rendering. |
+| `docs/08-CliRunner.md` | CLI implementation summary. |
+| `docs/jharmonizer-architecture.md` | Current high-level module architecture. |
 
----
+## Planning documents
 
-### `/core/README-CORE.md`
-
-Contains:
-- CLI usage: `your-util format --target=src/`
-- Configuration: `~/.your-util/config.yaml`
-- Example pipeline:
-  ```yaml
-  steps:
-    - name: Format code
-      run: your-util format --check
-  ```
-
----
-
-### `/maven-plugin/README-MAVEN.md`
-
-Contains:
-- Usage in `pom.xml`:
-  ```xml
-  <plugin>
-    <groupId>com.your</groupId>
-    <artifactId>formatter-maven-plugin</artifactId>
-    <version>1.0</version>
-  </plugin>
-  ```
-- Execution: `mvn formatter:format`
-- Parameters: `<skip>false</skip>`
-
----
-
-### `/examples/EXAMPLE.md` (one per integration)
-
-Example: Jenkins
-
-## Jenkins Integration
-
-```groovy
-pipeline {
-  stages {
-    stage('Format') {
-      steps {
-        withMaven(maven: 'maven-3.8') {
-          sh 'mvn formatter:format'
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-### `/docs/CONFIG.md`
-
-Contains:
-- Shared configuration principles
-- Environment variables:
-  ```bash
-  export FORMATTER_DEBUG=true
-  ```
-- Config formats: YAML / JSON
-
----
-
-### `/docs/TROUBLESHOOTING.md`
-
-| Error                    | Solution                                      |
-|--------------------------|-----------------------------------------------|
-| Unsupported Java version | Upgrade JDK to 17+                            |
-| Config not found         | Run `your-util init` to create default config |
-
----
-
-### `/docs/CHANGELOG.md`
-
-Example entry:
-```markdown
-## [1.1.0] - 2025-06-20
-### Added
-- Java 21 support
-```
+`docs/TODO.md`, `docs/test-coverage-plan.md`, `docs/sorting-algorythm.md`, and `docs/order-dependency-filter.md` describe planned, exploratory, or backlog work. They should be read as future-work notes unless they explicitly say a behavior is current.
