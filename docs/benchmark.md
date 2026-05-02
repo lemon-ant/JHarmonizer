@@ -19,7 +19,7 @@ The benchmark:
 
 ## Running the benchmark
 
-Run with defaults (4 threads, batch size 1000, warmup 2 iterations, measure 5 iterations):
+Run with defaults (4 threads, batch size 1000, warmup 5 iterations, measure 10 iterations, no forks):
 
 ```bash
 mvn -pl core -Pbenchmark-sort -Dskip-quality-gates -DskipTests test-compile exec:java
@@ -42,4 +42,4 @@ All commands must be run from the repository root.
 ## Output
 
 - Console summary from JMH.
-- Machine-readable JSON results at `core/target/sorting-benchmark.json`.
+- Machine-readable JSON results at `core/sorting-benchmark.json`.

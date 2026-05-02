@@ -128,7 +128,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processingSucceeds_returnsExitCode0() {
+    void call_processingSucceeds_returnsOkExitCode() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
@@ -192,7 +192,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
+    void call_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -204,11 +204,11 @@ class BaseCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
-    void call_baseDirMissing_returnsExitCode1() throws Exception {
+    void call_baseDirMissing_returnsProcessingErrorExitCode() throws Exception {
         // Given
         Path missingDirectoryPath = temporaryDirectory.resolve("missing-base-dir");
 
@@ -220,11 +220,11 @@ class BaseCommandTest {
 
         // Then
         assertThat(Files.exists(missingDirectoryPath)).isFalse();
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
-    void call_configFileMissing_returnsExitCode1() throws Exception {
+    void call_configFileMissing_returnsProcessingErrorExitCode() throws Exception {
         // Given
         Path missingConfigPath = temporaryDirectory.resolve("missing-config.yml");
 
@@ -236,11 +236,11 @@ class BaseCommandTest {
 
         // Then
         assertThat(Files.exists(missingConfigPath)).isFalse();
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
-    void call_processorThrowsRuntimeWithoutMessage_returnsExitCode1() throws Exception {
+    void call_processorThrowsRuntimeWithoutMessage_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -252,7 +252,7 @@ class BaseCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -271,7 +271,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_verboseWithRuntimeException_returnsExitCode1() throws Exception {
+    void call_verboseWithRuntimeException_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -283,7 +283,7 @@ class BaseCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -330,7 +330,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processorThrowsRuntimeWithBlankMessage_returnsExitCode1() throws Exception {
+    void call_processorThrowsRuntimeWithBlankMessage_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -342,11 +342,11 @@ class BaseCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
-    void call_verboseOptionWithMissingStdoutAppender_returnsExitCode0() {
+    void call_verboseOptionWithMissingStdoutAppender_returnsOkExitCode() {
         // Given
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         @SuppressWarnings("unchecked")
@@ -369,7 +369,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_missingBaseDir_returnsExitCode1() throws Exception {
+    void call_missingBaseDir_returnsProcessingErrorExitCode() throws Exception {
         // Given
         Path missingDir = temporaryDirectory.resolve("missing");
 
@@ -381,7 +381,7 @@ class BaseCommandTest {
 
         // Then
         assertThat(Files.exists(missingDir)).isFalse();
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -396,7 +396,7 @@ class BaseCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test

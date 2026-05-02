@@ -10,15 +10,18 @@ import org.apache.maven.plugins.annotations.Mojo;
  * does not conform to the configured member ordering. All violations are collected before the
  * build is failed (when {@code failOnViolation=true}).
  *
+ * <p>Mirrors the CLI {@code check-all} command and is the counterpart of {@code check-fast},
+ * which stops at the first violation.
+ *
  * <p>Source files are <strong>never modified</strong> by this goal.
  */
-@Mojo(name = "check", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true)
-public final class CheckMojo extends AbstractJHarmonizerMojo {
+@Mojo(name = "check-all", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true)
+public final class CheckAllMojo extends AbstractJHarmonizerMojo {
 
     /**
-     * Creates a new CheckMojo.
+     * Creates a new CheckAllMojo.
      */
-    public CheckMojo() {}
+    public CheckAllMojo() {}
 
     @Override
     @NonNull

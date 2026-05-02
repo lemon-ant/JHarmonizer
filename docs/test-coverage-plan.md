@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # JHarmonizer — test coverage plan (remaining work)
 
 This document is a **checklist of test work that is still missing** in the current repo version.
@@ -9,13 +14,13 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 - [ ] **Member body integrity**
   - **Type:** component
-  - **Targets:** `SpoonCustomSourcePrinter`
+  - **Targets:** `SpoonCustomSrcPrinter`
   - **Goal:** when a member is moved, its **body text is unchanged** (except group separator insertion around boundaries).
   - **Must assert:** stable “sentinel” markers inside members stay exactly the same.
 
 - [ ] **Boundary stitching correctness**
   - **Type:** component
-  - **Targets:** `SpoonCustomSourcePrinter`, `SpoonSourcePrinterUtils`
+  - **Targets:** `SpoonCustomSrcPrinter`, `SpoonSrcPrinterUtils`
   - **Goal:** no missing/extra braces, semicolons, or accidental merges of two members.
   - **Must assert:** output is syntactically valid and compiles.
 

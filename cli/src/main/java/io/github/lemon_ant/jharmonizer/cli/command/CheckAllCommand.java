@@ -17,7 +17,7 @@ final class CheckAllCommand extends BaseCommand {
      * Creates a new {@code check-all} command.
      */
     CheckAllCommand() {
-        // Required by Picocli (command instantiation).
+        super(ExitCodes.CHECK_FAILED);
     }
 
     /**

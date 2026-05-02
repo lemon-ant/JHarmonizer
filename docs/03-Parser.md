@@ -1,153 +1,79 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Java AST Parser
 
 ## Purpose
 
-In the context of the JHarmonizer project, we aim to evaluate and select a reliable and flexible Java parser
-that transforms raw Java source code into an object-oriented model (AST - Abstract Syntax Tree).
-This is a critical step for performing member reordering and clean reserialization back into Java source.
-Post-sorting, raw code might lose its original formatting and readability. Thus, to preserve correctness and maintain
-format quality, we must rely on a robust parser + formatter pair.
+Convert each `.java` source file into an AST that the rest of the pipeline (sorter,
+serializer, formatter) can manipulate and reserialize back into Java source.
 
-The AST parser must serve as the foundation for:
-- breaking code into structured elements,
-- performing sorting based on rules and configurations,
-- and reserializing it reliably, preserving annotations, comments, formatting consistency, and correct Java syntax.
+## Library
 
-## What is AST (Abstract Syntax Tree)?
+JHarmonizer uses **[Spoon](https://github.com/INRIA/spoon)** as its single AST library.
+The implementation lives in
+`io.github.lemon_ant.jharmonizer.core.translator.spoon`.
 
-**AST** (Abstract Syntax Tree) is a tree-like data structure used to represent the **syntactic structure** of source
-code in a hierarchical way.
+The selection criteria (semantic-rich AST, comment/annotation preservation, robust
+re-serialization, Java 21 support) were resolved during the initial POC. Other
+candidates evaluated at the time (JavaParser, Eclipse JDT, ANTLR) are not used.
 
-Each node in the tree corresponds to a **construct** occurring in the code:
-- expressions,
-- variable declarations,
-- method calls,
-- class definitions, etc.
+The decisive advantage of Spoon over a purely syntactic parser is that it does
+**not** stop at a token tree: it provides a fully resolved, navigable object model
+of the type system and of the in-code dependencies (`CtFieldReference`,
+`CtExecutableReference`, `CtTypeReference`, `CtVariableAccess`, etc.). This is what
+makes the declaration-order dependency graph (see
+[`declaration-order-dependencies.md`](declaration-order-dependencies.md)) feasible:
+each `*DependencyProvider` walks the resolved references inside a member's body to
+discover which other members it depends on, instead of guessing from textual
+identifiers.
 
-### Example
-
-For this Java code:
-```java
-int x = 2 + 3;
-```
-
-The corresponding AST structure would look like:
+## Where it fits in the pipeline
 
 ```
-Assignment
-+- Variable: x
-\- Expression: +
-    +- Literal: 2
-    \- Literal: 3
+SrcFile (raw text + path)
+    ↓
+SpoonParser.parseJavaSrcFile(srcFile, printerConfig)
+    ↓
+SpoonAstModel
+    ├─ CtCompilationUnit       (Spoon AST)
+    ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
+    ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
+    └─ Supplier<SerializedSrcWithSkippedTypeRanges>  (lazy re-serialization)
+    ↓
+Sorter → SpoonCustomSrcPrinter → Formatter
 ```
 
-## Where It Fits in the Pipeline
+## Key components
 
-```
-Raw Java code
-    ↓
-AST Parser (e.g., JavaParser or Spoon)
-    ↓
-Object Model (Class → Fields, Methods, Inner Types, etc.)
-    ↓
-Sorting and processing
-    ↓
-Back to source (reserialization)
-    ↓
-Formatter (Palantir Java Format)
-    ↓
-Final formatted Java code
-```
+| Class                                | Role                                                                                                  |
+|--------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `SpoonParser`                        | Entry point. Wraps the source in a `VirtualFile`, builds a `Launcher` with `complianceLevel = 21`, and assembles the `SpoonAstModel`. |
+| `SpoonAstModel`                      | Immutable post-parse snapshot used by the rest of the pipeline.                                       |
+| `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
+| `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the serializer can compute relocations.  |
+| `SpoonCustomSrcPrinter` / `SpoonTypePrinter` / `SpoonSrcPrinterUtils` | Spoon-printer customization used when the AST is serialized back to text.        |
+| `EnumMemberStartCorrectionResolver`  | Compensates for Spoon offset quirks at the start of enum bodies.                                      |
+| `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
 
-## Candidate Libraries
+## What is preserved
 
-### 1. [JavaParser](https://javaparser.org/)
-- Maintained actively, supports Java 1-21
-- Simple API for parsing, visiting, and manipulating AST
-- Supports pretty-printing with formatting preservation
-- Comments and annotations handled explicitly
-- Can parse broken/incomplete Java code (with exceptions)
+- Block, line, and Javadoc comments — preserved through the Spoon model and the custom
+  printer, including comments attached to top-level types and members.
+- Annotations on declarations.
+- Member-level source positions (`SourcePosition`) used for ordering tie-breakers and
+  for emitting opt-out warnings with `path:line:column` locations.
 
-### 2. [Spoon](https://spoon.gforge.inria.fr/)
-- Academic-grade deep Java code analysis and transformation framework
-- More powerful than JavaParser but more complex
-- AST with rich semantic information
-- Ideal for deep refactoring, not just basic sorting
-- Also supports comments and annotations
+## Java version
 
-### 3. Eclipse JDT AST
-- The AST used by the Eclipse IDE
-- Heavy, low-level API
-- Requires Eclipse infrastructure
-- Not ideal for lightweight standalone tools
+`SpoonParser.JAVA_VERSION = 21` — Spoon 11.x is required because earlier Spoon versions
+do not support Java 17+ source compliance levels. See the build memory: minimum runtime
+target is Java 17 (Spoon's own requirement); test compilation targets Java 21.
 
-### 4. ANTLR with Java grammar
-- Manual integration with grammar definitions
-- Error-prone and requires high effort
-- Not considered suitable for our primary flow
+## Failure mode
 
-## Parser Selection Criteria (POC Plan)
-
-We must test:
-1. **Valid Java Source**
-    - Parse a valid `.java` file
-    - Check resulting AST structure
-    - Evaluate reserialization output
-
-2. **Broken Java Source**
-    - Test malformed files
-    - Determine how gracefully parser fails
-    - Expected: structured error or partial AST
-
-3. **Comments Preservation**
-    - Block, inline, and Javadoc comments
-    - Must survive roundtrip (parse + output)
-
-4. **Annotations**
-    - On fields, methods, classes
-    - Preservation + *ability to sort annotations*
-
-5. **Inner/Nested Classes**
-    - Must retain proper nesting in AST and output
-    - Especially test deep nesting
-
-6. **Field Dependency Sorting**
-    - Determine order based on other field usage
-    - Does AST contain information about field dependencies?
-
-7. **Reserialization Quality**
-    - Check fidelity of output
-    - Formatting errors or losses?
-
-8. **Java Version Compatibility**
-    - Ensure Java 21 features are parsed correctly
-
-## Additional Notes
-
-- We may wrap the parser of choice in a lightweight adapter component to abstract its API and expose a simplified JHarmonizer-specific interface.
-- This component will serve as the core input/output layer for sorting and transformation logic.
-
-## Summary
-
-The selected parser must:
-- Be easy to use and integrate
-- Provide good support for annotations and comments
-- Work with Java 21 syntax
-- Tolerate broken code inputs gracefully
-- Output clean, faithful source via serialization
-
-### Primary candidates:
-- JavaParser (Preferred starting point)
-- Spoon (Alternative with deeper insight)
-
-### Secondary fallback:
-- Eclipse JDT AST (fallback)
-- ANTLR (fallback)
-
-If needed, fallback parser integration may be considered for future iterations depending on POC results and resource availability.
-
-## Related Tools
-
-- [JavaParser](https://javaparser.org/)
-- [Eclipse JDT AST](https://www.eclipse.org/jdt/)
-- [ANTLR for Java](https://github.com/antlr/antlr4)
+If Spoon fails to build the model for a file, `SpoonParser` throws
+`SpoonModelBuildException` carrying the source path and a normalized message. The
+flow layer captures it as a per-file processing failure without aborting the whole run.

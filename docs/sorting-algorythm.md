@@ -1,109 +1,142 @@
-# Replace topo-style final ordering with provider-lift repair
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-## Goal
+# JHarmonizer sorting algorithm
 
-Replace the current final dependency-aware ordering strategy so that the produced order is no longer driven by lexicographical/stable topological selection of the next legal element.
+This document describes the algorithm used to order members inside a single member
+group, including the key derivation, comparator chain, dependency-graph repair pass,
+and the post-sorting relocation reporter.
 
-The new final ordering behavior must be based on **provider lift**:
-the algorithm should preserve the existing base order as the primary desired sequence and repair it by moving required providers directly before the earliest blocked dependent element.
+## Inputs
 
-## Problem
+For one leaf member group inside one type, the sorter receives:
 
-The current ordering strategy may produce a dependency-valid order that is technically correct but visually less intuitive.
+- `compiledMemberGroup` — the leaf node of the compiled member-group tree, carrying
+  the inherited `ordering-rules`, `keepAccessorsTogether`, and `relaxedForwardReferences`
+  settings.
+- `groupMembers` — the `CtTypeMember`s that the dispatcher routed into this leaf
+  group, in original source order.
+- `memberDependencyGraph` — the per-type dependency graph built once by
+  `MemberDependencyGraphBuilder` (see [`declaration-order-dependencies.md`](declaration-order-dependencies.md)).
 
-In particular, the current behavior may:
-- spread dependency-related elements across the output;
-- push dependent elements downward in ways that are hard to explain locally;
-- preserve global legality while producing an order that is less readable for humans.
+## Output
 
-The desired behavior is different:
-- keep the base order as the default intention;
-- when a dependency conflict is encountered, resolve it by pulling the required providers upward;
-- keep the repair local, contiguous, and easy to explain.
+A list of `CtTypeMember`s in the final declaration order. The result is wrapped in a
+`MemberGroupBlock` and concatenated with the other groups into the type body.
 
-## Required change
+## Step 1 — Derive ordering keys
 
-Change the final ordering policy so that:
+`OrderingKeyFactory.createSortableMembers(...)` derives an `OrderingKey` per member
+from `SpoonTypeMemberUtils`:
 
-- ordering starts from the already computed base order;
-- the algorithm scans that order from left to right;
-- when the earliest blocked dependent element is encountered, the algorithm resolves the conflict by moving the required provider closure directly before that dependent element;
-- the process repeats until the order becomes dependency-valid.
+| Field on `OrderingKey`        | Source                                                            |
+|-------------------------------|-------------------------------------------------------------------|
+| `srcStart`                    | Spoon `SourcePosition` of the member declaration.                 |
+| `alphaKey`                    | Member name plus signature for methods/constructors (so overloads sort by parameter list). |
+| `alphaSortingRank`            | Per-kind grouping rank used as a secondary alpha tie-breaker.     |
+| `visibilityRank`              | `public=0`, `protected=1`, `package=2`, `private=3`.              |
 
-## Behavioral requirements
+For accessor co-location (when `keepAccessorsTogether` is on), the factory also
+computes two representative keys per member:
 
-### Base order remains primary
+- **Property cluster representative** — shared by the getter and setter for the same
+  JavaBean property.
+- **Super-cluster representative** — shared by all accessors in the group when at
+  least `MIN_ACCESSORS_FOR_SUPER_CLUSTER = 2` accessors are present.
 
-The existing base comparator and the already computed base order must remain the primary desired order.
+Members that do not belong to any cluster carry self-references for both
+representatives.
 
-The new logic must not replace the base order with an unrelated global traversal strategy.
-Instead, it must **repair** the base order only where required by hard dependencies.
+## Step 2 — Build the comparator
 
-### Earliest blocked element wins
+`ComparatorUtils.buildSortableTypeMemberComparator(orderingRules)` returns a
+`Comparator<SortableTypeMember>` that:
 
-When the current order is invalid, the algorithm must always resolve the **earliest blocked dependent element** first.
+1. Compares **super-cluster representatives** first (reference equality short-circuit
+   inside the same cluster).
+2. Then compares **property-cluster representatives**.
+3. Then compares each member's **own `OrderingKey`**.
 
-Do not skip a blocked element in order to continue producing later legal elements.
+For each level the underlying `OrderingKey` comparator is built from the inherited
+`ordering-rules`. The four rules map to pre-computed comparator constants:
 
-### Provider lift is contiguous
+| `OrderingRule`     | Comparator                                                        |
+|--------------------|-------------------------------------------------------------------|
+| `PRESERVE`         | `compareInt(srcStart)`                                            |
+| `ALPHA`            | `compareInt(alphaSortingRank).thenComparing(alphaKey)`            |
+| `VISIBILITY_DESC`  | `compareInt(visibilityRank)` (public first because public=0)      |
+| `VISIBILITY_ASC`   | `compareInt(visibilityRank).reversed()` (private first)           |
 
-When a repair is required, the moved provider set must appear as one contiguous block directly before the blocked dependent element.
+A deterministic tie-breaker chain (`PRESERVE` then `ALPHA`) is appended to the
+configured rules so two equal configurations always produce identical output. When no
+rules are configured, the default `PRESERVE → ALPHA` chain is used directly.
 
-Do not smear lifted providers across the order.
-Do not separate the lifted providers from the dependent element they justify.
+## Step 3 — Provider-lift repair against the dependency graph
 
-### Transitive providers must be respected
+The base order produced by sorting `SortableTypeMember`s with the comparator above is
+fed into `SimplifiedDependencyAwareSorter` together with:
 
-The repair must account for the required transitive provider closure, not only direct providers.
+- accessor-pair bundles modeled as `Groups`, and
+- `DECLARATION_DEPENDENCY` edges from `MemberDependencyGraph`, modeled as `Dependencies`.
 
-If a provider needed for the blocked element itself depends on other providers that are still located later in the order, those prerequisites must be handled as part of the same repair.
+The sorter implements a **provider-lift** repair policy:
 
-### Stability of unaffected elements
+1. The base order (from Step 2) is treated as the desired sequence.
+2. The base order is scanned left to right.
+3. When the earliest blocked dependent is encountered (its required providers have
+   not yet been emitted), the **minimal transitive provider closure** is moved as a
+   single contiguous block directly before the blocked element.
+4. Lifted providers are topologically sorted among themselves with base-rank
+   tie-breaking.
+5. Repeat until the order is dependency-valid.
 
-Elements that are not part of the current repair must preserve their relative order.
+Properties:
 
-The new policy must minimize collateral reordering and must not introduce unrelated reshuffling.
+- The base order remains the primary intent; only members forced by hard dependencies
+  are repositioned.
+- Lifted providers stay contiguous and sit immediately above the dependent that
+  required them (no smearing).
+- Unaffected members preserve their relative order.
+- The output is fully deterministic.
 
-### Determinism
+This is the only repair strategy: there is no alternative branching, no scoring
+between candidates, and no global topological re-shuffle.
 
-For identical input, dependencies, and base order, the output must always be identical.
+The mutual-exclusion precondition required by the simplified sorter — accessor-pair
+groups never overlap with dependency-graph nodes — is enforced when the Groups and
+Dependencies are constructed in `GroupMembersOrderer`.
 
-### Existing dependency model must stay intact
+## Step 4 — Emit the ordered group
 
-Keep the existing dependency graph construction, dependency semantics, and any existing cycle-condensation / bundling logic intact.
+The `CtTypeMember`s are collected from the sorted `SortableTypeMember`s and wrapped
+back into a `MemberGroupBlock`. Separator directives propagate to the printer.
 
-This task is about replacing the **final ordering policy**, not redesigning dependency extraction.
+## Top-level types
 
-## Explicit non-goals
+`SpoonSorter` reuses the same comparator machinery for top-level types of a
+compilation unit, but with the simpler `ComparatorUtils.buildOrderingKeyComparator(...)`
+(member-only) chain — top-level types do not participate in accessor clustering or in
+the per-type declaration-order dependency graph.
 
-This task must **not** introduce:
-- dependent shift;
-- branching or search-based candidate exploration;
-- scoring between multiple alternative outputs;
-- heuristic multi-strategy comparison;
-- arbitrary global reordering beyond provider lift repair.
+## Post-sorting relocation reporter
 
-The required behavior is a single deterministic strategy: **provider lift**.
+After sorting completes, `RelocationDetector` produces a human-friendly relocation
+report consumed by `MemberRelocationPrinter`. The reporter is a pure diagnostic
+pass — it never influences the produced output. Its full algorithm (the LIS-based
+minimal-moved-set computation, scope handling, and chunk gluing) is documented
+separately in [`relocation-detector.md`](relocation-detector.md).
 
-## Acceptance criteria
+## Determinism
 
-- The final order is produced by provider-lift repair over the base order.
-- The algorithm no longer relies on lexicographical/stable topological next-node selection as the final ordering policy.
-- The earliest blocked dependent element is always repaired first.
-- Required providers are moved directly before the blocked dependent element as a contiguous block.
-- Transitive unmet providers are respected.
-- Unaffected elements preserve relative order.
-- The output remains dependency-valid and deterministic.
+Every step of the pipeline is deterministic:
 
-## Test requirements
+- Comparator chains terminate in stable tie-breakers.
+- The provider-lift repair always picks the earliest blocked dependent and its minimal
+  closure.
+- The relocation report is derived from a deterministic patience-sort LIS (see
+  [`relocation-detector.md`](relocation-detector.md)).
 
-Add or update regression tests so that provider-lift behavior is explicitly locked down.
-
-At minimum cover:
-
-- a case where the previous topo-style strategy produced a dependency-valid but visually less intuitive result;
-- a case where transitive providers must be lifted together;
-- a case showing that unrelated elements preserve their relative order;
-- a case proving that the final order is built by provider-lift repair rather than by selecting the next currently legal node.
-
-Use exact expected output assertions for the most important regression fixtures.
+Two runs over identical inputs produce byte-identical AST orderings and identical
+relocation reports.

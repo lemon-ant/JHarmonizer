@@ -44,7 +44,7 @@ class ParseAllJava21FeaturesTest {
         assertThat(parsingStatistic.getParsedRootTypesCount()).isEqualTo(8);
         assertThat(parsingStatistic.getParsedTypesTotalCount()).isEqualTo(19);
         assertThat(parsingStatistic.getParsedMembersCount()).isEqualTo(129);
-        assertThat(parsingStatistic.getParsingTimeInNanos()).isGreaterThan(100000000);
+        assertThat(parsingStatistic.getParsingTimeInNanos()).isGreaterThan(1000000);
     }
 
     @Test

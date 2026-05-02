@@ -19,7 +19,7 @@
                     <execution>
                         <id>check-sources</id>
                         <goals>
-                            <goal>check</goal>
+                            <goal>check-all</goal>
                         </goals>
                         <phase>verify</phase>
                         <configuration>

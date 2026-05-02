@@ -70,15 +70,15 @@ Bind `check-fast` to the `verify` phase to fail the build on the first out-of-or
 ```
 
 `check-fast` immediately halts the build pipeline the moment it detects an out-of-order or unformatted file —
-no further processing happens. `check` scans all files, collects every violation, and only then interrupts the
-build with the full report; set `-Djharmonizer.failOnViolation=false` to make `check` report violations without
+no further processing happens. `check-all` scans all files, collects every violation, and only then interrupts the
+build with the full report; set `-Djharmonizer.failOnViolation=false` to make `check-all` report violations without
 failing the build.
 
 ### Manual invocation
 
 ```bash
 mvn jharmonizer:reorder      # reorder all sources
-mvn jharmonizer:check        # report all violations
+mvn jharmonizer:check-all        # report all violations
 mvn jharmonizer:check-fast   # fail fast on first violation
 ```
 
@@ -116,9 +116,11 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
 ## Current status
 
 - Core pipeline is available: parse → group → sort → serialize → format.
-- A declaration-order dependency graph is built to avoid reorderings that would break compilation or
-  field/constant initialization for the dependency cases JHarmonizer currently models.
-  Currently handles direct initializer references and accessor bundling.
+- A declaration-order dependency graph is built to avoid reorderings that would break compilation
+  or field/constant initialization. The current model handles direct initializer references
+  (forward and backward, including explicit `this.` / `<EnclosingType>.` qualifiers), enum
+  constant initializers, instance and static initializer blocks, blank-final definite-assignment
+  ordering, cross-type constant back-references, and accessor bundling.
 - Comment-based opt-out directives are supported for file scope and type scope.
 
 ## Roadmap (next versions)

@@ -1088,6 +1088,80 @@ Introduce a dedicated test-source visibility cleanup rule that:
 
 ---
 
+### 24. Vendor-format configuration adapters (IntelliJ IDEA, Eclipse, EditorConfig, Spotless)
+
+#### Status
+- [ ] Not implemented (captured as a future improvement)
+- [ ] Revisit after: configurator + compiled-config layering is fully stable and at least one
+  external integration explicitly requests it
+
+#### Background
+JHarmonizer's configurator already separates four layers (Vendor → Unified → Merge → Compiled);
+see [`docs/02-Configurator.md`](02-Configurator.md). The Vendor layer is the only layer that is
+format-specific; everything downstream — overlay merging, compilation, sorter / formatter
+consumption — already operates on the vendor-independent `UnifiedConfig`.
+
+Today the only Vendor implementation is the JHarmonizer YAML schema. The architecture is
+deliberately set up so that other vendor configuration formats (formats that influence
+**formatting and member ordering** in real Java projects) can be ingested by writing only an
+adapter, without touching merge / compile / runtime code.
+
+#### Problem statement
+Real-world Java projects often already carry vendor-specific style/order configuration that
+lives outside of JHarmonizer:
+
+- **IntelliJ IDEA** — `.idea/codeStyleConfig.xml`, `.idea/codeStyles/Project.xml`, the
+  "Arrangement" rules, naming-convention rules and `@Order` annotations from the IDE.
+- **Eclipse / Eclipse JDT** — `org.eclipse.jdt.core.prefs`, exported Eclipse formatter
+  profiles (`*.xml`) and clean-up profiles.
+- **EditorConfig** — `.editorconfig` properties that affect indentation, line endings, and a
+  small subset of formatter-relevant settings.
+- **Spotless** — `spotless` Maven/Gradle plugin configurations that pin a formatter style.
+- Possibly others (Checkstyle/PMD configurations that constrain ordering, etc.).
+
+Forcing teams to maintain a separate `jharmonizer.yml` that duplicates these settings is a
+real adoption friction. The goal is to ingest the parts of these formats that map onto
+`UnifiedConfig` so JHarmonizer can act as a single source of truth without rewriting the
+project's existing IDE/CI configuration.
+
+#### Proposed solution (future)
+For each supported vendor format, add a thin adapter pair:
+
+- a vendor-specific loader / deserializer (`<Vendor>ConfigLoader`) that turns the input file
+  into a strongly-typed vendor model (e.g. `IdeaCodeStyleConfig`, `EclipseFormatterProfile`,
+  `EditorConfigDocument`, `SpotlessConfigSnapshot`);
+- a vendor-specific converter (`<Vendor>2UnifiedConverter`) that maps the vendor model onto
+  `UnifiedConfig` / `FlexibleUnifiedConfig`.
+
+Once a vendor adapter produces a `UnifiedConfig` (or `FlexibleUnifiedConfig` overlay), the
+rest of the pipeline — `UnifiedConfigMerger`, `Unified2CompiledModelCompiler`, `SrcProcessor`
+— consumes it unchanged.
+
+Discovery and ordering of overlays (which vendor file is loaded first, how they merge with
+the JHarmonizer YAML overlay, which one wins on a conflict) is part of the design that needs
+to be revisited together with the actual ingestion code. Some properties of those formats
+have no JHarmonizer equivalent and should be silently ignored; some have lossy or
+opinionated mappings that need to be documented per adapter.
+
+#### Non-goals
+- Round-tripping vendor configurations: JHarmonizer ingests these formats one way; we do
+  **not** plan to write back into `.idea/*.xml`, Eclipse profiles, or `.editorconfig`.
+- Ingesting formats whose only relevance is unrelated to formatting / member ordering
+  (build configuration, linter rule sets, dependency tools).
+
+#### Implementation outline (when revisited)
+- [ ] Inventory which fields each target vendor format actually exposes that map onto
+  `UnifiedConfig` (formatter style, blank-line policy, member ordering, header lines, ...).
+- [ ] Decide a stable conflict-resolution order between vendor overlays and the JHarmonizer
+  YAML overlay.
+- [ ] Implement adapters one vendor at a time, starting with the lowest-risk format.
+  Suggested order: `.editorconfig` → IntelliJ IDEA → Eclipse → Spotless.
+- [ ] Add a "lossy mapping" doc per adapter that lists which vendor settings are honoured,
+  approximated, or ignored.
+- [ ] Add E2E fixtures for each adapter under `core/src/test/resources/test-cases/**`.
+
+---
+
 ## Technical debt / stabilization backlog
 
 ### 1. Blank-final nearest-provider edge cases still not covered by active E2E

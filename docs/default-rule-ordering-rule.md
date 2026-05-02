@@ -1,130 +1,214 @@
-# JHarmonizer default rule — member ordering specification (draft)
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-## Tree view (single hierarchy)
+# JHarmonizer "Default Rule" — member ordering specification
+
+This document describes the structure and semantics of the **Default Rule** root member
+group shipped in `core/src/main/resources/default-config.yml`. It is the fallback root
+group: it matches every member that no earlier root group has claimed (its include
+selector is the regex `~.*`).
+
+## Root rules in `default-config.yml`
+
+The embedded `default-config.yml` is **not** a single ordering rule. It defines a list
+of root rules under `type-members-ordering:`, evaluated in order. Each top-level type
+in the project is matched against the rules from top to bottom; the first matching
+rule wins, and that rule's `groups:` subtree is used to order the type's members.
+
+The rules shipped in the embedded default, in declaration order, are:
+
+| # | Root rule           | What it matches                                                                                                                                                                  | Why it exists                                                                                                                                                                         |
+|---|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | **Test Classes**    | Classes annotated with `@Test`/`@ExtendWith`/`@Nested`/`@RunWith`, or whose name ends in `Test` / `IT` (JUnit 4/5 conventions).                                                    | Test classes have a different natural shape: JUnit fields and constants on top, then `@BeforeEach`/`@BeforeAll`, then `@Test`/`@ParameterizedTest`/etc., then `@AfterEach`/`@AfterAll`, then utility methods, then `@TestConfiguration` and `@Nested` test classes. The general-purpose Default Rule would be a poor fit here. |
+| 2 | **DTO and Entities**| Classes named `*Dto` / `*DTO` / `*Entity`, or annotated with `@Value`, `@Data`, `@Entity`, `@MappedSuperclass`, `@Embeddable`, `@ConfigurationProperties`, or `@Document`. Excludes `interface`, `enum`, `annotation`. | Data-carrier classes benefit from the strict `Serializable UID → constants by visibility → static fields → final instance fields → static initializers → static methods → instance initializers → constructors → accessors (kept together) → other public methods → `equals`/`hashCode`/`toString`/`clone`/`compareTo` → non-public methods` shape. |
+| 3 | **Default Rule**    | Everything else (`includes: ~.*`).                                                                                                                                               | The general-purpose fallback documented in the rest of this file: production classes that are neither tests nor DTOs/entities.                                                          |
+
+In other words, the embedded default is **already specialized** for the three most
+common kinds of Java types in real projects: tests, data carriers, and "regular" code.
+A user-supplied YAML overlay can add new root rules in front of the defaults (they are
+merged at the root level by `name`; see [`02-Configurator.md`](02-Configurator.md)).
+
+This document describes only **rule #3 — Default Rule**. Rules #1 and #2 are
+self-documenting in `default-config.yml` itself.
+
+## What the Default Rule does (rule #3)
+
+This is a description of what the embedded default actually does for the third rule.
+The full reference schema for member-group YAML lives in [`config-dsl.md`](config-dsl.md);
+the documented ordering-rule values (`alpha`, `preserve`, `visibility-asc`,
+`visibility-desc`) are the ones used below.
+
+## Top-level layout (in order)
 
 ```
-Default Rule (fallback root group)
-├─ 1) Fields
-│  ├─ 1.1) Static fields
-│  │  ├─ 1.1.1) Static final fields (constants)
-│  │  │  ├─ 1.1.1.1) serialVersionUID (if present) — first
-│  │  │  ├─ 1.1.1.2) Logger fields (if present) — next
-│  │  │  └─ 1.1.1.3) Other static final fields — sort: visibility → ALPHA
-│  │  └─ 1.1.2) Static non-final fields — sort: visibility → ALPHA
-│  └─ 1.2) Instance fields
-│     ├─ 1.2.1) Instance final fields — sort: visibility → ALPHA
-│     └─ 1.2.2) Instance non-final fields — sort: visibility → ALPHA
-├─ 2) Initializers
-│  ├─ 2.1) Static initializers — preserve/source order
-│  └─ 2.2) Instance initializers — preserve/source order
-├─ 3) Methods (including constructors)
-│  ├─ note: keepAccessorsTogether = ON (applied here; inherited by all subgroups)
-│  ├─ note: separator/order rules can also be inherited by subgroups when omitted
-│  ├─ 3.1) Public
-│  │  ├─ Static methods — sort: ALPHA
-│  │  ├─ Constructors — sort: ALPHA
-│  │  └─ Instance methods — sort: ALPHA
-│  ├─ 3.2) Protected
-│  │  ├─ Static methods — sort: ALPHA
-│  │  ├─ Constructors — sort: ALPHA
-│  │  └─ Instance methods — sort: ALPHA
-│  ├─ 3.3) Package-private
-│  │  ├─ Static methods — sort: ALPHA
-│  │  ├─ Constructors — sort: ALPHA
-│  │  └─ Instance methods — sort: ALPHA
-│  └─ 3.4) Private
-│     ├─ Static methods — sort: ALPHA
-│     ├─ Constructors — sort: ALPHA
-│     └─ Instance methods — sort: ALPHA
-└─ 4) Nested types
-   ├─ 4.1) Public
-   │  ├─ Annotations (@interface) — sort: ALPHA
-   │  ├─ Enums — sort: ALPHA
-   │  ├─ Records — sort: ALPHA
-   │  ├─ Interfaces — sort: ALPHA
-   │  └─ Classes — sort: ALPHA
-   ├─ 4.2) Protected
-   │  ├─ Annotations (@interface) — sort: ALPHA
-   │  ├─ Enums — sort: ALPHA
-   │  ├─ Records — sort: ALPHA
-   │  ├─ Interfaces — sort: ALPHA
-   │  └─ Classes — sort: ALPHA
-   ├─ 4.3) Package-private
-   │  ├─ Annotations (@interface) — sort: ALPHA
-   │  ├─ Enums — sort: ALPHA
-   │  ├─ Records — sort: ALPHA
-   │  ├─ Interfaces — sort: ALPHA
-   │  └─ Classes — sort: ALPHA
-   └─ 4.4) Private
-      ├─ Annotations (@interface) — sort: ALPHA
-      ├─ Enums — sort: ALPHA
-      ├─ Records — sort: ALPHA
-      ├─ Interfaces — sort: ALPHA
-      └─ Classes — sort: ALPHA
+Default Rule  (matches ~.*, ordering-rules: preserve)
+├─ 1) Record components
+├─ 2) Enum constants
+├─ 3) Fields
+├─ 4) Initializers
+├─ 5) Methods (including constructors)
+└─ 6) Nested types
 ```
 
----
+The root `ordering-rules: preserve` controls the rendering between these top-level
+subgroups when no inner rule applies. Each subgroup overrides its own ordering as
+described below.
 
-## Scope
+## 1) Record components
 
-This specification describes the **Default Rule** ordering (the fallback root member group that applies when no specialized root group matches).
+```yaml
+- name: Record components
+  includes: [ record-component ]
+```
 
-It defines:
-- the **top-level sequence** of member groups inside a type;
-- the **subgroup structure** for each group;
-- the **sorting strategy** inside each subgroup.
+Bucket for `RECORD_COMPONENT` members. They live in the record header, so the bucket
+exists only to keep them separate from regular fields; ordering is inherited
+(`preserve`).
 
-## Definitions
+## 2) Enum constants
 
-### Visibility
+```yaml
+- name: Enum constants
+  includes: [ enum-constant ]
+```
 
-Visibility levels are:
-- `public`
-- `protected`
-- `package-private`
-- `private`
+Bucket for `ENUM_CONSTANT` members. Enum constants must stay at the top of an enum
+body; ordering is inherited (`preserve`).
 
-> Note: for Methods and Nested Types, visibility is modeled as **explicit structural groups** (not a sort-key).
-> The exact visibility group order is determined by configuration structure.
+## 3) Fields
 
-### Alpha ordering rule
+```yaml
+- name: Fields
+  separator: new-line
+  ordering-rules: [ visibility-desc, alpha ]
+  includes: field
+```
 
-**ALPHA** is a deterministic key that includes *all relevant signature parts* in one string:
-- for a **field**: `fieldName + ":" + fieldType`
-- for a **method**: `methodName + "(" + parameterTypes + ")" + ":" + returnType`
-- for a **constructor**: `constructorName + "(" + parameterTypes + ")"`
-  (constructor name is the declaring type name; parameters drive the order)
+All `FIELD` members. A blank line is inserted before this group at render time.
+Inside the group, fields are ordered by visibility (most-visible first), then alpha.
+Children:
 
-This means overloaded methods/constructors are naturally ordered by their parameter list as part of ALPHA.
+```
+Fields
+├─ Static fields              (includes: static)
+│  └─ Static final fields    (includes: final)
+│     ├─ serialVersionUID    (=serialVersionUID, preserve)
+│     └─ Logger fields       (~(?i)(log|.*logger)$, preserve)
+└─ Instance final fields     (includes: final)
+```
 
-### Preserve / source order
+Notes:
+- `Static fields` does not declare its own ordering — it inherits `[ visibility-desc, alpha ]`.
+- `Static final fields` has only two named special-case children (`serialVersionUID`
+  and `Logger fields`); other static-final fields fall back to the parent's
+  `[ visibility-desc, alpha ]`.
+- `Instance final fields` exists but there is **no** explicit "Instance non-final
+  fields" subgroup — non-final instance fields are placed by the parent rules.
 
-When a member kind has no stable ALPHA key (e.g., initializer blocks), order is **preserved** (original source order), unless dependency constraints force otherwise.
+## 4) Initializers
 
-### Accessor co-location
+```yaml
+- name: Initializers
+  includes: [ initializer ]
+  groups:
+    - name: Static initializers
+      includes: static
+```
 
-For the **Methods** subtree, `keepAccessorsTogether = ON` is applied at the group level so it is inherited by all nested method subgroups.
-The same inheritance mechanism applies to group `separator` and `ordering-rules` when nested groups omit them.
+Only `Static initializers` is broken out as an explicit child. Instance initializer
+blocks fall through to the parent and inherit `preserve`.
+
+## 5) Methods (including constructors)
+
+```yaml
+- name: Methods
+  ordering-rules: alpha
+  keepAccessorsTogether: true
+  includes:
+    - method
+    - constructor
+```
+
+`keepAccessorsTogether: true` is set at this level and inherited by all descendants —
+JavaBean getter/setter pairs declared inside the same type stay adjacent.
+
+Children, in order:
+
+```
+Methods
+├─ Public
+│  ├─ Static methods       (includes: static)
+│  ├─ Constructors         (includes: constructor)
+│  ├─ Instance methods     (excludes: =toString, =equals, =hashCode, =clone, =compareTo)
+│  └─ Basic Object Methods (includes: =toString, =equals, =hashCode, =clone, =compareTo; ordering-rules: alpha)
+├─ Protected
+│  ├─ Static methods
+│  ├─ Constructors
+│  └─ Instance methods
+├─ Package-private
+│  ├─ Static methods
+│  ├─ Constructors
+│  └─ Instance methods
+└─ Private
+   ├─ Static methods
+   ├─ Constructors
+   └─ Instance methods
+```
+
+Notes:
+- The `Basic Object Methods` subgroup is **only** under `Public` — `equals`/`hashCode`/
+  `toString`/`clone`/`compareTo` are pinned at the end of the public methods block.
+  The other visibility groups do not single them out.
+- Each leaf inherits `ordering-rules: alpha` from `Methods`.
+
+## 6) Nested types
+
+```yaml
+- name: Nested types
+  separator: new-line
+  ordering-rules: alpha
+  includes:
+    - annotation
+    - enum
+    - record
+    - interface
+    - class
+```
+
+A blank line is inserted before the group at render time. Children are by visibility,
+then split into two combined buckets:
+
+```
+Nested types
+├─ Public
+│  ├─ Annotations and Interfaces  (annotation, interface)
+│  └─ Classes, Enums, and Records (class, enum, record)
+├─ Protected
+│  ├─ Annotations and Interfaces
+│  └─ Classes, Enums, and Records
+├─ Package-private
+│  ├─ Annotations and Interfaces
+│  └─ Classes, Enums, and Records
+└─ Private
+   ├─ Annotations and Interfaces
+   └─ Classes, Enums, and Records
+```
+
+All leaves inherit `ordering-rules: alpha` from the parent.
 
 ## Non-negotiable constraints
 
-1. **Compilation safety** must be preserved.
-2. **Declaration dependencies** must be respected (provider before dependent).
-3. **Accessor co-location** (if enabled) must be preserved.
-4. If constraints conflict with the preferred visual order, constraints win.
+The Default Rule is rendered subject to the same global constraints that apply to any
+configuration:
 
----
-
-## Default Rule ordering (top → bottom)
-
-1. **Fields**
-2. **Initializers**
-3. **Methods** (including constructors)
-4. **Nested types**
-
----
-
-## Notes
-
-- This spec intentionally focuses only on the Default Rule (fallback root group).
-- Specialized root groups (tests, DTO/entities, etc.) are out of scope for this draft.
+1. Compilation safety — declaration-order dependencies (initializer references, blank-final
+   definite assignment, enum constant initializers, etc.) are honoured by the
+   declaration-order dependency graph and override the visual ordering when they
+   conflict. See [`declaration-order-dependencies.md`](declaration-order-dependencies.md).
+2. Accessor co-location — when `keepAccessorsTogether` is enabled, JavaBean getter/setter
+   pairs are kept adjacent inside their containing group; see
+   [`sorting-algorythm.md`](sorting-algorythm.md).
+3. Source of truth — when the YAML in `default-config.yml` and this document diverge,
+   the YAML wins. Update the document.
