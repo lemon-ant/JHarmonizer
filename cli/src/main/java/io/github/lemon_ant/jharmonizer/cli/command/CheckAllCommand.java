@@ -13,11 +13,13 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckAllCommand extends BaseCommand {
 
+    private static final int EXIT_CODE_CHECK_FAILED = 3;
+
     /**
      * Creates a new {@code check-all} command.
      */
     CheckAllCommand() {
-        // Required by Picocli (command instantiation).
+        super(EXIT_CODE_CHECK_FAILED);
     }
 
     /**

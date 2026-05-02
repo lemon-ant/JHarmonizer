@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # jharmonizer-cli
 
 Command-line interface for JHarmonizer. Wraps `jharmonizer-core` and exposes its
@@ -126,9 +131,13 @@ e.g. `**/*.java`, `**/generated/**`.
 | Code | Meaning |
 |---|---|
 | `0` | Processing completed successfully and no violations were detected |
-| `1` | Processing error (I/O problem, unexpected exception, invalid `--base-dir`, invalid `--config` path) **or** `check-all` detected at least one file that requires reordering |
+| `1` | Processing error (I/O problem, unexpected exception, invalid `--base-dir`, invalid `--config` path) |
 | `2` | Invalid CLI arguments (picocli default) |
-| `3` | `check-fast` only — at least one file requires reordering |
+| `3` | At least one file requires reordering — emitted by both `check-all` and `check-fast` |
+
+`reorder` always returns `0` on a successful run; the exit code is reserved for
+*detected non-conformance* and is the same (`3`) for both check commands so that CI
+gates can match a single value.
 
 ## Typical CI usage
 

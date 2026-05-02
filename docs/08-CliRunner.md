@@ -51,15 +51,16 @@ Glob patterns follow `java.nio.file.PathMatcher` `glob:` syntax (e.g. `**/*.java
 
 ## Exit codes
 
-| Code | Meaning                                                                                                                                    |
-|------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `0`  | Processing completed successfully and no violations were detected.                                                                         |
-| `1`  | Processing error (I/O problem, unexpected exception, invalid `--base-dir`, invalid `--config` path) **or** `check-all` detected violations. |
-| `2`  | Invalid CLI arguments (picocli default).                                                                                                   |
-| `3`  | `check-fast` only — at least one file requires reordering.                                                                                 |
+| Code | Meaning                                                                                                |
+|------|--------------------------------------------------------------------------------------------------------|
+| `0`  | Processing completed successfully and no violations were detected.                                     |
+| `1`  | Processing error (I/O problem, unexpected exception, invalid `--base-dir`, invalid `--config` path).   |
+| `2`  | Invalid CLI arguments (picocli default).                                                               |
+| `3`  | At least one file requires reordering — emitted by both `check-all` and `check-fast`.                  |
 
-`check-fast` is the only command that overrides the default check-failed exit code
-(set to `3` so it can be distinguished from generic processing errors in CI).
+Both check commands use the same `3` for "non-conforming files detected" so a CI gate
+can match a single value regardless of whether it runs `check-all` or `check-fast`.
+`reorder` always returns `0` on a successful run.
 
 ## Reference
 

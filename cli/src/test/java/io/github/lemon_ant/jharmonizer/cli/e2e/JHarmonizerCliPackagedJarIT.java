@@ -226,14 +226,14 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(3);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("JHarmonization summary")
                 .contains("App.java")
                 .containsAnyOf("REORDERED", "FORMATTED")
                 .contains("non-conforming")
-                .contains("Exit code: 1");
+                .contains("Exit code: 3");
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.APP_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.STABLE_SERVICE_JAVA);
         assertFileUnchanged(ORIGINAL_PROJECT_DIRECTORY, projectDirectory, Constants.FEATURE_SERVICE_JAVA);
@@ -265,7 +265,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(3);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("App.java")

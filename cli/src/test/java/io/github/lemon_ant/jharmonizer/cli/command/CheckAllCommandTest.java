@@ -48,7 +48,7 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_nonConformingFilesDetected_returnsExitCode1() {
+    void checkCommand_nonConformingFilesDetected_returnsExitCode3() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -59,7 +59,7 @@ class CheckAllCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(3);
     }
 
     @Test
@@ -99,7 +99,7 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_nonConformingFilesAndInfoDisabled_returnsExitCode1() {
+    void checkCommand_nonConformingFilesAndInfoDisabled_returnsExitCode3() {
         // Given
         Logger baseCommandLogger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
         Level previousLevel = baseCommandLogger.getLevel();
@@ -117,6 +117,6 @@ class CheckAllCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(3);
     }
 }
