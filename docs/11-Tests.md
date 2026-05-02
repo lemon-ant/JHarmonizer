@@ -58,11 +58,11 @@ The standard repository command runs unit and integration tests together with th
 of the quality gates:
 
 ```bash
-mvn -B -ntp verify
+mvn verify
 ```
 
 Individual modules can be tested with the usual Maven flags
-(`mvn -B -ntp -pl core -am test`, etc.).
+(`mvn -pl core -am test`, etc.).
 
 ## Fixture rules
 

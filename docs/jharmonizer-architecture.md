@@ -20,8 +20,11 @@ JHarmonizer is split into four Maven modules:
 `processSources(baseDir, includeGlobs, excludeGlobs, FlowType)` method:
 
 1. Compiles the active `CompiledConfig` (see [`02-Configurator.md`](02-Configurator.md)).
-2. Resolves the matching files via `SrcFilesHandler` (which delegates to
-   `GlobPathFinder` and returns a **parallel** `Stream<Path>`).
+2. Resolves the matching files via `SrcFilesHandler`, which delegates the actual
+   directory walk to [`glob-path-finder`](https://github.com/lemon-ant/glob-path-finder)
+   — a small in-house library purpose-built for parallel streaming traversal of
+   directory trees with glob include/exclude patterns and additional filters — and
+   returns a **parallel** `Stream<Path>`.
 3. Selects an `IFlow` implementation from the requested `FlowType`:
    - `REORDER` → `ReorderFlow`
    - `CHECK_ALL` → `CheckAllFlow`
@@ -80,8 +83,7 @@ Each stage corresponds to its own document:
 - Processor (orchestration) — [`06-Processor.md`](06-Processor.md)
 - DiffReporter — [`07-DiffReporter.md`](07-DiffReporter.md)
 - Algorithms (sorting + dependency graph) — [`sorting-algorythm.md`](sorting-algorythm.md),
-  [`declaration-order-dependencies.md`](declaration-order-dependencies.md),
-  [`order-dependency-filter.md`](order-dependency-filter.md)
+  [`declaration-order-dependencies.md`](declaration-order-dependencies.md)
 
 ## Concurrency model
 
@@ -104,28 +106,3 @@ This gives:
 - A simple debug story per file — one straight-line execution to step through.
 - Clean error boundaries — a failing file raises a runtime exception that is captured
   in its own `FileProcessingResult` without poisoning the rest of the run.
-
-## Reusable building block: `dependency-aware-sorting`
-
-The deterministic, group-aware, dependency-aware ordering engine that decides the
-final member order for a single type lives in its own Maven module,
-[`dependency-aware-sorting/`](../dependency-aware-sorting/README.md). It has **no**
-JHarmonizer-specific dependency: it operates on plain `SortableTypeMember`,
-`Group`/`Groups`, and `Dependency`/`Dependencies` value types and produces a
-deterministic linear order that respects both group locality (members of the same
-group stay adjacent) and DAG ordering (`provider` always precedes `dependent`).
-
-If you are working on a different code-rewriting tool (a different formatter,
-linter, refactoring engine, or even a non-Java tool that needs constraint-aware
-ordering) you can depend on the artifact directly:
-
-```xml
-<dependency>
-    <groupId>io.github.lemon-ant.jharmonizer</groupId>
-    <artifactId>dependency-aware-sorting</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
-```
-
-See [`dependency-aware-sorting/README.md`](../dependency-aware-sorting/README.md)
-for the API surface and the algorithmic guarantees.

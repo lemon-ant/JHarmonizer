@@ -63,7 +63,7 @@ core/
 │   ├── translator/spoon/printer/                    # SpoonCustomSrcPrinter (serialization)
 │   ├── formatter/                                   # Palantir wrapper + import fixer + blank-line policy
 │   ├── diff/                                        # DiffReporter
-│   ├── files_handler/                               # SrcFilesHandler (parallel stream)
+│   ├── files_handler/                               # SrcFilesHandler (parallel stream powered by glob-path-finder)
 │   └── stats/                                       # processing statistics
 └── src/main/resources/
     └── default-config.yml                           # embedded baseline configuration
@@ -97,7 +97,7 @@ YAML schema.
 | Topic                                       | Document                                                                                |
 |---------------------------------------------|-----------------------------------------------------------------------------------------|
 | Sorting algorithm and accessor co-location  | [`docs/sorting-algorythm.md`](../docs/sorting-algorythm.md), [`docs/04-Sorter.md`](../docs/04-Sorter.md) |
-| Declaration-order dependency graph          | [`docs/declaration-order-dependencies.md`](../docs/declaration-order-dependencies.md), [`docs/order-dependency-filter.md`](../docs/order-dependency-filter.md) |
+| Declaration-order dependency graph          | [`docs/declaration-order-dependencies.md`](../docs/declaration-order-dependencies.md) |
 | LIS-based relocation detector               | [`docs/relocation-detector.md`](../docs/relocation-detector.md)                         |
 | Default member ordering shipped out of the box | [`docs/default-rule-ordering-rule.md`](../docs/default-rule-ordering-rule.md)         |
 | Opt-out directives (`@jharmonizer:fully-off`) | [`docs/directives.md`](../docs/directives.md)                                          |
@@ -107,12 +107,12 @@ YAML schema.
 The standard repository build command builds and tests every module:
 
 ```bash
-mvn -B -ntp verify
+mvn verify
 ```
 
 To build and test only this module (with its single in-repo dependency
 [`dependency-aware-sorting`](../dependency-aware-sorting/README.md)):
 
 ```bash
-mvn -B -ntp -pl core -am verify
+mvn -pl core -am verify
 ```

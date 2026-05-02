@@ -73,10 +73,11 @@ All goals share the same parameters (see `AbstractJHarmonizerMojo`):
 | `printProcessingStatistics` | `jharmonizer.printProcessingStatistics` | _unset_                              | Overrides `printProcessingStatistics` from the active configuration (default `true`).            |
 | `failOnViolation`           | `jharmonizer.failOnViolation`           | `true`                               | Applies to `check-all`/`check-fast`. `false` → report-only.                                      |
 
-Globs are evaluated by JHarmonizer's own glob matcher
-(`io.github.lemon-ant:glob-path-finder`), an in-house library that follows the
-familiar `**`/`*`/`?` shell-style syntax — it is not a wrapper around
-`java.nio.file.PathMatcher`.
+`includes`/`excludes` follow the same convention as standard Maven plugins
+(Ant/glob-style patterns). Internally the plugin uses
+[`io.github.lemon-ant:glob-path-finder`](https://github.com/lemon-ant/glob-path-finder),
+an in-house library purpose-built for parallel streaming traversal of directory
+trees with glob include/exclude patterns and additional filters.
 
 For the full reference (parameter descriptions, profile snippet, log levels,
 backup behavior), see [`docs/09-Maven-plugin.md`](../docs/09-Maven-plugin.md).
@@ -102,11 +103,11 @@ The standard repository build command exercises the plugin together with its
 integration-test scenarios under `src/it/`:
 
 ```bash
-mvn -B -ntp verify
+mvn verify
 ```
 
 To build and test only this module (with its in-repo dependencies):
 
 ```bash
-mvn -B -ntp -pl maven-plugin -am verify
+mvn -pl maven-plugin -am verify
 ```

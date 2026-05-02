@@ -90,6 +90,6 @@ is thrown.
 
 ## Filtering
 
-For details on what gets filtered out before the graph is constructed (for example
-self-loops, accessor bundles when accessor co-location is off, edges across types),
-see [`order-dependency-filter.md`](order-dependency-filter.md).
+Self-loops, cross-type accessor edges when accessor co-location is off, and other
+edges that are not order-relevant are filtered out per provider as part of
+`MemberDependencyGraphBuilder` graph construction.

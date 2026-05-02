@@ -47,7 +47,6 @@ JHarmonizer/
     ├── jharmonizer-architecture.md
     ├── known-limitations.md
     ├── known-unhandled-patterns.md
-    ├── order-dependency-filter.md
     ├── sorting-algorythm.md
     ├── test-coverage-plan.md
     ├── TODO.md                         (long-form backlog; intentions, not behaviour)
@@ -69,8 +68,7 @@ JHarmonizer/
 6. Front-end docs: [`08-CliRunner.md`](08-CliRunner.md) and
    [`09-Maven-plugin.md`](09-Maven-plugin.md).
 7. Algorithm deep-dive: [`sorting-algorythm.md`](sorting-algorythm.md),
-   [`declaration-order-dependencies.md`](declaration-order-dependencies.md),
-   [`order-dependency-filter.md`](order-dependency-filter.md).
+   [`declaration-order-dependencies.md`](declaration-order-dependencies.md).
 8. Limitations: [`known-limitations.md`](known-limitations.md),
    [`known-unhandled-patterns.md`](known-unhandled-patterns.md).
 9. Operational topics: [`directives.md`](directives.md), [`benchmark.md`](benchmark.md),

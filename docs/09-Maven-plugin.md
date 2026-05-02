@@ -40,11 +40,12 @@ All goals share the same parameters, defined on the abstract base
 | `printProcessingStatistics` | `jharmonizer.printProcessingStatistics` | `Boolean` | _unset_                                                                                                                       | Overrides the `printProcessingStatistics` setting from the active configuration. When unset, the configuration value is used (the embedded default is `true`).          |
 | `failOnViolation`           | `jharmonizer.failOnViolation`           | `boolean` | `true`                                                                                                                        | Applies to `check-all` and `check-fast`. When `true` and the flow reports any violation, the build fails with `MojoFailureException`. Set to `false` to report-only.       |
 
-Glob patterns are evaluated by JHarmonizer's own glob matcher
-(`io.github.lemon-ant:glob-path-finder`), an in-house library that follows the
-familiar `**`/`*`/`?` shell-style syntax (`**/*.java`, `**/generated/**`) and
-supports parallel directory scanning. It is not a wrapper around
-`java.nio.file.PathMatcher`.
+`includes` and `excludes` follow the same convention as standard Maven plugins
+(`maven-compiler-plugin`, `maven-resources-plugin`, etc.) — Ant/glob-style
+patterns such as `**/*.java`, `**/generated/**`. Internally the plugin uses an
+in-house parallel directory walker,
+[`io.github.lemon-ant:glob-path-finder`](https://github.com/lemon-ant/glob-path-finder),
+which streams matching paths in parallel.
 
 ## Sample usage
 
@@ -110,7 +111,9 @@ CI systems set to `true` automatically:
                     <executions>
                         <execution>
                             <phase>process-sources</phase>
-                            <goals><goal>reorder</goal></goals>
+                            <goals>
+                                <goal>reorder</goal>
+                            </goals>
                         </execution>
                     </executions>
                 </plugin>
@@ -136,7 +139,9 @@ CI systems set to `true` automatically:
                     <executions>
                         <execution>
                             <phase>verify</phase>
-                            <goals><goal>check-fast</goal></goals>
+                            <goals>
+                                <goal>check-fast</goal>
+                            </goals>
                         </execution>
                     </executions>
                 </plugin>
@@ -171,11 +176,7 @@ mvn jharmonizer:check-all -Djharmonizer.failOnViolation=false   # report-only
   `check-fast` when you want the build to fail as quickly as possible.
 - `check-all` and `check-fast` are reporting goals — they never modify source files.
   With `failOnViolation=false`, they switch to **report-only** mode: violations are
-  still printed, but the build does not fail.
-- Per-file violation reports (member relocations and formatting diffs) are logged at
-  the **WARN** level (not ERROR), so a `failOnViolation=false` `check-*` run only
-  surfaces warnings in the build log, never errors.
-- When the build fails because of `check-all`/`check-fast`, the plugin logs a hint pointing at
-  `mvn jharmonizer:reorder` to fix the violations automatically.
+  still printed (per-file member-relocation reports and formatting diffs are logged
+  at the **ERROR** level), but the build does not fail.
 - When `baseDir` is configured explicitly, no auto-derived include patterns are added —
   only user-provided `includes` are used.
