@@ -82,7 +82,7 @@ java -jar jharmonizer-cli.jar reorder \
 
 Scans **all** files under `--base-dir` and logs every file that would be changed
 by a reorder. Exits with code `0` when every scanned file is already conformant
-and with code `1` when at least one file requires reordering. Source files are
+and with code `3` when at least one file requires reordering. Source files are
 never modified by this command.
 
 ```bash
