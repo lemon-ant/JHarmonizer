@@ -60,7 +60,7 @@ class ReorderCommandRendererTest {
     }
 
     @Test
-    void render_includeGlobWithBackslash_preservesGlobEscaping() {
+    void render_globWithBackslash_escapesBackslash() {
         // When / Then
         assertThat(ReorderCommandRenderer.render(BASE_DIR, Set.of("**\\*.java"), Set.of(), null, false, false))
                 .contains("--include \"**\\\\*.java\"");
