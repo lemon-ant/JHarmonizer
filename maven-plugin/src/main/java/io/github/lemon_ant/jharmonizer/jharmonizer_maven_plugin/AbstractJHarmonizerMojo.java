@@ -6,6 +6,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -196,8 +197,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                 .filter(Objects::nonNull)
                 .map(srcDir -> srcDir.toPath().toAbsolutePath().normalize())
                 .filter(Files::isDirectory)
-                .map(srcDirPath ->
-                        projectBaseDirPath.relativize(srcDirPath).toString().replace(File.separatorChar, '/') + "/**");
+                .map(srcDirPath -> PathUtils.normalizeSeparators(projectBaseDirPath.relativize(srcDirPath)) + "/**");
         Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());
     }

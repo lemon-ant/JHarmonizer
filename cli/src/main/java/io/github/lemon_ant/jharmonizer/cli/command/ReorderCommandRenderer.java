@@ -3,6 +3,7 @@
 
 package io.github.lemon_ant.jharmonizer.cli.command;
 
+import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.nio.file.Path;
 import java.util.Set;
 import lombok.NonNull;
@@ -38,7 +39,7 @@ class ReorderCommandRenderer {
             boolean noBackup,
             boolean noStatistics) {
         StringBuilder command = new StringBuilder(INITIAL_COMMAND_CAPACITY);
-        command.append("jharmonizer reorder --base-dir ").append(quoteArg(baseDir.toString()));
+        command.append("jharmonizer reorder --base-dir ").append(quoteArg(PathUtils.normalizeSeparators(baseDir)));
         for (String includeGlob : includeGlobs) {
             command.append(" --include ").append(quoteArg(includeGlob));
         }
@@ -46,7 +47,7 @@ class ReorderCommandRenderer {
             command.append(" --exclude ").append(quoteArg(excludeGlob));
         }
         if (configFilePath != null) {
-            command.append(" --config ").append(quoteArg(configFilePath.toString()));
+            command.append(" --config ").append(quoteArg(PathUtils.normalizeSeparators(configFilePath)));
         }
         if (noBackup) {
             command.append(" --no-backup");

@@ -17,7 +17,7 @@ class ReorderCommandRendererTest {
     void render_noOptionalArguments_returnsBaseCommand() {
         // When / Then
         assertThat(ReorderCommandRenderer.render(BASE_DIR, Set.of(), Set.of(), null, false, false))
-                .isEqualTo("jharmonizer reorder --base-dir \"" + BASE_DIR + "\"");
+                .isEqualTo("jharmonizer reorder --base-dir \"/projects/my-project\"");
     }
 
     @Test
@@ -31,10 +31,10 @@ class ReorderCommandRendererTest {
 
         // Then
         assertThat(command)
-                .startsWith("jharmonizer reorder --base-dir \"" + BASE_DIR + "\"")
+                .startsWith("jharmonizer reorder --base-dir \"/projects/my-project\"")
                 .contains("--include \"**/*.java\"")
                 .contains("--exclude \"**/excluded/**\"")
-                .contains("--config \"" + configFilePath + "\"")
+                .contains("--config \"/path/to/config.yml\"")
                 .contains("--no-backup")
                 .contains("--no-statistics");
     }
@@ -57,5 +57,12 @@ class ReorderCommandRendererTest {
         // When / Then
         assertThat(ReorderCommandRenderer.render(dirWithMetachars, Set.of(), Set.of(), null, false, false))
                 .isEqualTo("jharmonizer reorder --base-dir \"/projects/\\$build\"");
+    }
+
+    @Test
+    void render_globWithBackslash_escapesBackslash() {
+        // When / Then
+        assertThat(ReorderCommandRenderer.render(BASE_DIR, Set.of("**\\*.java"), Set.of(), null, false, false))
+                .contains("--include \"**\\\\*.java\"");
     }
 }
