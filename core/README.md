@@ -20,8 +20,8 @@ wrappers around the public entry points exposed here.
 </dependency>
 ```
 
-Built with **Java 21** (`--release 21` for tests, `--release 17` for main classes
-because Spoon 11.x requires JDK 17+ at runtime).
+Main classes are built for **Java 17** (`--release 17`), which matches Spoon 11.x's
+JDK 17+ runtime requirement. Tests use **Java 21** (`--release 21`) only.
 
 ## Public entry point
 
