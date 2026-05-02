@@ -31,7 +31,7 @@ The plugin is `threadSafe = true` on every goal.
 
 `check-all` and `check-fast` **never modify source files**. Only `reorder` writes
 to the working tree. With `failOnViolation=false` both check goals switch to
-report-only mode (violations are logged at WARN, the build does not fail).
+report-only mode (violations are logged at ERROR, the build does not fail).
 
 ## Quick start
 
