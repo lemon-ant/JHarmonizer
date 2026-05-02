@@ -69,9 +69,10 @@ For each type processed (top-level and nested):
    `OrderingKeyFactory`, and applies the comparator chain produced by
    `ComparatorUtils.buildClusteredOrderingComparator(...)`. The comparator chain is
    driven by the inherited `ordering-rules` of the leaf group.
-4. **Repair against the dependency graph**: relocations that would violate a
-   declaration-order arc are rejected; the affected members fall back to source
-   order (full algorithm in [`sorting-algorythm.md`](sorting-algorythm.md)).
+4. **Repair against the dependency graph**: the per-group ordering is passed to
+   `SimplifiedDependencyAwareSorter`, which performs the dependency-aware
+   provider-lift repair pass described in
+   [`sorting-algorythm.md`](sorting-algorythm.md).
 5. **Render**: ordered groups are emitted as `MemberGroupBlock`s with separator
    directives (`new-line`, `header`, `none`) propagated to the printer.
 
