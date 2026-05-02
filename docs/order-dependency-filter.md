@@ -1,215 +1,74 @@
-### Spoon Filter for Order-Dependent Class Members
-Below is a comprehensive Spoon filter that identifies all order-dependent class members in Java AST analysis. This filter checks for elements that **must be declared before their dependencies**:
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-```java
-import spoon.reflect.declaration.*;
-import spoon.reflect.code.*;
-import spoon.reflect.reference.*;
-import spoon.reflect.visitor.Filter;
-import java.util.List;
-import java.util.stream.Collectors;
+# Dependency-graph filtering
 
-public class OrderDependentElementFilter implements Filter<CtElement> {
+The per-type dependency graph (see [`declaration-order-dependencies.md`](declaration-order-dependencies.md))
+records two distinct kinds of edges: real declaration-order constraints and
+"keep-together" hints for accessor pairs. Filtering decides which of those edges a
+given consumer is allowed to see.
 
-    @Override
-    public boolean matches(CtElement element) {
-        // 1. Field with initialization dependency
-        if (element instanceof CtField) {
-            return hasFieldDependency((CtField<?>) element);
-        }
-        
-        // 2. Static initialization block with field references
-        if (element instanceof CtClassInitializer) {
-            CtClassInitializer init = (CtClassInitializer) element;
-            return init.isStatic() && hasFieldReferences(init.getBody());
-        }
-        
-        // 3. Instance initialization block
-        if (element instanceof CtAnonymousExecutable) {
-            return hasFieldReferences(((CtAnonymousExecutable) element).getBody());
-        }
-        
-        // 4. Enum constant with arguments
-        if (element instanceof CtEnumValue) {
-            return !((CtEnumValue<?>) element).getArguments().isEmpty();
-        }
-        
-        // 5. Annotation with constant dependency
-        if (element instanceof CtAnnotation) {
-            return hasAnnotationDependency((CtAnnotation<?>) element);
-        }
-        
-        // 6. Annotation type declaration
-        if (element instanceof CtAnnotationType) {
-            return true; // Always order-dependent
-        }
-        
-        // 7. Generic type parameter with bounds
-        if (element instanceof CtTypeParameter) {
-            return ((CtTypeParameter) element).getSuperclass() != null ||
-                   !((CtTypeParameter) element).getSuperInterfaces().isEmpty();
-        }
-        
-        return false;
-    }
+JHarmonizer does not use a dedicated Spoon `Filter<CtElement>` for this. The filtering
+is folded into the graph's query API.
 
-    // Helper: Check if field initialization depends on other fields
-    private boolean hasFieldDependency(CtField<?> field) {
-        if (field.getDefaultExpression() == null) return false;
-        
-        return field.getDefaultExpression().getElements(e -> 
-            e instanceof CtFieldRead || e instanceof CtVariableRead
-        ).size() > 0;
-    }
+## Edge kinds
 
-    // Helper: Check for field references in code blocks
-    private boolean hasFieldReferences(CtBlock<?> block) {
-        if (block == null) return false;
-        return block.getElements(new Filter<CtFieldRead<?>>() {
-            @Override
-            public boolean matches(CtFieldRead<?> fieldRead) {
-                return fieldRead.getVariable().getDeclaration() != null;
-            }
-        }).size() > 0;
-    }
+`MemberDependencyEdgeKind` is the only filter axis:
 
-    // Helper: Check annotation dependencies
-    private boolean hasAnnotationDependency(CtAnnotation<?> annotation) {
-        // Check constant dependencies in values
-        boolean hasConstantRef = annotation.getValues().values().stream()
-            .anyMatch(value -> 
-                value instanceof CtFieldRead ||
-                value instanceof CtVariableRead
-            );
-            
-        // Check type dependencies
-        boolean hasTypeRef = annotation.getAnnotationType().getDeclaredAnnotations().stream()
-            .anyMatch(anno -> 
-                anno.getAnnotationType().getDeclaration() != null
-            );
-            
-        return hasConstantRef || hasTypeRef;
-    }
+| Kind                       | Meaning                                                                           | Honoured by                                       |
+|----------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------|
+| `DECLARATION_DEPENDENCY`   | Real Java declaration-order constraint (provider must appear before dependent).   | `SimplifiedDependencyAwareSorter` (provider lift).|
+| `ACCESSOR_BUNDLE`          | "Keep adjacent" hint for getter/setter pairs of the same JavaBean property.       | Group bundling in `GroupMembersOrderer` (sets of `Groups`). |
 
-    // Bonus: Get all order-dependent elements from a class
-    public static List<CtElement> getOrderDependentElements(CtType<?> type) {
-        return type.getElements(new OrderDependentElementFilter()).stream()
-            .sorted((e1, e2) -> 
-                Integer.compare(
-                    e1.getPosition().getLine(),
-                    e2.getPosition().getLine()
-                )
-            )
-            .collect(Collectors.toList());
-    }
-}
-```
+`ACCESSOR_BUNDLE` edges are intentionally **not** declaration-order constraints and
+are filtered out before the order is repaired.
 
-### Key Features:
-1. **Covers all order-dependent cases**:
-    - Field initializers with dependencies
-    - Static/instance initialization blocks
-    - Enum constants with arguments
-    - Annotations with constant/type dependencies
-    - Generic type parameters with bounds
-    - Annotation type declarations
+## Where filtering happens
 
-2. **Precise dependency detection**:
-    - Checks for field/variable reads in expressions
-    - Verifies annotation value dependencies
-    - Validates type references in generics
+`MemberDependencyGraph` exposes its query API with an `allowedEdgeKinds`
+`Set<MemberDependencyEdgeKind>` parameter. Internally:
 
-3. **Helper utilities**:
-    - `hasFieldDependency()`: Detects field initialization dependencies
-    - `hasFieldReferences()`: Finds field usages in code blocks
-    - `hasAnnotationDependency()`: Checks annotation constant/type deps
-    - `getOrderDependentElements()`: Retrieves sorted list of sensitive elements
+- The set is normalized to a bitmask (`ALL_EDGE_KIND_MASK` short-circuits the
+  unfiltered case).
+- Edges are stored flat as neighbor + kind values; the kind check is applied at
+  query time, not at storage time.
+- Transitive queries are cached per `(start member, edge-kind mask)` pair.
 
-### Usage Examples:
-1. **Find all order-dependent elements in a class**:
-```java
-CtClass<?> myClass = ... // Get class from AST
-List<CtElement> dependentElements = 
-    OrderDependentElementFilter.getOrderDependentElements(myClass);
-```
+The two callers in the sorter pass disjoint masks:
 
-2. **Check if a specific element is order-dependent**:
-```java
-CtField<?> field = myClass.getField("myField");
-boolean isOrderDependent = new OrderDependentElementFilter().matches(field);
-```
+- `GroupMembersOrderer` queries the graph with `EnumSet.of(DECLARATION_DEPENDENCY)`
+  to feed the provider-lift repair pass with real constraints only.
+- The same caller separately consumes `ACCESSOR_BUNDLE` adjacency to build the
+  `Groups` argument used for accessor co-location.
 
-3. **Process only order-dependent elements**:
-```java
-myClass.filterChildren(new OrderDependentElementFilter())
-       .forEach(element -> {
-           // Handle order-sensitive element
-           processDependentElement(element);
-       });
-```
+## What the providers themselves filter out
 
-### Filter Coverage Matrix:
-| Element Type               | Detection Method                     | Dependencies Checked              |
-|----------------------------|--------------------------------------|-----------------------------------|
-| **Field**                  | `hasFieldDependency()`             | Field reads in initializers       |
-| **Static Initializer**     | `hasFieldReferences()`             | Field references in static blocks |
-| **Instance Initializer**   | `hasFieldReferences()`             | Field references in blocks        |
-| **Enum Constant**          | Argument list check                | Constructor arguments             |
-| **Annotation**             | `hasAnnotationDependency()`        | Constants/types in values         |
-| **Annotation Type**        | Direct match                      | Type declaration itself           |
-| **Generic Type Parameter** | Superclass/superinterface check   | Type bounds dependencies          |
+The filtering applied by individual providers (before any edge reaches the graph) is:
 
-### Special Cases Handling:
-1. **External References**:
-   ```java
-   @ExternalAnnotation(OtherClass.CONST) // Not considered order-dependent
-   ```
-    - Filter ignores external dependencies
+- **Cross-file references** are never recorded. `CrossTypeConstantBackRefDependencyProvider`
+  explicitly limits itself to type pairs in the same compilation unit; cross-file
+  cycles are treated as an application-design problem.
+- **Method and constructor bodies** never contribute declaration-order edges, matching
+  Java's actual rules.
+- **Self-loops** are not produced (a member never depends on itself).
+- **Already-satisfied edges from blank-final assignments** are deduplicated:
+  `InitializerBlockMutableFieldReadDependencyProvider` skips edges that
+  `BlankFinalDefiniteAssignmentDependencyProvider` already covers.
+- **Accessor-bundle edges** are only emitted when `keepAccessorsTogether: true` is in
+  effect for the containing group; with the flag off, `AccessorPairDependencyProvider`
+  contributes nothing.
 
-2. **Method-Local Dependencies**:
-   ```java
-   void method() {
-       int a = b; // Not detected (order-independent context)
-       int b = 10;
-   }
-   ```
-    - Filter only checks class-level dependencies
+## Cycle handling
 
-3. **Lambda Expressions**:
-   ```java
-   CtLambda<?> lambda = ...;
-   new OrderDependentElementFilter().matches(lambda); // Always false
-   ```
-    - Lambdas are always order-independent
+`MemberDependencyGraphBuilder` operates in two passes when at least one group is
+configured with `relaxedForwardReferences: false`:
 
-### Best Practices:
-1. **Combine with dependency analysis**:
-   ```java
-   dependentElements.forEach(el -> {
-       if (el instanceof CtField) {
-           analyzeFieldDependencies((CtField<?>) el);
-       }
-   });
-   ```
+1. Build the strict graph honoring the per-group `relaxedForwardReferences` setting.
+2. If the resulting graph contains a cycle on `DECLARATION_DEPENDENCY` edges, retry
+   with all groups forced to relaxed mode.
+3. If the relaxed graph is also cyclic, throw `SortingException`.
 
-2. **Use before reordering operations**:
-   ```java
-   List<CtElement> sensitiveElements = 
-       OrderDependentElementFilter.getOrderDependentElements(myClass);
-   
-   reorderService.preserveOrder(sensitiveElements);
-   ```
-
-3. **Integrate with pretty-printing**:
-   ```java
-   PrettyPrinter printer = new PrettyPrinter(env);
-   printer.setOrderDependentFilter(new OrderDependentElementFilter());
-   printer.print(myClass);
-   ```
-
-This filter provides complete coverage of Java's order-sensitive elements and is optimized for Spoon's AST model. It correctly handles:
-- Inheritance in generic type bounds
-- Nested annotations
-- Complex field initialization expressions
-- Enum constant argument dependencies
-- Static vs instance context differences
+This lets users opt into stricter forward-reference checks without making cyclic
+real-world code unsortable.

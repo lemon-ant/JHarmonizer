@@ -1,132 +1,95 @@
-### Comprehensive Order Dependency List in Java
-**Elements that require declaration order** (must be declared before use):
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-1. **Field Initializers**
-    - Depend on: *Fields* declared above
-   ```java
-   int a = b;  // Requires b declared above
-   int b = 10;
-   ```
+# Declaration-order dependencies
 
-2. **Static Field Initializers**
-    - Depend on: *Static fields* declared above
-   ```java
-   static int x = y;  // Requires y declared above
-   static int y = 5;
-   ```
+JHarmonizer must not produce a reordering that breaks Java's declaration-order rules.
+This document is the catalog of order-sensitive Java constructs the sorter is aware of,
+and the mapping from each rule to the provider class that contributes the corresponding
+edges to the per-type member dependency graph.
 
-3. **Instance Initialization Blocks**
-    - Depend on: *Fields* declared above
-   ```java
-   { System.out.println(z); }  // Requires z declared above
-   int z = 20;
-   ```
+The graph is built by `MemberDependencyGraphBuilder` from the providers in
+`io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph` and consumed by
+the sorter (see [`sorting-algorythm.md`](sorting-algorythm.md)).
 
-4. **Static Initialization Blocks**
-    - Depend on: *Static fields* declared above
-   ```java
-   static { System.out.println(count); }  // Requires count declared above
-   static int count = 0;
-   ```
+## Order-sensitive constructs
 
-5. **Enum Constant Arguments**
-    - Depend on: *Enum constants* or *static fields* declared above
-   ```java
-   enum Size {
-       SMALL(1), 
-       MEDIUM(SMALL.code+1);  // Requires SMALL declared above
-       final int code;
-       Size(int code) { this.code = code; }
-   }
-   ```
+| # | Java construct                                  | Example                                       | Order requirement |
+|---|-------------------------------------------------|-----------------------------------------------|-------------------|
+| 1 | Field initializer reading a same-class field    | `int a = b;`                                  | provider above    |
+| 2 | Static field initializer reading a same-class static field | `static int x = y;`                | provider above    |
+| 3 | Instance/static initializer block reading a same-class field | `{ ... = field; }`                | provider above    |
+| 4 | Enum constant initializer reading prior enum constants / static fields | `MEDIUM(SMALL.code+1)` | provider above |
+| 5 | Blank-final read after its definite assignment   | `final int x; { x = 1; } int y = x;`         | assignment above  |
+| 6 | Cross-type constant chain back-referencing the declaring type | `T.F → E1.SF → … → T.G`         | provider above    |
+| 7 | JavaBean accessor pair (when `keepAccessorsTogether: true`) | getter and setter for the same property | adjacent (not order) |
 
-6. **Annotation Default Values**
-    - Depend on: *Constant fields* declared above
-   ```java
-   static final String DEFAULT = "test";
-   @interface MyAnnotation {
-       String value() default DEFAULT;  // Requires DEFAULT declared above
-   }
-   ```
+Method bodies, constructor bodies, inner-class member references, and references that
+cross types in different files are **not** treated as declaration-order dependencies —
+Java does not require them, so the graph leaves them free.
 
-7. **Annotation Arguments**
-    - Depend on: *Constant fields* declared above
-   ```java
-   static final int MAX = 100;
-   @Limit(MAX)  // Requires MAX declared above
-   int value;
-   ```
+## Edge kinds
 
-8. **Annotation Type Declarations**
-    - Depend on: *Annotation types* declared before use
-   ```java
-   @interface Special {}  // Must be declared before use
-   @Special
-   void method() {}
-   ```
+`MemberDependencyEdgeKind` distinguishes:
 
-9. **Enum Types in Annotations**
-    - Depend on: *Enum types* declared before use
-   ```java
-   enum Status { ACTIVE }  // Must be declared first
-   @State(status = Status.ACTIVE)
-   void execute() {}
-   ```
+- `DECLARATION_DEPENDENCY` — a real declaration-order constraint. Honoured by the
+  provider-lift repair pass in `SimplifiedDependencyAwareSorter`.
+- `ACCESSOR_BUNDLE` — a "keep adjacent" hint emitted by `AccessorPairDependencyProvider`
+  when accessor co-location is enabled. Ignored by ordering and consumed only by the
+  group-bundling logic in `GroupMembersOrderer`.
 
-10. **Generic Type Bounds**
-    - Depend on: *Types* declared before use
-    ```java
-    class A {}
-    class B<T extends A> {}  // Requires A declared above
-    ```
+All edges are directed `provider → dependent`. Storage is flat (neighbor + kind);
+filtering by kind happens at query time. Transitive queries are cached per
+`(start member, edge-kind mask)` pair.
 
----
+## Providers
 
-### Order-Independent Elements
-**Can reference any member regardless of position**:
-1. **Method Bodies**
-   ```java
-   void methodA() { methodB(); }  // Valid even if methodB declared later
-   void methodB() {} 
-   ```
+Each provider implements `MemberDependencyProvider`. The graph builder iterates
+through them and accumulates the edges. Two abstract bases factor common logic; eleven
+concrete providers contribute edges.
 
-2. **Constructor Bodies**
-   ```java
-   MyClass() { this.value = 42; }  // Valid even if value declared later
-   int value;
-   ```
+### Abstract bases
 
-3. **Inner Classes**
-   ```java
-   class Inner { void use() { outerField = 10; } }  // Valid
-   int outerField;
-   ```
+| Class                                                            | Role |
+|------------------------------------------------------------------|------|
+| `AbstractReferencedFieldsDeclarationDependencyProvider`          | Common scaffolding for initializer-like members that emit `DECLARATION_DEPENDENCY` edges based on order-dependent field references. |
+| `AbstractExplicitInitializerForwardReferenceDependencyProvider`  | Common scaffolding for forward-reference detection between fields with explicit (non-default-value) initializers. |
 
-4. **Interface Default Methods**
-   ```java
-   interface MyInterface {
-       default void log() { System.out.println(MSG); } // Valid
-       String MSG = "Hello";
-   }
-   ```
+### Concrete providers
 
----
+| Class                                                              | Catalog rule(s) | Notes |
+|--------------------------------------------------------------------|-----------------|-------|
+| `FieldInitializerBackwardReferenceDependencyProvider`              | 1, 2            | Regular field initializer references resolved by `DeclaringTypeFieldReferenceUtils`. |
+| `ExplicitThisInitializerFieldDependencyProvider`                   | 1               | `this.<field>` references in field initializers (forward-reference handling). |
+| `ExplicitDeclaringTypeInitializerFieldDependencyProvider`          | 2               | `<DeclaringType>.<field>` references in static field initializers. |
+| `InitializerBlockDependencyProvider`                               | 3               | Static and instance initializer blocks: if a block reads `fieldA`, `fieldA → block`. |
+| `InitializerBlockMutableFieldReadDependencyProvider`               | 3               | Conservative edge for mutable fields whose contents may have been mutated by a prior initializer block via method calls (e.g. `map.put(...)`). |
+| `EnumConstantInitializerDependencyProvider`                        | 4               | Enum constants are static fields initialized in source order; their initializers cannot be reordered past their providers. |
+| `BlankFinalDefiniteAssignmentDependencyProvider`                   | 5               | If a dependent initialization member reads a blank final field, edges are added from all potential assignment providers declared above it. |
+| `CrossTypeConstantBackRefDependencyProvider`                       | 6               | Detects transitive cross-type initializer chains within the same compilation unit (`T.F → E1.SF1 → … → T.G`). Cross-file pairs are intentionally out of scope. |
+| `AccessorPairDependencyProvider`                                   | 7               | Emits `ACCESSOR_BUNDLE` edges (not declaration-order). Driven by `keepAccessorsTogether` and `SpoonJavaBeansAccessorUtils`. |
 
-### Complete Dependency Matrix
-| Dependent Element        | Dependency Type         | Order Requirement | Example                                   |
-|--------------------------|-------------------------|-------------------|-------------------------------------------|
-| Field initializer        | Same-class field        | ✅ Above           | `int a = b`                               |
-| Static field initializer | Same-class static field | ✅ Above           | `static int x = y`                        |
-| Instance init block      | Same-class field        | ✅ Above           | `{ System.out.println(field); }`          |
-| Static init block        | Same-class static field | ✅ Above           | `static { x = STATIC_FIELD; }`            |
-| Annotation default       | Same-class constant     | ✅ Above           | `default VALUE`                           |
-| Annotation argument      | Same-class constant     | ✅ Above           | `@Anno(CONST)`                            |
-| Annotation type usage    | Annotation declaration  | ✅ Above           | `@MyAnnotation`                           |
-| Enum in annotation       | Enum declaration        | ✅ Above           | `status = Status.ACTIVE`                  |
-| Generic type bound       | Class/interface         | ✅ Above           | `T extends MyType`                        |
-| Method body              | Any member              | ❌ None            | `void x() { y(); }`                       |
-| Constructor body         | Any member              | ❌ None            | `Foo() { this.field = value; }`           |
-| Inner class              | Any enclosing member    | ❌ None            | `class Inner { void use() { outer(); } }` |
-| External references      | Cross-class elements    | ❌ None            | `OtherClass.CONST`                        |
+`MemberDependencyGraphBuilder` exposes a `relaxedForwardReferences` knob for the strict
+mode: if any group is configured with `relaxedForwardReferences: false` and the
+resulting graph contains a cycle, the builder automatically retries with all groups
+forced back to relaxed mode. If the relaxed graph is also cyclic, a `SortingException`
+is thrown.
 
-This comprehensive list covers all order-sensitive and order-insensitive dependencies in Java class declarations. Use it as a reference for code analysis, refactoring, and AST manipulation tasks.
+## Conventions and limitations
+
+- Only **same-file** dependencies are tracked. Cross-file circular static-initializer
+  dependencies are considered an application-design problem, not something a
+  harmonization tool should silently route around.
+- Method bodies and constructor bodies are intentionally not treated as
+  declaration-order dependencies, matching Java's actual rules.
+- Generic type bounds, annotation type usage, and similar same-file cross-type
+  references that Java does not enforce as declaration-order constraints are not
+  modeled here either.
+
+## Filtering
+
+For details on what gets filtered out before the graph is constructed (for example
+self-loops, accessor bundles when accessor co-location is off, edges across types),
+see [`order-dependency-filter.md`](order-dependency-filter.md).
