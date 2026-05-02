@@ -73,9 +73,6 @@ class ComparatorUtils {
      * @return the sortable type member comparator
      */
     @NonNull
-    // Reference equality is intentional: cluster members share the same representative
-    // OrderingKey instance by design; identity checks group them correctly.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildSortableTypeMemberComparator(@NonNull List<OrderingRule> orderingRules) {
         Comparator<OrderingKey> base = buildOrderingKeyComparator(orderingRules);
         return (left, right) -> {

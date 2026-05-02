@@ -79,9 +79,6 @@ public class RelocationDetector {
      * @return {@code true} if any element is at a different position in the sorted order;
      *         otherwise {@code false}
      */
-    // Reference equality is intentional: detects positional changes by checking whether the
-    // Spoon AST node at each index is the exact same instance, not a structurally equal copy.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 

@@ -104,9 +104,6 @@ final class InitializationOrderDependencyUtils {
      * @return the candidate provider members
      */
     @NonNull
-    // Reference equality is intentional: filters out the exact same Spoon AST node instance,
-    // not a structurally equal but distinct member.
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
             @NonNull CtField<?> blankFinalField,
