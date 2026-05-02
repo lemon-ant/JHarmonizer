@@ -10,10 +10,35 @@ group shipped in `core/src/main/resources/default-config.yml`. It is the fallbac
 group: it matches every member that no earlier root group has claimed (its include
 selector is the regex `~.*`).
 
-This is a description of what the embedded default actually does. The full reference
-schema for member-group YAML lives in [`config-dsl.md`](config-dsl.md); the documented
-ordering-rule values (`alpha`, `preserve`, `visibility-asc`, `visibility-desc`) are the
-ones used below.
+## Root rules in `default-config.yml`
+
+The embedded `default-config.yml` is **not** a single ordering rule. It defines a list
+of root rules under `type-members-ordering:`, evaluated in order. Each top-level type
+in the project is matched against the rules from top to bottom; the first matching
+rule wins, and that rule's `groups:` subtree is used to order the type's members.
+
+The rules shipped in the embedded default, in declaration order, are:
+
+| # | Root rule           | What it matches                                                                                                                                                                  | Why it exists                                                                                                                                                                         |
+|---|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | **Test Classes**    | Classes annotated with `@Test`/`@ExtendWith`/`@Nested`/`@RunWith`, or whose name ends in `Test` / `IT` (JUnit 4/5 conventions).                                                    | Test classes have a different natural shape: JUnit fields and constants on top, then `@BeforeEach`/`@BeforeAll`, then `@Test`/`@ParameterizedTest`/etc., then `@AfterEach`/`@AfterAll`, then utility methods, then `@TestConfiguration` and `@Nested` test classes. The general-purpose Default Rule would be a poor fit here. |
+| 2 | **DTO and Entities**| Classes named `*Dto` / `*DTO` / `*Entity`, or annotated with `@Value`, `@Data`, `@Entity`, `@MappedSuperclass`, `@Embeddable`, `@ConfigurationProperties`, or `@Document`. Excludes `interface`, `enum`, `annotation`. | Data-carrier classes benefit from the strict `Serializable UID → constants by visibility → static fields → final instance fields → static initializers → static methods → instance initializers → constructors → accessors (kept together) → other public methods → `equals`/`hashCode`/`toString`/`clone`/`compareTo` → non-public methods` shape. |
+| 3 | **Default Rule**    | Everything else (`includes: ~.*`).                                                                                                                                               | The general-purpose fallback documented in the rest of this file: production classes that are neither tests nor DTOs/entities.                                                          |
+
+In other words, the embedded default is **already specialized** for the three most
+common kinds of Java types in real projects: tests, data carriers, and "regular" code.
+A user-supplied YAML overlay can add new root rules in front of the defaults (they are
+merged at the root level by `name`; see [`02-Configurator.md`](02-Configurator.md)).
+
+This document describes only **rule #3 — Default Rule**. Rules #1 and #2 are
+self-documenting in `default-config.yml` itself.
+
+## What the Default Rule does (rule #3)
+
+This is a description of what the embedded default actually does for the third rule.
+The full reference schema for member-group YAML lives in [`config-dsl.md`](config-dsl.md);
+the documented ordering-rule values (`alpha`, `preserve`, `visibility-asc`,
+`visibility-desc`) are the ones used below.
 
 ## Top-level layout (in order)
 

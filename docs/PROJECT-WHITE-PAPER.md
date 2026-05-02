@@ -59,8 +59,8 @@ Develop a **cross-platform, embeddable Java code formatter** that:
 ### 🧪 Supported Modes
 
 - `reorder`: reorder and rewrite files (the "sort" / "fix" of older drafts).
-- `check`: validate correct order; report every non-conforming file.
-- `check-fast`: same as `check` but stops at the first non-conforming file.
+- `check-all`: validate correct order; report every non-conforming file.
+- `check-fast`: same as `check-all` but stops at the first non-conforming file.
 
 ---
 
@@ -70,15 +70,18 @@ Develop a **cross-platform, embeddable Java code formatter** that:
 - Custom YAML config file (path passed via CLI `--config` or Maven `<configFile>`).
 - Selected per-run overrides via CLI options and Maven plugin parameters.
 
-Importing IDE-format files (IntelliJ, Eclipse, `.editorconfig`) is **not** supported
-today.
+Importing other vendor configuration formats (IntelliJ IDEA `codeStyleConfig.xml`,
+Eclipse formatter profiles, `.editorconfig`, Spotless config, ...) is on the
+roadmap — see [`02-Configurator.md`](02-Configurator.md) for the layered model
+that is being prepared for those adapters, and [`TODO.md`](TODO.md) for the
+backlog entry tracking this work.
 
 ---
 
 ## 🧱 Integration Options
 
 - CLI tool — `jharmonizer-cli` fat JAR (local & CI use).
-- Maven plugin — `jharmonizer-maven-plugin` with goals `reorder`, `check`, `check-fast`.
+- Maven plugin — `jharmonizer-maven-plugin` with goals `reorder`, `check-all`, `check-fast`.
 
 A Gradle plugin and a Docker image are **not** shipped today; contributions are welcome.
 

@@ -11,37 +11,6 @@ Reorder all members inside every type of a parsed Java file so that the resultin
 declaration order matches the active configuration (the compiled member-group tree),
 while honouring the declaration-order dependency graph and accessor co-location.
 
-## Terminology — *sort* vs *reorder*
-
-JHarmonizer deliberately uses two related but distinct terms, and they are **not**
-synonyms:
-
-| Term                     | Scope                                                                                       | Where it lives in the codebase                                              |
-|--------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
-| **sort** / **sorter**    | The in-memory algorithmic step that decides the new order of members inside a type/file.    | `core/sorter/spoon/` package, `Sorter`, `SpoonSorter`, `OrderingKey`, etc.   |
-| **reorder**              | The user-facing operation: parse → sort → serialize → format → write back to disk.          | CLI command `reorder`, Maven goal `reorder`, `ReorderFlow`, `FlowType.REORDER`. |
-
-In other words, *sort* is the algorithmic primitive, and *reorder* is the
-file-level operation a user invokes. This split mirrors how the words are used in
-mainstream English-language tooling (a "sort algorithm" is a unit of computation;
-"reorder" is a verb used for end-to-end manipulation of an existing structure).
-Variants such as *re-sort*, *resort*, *resorting*, *resorter* are not used —
-they would imply doing the same operation twice, which is not what JHarmonizer
-does.
-
-Concrete consequences for the rest of the docs and code:
-
-- internal classes that implement the algorithm carry the `Sort` / `Order` family
-  of names (`SpoonSorter`, `GroupMembersOrderer`, `OrderingKey`, `ComparatorUtils`);
-- the user-visible verb is always `reorder` — CLI command, Maven goal, flow type,
-  log messages ("requires reordering", "to automatically fix these violations,
-  run `jharmonizer reorder`");
-- check commands report files that "require reordering", because the user-level
-  fix is to run `reorder`, not to "re-sort" anything.
-
-If you discover a doc that uses one term where the other is meant, treat it as a
-documentation bug and align it to the table above.
-
 ## What gets sorted
 
 The sorter handles every Spoon `CtTypeMember` kind:

@@ -469,7 +469,7 @@ class SrcProcessorTest {
         // Then
         assertThat(logs).contains("Detected formatting violations in:").contains("FormattedOnly.java");
         assertThat(listAppender.list)
-                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.WARN));
     }
 
     @Test
@@ -490,7 +490,7 @@ class SrcProcessorTest {
         // Then
         assertThat(logs).contains("more changed hunks omitted");
         assertThat(listAppender.list)
-                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.WARN));
     }
 
     @Test
@@ -511,7 +511,7 @@ class SrcProcessorTest {
         // Then
         assertThat(logs).contains("lines omitted");
         assertThat(listAppender.list)
-                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.WARN));
     }
 
     @NonNull

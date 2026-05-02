@@ -14,11 +14,13 @@ Build the runtime configuration consumed by the sorter and formatter, by:
 - applying programmatic overrides from the CLI / Maven plugin layer,
 - compiling the result into the runtime `CompiledConfig`.
 
-There is **no** ingestion of other vendor configuration formats today (no
-`.editorconfig`, no `.idea/*.xml`, no Eclipse XML, no Spotless config, etc.). The
-multi-layer model described below is, however, deliberately structured so that
-adapters for additional vendor formats can be added in the future without changing
-the merge / compile logic — see [Model layers](#model-layers).
+There is **no** ingestion of other vendor configuration formats today. Adapters
+for additional vendor formats (for example IntelliJ IDEA `codeStyleConfig.xml`,
+Eclipse formatter profiles, EditorConfig, Spotless config) are a planned future
+capability — see [Why a separate Unified layer](#why-a-separate-unified-layer)
+and the corresponding entry in [`TODO.md`](TODO.md). The multi-layer model
+described below is deliberately structured so that those adapters can be added
+without changing the merge / compile logic.
 
 ## Pipeline
 

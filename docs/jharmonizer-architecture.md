@@ -5,13 +5,14 @@ SPDX-License-Identifier: Apache-2.0
 
 # JHarmonizer architecture
 
-JHarmonizer is split into three Maven modules:
+JHarmonizer is split into four Maven modules:
 
-| Module           | Maven artifact                | Role                                                                                |
-|------------------|-------------------------------|-------------------------------------------------------------------------------------|
-| `core/`          | `jharmonizer-core`            | The full processing pipeline. No CLI or Maven coupling.                             |
-| `cli/`           | `jharmonizer-cli`             | Picocli front-end producing an executable fat JAR.                                  |
-| `maven-plugin/`  | `jharmonizer-maven-plugin`    | `@Mojo`-based wrappers (`reorder`, `check`, `check-fast`) over `jharmonizer-core`.  |
+| Module                       | Maven artifact                                          | Role                                                                                |
+|------------------------------|---------------------------------------------------------|-------------------------------------------------------------------------------------|
+| `dependency-aware-sorting/`  | `io.github.lemon-ant.jharmonizer:dependency-aware-sorting` | A standalone, **reusable Java library** for fast, deterministic ordering of items under group + DAG (`provider → dependent`) constraints. JHarmonizer uses it as the underlying engine for member ordering, but the library has no JHarmonizer-specific assumptions and can be consumed independently — see [`dependency-aware-sorting/README.md`](../dependency-aware-sorting/README.md). |
+| `core/`                      | `jharmonizer-core`                                      | The full processing pipeline. No CLI or Maven coupling.                             |
+| `cli/`                       | `jharmonizer-cli`                                       | Picocli front-end producing an executable fat JAR.                                  |
+| `maven-plugin/`              | `jharmonizer-maven-plugin`                              | `@Mojo`-based wrappers (`reorder`, `check-all`, `check-fast`) over `jharmonizer-core`. |
 
 ## Top-level orchestration
 
@@ -103,3 +104,28 @@ This gives:
 - A simple debug story per file — one straight-line execution to step through.
 - Clean error boundaries — a failing file raises a runtime exception that is captured
   in its own `FileProcessingResult` without poisoning the rest of the run.
+
+## Reusable building block: `dependency-aware-sorting`
+
+The deterministic, group-aware, dependency-aware ordering engine that decides the
+final member order for a single type lives in its own Maven module,
+[`dependency-aware-sorting/`](../dependency-aware-sorting/README.md). It has **no**
+JHarmonizer-specific dependency: it operates on plain `SortableTypeMember`,
+`Group`/`Groups`, and `Dependency`/`Dependencies` value types and produces a
+deterministic linear order that respects both group locality (members of the same
+group stay adjacent) and DAG ordering (`provider` always precedes `dependent`).
+
+If you are working on a different code-rewriting tool (a different formatter,
+linter, refactoring engine, or even a non-Java tool that needs constraint-aware
+ordering) you can depend on the artifact directly:
+
+```xml
+<dependency>
+    <groupId>io.github.lemon-ant.jharmonizer</groupId>
+    <artifactId>dependency-aware-sorting</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+See [`dependency-aware-sorting/README.md`](../dependency-aware-sorting/README.md)
+for the API surface and the algorithmic guarantees.

@@ -18,9 +18,12 @@ JHarmonizer/
 ├── AGENTS.md                  # Repository-wide conventions for coding agents
 ├── cli/
 │   └── README.md              # CLI fat-JAR usage, options and exit codes
-├── core/                      # jharmonizer-core (no module-level README)
-├── maven-plugin/              # jharmonizer-maven-plugin (no module-level README)
-├── dependency-aware-sorting/  # SimplifiedDependencyAwareSorter library
+├── core/
+│   └── README.md              # jharmonizer-core: public entry point, pipeline overview, references
+├── maven-plugin/
+│   └── README.md              # jharmonizer-maven-plugin: goals, parameters, dispatch
+├── dependency-aware-sorting/
+│   └── README.md              # SimplifiedDependencyAwareSorter library (reusable, JHarmonizer-independent)
 ├── quality-gates/             # Quality-gate Maven module
 └── docs/
     ├── 01-Intro.md

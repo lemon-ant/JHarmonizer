@@ -70,15 +70,15 @@ Bind `check-fast` to the `verify` phase to fail the build on the first out-of-or
 ```
 
 `check-fast` immediately halts the build pipeline the moment it detects an out-of-order or unformatted file —
-no further processing happens. `check` scans all files, collects every violation, and only then interrupts the
-build with the full report; set `-Djharmonizer.failOnViolation=false` to make `check` report violations without
+no further processing happens. `check-all` scans all files, collects every violation, and only then interrupts the
+build with the full report; set `-Djharmonizer.failOnViolation=false` to make `check-all` report violations without
 failing the build.
 
 ### Manual invocation
 
 ```bash
 mvn jharmonizer:reorder      # reorder all sources
-mvn jharmonizer:check        # report all violations
+mvn jharmonizer:check-all        # report all violations
 mvn jharmonizer:check-fast   # fail fast on first violation
 ```
 

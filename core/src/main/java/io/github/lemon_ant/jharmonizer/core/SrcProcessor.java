@@ -233,12 +233,12 @@ public final class SrcProcessor {
     private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
         if (fileProcessingResult.getMemberRelocations() != null
                 && !fileProcessingResult.getMemberRelocations().isEmpty()) {
-            log.error(MemberRelocationPrinter.printRelocations(
+            log.warn(MemberRelocationPrinter.printRelocations(
                     fileProcessingResult.getPath(), fileProcessingResult.getMemberRelocations()));
         }
         String diff = fileProcessingResult.getDiff();
         if (diff != null && !diff.isEmpty()) {
-            log.error(FormattingViolationPrinter.printFormattingViolation(fileProcessingResult.getPath(), diff));
+            log.warn(FormattingViolationPrinter.printFormattingViolation(fileProcessingResult.getPath(), diff));
         }
     }
 

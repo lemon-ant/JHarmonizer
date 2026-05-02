@@ -12,7 +12,7 @@ import org.apache.maven.plugin.logging.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class CheckMojoTest {
+class CheckAllMojoTest {
 
     @TempDir
     private Path tempDir;
@@ -21,11 +21,11 @@ class CheckMojoTest {
     void execute_conformingFiles_completesWithoutException() throws Exception {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-conforming", tempDir);
-        CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
 
         // When
-        Throwable thrown = catchThrowable(checkMojo::execute);
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
 
         // Then
         assertThat(thrown).isNull();
@@ -35,12 +35,12 @@ class CheckMojoTest {
     void execute_nonConformingFiles_throwsMojoFailureException() {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkMojo, "failOnViolation", true);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", true);
 
         // When
-        Throwable thrown = catchThrowable(checkMojo::execute);
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
 
         // Then
         assertThat(thrown)
@@ -52,12 +52,12 @@ class CheckMojoTest {
     void execute_nonConformingFilesAndFailOnViolationFalse_completesWithoutException() throws Exception {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkMojo, "failOnViolation", false);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", false);
 
         // When
-        Throwable thrown = catchThrowable(checkMojo::execute);
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
 
         // Then
         assertThat(thrown).isNull();
@@ -67,12 +67,12 @@ class CheckMojoTest {
     void execute_skipTrue_skipsExecutionWithoutException() throws Exception {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkMojo, "skip", true);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "skip", true);
 
         // When
-        Throwable thrown = catchThrowable(checkMojo::execute);
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
 
         // Then
         assertThat(thrown).isNull();
@@ -81,11 +81,11 @@ class CheckMojoTest {
     @Test
     void execute_emptyDirectory_completesWithoutException() throws Exception {
         // Given
-        CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
 
         // When
-        Throwable thrown = catchThrowable(checkMojo::execute);
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
 
         // Then
         assertThat(thrown).isNull();
@@ -95,14 +95,14 @@ class CheckMojoTest {
     void execute_nonConformingFiles_logsReorderFixCommand() throws Exception {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckMojo checkMojo = new CheckMojo();
-        MojoTestUtils.injectField(checkMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkMojo, "failOnViolation", false);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", false);
         Log mockLog = mock(Log.class);
-        checkMojo.setLog(mockLog);
+        checkAllMojo.setLog(mockLog);
 
         // When
-        checkMojo.execute();
+        checkAllMojo.execute();
 
         // Then
         verify(mockLog).warn(argThat((CharSequence msg) -> msg.toString().contains("jharmonizer:reorder")));
