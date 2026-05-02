@@ -14,8 +14,11 @@ Build the runtime configuration consumed by the sorter and formatter, by:
 - applying programmatic overrides from the CLI / Maven plugin layer,
 - compiling the result into the runtime `CompiledConfig`.
 
-There is **no** IDE-format ingestion (no `.editorconfig`, no `.idea/*.xml`, no Eclipse XML)
-in the current implementation.
+There is **no** ingestion of other vendor configuration formats today (no
+`.editorconfig`, no `.idea/*.xml`, no Eclipse XML, no Spotless config, etc.). The
+multi-layer model described below is, however, deliberately structured so that
+adapters for additional vendor formats can be added in the future without changing
+the merge / compile logic — see [Model layers](#model-layers).
 
 ## Pipeline
 
@@ -57,6 +60,43 @@ CLI / Maven param overrides → FlexibleUnifiedConfig ────────�
 
 The flexible variants allow every field to be `null`, which is what makes them safe to use
 as overlays. The strict variants reject missing required fields.
+
+### Why a separate Unified layer
+
+The Unified layer is the architectural extension point for supporting other vendor
+configuration formats. Today only one vendor format exists (the JHarmonizer YAML
+schema), so the Vendor → Unified converter is effectively an identity mapping. The
+intent, however, is that adding support for another vendor (for example an
+IntelliJ IDEA `codeStyleConfig.xml`, an Eclipse formatter profile, an EditorConfig
+file, or a Spotless config) means writing a single component:
+
+- a vendor-specific loader / deserializer for that format, plus
+- a vendor-specific `<Vendor>2UnifiedConverter` that maps it onto `UnifiedConfig`.
+
+Once a vendor adapter produces a `UnifiedConfig` (or a `FlexibleUnifiedConfig`
+overlay), the rest of the pipeline — overlay merging, compilation, sorter/formatter
+consumption — works unchanged, because the entire downstream toolset operates on
+the unified model. In other words, the Unified layer is what keeps the merge and
+compile machinery vendor-agnostic.
+
+### Why a separate Compiled layer
+
+The Compiled layer exists for **performance**. `UnifiedConfig` is a literal
+description of the rules a user wrote; `CompiledConfig` precomputes everything the
+hot path needs:
+
+- each rule line in `includes`/`excludes` is compiled into a single boolean
+  predicate over `MemberDescriptor`, so member dispatch is one virtual call and a
+  predicate evaluation per rule;
+- the member-group tree is laid out in DFS post-order with stable indexes so
+  first-match-wins lookups are O(depth) per member;
+- the formatter style, header line, and other scalar settings are pinned into
+  immutable fields, so no string parsing happens per file.
+
+Today the precomputation covers the parts that dominate per-file cost; future work
+may move additional logic into the compiled layer, but the principle is the same —
+all heavy interpretation of the rules happens once, at construction time, not
+per file.
 
 ## Loading entry points
 

@@ -122,24 +122,11 @@ the per-type declaration-order dependency graph.
 
 ## Post-sorting relocation reporter
 
-After sorting completes, `RelocationDetector.detectRelocations(...)` produces a
-human-friendly relocation report consumed by `MemberRelocationPrinter`:
-
-- For each scope (file root or type body), it computes the Longest Increasing
-  Subsequence (LIS) of the sorted members' indices in the **original** source order,
-  using `LongestIncreasingSubsequenceUtils.computeLisMask` (patience-sort variant
-  with `UNTRACKED = -1` sentinel).
-- Members participating in the LIS are **stable**; the complement is the **minimal
-  set of moved members** needed to transform the original order into the sorted order.
-- Consecutive moved members in the sorted order are glued into a single
-  `MemberRelocation` chunk so the report shows one "move N members before X" line per
-  contiguous run.
-- Predecessors and successors come from the sorted order at the chunk boundaries
-  (either may be `null` when the chunk sits at the start or end of its scope).
-- Members with invalid source positions, or members not in the original snapshot, are
-  treated as stable and never reported.
-
-This pass is purely diagnostic; it does not influence the produced output.
+After sorting completes, `RelocationDetector` produces a human-friendly relocation
+report consumed by `MemberRelocationPrinter`. The reporter is a pure diagnostic
+pass — it never influences the produced output. Its full algorithm (the LIS-based
+minimal-moved-set computation, scope handling, and chunk gluing) is documented
+separately in [`relocation-detector.md`](relocation-detector.md).
 
 ## Determinism
 
@@ -148,7 +135,8 @@ Every step of the pipeline is deterministic:
 - Comparator chains terminate in stable tie-breakers.
 - The provider-lift repair always picks the earliest blocked dependent and its minimal
   closure.
-- The LIS-based relocation report is computed from a deterministic patience-sort.
+- The relocation report is derived from a deterministic patience-sort LIS (see
+  [`relocation-detector.md`](relocation-detector.md)).
 
 Two runs over identical inputs produce byte-identical AST orderings and identical
 relocation reports.

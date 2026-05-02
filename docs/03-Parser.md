@@ -20,6 +20,16 @@ The selection criteria (semantic-rich AST, comment/annotation preservation, robu
 re-serialization, Java 21 support) were resolved during the initial POC. Other
 candidates evaluated at the time (JavaParser, Eclipse JDT, ANTLR) are not used.
 
+The decisive advantage of Spoon over a purely syntactic parser is that it does
+**not** stop at a token tree: it provides a fully resolved, navigable object model
+of the type system and of the in-code dependencies (`CtFieldReference`,
+`CtExecutableReference`, `CtTypeReference`, `CtVariableAccess`, etc.). This is what
+makes the declaration-order dependency graph (see
+[`declaration-order-dependencies.md`](declaration-order-dependencies.md)) feasible:
+each `*DependencyProvider` walks the resolved references inside a member's body to
+discover which other members it depends on, instead of guessing from textual
+identifiers.
+
 ## Where it fits in the pipeline
 
 ```

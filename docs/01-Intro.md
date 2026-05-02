@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # JHarmonizer: Java Class Reordering Tool
 
 ## Overview
@@ -27,11 +32,14 @@ The main flow of JHarmonizer can be summarized as:
 2. **Parsing**: Convert each Java source into an AST using **Spoon** (`SpoonParser`).
 3. **Sorting**: Apply the configured ordering rules, honouring the declaration-order
    dependency graph and opt-out directives.
-4. **Formatting**: Run the **Palantir** java-format pass and apply blank-line and
+4. **Serialization**: Render the reordered Spoon AST back to Java source text via
+   the customized Spoon printer (`SpoonCustomSrcPrinter`), preserving comments,
+   annotations, and any source ranges marked by `@jharmonizer:fully-off`.
+5. **Formatting**: Run the **Palantir** java-format pass and apply blank-line and
    import-fixing rules.
-5. **Diffing (optional)**: In check mode, compare the rewritten text to the original
+6. **Diffing (optional)**: In check mode, compare the rewritten text to the original
    to determine whether the file conforms.
-6. **Writing (optional)**: In `reorder` mode, write the updated source back to disk
+7. **Writing (optional)**: In `reorder` mode, write the updated source back to disk
    (with an optional `.bak` backup).
 
 Each of these steps is handled by dedicated components, described in detail in the corresponding documentation modules.

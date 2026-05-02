@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # JHarmonizer — test coverage plan (remaining work)
 
 This document is a **checklist of test work that is still missing** in the current repo version.
