@@ -14,13 +14,11 @@ import picocli.CommandLine.Command;
         mixinStandardHelpOptions = true)
 final class CheckFastCommand extends BaseCommand {
 
-    private static final int EXIT_CODE_CHECK_FAILED = 3;
-
     /**
      * Creates a new {@code check-fast} command.
      */
     CheckFastCommand() {
-        super(EXIT_CODE_CHECK_FAILED);
+        super(ExitCodes.CHECK_FAILED);
     }
 
     /**

@@ -46,7 +46,7 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_formattingChangesDetected_returnsExitCode3() {
+    void checkFastCommand_formattingChangesDetected_returnsCheckFailedExitCode() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -57,11 +57,11 @@ class CheckFastCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(3);
+        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
     }
 
     @Test
-    void checkFastCommand_orderingChangesDetected_returnsExitCode3() {
+    void checkFastCommand_orderingChangesDetected_returnsCheckFailedExitCode() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -72,11 +72,11 @@ class CheckFastCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(3);
+        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
     }
 
     @Test
-    void checkFastCommand_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
+    void checkFastCommand_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -88,7 +88,7 @@ class CheckFastCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test

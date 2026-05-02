@@ -48,7 +48,7 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_nonConformingFilesDetected_returnsExitCode3() {
+    void checkCommand_nonConformingFilesDetected_returnsCheckFailedExitCode() {
         // When
         int exitCode;
         try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
@@ -59,11 +59,11 @@ class CheckAllCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(3);
+        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
     }
 
     @Test
-    void checkCommand_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
+    void checkCommand_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -75,7 +75,7 @@ class CheckAllCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -99,7 +99,7 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_nonConformingFilesAndInfoDisabled_returnsExitCode3() {
+    void checkCommand_nonConformingFilesAndInfoDisabled_returnsCheckFailedExitCode() {
         // Given
         Logger baseCommandLogger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
         Level previousLevel = baseCommandLogger.getLevel();
@@ -117,6 +117,6 @@ class CheckAllCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(3);
+        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
     }
 }

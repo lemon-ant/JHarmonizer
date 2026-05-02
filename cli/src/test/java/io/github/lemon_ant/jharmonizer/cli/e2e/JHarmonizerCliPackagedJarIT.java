@@ -6,6 +6,7 @@ import static io.github.lemon_ant.jharmonizer.cli.e2e.FileContentAssertions.asse
 import static io.github.lemon_ant.jharmonizer.cli.e2e.TemporaryProjectCopier.locateOriginalTestResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.cli.command.ExitCodes;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -226,7 +227,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(3);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(ExitCodes.CHECK_FAILED);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("JHarmonization summary")
@@ -265,7 +266,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(3);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(ExitCodes.CHECK_FAILED);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("App.java")
@@ -348,7 +349,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(3);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(ExitCodes.CHECK_FAILED);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("stopped early")
@@ -373,7 +374,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(2);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(ExitCodes.INVALID_USAGE);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("Unknown option: '--unknown-option'")
@@ -398,7 +399,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // Then
         assertCompleted(result);
-        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(1);
+        assertThat(result.getExitCode()).as(result.toString()).isEqualTo(ExitCodes.PROCESSING_ERROR);
         assertThat(result.combinedOutput())
                 .as(result.toString())
                 .contains("Base directory does not exist or is not a directory");

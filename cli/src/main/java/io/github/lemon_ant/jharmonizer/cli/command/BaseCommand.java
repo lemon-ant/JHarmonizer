@@ -37,7 +37,7 @@ abstract class BaseCommand implements Callable<Integer> {
 
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
     private static final String VERBOSE_LOG_PATTERN = "%-5level [%-8.8thread] [%logger{36}] %msg%n";
-    private static final int DEFAULT_CHECK_FAILED_EXIT_CODE = 1;
+    private static final int DEFAULT_CHECK_FAILED_EXIT_CODE = ExitCodes.PROCESSING_ERROR;
 
     private final int checkFailedExitCode;
 
@@ -128,12 +128,12 @@ abstract class BaseCommand implements Callable<Integer> {
         Path absoluteBaseDir = toAbsoluteNormalizedPath(effectiveBaseDir);
         if (!Files.isDirectory(absoluteBaseDir)) {
             log.error("Base directory does not exist or is not a directory: {}", absoluteBaseDir);
-            return 1;
+            return ExitCodes.PROCESSING_ERROR;
         }
         Path effectiveConfigFilePath = toAbsoluteNormalizedPath(configFilePath);
         if (effectiveConfigFilePath != null && !Files.isRegularFile(effectiveConfigFilePath)) {
             log.error("Config file does not exist or is not a regular file: {}", effectiveConfigFilePath);
-            return 1;
+            return ExitCodes.PROCESSING_ERROR;
         }
         CommandOptions commandOptions = CommandOptions.builder()
                 .baseDir(absoluteBaseDir)
@@ -152,7 +152,7 @@ abstract class BaseCommand implements Callable<Integer> {
             return processWithFlow(commandOptions);
         } catch (RuntimeException e) {
             logRuntimeFailure(commandOptions.isVerbose(), e);
-            return 1;
+            return ExitCodes.PROCESSING_ERROR;
         }
     }
 
@@ -179,7 +179,7 @@ abstract class BaseCommand implements Callable<Integer> {
                             commandOptions.isNoBackup(),
                             commandOptions.isNoStatistics()));
         }
-        int exitCode = srcProcessingResult.isSuccess() ? 0 : checkFailedExitCode;
+        int exitCode = srcProcessingResult.isSuccess() ? ExitCodes.OK : checkFailedExitCode;
         log.info("Exit code: {}", exitCode);
         return exitCode;
     }

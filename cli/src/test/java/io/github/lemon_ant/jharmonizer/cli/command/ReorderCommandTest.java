@@ -105,7 +105,7 @@ class ReorderCommandTest {
     }
 
     @Test
-    void reorderCommand_processorThrowsRuntimeException_returnsExitCode1() throws Exception {
+    void reorderCommand_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
         try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
@@ -117,7 +117,7 @@ class ReorderCommandTest {
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @NonNull
