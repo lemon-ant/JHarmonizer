@@ -1,77 +1,101 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Maven Plugin: `jharmonizer-maven-plugin`
 
 ## Purpose
 
-This Maven plugin is designed to integrate the **JHarmonizer** utility into Java projects as a build phase tool.
-It enables automated reordering or structure validation of Java source files directly from Maven, with flexible
-configuration and execution modes.
+Integrates JHarmonizer into Maven builds so Java sources can be reordered or validated
+as part of the standard lifecycle.
 
-## Features
+## Goals
 
-- Run structure **reformatting** or **check-only validation** as part of the Maven lifecycle.
-- Configurable to operate on `src/main/java` by default, with an option to include `src/test/java`.
-- Three validation severity levels for `check` mode.
-- Executes before source code generation phase to prevent working on already generated code.
-- Accepts inline configuration via `<configuration>` section in `pom.xml`.
-- Supports backup of modified files if desired.
+The plugin exposes three goals, each implemented by a dedicated Mojo class:
 
-## Plugin Goals
+| Goal                     | Mojo                | Default phase     | Effect                                                                                                                                              |
+|--------------------------|---------------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `jharmonizer:reorder`    | `ReorderMojo`       | `process-sources` | Rewrites Java source files in-place so member layout matches the configured ordering. Creates `.bak` backup files when backups are enabled.         |
+| `jharmonizer:check`      | `CheckMojo`         | `verify`          | Scans all sources, collects every file that does not conform to the configured ordering, and (by default) fails the build with the full report.     |
+| `jharmonizer:check-fast` | `CheckFastMojo`     | `verify`          | Scans sources and stops at the first non-conforming file. Faster than `check` when a single violation is enough to fail the build.                  |
 
-- `jharmonizer:check` — validates whether files are already properly structured.
-- `jharmonizer:reorder` — reorders Java source files according to the defined sorting and formatting logic.
+The `check` goals **never modify source files**. Only `reorder` writes to the working tree.
 
-## Configuration Options
+All goals are declared `threadSafe = true`.
 
-| Parameter            | Type      | Description                                                        |
-|----------------------|-----------|--------------------------------------------------------------------|
-| `mode`               | `String`  | Either `check` or `reorder`.                                   |
-| `includeTestSources` | `boolean` | Whether to include `src/test/java` in addition to `src/main/java`. |
-| `severityLevel`      | `String`  | `fail-fast`, `collect-and-fail`, or `warn-only` for check mode.    |
-| `configFiles`        | `List`    | Optional paths to config files to override defaults.               |
-| `overrideConfigs`    | `List`    | Optional list of inline configuration overrides.                   |
-| `parserFlags`        | `List`    | Optional parser customization flags.                               |
-| `enableBackup`       | `boolean` | Whether to create backups before overwriting any files.            |
+## Parameters
 
-## Maven Phase
+All goals share the same parameters, defined on the abstract base
+`AbstractJHarmonizerMojo`.
 
-By default, the plugin is configured to execute before `generate-sources`, ensuring that only manually written Java
-files are processed.
+| Parameter                   | Property                                | Type      | Default                                                                                                                       | Description                                                                                                                                                            |
+|-----------------------------|-----------------------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `baseDir`                   | `jharmonizer.baseDir`                   | `File`    | _unset_                                                                                                                       | Base directory to scan. When unset, falls back to the project base directory and auto-derives include patterns for both `src/main/java` and `src/test/java`.           |
+| `includes`                  | `jharmonizer.includes`                  | `Set<String>` | empty                                                                                                                     | Glob patterns of Java files to include. When `baseDir` is unset, the auto-derived patterns are used in addition to user-provided patterns.                             |
+| `excludes`                  | `jharmonizer.excludes`                  | `Set<String>` | empty                                                                                                                     | Glob patterns of Java files to exclude.                                                                                                                                |
+| `skip`                      | `jharmonizer.skip`                      | `boolean` | `false`                                                                                                                       | When `true`, the goal logs a skip message and exits without doing any work.                                                                                            |
+| `configFile`                | `jharmonizer.configFile`                | `File`    | `${project.basedir}/jharmonizer.yml`                                                                                          | YAML configuration file merged over the embedded defaults. When the file does not exist, only the embedded default configuration is used.                              |
+| `backupsEnabled`            | `jharmonizer.backupsEnabled`            | `Boolean` | _unset_                                                                                                                       | Overrides the `backupsEnabled` setting from the active configuration. When unset, the configuration value is used (the embedded default is `true`).                     |
+| `printProcessingStatistics` | `jharmonizer.printProcessingStatistics` | `Boolean` | _unset_                                                                                                                       | Overrides the `printProcessingStatistics` setting from the active configuration. When unset, the configuration value is used (the embedded default is `true`).          |
+| `failOnViolation`           | `jharmonizer.failOnViolation`           | `boolean` | `true`                                                                                                                        | Applies to `check` and `check-fast`. When `true` and the flow reports any violation, the build fails with `MojoFailureException`. Set to `false` to report-only.       |
 
-## Sample Usage
+Glob patterns follow the standard `java.nio.file.PathMatcher` `glob:` syntax,
+e.g. `**/*.java`, `**/generated/**`.
+
+## Sample usage
+
+### Auto-reorder on every build
 
 ```xml
 <plugin>
-  <groupId>com.example</groupId>
-  <artifactId>jharmonizer-maven-plugin</artifactId>
-  <version>0.1.0</version>
-  <executions>
-    <execution>
-      <goals>
-        <goal>check</goal>
-      </goals>
-      <phase>generate-sources</phase>
-    </execution>
-  </executions>
-  <configuration>
-    <mode>check</mode>
-    <includeTestSources>true</includeTestSources>
-    <severityLevel>collect-and-fail</severityLevel>
-    <enableBackup>true</enableBackup>
-  </configuration>
+    <groupId>io.github.lemon-ant.jharmonizer</groupId>
+    <artifactId>jharmonizer-maven-plugin</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <executions>
+        <execution>
+            <phase>process-sources</phase>
+            <goals>
+                <goal>reorder</goal>
+            </goals>
+        </execution>
+    </executions>
 </plugin>
 ```
 
-## Testing Strategy
+### Enforce order in CI (fail-fast)
 
-The plugin will use the **Maven Plugin Testing Framework** (e.g. `org.apache.maven.plugin.testing`) or alternatives
-such as **Invoker Plugin** for full integration testing.
+```xml
+<plugin>
+    <groupId>io.github.lemon-ant.jharmonizer</groupId>
+    <artifactId>jharmonizer-maven-plugin</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <executions>
+        <execution>
+            <phase>verify</phase>
+            <goals>
+                <goal>check-fast</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
 
-Tests will:
+### Manual invocation
 
-- Ensure valid detection and behavior under all severity levels.
-- Verify file changes and backup creation.
-- Confirm plugin integration works across multi-module projects and test configurations.
+```bash
+mvn jharmonizer:reorder        # reorder all sources
+mvn jharmonizer:check          # report all violations
+mvn jharmonizer:check-fast     # fail fast on first violation
+mvn jharmonizer:check -Djharmonizer.failOnViolation=false   # report-only
+```
 
 ## Notes
 
-This document is a **draft specification**. Some configuration keys and plugin behaviors may be refined during implementation.
+- `reorder` is bound to `process-sources` by default; this is the standard Maven phase
+  for reformatting existing sources (it runs after `generate-sources` and before `compile`).
+- `check` and `check-fast` are bound to `verify` by default.
+- When the build fails because of `check`/`check-fast`, the plugin logs a hint pointing at
+  `mvn jharmonizer:reorder` to fix the violations automatically.
+- When `baseDir` is configured explicitly, no auto-derived include patterns are added —
+  only user-provided `includes` are used.

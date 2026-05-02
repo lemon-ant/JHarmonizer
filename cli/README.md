@@ -76,8 +76,9 @@ java -jar jharmonizer-cli.jar reorder \
 ### `check-all`
 
 Scans **all** files under `--base-dir` and logs every file that would be changed
-by a reorder. Always exits `0` when processing completes without errors — use
-the log output to see which files need attention.
+by a reorder. Exits with code `0` when every scanned file is already conformant
+and with code `1` when at least one file requires reordering. Source files are
+never modified by this command.
 
 ```bash
 java -jar jharmonizer-cli.jar check-all \
@@ -92,7 +93,7 @@ java -jar jharmonizer-cli.jar check-all \
 
 Like `check-all`, but stops at the **first** file that requires reordering and
 exits immediately with code `3`. Useful in CI pipelines where failing fast is
-preferred.
+preferred. Source files are never modified by this command.
 
 ```bash
 java -jar jharmonizer-cli.jar check-fast \
@@ -124,8 +125,8 @@ e.g. `**/*.java`, `**/generated/**`.
 
 | Code | Meaning |
 |---|---|
-| `0` | Processing completed successfully |
-| `1` | Processing error (I/O problem, unexpected exception) |
+| `0` | Processing completed successfully and no violations were detected |
+| `1` | Processing error (I/O problem, unexpected exception, invalid `--base-dir`, invalid `--config` path) **or** `check-all` detected at least one file that requires reordering |
 | `2` | Invalid CLI arguments (picocli default) |
 | `3` | `check-fast` only — at least one file requires reordering |
 

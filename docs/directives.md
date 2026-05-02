@@ -63,5 +63,6 @@ Warnings are logged for the following file-scope cases: unrecognized directive t
 Javadoc comments containing a directive token (`/** @jharmonizer:... */`),
 malformed directives where the token is not at the start of the comment payload, and multiple
 file-scope directives in the same file (the last one wins).
-Type-scope parsing is silent — no warnings are emitted for unrecognized or inapplicable comments
-at type scope.
+For type-scope, parsing is silent for unrecognized or inapplicable comments; the only
+type-scope warning is emitted when a single type has multiple applicable opt-out directives
+(the last one wins).
