@@ -49,7 +49,15 @@ public String formatSourceAndFixImports(String input) throws FormatterException
 
 ## Configuration Parameters
 
-Formatter style is configured via `JavaFormatterOptions.Style`, with three supported styles:
+The wrapper accepts:
+
+- `UnifiedFormatterStyle` (`PALANTIR`, `GOOGLE`, `AOSP`, or `NONE`).
+  When the style is `NONE`, the Palantir formatting pass is skipped entirely; only
+  `fixImports` is honoured (if enabled).
+- `fixImports` boolean. When `true`, calls `formatter.formatSourceAndFixImports(...)`
+  (or, when style is `NONE`, just `formatter.fixImports(...)`).
+
+The non-`NONE` Palantir styles map to the upstream `JavaFormatterOptions.Style` enum:
 
 ```java
 public enum Style {
@@ -64,7 +72,20 @@ public enum Style {
 }
 ```
 
-These parameters must be passed through the `Configuration` model and injected into the formatter via our `FormatterWrapper`.
+These come from `UnifiedFormatting` and flow through `CompiledConfig` into the wrapper.
+
+The other formatting flags — `blank-line-after-type-header`, `blank-line-before-comment`,
+`blank-line-between-fields` — are **not** applied by the Palantir formatter. They are
+honoured earlier, by the Spoon custom printer (`SpoonTypePrinter` / `SpoonSrcPrinterUtils`)
+during AST serialization, before the formatter runs.
+
+## Formatting-skipped ranges
+
+Type subtrees marked `@jharmonizer:fully-off` are preserved verbatim. The serializer
+collects their character ranges as `SrcCharacterRange`s and the formatter wrapper
+inverts them into the formatting ranges that Palantir actually rewrites — the skipped
+ranges are passed through untouched. Import fixing, when enabled, runs on the whole
+file after the partial formatting pass.
 
 ## Summary
 

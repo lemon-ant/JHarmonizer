@@ -1,37 +1,57 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DiffReporter
 
 ## Purpose
 
-In **check mode**, a dedicated component — `DiffReporter` — is required to compare the **original Java source code with the reordered version**. It serves two key purposes:
+`io.github.lemon_ant.jharmonizer.core.diff.DiffReporter` computes a human-readable
+unified diff between the original and rewritten source text of a single file. It is
+used by the `CHECK_*` flows and by the `REORDER` flow when verbose diagnostics for
+non-conforming files are needed.
 
-1. **Comparison**: Determines whether the original and transformed code are identical.
-2. **Diagnostics**: If differences exist, generates a readable **diff output** suitable for terminal or log output, highlighting the changes clearly.
+## Implementation
 
-## Usage
+- Backed by [`java-diff-utils`](https://github.com/java-diff-utils/java-diff-utils)
+  (`DiffUtils`, `UnifiedDiffUtils`, `Patch<String>`).
+- Compares texts line-by-line.
+- Returns an empty string when the texts are identical.
 
-`DiffReporter` is invoked from within the `check(...)` method to:
-- Validate whether reordering is necessary.
-- Raise an exception when mismatches are found, including a detailed diff report.
+## Output format
 
-## Possible Implementations
+Git-style unified diff with a JHarmonizer-specific presentation:
 
-1. **Existing Java libraries**:
-   - [`google-diff-match-patch`](https://github.com/google/diff-match-patch)
-   - [`java-diff-utils`](https://github.com/java-diff-utils/java-diff-utils)
+- Hunk headers on their own line: `@@ -start,len +start,len @@`.
+- A `|` separator between the diff prefix (`+`, `-`, or space) and the line content.
+  This makes the prefix unambiguous when the source itself starts with `+`/`-`.
+- File header lines (`--- a/<path>`, `+++ b/<path>`) are **omitted**. The caller
+  prints the file path itself before the diff body.
+- Whitespace is visualised inside changed and context lines:
+  - space → `·`
+  - tab → `→→→→`
+  - end-of-line → `¶`
+- Context size is fixed at 3 lines.
+- Output is truncated for readability:
+  - at most 3 hunks per file;
+  - at most 20 changed lines per hunk;
+  - omitted content is replaced with a `... and N more` marker.
 
-2. **Reviewing Palantir Java Formatter**:
-   - Although `palantir-java-format` does not expose a standalone diff component, its internal logic in **`check` 
-   mode** can serve as a valuable **source of inspiration**. Investigating how it compares the formatted output
-   with the original may offer reusable strategies.
+## API
 
-3. **Custom implementation**:
-   - Line-by-line comparison with highlighted differences;
-   - Optional highlighting at the character level;
-   - Configurable verbosity (e.g., control display of whitespace-only differences or empty lines).
+```java
+public static String computeDiff(String filePath, String originalText, String revisedText);
+```
 
-## Next Steps
+Returns the formatted diff or `""` when the texts are equal. The `filePath` is only
+used by the underlying diff library for internal labelling and does not appear in the
+returned text.
 
-- Conduct a technical research sweep:
-  - Benchmark available libraries in terms of performance, Unicode support, and diff quality.
-  - Explore the comparison logic used in `palantir-java-format`.
-  - If necessary, implement a minimal internal `DiffReporter` prioritizing readability and extensibility.
+## Related
+
+- `FormattingViolationPrinter` consumes `computeDiff(...)` to render per-file
+  violation reports during `CHECK_*` flows.
+- `MemberRelocationPrinter` is a separate component that prints member-relocation
+  diagnostics computed by `RelocationDetector` (see [`sorting-algorythm.md`](sorting-algorythm.md));
+  it does not produce textual diffs.
