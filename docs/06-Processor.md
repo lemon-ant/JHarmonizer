@@ -67,8 +67,8 @@ The CLI / Maven plugin layer maps `success` to the documented exit codes.
 
 ## Internal pipeline
 
-For each source file (driven by the parallel `Stream<Path>` returned by
-`SrcFilesHandler.readJavaFiles(...)`), the active flow runs:
+For each source file (driven by the parallel `Stream<SrcFile>` returned by
+`SrcFilesHandler.readJavaFiles(...)`, i.e. already-loaded source wrappers), the active flow runs:
 
 1. **Parse** — `SpoonParser.parseJavaSrcFile(srcFile, printerConfig)` →
    `SpoonAstModel` (also resolves opt-out directives).
