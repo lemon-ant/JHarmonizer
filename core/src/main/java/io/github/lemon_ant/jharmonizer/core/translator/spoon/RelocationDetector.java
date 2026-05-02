@@ -79,6 +79,7 @@ public class RelocationDetector {
      * @return {@code true} if any element is at a different position in the sorted order;
      *         otherwise {@code false}
      */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 

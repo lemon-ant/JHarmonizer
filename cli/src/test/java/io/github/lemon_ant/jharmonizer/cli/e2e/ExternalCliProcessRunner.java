@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class ExternalCliProcessRunner {
 
-    private static final long PROCESS_TIMEOUT_SECONDS = 30;
+    private static final long PROCESS_TIMEOUT_SECONDS = 90;
     private static final String JAVA_TOOL_OPTIONS_MESSAGE_PREFIX = "Picked up JAVA_TOOL_OPTIONS: ";
 
     static ExternalCliProcessResult run(
