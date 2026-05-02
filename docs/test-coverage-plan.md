@@ -9,13 +9,13 @@ Use it as a contract/roadmap: we will implement tests **one item at a time** and
 
 - [ ] **Member body integrity**
   - **Type:** component
-  - **Targets:** `SpoonCustomSourcePrinter`
+  - **Targets:** `SpoonCustomSrcPrinter`
   - **Goal:** when a member is moved, its **body text is unchanged** (except group separator insertion around boundaries).
   - **Must assert:** stable “sentinel” markers inside members stay exactly the same.
 
 - [ ] **Boundary stitching correctness**
   - **Type:** component
-  - **Targets:** `SpoonCustomSourcePrinter`, `SpoonSourcePrinterUtils`
+  - **Targets:** `SpoonCustomSrcPrinter`, `SpoonSrcPrinterUtils`
   - **Goal:** no missing/extra braces, semicolons, or accidental merges of two members.
   - **Must assert:** output is syntactically valid and compiles.
 

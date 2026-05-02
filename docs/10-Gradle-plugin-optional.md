@@ -1,35 +1,20 @@
-# Gradle Plugin (Optional)
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-## Overview
+# Gradle plugin (not implemented)
 
-While the core focus of this project is on delivering a reliable and tested Maven plugin for integration with Java
-projects, we acknowledge the widespread use of Gradle in modern Java ecosystems. Therefore, we define the development
-of a **Gradle plugin** as an **optional contribution**, outside the primary scope of the hackathon deliverables.
+JHarmonizer ships two front-ends for `jharmonizer-core`:
 
-## Purpose
+- the CLI fat JAR (`jharmonizer-cli`) — see [`08-CliRunner.md`](08-CliRunner.md);
+- the Maven plugin (`jharmonizer-maven-plugin`) — see [`09-Maven-plugin.md`](09-Maven-plugin.md).
 
-The Gradle plugin would mirror the functionality provided by the Maven plugin. It would allow Java projects using
-Gradle to integrate the JHarmonizer tool directly into their build pipeline, enabling:
+A Gradle plugin is **not** part of the project. There is no `build.gradle*` module and
+no published Gradle plugin coordinates. Contributions adding a Gradle front-end on top
+of `jharmonizer-core` would be welcome, but until one exists, Gradle users should
+either invoke the CLI fat JAR from a custom Gradle task or run JHarmonizer from a
+separate Maven invocation.
 
-- Automatic reordering (`reorder`) of Java source code during the build process.
-- Validation (`check`) of formatting consistency to prevent unformatted code from passing through CI/CD pipelines.
-- Custom configuration passed through Gradle's extension and plugin DSL.
-
-## Status
-
-- **Optional**: The Gradle plugin is **not required** for the hackathon MVP.
-- **Open for Contribution**: If team members experienced in Gradle development express interest, they are welcome
-to take ownership of this component.
-- **Testing Strategy**: Similar to Maven, the plugin should be validated through representative Gradle test projects
-and integration testing.
-
-## Key Requirements
-
-- Provide Gradle DSL extension for configuration options (e.g. included paths, check/reorder mode, severity settings).
-- Hook into appropriate Gradle build lifecycle phases (e.g. `compileJava` or earlier).
-- Output diagnostics and reformatted code, or fail builds based on configurable thresholds.
-
-## Contribution Notice
-
-> If a contributor or a team member is passionate about Gradle and wishes to implement this plugin, we will fully
-> support the effort. Otherwise, the plugin remains out of scope for initial development.
+If or when a Gradle plugin is added, this document will be replaced with the actual
+DSL and lifecycle-hook reference.
