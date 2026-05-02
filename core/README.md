@@ -59,12 +59,12 @@ core/
 │   ├── flow/                                        # ReorderFlow / CheckAllFlow / CheckFailFastFlow
 │   ├── translator/spoon/                            # Spoon-backed parser, AST snapshot, opt-out resolver
 │   ├── sorter/spoon/                                # SpoonSorter, OrderingKeyFactory, ComparatorUtils
-│   ├── dependency_graph/                            # *DependencyProvider catalog + MemberDependencyGraph
+│   ├── sorter/spoon/dependency_graph/               # *DependencyProvider catalog + MemberDependencyGraph
 │   ├── translator/spoon/printer/                    # SpoonCustomSrcPrinter (serialization)
 │   ├── formatter/                                   # Palantir wrapper + import fixer + blank-line policy
 │   ├── diff/                                        # DiffReporter
 │   ├── files_handler/                               # SrcFilesHandler (parallel stream powered by glob-path-finder)
-│   └── stats/                                       # processing statistics
+│   └── processing_stat/                             # processing statistics
 └── src/main/resources/
     └── default-config.yml                           # embedded baseline configuration
 ```
