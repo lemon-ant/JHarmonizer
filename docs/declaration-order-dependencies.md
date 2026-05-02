@@ -47,7 +47,7 @@ filtering by kind happens at query time. Transitive queries are cached per
 ## Providers
 
 Each provider implements `MemberDependencyProvider`. The graph builder iterates
-through them and accumulates the edges. Two abstract bases factor common logic; eleven
+through them and accumulates the edges. Two abstract bases factor common logic; nine
 concrete providers contribute edges.
 
 ### Abstract bases
