@@ -355,7 +355,7 @@ SPDX-License-Identifier: Apache-2.0
                         <strictCheck>true</strictCheck>
                         <licenseSets>
                             <licenseSet>
-                                <header>${maven.multiModuleProjectDirectory}/license-header.txt</header>
+                                <header>${maven.multiModuleProjectDirectory}/quality-gates/license-header.txt</header>
                                 <includes>
                                     <include>.editorconfig</include>
                                     <include>.gitattributes</include>
