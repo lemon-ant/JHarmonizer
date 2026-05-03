@@ -363,8 +363,11 @@ SPDX-License-Identifier: Apache-2.0
                                     <include>.github/**/*.yml</include>
                                     <include>.gitignore</include>
                                     <include>*.md</include>
+                                    <include>**/*.bat</include>
+                                    <include>**/*.groovy</include>
                                     <include>**/*.java</include>
                                     <include>**/*.md</include>
+                                    <include>**/*.properties</include>
                                     <include>**/*.sh</include>
                                     <include>**/*.xml</include>
                                     <include>**/*.yml</include>
@@ -378,6 +381,15 @@ SPDX-License-Identifier: Apache-2.0
                                         overwrite them with our project SPDX header.
                                     -->
                                     <exclude>docs/**/*.java</exclude>
+                                    <!--
+                                        *.~java files use a tilde-prefixed extension to prevent the
+                                        Java compiler from treating them as source files (they contain
+                                        intentionally invalid or incomplete code).  The license-maven-plugin
+                                        mapping key would need to be "~java", which is not a valid XML
+                                        element name, so these files cannot be mapped to a comment style
+                                        automatically.  Their SPDX headers are maintained manually.
+                                    -->
+                                    <exclude>**/*.~java</exclude>
                                 </excludes>
                             </licenseSet>
                         </licenseSets>
@@ -393,8 +405,14 @@ SPDX-License-Identifier: Apache-2.0
                             <headerDefinition>${maven.multiModuleProjectDirectory}/quality-gates/license-header-styles.xml</headerDefinition>
                         </headerDefinitions>
                         <mapping>
+                            <bat>BAT_REM_STYLE</bat>
+                            <editorconfig>SCRIPT_SIMPLE</editorconfig>
+                            <gitattributes>SCRIPT_SIMPLE</gitattributes>
+                            <gitignore>SCRIPT_SIMPLE</gitignore>
+                            <groovy>DOUBLESLASH_SIMPLE</groovy>
                             <java>DOUBLESLASH_SIMPLE</java>
                             <md>MARKDOWN_BLOCK_COMMENT</md>
+                            <properties>SCRIPT_SIMPLE</properties>
                             <sh>SCRIPT_SIMPLE</sh>
                             <xml>XML_BLOCK_COMMENT</xml>
                             <yml>SCRIPT_SIMPLE</yml>

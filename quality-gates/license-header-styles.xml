@@ -49,4 +49,12 @@ SPDX-License-Identifier: Apache-2.0
         <padLines>false</padLines>
         <skipLine>&lt;\?xml.*</skipLine>
     </xml_block_comment>
+    <bat_rem_style>
+        <beforeEachLine>REM </beforeEachLine>
+        <firstLineDetectionPattern>REM .*$</firstLineDetectionPattern>
+        <lastLineDetectionPattern>REM .*$</lastLineDetectionPattern>
+        <allowBlankLines>false</allowBlankLines>
+        <multiLine>false</multiLine>
+        <padLines>false</padLines>
+    </bat_rem_style>
 </additionalHeaders>
