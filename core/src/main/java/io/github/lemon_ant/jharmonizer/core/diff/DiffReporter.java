@@ -181,9 +181,10 @@ public class DiffReporter {
 
     @NonNull
     private static String visualizeWhitespace(String line, WhitespaceVisualizationStyle style) {
-        String spaceMark = style == WhitespaceVisualizationStyle.UNICODE ? SPACE_MARK_UNICODE : SPACE_MARK_ASCII;
-        String tabMark = style == WhitespaceVisualizationStyle.UNICODE ? TAB_MARK_UNICODE : TAB_MARK_ASCII;
-        String eolMark = style == WhitespaceVisualizationStyle.UNICODE ? EOL_MARK_UNICODE : EOL_MARK_ASCII;
+        boolean useUnicode = style == WhitespaceVisualizationStyle.UNICODE;
+        String spaceMark = useUnicode ? SPACE_MARK_UNICODE : SPACE_MARK_ASCII;
+        String tabMark = useUnicode ? TAB_MARK_UNICODE : TAB_MARK_ASCII;
+        String eolMark = useUnicode ? EOL_MARK_UNICODE : EOL_MARK_ASCII;
         if (line.isEmpty()) {
             return eolMark;
         }

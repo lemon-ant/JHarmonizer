@@ -3,7 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.diff;
 
 /**
- * Controls which symbol set is used to visualise whitespace characters in diff output.
+ * Controls which symbol set is used to visualize whitespace characters in diff output.
  *
  * <p>{@link #UNICODE} uses visually distinctive Unicode characters and is suitable for
  * UTF-8 capable terminals. {@link #ASCII_SAFE} uses plain ASCII characters that render
