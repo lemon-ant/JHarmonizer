@@ -62,6 +62,7 @@ class DiffReporterTest {
             // Given
             String original = "class A {\n    void a() {}\n}\n";
             String revised = "class A {\n\tvoid a() {}\n}\n";
+            WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
 
             // When
             String result = computeDiff(FILE_PATH, original, revised);
@@ -70,17 +71,18 @@ class DiffReporterTest {
             String[] diffLines = result.split(System.lineSeparator(), -1);
             // Removed line: spaces visualized
             assertThat(diffLines)
-                    .anySatisfy(diffLine -> assertThat(diffLine).startsWith("-").contains("····"));
+                    .anySatisfy(diffLine -> assertThat(diffLine)
+                            .startsWith("-")
+                            .contains(style.getSpaceMark().repeat(4)));
             // Added line: tab visualized
             assertThat(diffLines)
-                    .anySatisfy(diffLine -> assertThat(diffLine).startsWith("+").contains("→→→→"));
+                    .anySatisfy(diffLine -> assertThat(diffLine).startsWith("+").contains(style.getTabMark()));
             // @@ header must not contain whitespace visualization markers
             assertThat(diffLines)
                     .filteredOn(diffLine -> diffLine.startsWith("@@ "))
                     .allSatisfy(diffLine -> assertThat(diffLine)
-                            .doesNotContain("·")
-                            .doesNotContain("→→→→")
-                            .doesNotEndWith("¶"));
+                            .doesNotContain(style.getSpaceMark())
+                            .doesNotContain(style.getTabMark()));
         }
     }
 
