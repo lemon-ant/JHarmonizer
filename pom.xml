@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
-    SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
-    SPDX-License-Identifier: Apache-2.0
-
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -68,6 +66,7 @@
         <jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
         <jmh.version>1.37</jmh.version>
         <jspecify.version>1.0.0</jspecify.version>
+        <license-maven-plugin.version>4.6</license-maven-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
@@ -347,6 +346,61 @@
                         </java>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>com.mycila</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${license-maven-plugin.version}</version>
+                    <configuration>
+                        <strictCheck>true</strictCheck>
+                        <licenseSets>
+                            <licenseSet>
+                                <header>${maven.multiModuleProjectDirectory}/license-header.txt</header>
+                                <includes>
+                                    <include>.editorconfig</include>
+                                    <include>.gitattributes</include>
+                                    <include>.github/**/*.md</include>
+                                    <include>.github/**/*.yml</include>
+                                    <include>.gitignore</include>
+                                    <include>*.md</include>
+                                    <include>**/*.java</include>
+                                    <include>**/*.md</include>
+                                    <include>**/*.sh</include>
+                                    <include>**/*.xml</include>
+                                    <include>**/*.yml</include>
+                                </includes>
+                                <excludes>
+                                    <exclude>LICENSE</exclude>
+                                    <exclude>target/**</exclude>
+                                    <!--
+                                        docs/**/*.java files are 3rd-party reference/example files
+                                        with their own upstream Apache-2.0 headers.  We must not
+                                        overwrite them with our project SPDX header.
+                                    -->
+                                    <exclude>docs/**/*.java</exclude>
+                                </excludes>
+                            </licenseSet>
+                        </licenseSets>
+                        <!--
+                            Built-in DOUBLESLASH_STYLE, SCRIPT_STYLE, and XML_STYLE all wrap the
+                            header block with extra first/end lines and blank-line padding that do
+                            not match the compact single-line-prefix convention used throughout this
+                            repository. Custom types in license-header-styles.xml omit those
+                            wrappers to produce and accept the exact format already present in all
+                            tracked source files.
+                        -->
+                        <headerDefinitions>
+                            <headerDefinition>${maven.multiModuleProjectDirectory}/quality-gates/license-header-styles.xml</headerDefinition>
+                        </headerDefinitions>
+                        <mapping>
+                            <java>DOUBLESLASH_SIMPLE</java>
+                            <md>MARKDOWN_BLOCK_COMMENT</md>
+                            <sh>SCRIPT_SIMPLE</sh>
+                            <xml>XML_BLOCK_COMMENT</xml>
+                            <yml>SCRIPT_SIMPLE</yml>
+                        </mapping>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -569,6 +623,20 @@
                             </execution>
                         </executions>
                     </plugin>
+
+                    <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-license-headers</id>
+                                <goals>
+                                    <goal>format</goal>
+                                </goals>
+                                <phase>validate</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -606,6 +674,20 @@
                                     <goal>check</goal>
                                 </goals>
                                 <phase>initialize</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>check-spdx-headers</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>validate</phase>
                             </execution>
                         </executions>
                     </plugin>
