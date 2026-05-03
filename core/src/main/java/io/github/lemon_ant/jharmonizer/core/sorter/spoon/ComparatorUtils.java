@@ -72,7 +72,6 @@ class ComparatorUtils {
      * @param orderingRules the ordering rules to apply, in priority order
      * @return the sortable type member comparator
      */
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     @NonNull
     static Comparator<SortableTypeMember> buildSortableTypeMemberComparator(@NonNull List<OrderingRule> orderingRules) {
         Comparator<OrderingKey> base = buildOrderingKeyComparator(orderingRules);

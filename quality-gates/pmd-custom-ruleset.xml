@@ -6,15 +6,7 @@ SPDX-License-Identifier: Apache-2.0
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0">
     <description>Everything except LawOfDemeter</description>
 
-    <rule ref="category/java/bestpractices.xml">
-        <!--
-            UnnecessaryWarningSuppression fires for every @SuppressWarnings("PMD.X") annotation
-            that successfully suppresses a violation, because PMD 7 evaluates suppressions before
-            running this rule and therefore sees no live violation at the annotated site.
-            The rule cannot coexist with @SuppressWarnings-based suppressions in PMD 7.
-        -->
-        <exclude name="UnnecessaryWarningSuppression"/>
-    </rule>
+    <rule ref="category/java/bestpractices.xml"/>
     <!-- TODO It's too strict to use and should be reconsidered
     <ruleset>category/java/codestyle.xml</ruleset>
     -->

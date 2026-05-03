@@ -105,7 +105,6 @@ final class InitializationOrderDependencyUtils {
      * @param relaxedForwardReferences whether to skip providers declared after the dependent member
      * @return the candidate provider members
      */
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     @NonNull
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,

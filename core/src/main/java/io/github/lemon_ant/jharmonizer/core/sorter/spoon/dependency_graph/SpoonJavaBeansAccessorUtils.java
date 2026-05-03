@@ -52,7 +52,6 @@ public class SpoonJavaBeansAccessorUtils {
      * Empty if the input method is not an accessor or if no matching pair exists in the type.
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     @NonNull
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
