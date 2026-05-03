@@ -3,7 +3,6 @@
 package io.github.lemon_ant.jharmonizer.core.diff;
 
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import lombok.NonNull;
@@ -17,19 +16,13 @@ import lombok.experimental.UtilityClass;
  * property is absent or names an unrecognised charset. The detection result is computed once
  * and cached for the lifetime of the JVM.
  *
- * <p>The style is selected by probing whether the resolved charset can encode the specific
- * marker characters:
- * <ul>
- *   <li>Can encode {@code →} (U+2192) → {@link WhitespaceVisualizationStyle#UNICODE}</li>
- *   <li>Can encode {@code ·} (U+00B7) → {@link WhitespaceVisualizationStyle#LATIN_SAFE}
- *       (e.g. CP1252, ISO-8859-1)</li>
- *   <li>Otherwise → {@link WhitespaceVisualizationStyle#ASCII_SAFE} (e.g. CP850, CP866)</li>
- * </ul>
+ * <p>Style selection is delegated to {@link WhitespaceVisualizationStyle#forCharset(Charset)}.
  */
 @UtilityClass
 class ConsoleUnicodeDetector {
 
-    private static final WhitespaceVisualizationStyle DETECTED_STYLE = detectStyle();
+    private static final WhitespaceVisualizationStyle DETECTED_STYLE =
+            WhitespaceVisualizationStyle.forCharset(resolveStdoutCharset());
 
     /**
      * Returns the cached whitespace visualization style for the current JVM stdout.
@@ -39,18 +32,6 @@ class ConsoleUnicodeDetector {
     @NonNull
     static WhitespaceVisualizationStyle resolveStyle() {
         return DETECTED_STYLE;
-    }
-
-    @NonNull
-    private static WhitespaceVisualizationStyle detectStyle() {
-        CharsetEncoder encoder = resolveStdoutCharset().newEncoder();
-        if (encoder.canEncode('\u2192')) {
-            return WhitespaceVisualizationStyle.UNICODE;
-        }
-        if (encoder.canEncode('\u00B7')) {
-            return WhitespaceVisualizationStyle.LATIN_SAFE;
-        }
-        return WhitespaceVisualizationStyle.ASCII_SAFE;
     }
 
     @NonNull
