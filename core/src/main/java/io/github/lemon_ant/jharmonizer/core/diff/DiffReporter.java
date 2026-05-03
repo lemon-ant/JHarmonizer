@@ -37,14 +37,6 @@ public class DiffReporter {
     private static final int MAX_CHANGED_LINES_PER_HUNK = 20;
     private static final String OMISSION_PREFIX = "... and ";
 
-    private static final String SPACE_MARK_UNICODE = "·";
-    private static final String TAB_MARK_UNICODE = "→→→→";
-    private static final String EOL_MARK_UNICODE = "¶";
-
-    private static final String SPACE_MARK_ASCII = ".";
-    private static final String TAB_MARK_ASCII = ">";
-    private static final String EOL_MARK_ASCII = "$";
-
     /**
      * Computes a truncated, human-readable unified diff between two versions of a source file.
      *
@@ -181,13 +173,9 @@ public class DiffReporter {
 
     @NonNull
     private static String visualizeWhitespace(String line, WhitespaceVisualizationStyle style) {
-        boolean useUnicode = style == WhitespaceVisualizationStyle.UNICODE;
-        String spaceMark = useUnicode ? SPACE_MARK_UNICODE : SPACE_MARK_ASCII;
-        String tabMark = useUnicode ? TAB_MARK_UNICODE : TAB_MARK_ASCII;
-        String eolMark = useUnicode ? EOL_MARK_UNICODE : EOL_MARK_ASCII;
         if (line.isEmpty()) {
-            return eolMark;
+            return style.eolMark;
         }
-        return line.replace(" ", spaceMark).replace("\t", tabMark) + eolMark;
+        return line.replace(" ", style.spaceMark).replace("\t", style.tabMark) + style.eolMark;
     }
 }
