@@ -69,14 +69,18 @@ class DiffReporterTest {
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            // Removed line: spaces visualized
+            // Removed line: spaces visualized, ends with EOL mark
             assertThat(diffLines)
                     .anySatisfy(diffLine -> assertThat(diffLine)
                             .startsWith("-")
-                            .contains(style.getSpaceMark().repeat(4)));
-            // Added line: tab visualized
+                            .contains(style.getSpaceMark().repeat(4))
+                            .endsWith(style.getEolMark()));
+            // Added line: tab visualized, ends with EOL mark
             assertThat(diffLines)
-                    .anySatisfy(diffLine -> assertThat(diffLine).startsWith("+").contains(style.getTabMark()));
+                    .anySatisfy(diffLine -> assertThat(diffLine)
+                            .startsWith("+")
+                            .contains(style.getTabMark())
+                            .endsWith(style.getEolMark()));
             // @@ header must not contain whitespace visualization markers
             assertThat(diffLines)
                     .filteredOn(diffLine -> diffLine.startsWith("@@ "))
@@ -94,13 +98,14 @@ class DiffReporterTest {
             // Given
             String original = "class A {\n\n    void a() {}\n}\n";
             String revised = "class A {\n    void a() {}\n}\n";
+            WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
 
             // When
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|¶"));
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|" + style.getEolMark()));
         }
     }
 

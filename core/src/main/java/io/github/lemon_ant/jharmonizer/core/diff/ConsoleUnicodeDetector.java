@@ -11,13 +11,18 @@ import lombok.experimental.UtilityClass;
 /**
  * Detects which whitespace visualization style is appropriate for the standard output stream.
  *
- * <p>Uses the {@code stdout.encoding} JVM system property, when present, to determine the
- * effective charset of stdout. Falls back to {@link Charset#defaultCharset()} when the property
- * is absent or names an unrecognised charset; on some supported Java 17 runtimes, this fallback
- * path is the normal behavior because {@code stdout.encoding} is not populated. The detection
- * result is computed once and cached for the lifetime of the JVM.
+ * <p>Resolves the effective stdout charset via a three-step property lookup:
+ * <ol>
+ *   <li>{@code stdout.encoding} — set by the JVM on Java 18 and later to reflect the actual
+ *       I/O encoding of the stdout stream (the console OEM code page on Windows).</li>
+ *   <li>{@code native.encoding} — set by the JVM on Java 17 and later to reflect the native
+ *       file I/O encoding; on Windows this is typically the ANSI code page, not the console
+ *       OEM code page, so it may still be imprecise in locales where the two differ.</li>
+ *   <li>{@link Charset#defaultCharset()} — last-resort fallback.</li>
+ * </ol>
  *
- * <p>Style selection is delegated to {@link WhitespaceVisualizationStyle#forCharset(Charset)}.
+ * <p>The detection result is computed once and cached for the lifetime of the JVM.
+ * Style selection is delegated to {@link WhitespaceVisualizationStyle#forCharset(Charset)}.
  */
 @UtilityClass
 class ConsoleUnicodeDetector {
@@ -37,12 +42,15 @@ class ConsoleUnicodeDetector {
 
     @NonNull
     private static Charset resolveStdoutCharset() {
-        String encodingProperty = System.getProperty("stdout.encoding");
-        if (encodingProperty == null) {
+        String encoding = System.getProperty("stdout.encoding");
+        if (encoding == null) {
+            encoding = System.getProperty("native.encoding");
+        }
+        if (encoding == null) {
             return Charset.defaultCharset();
         }
         try {
-            return Charset.forName(encodingProperty);
+            return Charset.forName(encoding);
         } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
             return Charset.defaultCharset();
         }
