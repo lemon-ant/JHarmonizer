@@ -18,6 +18,8 @@ class WhitespaceVisualizationStyleTest {
         assertThat(WhitespaceVisualizationStyle.UNICODE.getSpaceMark()).isEqualTo("·");
         assertThat(WhitespaceVisualizationStyle.UNICODE.getTabMark()).isEqualTo("→→→→");
         assertThat(WhitespaceVisualizationStyle.UNICODE.getEolMark()).isEqualTo("¶");
+        assertThat(WhitespaceVisualizationStyle.UNICODE.getEllipsisMark()).isEqualTo("…");
+        assertThat(WhitespaceVisualizationStyle.UNICODE.getChunkOmissionMark()).isEqualTo("¦");
     }
 
     @Test
@@ -26,6 +28,9 @@ class WhitespaceVisualizationStyleTest {
         assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getSpaceMark()).isEqualTo("·");
         assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getTabMark()).isEqualTo("--->");
         assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getEolMark()).isEqualTo("¶");
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getEllipsisMark()).isEqualTo("...");
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getChunkOmissionMark())
+                .isEqualTo("¦");
     }
 
     @Test
@@ -34,6 +39,9 @@ class WhitespaceVisualizationStyleTest {
         assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getSpaceMark()).isEqualTo(".");
         assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getTabMark()).isEqualTo("--->");
         assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getEolMark()).isEmpty();
+        assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getEllipsisMark()).isEqualTo("...");
+        assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getChunkOmissionMark())
+                .isEqualTo("|");
     }
 
     @ParameterizedTest

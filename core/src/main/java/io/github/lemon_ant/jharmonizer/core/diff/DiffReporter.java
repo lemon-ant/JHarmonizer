@@ -37,7 +37,20 @@ public class DiffReporter {
     private static final int CONTEXT_SIZE = 3;
     private static final int MAX_HUNKS_PER_FILE = 3;
     private static final int MAX_CHANGED_LINES_PER_HUNK = 20;
-    private static final String OMISSION_PREFIX = "... and ";
+
+    /**
+     * Returns the cached whitespace visualization style for the current JVM stdout.
+     *
+     * <p>Delegates to {@link ConsoleUnicodeDetector#resolveStyle()} and exposes the result
+     * as a public API so that other output components (such as relocation printers) can render
+     * their omission markers consistently with the diff output.
+     *
+     * @return the style that best matches what the stdout encoding can render
+     */
+    @NonNull
+    public static WhitespaceVisualizationStyle resolveStyle() {
+        return ConsoleUnicodeDetector.resolveStyle();
+    }
 
     /**
      * Computes a truncated, human-readable unified diff between two versions of a source file.
@@ -82,7 +95,8 @@ public class DiffReporter {
             formatHunkContent(unifiedLines.subList(hunkStart + 1, hunkEnd), sb, style);
         }
         if (omittedHunkCount > 0) {
-            sb.append(OMISSION_PREFIX)
+            sb.append(style.getEllipsisMark())
+                    .append(" and ")
                     .append(omittedHunkCount)
                     .append(" more changed ")
                     .append(omittedHunkCount == 1 ? "hunk" : "hunks")
@@ -115,7 +129,7 @@ public class DiffReporter {
             int omittedAdded = (int) remaining.stream()
                     .filter(diffLine -> diffLine.startsWith("+"))
                     .count();
-            sb.append(buildOmissionSummary(omittedRemoved, omittedAdded)).append(System.lineSeparator());
+            sb.append(buildOmissionSummary(omittedRemoved, omittedAdded, style)).append(System.lineSeparator());
         }
     }
 
@@ -148,13 +162,15 @@ public class DiffReporter {
     }
 
     @NonNull
-    private static String buildOmissionSummary(int omittedRemoved, int omittedAdded) {
+    private static String buildOmissionSummary(
+            int omittedRemoved, int omittedAdded, WhitespaceVisualizationStyle style) {
+        String prefix = style.getEllipsisMark() + " and ";
         if (omittedRemoved > 0 && omittedAdded > 0) {
-            return OMISSION_PREFIX + omittedRemoved + " more removed / " + omittedAdded + " more added lines omitted";
+            return prefix + omittedRemoved + " more removed / " + omittedAdded + " more added lines omitted";
         } else if (omittedRemoved > 0) {
-            return OMISSION_PREFIX + omittedRemoved + " more removed lines omitted";
+            return prefix + omittedRemoved + " more removed lines omitted";
         } else {
-            return OMISSION_PREFIX + omittedAdded + " more added lines omitted";
+            return prefix + omittedAdded + " more added lines omitted";
         }
     }
 

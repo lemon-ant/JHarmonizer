@@ -6,6 +6,8 @@ import static io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFo
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.DeclarationHeaderRenderer.renderDeclarationHeader;
 import static java.lang.System.lineSeparator;
 
+import io.github.lemon_ant.jharmonizer.core.diff.DiffReporter;
+import io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -43,8 +45,8 @@ public class MemberRelocationPrinter {
      * Detected member ordering violations in:
      *   Sample.java
      *   [1] com.example.Sample:
-     *         public void a() { ... }
-     *     --> public void b() { ... }
+     *         public void a() { … }
+     *     --> public void b() { … }
      * </pre>
      *
      * @param path        the path of the file where the relocations were detected
@@ -53,6 +55,7 @@ public class MemberRelocationPrinter {
      */
     @NonNull
     public static String printRelocations(@NonNull Path path, @NonNull Collection<MemberRelocation> relocations) {
+        WhitespaceVisualizationStyle style = DiffReporter.resolveStyle();
         List<MemberRelocation> relocationList = List.copyOf(relocations);
         int totalCount = relocationList.size();
         int displayedCount = Math.min(totalCount, MAX_DISPLAYED_VIOLATIONS);
@@ -63,15 +66,17 @@ public class MemberRelocationPrinter {
                 .append(abbreviatePathForDisplay(path, MAX_PATH_DISPLAY_LENGTH));
         for (int i = 0; i < displayedCount; i++) {
             sb.append(lineSeparator());
-            appendRelocationEntry(sb, relocationList.get(i), i + 1);
+            appendRelocationEntry(sb, relocationList.get(i), i + 1, style);
         }
         if (totalCount > MAX_DISPLAYED_VIOLATIONS) {
-            sb.append(lineSeparator()).append(String.format("  ... %d violations total", totalCount));
+            sb.append(lineSeparator())
+                    .append(String.format("  %s %d violations total", style.getEllipsisMark(), totalCount));
         }
         return sb.toString();
     }
 
-    private static void appendRelocationEntry(StringBuilder sb, MemberRelocation relocation, int index) {
+    private static void appendRelocationEntry(
+            StringBuilder sb, MemberRelocation relocation, int index, WhitespaceVisualizationStyle style) {
         CtTypeMember firstMember = relocation.getRelocatedMembers().get(0);
         String typeName = firstMember.getDeclaringType() != null
                 ? firstMember.getDeclaringType().getQualifiedName()
@@ -79,28 +84,32 @@ public class MemberRelocationPrinter {
         sb.append(String.format("  [%d] %s:", index, typeName));
         if (relocation.getSortedPredecessor() != null) {
             sb.append(lineSeparator())
-                    .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedPredecessor())));
+                    .append(String.format(
+                            "        %s", renderDeclarationHeader(relocation.getSortedPredecessor(), style)));
         }
-        appendChunkLines(sb, relocation.getRelocatedMembers());
+        appendChunkLines(sb, relocation.getRelocatedMembers(), style);
         if (relocation.getSortedSuccessor() != null) {
             sb.append(lineSeparator())
-                    .append(String.format("        %s", renderDeclarationHeader(relocation.getSortedSuccessor())));
+                    .append(String.format(
+                            "        %s", renderDeclarationHeader(relocation.getSortedSuccessor(), style)));
         }
     }
 
-    private static void appendChunkLines(StringBuilder sb, List<CtTypeMember> members) {
+    private static void appendChunkLines(
+            StringBuilder sb, List<CtTypeMember> members, WhitespaceVisualizationStyle style) {
         if (members.size() <= MAX_DISPLAYED_CHUNK_MEMBERS) {
             for (CtTypeMember member : members) {
-                sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member)));
+                sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member, style)));
             }
         } else {
             int omittedCount = members.size() - 2;
             sb.append(lineSeparator())
-                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(0))))
+                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(0), style)))
                     .append(lineSeparator())
-                    .append(String.format("    ... (%d members omitted)", omittedCount))
+                    .append(String.format("    %s (%d members omitted)", style.getChunkOmissionMark(), omittedCount))
                     .append(lineSeparator())
-                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(members.size() - 1))));
+                    .append(String.format(
+                            "    --> %s", renderDeclarationHeader(members.get(members.size() - 1), style)));
         }
     }
 }

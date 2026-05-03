@@ -9,7 +9,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Controls which symbol set is used to visualize whitespace characters in diff output.
+ * Controls which symbol set is used to visualize whitespace characters in diff output
+ * and to render omission markers in relocation reports.
  *
  * <p>Three styles are available, selected automatically via
  * {@link #forCharsets(Charset, Charset)} based on the display charset (what the console renders)
@@ -26,32 +27,37 @@ import lombok.RequiredArgsConstructor;
  * </ul>
  *
  * <p>Each constant carries the concrete marker strings ({@link #getSpaceMark()},
- * {@link #getTabMark()}, {@link #getEolMark()}) so callers can use them directly without
- * further conditional logic.
+ * {@link #getTabMark()}, {@link #getEolMark()}, {@link #getEllipsisMark()},
+ * {@link #getChunkOmissionMark()}) so callers can use them directly without further
+ * conditional logic.
  */
 @Getter
 @RequiredArgsConstructor
-enum WhitespaceVisualizationStyle {
+public enum WhitespaceVisualizationStyle {
 
     /**
-     * Unicode whitespace markers: {@code ·} for spaces, {@code →→→→} for tabs, {@code ¶} for end-of-line.
+     * Unicode whitespace markers: {@code ·} for spaces, {@code →→→→} for tabs, {@code ¶} for
+     * end-of-line, {@code …} (U+2026) as ellipsis, {@code ¦} (U+00A6) as chunk omission mark.
      * Requires both the display and encoder charsets to encode U+2192 identically (e.g. UTF-8).
      */
-    UNICODE("·", "→→→→", "¶"),
+    UNICODE("·", "→→→→", "¶", "…", "¦"),
 
     /**
-     * Latin-1 supplement markers: {@code ·} for spaces, {@code --->} for tabs, {@code ¶} for end-of-line.
+     * Latin-1 supplement markers: {@code ·} for spaces, {@code --->} for tabs, {@code ¶} for
+     * end-of-line, {@code ...} as ellipsis (U+2026 is absent from IBM850 and ISO-8859-1),
+     * {@code ¦} (U+00A6) as chunk omission mark.
      * Selected when both the display and encoder charsets encode U+00B7 and U+00B6 to the same bytes
-     * (e.g. CP1252/CP1252, ISO-8859-1/ISO-8859-1).
+     * (e.g. CP1252/CP1252, ISO-8859-1/ISO-8859-1, IBM850/IBM850).
      */
-    LATIN_SAFE("·", "--->", "¶"),
+    LATIN_SAFE("·", "--->", "¶", "...", "¦"),
 
     /**
-     * ASCII-only whitespace markers: {@code .} for spaces, {@code --->} for tabs, no end-of-line marker.
-     * Used when the display and encoder charsets produce different byte sequences for non-ASCII markers,
-     * which would otherwise cause garbled output (e.g. CP850 display with CP1252 encoder).
+     * ASCII-only whitespace markers: {@code .} for spaces, {@code --->} for tabs, no end-of-line
+     * marker, {@code ...} as ellipsis, {@code |} as chunk omission mark.
+     * Used when the display and encoder charsets produce different byte sequences for non-ASCII
+     * markers, which would otherwise cause garbled output (e.g. CP850 display with CP1252 encoder).
      */
-    ASCII_SAFE(".", "--->", "");
+    ASCII_SAFE(".", "--->", "", "...", "|");
 
     /** Symbol used to replace each space character in source lines. */
     private final String spaceMark;
@@ -61,6 +67,22 @@ enum WhitespaceVisualizationStyle {
 
     /** Symbol appended at the end of every source line, or empty if not applicable. */
     private final String eolMark;
+
+    /**
+     * Single-character ellipsis marker used in omission summaries such as
+     * {@code … and 3 more hunks omitted}.
+     * {@code …} (U+2026) for {@link #UNICODE}; {@code ...} for {@link #LATIN_SAFE} and
+     * {@link #ASCII_SAFE} because U+2026 is absent from IBM850 and ISO-8859-1.
+     */
+    private final String ellipsisMark;
+
+    /**
+     * Marker used as a visual separator between the first and last members of a truncated
+     * relocation chunk, e.g. {@code ¦ (2 members omitted)}.
+     * {@code ¦} (U+00A6) for {@link #UNICODE} and {@link #LATIN_SAFE} (present in all
+     * LATIN_SAFE charsets including IBM850 and CP1252); {@code |} for {@link #ASCII_SAFE}.
+     */
+    private final String chunkOmissionMark;
 
     /**
      * Selects the appropriate style by comparing how the display charset (terminal) and the encoder

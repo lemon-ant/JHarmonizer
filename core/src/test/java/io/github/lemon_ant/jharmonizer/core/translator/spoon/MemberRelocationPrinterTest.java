@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
+import io.github.lemon_ant.jharmonizer.core.diff.DiffReporter;
+import io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
@@ -26,6 +28,7 @@ class MemberRelocationPrinterTest {
             DEFAULT_CONFIG.getFormatting().isBlankLineAfterTypeHeader(),
             DEFAULT_CONFIG.getFormatting().isBlankLineBeforeComment(),
             DEFAULT_CONFIG.getFormatting().isBlankLineBetweenFields());
+    private static final WhitespaceVisualizationStyle STYLE = DiffReporter.resolveStyle();
 
     @Test
     void printRelocations_noRelocations_returnsMessageWithFileName() {
@@ -72,8 +75,8 @@ class MemberRelocationPrinterTest {
         assertThat(output).contains("Detected member ordering violations in:");
         assertThat(output).contains("  Sample.java");
         assertThat(output).doesNotContain("Ordering violation in");
-        assertThat(output).contains("    --> public void a() { ... }");
-        assertThat(output).contains("        public void b() { ... }");
+        assertThat(output).contains("    --> public void a() { " + STYLE.getEllipsisMark() + " }");
+        assertThat(output).contains("        public void b() { " + STYLE.getEllipsisMark() + " }");
     }
 
     @Test
@@ -102,7 +105,7 @@ class MemberRelocationPrinterTest {
         // Then
         assertThat(output).contains("  [5]");
         assertThat(output).doesNotContain("  [6]");
-        assertThat(output).contains("  ... 6 violations total");
+        assertThat(output).contains("  " + STYLE.getEllipsisMark() + " 6 violations total");
     }
 
     @Test
@@ -131,11 +134,11 @@ class MemberRelocationPrinterTest {
         String output = MemberRelocationPrinter.printRelocations(Path.of("Sample.java"), relocation);
 
         // Then — first and last are shown with -->, hidden middle elements indicated by count
-        assertThat(output).contains("    --> public void a() { ... }");
-        assertThat(output).contains("    ... (2 members omitted)");
-        assertThat(output).contains("    --> public void d() { ... }");
-        assertThat(output).doesNotContain("    --> public void b() { ... }");
-        assertThat(output).doesNotContain("    --> public void c() { ... }");
+        assertThat(output).contains("    --> public void a() { " + STYLE.getEllipsisMark() + " }");
+        assertThat(output).contains("    " + STYLE.getChunkOmissionMark() + " (2 members omitted)");
+        assertThat(output).contains("    --> public void d() { " + STYLE.getEllipsisMark() + " }");
+        assertThat(output).doesNotContain("    --> public void b()");
+        assertThat(output).doesNotContain("    --> public void c()");
     }
 
     @NonNull

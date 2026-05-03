@@ -5,6 +5,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle;
 import java.util.Comparator;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -31,11 +32,7 @@ import spoon.reflect.declaration.ModifierKind;
 @UtilityClass
 class DeclarationHeaderRenderer {
 
-    private static final String BODY_PLACEHOLDER = " { ... }";
     private static final String EMPTY_PARAMS = "()";
-    private static final String VARARGS_PARAMS = "(...)";
-    private static final String STATIC_INITIALIZER_HEADER = "static { ... }";
-    private static final String INSTANCE_INITIALIZER_HEADER = "{ ... }";
 
     /**
      * Renders a compact declaration header for a type member, omitting bodies and initializers.
@@ -43,23 +40,24 @@ class DeclarationHeaderRenderer {
      * <p>Format by member kind:
      * <ul>
      *   <li>Field: {@code [modifiers] [type] [name]}</li>
-     *   <li>Method: {@code [modifiers] [returnType] [name]() { ... }} or {@code (...) { ... }} when parameters are present</li>
-     *   <li>Constructor: {@code [modifiers] [name]() { ... }} or {@code (...) { ... }} when parameters are present</li>
-     *   <li>Nested type: {@code [modifiers] class|interface|enum|@interface [name] { ... }}</li>
+     *   <li>Method: {@code [modifiers] [returnType] [name]() { … }} or {@code (…) { … }} when parameters are present</li>
+     *   <li>Constructor: {@code [modifiers] [name]() { … }} or {@code (…) { … }} when parameters are present</li>
+     *   <li>Nested type: {@code [modifiers] class|interface|enum|@interface [name] { … }}</li>
      *   <li>Enum value: {@code [name]}</li>
-     *   <li>Initializer block: {@code { ... }} or {@code static { ... }}</li>
+     *   <li>Initializer block: {@code { … }} or {@code static { … }}</li>
      * </ul>
      *
      * @param element the element to render
+     * @param style the visualization style used to render body and parameter placeholders
      * @return a compact single-line declaration header
      */
     @NonNull
-    static String renderDeclarationHeader(@NonNull CtElement element) {
+    static String renderDeclarationHeader(@NonNull CtElement element, @NonNull WhitespaceVisualizationStyle style) {
         if (!(element instanceof CtTypeMember member)) {
             return "<nameless>";
         }
         if (member instanceof CtAnonymousExecutable initializerBlock) {
-            return renderInitializerHeader(initializerBlock);
+            return renderInitializerHeader(initializerBlock, style);
         }
         if (member instanceof CtEnumValue<?> enumValue) {
             return enumValue.getSimpleName();
@@ -69,37 +67,43 @@ class DeclarationHeaderRenderer {
             return joinNonBlank(modifiers, field.getType().getSimpleName(), field.getSimpleName());
         }
         if (member instanceof CtMethod<?> method) {
-            return renderMethodHeader(modifiers, method);
+            return renderMethodHeader(modifiers, method, style);
         }
         if (member instanceof CtConstructor<?> constructor) {
-            return renderConstructorHeader(modifiers, constructor);
+            return renderConstructorHeader(modifiers, constructor, style);
         }
         if (member instanceof CtType<?> nestedType) {
             return joinNonBlank(modifiers, resolveTypeKeyword(nestedType), nestedType.getSimpleName())
-                    + BODY_PLACEHOLDER;
+                    + buildBody(style);
         }
         return isBlank(member.getSimpleName()) ? "<initializer>" : member.getSimpleName();
     }
 
     @NonNull
-    private static String renderInitializerHeader(CtAnonymousExecutable initializerBlock) {
-        return initializerBlock.getModifiers().contains(ModifierKind.STATIC)
-                ? STATIC_INITIALIZER_HEADER
-                : INSTANCE_INITIALIZER_HEADER;
+    private static String renderInitializerHeader(
+            CtAnonymousExecutable initializerBlock, WhitespaceVisualizationStyle style) {
+        String body = buildBody(style);
+        return initializerBlock.getModifiers().contains(ModifierKind.STATIC) ? "static" + body : body.stripLeading();
     }
 
     @NonNull
-    private static String renderMethodHeader(String modifiers, CtMethod<?> method) {
-        String params = method.getParameters().isEmpty() ? EMPTY_PARAMS : VARARGS_PARAMS;
+    private static String renderMethodHeader(String modifiers, CtMethod<?> method, WhitespaceVisualizationStyle style) {
+        String params = method.getParameters().isEmpty() ? EMPTY_PARAMS : "(" + style.getEllipsisMark() + ")";
         return joinNonBlank(modifiers, method.getType().getSimpleName(), method.getSimpleName() + params)
-                + BODY_PLACEHOLDER;
+                + buildBody(style);
     }
 
     @NonNull
-    private static String renderConstructorHeader(String modifiers, CtConstructor<?> constructor) {
-        String params = constructor.getParameters().isEmpty() ? EMPTY_PARAMS : VARARGS_PARAMS;
+    private static String renderConstructorHeader(
+            String modifiers, CtConstructor<?> constructor, WhitespaceVisualizationStyle style) {
+        String params = constructor.getParameters().isEmpty() ? EMPTY_PARAMS : "(" + style.getEllipsisMark() + ")";
         String name = constructor.getDeclaringType().getSimpleName();
-        return joinNonBlank(modifiers, name + params) + BODY_PLACEHOLDER;
+        return joinNonBlank(modifiers, name + params) + buildBody(style);
+    }
+
+    @NonNull
+    private static String buildBody(WhitespaceVisualizationStyle style) {
+        return " { " + style.getEllipsisMark() + " }";
     }
 
     @NonNull
