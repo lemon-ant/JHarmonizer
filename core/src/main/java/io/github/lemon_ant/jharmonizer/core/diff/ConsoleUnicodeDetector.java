@@ -3,19 +3,28 @@
 package io.github.lemon_ant.jharmonizer.core.diff;
 
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
- * Detects whether the standard output stream can render Unicode whitespace marker characters.
+ * Detects which whitespace visualization style is appropriate for the standard output stream.
  *
  * <p>Uses the {@code stdout.encoding} JVM system property (available since JDK 17) to determine
  * the effective charset of stdout. Falls back to {@link Charset#defaultCharset()} when the
  * property is absent or names an unrecognised charset. The detection result is computed once
  * and cached for the lifetime of the JVM.
+ *
+ * <p>The style is selected by probing whether the resolved charset can encode the specific
+ * marker characters:
+ * <ul>
+ *   <li>Can encode {@code →} (U+2192) → {@link WhitespaceVisualizationStyle#UNICODE}</li>
+ *   <li>Can encode {@code ·} (U+00B7) → {@link WhitespaceVisualizationStyle#LATIN_SAFE}
+ *       (e.g. CP1252, ISO-8859-1)</li>
+ *   <li>Otherwise → {@link WhitespaceVisualizationStyle#ASCII_SAFE} (e.g. CP850, CP866)</li>
+ * </ul>
  */
 @UtilityClass
 class ConsoleUnicodeDetector {
@@ -25,8 +34,7 @@ class ConsoleUnicodeDetector {
     /**
      * Returns the cached whitespace visualization style for the current JVM stdout.
      *
-     * @return {@link WhitespaceVisualizationStyle#UNICODE} when stdout is UTF-8 capable,
-     *         {@link WhitespaceVisualizationStyle#ASCII_SAFE} otherwise
+     * @return the style that best matches what the stdout encoding can render
      */
     @NonNull
     static WhitespaceVisualizationStyle resolveStyle() {
@@ -35,10 +43,14 @@ class ConsoleUnicodeDetector {
 
     @NonNull
     private static WhitespaceVisualizationStyle detectStyle() {
-        Charset stdoutCharset = resolveStdoutCharset();
-        return StandardCharsets.UTF_8.equals(stdoutCharset)
-                ? WhitespaceVisualizationStyle.UNICODE
-                : WhitespaceVisualizationStyle.ASCII_SAFE;
+        CharsetEncoder encoder = resolveStdoutCharset().newEncoder();
+        if (encoder.canEncode('\u2192')) {
+            return WhitespaceVisualizationStyle.UNICODE;
+        }
+        if (encoder.canEncode('\u00B7')) {
+            return WhitespaceVisualizationStyle.LATIN_SAFE;
+        }
+        return WhitespaceVisualizationStyle.ASCII_SAFE;
     }
 
     @NonNull

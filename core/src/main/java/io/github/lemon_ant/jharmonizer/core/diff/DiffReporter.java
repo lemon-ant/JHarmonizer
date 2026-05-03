@@ -21,7 +21,8 @@ import lombok.experimental.UtilityClass;
  *       line content, to make it clear that the prefix is a marker and not part of the source</li>
  *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis:
  *       Unicode markers ({@code ·}, {@code →→→→}, {@code ¶}) on UTF-8 capable output streams,
- *       ASCII markers ({@code .}, {@code --->}, no end-of-line marker) otherwise</li>
+ *       Latin-1 markers ({@code ·}, {@code --->}, {@code ¶}) on CP1252/ISO-8859-1 streams,
+ *       ASCII markers ({@code .}, {@code --->}, no end-of-line) on other encodings</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
  * </ul>

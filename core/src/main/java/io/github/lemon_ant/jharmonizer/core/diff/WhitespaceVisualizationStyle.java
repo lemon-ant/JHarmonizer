@@ -8,9 +8,14 @@ import lombok.RequiredArgsConstructor;
 /**
  * Controls which symbol set is used to visualize whitespace characters in diff output.
  *
- * <p>{@link #UNICODE} uses visually distinctive Unicode characters and is suitable for
- * UTF-8 capable terminals. {@link #ASCII_SAFE} uses plain ASCII characters that render
- * correctly on any terminal, including Windows PowerShell with non-UTF-8 code pages.
+ * <p>Three styles are available, selected automatically by {@link ConsoleUnicodeDetector}
+ * based on what the stdout charset can actually encode:
+ * <ul>
+ *   <li>{@link #UNICODE} — full Unicode markers; requires a UTF-8 or similarly capable encoding</li>
+ *   <li>{@link #LATIN_SAFE} — Latin-1 supplement markers for spaces and end-of-line,
+ *       ASCII {@code --->} for tabs; suitable for CP1252, ISO-8859-1 and similar encodings</li>
+ *   <li>{@link #ASCII_SAFE} — pure ASCII markers; safe on any encoding including CP850, CP866</li>
+ * </ul>
  *
  * <p>Each constant carries the concrete marker strings ({@link #getSpaceMark()},
  * {@link #getTabMark()}, {@link #getEolMark()}) so callers can use them directly without
@@ -22,13 +27,20 @@ enum WhitespaceVisualizationStyle {
 
     /**
      * Unicode whitespace markers: {@code ·} for spaces, {@code →→→→} for tabs, {@code ¶} for end-of-line.
-     * Requires a terminal that can render these characters (UTF-8 or Latin-1 output encoding).
+     * Requires a terminal whose encoding can render U+2192 (e.g. UTF-8).
      */
     UNICODE("·", "→→→→", "¶"),
 
     /**
+     * Latin-1 supplement markers: {@code ·} for spaces, {@code --->} for tabs, {@code ¶} for end-of-line.
+     * Suitable for CP1252, ISO-8859-1 and similar single-byte encodings that include the Latin-1
+     * supplement range (U+0080–U+00FF) but cannot render the Unicode arrow U+2192.
+     */
+    LATIN_SAFE("·", "--->", "¶"),
+
+    /**
      * ASCII-only whitespace markers: {@code .} for spaces, {@code --->} for tabs, no end-of-line marker.
-     * Works on any terminal regardless of encoding.
+     * Works on any terminal regardless of encoding, including CP850 and CP866.
      */
     ASCII_SAFE(".", "--->", "");
 

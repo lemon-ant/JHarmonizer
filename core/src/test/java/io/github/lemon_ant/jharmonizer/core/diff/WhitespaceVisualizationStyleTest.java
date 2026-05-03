@@ -17,6 +17,14 @@ class WhitespaceVisualizationStyleTest {
     }
 
     @Test
+    void latinSafe_markers_useExpectedSymbols() {
+        // When / Then
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getSpaceMark()).isEqualTo("·");
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getTabMark()).isEqualTo("--->");
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getEolMark()).isEqualTo("¶");
+    }
+
+    @Test
     void asciiSafe_markers_useExpectedSymbols() {
         // When / Then
         assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getSpaceMark()).isEqualTo(".");
