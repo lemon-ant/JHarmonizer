@@ -21,14 +21,6 @@ class WhitespaceVisualizationStyleTest {
     }
 
     @Test
-    void latinSafe_markers_useExpectedSymbols() {
-        // When / Then
-        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getSpaceMark()).isEqualTo("·");
-        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getTabMark()).isEqualTo("--->");
-        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getEolMark()).isEqualTo("¶");
-    }
-
-    @Test
     void asciiSafe_markers_useExpectedSymbols() {
         // When / Then
         assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getSpaceMark()).isEqualTo(".");
@@ -46,16 +38,6 @@ class WhitespaceVisualizationStyleTest {
         assertThat(style).isEqualTo(WhitespaceVisualizationStyle.UNICODE);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"windows-1252", "ISO-8859-1", "IBM850"})
-    void forCharset_latin1CapableCharset_returnsLatinSafe(String charsetName) {
-        // When
-        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharset(Charset.forName(charsetName));
-
-        // Then
-        assertThat(style).isEqualTo(WhitespaceVisualizationStyle.LATIN_SAFE);
-    }
-
     @Test
     void forCharset_utf8Charset_returnsUnicode() {
         // When
@@ -66,8 +48,8 @@ class WhitespaceVisualizationStyleTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"IBM866", "US-ASCII"})
-    void forCharset_asciiOnlyCharset_returnsAsciiSafe(String charsetName) {
+    @ValueSource(strings = {"windows-1252", "ISO-8859-1", "IBM850", "IBM866", "US-ASCII"})
+    void forCharset_nonUnicodeCharset_returnsAsciiSafe(String charsetName) {
         // When
         WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharset(Charset.forName(charsetName));
 

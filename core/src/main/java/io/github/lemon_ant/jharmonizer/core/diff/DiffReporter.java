@@ -20,9 +20,9 @@ import lombok.experimental.UtilityClass;
  *   <li>A {@code |} separator between the diff prefix ({@code +}, {@code -}, or space) and the
  *       line content, to make it clear that the prefix is a marker and not part of the source</li>
  *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis:
- *       Unicode markers ({@code ·}, {@code →→→→}, {@code ¶}) on UTF-8 capable output streams,
- *       Latin-1 markers ({@code ·}, {@code --->}, {@code ¶}) on CP1252/ISO-8859-1 streams,
- *       ASCII markers ({@code .}, {@code --->}, no end-of-line) on other encodings</li>
+ *       Unicode markers ({@code ·}, {@code →→→→}, {@code ¶}) on UTF-8 or other Unicode-capable
+ *       output streams, ASCII markers ({@code .}, {@code --->}, no end-of-line marker) on all
+ *       other encodings</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
  * </ul>
@@ -42,9 +42,8 @@ public class DiffReporter {
      * Computes a truncated, human-readable unified diff between two versions of a source file.
      *
      * <p>Whitespace visualization symbols are chosen automatically based on the capabilities of the
-     * output charset: Unicode markers when the charset can encode them, Latin-safe markers when
-     * Unicode markers are unavailable but Latin-1-safe markers are encodable, and ASCII markers
-     * otherwise.
+     * output charset: Unicode markers when the charset can encode them (e.g. UTF-8), and ASCII
+     * markers otherwise.
      *
      * @param filePath the path of the source file, passed to the underlying diff library
      * @param originalText the original source text
