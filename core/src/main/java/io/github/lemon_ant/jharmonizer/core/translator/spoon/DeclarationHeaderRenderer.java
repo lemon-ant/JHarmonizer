@@ -82,6 +82,9 @@ class DeclarationHeaderRenderer {
     @NonNull
     private static String renderInitializerHeader(
             CtAnonymousExecutable initializerBlock, WhitespaceVisualizationStyle style) {
+        // buildBody() returns " { … }" with a leading space; strip it for the instance case
+        // so the result is "{ … }" rather than " { … }". The static case prepends "static" which
+        // consumes the leading space naturally: "static { … }".
         String body = buildBody(style);
         return initializerBlock.getModifiers().contains(ModifierKind.STATIC) ? "static" + body : body.stripLeading();
     }

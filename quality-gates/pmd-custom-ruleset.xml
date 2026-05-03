@@ -2,7 +2,12 @@
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0">
     <description>Everything except LawOfDemeter</description>
 
-    <rule ref="category/java/bestpractices.xml"/>
+    <rule ref="category/java/bestpractices.xml">
+        <!-- An exhaustive switch that also has a defensive default throw is a valid safety net
+             for when new enum values are added later.  The PMD rule would force removal of the
+             default, which would cause new enum values to silently do nothing. -->
+        <exclude name="ExhaustiveSwitchHasDefault"/>
+    </rule>
     <!-- TODO It's too strict to use and should be reconsidered
     <ruleset>category/java/codestyle.xml</ruleset>
     -->

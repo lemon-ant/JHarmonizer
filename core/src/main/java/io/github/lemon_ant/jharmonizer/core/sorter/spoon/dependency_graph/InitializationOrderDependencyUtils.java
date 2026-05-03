@@ -104,6 +104,7 @@ final class InitializationOrderDependencyUtils {
      * @return the candidate provider members
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals") // Spoon AST node identity check — intentional
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
             @NonNull CtField<?> blankFinalField,
