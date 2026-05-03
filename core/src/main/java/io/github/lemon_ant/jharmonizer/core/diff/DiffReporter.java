@@ -41,8 +41,10 @@ public class DiffReporter {
     /**
      * Computes a truncated, human-readable unified diff between two versions of a source file.
      *
-     * <p>Whitespace visualization symbols are chosen automatically based on whether the standard
-     * output stream is UTF-8 capable: Unicode markers on UTF-8 streams, ASCII markers otherwise.
+     * <p>Whitespace visualization symbols are chosen automatically based on the capabilities of the
+     * output charset: Unicode markers when the charset can encode them, Latin-safe markers when
+     * Unicode markers are unavailable but Latin-1-safe markers are encodable, and ASCII markers
+     * otherwise.
      *
      * @param filePath the path of the source file, passed to the underlying diff library
      * @param originalText the original source text
