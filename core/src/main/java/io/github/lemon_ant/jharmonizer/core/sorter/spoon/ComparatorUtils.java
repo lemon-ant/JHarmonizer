@@ -72,6 +72,7 @@ class ComparatorUtils {
      * @param orderingRules the ordering rules to apply, in priority order
      * @return the sortable type member comparator
      */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     @NonNull
     static Comparator<SortableTypeMember> buildSortableTypeMemberComparator(@NonNull List<OrderingRule> orderingRules) {
         Comparator<OrderingKey> base = buildOrderingKeyComparator(orderingRules);
@@ -83,12 +84,12 @@ class ComparatorUtils {
             // (self-reference).
             OrderingKey leftSuperRep = left.getSuperClusterRepresentativeKey();
             OrderingKey rightSuperRep = right.getSuperClusterRepresentativeKey();
-            if (leftSuperRep != rightSuperRep) { // NOPMD - CompareObjectsWithEquals: intentional reference-equality cluster dispatch
+            if (leftSuperRep != rightSuperRep) {
                 return base.compare(leftSuperRep, rightSuperRep);
             }
             OrderingKey leftPropertyRep = left.getPropertyClusterRepresentativeKey();
             OrderingKey rightPropertyRep = right.getPropertyClusterRepresentativeKey();
-            if (leftPropertyRep != rightPropertyRep) { // NOPMD - CompareObjectsWithEquals: intentional reference-equality cluster dispatch
+            if (leftPropertyRep != rightPropertyRep) {
                 return base.compare(leftPropertyRep, rightPropertyRep);
             }
             return base.compare(left.getOwnKey(), right.getOwnKey());

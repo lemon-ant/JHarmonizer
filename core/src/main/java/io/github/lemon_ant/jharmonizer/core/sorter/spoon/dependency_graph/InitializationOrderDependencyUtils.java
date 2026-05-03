@@ -105,6 +105,7 @@ final class InitializationOrderDependencyUtils {
      * @param relaxedForwardReferences whether to skip providers declared after the dependent member
      * @return the candidate provider members
      */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     @NonNull
     static Set<CtTypeMember> resolveProviderMembersForBlankFinalRead(
             @NonNull CtTypeMember dependentMember,
@@ -116,7 +117,7 @@ final class InitializationOrderDependencyUtils {
         boolean blankFinalFieldIsStatic = blankFinalField.getModifiers().contains(ModifierKind.STATIC);
 
         return streamExplicitSrcTypeMembers(declaringType)
-                .filter(typeMember -> typeMember != dependentMember) // NOPMD - CompareObjectsWithEquals: intentional AST node identity filter
+                .filter(typeMember -> typeMember != dependentMember)
                 .filter(typeMember -> matchesInitializationMemberStaticness(typeMember, blankFinalFieldIsStatic))
                 .map(candidateProviderMember ->
                         new ProviderCandidate(candidateProviderMember, requireSrcStart(candidateProviderMember)))

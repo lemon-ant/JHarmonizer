@@ -52,6 +52,7 @@ public class SpoonJavaBeansAccessorUtils {
      * Empty if the input method is not an accessor or if no matching pair exists in the type.
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     @NonNull
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
@@ -67,7 +68,7 @@ public class SpoonJavaBeansAccessorUtils {
         return streamExplicitSrcTypeMembers(declaringType)
                 .filter(typeMember -> typeMember instanceof CtMethod<?>)
                 .map(typeMember -> (CtMethod<?>) typeMember)
-                .filter(candidateMethod -> candidateMethod != accessorMethod) // NOPMD - CompareObjectsWithEquals: intentional AST node identity filter
+                .filter(candidateMethod -> candidateMethod != accessorMethod)
                 .flatMap(
                         candidateMethod -> tryParseAccessorMethodDescriptor(candidateMethod)
                                 .map(candidateDescriptor -> Pair.of(candidateMethod, candidateDescriptor))
