@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
  *       line content, to make it clear that the prefix is a marker and not part of the source</li>
  *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis:
  *       Unicode markers ({@code ·}, {@code →→→→}, {@code ¶}) on UTF-8 capable output streams,
- *       ASCII markers ({@code .}, {@code >}, {@code $}) otherwise</li>
+ *       ASCII markers ({@code .}, {@code --->}, no end-of-line marker) otherwise</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
  * </ul>
@@ -51,25 +51,7 @@ public class DiffReporter {
     @NonNull
     public static String computeDiff(
             @NonNull String filePath, @NonNull String originalText, @NonNull String revisedText) {
-        return computeDiff(filePath, originalText, revisedText, ConsoleUnicodeDetector.resolveStyle());
-    }
-
-    /**
-     * Computes a truncated, human-readable unified diff between two versions of a source file,
-     * using the specified whitespace visualization style.
-     *
-     * @param filePath the path of the source file, passed to the underlying diff library
-     * @param originalText the original source text
-     * @param revisedText the revised source text
-     * @param style the whitespace visualization style to use
-     * @return a formatted unified diff string, or an empty string if the texts are identical
-     */
-    @NonNull
-    static String computeDiff(
-            @NonNull String filePath,
-            @NonNull String originalText,
-            @NonNull String revisedText,
-            @NonNull WhitespaceVisualizationStyle style) {
+        WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
         List<String> originalLines = originalText.lines().toList();
         Patch<String> patch = DiffUtils.diff(originalLines, revisedText.lines().toList());
         if (patch.getDeltas().isEmpty()) {
@@ -174,8 +156,8 @@ public class DiffReporter {
     @NonNull
     private static String visualizeWhitespace(String line, WhitespaceVisualizationStyle style) {
         if (line.isEmpty()) {
-            return style.eolMark;
+            return style.getEolMark();
         }
-        return line.replace(" ", style.spaceMark).replace("\t", style.tabMark) + style.eolMark;
+        return line.replace(" ", style.getSpaceMark()).replace("\t", style.getTabMark()) + style.getEolMark();
     }
 }

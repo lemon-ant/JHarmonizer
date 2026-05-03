@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.diff;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * Controls which symbol set is used to visualize whitespace characters in diff output.
  *
@@ -9,9 +12,12 @@ package io.github.lemon_ant.jharmonizer.core.diff;
  * UTF-8 capable terminals. {@link #ASCII_SAFE} uses plain ASCII characters that render
  * correctly on any terminal, including Windows PowerShell with non-UTF-8 code pages.
  *
- * <p>Each constant carries the concrete marker strings ({@link #spaceMark}, {@link #tabMark},
- * {@link #eolMark}) so callers can use them directly without further conditional logic.
+ * <p>Each constant carries the concrete marker strings ({@link #getSpaceMark()},
+ * {@link #getTabMark()}, {@link #getEolMark()}) so callers can use them directly without
+ * further conditional logic.
  */
+@Getter
+@RequiredArgsConstructor
 enum WhitespaceVisualizationStyle {
 
     /**
@@ -21,23 +27,17 @@ enum WhitespaceVisualizationStyle {
     UNICODE("·", "→→→→", "¶"),
 
     /**
-     * ASCII-only whitespace markers: {@code .} for spaces, {@code >} for tabs, {@code $} for end-of-line.
+     * ASCII-only whitespace markers: {@code .} for spaces, {@code --->} for tabs, no end-of-line marker.
      * Works on any terminal regardless of encoding.
      */
-    ASCII_SAFE(".", ">", "$");
+    ASCII_SAFE(".", "--->", "");
 
     /** Symbol used to replace each space character in source lines. */
-    final String spaceMark;
+    private final String spaceMark;
 
     /** Symbol used to replace each tab character in source lines. */
-    final String tabMark;
+    private final String tabMark;
 
-    /** Symbol appended at the end of every source line. */
-    final String eolMark;
-
-    WhitespaceVisualizationStyle(String spaceMark, String tabMark, String eolMark) {
-        this.spaceMark = spaceMark;
-        this.tabMark = tabMark;
-        this.eolMark = eolMark;
-    }
+    /** Symbol appended at the end of every source line, or empty if not applicable. */
+    private final String eolMark;
 }

@@ -3,8 +3,6 @@
 package io.github.lemon_ant.jharmonizer.core.diff;
 
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
-import static io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle.ASCII_SAFE;
-import static io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle.UNICODE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
@@ -60,28 +58,22 @@ class DiffReporterTest {
     class WhitespaceVisualization {
 
         @Test
-        void computeDiff_changedLinesContainingSpacesAndTabs_visualizesWhitespaceInContentLinesOnly() {
+        void computeDiff_changedLinesContainingSpacesAndTabs_visualizesWhitespaceInContentLines() {
             // Given
             String original = "class A {\n    void a() {}\n}\n";
             String revised = "class A {\n\tvoid a() {}\n}\n";
 
             // When
-            String result = computeDiff(FILE_PATH, original, revised, UNICODE);
+            String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            // Removed line: spaces → ·
+            // Removed line: spaces visualized
             assertThat(diffLines)
-                    .anySatisfy(diffLine -> assertThat(diffLine)
-                            .startsWith("-")
-                            .contains("····")
-                            .endsWith("¶"));
-            // Added line: tab → →→→→
+                    .anySatisfy(diffLine -> assertThat(diffLine).startsWith("-").contains("····"));
+            // Added line: tab visualized
             assertThat(diffLines)
-                    .anySatisfy(diffLine -> assertThat(diffLine)
-                            .startsWith("+")
-                            .contains("→→→→")
-                            .endsWith("¶"));
+                    .anySatisfy(diffLine -> assertThat(diffLine).startsWith("+").contains("→→→→"));
             // @@ header must not contain whitespace visualization markers
             assertThat(diffLines)
                     .filteredOn(diffLine -> diffLine.startsWith("@@ "))
@@ -89,31 +81,6 @@ class DiffReporterTest {
                             .doesNotContain("·")
                             .doesNotContain("→→→→")
                             .doesNotEndWith("¶"));
-        }
-
-        @Test
-        void computeDiff_changedLinesContainingSpacesAndTabs_asciiSafeUsesAsciiMarkers() {
-            // Given
-            String original = "class A {\n    void a() {}\n}\n";
-            String revised = "class A {\n\tvoid a() {}\n}\n";
-
-            // When
-            String result = computeDiff(FILE_PATH, original, revised, ASCII_SAFE);
-
-            // Then
-            String[] diffLines = result.split(System.lineSeparator(), -1);
-            // Removed line: spaces → .
-            assertThat(diffLines)
-                    .anySatisfy(diffLine -> assertThat(diffLine)
-                            .startsWith("-")
-                            .contains("....")
-                            .endsWith("$"));
-            // Added line: tab → >
-            assertThat(diffLines)
-                    .anySatisfy(diffLine ->
-                            assertThat(diffLine).startsWith("+").contains(">").endsWith("$"));
-            // No Unicode markers must appear
-            assertThat(result).doesNotContain("·").doesNotContain("→→→→").doesNotContain("¶");
         }
     }
 
@@ -127,25 +94,11 @@ class DiffReporterTest {
             String revised = "class A {\n    void a() {}\n}\n";
 
             // When
-            String result = computeDiff(FILE_PATH, original, revised, UNICODE);
+            String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
             assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|¶"));
-        }
-
-        @Test
-        void computeDiff_blankLineRemoved_asciiSafeVisualizesAsDollarSign() {
-            // Given
-            String original = "class A {\n\n    void a() {}\n}\n";
-            String revised = "class A {\n    void a() {}\n}\n";
-
-            // When
-            String result = computeDiff(FILE_PATH, original, revised, ASCII_SAFE);
-
-            // Then
-            String[] diffLines = result.split(System.lineSeparator(), -1);
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|$"));
         }
     }
 
