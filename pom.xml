@@ -372,6 +372,12 @@ SPDX-License-Identifier: Apache-2.0
                                 <excludes>
                                     <exclude>LICENSE</exclude>
                                     <exclude>target/**</exclude>
+                                    <!--
+                                        docs/**/*.java files are 3rd-party reference/example files
+                                        with their own upstream Apache-2.0 headers.  We must not
+                                        overwrite them with our project SPDX header.
+                                    -->
+                                    <exclude>docs/**/*.java</exclude>
                                 </excludes>
                             </licenseSet>
                         </licenseSets>
