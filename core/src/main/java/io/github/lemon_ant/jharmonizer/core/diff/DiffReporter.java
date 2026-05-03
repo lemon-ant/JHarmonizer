@@ -19,7 +19,9 @@ import lombok.experimental.UtilityClass;
  *   <li>Hunk headers on separate lines ({@code @@ -start,len +start,len @@})</li>
  *   <li>A {@code |} separator between the diff prefix ({@code +}, {@code -}, or space) and the
  *       line content, to make it clear that the prefix is a marker and not part of the source</li>
- *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis</li>
+ *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis:
+ *       Unicode markers ({@code ·}, {@code →→→→}, {@code ¶}) on UTF-8 capable output streams,
+ *       ASCII markers ({@code .}, {@code >}, {@code $}) otherwise</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
  * </ul>
@@ -35,8 +37,19 @@ public class DiffReporter {
     private static final int MAX_CHANGED_LINES_PER_HUNK = 20;
     private static final String OMISSION_PREFIX = "... and ";
 
+    private static final String SPACE_MARK_UNICODE = "·";
+    private static final String TAB_MARK_UNICODE = "→→→→";
+    private static final String EOL_MARK_UNICODE = "¶";
+
+    private static final String SPACE_MARK_ASCII = ".";
+    private static final String TAB_MARK_ASCII = ">";
+    private static final String EOL_MARK_ASCII = "$";
+
     /**
      * Computes a truncated, human-readable unified diff between two versions of a source file.
+     *
+     * <p>Whitespace visualization symbols are chosen automatically based on whether the standard
+     * output stream is UTF-8 capable: Unicode markers on UTF-8 streams, ASCII markers otherwise.
      *
      * @param filePath the path of the source file, passed to the underlying diff library
      * @param originalText the original source text
@@ -46,6 +59,25 @@ public class DiffReporter {
     @NonNull
     public static String computeDiff(
             @NonNull String filePath, @NonNull String originalText, @NonNull String revisedText) {
+        return computeDiff(filePath, originalText, revisedText, ConsoleUnicodeDetector.resolveStyle());
+    }
+
+    /**
+     * Computes a truncated, human-readable unified diff between two versions of a source file,
+     * using the specified whitespace visualization style.
+     *
+     * @param filePath the path of the source file, passed to the underlying diff library
+     * @param originalText the original source text
+     * @param revisedText the revised source text
+     * @param style the whitespace visualization style to use
+     * @return a formatted unified diff string, or an empty string if the texts are identical
+     */
+    @NonNull
+    static String computeDiff(
+            @NonNull String filePath,
+            @NonNull String originalText,
+            @NonNull String revisedText,
+            @NonNull WhitespaceVisualizationStyle style) {
         List<String> originalLines = originalText.lines().toList();
         Patch<String> patch = DiffUtils.diff(originalLines, revisedText.lines().toList());
         if (patch.getDeltas().isEmpty()) {
@@ -53,11 +85,11 @@ public class DiffReporter {
         }
         List<String> unifiedLines = UnifiedDiffUtils.generateUnifiedDiff(
                 "a/" + filePath, "b/" + filePath, originalLines, patch, CONTEXT_SIZE);
-        return formatUnifiedDiff(unifiedLines);
+        return formatUnifiedDiff(unifiedLines, style);
     }
 
     @NonNull
-    private static String formatUnifiedDiff(List<String> unifiedLines) {
+    private static String formatUnifiedDiff(List<String> unifiedLines, WhitespaceVisualizationStyle style) {
         List<Integer> hunkStarts = findHunkStartIndices(unifiedLines);
         int totalHunks = hunkStarts.size();
         int keptHunkCount = Math.min(MAX_HUNKS_PER_FILE, totalHunks);
@@ -68,7 +100,7 @@ public class DiffReporter {
             int hunkStart = hunkStarts.get(hunkIndex);
             int hunkEnd = hunkIndex + 1 < totalHunks ? hunkStarts.get(hunkIndex + 1) : unifiedLines.size();
             sb.append(unifiedLines.get(hunkStart)).append(System.lineSeparator());
-            formatHunkContent(unifiedLines.subList(hunkStart + 1, hunkEnd), sb);
+            formatHunkContent(unifiedLines.subList(hunkStart + 1, hunkEnd), sb, style);
         }
         if (omittedHunkCount > 0) {
             sb.append(OMISSION_PREFIX)
@@ -92,9 +124,10 @@ public class DiffReporter {
         return Collections.unmodifiableList(hunkStarts);
     }
 
-    private static void formatHunkContent(List<String> contentLines, StringBuilder sb) {
+    private static void formatHunkContent(
+            List<String> contentLines, StringBuilder sb, WhitespaceVisualizationStyle style) {
         int truncationPoint = findTruncationPoint(contentLines);
-        contentLines.subList(0, truncationPoint).forEach(line -> appendVisualizedLine(sb, line));
+        contentLines.subList(0, truncationPoint).forEach(diffLine -> appendVisualizedLine(sb, diffLine, style));
         if (truncationPoint < contentLines.size()) {
             List<String> remaining = contentLines.subList(truncationPoint, contentLines.size());
             int omittedRemoved = (int) remaining.stream()
@@ -122,14 +155,17 @@ public class DiffReporter {
         return contentLines.size();
     }
 
-    private static void appendVisualizedLine(StringBuilder sb, String line) {
+    private static void appendVisualizedLine(StringBuilder sb, String line, WhitespaceVisualizationStyle style) {
         if (line.isEmpty()) {
             sb.append(System.lineSeparator());
             return;
         }
         char prefix = line.charAt(0);
         String content = line.substring(1);
-        sb.append(prefix).append('|').append(visualizeWhitespace(content)).append(System.lineSeparator());
+        sb.append(prefix)
+                .append('|')
+                .append(visualizeWhitespace(content, style))
+                .append(System.lineSeparator());
     }
 
     @NonNull
@@ -144,12 +180,13 @@ public class DiffReporter {
     }
 
     @NonNull
-    private static String visualizeWhitespace(String line) {
+    private static String visualizeWhitespace(String line, WhitespaceVisualizationStyle style) {
+        String spaceMark = style == WhitespaceVisualizationStyle.UNICODE ? SPACE_MARK_UNICODE : SPACE_MARK_ASCII;
+        String tabMark = style == WhitespaceVisualizationStyle.UNICODE ? TAB_MARK_UNICODE : TAB_MARK_ASCII;
+        String eolMark = style == WhitespaceVisualizationStyle.UNICODE ? EOL_MARK_UNICODE : EOL_MARK_ASCII;
         if (line.isEmpty()) {
-            return "¶";
+            return eolMark;
         }
-        return line.replace(" ", "·") // spaces
-                        .replace("\t", "→→→→") // tabs
-                + "¶"; // end of line marker
+        return line.replace(" ", spaceMark).replace("\t", tabMark) + eolMark;
     }
 }
