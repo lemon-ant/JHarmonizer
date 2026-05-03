@@ -1,10 +1,7 @@
 <!--
-
-    SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
-    SPDX-License-Identifier: Apache-2.0
-
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
 -->
-
 # dependency-aware-sorting
 
 A Java 17+ research project (compatible with Java 21) that implements a **fast, deterministic algorithm** for

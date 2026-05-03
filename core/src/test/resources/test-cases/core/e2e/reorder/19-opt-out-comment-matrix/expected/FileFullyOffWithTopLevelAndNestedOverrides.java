@@ -1,7 +1,5 @@
-/*
- * SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
- * SPDX-License-Identifier: Apache-2.0
- */
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 // @jharmonizer:fully-off
 class ZetaTopLevel{static String label(){return "zeta";}}
 public class FileFullyOffWithTopLevelAndNestedOverrides{static class ZuluNested{static String label(){return "zulu";}} int zebra; static class AlphaNested{static String label(){return "alpha";}} int ant;
