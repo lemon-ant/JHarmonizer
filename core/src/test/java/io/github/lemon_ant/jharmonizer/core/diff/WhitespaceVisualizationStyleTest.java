@@ -21,6 +21,14 @@ class WhitespaceVisualizationStyleTest {
     }
 
     @Test
+    void latinSafe_markers_useExpectedSymbols() {
+        // When / Then
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getSpaceMark()).isEqualTo("·");
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getTabMark()).isEqualTo("--->");
+        assertThat(WhitespaceVisualizationStyle.LATIN_SAFE.getEolMark()).isEqualTo("¶");
+    }
+
+    @Test
     void asciiSafe_markers_useExpectedSymbols() {
         // When / Then
         assertThat(WhitespaceVisualizationStyle.ASCII_SAFE.getSpaceMark()).isEqualTo(".");
@@ -30,28 +38,87 @@ class WhitespaceVisualizationStyleTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"UTF-8", "UTF-16"})
-    void forCharset_unicodeCapableCharset_returnsUnicode(String charsetName) {
+    void forCharsets_sameUnicodeCapableCharset_returnsUnicode(String charsetName) {
+        // Given
+        Charset charset = Charset.forName(charsetName);
+
         // When
-        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharset(Charset.forName(charsetName));
+        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(charset, charset);
 
         // Then
         assertThat(style).isEqualTo(WhitespaceVisualizationStyle.UNICODE);
     }
 
     @Test
-    void forCharset_utf8Charset_returnsUnicode() {
+    void forCharsets_sameUtf8Charset_returnsUnicode() {
         // When
-        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharset(StandardCharsets.UTF_8);
+        WhitespaceVisualizationStyle style =
+                WhitespaceVisualizationStyle.forCharsets(StandardCharsets.UTF_8, StandardCharsets.UTF_8);
 
         // Then
         assertThat(style).isEqualTo(WhitespaceVisualizationStyle.UNICODE);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"windows-1252", "ISO-8859-1", "IBM850", "IBM866", "US-ASCII"})
-    void forCharset_nonUnicodeCharset_returnsAsciiSafe(String charsetName) {
+    @ValueSource(strings = {"windows-1252", "ISO-8859-1"})
+    void forCharsets_sameLatin1CompatibleCharset_returnsLatinSafe(String charsetName) {
+        // Given
+        Charset charset = Charset.forName(charsetName);
+
         // When
-        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharset(Charset.forName(charsetName));
+        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(charset, charset);
+
+        // Then
+        assertThat(style).isEqualTo(WhitespaceVisualizationStyle.LATIN_SAFE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"IBM866", "US-ASCII"})
+    void forCharsets_sameAsciiOnlyCharset_returnsAsciiSafe(String charsetName) {
+        // Given
+        Charset charset = Charset.forName(charsetName);
+
+        // When
+        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(charset, charset);
+
+        // Then
+        assertThat(style).isEqualTo(WhitespaceVisualizationStyle.ASCII_SAFE);
+    }
+
+    @Test
+    void forCharsets_cp850DisplayWithCp1252Encoder_returnsAsciiSafe() {
+        // Given — CP850 and CP1252 assign different byte values to U+00B7 (·)
+        Charset displayCharset = Charset.forName("IBM850");
+        Charset encoderCharset = Charset.forName("windows-1252");
+
+        // When
+        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(displayCharset, encoderCharset);
+
+        // Then
+        assertThat(style).isEqualTo(WhitespaceVisualizationStyle.ASCII_SAFE);
+    }
+
+    @Test
+    void forCharsets_cp1252DisplayWithUtf8Encoder_returnsAsciiSafe() {
+        // Given — UTF-8 encodes · as two bytes (0xC2 0xB7); CP1252 encodes it as one byte (0xB7)
+        Charset displayCharset = Charset.forName("windows-1252");
+        Charset encoderCharset = StandardCharsets.UTF_8;
+
+        // When
+        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(displayCharset, encoderCharset);
+
+        // Then
+        assertThat(style).isEqualTo(WhitespaceVisualizationStyle.ASCII_SAFE);
+    }
+
+    @Test
+    void forCharsets_cp850DisplayWithUtf8Encoder_returnsAsciiSafe() {
+        // Given — the original Windows OEM/UTF-8 mismatch that caused garbled output
+        Charset displayCharset = Charset.forName("IBM850");
+        Charset encoderCharset = StandardCharsets.UTF_8;
+
+        // When
+        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(displayCharset, encoderCharset);
 
         // Then
         assertThat(style).isEqualTo(WhitespaceVisualizationStyle.ASCII_SAFE);

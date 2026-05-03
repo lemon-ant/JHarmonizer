@@ -11,7 +11,8 @@ import lombok.experimental.UtilityClass;
 /**
  * Detects which whitespace visualization style is appropriate for the standard output stream.
  *
- * <p>Resolves the effective stdout charset via a three-step property lookup:
+ * <p>Resolves the effective stdout charset (the console display encoding) via a three-step
+ * property lookup:
  * <ol>
  *   <li>{@code stdout.encoding} — set by the JVM on Java 18 and later to reflect the actual
  *       I/O encoding of the stdout stream (the console OEM code page on Windows).</li>
@@ -21,14 +22,18 @@ import lombok.experimental.UtilityClass;
  *   <li>{@link Charset#defaultCharset()} — last-resort fallback.</li>
  * </ol>
  *
+ * <p>The encoder charset (what the logging framework writes) is always
+ * {@link Charset#defaultCharset()}.  Style selection compares the display and encoder charsets
+ * byte-by-byte for each candidate marker and delegates to
+ * {@link WhitespaceVisualizationStyle#forCharsets(Charset, Charset)}.
+ *
  * <p>The detection result is computed once and cached for the lifetime of the JVM.
- * Style selection is delegated to {@link WhitespaceVisualizationStyle#forCharset(Charset)}.
  */
 @UtilityClass
 class ConsoleUnicodeDetector {
 
     private static final WhitespaceVisualizationStyle DETECTED_STYLE =
-            WhitespaceVisualizationStyle.forCharset(resolveStdoutCharset());
+            WhitespaceVisualizationStyle.forCharsets(resolveStdoutCharset(), Charset.defaultCharset());
 
     /**
      * Returns the cached whitespace visualization style for the current JVM stdout.

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.diff;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import lombok.Getter;
 import lombok.NonNull;
@@ -10,20 +11,19 @@ import lombok.RequiredArgsConstructor;
 /**
  * Controls which symbol set is used to visualize whitespace characters in diff output.
  *
- * <p>Two styles are available, selected automatically via {@link #forCharset(Charset)}
- * based on what the given charset can encode:
+ * <p>Three styles are available, selected automatically via
+ * {@link #forCharsets(Charset, Charset)} based on the display charset (what the console renders)
+ * and the encoder charset (what the logging framework writes):
  * <ul>
- *   <li>{@link #UNICODE} — full Unicode markers; requires an encoding that can render U+2192
- *       (RIGHT ARROW), such as UTF-8 or UTF-16</li>
- *   <li>{@link #ASCII_SAFE} — pure ASCII markers; safe on any encoding because ASCII bytes are
- *       identical across all standard single-byte and multi-byte charsets</li>
+ *   <li>{@link #UNICODE} — full Unicode markers; requires both charsets to encode U+2192
+ *       (RIGHT ARROW) to identical bytes (e.g. UTF-8/UTF-8)</li>
+ *   <li>{@link #LATIN_SAFE} — Latin-1 supplement markers for spaces and end-of-line,
+ *       ASCII {@code --->} for tabs; selected when both charsets encode U+00B7 (·) and U+00B6 (¶)
+ *       to identical bytes (e.g. CP1252/CP1252, ISO-8859-1/ISO-8859-1)</li>
+ *   <li>{@link #ASCII_SAFE} — pure ASCII markers; used when display and encoder charsets produce
+ *       different bytes for the non-ASCII markers, which would cause garbled output
+ *       (e.g. CP850 display with CP1252 encoder)</li>
  * </ul>
- *
- * <p>Note: OEM/ANSI charsets (CP850, CP1252, ISO-8859-1 and similar) may technically encode
- * characters such as U+00B7 (·) and U+00B6 (¶), but in practice the output encoding used by
- * the logging framework ({@link java.nio.charset.Charset#defaultCharset()}) may differ from the
- * console display encoding, so non-ASCII markers can still arrive as garbled byte sequences.
- * Only ASCII markers are byte-identical across all charsets and are therefore always safe.
  *
  * <p>Each constant carries the concrete marker strings ({@link #getSpaceMark()},
  * {@link #getTabMark()}, {@link #getEolMark()}) so callers can use them directly without
@@ -35,13 +35,21 @@ enum WhitespaceVisualizationStyle {
 
     /**
      * Unicode whitespace markers: {@code ·} for spaces, {@code →→→→} for tabs, {@code ¶} for end-of-line.
-     * Requires a terminal whose encoding can render U+2192 (e.g. UTF-8).
+     * Requires both the display and encoder charsets to encode U+2192 identically (e.g. UTF-8).
      */
     UNICODE("·", "→→→→", "¶"),
 
     /**
+     * Latin-1 supplement markers: {@code ·} for spaces, {@code --->} for tabs, {@code ¶} for end-of-line.
+     * Selected when both the display and encoder charsets encode U+00B7 and U+00B6 to the same bytes
+     * (e.g. CP1252/CP1252, ISO-8859-1/ISO-8859-1).
+     */
+    LATIN_SAFE("·", "--->", "¶"),
+
+    /**
      * ASCII-only whitespace markers: {@code .} for spaces, {@code --->} for tabs, no end-of-line marker.
-     * Works on any terminal regardless of encoding.
+     * Used when the display and encoder charsets produce different byte sequences for non-ASCII markers,
+     * which would otherwise cause garbled output (e.g. CP850 display with CP1252 encoder).
      */
     ASCII_SAFE(".", "--->", "");
 
@@ -55,28 +63,44 @@ enum WhitespaceVisualizationStyle {
     private final String eolMark;
 
     /**
-     * Selects the appropriate style for the given charset by probing whether the charset can
-     * encode the Unicode arrow character U+2192.
+     * Selects the appropriate style by comparing how the display charset (terminal) and the encoder
+     * charset (logging framework) represent each candidate marker character.
+     *
+     * <p>A marker is safe to use only when both charsets encode it to the <em>same</em> byte
+     * sequence, ensuring that what the encoder writes is exactly what the terminal can render.
      *
      * <ul>
-     *   <li>Charset can encode {@code →} (U+2192) → {@link #UNICODE} (e.g. UTF-8, UTF-16)</li>
-     *   <li>Otherwise → {@link #ASCII_SAFE} (e.g. CP850, CP1252, IBM866, US-ASCII)</li>
+     *   <li>Both charsets encode {@code →} (U+2192) identically → {@link #UNICODE}</li>
+     *   <li>Both encode {@code ·} (U+00B7) and {@code ¶} (U+00B6) identically → {@link #LATIN_SAFE}
+     *       (e.g. CP1252 display + CP1252 encoder)</li>
+     *   <li>Otherwise → {@link #ASCII_SAFE} (e.g. CP850 display + CP1252 encoder, or any display
+     *       with a UTF-8 encoder on Java 18+ where the ANSI and OEM code pages differ)</li>
      * </ul>
      *
-     * <p>Single-byte charsets that technically encode Latin-1 supplement characters (U+00B7, U+00B6)
-     * still map to {@link #ASCII_SAFE} because in practice the logging framework may encode output
-     * using a different charset than the console display charset, causing non-ASCII bytes to be
-     * misinterpreted. ASCII characters are byte-identical in all standard charsets and are
-     * therefore always safe.
-     *
-     * @param charset the charset to probe
-     * @return the style best suited for that charset
+     * @param displayCharset the charset used by the terminal to render output (e.g. from
+     *                       {@code stdout.encoding})
+     * @param encoderCharset the charset used by the logging framework to encode log messages
+     *                       (typically {@link Charset#defaultCharset()})
+     * @return the style best suited for the given charset pair
      */
     @NonNull
-    static WhitespaceVisualizationStyle forCharset(@NonNull Charset charset) {
-        if (charset.newEncoder().canEncode('\u2192')) {
+    static WhitespaceVisualizationStyle forCharsets(@NonNull Charset displayCharset, @NonNull Charset encoderCharset) {
+        if (encodeIdentically(displayCharset, encoderCharset, '\u2192')) {
             return UNICODE;
         }
+        if (encodeIdentically(displayCharset, encoderCharset, '\u00B7')
+                && encodeIdentically(displayCharset, encoderCharset, '\u00B6')) {
+            return LATIN_SAFE;
+        }
         return ASCII_SAFE;
+    }
+
+    private static boolean encodeIdentically(Charset c1, Charset c2, char ch) {
+        if (!c1.newEncoder().canEncode(ch) || !c2.newEncoder().canEncode(ch)) {
+            return false;
+        }
+        ByteBuffer encoded1 = c1.encode(String.valueOf(ch));
+        ByteBuffer encoded2 = c2.encode(String.valueOf(ch));
+        return encoded1.equals(encoded2);
     }
 }
