@@ -39,4 +39,14 @@ SPDX-License-Identifier: Apache-2.0
         <multiLine>true</multiLine>
         <padLines>false</padLines>
     </markdown_block_comment>
+    <xml_block_comment>
+        <firstLine>&lt;!--</firstLine>
+        <endLine>--&gt;</endLine>
+        <firstLineDetectionPattern>&lt;!--.*$</firstLineDetectionPattern>
+        <lastLineDetectionPattern>--&gt;.*$</lastLineDetectionPattern>
+        <allowBlankLines>false</allowBlankLines>
+        <multiLine>true</multiLine>
+        <padLines>false</padLines>
+        <skipLine>&lt;\?xml.*</skipLine>
+    </xml_block_comment>
 </additionalHeaders>
