@@ -1,3 +1,10 @@
+<!--
+
+    SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+    SPDX-License-Identifier: Apache-2.0
+
+-->
+
 # Full stack trace for self-type class-literal partial-evaluation failure
 
 ```text

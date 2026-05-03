@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
 // Verifies that when baseDirs is explicitly configured to a non-default directory,
 // only files in that directory are checked — not files in the default src/main/java.
 // The configured directory (src/custom/java) contains only conforming files, so the

@@ -1,3 +1,6 @@
+REM SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+REM SPDX-License-Identifier: Apache-2.0
+
 @echo off
 REM === JHarmonizer PDF Build Script ===
 REM Requires: pandoc + LaTeX (e.g., MiKTeX or TeX Live)
