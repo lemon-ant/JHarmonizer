@@ -79,7 +79,6 @@ public class RelocationDetector {
      * @return {@code true} if any element is at a different position in the sorted order;
      *         otherwise {@code false}
      */
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
@@ -88,7 +87,7 @@ public class RelocationDetector {
                 .anyMatch(member -> {
                     int currentIndex = index.getAndIncrement();
                     return currentIndex >= originalMemberOrder.size()
-                            || originalMemberOrder.get(currentIndex) != member;
+                            || originalMemberOrder.get(currentIndex) != member; // NOPMD - CompareObjectsWithEquals: intentional AST node identity check
                 });
         return mismatchFound || index.get() != originalMemberOrder.size();
     }

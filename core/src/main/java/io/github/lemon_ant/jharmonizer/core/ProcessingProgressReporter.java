@@ -41,9 +41,8 @@ final class ProcessingProgressReporter {
         }
     }
 
-    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private void incrementStatusCounter(FileProcessingStatus status) {
-        switch (status) {
+        switch (status) { // NOPMD - ExhaustiveSwitchHasDefault: defensive default guards against future enum additions
             case REORDERED -> reorderedCount.increment();
             case FORMATTED -> formattedCount.increment();
             case UNCHANGED -> unchangedCount.increment();
