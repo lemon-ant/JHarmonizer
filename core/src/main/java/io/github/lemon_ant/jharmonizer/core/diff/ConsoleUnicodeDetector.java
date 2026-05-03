@@ -22,12 +22,14 @@ import lombok.experimental.UtilityClass;
  *   <li>{@link Charset#defaultCharset()} — last-resort fallback.</li>
  * </ol>
  *
- * <p>The encoder charset (what {@link System#out} actually writes to the terminal) is resolved
- * separately: {@code stdout.encoding} if the property is set (Java 18+, where the JVM binds
- * {@link System#out} to that charset regardless of {@code -Dfile.encoding}); otherwise
- * {@link Charset#defaultCharset()} (Java 17, where {@link System#out} was constructed with
- * the default charset).  {@code native.encoding} is intentionally skipped for the encoder
- * because it reflects the OS/locale encoding, not {@link System#out}'s actual charset.
+ * <p>The encoder charset (the charset that the logging framework uses to convert log strings to
+ * bytes) is resolved separately: {@code stdout.encoding} if the property is set (Java 18 and
+ * later); otherwise {@link Charset#defaultCharset()}, which equals the platform charset derived
+ * from {@code file.encoding} (the same charset that Logback's {@code PatternLayoutEncoder} would
+ * use when no explicit {@code &lt;charset&gt;} is configured).  The CLI's {@code logback.xml}
+ * configures the STDOUT appender encoder with
+ * {@code &lt;charset&gt;${stdout.encoding:-${file.encoding}}&lt;/charset&gt;}, so the encoder
+ * charset detected here matches what Logback actually writes to the console.
  * Style selection compares the display and encoder charsets byte-by-byte for each candidate
  * marker and delegates to {@link WhitespaceVisualizationStyle#forCharsets(Charset, Charset)}.
  *
@@ -51,10 +53,12 @@ class ConsoleUnicodeDetector {
 
     @NonNull
     private static Charset resolveEncoderCharset() {
-        // On Java 18+, System.out is bound to stdout.encoding regardless of -Dfile.encoding.
-        // On Java 17, System.out was constructed with Charset.defaultCharset().
-        // native.encoding is intentionally skipped here because it reflects the OS/locale
-        // encoding, not the encoding that System.out actually uses.
+        // The CLI's logback.xml configures the STDOUT encoder with
+        // <charset>${stdout.encoding:-${file.encoding}}</charset>, so on Java 18+ the encoder
+        // uses stdout.encoding.  On Java 17 (where stdout.encoding is not set by the JVM),
+        // both the logback.xml fallback (${file.encoding}) and Charset.defaultCharset() resolve
+        // to the same platform charset.  native.encoding is intentionally skipped here because
+        // it reflects the OS/locale encoding, not the encoding the STDOUT encoder actually uses.
         String encoding = System.getProperty("stdout.encoding");
         if (encoding == null) {
             return Charset.defaultCharset();

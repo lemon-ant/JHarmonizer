@@ -60,7 +60,7 @@ class WhitespaceVisualizationStyleTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"windows-1252", "ISO-8859-1"})
+    @ValueSource(strings = {"windows-1252", "ISO-8859-1", "IBM850"})
     void forCharsets_sameLatin1CompatibleCharset_returnsLatinSafe(String charsetName) {
         // Given
         Charset charset = Charset.forName(charsetName);
@@ -100,10 +100,10 @@ class WhitespaceVisualizationStyleTest {
 
     @Test
     void forCharsets_cp1252DisplayWithUtf8Encoder_returnsAsciiSafe() {
-        // Given — on Java 17 with -Dfile.encoding=UTF-8, System.out.charset()=UTF-8 but the
-        // terminal display charset is CP1252; UTF-8 encodes · as two bytes (0xC2 0xB7) while
-        // CP1252 encodes it as one byte (0xB7), so the bytes would not match what the terminal
-        // expects — ASCII_SAFE prevents garbled output in that scenario
+        // Given — when the terminal display charset is CP1252 but the encoder uses UTF-8
+        // (e.g. Java 18+ with -Dfile.encoding=UTF-8 overriding the default), UTF-8 encodes ·
+        // as two bytes (0xC2 0xB7) while CP1252 expects one byte (0xB7), so the bytes do not
+        // match what the terminal can render — ASCII_SAFE prevents garbled output
         Charset displayCharset = Charset.forName("windows-1252");
         Charset encoderCharset = StandardCharsets.UTF_8;
 
@@ -116,7 +116,9 @@ class WhitespaceVisualizationStyleTest {
 
     @Test
     void forCharsets_cp850DisplayWithUtf8Encoder_returnsAsciiSafe() {
-        // Given — the original Windows OEM/UTF-8 mismatch that caused garbled output
+        // Given — IBM850 terminal display with UTF-8 encoder: UTF-8 encodes · as two bytes
+        // (0xC2 0xB7) but IBM850 expects 0xF9 — bytes do not match, so ASCII_SAFE is required
+        // to prevent garbled output such as ┬À (the CP850 interpretation of 0xC2 0xB7)
         Charset displayCharset = Charset.forName("IBM850");
         Charset encoderCharset = StandardCharsets.UTF_8;
 
