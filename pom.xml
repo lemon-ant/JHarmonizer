@@ -377,10 +377,23 @@
                                 </excludes>
                             </licenseSet>
                         </licenseSets>
+                        <!--
+                            Built-in DOUBLESLASH_STYLE, SCRIPT_STYLE, and XML_STYLE all wrap the
+                            header block with extra first/end lines and blank-line padding that do
+                            not match the compact single-line-prefix convention used throughout this
+                            repository. Custom types in license-header-styles.xml omit those
+                            wrappers to produce and accept the exact format already present in all
+                            tracked source files.
+                        -->
+                        <headerDefinitions>
+                            <headerDefinition>${maven.multiModuleProjectDirectory}/quality-gates/license-header-styles.xml</headerDefinition>
+                        </headerDefinitions>
                         <mapping>
-                            <md>XML_STYLE</md>
-                            <sh>SCRIPT_STYLE</sh>
-                            <yml>SCRIPT_STYLE</yml>
+                            <java>DOUBLESLASH_SIMPLE</java>
+                            <md>MARKDOWN_BLOCK_COMMENT</md>
+                            <sh>SCRIPT_SIMPLE</sh>
+                            <xml>MARKDOWN_BLOCK_COMMENT</xml>
+                            <yml>SCRIPT_SIMPLE</yml>
                         </mapping>
                     </configuration>
                 </plugin>

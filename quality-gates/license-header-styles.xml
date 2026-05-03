@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+  Custom comment-style definitions for com.mycila:license-maven-plugin.
+
+  The built-in DOUBLESLASH_STYLE, SCRIPT_STYLE, and XML_STYLE all wrap the
+  header block with extra first/end lines and blank-line padding that do not
+  match the compact single-line-prefix convention used throughout this
+  repository.  These custom definitions omit firstLine/endLine and set
+  padLines=false to produce the compact form already present in all tracked
+  source files.
+-->
+<additionalHeaders>
+    <doubleslash_simple>
+        <beforeEachLine>// </beforeEachLine>
+        <firstLineDetectionPattern>//.*$</firstLineDetectionPattern>
+        <lastLineDetectionPattern>//.*$</lastLineDetectionPattern>
+        <allowBlankLines>false</allowBlankLines>
+        <multiLine>false</multiLine>
+        <padLines>false</padLines>
+    </doubleslash_simple>
+    <script_simple>
+        <beforeEachLine># </beforeEachLine>
+        <firstLineDetectionPattern>#.*$</firstLineDetectionPattern>
+        <lastLineDetectionPattern>#.*$</lastLineDetectionPattern>
+        <allowBlankLines>false</allowBlankLines>
+        <multiLine>false</multiLine>
+        <padLines>false</padLines>
+    </script_simple>
+    <markdown_block_comment>
+        <firstLine>&lt;!--</firstLine>
+        <endLine>--&gt;</endLine>
+        <firstLineDetectionPattern>&lt;!--.*$</firstLineDetectionPattern>
+        <lastLineDetectionPattern>--&gt;.*$</lastLineDetectionPattern>
+        <allowBlankLines>false</allowBlankLines>
+        <multiLine>true</multiLine>
+        <padLines>false</padLines>
+    </markdown_block_comment>
+</additionalHeaders>
