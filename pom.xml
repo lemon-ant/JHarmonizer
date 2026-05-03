@@ -354,18 +354,32 @@
                     <artifactId>license-maven-plugin</artifactId>
                     <version>${license-maven-plugin.version}</version>
                     <configuration>
+                        <strictCheck>true</strictCheck>
                         <licenseSets>
                             <licenseSet>
                                 <header>${maven.multiModuleProjectDirectory}/license-header.txt</header>
+                                <includes>
+                                    <include>.editorconfig</include>
+                                    <include>.gitattributes</include>
+                                    <include>.github/**/*.md</include>
+                                    <include>.github/**/*.yml</include>
+                                    <include>.gitignore</include>
+                                    <include>*.md</include>
+                                    <include>**/*.java</include>
+                                    <include>**/*.md</include>
+                                    <include>**/*.sh</include>
+                                    <include>**/*.xml</include>
+                                    <include>**/*.yml</include>
+                                </includes>
                                 <excludes>
                                     <exclude>LICENSE</exclude>
+                                    <exclude>target/**</exclude>
                                 </excludes>
                             </licenseSet>
                         </licenseSets>
                         <mapping>
-                            <java>DOUBLESLASH_STYLE</java>
                             <md>XML_STYLE</md>
-                            <yaml>SCRIPT_STYLE</yaml>
+                            <sh>SCRIPT_STYLE</sh>
                             <yml>SCRIPT_STYLE</yml>
                         </mapping>
                     </configuration>
@@ -652,7 +666,7 @@
                         <artifactId>license-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>check-license-headers</id>
+                                <id>check-spdx-headers</id>
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
