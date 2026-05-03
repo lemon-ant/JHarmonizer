@@ -22,10 +22,14 @@ import lombok.experimental.UtilityClass;
  *   <li>{@link Charset#defaultCharset()} — last-resort fallback.</li>
  * </ol>
  *
- * <p>The encoder charset (what the logging framework writes) is always
- * {@link Charset#defaultCharset()}.  Style selection compares the display and encoder charsets
- * byte-by-byte for each candidate marker and delegates to
- * {@link WhitespaceVisualizationStyle#forCharsets(Charset, Charset)}.
+ * <p>The encoder charset (what {@link System#out} actually writes to the terminal) is resolved
+ * separately: {@code stdout.encoding} if the property is set (Java 18+, where the JVM binds
+ * {@link System#out} to that charset regardless of {@code -Dfile.encoding}); otherwise
+ * {@link Charset#defaultCharset()} (Java 17, where {@link System#out} was constructed with
+ * the default charset).  {@code native.encoding} is intentionally skipped for the encoder
+ * because it reflects the OS/locale encoding, not {@link System#out}'s actual charset.
+ * Style selection compares the display and encoder charsets byte-by-byte for each candidate
+ * marker and delegates to {@link WhitespaceVisualizationStyle#forCharsets(Charset, Charset)}.
  *
  * <p>The detection result is computed once and cached for the lifetime of the JVM.
  */
@@ -33,7 +37,7 @@ import lombok.experimental.UtilityClass;
 class ConsoleUnicodeDetector {
 
     private static final WhitespaceVisualizationStyle DETECTED_STYLE =
-            WhitespaceVisualizationStyle.forCharsets(resolveStdoutCharset(), Charset.defaultCharset());
+            WhitespaceVisualizationStyle.forCharsets(resolveStdoutCharset(), resolveEncoderCharset());
 
     /**
      * Returns the cached whitespace visualization style for the current JVM stdout.
@@ -43,6 +47,23 @@ class ConsoleUnicodeDetector {
     @NonNull
     static WhitespaceVisualizationStyle resolveStyle() {
         return DETECTED_STYLE;
+    }
+
+    @NonNull
+    private static Charset resolveEncoderCharset() {
+        // On Java 18+, System.out is bound to stdout.encoding regardless of -Dfile.encoding.
+        // On Java 17, System.out was constructed with Charset.defaultCharset().
+        // native.encoding is intentionally skipped here because it reflects the OS/locale
+        // encoding, not the encoding that System.out actually uses.
+        String encoding = System.getProperty("stdout.encoding");
+        if (encoding == null) {
+            return Charset.defaultCharset();
+        }
+        try {
+            return Charset.forName(encoding);
+        } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
+            return Charset.defaultCharset();
+        }
     }
 
     @NonNull

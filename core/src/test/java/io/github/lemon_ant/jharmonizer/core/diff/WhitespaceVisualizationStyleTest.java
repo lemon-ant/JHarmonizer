@@ -100,7 +100,10 @@ class WhitespaceVisualizationStyleTest {
 
     @Test
     void forCharsets_cp1252DisplayWithUtf8Encoder_returnsAsciiSafe() {
-        // Given — UTF-8 encodes · as two bytes (0xC2 0xB7); CP1252 encodes it as one byte (0xB7)
+        // Given — on Java 17 with -Dfile.encoding=UTF-8, System.out.charset()=UTF-8 but the
+        // terminal display charset is CP1252; UTF-8 encodes · as two bytes (0xC2 0xB7) while
+        // CP1252 encodes it as one byte (0xB7), so the bytes would not match what the terminal
+        // expects — ASCII_SAFE prevents garbled output in that scenario
         Charset displayCharset = Charset.forName("windows-1252");
         Charset encoderCharset = StandardCharsets.UTF_8;
 

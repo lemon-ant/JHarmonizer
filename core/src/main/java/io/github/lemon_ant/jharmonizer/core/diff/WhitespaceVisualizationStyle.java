@@ -79,8 +79,8 @@ enum WhitespaceVisualizationStyle {
      *
      * @param displayCharset the charset used by the terminal to render output (e.g. from
      *                       {@code stdout.encoding})
-     * @param encoderCharset the charset used by the logging framework to encode log messages
-     *                       (typically {@link Charset#defaultCharset()})
+     * @param encoderCharset the charset used by {@link System#out} to write log messages
+     *                       (obtained via {@link java.io.PrintStream#charset() System.out.charset()})
      * @return the style best suited for the given charset pair
      */
     @NonNull
