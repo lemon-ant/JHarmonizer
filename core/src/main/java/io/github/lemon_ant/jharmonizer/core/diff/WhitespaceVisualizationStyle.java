@@ -39,6 +39,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public enum WhitespaceVisualizationStyle {
 
     /**
