@@ -63,7 +63,22 @@ class CheckAllFlowIntegrationTest {
 
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
-        assertThat(fileProcessingResult.getDiff()).isNotEmpty();
+        assertThat(fileProcessingResult.getDiff()).isEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
+    }
+
+    @Test
+    void processStream_membersOutOfOrderAndFormattingViolation_returnsSortingOnlyResult() {
+        // Given: file has both sorting and formatting violations
+        SrcFile srcFile = createSrcFile("class A{void b(){}void a(){}}", Path.of("A.java"));
+
+        // When
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
+        assertThat(fileProcessingResult.getDiff()).isEmpty();
         assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
     }
 
