@@ -174,6 +174,7 @@ abstract class BaseCommand implements Callable<Integer> {
             log.info(
                     "To automatically fix these violations, run:\n{}",
                     ReorderCommandRenderer.render(
+                            CliLauncherDetector.detectLauncherPrefix(),
                             commandOptions.getBaseDir(),
                             commandOptions.getIncludeGlobs(),
                             commandOptions.getExcludeGlobs(),
