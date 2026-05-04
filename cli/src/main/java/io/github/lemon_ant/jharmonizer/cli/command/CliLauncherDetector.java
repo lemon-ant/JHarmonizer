@@ -55,7 +55,7 @@ class CliLauncherDetector {
         }
         try {
             return buildLauncherPrefix(maybeCommand.get(), maybeArguments.get());
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException pathBuildingException) {
             // Path.of() can throw InvalidPathException for unusual process info values;
             // treat any failure as an unavailable detection and fall back to the symbolic name.
             return FALLBACK_LAUNCHER;
