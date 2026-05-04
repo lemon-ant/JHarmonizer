@@ -12,11 +12,12 @@ import org.junit.jupiter.api.Test;
 class ReorderCommandRendererTest {
 
     private static final Path BASE_DIR = Path.of("/projects/my-project");
+    private static final String FALLBACK_LAUNCHER = "jharmonizer";
 
     @Test
     void render_noOptionalArguments_returnsBaseCommand() {
         // When / Then
-        assertThat(ReorderCommandRenderer.render(BASE_DIR, Set.of(), Set.of(), null, false, false))
+        assertThat(ReorderCommandRenderer.render(FALLBACK_LAUNCHER, BASE_DIR, Set.of(), Set.of(), null, false, false))
                 .isEqualTo("jharmonizer reorder --base-dir \"/projects/my-project\"");
     }
 
@@ -27,7 +28,7 @@ class ReorderCommandRendererTest {
 
         // When
         String command = ReorderCommandRenderer.render(
-                BASE_DIR, Set.of("**/*.java"), Set.of("**/excluded/**"), configFilePath, true, true);
+                FALLBACK_LAUNCHER, BASE_DIR, Set.of("**/*.java"), Set.of("**/excluded/**"), configFilePath, true, true);
 
         // Then
         assertThat(command)
@@ -45,7 +46,8 @@ class ReorderCommandRendererTest {
         Path dirWithSpaces = Path.of("/my projects/my app");
 
         // When / Then
-        assertThat(ReorderCommandRenderer.render(dirWithSpaces, Set.of(), Set.of(), null, false, false))
+        assertThat(ReorderCommandRenderer.render(
+                        FALLBACK_LAUNCHER, dirWithSpaces, Set.of(), Set.of(), null, false, false))
                 .isEqualTo("jharmonizer reorder --base-dir \"/my projects/my app\"");
     }
 
@@ -55,14 +57,26 @@ class ReorderCommandRendererTest {
         Path dirWithMetachars = Path.of("/projects/$build");
 
         // When / Then
-        assertThat(ReorderCommandRenderer.render(dirWithMetachars, Set.of(), Set.of(), null, false, false))
+        assertThat(ReorderCommandRenderer.render(
+                        FALLBACK_LAUNCHER, dirWithMetachars, Set.of(), Set.of(), null, false, false))
                 .isEqualTo("jharmonizer reorder --base-dir \"/projects/\\$build\"");
     }
 
     @Test
     void render_globWithBackslash_escapesBackslash() {
         // When / Then
-        assertThat(ReorderCommandRenderer.render(BASE_DIR, Set.of("**\\*.java"), Set.of(), null, false, false))
+        assertThat(ReorderCommandRenderer.render(
+                        FALLBACK_LAUNCHER, BASE_DIR, Set.of("**\\*.java"), Set.of(), null, false, false))
                 .contains("--include \"**\\\\*.java\"");
+    }
+
+    @Test
+    void render_customLauncherPrefix_prefixesReorderSubcommand() {
+        // Given
+        String javaJarLauncher = "\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar";
+
+        // When / Then
+        assertThat(ReorderCommandRenderer.render(javaJarLauncher, BASE_DIR, Set.of(), Set.of(), null, false, false))
+                .startsWith("\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar reorder");
     }
 }

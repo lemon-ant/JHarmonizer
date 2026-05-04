@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Renders the ready-to-run {@code jharmonizer reorder} command string that users can paste
+ * Renders the ready-to-run {@code reorder} command string that users can paste
  * to automatically fix ordering violations detected by a check flow.
  */
 @UtilityClass
@@ -20,8 +20,10 @@ class ReorderCommandRenderer {
     private static final int INITIAL_COMMAND_CAPACITY = 256;
 
     /**
-     * Builds the {@code jharmonizer reorder} command with all resolved options preserved.
+     * Builds the {@code reorder} command with all resolved options preserved.
      *
+     * @param launcherPrefix the launcher prefix to prepend (for example {@code jharmonizer} or
+     *     {@code "C:/path/to/java.exe" -jar jharmonizer-cli.jar})
      * @param baseDir resolved, absolute base directory
      * @param includeGlobs glob patterns for files to include
      * @param excludeGlobs glob patterns for files to exclude
@@ -32,6 +34,7 @@ class ReorderCommandRenderer {
      */
     @NonNull
     static String render(
+            @NonNull String launcherPrefix,
             @NonNull Path baseDir,
             @NonNull Set<String> includeGlobs,
             @NonNull Set<String> excludeGlobs,
@@ -39,7 +42,9 @@ class ReorderCommandRenderer {
             boolean noBackup,
             boolean noStatistics) {
         StringBuilder command = new StringBuilder(INITIAL_COMMAND_CAPACITY);
-        command.append("jharmonizer reorder --base-dir ").append(quoteArg(PathUtils.normalizeSeparators(baseDir)));
+        command.append(launcherPrefix)
+                .append(" reorder --base-dir ")
+                .append(quoteArg(PathUtils.normalizeSeparators(baseDir)));
         for (String includeGlob : includeGlobs) {
             command.append(" --include ").append(quoteArg(includeGlob));
         }
