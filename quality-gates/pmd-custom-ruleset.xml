@@ -22,7 +22,16 @@
     <!-- TODO Activate it
     ruleset>category/java/documentation.xml</ruleset>
     -->
-    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/errorprone.xml">
+        <!--
+            PMD 7 paradox: UnnecessaryWarningSuppression fires for every @SuppressWarnings("PMD.X")
+            that successfully suppresses a real violation, because PMD re-evaluates the scope after
+            suppression and no longer sees the violation — making the suppression look unnecessary.
+            Excluding this rule avoids the false-positive cycle while keeping all other suppressions
+            functional. Remove this exclusion if a future PMD release fixes the paradox.
+        -->
+        <exclude name="UnnecessaryWarningSuppression"/>
+    </rule>
     <rule ref="category/java/multithreading.xml"/>
     <rule ref="category/java/performance.xml"/>
     <rule ref="category/java/security.xml"/>

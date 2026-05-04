@@ -73,6 +73,7 @@ class ComparatorUtils {
      * @return the sortable type member comparator
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals") // cluster representatives are checked by identity by design
     static Comparator<SortableTypeMember> buildSortableTypeMemberComparator(@NonNull List<OrderingRule> orderingRules) {
         Comparator<OrderingKey> base = buildOrderingKeyComparator(orderingRules);
         return (left, right) -> {
