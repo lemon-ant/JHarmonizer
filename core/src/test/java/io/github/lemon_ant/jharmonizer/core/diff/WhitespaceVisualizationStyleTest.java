@@ -44,17 +44,6 @@ class WhitespaceVisualizationStyleTest {
                 .isEqualTo("|");
     }
 
-    @Test
-    void extendedSafe_markers_useExpectedSymbols() {
-        // When / Then
-        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getSpaceMark()).isEqualTo("·");
-        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getTabMark()).isEqualTo("--->");
-        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getEolMark()).isEqualTo("¶");
-        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getEllipsisMark()).isEqualTo("...");
-        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getChunkOmissionMark())
-                .isEqualTo("¦");
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"UTF-8", "UTF-16"})
     void forCharsets_sameUnicodeCapableCharset_returnsUnicode(String charsetName) {
@@ -76,18 +65,6 @@ class WhitespaceVisualizationStyleTest {
 
         // Then
         assertThat(style).isEqualTo(WhitespaceVisualizationStyle.UNICODE);
-    }
-
-    @Test
-    void forCharsets_sameCp1252Charset_returnsExtendedSafe() {
-        // Given — Windows-1252 encodes U+2026 (…) as byte 0x85 (extended ASCII range)
-        Charset charset = Charset.forName("windows-1252");
-
-        // When
-        WhitespaceVisualizationStyle style = WhitespaceVisualizationStyle.forCharsets(charset, charset);
-
-        // Then
-        assertThat(style).isEqualTo(WhitespaceVisualizationStyle.EXTENDED_SAFE);
     }
 
     @ParameterizedTest

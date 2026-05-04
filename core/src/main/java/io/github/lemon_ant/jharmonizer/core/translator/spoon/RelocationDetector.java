@@ -79,8 +79,6 @@ public class RelocationDetector {
      * @return {@code true} if any element is at a different position in the sorted order;
      *         otherwise {@code false}
      */
-    @SuppressWarnings(
-            "PMD.CompareObjectsWithEquals") // Spoon AST nodes are compared by identity to detect position changes
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
