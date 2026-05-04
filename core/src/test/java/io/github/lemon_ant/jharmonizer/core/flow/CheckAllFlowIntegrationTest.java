@@ -54,8 +54,8 @@ class CheckAllFlowIntegrationTest {
 
     @Test
     void processStream_membersOutOfOrder_returnsReorderedResult() {
-        // Given
-        SrcFile srcFile = createSrcFile("class A { void b() {} void a() {} }", Path.of("A.java"));
+        // Given: file is properly formatted but members are out of alphabetical order
+        SrcFile srcFile = createSrcFile("class A {\n    void b() {}\n\n    void a() {}\n}\n", Path.of("A.java"));
 
         // When
         FileProcessingResult fileProcessingResult =
