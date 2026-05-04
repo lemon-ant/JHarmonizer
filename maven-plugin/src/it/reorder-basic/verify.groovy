@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
 // Verifies that the reorder goal rewrote the source file so that the field now precedes the methods.
 File reorderedFile = new File(basedir, "src/main/java/sample/ReorderSample.java")
 assert reorderedFile.exists() : "ReorderSample.java should still exist after reorder"
