@@ -27,8 +27,13 @@ class ExternalCliProcessRunner {
     static ExternalCliProcessResult run(
             @NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
             throws IOException, InterruptedException {
+        // Force UTF-8 I/O in the subprocess so the output encoding is deterministic across
+        // platforms.  Without this, ConsoleUnicodeDetector picks up the native console charset
+        // (e.g. windows-1252 on Windows), causing Logback to write CP1252 bytes that cannot be
+        // decoded as UTF-8, which garbles all non-ASCII whitespace markers in the captured output.
         List<String> command = Stream.concat(
-                        Stream.of("java", "-jar", executableJar.toString()), Arrays.stream(arguments))
+                        Stream.of("java", "-Dstdout.encoding=UTF-8", "-jar", executableJar.toString()),
+                        Arrays.stream(arguments))
                 .toList();
 
         Process process =
