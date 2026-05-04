@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
-import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
@@ -17,16 +14,15 @@ import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import java.util.List;
 import lombok.NonNull;
 
 public class CheckAllFlow extends AbstractOptOutFlow {
 
     /**
      * Creates a flow that reports all ordering and formatting violations found in one source file.
+     * Sorting is checked first; if violations are detected, formatting is skipped for that file.
      *
      * @param formatter the formatter used after sorting
      * @param sorter the sorter used to reorder members
@@ -38,7 +34,11 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     }
 
     /**
-     * Processes the source.
+     * Processes the source file by checking sorting first.
+     * If sorting violations are detected, only the sorting report is produced and formatting is skipped,
+     * because formatting on an incorrectly sorted file would produce meaningless results.
+     * Processing always continues to the next file regardless of violations.
+     *
      * @param srcFile the source file
      * @return the result
      */
@@ -56,40 +56,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
-
-        SortingSerializationAndFormattingResult sortingSerializationAndFormattingResult =
-                sortSerializeAndFormatSrc(srcFile, parsedSpoonAstModel, "sorting checks");
-        SortingAndSerializationResult sortingAndSerializationResult =
-                sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
-        SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
-
-        boolean hasChanges =
-                !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
-        List<MemberRelocation> memberRelocations = List.of();
-        String srcDiff = "";
-        if (hasChanges) {
-            if (!sortingAndSerializationResult.isSortingSkipped()) {
-                memberRelocations = findRelocations(
-                        sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-            }
-            srcDiff = computeDiff(
-                    srcFile.getPath().toString(),
-                    srcFile.getSrcCode(),
-                    sortingSerializationAndFormattingResult.getFormattedSrcCode());
-        }
-
-        return FileProcessingResult.builder()
-                .path(srcFile.getPath())
-                .memberRelocations(memberRelocations)
-                .diff(srcDiff)
-                .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(
-                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
-                .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
-                .fileProcessingStatus(
-                        defineFileProcessingStatus(!memberRelocations.isEmpty(), !srcDiff.isEmpty(), true))
-                .build();
+        return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, false);
     }
 
     @Override

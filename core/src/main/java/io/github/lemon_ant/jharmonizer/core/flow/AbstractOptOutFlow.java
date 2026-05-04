@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.flow;
 
+import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
+import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFormattingOnlyFallbackResult;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -13,10 +16,12 @@ import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
+import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
@@ -33,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter(AccessLevel.PROTECTED)
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.CouplingBetweenObjects", "PMD.TooManyMethods"})
 abstract class AbstractOptOutFlow implements IFlow {
 
     @NonNull
@@ -262,6 +268,99 @@ abstract class AbstractOptOutFlow implements IFlow {
      */
     protected boolean isStopRequestedOnFormattingChange() {
         return false;
+    }
+
+    /**
+     * Performs the two-step check: sorting first, then formatting only if sorting passed.
+     * If sorting violations are detected the formatting step is skipped because formatting an
+     * incorrectly sorted file would produce meaningless results.
+     *
+     * <p>The {@code stopOnViolation} flag controls whether the returned result signals a pipeline
+     * stop when a violation is found. Pass {@code true} for fail-fast flows and {@code false} for
+     * check-all flows.
+     *
+     * @param srcFile the source file being processed
+     * @param parsedSpoonAstModel the parsed Spoon AST model for the source file
+     * @param parsingResult the parsing result, used to populate per-phase statistics
+     * @param stopOnViolation whether to set {@code stopRequested = true} when a violation is detected
+     * @return the processing result for the source file
+     */
+    @NonNull
+    protected final FileProcessingResult checkSortThenFormat(
+            @NonNull SrcFile srcFile,
+            @NonNull SpoonAstModel parsedSpoonAstModel,
+            @NonNull ParsingResult parsingResult,
+            boolean stopOnViolation) {
+        SortingAndSerializationResult sortingAndSerializationResult =
+                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
+        SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
+                        sortingAndSerializationResult.getSerializedSrcCode());
+
+        List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
+                ? List.of()
+                : findRelocations(
+                        sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
+        if (!memberRelocations.isEmpty()) {
+            return FileProcessingResult.builder()
+                    .path(srcFile.getPath())
+                    .memberRelocations(memberRelocations)
+                    .diff("")
+                    .parsingStatistic(parsingResult.getParsingStatistic())
+                    .sortingStatistic(
+                            sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                    .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                    .formattingStatistic(new FormattingStatistic(0, 0))
+                    .fileProcessingStatus(defineFileProcessingStatus(true, false, true))
+                    .stopRequested(stopOnViolation)
+                    .build();
+        }
+
+        FormattingResult formattingResult = getFormatter()
+                .formatSrc(
+                        sortingAndSerializationResult.getSerializedSrcCode(),
+                        srcFile.getPath(),
+                        OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
+                                sortedSpoonAstModel.getOptOuts(),
+                                sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
+        getDebugStageRecorder()
+                .recordSrcStage(
+                        srcFile.getPath(),
+                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
+                        formattingResult.getFormattedSrcCode());
+
+        if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
+            String srcDiff = computeDiff(
+                    srcFile.getPath().toString(), srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
+            return FileProcessingResult.builder()
+                    .path(srcFile.getPath())
+                    .memberRelocations(List.of())
+                    .diff(srcDiff)
+                    .parsingStatistic(parsingResult.getParsingStatistic())
+                    .sortingStatistic(
+                            sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                    .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                    .formattingStatistic(formattingResult.getFormattingStatistic())
+                    .fileProcessingStatus(defineFileProcessingStatus(false, true, true))
+                    .stopRequested(stopOnViolation)
+                    .build();
+        }
+
+        return FileProcessingResult.builder()
+                .path(srcFile.getPath())
+                .memberRelocations(List.of())
+                .diff("")
+                .parsingStatistic(parsingResult.getParsingStatistic())
+                .sortingStatistic(
+                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
+                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
+                .formattingStatistic(formattingResult.getFormattingStatistic())
+                .fileProcessingStatus(defineFileProcessingStatus(false, false, true))
+                .stopRequested(false)
+                .build();
     }
 
     @Value

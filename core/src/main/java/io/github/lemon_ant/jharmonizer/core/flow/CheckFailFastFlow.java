@@ -2,27 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
-import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_FAIL_FAST;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
-import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
-import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -105,77 +97,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
-
-        SortingAndSerializationResult sortingAndSerializationResult =
-                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
-        SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult.getSerializedSrcCode());
-
-        List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
-                ? List.of()
-                : findRelocations(
-                        sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-        if (!memberRelocations.isEmpty()) {
-            return FileProcessingResult.builder()
-                    .path(srcFile.getPath())
-                    .memberRelocations(memberRelocations)
-                    .diff("")
-                    .parsingStatistic(parsingResult.getParsingStatistic())
-                    .sortingStatistic(
-                            sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                    .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
-                    .formattingStatistic(new FormattingStatistic(0, 0))
-                    .fileProcessingStatus(defineFileProcessingStatus(true, false, true))
-                    .stopRequested(true)
-                    .build();
-        }
-
-        FormattingResult formattingResult = getFormatter()
-                .formatSrc(
-                        sortingAndSerializationResult.getSerializedSrcCode(),
-                        srcFile.getPath(),
-                        OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
-                                sortedSpoonAstModel.getOptOuts(),
-                                sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormattedSrcCode());
-
-        if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
-            String srcDiff = computeDiff(
-                    srcFile.getPath().toString(), srcFile.getSrcCode(), formattingResult.getFormattedSrcCode());
-            return FileProcessingResult.builder()
-                    .path(srcFile.getPath())
-                    .memberRelocations(List.of())
-                    .diff(srcDiff)
-                    .parsingStatistic(parsingResult.getParsingStatistic())
-                    .sortingStatistic(
-                            sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                    .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
-                    .formattingStatistic(formattingResult.getFormattingStatistic())
-                    .fileProcessingStatus(defineFileProcessingStatus(false, true, true))
-                    .stopRequested(true)
-                    .build();
-        }
-
-        return FileProcessingResult.builder()
-                .path(srcFile.getPath())
-                .memberRelocations(null)
-                .diff("")
-                .parsingStatistic(parsingResult.getParsingStatistic())
-                .sortingStatistic(
-                        sortingAndSerializationResult.getSortingResult().getSortingStatistic())
-                .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
-                .formattingStatistic(formattingResult.getFormattingStatistic())
-                .fileProcessingStatus(defineFileProcessingStatus(false, false, true))
-                .stopRequested(false)
-                .build();
+        return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, true);
     }
 
     @Override
