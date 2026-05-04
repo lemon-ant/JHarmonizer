@@ -57,8 +57,12 @@
                             These opens are required when running under the module system (JDK 9+) for the
                             same reason they are needed in the core module – palantir-java-format is a
                             transitive runtime dependency here as well.
+                            -Dstdout.encoding=UTF-8 overrides the JVM-detected console charset (CP1252 on
+                            Windows) so logback-test.xml encodes in UTF-8 — matching the UTF-8 capture used
+                            by Surefire and IDEs. Without this, non-ASCII markers (·, ¶, …) arrive as raw
+                            CP1252 bytes and are garbled when displayed in a UTF-8 output viewer.
                         -->
-                        <argLine>@{argLine} ${mockito.agent.argLine}
+                        <argLine>@{argLine} ${mockito.agent.argLine} -Dstdout.encoding=UTF-8
                         --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
                         --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
                         --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
