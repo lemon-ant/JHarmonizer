@@ -135,7 +135,7 @@ class MemberRelocationPrinterTest {
 
         // Then — first and last are shown with -->, hidden middle elements indicated by count
         assertThat(output).contains("    --> public void a() { " + STYLE.getEllipsisMark() + " }");
-        assertThat(output).contains("    " + STYLE.getChunkOmissionMark() + " (2 members omitted)");
+        assertThat(output).contains("      " + STYLE.getChunkOmissionMark() + " (2 members omitted)");
         assertThat(output).contains("    --> public void d() { " + STYLE.getEllipsisMark() + " }");
         assertThat(output).doesNotContain("    --> public void b()");
         assertThat(output).doesNotContain("    --> public void c()");

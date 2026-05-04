@@ -106,7 +106,7 @@ public class MemberRelocationPrinter {
             sb.append(lineSeparator())
                     .append(String.format("    --> %s", renderDeclarationHeader(members.get(0), style)))
                     .append(lineSeparator())
-                    .append(String.format("    %s (%d members omitted)", style.getChunkOmissionMark(), omittedCount))
+                    .append(String.format("      %s (%d members omitted)", style.getChunkOmissionMark(), omittedCount))
                     .append(lineSeparator())
                     .append(String.format(
                             "    --> %s", renderDeclarationHeader(members.get(members.size() - 1), style)));
