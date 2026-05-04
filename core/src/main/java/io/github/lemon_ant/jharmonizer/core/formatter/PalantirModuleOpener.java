@@ -98,7 +98,7 @@ class PalantirModuleOpener {
             // IMPL_LOOKUP is a pre-existing trusted lookup inside the JDK itself.
             Field implLookupField = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
             Object base = unsafeClass.getMethod("staticFieldBase", Field.class).invoke(unsafe, implLookupField);
-            Long offset = (Long)
+            long offset = (Long)
                     unsafeClass.getMethod("staticFieldOffset", Field.class).invoke(unsafe, implLookupField);
             MethodHandles.Lookup trustedLookup = (MethodHandles.Lookup)
                     unsafeClass.getMethod("getObject", Object.class, long.class).invoke(unsafe, base, offset);
