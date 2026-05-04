@@ -45,8 +45,8 @@ public class MemberRelocationPrinter {
      * Detected member ordering violations in:
      *   Sample.java
      *   [1] com.example.Sample:
-     *         public void a() { … }
-     *     --> public void b() { … }
+     *         public void a() { ... }
+     *     --> public void b() { ... }
      * </pre>
      *
      * @param path        the path of the file where the relocations were detected

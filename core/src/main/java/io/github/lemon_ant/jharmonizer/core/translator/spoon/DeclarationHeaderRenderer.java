@@ -40,11 +40,11 @@ class DeclarationHeaderRenderer {
      * <p>Format by member kind:
      * <ul>
      *   <li>Field: {@code [modifiers] [type] [name]}</li>
-     *   <li>Method: {@code [modifiers] [returnType] [name]() { … }} or {@code (…) { … }} when parameters are present</li>
-     *   <li>Constructor: {@code [modifiers] [name]() { … }} or {@code (…) { … }} when parameters are present</li>
-     *   <li>Nested type: {@code [modifiers] class|interface|enum|@interface [name] { … }}</li>
+     *   <li>Method: {@code [modifiers] [returnType] [name]() { ... }} or {@code (...) { ... }} when parameters are present</li>
+     *   <li>Constructor: {@code [modifiers] [name]() { ... }} or {@code (...) { ... }} when parameters are present</li>
+     *   <li>Nested type: {@code [modifiers] class|interface|enum|@interface [name] { ... }}</li>
      *   <li>Enum value: {@code [name]}</li>
-     *   <li>Initializer block: {@code { … }} or {@code static { … }}</li>
+     *   <li>Initializer block: {@code { ... }} or {@code static { ... }}</li>
      * </ul>
      *
      * @param element the element to render
@@ -82,9 +82,9 @@ class DeclarationHeaderRenderer {
     @NonNull
     private static String renderInitializerHeader(
             CtAnonymousExecutable initializerBlock, WhitespaceVisualizationStyle style) {
-        // buildBody() returns " { … }" with a leading space; strip it for the instance case
-        // so the result is "{ … }" rather than " { … }". The static case prepends "static" which
-        // consumes the leading space naturally: "static { … }".
+        // buildBody() returns " { ... }" with a leading space; strip it for the instance case
+        // so the result is "{ ... }" rather than " { ... }". The static case prepends "static" which
+        // consumes the leading space naturally: "static { ... }".
         String body = buildBody(style);
         return initializerBlock.getModifiers().contains(ModifierKind.STATIC) ? "static" + body : body.stripLeading();
     }

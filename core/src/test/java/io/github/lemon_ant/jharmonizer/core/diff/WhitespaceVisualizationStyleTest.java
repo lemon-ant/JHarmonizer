@@ -18,7 +18,7 @@ class WhitespaceVisualizationStyleTest {
         assertThat(WhitespaceVisualizationStyle.UNICODE.getSpaceMark()).isEqualTo("·");
         assertThat(WhitespaceVisualizationStyle.UNICODE.getTabMark()).isEqualTo("→→→→");
         assertThat(WhitespaceVisualizationStyle.UNICODE.getEolMark()).isEqualTo("¶");
-        assertThat(WhitespaceVisualizationStyle.UNICODE.getEllipsisMark()).isEqualTo("…");
+        assertThat(WhitespaceVisualizationStyle.UNICODE.getEllipsisMark()).isEqualTo("...");
         assertThat(WhitespaceVisualizationStyle.UNICODE.getChunkOmissionMark()).isEqualTo("¦");
     }
 

@@ -16,7 +16,8 @@ import lombok.RequiredArgsConstructor;
  * {@link #forCharsets(Charset, Charset)} based on the display charset (what the console renders)
  * and the encoder charset (what the logging framework writes):
  * <ul>
- *   <li>{@link #UNICODE} — full Unicode markers; requires both charsets to encode U+2192
+ *   <li>{@link #UNICODE} — full Unicode markers for whitespace ({@code ·}, {@code →→→→},
+ *       {@code ¶}); ASCII {@code ...} as ellipsis; requires both charsets to encode U+2192
  *       (RIGHT ARROW) to identical bytes (e.g. UTF-8/UTF-8)</li>
  *   <li>{@link #EXTENDED_SAFE} — Latin-1 supplement markers plus the horizontal ellipsis
  *       (U+2026, byte 0x85 in Windows-1252); selected when both charsets encode U+2026
@@ -41,10 +42,10 @@ public enum WhitespaceVisualizationStyle {
 
     /**
      * Unicode whitespace markers: {@code ·} for spaces, {@code →→→→} for tabs, {@code ¶} for
-     * end-of-line, {@code …} (U+2026) as ellipsis, {@code ¦} (U+00A6) as chunk omission mark.
+     * end-of-line, {@code ...} as ellipsis, {@code ¦} (U+00A6) as chunk omission mark.
      * Requires both the display and encoder charsets to encode U+2192 identically (e.g. UTF-8).
      */
-    UNICODE("·", "→→→→", "¶", "…", "¦"),
+    UNICODE("·", "→→→→", "¶", "...", "¦"),
 
     /**
      * Extended Latin markers with horizontal ellipsis.
@@ -85,10 +86,9 @@ public enum WhitespaceVisualizationStyle {
 
     /**
      * Single-character ellipsis marker used in omission summaries such as
-     * {@code … and 3 more hunks omitted}.
-     * {@code …} (U+2026) for {@link #UNICODE} and {@link #EXTENDED_SAFE};
-     * {@code ...} for {@link #LATIN_SAFE} and {@link #ASCII_SAFE} because U+2026 is absent
-     * from IBM850 and ISO-8859-1 (byte 0x85 is {@code à} in IBM850 and a C1 control in ISO-8859-1).
+     * {@code ... and 3 more hunks omitted}.
+     * {@code ...} (three ASCII dots) for all styles, ensuring the marker is readable on every
+     * terminal regardless of charset.
      */
     private final String ellipsisMark;
 
