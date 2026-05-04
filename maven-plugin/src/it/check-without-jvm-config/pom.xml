@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.lemon-ant.jharmonizer.it</groupId>
+    <artifactId>check-without-jvm-config-it</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>IT: check-without-jvm-config</name>
+
+    <!--
+        Intentionally has NO .mvn/jvm.config.
+
+        This scenario proves that PalantirModuleOpener in jharmonizer-core opens the
+        jdk.compiler internals programmatically (via sun.misc.Unsafe) so the plugin
+        works even when the user has not added add-opens flags to their JVM config.
+
+        The source file below contains an import statement, so palantir-java-format will
+        call ImportOrderer.fixImports() which internally accesses the internal JDK class
+        com.sun.tools.javac.parser.Tokens$TokenKind.  Without PalantirModuleOpener this
+        triggers an IllegalAccessError.  With it the build must succeed.
+    -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.github.lemon-ant.jharmonizer</groupId>
+                <artifactId>jharmonizer-maven-plugin</artifactId>
+                <version>@project.version@</version>
+                <executions>
+                    <execution>
+                        <id>check-sources</id>
+                        <goals>
+                            <goal>check-all</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <failOnViolation>false</failOnViolation>
+                            <printProcessingStatistics>false</printProcessingStatistics>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
