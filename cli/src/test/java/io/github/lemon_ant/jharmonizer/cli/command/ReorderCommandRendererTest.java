@@ -71,7 +71,7 @@ class ReorderCommandRendererTest {
     }
 
     @Test
-    void render_customLauncherPrefix_prefixedsReorderSubcommand() {
+    void render_customLauncherPrefix_prefixesReorderSubcommand() {
         // Given
         String javaJarLauncher = "\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar";
 
