@@ -47,12 +47,24 @@ class CliLauncherDetector {
      * @return the resolved launcher prefix, or the {@code jharmonizer} fallback
      */
     @NonNull
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     static String resolveLauncherPrefix(
             @NonNull Optional<String> maybeCommand, @NonNull Optional<String[]> maybeArguments) {
         if (maybeCommand.isEmpty() || maybeArguments.isEmpty()) {
             return FALLBACK_LAUNCHER;
         }
-        String[] args = maybeArguments.get();
+        try {
+            return buildLauncherPrefix(maybeCommand.get(), maybeArguments.get());
+        } catch (RuntimeException ignored) {
+            // Path.of() can throw InvalidPathException for unusual process info values;
+            // treat any failure as an unavailable detection and fall back to the symbolic name.
+            return FALLBACK_LAUNCHER;
+        }
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.UseVarargs")
+    private static String buildLauncherPrefix(String command, String[] args) {
         int jarFlagIndex = findJarFlagIndex(args);
         if (jarFlagIndex < 0) {
             return FALLBACK_LAUNCHER;
@@ -61,7 +73,7 @@ class CliLauncherDetector {
         if (!isJHarmonizerJar(jarPath)) {
             return FALLBACK_LAUNCHER;
         }
-        String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(maybeCommand.get()));
+        String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(command));
         String normalizedJarPath = PathUtils.normalizeSeparators(Path.of(jarPath));
         return quotePathForShell(normalizedJavaExe) + " " + JAR_FLAG + " " + quotePathForShell(normalizedJarPath);
     }
@@ -80,17 +92,24 @@ class CliLauncherDetector {
         if (jarPath == null || jarPath.isBlank()) {
             return false;
         }
-        Path jarFilePath = Path.of(jarPath).getFileName();
-        return jarFilePath != null
-                && jarFilePath.toString().toLowerCase(Locale.ROOT).contains(JHARMONIZER_JAR_NAME_PART);
+        // Normalize separators on the raw string before extracting the filename so that
+        // Windows-style backslashes are handled correctly on any OS (Path.of() is platform-dependent).
+        String normalizedJarPath = jarPath.replace('\\', '/');
+        int lastSlash = normalizedJarPath.lastIndexOf('/');
+        String jarFileName = lastSlash >= 0 ? normalizedJarPath.substring(lastSlash + 1) : normalizedJarPath;
+        return jarFileName.toLowerCase(Locale.ROOT).contains(JHARMONIZER_JAR_NAME_PART);
     }
 
     @NonNull
     private static String quotePathForShell(String normalizedPath) {
-        String escaped = normalizedPath.replace("\"", "\\\"");
-        if (escaped.contains(" ")) {
-            return "\"" + escaped + "\"";
-        }
-        return escaped;
+        // Apply the same escaping rules as ReorderCommandRenderer.quoteArg() so the launcher
+        // prefix is safe for paths that contain shell metacharacters such as $, `, or !.
+        // Paths are already separator-normalized, so backslashes do not need separate treatment.
+        String escaped = normalizedPath
+                .replace("\"", "\\\"")
+                .replace("$", "\\$")
+                .replace("`", "\\`")
+                .replace("!", "\\!");
+        return "\"" + escaped + "\"";
     }
 }

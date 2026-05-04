@@ -53,13 +53,30 @@ class CliLauncherDetectorTest {
     }
 
     @Test
+    void resolveLauncherPrefix_invalidPathInCommand_returnsFallbackLauncher() {
+        // When / Then -- Path.of() throws InvalidPathException for NUL bytes; must fall back safely
+        assertThat(CliLauncherDetector.resolveLauncherPrefix(
+                        Optional.of("bad\0path"), Optional.of(new String[] {"-jar", "jharmonizer-cli.jar"})))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
+    void resolveLauncherPrefix_windowsJarPathWithJHarmonizerInDirectory_returnsFallbackLauncher() {
+        // When / Then -- "jharmonizer" appears only in a directory component, not the jar filename
+        assertThat(CliLauncherDetector.resolveLauncherPrefix(
+                        Optional.of("/usr/bin/java"),
+                        Optional.of(new String[] {"-jar", "C:\\tools\\jharmonizer\\surefirebooter123.jar"})))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
     void resolveLauncherPrefix_jHarmonizerJarDetected_returnsJavaJarPrefix() {
         // When
         String result = CliLauncherDetector.resolveLauncherPrefix(
                 Optional.of("/usr/bin/java"), Optional.of(new String[] {"-jar", "jharmonizer-cli.jar"}));
 
         // Then
-        assertThat(result).isEqualTo("/usr/bin/java -jar jharmonizer-cli.jar");
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"jharmonizer-cli.jar\"");
     }
 
     @Test
@@ -70,7 +87,7 @@ class CliLauncherDetectorTest {
                 Optional.of(new String[] {"-Xmx512m", "-jar", "jharmonizer-cli.jar", "check-fast"}));
 
         // Then
-        assertThat(result).isEqualTo("/usr/bin/java -jar jharmonizer-cli.jar");
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"jharmonizer-cli.jar\"");
     }
 
     @Test
@@ -81,7 +98,7 @@ class CliLauncherDetectorTest {
                 Optional.of(new String[] {"-jar", "jharmonizer-cli.jar"}));
 
         // Then
-        assertThat(result).isEqualTo("\"C:/Program Files/jdk-21/bin/java.exe\" -jar jharmonizer-cli.jar");
+        assertThat(result).isEqualTo("\"C:/Program Files/jdk-21/bin/java.exe\" -jar \"jharmonizer-cli.jar\"");
     }
 
     @Test
@@ -91,7 +108,7 @@ class CliLauncherDetectorTest {
                 Optional.of("/usr/bin/java"), Optional.of(new String[] {"-jar", "/my tools/jharmonizer-cli.jar"}));
 
         // Then
-        assertThat(result).isEqualTo("/usr/bin/java -jar \"/my tools/jharmonizer-cli.jar\"");
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"/my tools/jharmonizer-cli.jar\"");
     }
 
     @Test
@@ -102,6 +119,16 @@ class CliLauncherDetectorTest {
                 Optional.of(new String[] {"-jar", ".\\jharmonizer-cli.jar"}));
 
         // Then
-        assertThat(result).isEqualTo("\"C:/Program Files/jdk-21/bin/java.exe\" -jar ./jharmonizer-cli.jar");
+        assertThat(result).isEqualTo("\"C:/Program Files/jdk-21/bin/java.exe\" -jar \"./jharmonizer-cli.jar\"");
+    }
+
+    @Test
+    void resolveLauncherPrefix_pathWithShellMetacharacters_escapesMetacharacters() {
+        // When
+        String result = CliLauncherDetector.resolveLauncherPrefix(
+                Optional.of("/usr/$JAVA_HOME/bin/java"), Optional.of(new String[] {"-jar", "jharmonizer-cli.jar"}));
+
+        // Then
+        assertThat(result).isEqualTo("\"/usr/\\$JAVA_HOME/bin/java\" -jar \"jharmonizer-cli.jar\"");
     }
 }
