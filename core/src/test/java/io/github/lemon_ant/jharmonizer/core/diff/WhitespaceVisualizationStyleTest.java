@@ -50,7 +50,7 @@ class WhitespaceVisualizationStyleTest {
         assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getSpaceMark()).isEqualTo("·");
         assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getTabMark()).isEqualTo("--->");
         assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getEolMark()).isEqualTo("¶");
-        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getEllipsisMark()).isEqualTo("…");
+        assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getEllipsisMark()).isEqualTo("...");
         assertThat(WhitespaceVisualizationStyle.EXTENDED_SAFE.getChunkOmissionMark())
                 .isEqualTo("¦");
     }

@@ -19,9 +19,10 @@ import lombok.RequiredArgsConstructor;
  *   <li>{@link #UNICODE} — full Unicode markers for whitespace ({@code ·}, {@code →→→→},
  *       {@code ¶}); ASCII {@code ...} as ellipsis; requires both charsets to encode U+2192
  *       (RIGHT ARROW) to identical bytes (e.g. UTF-8/UTF-8)</li>
- *   <li>{@link #EXTENDED_SAFE} — Latin-1 supplement markers plus the horizontal ellipsis
- *       (U+2026, byte 0x85 in Windows-1252); selected when both charsets encode U+2026
- *       identically but not U+2192 (e.g. CP1252/CP1252)</li>
+ *   <li>{@link #EXTENDED_SAFE} — Latin-1 supplement markers (same markers as {@link #LATIN_SAFE});
+ *       selected when both charsets encode U+2026 identically but not U+2192 (e.g. CP1252/CP1252);
+ *       uses ASCII {@code ...} as ellipsis because byte 0x85 is a C1 control rendered as {@code ?}
+ *       by most terminals</li>
  *   <li>{@link #LATIN_SAFE} — Latin-1 supplement markers for spaces and end-of-line,
  *       ASCII {@code --->} for tabs; selected when both charsets encode U+00B7 (·) and U+00B6 (¶)
  *       to identical bytes but cannot encode U+2026 (e.g. ISO-8859-1/ISO-8859-1,
@@ -48,15 +49,14 @@ public enum WhitespaceVisualizationStyle {
     UNICODE("·", "→→→→", "¶", "...", "¦"),
 
     /**
-     * Extended Latin markers with horizontal ellipsis.
-     * Same whitespace markers as {@link #LATIN_SAFE} but uses {@code …} (U+2026) as ellipsis:
-     * U+2026 is byte {@code 0x85} in Windows-1252 (extended ASCII), so it is safe on CP1252
-     * terminals. ISO-8859-1 and IBM850 do not encode U+2026 (byte 0x85 is a C1 control
-     * character in ISO-8859-1, and {@code à} in IBM850), so those fall back to
-     * {@link #LATIN_SAFE}.
+     * Extended Latin markers: same as {@link #LATIN_SAFE} in every marker, including the
+     * ASCII {@code ...} ellipsis.
+     * U+2026 (byte {@code 0x85} in Windows-1252) was previously used as the ellipsis here,
+     * but byte {@code 0x85} is a C1 control character that most terminals render as {@code ?},
+     * so {@code ...} is used instead.
      * Selected when both charsets encode U+2026 identically but not U+2192 (e.g. CP1252/CP1252).
      */
-    EXTENDED_SAFE("·", "--->", "¶", "…", "¦"),
+    EXTENDED_SAFE("·", "--->", "¶", "...", "¦"),
 
     /**
      * Latin-1 supplement markers: {@code ·} for spaces, {@code --->} for tabs, {@code ¶} for
@@ -111,7 +111,8 @@ public enum WhitespaceVisualizationStyle {
      * <ul>
      *   <li>Both charsets encode {@code →} (U+2192) identically → {@link #UNICODE}</li>
      *   <li>Both encode {@code …} (U+2026) identically → {@link #EXTENDED_SAFE}
-     *       (e.g. CP1252/CP1252; U+2026 is byte 0x85 in Windows-1252)</li>
+     *       (e.g. CP1252/CP1252; U+2026 is byte 0x85 in Windows-1252, but most terminals
+     *       render that byte as {@code ?}, so ASCII {@code ...} is used as the ellipsis)</li>
      *   <li>Both encode {@code ·} (U+00B7) and {@code ¶} (U+00B6) identically → {@link #LATIN_SAFE}
      *       (e.g. ISO-8859-1/ISO-8859-1, IBM850/IBM850)</li>
      *   <li>Otherwise → {@link #ASCII_SAFE} (e.g. CP850 display + CP1252 encoder, or any display
