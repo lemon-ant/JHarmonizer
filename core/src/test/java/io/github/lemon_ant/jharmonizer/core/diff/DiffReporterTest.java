@@ -58,35 +58,35 @@ class DiffReporterTest {
     class WhitespaceVisualization {
 
         @Test
-        void computeDiff_changedLinesContainingSpacesAndTabs_visualizesWhitespaceInContentLinesOnly() {
+        void computeDiff_changedLinesContainingSpacesAndTabs_visualizesWhitespaceInContentLines() {
             // Given
             String original = "class A {\n    void a() {}\n}\n";
             String revised = "class A {\n\tvoid a() {}\n}\n";
+            WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
 
             // When
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            // Removed line: spaces → ·
+            // Removed line: spaces visualized, ends with EOL mark
             assertThat(diffLines)
                     .anySatisfy(diffLine -> assertThat(diffLine)
                             .startsWith("-")
-                            .contains("····")
-                            .endsWith("¶"));
-            // Added line: tab → →→→→
+                            .contains(style.getSpaceMark().repeat(4))
+                            .endsWith(style.getEolMark()));
+            // Added line: tab visualized, ends with EOL mark
             assertThat(diffLines)
                     .anySatisfy(diffLine -> assertThat(diffLine)
                             .startsWith("+")
-                            .contains("→→→→")
-                            .endsWith("¶"));
+                            .contains(style.getTabMark())
+                            .endsWith(style.getEolMark()));
             // @@ header must not contain whitespace visualization markers
             assertThat(diffLines)
                     .filteredOn(diffLine -> diffLine.startsWith("@@ "))
                     .allSatisfy(diffLine -> assertThat(diffLine)
-                            .doesNotContain("·")
-                            .doesNotContain("→→→→")
-                            .doesNotEndWith("¶"));
+                            .doesNotContain(style.getSpaceMark())
+                            .doesNotContain(style.getTabMark()));
         }
     }
 
@@ -98,13 +98,14 @@ class DiffReporterTest {
             // Given
             String original = "class A {\n\n    void a() {}\n}\n";
             String revised = "class A {\n    void a() {}\n}\n";
+            WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
 
             // When
             String result = computeDiff(FILE_PATH, original, revised);
 
             // Then
             String[] diffLines = result.split(System.lineSeparator(), -1);
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|¶"));
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|" + style.getEolMark()));
         }
     }
 

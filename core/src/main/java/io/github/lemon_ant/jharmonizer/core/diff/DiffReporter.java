@@ -19,7 +19,11 @@ import lombok.experimental.UtilityClass;
  *   <li>Hunk headers on separate lines ({@code @@ -start,len +start,len @@})</li>
  *   <li>A {@code |} separator between the diff prefix ({@code +}, {@code -}, or space) and the
  *       line content, to make it clear that the prefix is a marker and not part of the source</li>
- *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis</li>
+ *   <li>Whitespace characters visualised in changed and context lines to aid diagnosis:
+ *       Unicode markers ({@code ·}, {@code →→→→}, {@code ¶}) when both the display and encoder
+ *       charsets agree on UTF-8 or another Unicode-capable encoding; Latin-1 markers
+ *       ({@code ·}, {@code --->}, {@code ¶}) when both charsets agree on an ISO-8859-1-compatible
+ *       encoding such as CP1252; ASCII markers ({@code .}, {@code --->}, no EOL) otherwise</li>
  *   <li>Output truncated to at most {@value #MAX_HUNKS_PER_FILE} hunks and
  *       {@value #MAX_CHANGED_LINES_PER_HUNK} changed lines per hunk</li>
  * </ul>
@@ -33,10 +37,29 @@ public class DiffReporter {
     private static final int CONTEXT_SIZE = 3;
     private static final int MAX_HUNKS_PER_FILE = 3;
     private static final int MAX_CHANGED_LINES_PER_HUNK = 20;
-    private static final String OMISSION_PREFIX = "... and ";
+
+    /**
+     * Returns the cached whitespace visualization style for the current JVM stdout.
+     *
+     * <p>Delegates to {@link ConsoleUnicodeDetector#resolveStyle()} and exposes the result
+     * as a public API so that other output components (such as relocation printers) can render
+     * their omission markers consistently with the diff output.
+     *
+     * @return the style that best matches what the stdout encoding can render
+     */
+    @NonNull
+    public static WhitespaceVisualizationStyle resolveStyle() {
+        return ConsoleUnicodeDetector.resolveStyle();
+    }
 
     /**
      * Computes a truncated, human-readable unified diff between two versions of a source file.
+     *
+     * <p>Whitespace visualization symbols are chosen by comparing the display charset
+     * ({@code stdout.encoding}) and encoder charset ({@link java.nio.charset.Charset#defaultCharset()})
+     * byte-by-byte for each candidate marker: Unicode markers when both produce identical bytes for
+     * {@code →}; Latin-1 markers when both produce identical bytes for {@code ·} and {@code ¶};
+     * ASCII markers otherwise.
      *
      * @param filePath the path of the source file, passed to the underlying diff library
      * @param originalText the original source text
@@ -46,6 +69,7 @@ public class DiffReporter {
     @NonNull
     public static String computeDiff(
             @NonNull String filePath, @NonNull String originalText, @NonNull String revisedText) {
+        WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
         List<String> originalLines = originalText.lines().toList();
         Patch<String> patch = DiffUtils.diff(originalLines, revisedText.lines().toList());
         if (patch.getDeltas().isEmpty()) {
@@ -53,11 +77,11 @@ public class DiffReporter {
         }
         List<String> unifiedLines = UnifiedDiffUtils.generateUnifiedDiff(
                 "a/" + filePath, "b/" + filePath, originalLines, patch, CONTEXT_SIZE);
-        return formatUnifiedDiff(unifiedLines);
+        return formatUnifiedDiff(unifiedLines, style);
     }
 
     @NonNull
-    private static String formatUnifiedDiff(List<String> unifiedLines) {
+    private static String formatUnifiedDiff(List<String> unifiedLines, WhitespaceVisualizationStyle style) {
         List<Integer> hunkStarts = findHunkStartIndices(unifiedLines);
         int totalHunks = hunkStarts.size();
         int keptHunkCount = Math.min(MAX_HUNKS_PER_FILE, totalHunks);
@@ -68,10 +92,11 @@ public class DiffReporter {
             int hunkStart = hunkStarts.get(hunkIndex);
             int hunkEnd = hunkIndex + 1 < totalHunks ? hunkStarts.get(hunkIndex + 1) : unifiedLines.size();
             sb.append(unifiedLines.get(hunkStart)).append(System.lineSeparator());
-            formatHunkContent(unifiedLines.subList(hunkStart + 1, hunkEnd), sb);
+            formatHunkContent(unifiedLines.subList(hunkStart + 1, hunkEnd), sb, style);
         }
         if (omittedHunkCount > 0) {
-            sb.append(OMISSION_PREFIX)
+            sb.append(style.getEllipsisMark())
+                    .append(" and ")
                     .append(omittedHunkCount)
                     .append(" more changed ")
                     .append(omittedHunkCount == 1 ? "hunk" : "hunks")
@@ -92,9 +117,10 @@ public class DiffReporter {
         return Collections.unmodifiableList(hunkStarts);
     }
 
-    private static void formatHunkContent(List<String> contentLines, StringBuilder sb) {
+    private static void formatHunkContent(
+            List<String> contentLines, StringBuilder sb, WhitespaceVisualizationStyle style) {
         int truncationPoint = findTruncationPoint(contentLines);
-        contentLines.subList(0, truncationPoint).forEach(line -> appendVisualizedLine(sb, line));
+        contentLines.subList(0, truncationPoint).forEach(diffLine -> appendVisualizedLine(sb, diffLine, style));
         if (truncationPoint < contentLines.size()) {
             List<String> remaining = contentLines.subList(truncationPoint, contentLines.size());
             int omittedRemoved = (int) remaining.stream()
@@ -103,7 +129,7 @@ public class DiffReporter {
             int omittedAdded = (int) remaining.stream()
                     .filter(diffLine -> diffLine.startsWith("+"))
                     .count();
-            sb.append(buildOmissionSummary(omittedRemoved, omittedAdded)).append(System.lineSeparator());
+            sb.append(buildOmissionSummary(omittedRemoved, omittedAdded, style)).append(System.lineSeparator());
         }
     }
 
@@ -122,34 +148,37 @@ public class DiffReporter {
         return contentLines.size();
     }
 
-    private static void appendVisualizedLine(StringBuilder sb, String line) {
+    private static void appendVisualizedLine(StringBuilder sb, String line, WhitespaceVisualizationStyle style) {
         if (line.isEmpty()) {
             sb.append(System.lineSeparator());
             return;
         }
         char prefix = line.charAt(0);
         String content = line.substring(1);
-        sb.append(prefix).append('|').append(visualizeWhitespace(content)).append(System.lineSeparator());
+        sb.append(prefix)
+                .append('|')
+                .append(visualizeWhitespace(content, style))
+                .append(System.lineSeparator());
     }
 
     @NonNull
-    private static String buildOmissionSummary(int omittedRemoved, int omittedAdded) {
+    private static String buildOmissionSummary(
+            int omittedRemoved, int omittedAdded, WhitespaceVisualizationStyle style) {
+        String prefix = style.getEllipsisMark() + " and ";
         if (omittedRemoved > 0 && omittedAdded > 0) {
-            return OMISSION_PREFIX + omittedRemoved + " more removed / " + omittedAdded + " more added lines omitted";
+            return prefix + omittedRemoved + " more removed / " + omittedAdded + " more added lines omitted";
         } else if (omittedRemoved > 0) {
-            return OMISSION_PREFIX + omittedRemoved + " more removed lines omitted";
+            return prefix + omittedRemoved + " more removed lines omitted";
         } else {
-            return OMISSION_PREFIX + omittedAdded + " more added lines omitted";
+            return prefix + omittedAdded + " more added lines omitted";
         }
     }
 
     @NonNull
-    private static String visualizeWhitespace(String line) {
+    private static String visualizeWhitespace(String line, WhitespaceVisualizationStyle style) {
         if (line.isEmpty()) {
-            return "¶";
+            return style.getEolMark();
         }
-        return line.replace(" ", "·") // spaces
-                        .replace("\t", "→→→→") // tabs
-                + "¶"; // end of line marker
+        return line.replace(" ", style.getSpaceMark()).replace("\t", style.getTabMark()) + style.getEolMark();
     }
 }

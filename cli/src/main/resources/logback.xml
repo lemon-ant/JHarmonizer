@@ -23,6 +23,12 @@ SPDX-License-Identifier: Apache-2.0
         </filter>
         <encoder>
             <pattern>%-5level %msg%n</pattern>
+            <!-- Use the JVM's stdout.encoding so the encoder charset matches the terminal's
+                 display charset.  This keeps ConsoleUnicodeDetector's two charsets in sync
+                 and allows LATIN_SAFE (or UNICODE) style selection on non-UTF-8 terminals
+                 such as IBM850 or CP1252.  Falls back to ${file.encoding} on Java 17 where
+                 stdout.encoding is not set, which equals Charset.defaultCharset() there. -->
+            <charset>${stdout.encoding:-${file.encoding}}</charset>
         </encoder>
     </appender>
 
