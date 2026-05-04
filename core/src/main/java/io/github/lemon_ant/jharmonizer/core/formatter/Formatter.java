@@ -27,6 +27,13 @@ import org.apache.commons.lang3.Validate;
 @Slf4j
 public final class Formatter {
 
+    static {
+        // Open jdk.compiler internals required by palantir-java-format before the first
+        // use of this class. Without this, the Maven plugin (unnamed module) receives
+        // IllegalAccessError because java.lang is exported but not opened in java.base.
+        PalantirModuleOpener.openRequiredJdkCompilerPackages();
+    }
+
     private static final Map<UnifiedFormatterStyle, Style> UNIFIED_2_PALANTIR_FORMATTING_STYLE = Map.ofEntries(
             /* UnifiedFormatterStyle.NONE is not mapped to return null */
             entry(UnifiedFormatterStyle.PALANTIR, Style.PALANTIR),
