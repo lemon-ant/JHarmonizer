@@ -14,7 +14,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  *
  * <p>Source files are <strong>never modified</strong> by this goal.
  */
-@Mojo(name = "check-fast", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true)
+@Mojo(name = "check-fast", defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true)
 public final class CheckFastMojo extends AbstractJHarmonizerMojo {
 
     /**
