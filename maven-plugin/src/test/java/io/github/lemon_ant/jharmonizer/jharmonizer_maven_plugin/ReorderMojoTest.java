@@ -54,8 +54,8 @@ class ReorderMojoTest {
     }
 
     @Test
-    void execute_noBaseDirWithNonExistentSourceDirectories_doesNotProcessFilesOutsideSourceDirs() throws Exception {
-        // Given – the project base dir exists but neither src/main/java nor src/test/java is present
+    void execute_nonExistentSourceDirectories_skipsExecutionAndLeavesFilesUntouched() throws Exception {
+        // Given - the project base dir exists but neither src/main/java nor src/test/java is present
         // (typical for a parent-only POM module in a multi-module build).
         // A Java file placed directly under the project root should NOT be processed.
         Path srcMainJava = tempDir.resolve("src/main/java");

@@ -149,7 +149,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
 
         if (JvmShutdownSignal.isShuttingDown()) {
-            Thread.currentThread().interrupt();
+            interruptCurrentThread();
             throw new MojoExecutionException("JHarmonizer was interrupted (Ctrl+C); aborting build.");
         }
 
@@ -258,6 +258,11 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return null;
         }
         return JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath);
+    }
+
+    @SuppressWarnings("PMD.DoNotUseThreads")
+    private static void interruptCurrentThread() {
+        Thread.currentThread().interrupt();
     }
 
     @Nullable
