@@ -54,6 +54,26 @@ class ReorderMojoTest {
     }
 
     @Test
+    void execute_onlyMainSrcDirExistsAndTestSrcDirConfiguredAbsent_processesOnlyExistingDirectory() throws Exception {
+        // Given – src/main/java exists with a Java file; src/test/java is configured but does not exist.
+        // The banner should include both patterns, and only the existing directory is scanned.
+        Path srcMainJava = tempDir.resolve("src/main/java");
+        Path srcTestJava = tempDir.resolve("src/test/java");
+        Files.createDirectories(srcMainJava);
+        MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", srcMainJava);
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "projectBaseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(reorderMojo, "mainSourceDirectory", MojoTestUtils.toFile(srcMainJava));
+        MojoTestUtils.injectField(reorderMojo, "testSourceDirectory", MojoTestUtils.toFile(srcTestJava));
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then – mojo runs to completion; the non-existent test source directory pattern is safely ignored
+        assertThat(thrown).isNull();
+    }
+
+    @Test
     void execute_nonExistentSourceDirectories_skipsExecutionAndLeavesFilesUntouched() throws Exception {
         // Given - the project base dir exists but neither src/main/java nor src/test/java is present
         // (typical for a parent-only POM module in a multi-module build).

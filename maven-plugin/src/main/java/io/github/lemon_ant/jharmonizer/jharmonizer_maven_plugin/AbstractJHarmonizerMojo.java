@@ -13,6 +13,7 @@ import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -212,12 +213,16 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     @NonNull
     private Set<String> computeDefaultIncludes(Path projectBaseDirPath) {
-        Stream<String> srcDirIncludes = Stream.of(mainSourceDirectory, testSourceDirectory)
+        List<Path> srcDirPaths = Stream.of(mainSourceDirectory, testSourceDirectory)
                 .filter(Objects::nonNull)
                 .map(srcDir -> srcDir.toPath().toAbsolutePath().normalize())
-                .filter(Files::isDirectory)
-                .map(srcDirPath -> PathUtils.normalizeSeparators(projectBaseDirPath.relativize(srcDirPath)) + "/**");
+                .toList();
         Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
+        if (srcDirPaths.stream().noneMatch(Files::isDirectory)) {
+            return userIncludes.collect(Collectors.toUnmodifiableSet());
+        }
+        Stream<String> srcDirIncludes = srcDirPaths.stream()
+                .map(srcDirPath -> PathUtils.normalizeSeparators(projectBaseDirPath.relativize(srcDirPath)) + "/**");
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());
     }
 
