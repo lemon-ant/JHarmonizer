@@ -28,9 +28,10 @@ import org.apache.commons.lang3.Validate;
 public final class Formatter {
 
     static {
-        // Open jdk.compiler internals required by palantir-java-format before the first
-        // use of this class. Without this, the Maven plugin (unnamed module) receives
-        // IllegalAccessError because java.lang is exported but not opened in java.base.
+        // Open the jdk.compiler internals required by palantir-java-format before the
+        // first use of this class. Without this, the Maven plugin (unnamed module)
+        // can receive IllegalAccessError when palantir-java-format reflects into
+        // com.sun.tools.javac.* packages that are not opened by default.
         PalantirModuleOpener.openRequiredJdkCompilerPackages();
     }
 
