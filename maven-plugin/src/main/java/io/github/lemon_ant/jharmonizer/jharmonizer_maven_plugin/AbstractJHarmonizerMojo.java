@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.io.File;
 import java.nio.file.Files;
@@ -125,6 +126,9 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
      * Validates parameters, builds configuration, and runs the selected JHarmonizer flow.
+     * When no explicit {@code baseDir} is configured and no Java source directories exist under the
+     * project base directory, execution is skipped silently (common for parent-only POM modules in a
+     * multi-module build where there are no Java sources to process).
      *
      * @throws MojoExecutionException when a base directory is invalid or an unexpected error occurs
      * @throws MojoFailureException   when the flow reports violations and {@code failOnViolation} is {@code true}
@@ -137,8 +141,17 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
 
         BaseDirContext context = resolveBaseDirContext();
+        if (context == null) {
+            getLog().info("JHarmonizer: no Java source directories found under project base directory; skipping.");
+            return;
+        }
         SrcProcessingResult srcProcessingResult =
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
+
+        if (JvmShutdownSignal.isShuttingDown()) {
+            Thread.currentThread().interrupt();
+            throw new MojoExecutionException("JHarmonizer was interrupted (Ctrl+C); aborting build.");
+        }
 
         if (!srcProcessingResult.isSuccess() && isCheckFlow(getFlowType())) {
             getLog().warn("To automatically fix these violations, run:\nmvn jharmonizer:reorder");
@@ -153,7 +166,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
     }
 
-    @NonNull
+    @Nullable
     private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
         return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
     }
@@ -171,7 +184,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         return new BaseDirContext(resolvedBaseDir, includes != null ? includes : Set.of());
     }
 
-    @NonNull
+    @Nullable
     private BaseDirContext resolveProjectBaseDir() throws MojoExecutionException {
         if (projectBaseDir == null) {
             throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
@@ -183,7 +196,11 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                     "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
         }
         try {
-            return new BaseDirContext(projectBaseDirPath, computeDefaultIncludes(projectBaseDirPath));
+            Set<String> effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
+            if (effectiveIncludes.isEmpty()) {
+                return null;
+            }
+            return new BaseDirContext(projectBaseDirPath, effectiveIncludes);
         } catch (IllegalArgumentException e) {
             throw new MojoExecutionException(
                     "Cannot compute default source include patterns relative to project base directory '"

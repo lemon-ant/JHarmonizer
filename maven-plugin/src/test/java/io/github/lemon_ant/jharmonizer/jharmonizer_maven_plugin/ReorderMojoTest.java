@@ -54,6 +54,30 @@ class ReorderMojoTest {
     }
 
     @Test
+    void execute_noBaseDirWithNonExistentSourceDirectories_doesNotProcessFilesOutsideSourceDirs() throws Exception {
+        // Given – the project base dir exists but neither src/main/java nor src/test/java is present
+        // (typical for a parent-only POM module in a multi-module build).
+        // A Java file placed directly under the project root should NOT be processed.
+        Path srcMainJava = tempDir.resolve("src/main/java");
+        Path srcTestJava = tempDir.resolve("src/test/java");
+        MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", tempDir);
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "projectBaseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(reorderMojo, "mainSourceDirectory", MojoTestUtils.toFile(srcMainJava));
+        MojoTestUtils.injectField(reorderMojo, "testSourceDirectory", MojoTestUtils.toFile(srcTestJava));
+        String contentBefore =
+                MojoTestUtils.readResourceAsString("/test-cases/reorder-basic/input/NonConformingSample.java");
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then – plugin skips gracefully and leaves the file untouched
+        assertThat(thrown).isNull();
+        String contentAfter = Files.readString(tempDir.resolve("NonConformingSample.java"));
+        assertThat(contentAfter).isEqualTo(contentBefore);
+    }
+
+    @Test
     void execute_projectBaseDirNull_throwsMojoExecutionException() {
         // Given
         ReorderMojo reorderMojo = new ReorderMojo();
