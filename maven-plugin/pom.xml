@@ -118,12 +118,7 @@ SPDX-License-Identifier: Apache-2.0
                     <!--
                         PalantirModuleOpener in jharmonizer-core opens jdk.compiler internals
                         programmatically (via sun.misc.Unsafe) before the first Formatter use,
-                        so no JVM flags are required from end users.
-                        The .mvn/jvm.config in each IT project is kept as an explicit safety
-                        fallback in case the programmatic approach ever fails (e.g. future JDK
-                        changes that restrict Unsafe access).  Maven reads .mvn/jvm.config
-                        line-by-line in its launcher, which avoids the line-break problems that
-                        affect MAVEN_OPTS on Windows.
+                        so no JVM flags are required from end users or IT projects.
                     -->
                     <postBuildHookScript>verify</postBuildHookScript>
                     <projectsDirectory>src/it</projectsDirectory>
