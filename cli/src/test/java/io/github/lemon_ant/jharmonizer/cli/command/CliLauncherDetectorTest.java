@@ -295,4 +295,27 @@ class CliLauncherDetectorTest {
                         "bad\0path", "jharmonizer-cli.jar check-fast"))
                 .isEqualTo(FALLBACK_LAUNCHER);
     }
+
+    @Test
+    void resolveLauncherPrefixFromSunProperty_jarPathWithSpaces_returnsJavaJarPrefix() {
+        // When — jar path contains spaces; first-space split would cut it incorrectly
+        String result = CliLauncherDetector.resolveLauncherPrefixFromSunProperty(
+                "C:\\Program Files\\Microsoft\\jdk-21\\bin\\java.exe",
+                "C:\\Program Files\\jharmonizer\\jharmonizer-cli.jar check-fast");
+
+        // Then
+        assertThat(result)
+                .isEqualTo(
+                        "\"C:/Program Files/Microsoft/jdk-21/bin/java.exe\" -jar \"C:/Program Files/jharmonizer/jharmonizer-cli.jar\"");
+    }
+
+    @Test
+    void resolveLauncherPrefixFromSunProperty_jarPathWithSpacesAndNoArgs_returnsJavaJarPrefix() {
+        // When — jar path contains spaces with no trailing app args
+        String result = CliLauncherDetector.resolveLauncherPrefixFromSunProperty(
+                "/usr/bin/java", "/my tools/jharmonizer-cli.jar");
+
+        // Then
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"/my tools/jharmonizer-cli.jar\"");
+    }
 }

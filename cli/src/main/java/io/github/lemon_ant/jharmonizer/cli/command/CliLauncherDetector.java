@@ -28,6 +28,7 @@ class CliLauncherDetector {
     private static final String JHARMONIZER_JAR_NAME_PART = "jharmonizer";
     private static final char DOUBLE_QUOTE = '"';
     private static final int MINIMUM_COMMANDLINE_TOKEN_COUNT = 2;
+    private static final String JAR_EXTENSION = ".jar";
 
     /**
      * Detects the launcher prefix for the current process.
@@ -118,11 +119,14 @@ class CliLauncherDetector {
      * system property.
      *
      * <p>When the JVM is started with {@code java -jar app.jar [args]}, the HotSpot launcher sets
-     * {@code sun.java.command} to {@code "app.jar [args]"}. The first whitespace-delimited token
-     * of that property is therefore the jar file name (or path), which — combined with
-     * {@code command()} for the java executable — gives us the full launcher prefix without
-     * relying on {@code arguments()} (which is subject to the Windows limitation described by
-     * JDK-8252698) and without requiring {@code commandLine()} to be available.
+     * {@code sun.java.command} to {@code "app.jar [args]"}. The jar file name (or path) is the
+     * leading {@code .jar}-terminated token of that property; combined with {@code command()} for
+     * the java executable this gives the full launcher prefix without relying on
+     * {@code arguments()} (subject to the Windows limitation described by JDK-8252698) or on
+     * {@code commandLine()} being available.
+     *
+     * <p>The jar token is delimited by the {@code .jar} extension rather than by the first
+     * whitespace character so that jar paths containing spaces are handled correctly.
      *
      * <p>Exposed as package-private for unit testing without requiring a real process context.
      *
@@ -139,10 +143,7 @@ class CliLauncherDetector {
             return FALLBACK_LAUNCHER;
         }
         try {
-            // sun.java.command = "<jar-or-class> [app-args...]"
-            // The program name is the portion up to the first whitespace character.
-            int firstSpace = sunJavaCommand.indexOf(' ');
-            String programName = firstSpace >= 0 ? sunJavaCommand.substring(0, firstSpace) : sunJavaCommand;
+            String programName = parseProgramNameFromSunCommand(sunJavaCommand);
             if (!isJHarmonizerJar(programName)) {
                 return FALLBACK_LAUNCHER;
             }
@@ -217,6 +218,36 @@ class CliLauncherDetector {
             }
         }
         return -1;
+    }
+
+    /**
+     * Extracts the program name (jar file path or class name) from the {@code sun.java.command}
+     * property value.
+     *
+     * <p>For jar invocations the program name ends at the {@code .jar} extension, so that jar
+     * paths containing spaces are not incorrectly truncated at the first space. For class-name
+     * invocations (which never contain spaces) the first space is used as the delimiter.
+     *
+     * @param sunJavaCommand the non-null, non-blank value of {@code sun.java.command}
+     * @return the extracted program name
+     */
+    @NonNull
+    private static String parseProgramNameFromSunCommand(String sunJavaCommand) {
+        // The HotSpot launcher stores the raw unquoted program argument in sun.java.command, so
+        // jar paths with spaces appear as-is without surrounding quotes.  Splitting on the first
+        // space would cut a path like "C:\Program Files\...\jharmonizer-cli.jar" at the first
+        // space.  We instead locate the ".jar" extension as the boundary, which is unambiguous.
+        String lowerCaseSunCommand = sunJavaCommand.toLowerCase(Locale.ROOT);
+        int jarExtensionIndex = lowerCaseSunCommand.indexOf(JAR_EXTENSION + " ");
+        if (jarExtensionIndex >= 0) {
+            return sunJavaCommand.substring(0, jarExtensionIndex + JAR_EXTENSION.length());
+        }
+        if (lowerCaseSunCommand.endsWith(JAR_EXTENSION)) {
+            return sunJavaCommand;
+        }
+        // No .jar extension — class-name invocation; class names cannot contain spaces.
+        int firstSpace = sunJavaCommand.indexOf(' ');
+        return firstSpace >= 0 ? sunJavaCommand.substring(0, firstSpace) : sunJavaCommand;
     }
 
     private static boolean isJHarmonizerJar(@Nullable String jarPath) {
