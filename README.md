@@ -47,7 +47,8 @@ Spotless); it runs after `generate-sources` and before `compile`.
 
 ### Enforce order in CI
 
-Bind `check-fast` to the `verify` phase to fail the build on the first out-of-order file:
+`check-fast` and `check-all` default to the `validate` phase — the build fails early,
+before any compilation happens:
 
 ```xml
 <build>
@@ -58,7 +59,6 @@ Bind `check-fast` to the `verify` phase to fail the build on the first out-of-or
             <version>1.0-SNAPSHOT</version>
             <executions>
                 <execution>
-                    <phase>verify</phase>
                     <goals>
                         <goal>check-fast</goal>
                     </goals>

@@ -116,11 +116,9 @@ SPDX-License-Identifier: Apache-2.0
                     -->
                     <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
                     <!--
-                        Palantir Java Format accesses JDK compiler internals via reflection.
-                        The required add-opens flags are supplied via .mvn/jvm.config in each IT project
-                        (not via mavenOpts here) so that each option can stay on its own line.
-                        Maven reads .mvn/jvm.config line-by-line in its launcher, so it works on Windows
-                        without the line-break problems that affect MAVEN_OPTS/mavenOpts.
+                        PalantirModuleOpener in jharmonizer-core opens jdk.compiler internals
+                        programmatically (via sun.misc.Unsafe) before the first Formatter use,
+                        so no JVM flags are required from end users or IT projects.
                     -->
                     <postBuildHookScript>verify</postBuildHookScript>
                     <projectsDirectory>src/it</projectsDirectory>

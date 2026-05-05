@@ -11,6 +11,13 @@ SPDX-License-Identifier: Apache-2.0
              for when new enum values are added later.  The PMD rule would force removal of the
              default, which would cause new enum values to silently do nothing. -->
         <exclude name="ExhaustiveSwitchHasDefault"/>
+        <!--
+            PMD 7 paradox: UnnecessaryWarningSuppression fires whenever a @SuppressWarnings("PMD.X")
+            successfully suppresses a real violation.  This makes it impossible to use @SuppressWarnings
+            for legitimate cases (e.g. AvoidCatchingGenericException on MethodHandle.invokeExact).
+            Excluding the rule globally is the only practical fix.
+        -->
+        <exclude name="UnnecessaryWarningSuppression"/>
     </rule>
     <!-- TODO It's too strict to use and should be reconsidered
     <ruleset>category/java/codestyle.xml</ruleset>
