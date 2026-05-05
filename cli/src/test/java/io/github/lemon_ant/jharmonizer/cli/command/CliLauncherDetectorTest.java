@@ -131,4 +131,91 @@ class CliLauncherDetectorTest {
         // Then
         assertThat(result).isEqualTo("\"/usr/\\$JAVA_HOME/bin/java\" -jar \"jharmonizer-cli.jar\"");
     }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_commandLineAbsent_returnsFallbackLauncher() {
+        // When / Then
+        assertThat(CliLauncherDetector.resolveLauncherPrefixFromCommandLine(Optional.empty()))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_emptyCommandLine_returnsFallbackLauncher() {
+        // When / Then
+        assertThat(CliLauncherDetector.resolveLauncherPrefixFromCommandLine(Optional.of("")))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_onlyExecutable_returnsFallbackLauncher() {
+        // When / Then — no arguments at all, so no -jar flag
+        assertThat(CliLauncherDetector.resolveLauncherPrefixFromCommandLine(Optional.of("java")))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_noJarFlag_returnsFallbackLauncher() {
+        // When / Then
+        assertThat(CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                        Optional.of("/usr/bin/java -cp libs/* io.github.lemon_ant.Main")))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_nonJHarmonizerJar_returnsFallbackLauncher() {
+        // When / Then
+        assertThat(CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                        Optional.of("/usr/bin/java -jar surefirebooter1234567890.jar")))
+                .isEqualTo(FALLBACK_LAUNCHER);
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_unquotedPaths_returnsJavaJarPrefix() {
+        // When
+        String result = CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                Optional.of("/usr/bin/java -jar jharmonizer-cli.jar check-fast"));
+
+        // Then
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"jharmonizer-cli.jar\"");
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_quotedJavaPathWithSpaces_returnsJavaJarPrefix() {
+        // When — simulates a Windows invocation where the java.exe path contains spaces
+        String result = CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                Optional.of("\"C:/Program Files/jdk-21/bin/java.exe\" -jar jharmonizer-cli.jar check-fast"));
+
+        // Then
+        assertThat(result).isEqualTo("\"C:/Program Files/jdk-21/bin/java.exe\" -jar \"jharmonizer-cli.jar\"");
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_windowsBackslashPaths_normalizesToForwardSlashes() {
+        // When — simulates ProcessHandle.commandLine() on Windows where backslashes appear in paths
+        String result = CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                Optional.of("\"C:\\Program Files\\jdk-21\\bin\\java.exe\" -jar .\\jharmonizer-cli.jar check-fast"));
+
+        // Then
+        assertThat(result).isEqualTo("\"C:/Program Files/jdk-21/bin/java.exe\" -jar \"./jharmonizer-cli.jar\"");
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_jvmFlagsBeforeJarFlag_returnsJavaJarPrefix() {
+        // When
+        String result = CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                Optional.of("/usr/bin/java -Xmx512m -jar jharmonizer-cli.jar check-fast"));
+
+        // Then
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"jharmonizer-cli.jar\"");
+    }
+
+    @Test
+    void resolveLauncherPrefixFromCommandLine_quotedJarPathWithSpaces_returnsJavaJarPrefix() {
+        // When
+        String result = CliLauncherDetector.resolveLauncherPrefixFromCommandLine(
+                Optional.of("/usr/bin/java -jar \"/my tools/jharmonizer-cli.jar\" check-fast"));
+
+        // Then
+        assertThat(result).isEqualTo("\"/usr/bin/java\" -jar \"/my tools/jharmonizer-cli.jar\"");
+    }
 }

@@ -4,6 +4,8 @@ package io.github.lemon_ant.jharmonizer.cli.command;
 
 import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import lombok.NonNull;
@@ -34,7 +36,13 @@ class CliLauncherDetector {
     @NonNull
     static String detectLauncherPrefix() {
         ProcessHandle.Info processInfo = ProcessHandle.current().info();
-        return resolveLauncherPrefix(processInfo.command(), processInfo.arguments());
+        String primaryPrefix = resolveLauncherPrefix(processInfo.command(), processInfo.arguments());
+        if (!FALLBACK_LAUNCHER.equals(primaryPrefix)) {
+            return primaryPrefix;
+        }
+        // On some platforms (notably Windows) arguments() may return Optional.empty() even
+        // though commandLine() is available. Try parsing commandLine() as a fallback.
+        return resolveLauncherPrefixFromCommandLine(processInfo.commandLine());
     }
 
     /**
@@ -60,6 +68,77 @@ class CliLauncherDetector {
             // treat any failure as an unavailable detection and fall back to the symbolic name.
             return FALLBACK_LAUNCHER;
         }
+    }
+
+    /**
+     * Resolves the launcher prefix by parsing the raw process command line.
+     *
+     * <p>Used as a fallback when {@link #resolveLauncherPrefix} cannot detect the prefix because
+     * {@code ProcessHandle.Info.arguments()} returns an empty Optional — a known limitation on
+     * Windows where the OS exposes a single command-line string rather than a pre-split argument
+     * array. {@code ProcessHandle.Info.commandLine()} is more reliably populated on Windows.
+     *
+     * <p>Exposed as package-private for unit testing without requiring a real process context.
+     *
+     * @param maybeCommandLine the full raw command line of the process, if available
+     * @return the resolved launcher prefix, or the {@code jharmonizer} fallback
+     */
+    @NonNull
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    static String resolveLauncherPrefixFromCommandLine(@NonNull Optional<String> maybeCommandLine) {
+        if (maybeCommandLine.isEmpty()) {
+            return FALLBACK_LAUNCHER;
+        }
+        try {
+            List<String> tokens = tokenizeCommandLine(maybeCommandLine.get());
+            if (tokens.size() < 2) {
+                return FALLBACK_LAUNCHER;
+            }
+            String command = tokens.get(0);
+            String[] args = tokens.subList(1, tokens.size()).toArray(String[]::new);
+            return buildLauncherPrefix(command, args);
+        } catch (RuntimeException commandLineParseException) {
+            return FALLBACK_LAUNCHER;
+        }
+    }
+
+    /**
+     * Splits a raw command-line string into tokens, respecting double-quoted sections.
+     *
+     * <p>Tokens are delimited by whitespace outside of double-quoted spans. Quotes are stripped
+     * from the resulting tokens. This covers the shell quoting conventions used on both Windows
+     * (cmd.exe / PowerShell) and Unix for the {@code java -jar} invocation patterns that
+     * JHarmonizer users typically employ.
+     *
+     * @param commandLine the raw command-line string to tokenize
+     * @return the list of tokens extracted from the command line
+     */
+    @NonNull
+    private static List<String> tokenizeCommandLine(@NonNull String commandLine) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder currentToken = new StringBuilder();
+        boolean inQuotes = false;
+        boolean buildingToken = false;
+        for (int charIndex = 0; charIndex < commandLine.length(); charIndex++) {
+            char currentChar = commandLine.charAt(charIndex);
+            if (currentChar == '"') {
+                inQuotes = !inQuotes;
+                buildingToken = true;
+            } else if (Character.isWhitespace(currentChar) && !inQuotes) {
+                if (buildingToken) {
+                    tokens.add(currentToken.toString());
+                    currentToken = new StringBuilder();
+                    buildingToken = false;
+                }
+            } else {
+                currentToken.append(currentChar);
+                buildingToken = true;
+            }
+        }
+        if (buildingToken) {
+            tokens.add(currentToken.toString());
+        }
+        return tokens;
     }
 
     @NonNull
