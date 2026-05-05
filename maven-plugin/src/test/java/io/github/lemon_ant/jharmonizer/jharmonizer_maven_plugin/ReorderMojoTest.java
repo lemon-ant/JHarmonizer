@@ -54,9 +54,8 @@ class ReorderMojoTest {
     }
 
     @Test
-    void execute_onlyMainSrcDirExistsAndTestSrcDirConfiguredAbsent_processesOnlyExistingDirectory() throws Exception {
-        // Given – src/main/java exists with a Java file; src/test/java is configured but does not exist.
-        // The banner should include both patterns, and only the existing directory is scanned.
+    void execute_testSourceDirectoryConfiguredButAbsent_processesMainDirectoryOnly() throws Exception {
+        // Given – src/main/java exists with a Java file; src/test/java is configured but absent.
         Path srcMainJava = tempDir.resolve("src/main/java");
         Path srcTestJava = tempDir.resolve("src/test/java");
         Files.createDirectories(srcMainJava);

@@ -80,9 +80,10 @@ public class SrcFilesHandler {
         }
         // Walk the non-wildcard prefix to find the effective scan root that GlobPathFinder
         // would use. Stop at the first wildcard segment so we do not over-restrict.
+        // Note: glob character ranges ([abc]) are also treated as wildcards here.
         Path effectiveBase = baseDir;
         for (String segment : includeGlob.split("[/\\\\]")) {
-            if (segment.isEmpty() || segment.contains("*") || segment.contains("?") || segment.contains("{")) {
+            if (segment.isEmpty() || segment.matches(".*[*?{\\[].*")) {
                 break;
             }
             effectiveBase = effectiveBase.resolve(segment);

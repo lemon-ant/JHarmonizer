@@ -217,12 +217,12 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                 .filter(Objects::nonNull)
                 .map(srcDir -> srcDir.toPath().toAbsolutePath().normalize())
                 .toList();
-        Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         if (srcDirPaths.stream().noneMatch(Files::isDirectory)) {
-            return userIncludes.collect(Collectors.toUnmodifiableSet());
+            return includes != null ? Set.copyOf(includes) : Set.of();
         }
         Stream<String> srcDirIncludes = srcDirPaths.stream()
                 .map(srcDirPath -> PathUtils.normalizeSeparators(projectBaseDirPath.relativize(srcDirPath)) + "/**");
+        Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());
     }
 
