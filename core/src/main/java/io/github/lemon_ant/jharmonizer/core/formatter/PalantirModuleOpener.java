@@ -52,11 +52,15 @@ class PalantirModuleOpener {
      */
     static void openRequiredJdkCompilerPackages() {
         if (opened.compareAndSet(false, true)) {
-            applyPackageOpens();
+            if (!applyPackageOpens()) {
+                // Reset so the next caller can retry (e.g. after a transient failure or
+                // if the first attempt happened before the module layer was fully initialized).
+                opened.set(false);
+            }
         }
     }
 
-    private static void applyPackageOpens() {
+    private static boolean applyPackageOpens() {
         try {
             Method implAddOpens = Module.class.getDeclaredMethod("implAddOpens", String.class);
             makeMethodPublicViaTrustedLookup(implAddOpens);
@@ -67,6 +71,7 @@ class PalantirModuleOpener {
                     }
                 }
             }
+            return true;
         } catch (ReflectiveOperationException | IllegalStateException exception) {
             log.warn(
                     "Could not open jdk.compiler internals programmatically. "
@@ -78,6 +83,7 @@ class PalantirModuleOpener {
                             + "--add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED\n"
                             + "--add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
                     exception);
+            return false;
         }
     }
 

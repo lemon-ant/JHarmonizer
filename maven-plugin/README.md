@@ -26,8 +26,8 @@ The plugin is `threadSafe = true` on every goal.
 | Goal                     | Mojo            | Default phase     | Effect                                                                                          |
 |--------------------------|-----------------|-------------------|-------------------------------------------------------------------------------------------------|
 | `jharmonizer:reorder`    | `ReorderMojo`   | `process-sources` | Rewrites Java source files in place; optional `.bak` backups.                                   |
-| `jharmonizer:check-all`  | `CheckAllMojo`  | `verify`          | Read-only. Collects every non-conforming file and (by default) fails the build with the report. |
-| `jharmonizer:check-fast` | `CheckFastMojo` | `verify`          | Read-only. Stops at the first non-conforming file. Faster than `check-all`.                     |
+| `jharmonizer:check-all`  | `CheckAllMojo`  | `validate`        | Read-only. Collects every non-conforming file and (by default) fails the build with the report. |
+| `jharmonizer:check-fast` | `CheckFastMojo` | `validate`        | Read-only. Stops at the first non-conforming file. Faster than `check-all`.                     |
 
 `check-all` and `check-fast` **never modify source files**. Only `reorder` writes
 to the working tree. With `failOnViolation=false` both check goals switch to

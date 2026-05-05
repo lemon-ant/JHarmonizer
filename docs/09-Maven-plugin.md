@@ -17,8 +17,8 @@ The plugin exposes three goals, each implemented by a dedicated Mojo class:
 | Goal                     | Mojo                | Default phase     | Effect                                                                                                                                              |
 |--------------------------|---------------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
 | `jharmonizer:reorder`    | `ReorderMojo`       | `process-sources` | Rewrites Java source files in-place so member layout matches the configured ordering. Creates `.bak` backup files when backups are enabled.         |
-| `jharmonizer:check-all`      | `CheckAllMojo`         | `verify`          | Scans all sources, collects every file that does not conform to the configured ordering, and (by default) fails the build with the full report.     |
-| `jharmonizer:check-fast` | `CheckFastMojo`     | `verify`          | Scans sources and stops at the first non-conforming file. Faster than `check-all` when a single violation is enough to fail the build.                  |
+| `jharmonizer:check-all`      | `CheckAllMojo`         | `validate`        | Scans all sources, collects every file that does not conform to the configured ordering, and (by default) fails the build with the full report.     |
+| `jharmonizer:check-fast` | `CheckFastMojo`     | `validate`        | Scans sources and stops at the first non-conforming file. Faster than `check-all` when a single violation is enough to fail the build.                  |
 
 The `check-all` goals **never modify source files**. Only `reorder` writes to the working tree.
 
@@ -69,6 +69,9 @@ which streams matching paths in parallel.
 
 ### Enforce order in CI (fail-fast)
 
+`check-fast` and `check-all` default to the `validate` phase — the build fails early,
+before compilation:
+
 ```xml
 <plugin>
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
@@ -76,7 +79,6 @@ which streams matching paths in parallel.
     <version>1.0-SNAPSHOT</version>
     <executions>
         <execution>
-            <phase>verify</phase>
             <goals>
                 <goal>check-fast</goal>
             </goals>
@@ -138,7 +140,6 @@ CI systems set to `true` automatically:
                     <version>1.0-SNAPSHOT</version>
                     <executions>
                         <execution>
-                            <phase>verify</phase>
                             <goals>
                                 <goal>check-fast</goal>
                             </goals>
@@ -169,7 +170,7 @@ mvn jharmonizer:check-all -Djharmonizer.failOnViolation=false   # report-only
 
 - `reorder` is bound to `process-sources` by default; this is the standard Maven phase
   for reformatting existing sources (it runs after `generate-sources` and before `compile`).
-- `check-all` and `check-fast` are bound to `verify` by default.
+- `check-all` and `check-fast` are bound to `validate` by default.
 - `check-all` performs a **complete pass** over the source tree and collects every
   non-conforming file before deciding the build outcome; `check-fast` short-circuits
   at the first violation. Use `check-all` when you want the full violation report,
