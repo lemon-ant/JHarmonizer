@@ -36,12 +36,21 @@ class CliLauncherDetector {
     @NonNull
     static String detectLauncherPrefix() {
         ProcessHandle.Info processInfo = ProcessHandle.current().info();
+        // Primary: command() + arguments() — works on Unix/macOS.
         String primaryPrefix = resolveLauncherPrefix(processInfo.command(), processInfo.arguments());
         if (!FALLBACK_LAUNCHER.equals(primaryPrefix)) {
             return primaryPrefix;
         }
-        // On some platforms (notably Windows) arguments() may return Optional.empty() even
-        // though commandLine() is available. Try parsing commandLine() as a fallback.
+        // Fallback 1: command() + sun.java.command — works on Windows with any HotSpot JVM.
+        // On Windows, ProcessHandle.Info.arguments() returns Optional.empty() (JDK-8252698), but
+        // the JVM launcher always sets sun.java.command to "<program> [app-args]" for -jar mode.
+        String sunJavaCommandFallback =
+                resolveLauncherPrefixFromSunProperty(processInfo.command(), System.getProperty("sun.java.command"));
+        if (!FALLBACK_LAUNCHER.equals(sunJavaCommandFallback)) {
+            return sunJavaCommandFallback;
+        }
+        // Fallback 2: tokenize commandLine() — covers remaining edge cases where commandLine() is
+        // populated but neither arguments() nor sun.java.command provided useful info.
         return resolveLauncherPrefixFromCommandLine(processInfo.commandLine());
     }
 
@@ -103,6 +112,47 @@ class CliLauncherDetector {
     }
 
     /**
+     * Resolves the launcher prefix using the Java executable path and the {@code sun.java.command}
+     * system property.
+     *
+     * <p>When the JVM is started with {@code java -jar app.jar [args]}, the HotSpot launcher sets
+     * {@code sun.java.command} to {@code "app.jar [args]"}. The first whitespace-delimited token
+     * of that property is therefore the jar file name (or path), which — combined with
+     * {@code command()} for the java executable — gives us the full launcher prefix without
+     * relying on {@code arguments()} or {@code commandLine()}, both of which are unavailable on
+     * Windows (JDK-8252698).
+     *
+     * <p>Exposed as package-private for unit testing without requiring a real process context.
+     *
+     * @param maybeCommand the Java executable path from {@code ProcessHandle.Info.command()}
+     * @param sunJavaCommand the value of the {@code sun.java.command} system property, or
+     *     {@code null} if the property is not set
+     * @return the resolved launcher prefix, or the {@code jharmonizer} fallback
+     */
+    @NonNull
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    static String resolveLauncherPrefixFromSunProperty(
+            @NonNull Optional<String> maybeCommand, @Nullable String sunJavaCommand) {
+        if (maybeCommand.isEmpty() || sunJavaCommand == null || sunJavaCommand.isBlank()) {
+            return FALLBACK_LAUNCHER;
+        }
+        try {
+            // sun.java.command = "<jar-or-class> [app-args...]"
+            // The program name is the portion up to the first whitespace character.
+            int firstSpace = sunJavaCommand.indexOf(' ');
+            String programName = firstSpace >= 0 ? sunJavaCommand.substring(0, firstSpace) : sunJavaCommand;
+            if (!isJHarmonizerJar(programName)) {
+                return FALLBACK_LAUNCHER;
+            }
+            String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(maybeCommand.get()));
+            String normalizedJarPath = PathUtils.normalizeSeparators(Path.of(programName));
+            return quotePathForShell(normalizedJavaExe) + " " + JAR_FLAG + " " + quotePathForShell(normalizedJarPath);
+        } catch (RuntimeException pathBuildingException) {
+            return FALLBACK_LAUNCHER;
+        }
+    }
+
+    /**
      * Splits a raw command-line string into tokens, respecting double-quoted sections.
      *
      * <p>Tokens are delimited by whitespace outside of double-quoted spans. Quotes are stripped
@@ -119,19 +169,19 @@ class CliLauncherDetector {
         StringBuilder currentToken = new StringBuilder();
         boolean inQuotes = false;
         boolean buildingToken = false;
-        for (int charIndex = 0; charIndex < commandLine.length(); charIndex++) {
-            char currentChar = commandLine.charAt(charIndex);
-            if (currentChar == '"') {
+        for (int characterIndex = 0; characterIndex < commandLine.length(); characterIndex++) {
+            char character = commandLine.charAt(characterIndex);
+            if (character == '"') {
                 inQuotes = !inQuotes;
                 buildingToken = true;
-            } else if (Character.isWhitespace(currentChar) && !inQuotes) {
+            } else if (Character.isWhitespace(character) && !inQuotes) {
                 if (buildingToken) {
                     tokens.add(currentToken.toString());
                     currentToken = new StringBuilder();
                     buildingToken = false;
                 }
             } else {
-                currentToken.append(currentChar);
+                currentToken.append(character);
                 buildingToken = true;
             }
         }
