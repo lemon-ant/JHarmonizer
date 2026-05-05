@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +36,8 @@ public class UnifiedConfigMerger {
                 .orElse(baseline.getFormatting());
         UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
         Boolean backupsEnabled = overlay.getBackupsEnabled().orElse(baseline.isBackupsEnabled());
-        Boolean printProcessingStatistics =
-                overlay.getPrintProcessingStatistics().orElse(baseline.isPrintProcessingStatistics());
+        ProcessingStatisticsMode processingStatisticsMode =
+                overlay.getProcessingStatisticsMode().orElse(baseline.getProcessingStatisticsMode());
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
                 .map(overlayRootGroups -> mergeRootMemberGroups(baseline.getRootMemberGroups(), overlayRootGroups))
                 .orElse(baseline.getRootMemberGroups());
@@ -46,7 +47,7 @@ public class UnifiedConfigMerger {
                 .formatting(formatting)
                 .headerLine(header)
                 .backupsEnabled(backupsEnabled)
-                .printProcessingStatistics(printProcessingStatistics)
+                .processingStatisticsMode(processingStatisticsMode)
                 .rootMemberGroups(root)
                 .build();
     }
@@ -72,8 +73,8 @@ public class UnifiedConfigMerger {
                 overlay.getHeaderLine().orElse(baseline.getHeaderLine().orElse(null));
         Boolean backupsEnabled =
                 overlay.getBackupsEnabled().orElse(baseline.getBackupsEnabled().orElse(null));
-        Boolean printProcessingStatistics = overlay.getPrintProcessingStatistics()
-                .orElse(baseline.getPrintProcessingStatistics().orElse(null));
+        ProcessingStatisticsMode processingStatisticsMode = overlay.getProcessingStatisticsMode()
+                .orElse(baseline.getProcessingStatisticsMode().orElse(null));
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
                 .map(overlayRootGroups -> baseline.getRootMemberGroups()
                         .map(baselineRootGroups -> mergeRootMemberGroups(baselineRootGroups, overlayRootGroups))
@@ -84,7 +85,7 @@ public class UnifiedConfigMerger {
                 .topLevelTypesOrdering(top)
                 .formatting(formatting)
                 .backupsEnabled(backupsEnabled)
-                .printProcessingStatistics(printProcessingStatistics)
+                .processingStatisticsMode(processingStatisticsMode)
                 .headerLine(header);
         if (root != null) {
             builder.rootMemberGroups(root);

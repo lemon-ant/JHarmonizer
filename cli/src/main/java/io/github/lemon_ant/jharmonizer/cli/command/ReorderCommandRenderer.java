@@ -30,6 +30,7 @@ class ReorderCommandRenderer {
      * @param configFilePath optional path to the configuration file
      * @param noBackup whether the no-backup flag is set
      * @param noStatistics whether the no-statistics flag is set
+     * @param fullStatistics whether the full-statistics flag is set
      * @return the ready-to-run reorder command string
      */
     @NonNull
@@ -40,7 +41,8 @@ class ReorderCommandRenderer {
             @NonNull Set<String> excludeGlobs,
             @Nullable Path configFilePath,
             boolean noBackup,
-            boolean noStatistics) {
+            boolean noStatistics,
+            boolean fullStatistics) {
         StringBuilder command = new StringBuilder(INITIAL_COMMAND_CAPACITY);
         command.append(launcherPrefix)
                 .append(" reorder --base-dir ")
@@ -59,6 +61,9 @@ class ReorderCommandRenderer {
         }
         if (noStatistics) {
             command.append(" --no-statistics");
+        }
+        if (fullStatistics) {
+            command.append(" --full-statistics");
         }
         return command.toString();
     }

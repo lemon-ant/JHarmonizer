@@ -35,7 +35,7 @@ public class Unified2CompiledModelCompiler {
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(unifiedConfig.getFormatting())
                 .backupsEnabled(unifiedConfig.isBackupsEnabled())
-                .printProcessingStatistics(unifiedConfig.isPrintProcessingStatistics())
+                .processingStatisticsMode(unifiedConfig.getProcessingStatisticsMode())
                 .headerLine(unifiedConfig.getHeaderLine())
                 .build();
     }

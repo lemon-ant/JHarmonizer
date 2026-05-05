@@ -7,7 +7,7 @@ formatting:
   blank-line-before-comment: true
   blank-line-between-fields: false
 backups-enabled: false
-print-processing-statistics: true
+processing-statistics-mode: FULL
 header-line:
   character: "-"
   left-padding: 2

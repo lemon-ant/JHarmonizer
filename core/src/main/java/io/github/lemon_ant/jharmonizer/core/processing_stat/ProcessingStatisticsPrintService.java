@@ -17,6 +17,8 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
+// Sonar/PMD: utility class with many constants is intentional — each is a layout parameter.
+
 /**
  * Renders processing statistics into a structured log-friendly report.
  */
@@ -29,6 +31,24 @@ public class ProcessingStatisticsPrintService {
     private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
     private static final int DETAIL_PATH_MAX_LENGTH = 120;
     private static final String HEADER = "JHarmonization summary";
+
+    /**
+     * Builds a brief single-line summary: file count, wall-clock time, total size and error count.
+     *
+     * @param stats aggregated statistics to summarize
+     * @return a compact one-line summary suitable for logs
+     */
+    @NonNull
+    public static String renderMinimal(@NonNull AggregatedProcessingStatistic stats) {
+        int unexpectedErrorCount = stats.getFilesWithUnexpectedErrors().size();
+        return String.format(
+                Locale.ROOT,
+                "JHarmonization: %,d file(s), wall-clock %s, %s total%s",
+                stats.getFileCount(),
+                formatHmsMillisFromNanos(stats.getWallClockTimeNanos()),
+                formatBytes(stats.getTotalSizeInBytes()),
+                unexpectedErrorCount > 0 ? ", " + unexpectedErrorCount + " unexpected error(s)" : "");
+    }
 
     /**
      * Builds a pseudo-table report with a dedicated section for unexpected internal errors.

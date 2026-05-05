@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core;
 
-import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FILES_WITH_UNEXPECTED_ERRORS;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +19,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FileProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -260,7 +260,7 @@ class SrcProcessorTest {
 
         // Then
         assertThat(logs).contains("JHarmonizer ERROR").contains("BrokenSample.java");
-        assertThat(logs).contains(FILES_WITH_UNEXPECTED_ERRORS);
+        assertThat(logs).contains("Files encountered unexpected errors");
         assertThat(Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8)).isEqualTo(brokenOriginalSrcCode);
         assertThat(Files.readString(validJavaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(validOriginalSrcCode);
     }
@@ -371,12 +371,34 @@ class SrcProcessorTest {
     }
 
     @Test
+    void processSources_processingStatisticsMinimal_logsMinimalSummaryLine() throws Exception {
+        // Given
+        writeJavaFile(temporaryDirectory, "MinimalSample.java", "package demo; public class MinimalSample {}");
+        SrcProcessor srcProcessor = new SrcProcessor(FlexibleUnifiedConfig.builder()
+                .processingStatisticsMode(ProcessingStatisticsMode.MINIMAL)
+                .build());
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("JHarmonization:").contains("file(s)").contains("wall-clock");
+    }
+
+    @Test
     void processSources_processingStatisticsDisabled_logsDebugCompletionSummary() throws Exception {
         // Given
         Path javaFilePath =
                 writeJavaFile(temporaryDirectory, "SummarySample.java", "package demo; public class SummarySample {}");
-        SrcProcessor srcProcessor = new SrcProcessor(
-                FlexibleUnifiedConfig.builder().printProcessingStatistics(false).build());
+        SrcProcessor srcProcessor = new SrcProcessor(FlexibleUnifiedConfig.builder()
+                .processingStatisticsMode(ProcessingStatisticsMode.DISABLED)
+                .build());
         @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
@@ -392,7 +414,7 @@ class SrcProcessorTest {
         // Then
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).contains("public class SummarySample");
         assertThat(logs)
-                .contains("Processing completed (full statistics report disabled)")
+                .contains("Processing completed (statistics disabled)")
                 .contains("flowType=REORDER")
                 .contains("status=COMPLETED")
                 .contains("processedFiles=1")

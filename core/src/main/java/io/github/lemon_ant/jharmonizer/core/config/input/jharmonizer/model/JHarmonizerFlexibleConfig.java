@@ -5,6 +5,7 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +31,7 @@ public class JHarmonizerFlexibleConfig {
     Boolean backupsEnabled;
 
     @Nullable
-    Boolean printProcessingStatistics;
+    ProcessingStatisticsMode processingStatisticsMode;
 
     @Nullable
     JHarmonizerHeaderLine headerLine;
@@ -47,7 +48,7 @@ public class JHarmonizerFlexibleConfig {
      * @param topLevelTypesOrdering the optional top-level types ordering override
      * @param formatting the optional partial formatting override
      * @param backupsEnabled the optional backups-enabled override
-     * @param printProcessingStatistics the optional print-processing-statistics override
+     * @param processingStatisticsMode the optional processing-statistics-mode override
      * @param headerLine the optional header-line override
      * @param memberGroups the optional member group overrides
      */
@@ -55,21 +56,21 @@ public class JHarmonizerFlexibleConfig {
             @Nullable @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable @JsonProperty("formatting") JHarmonizerFlexibleFormatting formatting,
             @Nullable @JsonProperty("backups-enabled") Boolean backupsEnabled,
-            @Nullable @JsonProperty("print-processing-statistics") Boolean printProcessingStatistics,
+            @Nullable @JsonProperty("processing-statistics-mode") ProcessingStatisticsMode processingStatisticsMode,
             @Nullable @JsonProperty("header-line") JHarmonizerHeaderLine headerLine,
             @Nullable @JsonProperty("type-members-ordering") List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         Validate.isTrue(
                 topLevelTypesOrdering != null
                         || formatting != null
                         || backupsEnabled != null
-                        || printProcessingStatistics != null
+                        || processingStatisticsMode != null
                         || headerLine != null
                         || memberGroups != null,
                 "At least one field must be set in JHarmonizerFlexibleConfig");
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
-        this.printProcessingStatistics = printProcessingStatistics;
+        this.processingStatisticsMode = processingStatisticsMode;
         this.headerLine = headerLine;
         this.memberGroups =
                 ofNullable(memberGroups).map(Collections::unmodifiableList).orElse(null);
@@ -96,13 +97,13 @@ public class JHarmonizerFlexibleConfig {
     }
 
     /**
-     * Returns the optional print-processing-statistics override.
+     * Returns the optional processing-statistics-mode override.
      *
-     * @return the optional print-processing-statistics override
+     * @return the optional processing-statistics-mode override
      */
     @NonNull
-    public Optional<Boolean> getPrintProcessingStatistics() {
-        return ofNullable(printProcessingStatistics);
+    public Optional<ProcessingStatisticsMode> getProcessingStatisticsMode() {
+        return ofNullable(processingStatisticsMode);
     }
 
     /**

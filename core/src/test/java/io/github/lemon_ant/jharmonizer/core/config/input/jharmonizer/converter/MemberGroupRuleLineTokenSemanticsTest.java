@@ -22,6 +22,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
@@ -96,7 +97,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
                 .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false))
                 .backupsEnabled(false)
-                .printProcessingStatistics(true)
+                .processingStatisticsMode(ProcessingStatisticsMode.FULL)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .topLevelTypesOrdering(createMinimalTopLevelTypesOrdering())
                 .rootMemberGroup(rootGroup)

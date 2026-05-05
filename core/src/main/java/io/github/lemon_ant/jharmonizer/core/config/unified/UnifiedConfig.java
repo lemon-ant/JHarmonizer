@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
@@ -29,7 +30,8 @@ public class UnifiedConfig {
 
     boolean backupsEnabled;
 
-    boolean printProcessingStatistics;
+    @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Header line descriptor (character + leftPadding).
@@ -55,7 +57,7 @@ public class UnifiedConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
-     * @param printProcessingStatistics the print processing statistics flag
+     * @param processingStatisticsMode the processing statistics mode
      * @param headerLine the header line
      * @param rootMemberGroups the root member groups
      */
@@ -64,13 +66,13 @@ public class UnifiedConfig {
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             @NonNull Boolean backupsEnabled,
-            @NonNull Boolean printProcessingStatistics,
+            @NonNull ProcessingStatisticsMode processingStatisticsMode,
             @NonNull UnifiedHeaderLine headerLine,
             @NonNull @Singular List<UnifiedMemberGroup> rootMemberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
-        this.printProcessingStatistics = printProcessingStatistics;
+        this.processingStatisticsMode = processingStatisticsMode;
         this.headerLine = headerLine;
         Validate.notEmpty(rootMemberGroups, "Root member groups cannot be empty");
         this.rootMemberGroups = Collections.unmodifiableList(rootMemberGroups);

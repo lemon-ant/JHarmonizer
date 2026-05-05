@@ -14,6 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -109,6 +110,11 @@ abstract class BaseCommand implements Callable<Integer> {
             description = "Disable final processing statistics report output.")
     private boolean noStatistics;
 
+    @Option(
+            names = {"-F", "--full-statistics"},
+            description = "Enable full detailed processing statistics report output.")
+    private boolean fullStatistics;
+
     /**
      * Returns the processing flow implemented by the command.
      *
@@ -145,6 +151,7 @@ abstract class BaseCommand implements Callable<Integer> {
                 .configFilePath(effectiveConfigFilePath)
                 .noBackup(noBackup)
                 .noStatistics(noStatistics)
+                .fullStatistics(fullStatistics)
                 .build();
         if (commandOptions.isVerbose()) {
             ((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)).setLevel(Level.DEBUG);
@@ -161,7 +168,10 @@ abstract class BaseCommand implements Callable<Integer> {
     private int processWithFlow(CommandOptions commandOptions) {
         FlowType flowType = getFlowType();
         FlexibleUnifiedConfig effectiveConfig = resolveEffectiveConfig(
-                commandOptions.getConfigFilePath(), commandOptions.isNoBackup(), commandOptions.isNoStatistics());
+                commandOptions.getConfigFilePath(),
+                commandOptions.isNoBackup(),
+                commandOptions.isNoStatistics(),
+                commandOptions.isFullStatistics());
         SrcProcessingResult srcProcessingResult = new SrcProcessor(effectiveConfig)
                 .processSources(
                         commandOptions.getBaseDir(),
@@ -180,7 +190,8 @@ abstract class BaseCommand implements Callable<Integer> {
                             commandOptions.getExcludeGlobs(),
                             commandOptions.getConfigFilePath(),
                             commandOptions.isNoBackup(),
-                            commandOptions.isNoStatistics()));
+                            commandOptions.isNoStatistics(),
+                            commandOptions.isFullStatistics()));
         }
         int exitCode = srcProcessingResult.isSuccess() ? ExitCodes.OK : checkFailedExitCode;
         log.info("Exit code: {}", exitCode);
@@ -189,14 +200,23 @@ abstract class BaseCommand implements Callable<Integer> {
 
     @Nullable
     private static FlexibleUnifiedConfig resolveEffectiveConfig(
-            @Nullable Path configFilePath, boolean disableBackups, boolean disableStatisticsOutput) {
+            @Nullable Path configFilePath,
+            boolean disableBackups,
+            boolean disableStatistics,
+            boolean enableFullStatistics) {
         FlexibleUnifiedConfig externalConfig = configFilePath != null
                 ? JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath)
                 : null;
-        FlexibleUnifiedConfig cliOverrideConfig = (disableBackups || disableStatisticsOutput)
+        ProcessingStatisticsMode statisticsModeOverride = null;
+        if (disableStatistics) {
+            statisticsModeOverride = ProcessingStatisticsMode.DISABLED;
+        } else if (enableFullStatistics) {
+            statisticsModeOverride = ProcessingStatisticsMode.FULL;
+        }
+        FlexibleUnifiedConfig cliOverrideConfig = (disableBackups || statisticsModeOverride != null)
                 ? FlexibleUnifiedConfig.builder()
                         .backupsEnabled(disableBackups ? false : null)
-                        .printProcessingStatistics(disableStatisticsOutput ? false : null)
+                        .processingStatisticsMode(statisticsModeOverride)
                         .build()
                 : null;
         return mergeFlexibleConfigs(externalConfig, cliOverrideConfig);
@@ -292,5 +312,7 @@ abstract class BaseCommand implements Callable<Integer> {
         boolean noBackup;
 
         boolean noStatistics;
+
+        boolean fullStatistics;
     }
 }

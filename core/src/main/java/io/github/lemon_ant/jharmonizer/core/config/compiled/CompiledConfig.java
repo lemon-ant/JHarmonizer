@@ -7,6 +7,7 @@ import static java.util.Collections.unmodifiableList;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -28,7 +29,8 @@ public class CompiledConfig {
 
     boolean backupsEnabled;
 
-    boolean printProcessingStatistics;
+    @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Header line descriptor (character + leftPadding).
@@ -51,7 +53,7 @@ public class CompiledConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
-     * @param printProcessingStatistics the print processing statistics flag
+     * @param processingStatisticsMode the processing statistics mode
      * @param headerLine the header line
      */
     @Builder(access = AccessLevel.PACKAGE)
@@ -60,13 +62,13 @@ public class CompiledConfig {
             @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             boolean backupsEnabled,
-            boolean printProcessingStatistics,
+            @NonNull ProcessingStatisticsMode processingStatisticsMode,
             @NonNull UnifiedHeaderLine headerLine) {
         this.rootMemberGroups = unmodifiableList(rootMemberGroups);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
-        this.printProcessingStatistics = printProcessingStatistics;
+        this.processingStatisticsMode = processingStatisticsMode;
         this.headerLine = headerLine;
     }
 

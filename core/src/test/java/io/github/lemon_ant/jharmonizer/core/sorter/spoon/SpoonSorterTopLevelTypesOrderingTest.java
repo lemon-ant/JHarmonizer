@@ -18,6 +18,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSelector;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -138,7 +139,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false))
                 .backupsEnabled(false)
-                .printProcessingStatistics(true)
+                .processingStatisticsMode(ProcessingStatisticsMode.FULL)
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .rootMemberGroup(rootMemberGroup)
                 .build();

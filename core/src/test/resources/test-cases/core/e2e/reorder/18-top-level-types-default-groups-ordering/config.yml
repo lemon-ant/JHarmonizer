@@ -8,7 +8,7 @@ formatting:
   blank-line-between-fields: false
 
 backups-enabled: true
-print-processing-statistics: true
+processing-statistics-mode: FULL
 
 header-line:
   character: '-'
