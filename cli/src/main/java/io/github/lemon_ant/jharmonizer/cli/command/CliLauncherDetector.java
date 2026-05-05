@@ -121,8 +121,8 @@ class CliLauncherDetector {
      * {@code sun.java.command} to {@code "app.jar [args]"}. The first whitespace-delimited token
      * of that property is therefore the jar file name (or path), which — combined with
      * {@code command()} for the java executable — gives us the full launcher prefix without
-     * relying on {@code arguments()} or {@code commandLine()}, both of which are unavailable on
-     * Windows (JDK-8252698).
+     * relying on {@code arguments()} (which is subject to the Windows limitation described by
+     * JDK-8252698) and without requiring {@code commandLine()} to be available.
      *
      * <p>Exposed as package-private for unit testing without requiring a real process context.
      *
