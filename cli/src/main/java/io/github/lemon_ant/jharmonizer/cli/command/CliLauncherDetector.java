@@ -26,6 +26,8 @@ class CliLauncherDetector {
     private static final String FALLBACK_LAUNCHER = "jharmonizer";
     private static final String JAR_FLAG = "-jar";
     private static final String JHARMONIZER_JAR_NAME_PART = "jharmonizer";
+    private static final char DOUBLE_QUOTE = '"';
+    private static final int MINIMUM_COMMANDLINE_TOKEN_COUNT = 2;
 
     /**
      * Detects the launcher prefix for the current process.
@@ -44,14 +46,14 @@ class CliLauncherDetector {
         // Fallback 1: command() + sun.java.command — works on Windows with any HotSpot JVM.
         // On Windows, ProcessHandle.Info.arguments() returns Optional.empty() (JDK-8252698), but
         // the JVM launcher always sets sun.java.command to "<program> [app-args]" for -jar mode.
-        String sunJavaCommandFallback =
-                resolveLauncherPrefixFromSunProperty(processInfo.command(), System.getProperty("sun.java.command"));
+        String sunJavaCommandFallback = resolveLauncherPrefixFromSunProperty(
+                processInfo.command().orElse(null), System.getProperty("sun.java.command"));
         if (!FALLBACK_LAUNCHER.equals(sunJavaCommandFallback)) {
             return sunJavaCommandFallback;
         }
         // Fallback 2: tokenize commandLine() — covers remaining edge cases where commandLine() is
         // populated but neither arguments() nor sun.java.command provided useful info.
-        return resolveLauncherPrefixFromCommandLine(processInfo.commandLine());
+        return resolveLauncherPrefixFromCommandLine(processInfo.commandLine().orElse(null));
     }
 
     /**
@@ -89,18 +91,18 @@ class CliLauncherDetector {
      *
      * <p>Exposed as package-private for unit testing without requiring a real process context.
      *
-     * @param maybeCommandLine the full raw command line of the process, if available
+     * @param commandLine the full raw command line of the process, or {@code null} if unavailable
      * @return the resolved launcher prefix, or the {@code jharmonizer} fallback
      */
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    static String resolveLauncherPrefixFromCommandLine(@NonNull Optional<String> maybeCommandLine) {
-        if (maybeCommandLine.isEmpty()) {
+    static String resolveLauncherPrefixFromCommandLine(@Nullable String commandLine) {
+        if (commandLine == null) {
             return FALLBACK_LAUNCHER;
         }
         try {
-            List<String> tokens = tokenizeCommandLine(maybeCommandLine.get());
-            if (tokens.size() < 2) {
+            List<String> tokens = tokenizeCommandLine(commandLine);
+            if (tokens.size() < MINIMUM_COMMANDLINE_TOKEN_COUNT) {
                 return FALLBACK_LAUNCHER;
             }
             String command = tokens.get(0);
@@ -124,16 +126,16 @@ class CliLauncherDetector {
      *
      * <p>Exposed as package-private for unit testing without requiring a real process context.
      *
-     * @param maybeCommand the Java executable path from {@code ProcessHandle.Info.command()}
+     * @param command the Java executable path from {@code ProcessHandle.Info.command()}, or
+     *     {@code null} if unavailable
      * @param sunJavaCommand the value of the {@code sun.java.command} system property, or
      *     {@code null} if the property is not set
      * @return the resolved launcher prefix, or the {@code jharmonizer} fallback
      */
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    static String resolveLauncherPrefixFromSunProperty(
-            @NonNull Optional<String> maybeCommand, @Nullable String sunJavaCommand) {
-        if (maybeCommand.isEmpty() || sunJavaCommand == null || sunJavaCommand.isBlank()) {
+    static String resolveLauncherPrefixFromSunProperty(@Nullable String command, @Nullable String sunJavaCommand) {
+        if (command == null || sunJavaCommand == null || sunJavaCommand.isBlank()) {
             return FALLBACK_LAUNCHER;
         }
         try {
@@ -144,7 +146,7 @@ class CliLauncherDetector {
             if (!isJHarmonizerJar(programName)) {
                 return FALLBACK_LAUNCHER;
             }
-            String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(maybeCommand.get()));
+            String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(command));
             String normalizedJarPath = PathUtils.normalizeSeparators(Path.of(programName));
             return quotePathForShell(normalizedJavaExe) + " " + JAR_FLAG + " " + quotePathForShell(normalizedJarPath);
         } catch (RuntimeException pathBuildingException) {
@@ -164,20 +166,20 @@ class CliLauncherDetector {
      * @return the list of tokens extracted from the command line
      */
     @NonNull
-    private static List<String> tokenizeCommandLine(@NonNull String commandLine) {
+    private static List<String> tokenizeCommandLine(String commandLine) {
         List<String> tokens = new ArrayList<>();
         StringBuilder currentToken = new StringBuilder();
         boolean inQuotes = false;
         boolean buildingToken = false;
         for (int characterIndex = 0; characterIndex < commandLine.length(); characterIndex++) {
             char character = commandLine.charAt(characterIndex);
-            if (character == '"') {
+            if (character == DOUBLE_QUOTE) {
                 inQuotes = !inQuotes;
                 buildingToken = true;
             } else if (Character.isWhitespace(character) && !inQuotes) {
                 if (buildingToken) {
                     tokens.add(currentToken.toString());
-                    currentToken = new StringBuilder();
+                    currentToken.setLength(0);
                     buildingToken = false;
                 }
             } else {
