@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -43,8 +42,6 @@ public class SrcFilesHandler {
     /**
      * Recursively resolves all {@code .java} files that match the provided include and exclude globs.
      * Supports mixed absolute and relative globs and removes duplicates from the result.
-     * Include globs whose effective base directory does not exist are silently skipped, rather than
-     * causing {@link java.nio.file.NoSuchFileException} to propagate from the underlying file walker.
      *
      * @param baseDir the base directory to scan
      * @param includeGlobs the include globs to apply
@@ -54,41 +51,13 @@ public class SrcFilesHandler {
     @NonNull
     private static Stream<Path> findJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
-        // GlobPathFinder calls Files.find() eagerly on the effective base directory for each
-        // include glob, and throws NoSuchFileException if that base does not exist. Pre-filter to
-        // prevent this for globs whose effective base directory is absent (e.g. auto-derived
-        // src/test/java patterns in modules that have no test sources).
-        Set<String> reachableIncludes = includeGlobs.stream()
-                .filter(glob -> effectiveBaseExists(baseDir, glob))
-                .collect(Collectors.toUnmodifiableSet());
-        if (!includeGlobs.isEmpty() && reachableIncludes.isEmpty()) {
-            return Stream.empty();
-        }
         PathQuery pathQuery = PathQuery.builder()
                 .baseDir(baseDir)
-                .includeGlobs(reachableIncludes)
+                .includeGlobs(includeGlobs)
                 .excludeGlobs(excludeGlobs)
                 .allowedExtensions(Set.of("java"))
                 .build();
         return GlobPathFinder.findPaths(pathQuery).parallel();
-    }
-
-    private static boolean effectiveBaseExists(Path baseDir, String includeGlob) {
-        // Absolute globs are resolved by GlobPathFinder independently; do not pre-filter them.
-        if (Path.of(includeGlob).isAbsolute()) {
-            return true;
-        }
-        // Walk the non-wildcard prefix to find the effective scan root that GlobPathFinder
-        // would use. Stop at the first wildcard segment so we do not over-restrict.
-        // Note: glob character ranges ([abc]) are also treated as wildcards here.
-        Path effectiveBase = baseDir;
-        for (String segment : includeGlob.split("[/\\\\]")) {
-            if (segment.isEmpty() || segment.matches(".*[*?{\\[].*")) {
-                break;
-            }
-            effectiveBase = effectiveBase.resolve(segment);
-        }
-        return Files.exists(effectiveBase);
     }
 
     /**
