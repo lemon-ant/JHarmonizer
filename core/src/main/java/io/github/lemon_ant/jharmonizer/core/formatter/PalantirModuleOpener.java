@@ -51,12 +51,10 @@ class PalantirModuleOpener {
      * that can be added to {@code .mvn/jvm.config} as a manual fallback.
      */
     static void openRequiredJdkCompilerPackages() {
-        if (opened.compareAndSet(false, true)) {
-            if (!applyPackageOpens()) {
-                // Reset so the next caller can retry (e.g. after a transient failure or
-                // if the first attempt happened before the module layer was fully initialized).
-                opened.set(false);
-            }
+        if (opened.compareAndSet(false, true) && !applyPackageOpens()) {
+            // Reset so the next caller can retry (e.g. after a transient failure or
+            // if the first attempt happened before the module layer was fully initialized).
+            opened.set(false);
         }
     }
 
