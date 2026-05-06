@@ -54,7 +54,7 @@ class ReorderMojoTest {
     }
 
     @Test
-    void execute_mainSourceExistsTestSourceAbsent_bothPatternsPassedAndSucceeds() throws Exception {
+    void execute_testSourceDirectoryAbsent_succeeds() throws Exception {
         // Given - src/main/java exists, src/test/java does not; both include patterns must be passed
         // to the core and the missing test source dir must be skipped gracefully.
         Path srcMainJava = tempDir.resolve("src/main/java");
