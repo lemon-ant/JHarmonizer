@@ -4,8 +4,6 @@
 name: 01-Build Artifacts
 
 on:
-  push:
-    branches: [ main ]
   release:
     types: [ published ]
   workflow_dispatch:
@@ -32,7 +30,13 @@ jobs:
           cache: maven
 
       - name: Build once
-        run: mvn -B -ntp -Dci=true clean verify
+        # `install` (not `verify`) is required so that inter-module JARs land in the local
+        # Maven repository before the subsequent `source:jar javadoc:jar` invocation.
+        # Running those goals directly (outside the lifecycle) bypasses reactor resolution,
+        # so downstream modules like jharmonizer-core cannot find dependency-aware-sorting
+        # unless it is already installed. Remove this comment if the source/javadoc step
+        # is ever reworked to run inside a single lifecycle invocation.
+        run: mvn -B -ntp -Dci=true clean install
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
