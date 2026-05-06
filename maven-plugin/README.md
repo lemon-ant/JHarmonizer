@@ -88,7 +88,7 @@ Each Mojo class is a thin wrapper that:
 
 1. Resolves `baseDir` and the effective `includes`/`excludes`.
 2. Builds an optional `FlexibleUnifiedConfig` overlay from `configFile` and from
-   per-run parameter overrides (`backupsEnabled`, `printProcessingStatistics`).
+   per-run parameter overrides (`backupsEnabled`, `processingStatisticsMode`).
 3. Constructs a `SrcProcessor(overlay)` and invokes `processSources(...)` with
    the goal-specific `FlowType` (`REORDER`, `CHECK_ALL`, `CHECK_FAIL_FAST`).
 4. For `check-*` goals: when the result is non-successful and
