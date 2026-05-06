@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -72,6 +73,25 @@ class CheckAllMojoTest {
         CheckAllMojo checkAllMojo = new CheckAllMojo();
         MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
         MojoTestUtils.injectField(checkAllMojo, "skip", true);
+
+        // When
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
+
+        // Then
+        assertThat(thrown).isNull();
+    }
+
+    @Test
+    void execute_testSourceDirectoryAbsent_completesWithoutException() throws Exception {
+        // Given
+        Path srcMainJava = tempDir.resolve("src/main/java");
+        Files.createDirectories(srcMainJava);
+        MojoTestUtils.copyResourceDirectory("/test-cases/check-conforming", srcMainJava);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "projectBaseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "mainSourceDirectory", MojoTestUtils.toFile(srcMainJava));
+        MojoTestUtils.injectField(
+                checkAllMojo, "testSourceDirectory", MojoTestUtils.toFile(tempDir.resolve("src/test/java")));
 
         // When
         Throwable thrown = catchThrowable(checkAllMojo::execute);

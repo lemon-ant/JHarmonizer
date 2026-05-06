@@ -8,10 +8,12 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -125,6 +127,9 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
      * Validates parameters, builds configuration, and runs the selected JHarmonizer flow.
+     * When no explicit {@code baseDir} is configured and no Java source directories exist under the
+     * project base directory, execution is skipped with an informational log message (common for
+     * parent-only POM modules in a multi-module build where there are no Java sources to process).
      *
      * @throws MojoExecutionException when a base directory is invalid or an unexpected error occurs
      * @throws MojoFailureException   when the flow reports violations and {@code failOnViolation} is {@code true}
@@ -137,8 +142,17 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
 
         BaseDirContext context = resolveBaseDirContext();
+        if (context == null) {
+            getLog().info("JHarmonizer: no Java source directories found under project base directory; skipping.");
+            return;
+        }
         SrcProcessingResult srcProcessingResult =
                 invokeSrcProcessor(context.getResolvedBaseDir(), context.getEffectiveIncludes());
+
+        if (JvmShutdownSignal.isShuttingDown()) {
+            interruptCurrentThread();
+            throw new MojoExecutionException("JHarmonizer was interrupted (Ctrl+C); aborting build.");
+        }
 
         if (!srcProcessingResult.isSuccess() && isCheckFlow(getFlowType())) {
             getLog().warn("To automatically fix these violations, run:\nmvn jharmonizer:reorder");
@@ -153,7 +167,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
     }
 
-    @NonNull
+    @Nullable
     private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
         return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
     }
@@ -171,7 +185,7 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         return new BaseDirContext(resolvedBaseDir, includes != null ? includes : Set.of());
     }
 
-    @NonNull
+    @Nullable
     private BaseDirContext resolveProjectBaseDir() throws MojoExecutionException {
         if (projectBaseDir == null) {
             throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
@@ -183,7 +197,11 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
                     "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
         }
         try {
-            return new BaseDirContext(projectBaseDirPath, computeDefaultIncludes(projectBaseDirPath));
+            Set<String> effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
+            if (effectiveIncludes.isEmpty()) {
+                return null;
+            }
+            return new BaseDirContext(projectBaseDirPath, effectiveIncludes);
         } catch (IllegalArgumentException e) {
             throw new MojoExecutionException(
                     "Cannot compute default source include patterns relative to project base directory '"
@@ -195,10 +213,14 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     @NonNull
     private Set<String> computeDefaultIncludes(Path projectBaseDirPath) {
-        Stream<String> srcDirIncludes = Stream.of(mainSourceDirectory, testSourceDirectory)
+        List<Path> srcDirPaths = Stream.of(mainSourceDirectory, testSourceDirectory)
                 .filter(Objects::nonNull)
                 .map(srcDir -> srcDir.toPath().toAbsolutePath().normalize())
-                .filter(Files::isDirectory)
+                .toList();
+        if (srcDirPaths.stream().noneMatch(Files::isDirectory)) {
+            return includes != null ? Set.copyOf(includes) : Set.of();
+        }
+        Stream<String> srcDirIncludes = srcDirPaths.stream()
                 .map(srcDirPath -> PathUtils.normalizeSeparators(projectBaseDirPath.relativize(srcDirPath)) + "/**");
         Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());
@@ -241,6 +263,11 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return null;
         }
         return JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath);
+    }
+
+    @SuppressWarnings("PMD.DoNotUseThreads")
+    private static void interruptCurrentThread() {
+        Thread.currentThread().interrupt();
     }
 
     @Nullable
