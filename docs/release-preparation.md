@@ -6,7 +6,7 @@
 -->
 # Release Preparation Checklist
 
-This document lists every step required to cut a new release of **Glob Path Finder**.
+This document lists every step required to cut a new release of **JHarmonizer**.
 Follow the steps in order. Do not skip any item — each one was added because it was
 either forgotten in a previous release or is easy to overlook.
 
@@ -75,7 +75,7 @@ Add a new top-level section **above** the previous release, following the existi
 Also add the comparison link at the bottom of the file:
 
 ```markdown
-[X.Y.Z]: https://github.com/lemon-ant/glob-path-finder/compare/vPREV...vX.Y.Z
+[X.Y.Z]: https://github.com/lemon-ant/JHarmonizer/compare/vPREV...vX.Y.Z
 ```
 
 Use today's date as the release date. Do not leave it as a placeholder.
@@ -160,7 +160,7 @@ After publishing the release, confirm that all three workflows succeed:
 | Workflow             | Expected result |
 |----------------------|---|
 | `01-Build Artifacts` | ✅ Green |
-| `02-Compat Test`     | ✅ Green |
+| `02-Compatibility Test`     | ✅ Green |
 | `03-Publish Release` | ✅ Green — artifact uploaded to Maven Central |
 
 If any workflow fails, investigate the logs before announcing the release.
@@ -172,13 +172,13 @@ If any workflow fails, investigate the logs before announcing the release.
 Wait up to 30 minutes, then confirm the artifact is searchable:
 
 ```
-https://search.maven.org/artifact/io.github.lemon-ant/glob-path-finder/X.Y.Z/jar
+https://search.maven.org/search?q=g:io.github.lemon-ant.jharmonizer+AND+v:X.Y.Z
 ```
 
-For example, for version `1.2.0`:
+For example, for version `1.0.0`:
 
 ```
-https://search.maven.org/artifact/io.github.lemon-ant/glob-path-finder/1.2.0/jar
+https://search.maven.org/search?q=g:io.github.lemon-ant.jharmonizer+AND+v:1.0.0
 ```
 
 ---
