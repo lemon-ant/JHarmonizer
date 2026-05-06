@@ -15,6 +15,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarm
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerTypeKind;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ class JHarmonizer2UnifiedConverterTest {
                 topLevel,
                 createFormatting(true, FormatterStyle.PALANTIR),
                 true,
-                true,
+                ProcessingStatisticsMode.FULL,
                 createHeaderLine('-', 5),
                 List.of(root));
 

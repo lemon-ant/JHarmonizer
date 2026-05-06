@@ -12,6 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -209,7 +210,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     private static SrcProcessor buildSrcProcessor(Path scenarioConfigPath) {
         if (scenarioConfigPath == null) {
             return new SrcProcessor(FlexibleUnifiedConfig.builder()
-                    .printProcessingStatistics(false)
+                    .processingStatisticsMode(ProcessingStatisticsMode.DISABLED)
                     .build());
         }
 
@@ -225,7 +226,7 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                 .topLevelTypesOrdering(flexibleConfig.getTopLevelTypesOrdering().orElse(null))
                 .formatting(flexibleConfig.getFormatting().orElse(null))
                 .backupsEnabled(flexibleConfig.getBackupsEnabled().orElse(null))
-                .printProcessingStatistics(false)
+                .processingStatisticsMode(ProcessingStatisticsMode.DISABLED)
                 .headerLine(flexibleConfig.getHeaderLine().orElse(null))
                 .rootMemberGroups(flexibleConfig.getRootMemberGroups().orElse(null))
                 .build();

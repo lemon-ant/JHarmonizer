@@ -19,6 +19,7 @@ import ch.qos.logback.core.filter.Filter;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -168,7 +169,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_noStatisticsOptionInvoked_disablesStatisticsReportInSrcProcessor() {
+    void call_statisticsDisabledOptionInvoked_disablesStatisticsReportInSrcProcessor() {
         // Given
         CommandLine cmd = new CommandLine(new TestCommand());
         AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
@@ -181,7 +182,7 @@ class BaseCommandTest {
                     when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenReturn(CommandTestUtils.buildSuccessfulResult());
                 })) {
-            exitCode = cmd.execute("--base-dir", "src", "--no-statistics");
+            exitCode = cmd.execute("--base-dir", "src", "--statistics-mode", "DISABLED");
         }
 
         // Then
@@ -190,7 +191,32 @@ class BaseCommandTest {
         Object constructorConfig = constructorArguments.get().getFirst();
         assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
         FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
-        assertThat(flexibleConfig.getPrintProcessingStatistics()).contains(false);
+        assertThat(flexibleConfig.getProcessingStatisticsMode()).contains(ProcessingStatisticsMode.DISABLED);
+    }
+
+    @Test
+    void call_statisticsFullOptionInvoked_enablesFullStatisticsReportInSrcProcessor() {
+        // Given
+        CommandLine cmd = new CommandLine(new TestCommand());
+        AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
+                mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    constructorArguments.set(context.arguments());
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenReturn(CommandTestUtils.buildSuccessfulResult());
+                })) {
+            exitCode = cmd.execute("--base-dir", "src", "--statistics-mode", "FULL");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        Object constructorConfig = constructorArguments.get().getFirst();
+        assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
+        FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
+        assertThat(flexibleConfig.getProcessingStatisticsMode()).contains(ProcessingStatisticsMode.FULL);
     }
 
     @Test

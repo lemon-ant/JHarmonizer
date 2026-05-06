@@ -4,6 +4,7 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 
 import static java.util.Optional.ofNullable;
 
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +37,7 @@ public class FlexibleUnifiedConfig {
     Boolean backupsEnabled;
 
     @Nullable
-    Boolean printProcessingStatistics;
+    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Optional override for header line.
@@ -62,7 +63,7 @@ public class FlexibleUnifiedConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
-     * @param printProcessingStatistics the print processing statistics flag
+     * @param processingStatisticsMode the processing statistics mode
      * @param headerLine the header line
      * @param rootMemberGroups the root member groups
      */
@@ -71,21 +72,21 @@ public class FlexibleUnifiedConfig {
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable FlexibleUnifiedFormatting formatting,
             @Nullable Boolean backupsEnabled,
-            @Nullable Boolean printProcessingStatistics,
+            @Nullable ProcessingStatisticsMode processingStatisticsMode,
             @Nullable UnifiedHeaderLine headerLine,
             @Nullable List<UnifiedMemberGroup> rootMemberGroups) {
         Validate.isTrue(
                 topLevelTypesOrdering != null
                         || formatting != null
                         || backupsEnabled != null
-                        || printProcessingStatistics != null
+                        || processingStatisticsMode != null
                         || headerLine != null
                         || rootMemberGroups != null,
                 "At least one field must be set in FlexibleUnifiedConfig");
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
-        this.printProcessingStatistics = printProcessingStatistics;
+        this.processingStatisticsMode = processingStatisticsMode;
         this.headerLine = headerLine;
         this.rootMemberGroups =
                 ofNullable(rootMemberGroups).map(Collections::unmodifiableList).orElse(null);
@@ -110,12 +111,12 @@ public class FlexibleUnifiedConfig {
     }
 
     /**
-     * Returns the print processing statistics flag.
-     * @return the print processing statistics flag
+     * Returns the processing statistics mode.
+     * @return the processing statistics mode
      */
     @NonNull
-    public Optional<Boolean> getPrintProcessingStatistics() {
-        return ofNullable(printProcessingStatistics);
+    public Optional<ProcessingStatisticsMode> getProcessingStatisticsMode() {
+        return ofNullable(processingStatisticsMode);
     }
 
     /**

@@ -3,6 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;
@@ -22,7 +23,8 @@ public class JHarmonizerConfig {
 
     boolean backupsEnabled;
 
-    boolean printProcessingStatistics;
+    @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
 
     @NonNull
     JHarmonizerHeaderLine headerLine;
@@ -39,7 +41,7 @@ public class JHarmonizerConfig {
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
-     * @param printProcessingStatistics the print processing statistics flag
+     * @param processingStatisticsMode the processing statistics mode
      * @param headerLine the header line
      * @param memberGroups the member groups
      */
@@ -48,14 +50,15 @@ public class JHarmonizerConfig {
                     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
             @JsonProperty(value = "backups-enabled", required = true) boolean backupsEnabled,
-            @JsonProperty(value = "print-processing-statistics", required = true) boolean printProcessingStatistics,
+            @NonNull @JsonProperty(value = "processing-statistics-mode", required = true)
+                    ProcessingStatisticsMode processingStatisticsMode,
             @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
                     List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
-        this.printProcessingStatistics = printProcessingStatistics;
+        this.processingStatisticsMode = processingStatisticsMode;
         this.headerLine = headerLine;
         Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
         this.memberGroups = Collections.unmodifiableList(memberGroups);

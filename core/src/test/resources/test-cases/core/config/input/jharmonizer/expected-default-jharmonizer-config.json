@@ -7,7 +7,7 @@
     "blankLineBetweenFields" : false
   },
   "backupsEnabled" : true,
-  "printProcessingStatistics" : true,
+  "processingStatisticsMode" : "MINIMAL",
   "headerLine" : {
     "character" : "-",
     "leftPadding" : 3

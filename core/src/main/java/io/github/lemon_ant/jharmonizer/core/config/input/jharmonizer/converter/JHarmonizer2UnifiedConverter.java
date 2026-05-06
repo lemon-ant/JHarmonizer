@@ -9,6 +9,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -44,7 +45,7 @@ public final class JHarmonizer2UnifiedConverter {
         boolean blankLineBetweenFields = vendor.getFormatting().isBlankLineBetweenFields();
 
         boolean backupsEnabled = vendor.isBackupsEnabled();
-        boolean printProcessingStatistics = vendor.isPrintProcessingStatistics();
+        ProcessingStatisticsMode processingStatisticsMode = vendor.getProcessingStatisticsMode();
 
         // 4) headerLine
         UnifiedHeaderLine header = new UnifiedHeaderLine(
@@ -59,7 +60,7 @@ public final class JHarmonizer2UnifiedConverter {
                 .formatting(new UnifiedFormatting(
                         fixImports, style, blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields))
                 .backupsEnabled(backupsEnabled)
-                .printProcessingStatistics(printProcessingStatistics)
+                .processingStatisticsMode(processingStatisticsMode)
                 .headerLine(header)
                 .rootMemberGroups(root)
                 .build();

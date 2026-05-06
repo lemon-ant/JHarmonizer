@@ -18,6 +18,7 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.FlowProcessingStats.AggregatedProcessingStatistic;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.PathDisplayFormatUtil;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsPrintService;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocationPrinter;
@@ -130,11 +131,19 @@ public final class SrcProcessor {
                 .peek(SrcProcessor::logNonConformingFileDetails)
                 .collect(FlowProcessingStats.statsCollector());
 
-        if (config.isPrintProcessingStatistics()) {
-            log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
-        } else {
-            logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
-            logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
+        switch (config.getProcessingStatisticsMode()) {
+            case FULL -> log.info(ProcessingStatisticsPrintService.render(aggregatedProcessingStatistic));
+            case MINIMAL -> {
+                log.info(ProcessingStatisticsPrintService.renderMinimal(aggregatedProcessingStatistic));
+                logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
+            }
+            case DISABLED -> {
+                logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
+                logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
+            }
+            default ->
+                throw new IllegalStateException(
+                        "Unhandled ProcessingStatisticsMode: " + config.getProcessingStatisticsMode());
         }
 
         logCompletionMessage(flowType, aggregatedProcessingStatistic, flow.isModifyingFlow());
@@ -165,7 +174,7 @@ public final class SrcProcessor {
                         ? SUMMARY_STATUS_COMPLETED
                         : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
         log.debug(
-                "Processing completed (full statistics report disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, wallClockTimeNanos={}, totalCpuTimeNanos={}, unexpectedErrors={}",
+                "Processing completed (statistics disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, wallClockTimeNanos={}, totalCpuTimeNanos={}, unexpectedErrors={}",
                 flowType,
                 processingStatus,
                 aggregatedProcessingStatistic.getFileCount(),
@@ -249,7 +258,7 @@ public final class SrcProcessor {
             @NonNull Path baseDir,
             @NonNull Collection<String> includeGlobs,
             @NonNull Collection<String> excludeGlobs) {
-        if (config.isPrintProcessingStatistics() && log.isInfoEnabled()) {
+        if (config.getProcessingStatisticsMode() == ProcessingStatisticsMode.FULL && log.isInfoEnabled()) {
             log.info(StartupBannerRenderer.render(
                     flowType, baseDir, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
         } else {

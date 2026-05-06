@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedFormat
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -29,15 +30,15 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
         UnifiedTopLevelTypesOrdering topLevelTypesOrdering = readTopLevelTypesOrdering(vendorConfig);
         FlexibleUnifiedFormatting formatting = readFormatting(vendorConfig);
         Boolean backupsEnabled = vendorConfig.getBackupsEnabled().orElse(null);
-        Boolean printProcessingStatistics =
-                vendorConfig.getPrintProcessingStatistics().orElse(null);
+        ProcessingStatisticsMode processingStatisticsMode =
+                vendorConfig.getProcessingStatisticsMode().orElse(null);
         UnifiedHeaderLine headerLine = readHeaderLine(vendorConfig);
         List<UnifiedMemberGroup> rootMemberGroups = readRootMemberGroups(vendorConfig);
         FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder builder = FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(formatting)
                 .backupsEnabled(backupsEnabled)
-                .printProcessingStatistics(printProcessingStatistics)
+                .processingStatisticsMode(processingStatisticsMode)
                 .headerLine(headerLine);
         if (rootMemberGroups != null) {
             builder.rootMemberGroups(rootMemberGroups);

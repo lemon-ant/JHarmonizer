@@ -31,6 +31,24 @@ public class ProcessingStatisticsPrintService {
     private static final String HEADER = "JHarmonization summary";
 
     /**
+     * Builds a brief single-line summary: file count, wall-clock time, total size and error count.
+     *
+     * @param stats aggregated statistics to summarize
+     * @return a compact one-line summary suitable for logs
+     */
+    @NonNull
+    public static String renderMinimal(@NonNull AggregatedProcessingStatistic stats) {
+        int unexpectedErrorCount = stats.getFilesWithUnexpectedErrors().size();
+        return String.format(
+                Locale.ROOT,
+                "JHarmonization: %,d file(s), wall-clock %s, %s total%s",
+                stats.getFileCount(),
+                formatHmsMillisFromNanos(stats.getWallClockTimeNanos()),
+                formatBytes(stats.getTotalSizeInBytes()),
+                unexpectedErrorCount > 0 ? ", " + unexpectedErrorCount + " unexpected error(s)" : "");
+    }
+
+    /**
      * Builds a pseudo-table report with a dedicated section for unexpected internal errors.
      *
      * @param stats aggregated statistics to print

@@ -5,6 +5,7 @@ package io.github.lemon_ant.jharmonizer.core.config.unified;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
@@ -312,7 +313,7 @@ class UnifiedConfigMergerTest {
                 .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)
                 .formatting(FORMATTING)
                 .backupsEnabled(true)
-                .printProcessingStatistics(true)
+                .processingStatisticsMode(ProcessingStatisticsMode.FULL)
                 .headerLine(HEADER_LINE)
                 .rootMemberGroups(rootMemberGroups)
                 .build();

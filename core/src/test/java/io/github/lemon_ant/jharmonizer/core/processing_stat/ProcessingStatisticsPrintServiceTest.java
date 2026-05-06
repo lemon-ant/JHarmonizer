@@ -26,6 +26,43 @@ import org.junit.jupiter.api.parallel.Resources;
 class ProcessingStatisticsPrintServiceTest {
 
     @Test
+    void renderMinimal_withNoErrors_returnsCompactSummaryLine() {
+        // Given
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(7)
+                .totalSizeInBytes(12_345)
+                .wallClockTimeNanos(1_234_000_000L)
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.renderMinimal(stats);
+
+        // Then
+        assertThat(report).contains("7 file(s)").contains("wall-clock").doesNotContain("unexpected error");
+    }
+
+    @Test
+    void renderMinimal_withErrors_includesErrorCount() {
+        // Given
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(3)
+                .totalSizeInBytes(0)
+                .filesWithUnexpectedErrors(List.of(Path.of("Broken.java"), Path.of("Also.java")))
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.renderMinimal(stats);
+
+        // Then
+        assertThat(report).contains("2 unexpected error(s)");
+    }
+
+    @Test
     void render_containsPseudoTableAndMultilineUnexpectedErrorList() {
         // Given
         Path brokenPath = Path.of("zeta", "Broken.java");

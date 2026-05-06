@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizer
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.io.File;
@@ -102,12 +103,13 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private Boolean backupsEnabled;
 
     /**
-     * Overrides the {@code printProcessingStatistics} setting from the active configuration.
-     * When not set, the value from the configuration file is used; the embedded default is {@code true}.
+     * Overrides the {@code processingStatisticsMode} setting from the active configuration.
+     * When not set, the value from the configuration file is used; the embedded default is {@code MINIMAL}.
+     * Accepted values: {@code FULL}, {@code MINIMAL}, {@code DISABLED}.
      */
-    @Parameter(property = "jharmonizer.printProcessingStatistics")
+    @Parameter(property = "jharmonizer.processingStatisticsMode")
     @Nullable
-    private Boolean printProcessingStatistics;
+    private ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * When {@code true} and the processing result indicates a violation (e.g. non-conforming files
@@ -243,10 +245,10 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private FlexibleUnifiedConfig buildConfig() {
         FlexibleUnifiedConfig fileConfig = resolveFileConfig();
 
-        FlexibleUnifiedConfig paramOverrideConfig = (backupsEnabled != null || printProcessingStatistics != null)
+        FlexibleUnifiedConfig paramOverrideConfig = (backupsEnabled != null || processingStatisticsMode != null)
                 ? FlexibleUnifiedConfig.builder()
                         .backupsEnabled(backupsEnabled)
-                        .printProcessingStatistics(printProcessingStatistics)
+                        .processingStatisticsMode(processingStatisticsMode)
                         .build()
                 : null;
 
