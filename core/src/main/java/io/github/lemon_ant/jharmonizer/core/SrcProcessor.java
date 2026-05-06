@@ -137,7 +137,7 @@ public final class SrcProcessor {
                 log.info(ProcessingStatisticsPrintService.renderMinimal(aggregatedProcessingStatistic));
                 logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
             }
-            default -> {
+            case DISABLED -> {
                 logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
                 logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
             }
