@@ -70,7 +70,7 @@ All goals share the same parameters (see `AbstractJHarmonizerMojo`):
 | `skip`                      | `jharmonizer.skip`                      | `false`                              | When `true`, the goal logs a skip message and exits.                                             |
 | `configFile`                | `jharmonizer.configFile`                | `${project.basedir}/jharmonizer.yml` | YAML overlay merged over the embedded defaults. Missing file → defaults only.                    |
 | `backupsEnabled`            | `jharmonizer.backupsEnabled`            | _unset_                              | Overrides `backupsEnabled` from the active configuration (default `true`).                       |
-| `printProcessingStatistics` | `jharmonizer.printProcessingStatistics` | _unset_                              | Overrides `printProcessingStatistics` from the active configuration (default `true`).            |
+| `processingStatisticsMode`  | `jharmonizer.processingStatisticsMode`  | _unset_                              | Overrides `processingStatisticsMode` from the active configuration (default `MINIMAL`). Accepted values: `FULL`, `MINIMAL`, `DISABLED`. |
 | `failOnViolation`           | `jharmonizer.failOnViolation`           | `true`                               | Applies to `check-all`/`check-fast`. `false` → report-only.                                      |
 
 `includes`/`excludes` follow the same convention as standard Maven plugins
