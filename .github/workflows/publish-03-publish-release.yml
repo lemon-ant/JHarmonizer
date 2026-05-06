@@ -90,7 +90,8 @@ jobs:
       - name: Sign and publish to Maven Central
         # -Prelease activates: maven-source-plugin, maven-javadoc-plugin,
         #                       maven-gpg-plugin (sign), central-publishing-maven-plugin (deploy).
-        # -DskipTests skips unit tests (already passed in step 01).
+        # -DskipTests skips unit tests (Surefire); -DskipITs skips integration tests (Failsafe).
+        # Both already passed in step 01.
         # -Ddoclint=none avoids failing on non-critical Javadoc warnings.
         # -Dci=true disables local-dev-only profiles (reformat-poms, reformat-sources).
-        run: mvn -B -ntp -Dci=true -Prelease -DskipTests -Ddoclint=none deploy
+        run: mvn -B -ntp -Dci=true -Prelease -DskipTests -DskipITs -Ddoclint=none deploy
