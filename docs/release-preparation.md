@@ -94,11 +94,11 @@ Search for the previous version string and replace every occurrence with `X.Y.Z`
 
 ## 5. Update supported version in `SECURITY.md`
 
-`SECURITY.md` declares which version is currently supported.
-Update the version number to `X.Y.Z`:
+`SECURITY.md` contains a **Supported versions** section. Replace the pre-release placeholder
+text with a statement that confirms the new version `X.Y.Z` is the supported release:
 
 ```markdown
-As of now, this means version **X.Y.Z**.
+The latest stable release is supported. As of now, this means version **X.Y.Z**.
 ```
 
 ---
@@ -134,8 +134,8 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-The tag name **must** start with `v` (e.g. `v1.2.0`). The publish workflow checks for this
-prefix (`refs/tags/v*`) and will be skipped if the tag does not match.
+The tag name **must** start with `v` (e.g. `v1.2.0`).
+Pushing the tag alone does not trigger any CI workflow; publishing the GitHub Release in step 9 does.
 
 ---
 
@@ -148,8 +148,9 @@ prefix (`refs/tags/v*`) and will be skipped if the tag does not match.
 5. Ensure **Set as the latest release** is checked (unless this is a pre-release).
 6. Click **Publish release**.
 
-Publishing the release triggers the **03-Publish Release** workflow, which builds, signs,
-and uploads the artifact to Maven Central.
+Publishing the release triggers the **01-Build Artifacts** workflow. On successful completion
+it chains into **02-Compatibility Test**, which then triggers **03-Publish Release**, which
+signs and uploads the artifacts to Maven Central.
 
 ---
 
