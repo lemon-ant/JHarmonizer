@@ -101,7 +101,7 @@ class JHarmonizerCliPackagedJarIT {
                 .contains("Usage: jharmonizer " + command)
                 .contains("-b, --base-dir")
                 .contains("-B, --no-backup")
-                .contains("-S, --no-statistics")
+                .contains("-s, --statistics-mode")
                 .contains("-i, --include")
                 .contains("-e, --exclude")
                 .contains("Repeat this option or pass multiple patterns as a")
@@ -116,7 +116,7 @@ class JHarmonizerCliPackagedJarIT {
 
         // When
         ExternalCliProcessResult result = ExternalCliProcessRunner.run(
-                EXECUTABLE_JAR, projectDirectory, "reorder", "--no-statistics", "--include", "**/*.java");
+                EXECUTABLE_JAR, projectDirectory, "reorder", "--statistics-mode", "DISABLED", "--include", "**/*.java");
 
         // Then
         assertCompleted(result);
@@ -146,7 +146,8 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "reorder",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -179,7 +180,8 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "reorder",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -193,7 +195,8 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "reorder",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -256,7 +259,8 @@ class JHarmonizerCliPackagedJarIT {
                 projectDirectory,
                 "check-all",
                 "--verbose",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -293,7 +297,8 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "reorder",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -308,7 +313,8 @@ class JHarmonizerCliPackagedJarIT {
                 projectDirectory,
                 "check-all",
                 "--verbose",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -343,7 +349,8 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 projectDirectory,
                 "check-fast",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 ".",
                 "--include",
@@ -393,7 +400,8 @@ class JHarmonizerCliPackagedJarIT {
                 EXECUTABLE_JAR,
                 workingDirectory,
                 "check-all",
-                "--no-statistics",
+                "--statistics-mode",
+                "DISABLED",
                 "--base-dir",
                 "missing-directory",
                 "--include",

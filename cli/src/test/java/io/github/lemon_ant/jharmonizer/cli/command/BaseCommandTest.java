@@ -169,7 +169,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_noStatisticsOptionInvoked_disablesStatisticsReportInSrcProcessor() {
+    void call_statisticsDisabledOptionInvoked_disablesStatisticsReportInSrcProcessor() {
         // Given
         CommandLine cmd = new CommandLine(new TestCommand());
         AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
@@ -182,7 +182,7 @@ class BaseCommandTest {
                     when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenReturn(CommandTestUtils.buildSuccessfulResult());
                 })) {
-            exitCode = cmd.execute("--base-dir", "src", "--no-statistics");
+            exitCode = cmd.execute("--base-dir", "src", "--statistics-mode", "DISABLED");
         }
 
         // Then
@@ -195,7 +195,7 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_fullStatisticsOptionInvoked_enablesFullStatisticsReportInSrcProcessor() {
+    void call_statisticsFullOptionInvoked_enablesFullStatisticsReportInSrcProcessor() {
         // Given
         CommandLine cmd = new CommandLine(new TestCommand());
         AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
@@ -208,7 +208,7 @@ class BaseCommandTest {
                     when(mock.processSources(any(Path.class), any(), any(), any()))
                             .thenReturn(CommandTestUtils.buildSuccessfulResult());
                 })) {
-            exitCode = cmd.execute("--base-dir", "src", "--full-statistics");
+            exitCode = cmd.execute("--base-dir", "src", "--statistics-mode", "FULL");
         }
 
         // Then

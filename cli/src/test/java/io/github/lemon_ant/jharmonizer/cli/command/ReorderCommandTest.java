@@ -80,7 +80,7 @@ class ReorderCommandTest {
                 .contains("-b, --base-dir")
                 .contains("-c, --config")
                 .contains("-B, --no-backup")
-                .contains("-S, --no-statistics")
+                .contains("-s, --statistics-mode")
                 .contains("-i, --include")
                 .contains("-e, --exclude")
                 .contains("Repeat this option or pass multiple patterns as a")

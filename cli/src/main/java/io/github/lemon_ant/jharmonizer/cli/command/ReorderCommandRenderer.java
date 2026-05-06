@@ -3,6 +3,7 @@
 
 package io.github.lemon_ant.jharmonizer.cli.command;
 
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
 import io.github.lemon_ant.jharmonizer.core.utilities.PathUtils;
 import java.nio.file.Path;
 import java.util.Set;
@@ -29,8 +30,7 @@ class ReorderCommandRenderer {
      * @param excludeGlobs glob patterns for files to exclude
      * @param configFilePath optional path to the configuration file
      * @param noBackup whether the no-backup flag is set
-     * @param noStatistics whether the no-statistics flag is set
-     * @param fullStatistics whether the full-statistics flag is set
+     * @param statisticsMode optional statistics mode override; omitted from the command when {@code null}
      * @return the ready-to-run reorder command string
      */
     @NonNull
@@ -41,8 +41,7 @@ class ReorderCommandRenderer {
             @NonNull Set<String> excludeGlobs,
             @Nullable Path configFilePath,
             boolean noBackup,
-            boolean noStatistics,
-            boolean fullStatistics) {
+            @Nullable ProcessingStatisticsMode statisticsMode) {
         StringBuilder command = new StringBuilder(INITIAL_COMMAND_CAPACITY);
         command.append(launcherPrefix)
                 .append(" reorder --base-dir ")
@@ -59,11 +58,8 @@ class ReorderCommandRenderer {
         if (noBackup) {
             command.append(" --no-backup");
         }
-        if (noStatistics) {
-            command.append(" --no-statistics");
-        }
-        if (fullStatistics) {
-            command.append(" --full-statistics");
+        if (statisticsMode != null) {
+            command.append(" --statistics-mode ").append(statisticsMode.name());
         }
         return command.toString();
     }
