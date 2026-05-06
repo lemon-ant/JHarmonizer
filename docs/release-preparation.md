@@ -157,11 +157,11 @@ and uploads the artifact to Maven Central.
 
 After publishing the release, confirm that all three workflows succeed:
 
-| Workflow | Expected result |
-|---|---|
+| Workflow             | Expected result |
+|----------------------|---|
 | `01-Build Artifacts` | ✅ Green |
-| `02-Compat Test` | ✅ Green |
-| `04-Publish Release` | ✅ Green — artifact uploaded to Maven Central |
+| `02-Compat Test`     | ✅ Green |
+| `03-Publish Release` | ✅ Green — artifact uploaded to Maven Central |
 
 If any workflow fails, investigate the logs before announcing the release.
 
