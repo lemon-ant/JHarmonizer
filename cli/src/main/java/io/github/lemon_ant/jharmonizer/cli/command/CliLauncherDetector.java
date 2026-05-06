@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
@@ -40,7 +39,8 @@ class CliLauncherDetector {
     static String detectLauncherPrefix() {
         ProcessHandle.Info processInfo = ProcessHandle.current().info();
         // Primary: command() + arguments() — works on Unix/macOS.
-        String primaryPrefix = resolveLauncherPrefix(processInfo.command(), processInfo.arguments());
+        String primaryPrefix = resolveLauncherPrefix(
+                processInfo.command().orElse(null), processInfo.arguments().orElse(null));
         if (!FALLBACK_LAUNCHER.equals(primaryPrefix)) {
             return primaryPrefix;
         }
@@ -62,19 +62,18 @@ class CliLauncherDetector {
      *
      * <p>Exposed as package-private for unit testing without requiring a real process context.
      *
-     * @param maybeCommand the Java executable path, if available
-     * @param maybeArguments the JVM argument list, if available
+     * @param command the Java executable path, or {@code null} if unavailable
+     * @param arguments the JVM argument list, or {@code null} if unavailable
      * @return the resolved launcher prefix, or the {@code jharmonizer} fallback
      */
     @NonNull
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    static String resolveLauncherPrefix(
-            @NonNull Optional<String> maybeCommand, @NonNull Optional<String[]> maybeArguments) {
-        if (maybeCommand.isEmpty() || maybeArguments.isEmpty()) {
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.UseVarargs"})
+    static String resolveLauncherPrefix(@Nullable String command, @Nullable String[] arguments) {
+        if (command == null || arguments == null) {
             return FALLBACK_LAUNCHER;
         }
         try {
-            return buildLauncherPrefix(maybeCommand.get(), maybeArguments.get());
+            return buildLauncherPrefix(command, arguments);
         } catch (RuntimeException pathBuildingException) {
             // Path.of() can throw InvalidPathException for unusual process info values;
             // treat any failure as an unavailable detection and fall back to the symbolic name.
