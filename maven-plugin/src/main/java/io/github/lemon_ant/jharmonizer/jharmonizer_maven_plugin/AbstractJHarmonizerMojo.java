@@ -221,7 +221,6 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
             return includes != null ? Set.copyOf(includes) : Set.of();
         }
         Stream<String> srcDirIncludes = srcDirPaths.stream()
-                .filter(Files::isDirectory)
                 .map(srcDirPath -> PathUtils.normalizeSeparators(projectBaseDirPath.relativize(srcDirPath)) + "/**");
         Stream<String> userIncludes = includes != null ? includes.stream() : Stream.empty();
         return Stream.concat(srcDirIncludes, userIncludes).collect(Collectors.toUnmodifiableSet());

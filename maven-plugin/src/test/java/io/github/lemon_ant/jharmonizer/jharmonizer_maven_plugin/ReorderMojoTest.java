@@ -54,6 +54,26 @@ class ReorderMojoTest {
     }
 
     @Test
+    void execute_mainSourceExistsTestSourceAbsent_bothPatternsPassedAndSucceeds() throws Exception {
+        // Given - src/main/java exists, src/test/java does not; both include patterns must be passed
+        // to the core and the missing test source dir must be skipped gracefully.
+        Path srcMainJava = tempDir.resolve("src/main/java");
+        Path srcTestJava = tempDir.resolve("src/test/java");
+        Files.createDirectories(srcMainJava);
+        MojoTestUtils.copyResourceDirectory("/test-cases/reorder-basic/input", srcMainJava);
+        ReorderMojo reorderMojo = new ReorderMojo();
+        MojoTestUtils.injectField(reorderMojo, "projectBaseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(reorderMojo, "mainSourceDirectory", MojoTestUtils.toFile(srcMainJava));
+        MojoTestUtils.injectField(reorderMojo, "testSourceDirectory", MojoTestUtils.toFile(srcTestJava));
+
+        // When
+        Throwable thrown = catchThrowable(reorderMojo::execute);
+
+        // Then
+        assertThat(thrown).isNull();
+    }
+
+    @Test
     void execute_nonExistentSourceDirectories_skipsExecutionAndLeavesFilesUntouched() throws Exception {
         // Given - the project base dir exists but neither src/main/java nor src/test/java is present
         // (typical for a parent-only POM module in a multi-module build).
