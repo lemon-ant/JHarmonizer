@@ -225,6 +225,8 @@ class JHarmonizerCliPackagedJarIT {
                 projectDirectory,
                 "check-all",
                 "--verbose",
+                "--statistics-mode",
+                "FULL",
                 "--base-dir",
                 ".",
                 "--include",
