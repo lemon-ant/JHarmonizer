@@ -57,6 +57,7 @@ public class SrcFilesHandler {
                 .excludeGlobs(excludeGlobs)
                 .allowedExtensions(Set.of("java"))
                 .failFastOnError(false)
+                .suppressIoWarnings(true)
                 .build();
         return GlobPathFinder.findPaths(pathQuery).parallel();
     }
