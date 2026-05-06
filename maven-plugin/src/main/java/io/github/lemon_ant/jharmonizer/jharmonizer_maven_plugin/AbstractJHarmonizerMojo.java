@@ -128,8 +128,8 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     /**
      * Validates parameters, builds configuration, and runs the selected JHarmonizer flow.
      * When no explicit {@code baseDir} is configured and no Java source directories exist under the
-     * project base directory, execution is skipped silently (common for parent-only POM modules in a
-     * multi-module build where there are no Java sources to process).
+     * project base directory, execution is skipped with an informational log message (common for
+     * parent-only POM modules in a multi-module build where there are no Java sources to process).
      *
      * @throws MojoExecutionException when a base directory is invalid or an unexpected error occurs
      * @throws MojoFailureException   when the flow reports violations and {@code failOnViolation} is {@code true}
