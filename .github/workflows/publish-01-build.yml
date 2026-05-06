@@ -29,17 +29,14 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build once
-        # `install` (not `verify`) is required so that inter-module JARs land in the local
-        # Maven repository before the subsequent `source:jar javadoc:jar` invocation.
-        # Running those goals directly (outside the lifecycle) bypasses reactor resolution,
-        # so downstream modules like jharmonizer-core cannot find dependency-aware-sorting
-        # unless it is already installed. Remove this comment if the source/javadoc step
-        # is ever reworked to run inside a single lifecycle invocation.
-        run: mvn -B -ntp -Dci=true clean install
-
-      - name: Attach sources and javadoc
-        run: mvn -B -ntp -Dci=true -DskipTests -Dskip-quality-gates=true -Ddoclint=none source:jar javadoc:jar
+      - name: Build with sources and javadoc
+        # `source:jar-no-fork javadoc:jar` are appended as additional goals to the lifecycle.
+        # Maven processes each reactor module fully through `install` before advancing to the
+        # next, so inter-module JARs (e.g. dependency-aware-sorting) are already in the local
+        # repository when `javadoc:jar` resolves the classpath for downstream modules.
+        # `source:jar-no-fork` is used instead of `source:jar` to avoid an internal lifecycle
+        # fork that would cause tests and quality gates to run a second time per module.
+        run: mvn -B -ntp -Dci=true -Ddoclint=none clean install source:jar-no-fork javadoc:jar
 
       - name: Stage dist and runtime dependencies
         run: |
