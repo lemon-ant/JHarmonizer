@@ -144,7 +144,7 @@ class CliLauncherDetector {
         }
         try {
             String programName = parseProgramNameFromSunCommand(sunJavaCommand);
-            if (!isJHarmonizerJar(programName)) {
+            if (isNotJHarmonizerJar(programName)) {
                 return FALLBACK_LAUNCHER;
             }
             String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(command));
@@ -202,7 +202,7 @@ class CliLauncherDetector {
             return FALLBACK_LAUNCHER;
         }
         String jarPath = args[jarFlagIndex + 1];
-        if (!isJHarmonizerJar(jarPath)) {
+        if (isNotJHarmonizerJar(jarPath)) {
             return FALLBACK_LAUNCHER;
         }
         String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(command));
@@ -250,16 +250,16 @@ class CliLauncherDetector {
         return firstSpace >= 0 ? sunJavaCommand.substring(0, firstSpace) : sunJavaCommand;
     }
 
-    private static boolean isJHarmonizerJar(@Nullable String jarPath) {
+    private static boolean isNotJHarmonizerJar(@Nullable String jarPath) {
         if (jarPath == null || jarPath.isBlank()) {
-            return false;
+            return true;
         }
         // Normalize separators on the raw string before extracting the filename so that
         // Windows-style backslashes are handled correctly on any OS (Path.of() is platform-dependent).
         String normalizedJarPath = jarPath.replace('\\', '/');
         int lastSlash = normalizedJarPath.lastIndexOf('/');
         String jarFileName = lastSlash >= 0 ? normalizedJarPath.substring(lastSlash + 1) : normalizedJarPath;
-        return jarFileName.toLowerCase(Locale.ROOT).contains(JHARMONIZER_JAR_NAME_PART);
+        return !jarFileName.toLowerCase(Locale.ROOT).contains(JHARMONIZER_JAR_NAME_PART);
     }
 
     @NonNull
