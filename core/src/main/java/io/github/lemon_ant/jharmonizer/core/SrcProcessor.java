@@ -141,6 +141,9 @@ public final class SrcProcessor {
                 logDebugProcessingCompletionSummary(aggregatedProcessingStatistic, flowType);
                 logFilesWithUnexpectedErrors(aggregatedProcessingStatistic);
             }
+            default ->
+                throw new IllegalStateException(
+                        "Unhandled ProcessingStatisticsMode: " + config.getProcessingStatisticsMode());
         }
 
         logCompletionMessage(flowType, aggregatedProcessingStatistic, flow.isModifyingFlow());
