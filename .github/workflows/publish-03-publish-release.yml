@@ -13,8 +13,8 @@ on:
     types: [ completed ]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -87,9 +87,10 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
-      - name: Build, sign, and publish to Maven Central
+      - name: Sign and publish to Maven Central
         # -Prelease activates: maven-source-plugin, maven-javadoc-plugin,
         #                       maven-gpg-plugin (sign), central-publishing-maven-plugin (deploy).
-        # -Ddoclint=none avoids failing the build on non-critical Javadoc warnings.
+        # -DskipTests skips unit tests (already passed in step 01).
+        # -Ddoclint=none avoids failing on non-critical Javadoc warnings.
         # -Dci=true disables local-dev-only profiles (reformat-poms, reformat-sources).
-        run: mvn -B -ntp -Dci=true -Prelease -Ddoclint=none clean deploy
+        run: mvn -B -ntp -Dci=true -Prelease -DskipTests -Ddoclint=none deploy
