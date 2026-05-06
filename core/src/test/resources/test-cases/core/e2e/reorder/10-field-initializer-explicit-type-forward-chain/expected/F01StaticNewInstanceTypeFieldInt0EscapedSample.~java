@@ -1,0 +1,20 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// This shows a potentially unsafe reordered shape produced without the missing dependency edge.
+public class F01StaticNewInstanceTypeFieldInt0EscapedSample {
+    private int aaa = F01StaticNewInstanceTypeFieldInt0EscapedSample.bravo + 1;
+    private static int zzz = new F01StaticNewInstanceTypeFieldInt0EscapedSample().aaa;
+    private static int bravo = 10;
+
+    public static void main(String[] args) {
+        // This assertion should still hold after harmonization; currently this shape can violate it.
+        if (zzz != 1 || bravo != 10) {
+            throw new IllegalStateException("Unexpected values: zzz=" + zzz + ", bravo=" + bravo);
+        }
+    }
+}

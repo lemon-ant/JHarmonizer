@@ -1,0 +1,36 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+class NestedMultiNodeCycleRegressionSample {
+    static final String B_VALUE = new String("B");
+    static final String A_VALUE = new String("A");
+    static final String Z_RESULT = Mode.ENTRY.getValue();
+
+    public static void main(String[] args) {
+        if (!"A+B".equals(Z_RESULT)) {
+            throw new IllegalStateException("Expected 'A+B' but was: " + Z_RESULT);
+        }
+    }
+
+    enum Mode {
+        ENTRY(Constants.COMBINED);
+
+        private final String value;
+
+        Mode(String value) {
+            this.value = value;
+        }
+
+        String getValue() {
+            return value;
+        }
+    }
+
+    static class Constants {
+        static final String COMBINED =
+                new String(NestedMultiNodeCycleRegressionSample.A_VALUE
+                        + "+"
+                        + NestedMultiNodeCycleRegressionSample.B_VALUE);
+    }
+}

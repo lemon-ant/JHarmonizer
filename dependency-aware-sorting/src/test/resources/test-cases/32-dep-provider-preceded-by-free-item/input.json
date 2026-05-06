@@ -1,0 +1,13 @@
+{
+  "description": "Models the EnumStaticMixedInitializationScenario E2E case. Provider label must appear before dependent aEnumSnapshot. Free items bDependent and zProvider have keys that fall between label and aEnumSnapshot (bDependent) or after zeta (zProvider) in natural order.",
+  "items": [
+    {"name": "aEnumSnapshot", "numeration": "STATIC"},
+    {"name": "bDependent", "numeration": "STATIC"},
+    {"name": "label", "numeration": "STATIC"},
+    {"name": "zProvider", "numeration": "STATIC"}
+  ],
+  "groups": [],
+  "dependencies": [
+    {"provider": "label", "dependent": "aEnumSnapshot"}
+  ]
+}

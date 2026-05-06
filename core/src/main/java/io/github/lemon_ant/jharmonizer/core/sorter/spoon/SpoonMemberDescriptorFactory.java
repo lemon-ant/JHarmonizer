@@ -1,0 +1,219 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
+package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
+
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+
+import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
+import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtAnonymousExecutable;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtEnum;
+import spoon.reflect.declaration.CtEnumValue;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtInterface;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtRecord;
+import spoon.reflect.declaration.CtRecordComponent;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.ModifierKind;
+
+/**
+ * Spoon-based descriptor factory.
+ * Note: mapping rules are intentionally explicit and conservative.
+ */
+@UtilityClass
+@SuppressWarnings("PMD.ExcessiveImports")
+class SpoonMemberDescriptorFactory {
+
+    private static final String INIT_NAME = "<init>";
+    private static final List<Map.Entry<ModifierKind, MemberAccess>> ACCESS_BY_MODIFIER = List.of(
+            Map.entry(ModifierKind.PUBLIC, MemberAccess.PUBLIC),
+            Map.entry(ModifierKind.PROTECTED, MemberAccess.PROTECTED),
+            Map.entry(ModifierKind.PRIVATE, MemberAccess.PRIVATE));
+    private static final Map<ModifierKind, DeclarationModifier> DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND = Map.of(
+            ModifierKind.STATIC, DeclarationModifier.STATIC,
+            ModifierKind.FINAL, DeclarationModifier.FINAL,
+            ModifierKind.ABSTRACT, DeclarationModifier.ABSTRACT
+            // TODO Research: map ModifierKind.DEFAULT once semantics are confirmed for your model.
+            // TODO Map SEALED / NON_SEALED once Spoon exposes them (Java 17+ features).
+            );
+
+    /**
+     * Performs the describe members.
+     * @param type the type
+     * @return the resulting map
+     */
+    @NonNull
+    Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
+        return streamExplicitSrcTypeMembers(type)
+                .collect(Collectors.toUnmodifiableMap(
+                        Function.identity(), SpoonMemberDescriptorFactory::describeMember));
+    }
+
+    /**
+     * Performs the describe member.
+     * @param typeMember the type member
+     * @return the result
+     */
+    @NonNull
+    static MemberDescriptor describeMember(@NonNull CtTypeMember typeMember) {
+        MemberKind memberKind = resolveMemberKind(typeMember);
+        MemberAccess memberAccess = resolveMemberAccessIfApplicable(typeMember);
+        Set<DeclarationModifier> declarationModifiers = resolveDeclarationModifiers(typeMember);
+        Set<String> annotationQualifiedNames = resolveAnnotationQualifiedNames(typeMember);
+        String memberName = resolveMemberName(typeMember);
+
+        return MemberDescriptor.builder()
+                .name(memberName)
+                .memberKind(memberKind)
+                .memberAccess(memberAccess)
+                .declarationModifiers(declarationModifiers)
+                .annotationQualifiedNames(annotationQualifiedNames)
+                .build();
+    }
+
+    @NonNull
+    private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
+        if (typeMember instanceof CtEnumValue<?>) {
+            return MemberKind.ENUM_CONSTANT;
+        }
+        if (typeMember instanceof CtRecordComponent) {
+            return MemberKind.RECORD_COMPONENT;
+        }
+        if (typeMember instanceof CtField<?>) {
+            return MemberKind.FIELD;
+        }
+        if (typeMember instanceof CtMethod<?>) {
+            return MemberKind.METHOD;
+        }
+        if (typeMember instanceof CtConstructor<?>) {
+            return MemberKind.CONSTRUCTOR;
+        }
+        if (typeMember instanceof CtAnonymousExecutable) {
+            return MemberKind.INIT_BLOCK;
+        }
+        if (typeMember instanceof CtType<?> nestedType) {
+            return resolveNestedTypeKind(nestedType);
+        }
+
+        throw new IllegalArgumentException(
+                "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
+    }
+
+    @NonNull
+    private static String composeDebugExceptionMessage(CtTypeMember typeMember) {
+        Class<?> runtimeClass = typeMember.getClass();
+
+        String implementedInterfaces =
+                Stream.of(runtimeClass.getInterfaces()).map(Class::getName).collect(Collectors.joining(", "));
+
+        String declaringTypeQualifiedName = typeMember.getDeclaringType() == null
+                ? "<null>"
+                : String.valueOf(typeMember.getDeclaringType().getQualifiedName());
+
+        String positionText =
+                typeMember.getPosition().isValidPosition() ? String.valueOf(typeMember.getPosition()) : "<invalid>";
+
+        String modifiersText = String.valueOf(typeMember.getModifiers());
+
+        String simpleNameText = String.valueOf(typeMember.getSimpleName());
+
+        String shortRepresentationText = String.valueOf(typeMember.getShortRepresentation());
+
+        return "context{"
+                + "\nruntimeClass=" + runtimeClass.getName()
+                + ",\ndirectInterfaces=[" + implementedInterfaces + "]"
+                + ",\ndeclaringType=" + declaringTypeQualifiedName
+                + ",\nsimpleName=" + simpleNameText
+                + ",\nshortRepresentation=" + shortRepresentationText
+                + ",\nmodifiers=" + modifiersText
+                + ",\nposition=" + positionText
+                + "}";
+    }
+
+    @NonNull
+    private static MemberKind resolveNestedTypeKind(CtType<?> nestedType) {
+        // In Spoon annotation types may also appear as interfaces, so handle this first.
+        if (nestedType.isAnnotationType()) {
+            return MemberKind.TYPE_ANNOTATION;
+        }
+        if (nestedType instanceof CtEnum<?>) {
+            return MemberKind.TYPE_ENUM;
+        }
+        if (nestedType instanceof CtRecord) {
+            return MemberKind.TYPE_RECORD;
+        }
+        if (nestedType instanceof CtClass<?>) {
+            return MemberKind.TYPE_CLASS;
+        }
+        if (nestedType instanceof CtInterface<?>) {
+            return MemberKind.TYPE_INTERFACE;
+        }
+
+        throw new IllegalArgumentException("Unsupported nested CtType: "
+                + nestedType.getClass().getName() + ", qualifiedName=" + nestedType.getQualifiedName());
+    }
+
+    @Nullable
+    private static MemberAccess resolveMemberAccessIfApplicable(CtTypeMember typeMember) {
+        if (typeMember instanceof CtAnonymousExecutable
+                || typeMember instanceof CtEnumValue<?>
+                || typeMember instanceof CtRecordComponent) {
+            return null;
+        }
+
+        Set<ModifierKind> typeMemberModifierKinds = typeMember.getModifiers();
+
+        return ACCESS_BY_MODIFIER.stream()
+                .filter(modifierToAccessEntry -> typeMemberModifierKinds.contains(modifierToAccessEntry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                // No explicit access modifier means package-private.
+                .orElse(MemberAccess.PACKAGE);
+    }
+
+    @NonNull
+    private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
+        return typeMember.getModifiers().stream()
+                .map(DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> EnumSet.noneOf(DeclarationModifier.class)), Set::copyOf));
+    }
+
+    @NonNull
+    private static Set<String> resolveAnnotationQualifiedNames(CtTypeMember typeMember) {
+        return typeMember.getAnnotations().stream()
+                .map(CtAnnotation::getAnnotationType)
+                .flatMap(annotationTypeReference ->
+                        Stream.of(annotationTypeReference.getQualifiedName(), annotationTypeReference.getSimpleName()))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @Nullable
+    private static String resolveMemberName(CtTypeMember typeMember) {
+        String name = StringUtils.trimToNull(typeMember.getSimpleName());
+        if (INIT_NAME.equals(name)) {
+            return null;
+        }
+        return name;
+    }
+}

@@ -1,46 +1,68 @@
-# CLI Runner
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 
-> **Draft Proposal**  
-> This document outlines a preliminary sketch for adding command-line capabilities to the restructuring tool.  
-> It is not a finalized design and should be refined during implementation.
+# CLI Runner
 
 ## Purpose
 
-Introduce a lightweight, console-invocable entry point that allows triggering the entire restructuring pipeline via standard terminal commands.  
-This CLI component is aimed at:
-- Supporting quick local testing and debugging
-- Allowing integration into CI/CD and automation workflows
-- Providing a developer-friendly way to validate or restructure files without needing to embed the tool into another Java application
+Console-invocable entry point for the JHarmonizer pipeline. Wraps `jharmonizer-core` and
+exposes its functionality as three runnable commands from a single executable fat JAR
+(`cli/target/jharmonizer-cli.jar`).
 
-## Responsibilities
+The CLI is aimed at:
 
-- Parse CLI arguments
-- Prepare and trigger configuration resolution
-- Instantiate the main Processor and call either `restructure` or `check` flow
-- Report outcome via terminal messages and exit codes
+- local invocation outside Maven builds
+- integration into CI/CD pipelines via exit codes
+- ad-hoc validation or reordering of an arbitrary source tree
 
-## Preliminary Argument Set (Subject to Change)
+## Implementation
 
-| Argument            | Description                                               |
-|---------------------|-----------------------------------------------------------|
-| `--mode=`           | Operation mode: `restructure` or `check`                  |
-| `--input=`          | File or directory path to be processed                    |
-| `--config=`         | Path to configuration file(s)                             |
-| `--flags=`          | Optional override flags (e.g. `parser1:on,parser2:off`)   |
+- Entry point: `io.github.lemon_ant.jharmonizer.cli.command.JHarmonizerCliApplication`.
+- Command parser: [picocli](https://picocli.info/).
+- Sub-commands extend `BaseCommand`, which holds shared options and the dispatch logic
+  to `SrcProcessor#processSources` from `jharmonizer-core`.
 
-## Expected Exit Codes
+## Commands
 
-| Code | Meaning                                          |
-|------|--------------------------------------------------|
-| 0    | Success (no changes needed or restructure done)  |
-| 1    | Failure (e.g. check mode failed due to mismatch) |
-| 2+   | Errors: invalid args, IO issues, internal crash  |
+| Command       | Class               | Flow                       |
+|---------------|---------------------|----------------------------|
+| `reorder`     | `ReorderCommand`    | `FlowType.REORDER`         |
+| `check-all`   | `CheckAllCommand`   | `FlowType.CHECK_ALL`       |
+| `check-fast`  | `CheckFastCommand`  | `FlowType.CHECK_FAIL_FAST` |
 
-## Implementation Notes
+`reorder` rewrites source files in place (creating `.bak` files when backups are enabled).
+`check-all` and `check-fast` never modify files.
 
-- Prefer lightweight CLI parsers (e.g. `picocli`, `JCommander`) for ease of maintenance.
-- It should stay thin: focus only on delegation, logging, and error handling.
+## Shared options (from `BaseCommand`)
 
-## Note
+| Option            | Short | Description                                                                                       |
+|-------------------|-------|---------------------------------------------------------------------------------------------------|
+| `--base-dir`      | `-b`  | Base directory containing Java source files. Defaults to the current directory when not provided. |
+| `--include`       | `-i`  | Glob patterns for files to include. Repeat the option or pass a comma-separated list.             |
+| `--exclude`       | `-e`  | Glob patterns for files to exclude. Repeat the option or pass a comma-separated list.             |
+| `--verbose`       | `-v`  | Enable DEBUG-level logging and switch to a verbose log pattern.                                   |
+| `--config`        | `-c`  | Path to a YAML configuration file merged over the embedded defaults.                              |
+| `--no-backup`     | `-B`  | Disable `.bak` file creation even when backups are enabled in configuration.                      |
+| `--no-statistics` | `-S`  | Disable the final processing statistics report output.                                            |
 
-> Further design will evolve once configuration bootstrapping and Processor contracts are finalized.
+Glob patterns follow `java.nio.file.PathMatcher` `glob:` syntax (e.g. `**/*.java`).
+
+## Exit codes
+
+| Code | Meaning                                                                                                |
+|------|--------------------------------------------------------------------------------------------------------|
+| `0`  | Processing completed successfully and no violations were detected.                                     |
+| `1`  | Processing error (I/O problem, unexpected exception, invalid `--base-dir`, invalid `--config` path).   |
+| `2`  | Invalid CLI arguments (picocli default).                                                               |
+| `3`  | At least one file requires reordering — emitted by both `check-all` and `check-fast`.                  |
+
+Both check commands use the same `3` for "non-conforming files detected" so a CI gate
+can match a single value regardless of whether it runs `check-all` or `check-fast`.
+`reorder` always returns `0` on a successful run.
+
+## Reference
+
+For full command-line examples, packaging instructions, and logging configuration details,
+see the module-level [`cli/README.md`](../cli/README.md).

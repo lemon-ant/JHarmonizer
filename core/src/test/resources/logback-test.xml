@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-5level [%-8.8thread] [%logger{36}] %msg%n</pattern>
+            <!-- Keep the encoder charset in sync with the terminal's display charset so that
+                 non-ASCII whitespace markers (·, ¶, ¦) print correctly in test output.
+                 Falls back to ${file.encoding} on Java 17 where stdout.encoding is not set. -->
+            <charset>${stdout.encoding:-${file.encoding}}</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

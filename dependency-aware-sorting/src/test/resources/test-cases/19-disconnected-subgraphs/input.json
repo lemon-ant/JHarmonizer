@@ -1,0 +1,56 @@
+{
+  "description": "Four completely independent provider->dependent pairs: bravo->alpha, delta->charlie, foxtrot->echo, hotel->golf. No connections between the groups. Lex tie-breaking interleaves the groups in alphabetical order by root node name.",
+  "items": [
+    {
+      "name": "delta",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "charlie",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "bravo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "alpha",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "hotel",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "golf",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "foxtrot",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "echo",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [],
+  "dependencies": [
+    {
+      "provider": "delta",
+      "dependent": "charlie"
+    },
+    {
+      "provider": "bravo",
+      "dependent": "alpha"
+    },
+    {
+      "provider": "hotel",
+      "dependent": "golf"
+    },
+    {
+      "provider": "foxtrot",
+      "dependent": "echo"
+    }
+  ]
+}

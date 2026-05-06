@@ -1,0 +1,28 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Potential unsafe reordered shape without missing dependency modeling.
+public class F04StaticNewInstanceTypeFieldLongChainEscapedSample {
+    private int aaa = loadBravoWithMixedQualification();
+    private static int zzz = new F04StaticNewInstanceTypeFieldLongChainEscapedSample().aaa;
+    private static int bravo = 10;
+
+    private int loadBravoWithMixedQualification() {
+        return F04StaticNewInstanceTypeFieldLongChainEscapedSample.bravo
+                + this.localAdjustment();
+    }
+
+    private int localAdjustment() {
+        return 1;
+    }
+
+    public static void main(String[] args) {
+        if (zzz != 1 || bravo != 10) {
+            throw new IllegalStateException("Unexpected values: zzz=" + zzz + ", bravo=" + bravo);
+        }
+    }
+}

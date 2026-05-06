@@ -1,136 +1,166 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Configurator
 
 ## Purpose
 
-To construct a validated, immutable configuration model (`Configuration`) by:
+Build the runtime configuration consumed by the sorter and formatter, by:
 
-- loading internal defaults from resources,
-- overlaying with external configuration sources (IDE (IDEA, possibly Eclipse), configuration file, passed model from external wrapper),
-- resolving priority and applying overrides in sequence.
+- loading the embedded default configuration from a classpath resource,
+- optionally overlaying a user-supplied YAML configuration on top,
+- applying programmatic overrides from the CLI / Maven plugin layer,
+- compiling the result into the runtime `CompiledConfig`.
 
-## Configuration Assembly Flow
+There is **no** ingestion of other vendor configuration formats today. Adapters
+for additional vendor formats (for example IntelliJ IDEA `codeStyleConfig.xml`,
+Eclipse formatter profiles, EditorConfig, Spotless config) are a planned future
+capability — see [Why a separate Unified layer](#why-a-separate-unified-layer)
+and the corresponding entry in [`TODO.md`](TODO.md). The multi-layer model
+described below is deliberately structured so that those adapters can be added
+without changing the merge / compile logic.
 
-1. Load default configuration from embedded resource file  
-   → `Configuration defaultConfig`
+## Pipeline
 
-2. Optionally overlay:
-   - IDE configuration (optional) - it must be IDEA and possibly Eclipse
-   - Custom file configuration (optional)
-   - External override (optional)
-
-3. Each overlay produces a merged intermediate:  
-   `defaultConfig → mergedConfig1 → mergedConfig2 → ... → finalConfig`
-
-## Key Components (suggested interfaces only)
-
-| Component                 | Responsibility                                                                   |
-|---------------------------|----------------------------------------------------------------------------------|
-| `DefaultConfigLoader`     | Loads embedded default configuration from `resources/`.                          |
-| `IDEConfigParser`         | Parses IDE-specific configuration formats (e.g. `.editorconfig`, `.idea/*.xml`). |
-| `ProjectFileConfigParser` | Reads XML configuration from project sources.                                    |
-| `Configurator`            | Coordinates the full assembly process; returns validated `Configuration`.        |
-
-These additional configuration parsers can implement a unified interface `OverridingConfigurationProvider` to be 
-processed as a sequence in a unified stream/cycle algorithm. 
-
-## Proposed Core Types
-
-All code snippets given only as illustrations of the idea
-
-### 1. `OverridingConfiguration`
-
-A nullable, non-validated DTO representing raw configuration input.
-
-Used as intermediary for loading from:
-
-- default resource file
-- IDE settings (JetBrains, Eclipse)
-- project configuration file (XML/YAML)
-- external override models (e.g. plugin input)
-
-```java
-@Data
-public class OverridingConfiguration {
-    private List<String> memberOrder;
-    private List<String> accessLevelOrder;
-    private Integer maxLineLength;
-    private Boolean reorderImports;
-}
+```
+default-config.yml (classpath)                ← embedded baseline
+        │
+        ▼
+JHarmonizerConfig (vendor strict model)
+        │  JHarmonizer2UnifiedConverter
+        ▼
+UnifiedConfig (strict, vendor-independent)    ── baseline ──┐
+                                                            │
+external YAML (optional, user-supplied)                     │
+        │                                                   │
+        ▼                                                   │
+JHarmonizerFlexibleConfig (vendor flexible)                 │
+        │  JHarmonizerFlexible2FlexibleUnifiedConverter      │
+        ▼                                                   │
+FlexibleUnifiedConfig (overlay) ──── UnifiedConfigMerger ───┤
+                                                            │
+CLI / Maven param overrides → FlexibleUnifiedConfig ────────┤
+                                                            ▼
+                                                       UnifiedConfig (merged)
+                                                            │
+                                                            ▼
+                                          Unified2CompiledModelCompiler
+                                                            │
+                                                            ▼
+                                                       CompiledConfig
 ```
 
-## 2. `Configuration`
+## Model layers
 
-Final, validated, immutable model for internal use.
+| Layer       | Purpose                                                                                  | Strict variant           | Flexible / overlay variant     |
+|-------------|------------------------------------------------------------------------------------------|--------------------------|--------------------------------|
+| Vendor      | 1:1 mirror of the YAML schema accepted by JHarmonizer                                    | `JHarmonizerConfig`      | `JHarmonizerFlexibleConfig`    |
+| Unified     | Strongly-typed, vendor-independent model used as the merge boundary                       | `UnifiedConfig`          | `FlexibleUnifiedConfig`        |
+| Compiled    | Runtime model with predicate-based selectors and post-order group indexes                 | `CompiledConfig`         | _n/a_                          |
 
-```java
-@Value
-@Builder
-public class Configuration {
-    List<String> memberOrder;
-    List<String> accessLevelOrder;
-    int maxLineLength;
-    boolean reorderImports;
-}
-```
+The flexible variants allow every field to be `null`, which is what makes them safe to use
+as overlays. The strict variants reject missing required fields.
 
-## Proposed method contracts
+### Why a separate Unified layer
 
-All code snippets given only as illustrations of the idea
+The Unified layer is the architectural extension point for supporting other vendor
+configuration formats. Today only one vendor format exists (the JHarmonizer YAML
+schema), so the Vendor → Unified converter is effectively an identity mapping. The
+intent, however, is that adding support for another vendor (for example an
+IntelliJ IDEA `codeStyleConfig.xml`, an Eclipse formatter profile, an EditorConfig
+file, or a Spotless config) means writing a single component:
 
-### Resolve Signature
+- a vendor-specific loader / deserializer for that format, plus
+- a vendor-specific `<Vendor>2UnifiedConverter` that maps it onto `UnifiedConfig`.
 
-```java
-public interface Configurator {
-    Configuration resolve(
-        List<OverridingConfiguration> externalConfigs,
-        List<Path> configFiles
-    );
-}
-```
+Once a vendor adapter produces a `UnifiedConfig` (or a `FlexibleUnifiedConfig`
+overlay), the rest of the pipeline — overlay merging, compilation, sorter/formatter
+consumption — works unchanged, because the entire downstream toolset operates on
+the unified model. In other words, the Unified layer is what keeps the merge and
+compile machinery vendor-agnostic.
 
-### Merge Signature
+### Why a separate Compiled layer
 
-```java
-public interface Configurator {
-   Configuration merge(Configuration baseConfig, OverridingConfiguration overridingConfiguration);
-}
-```
+The Compiled layer exists for **performance**. `UnifiedConfig` is a literal
+description of the rules a user wrote; `CompiledConfig` precomputes everything the
+hot path needs:
 
-## Notes
+- each rule line in `includes`/`excludes` is compiled into a single boolean
+  predicate over `MemberDescriptor`, so member dispatch is one virtual call and a
+  predicate evaluation per rule;
+- the member-group tree is laid out in DFS post-order with stable indexes so
+  first-match-wins lookups are O(depth) per member;
+- the formatter style, header line, and other scalar settings are pinned into
+  immutable fields, so no string parsing happens per file.
 
-- `OverridingConfiguration` can be reused across all stages as the universal nullable intermediate.
-- Merging logic should handle null fields safely, always preserving previous values unless explicitly overridden.
-- Multiple `merge()` calls are expected in sequence.
-- Final `Configuration` must be fully initialized and validated (non-null + correct values).
+Today the precomputation covers the parts that dominate per-file cost; future work
+may move additional logic into the compiled layer, but the principle is the same —
+all heavy interpretation of the rules happens once, at construction time, not
+per file.
 
-## Optional Configuration Sources Control
+## Loading entry points
 
-For advanced usage, the configurator supports **optional control over which sources to include** when resolving the final configuration.
+`JHarmonizerConfigLoader` (package-private, called via the manager facade):
 
-By default, all sources are enabled:
-- IDE configuration (e.g. IntelliJ, Eclipse)
-- Project-level configuration files (XML/YAML)
-- External override inputs (e.g. plugin parameters)
+- `loadDefault()` — reads `/default-config.yml` from the classpath.
+- `loadFrom(InputStream)` / `loadFrom(File)` / `loadFromClasspathResource(URL)` — strict load.
+- `loadFlexibleFrom(InputStream)` / `loadFlexibleFrom(File)` / `loadFlexibleFromClasspathResource(URL)` — overlay load.
 
-However, users can pass boolean flags (e.g. `disableIDEA`, `disableFileConfig`) to suppress specific sources.
+`JHarmonizerConfigurationManager` is the public facade and exposes:
 
-Additionally, for full flexibility, it is proposed that the configurator exposes a method accepting a **custom sequence of configuration parsers**, each implementing a common interface (e.g. `RawConfigProvider`).
+- `parseUnifiedDefaultConfig()` — returns the embedded baseline as `UnifiedConfig`.
+- `parseUnifiedConfigFromClasspathResource(URL)` — returns a strict unified config from the classpath.
+- `parseFlexibleUnifiedConfigFromClasspathResource(URL)` — returns a flexible (overlay) unified config from the classpath.
+- `parseFlexibleUnifiedConfigFromFile(Path)` — returns a flexible (overlay) unified config from disk.
 
-This allows advanced consumers (e.g. plugins, test suites) to **control exactly which parsers participate** in the configuration resolution process.
+The manager class is marked with a `// TODO Merge with JHarmonizerConfigLoader`. Treat the
+two as a single subsystem.
 
-```java
-public interface OverridingConfigurationProvider {
-    OverridingConfiguration load();
-}
-```
+## Merging
 
-Suggested method for customized merging:
+Overlays are merged with `UnifiedConfigMerger.merge(baseline, overlay)`. Behavior:
 
-```java
-public Configuration resolve(List<OverridingConfigurationProvider> customProviders);
-```
+- Scalar overlay fields that are `null` are inherited from the baseline; non-null values
+  override the baseline.
+- `top-level-types-ordering` and `formatting`/`header-line` blocks are merged field-by-field
+  with the same null-means-inherit rule.
+- `type-members-ordering` is merged at the **root** level by `name`:
+  - matching custom root group fully replaces the default root group, keeping the original
+    default position;
+  - new custom root groups are inserted before all default root groups, keeping their
+    relative order from the overlay;
+  - nested `groups:` subtrees are not merged — replacing a root group replaces its whole
+    subtree.
 
-This approach makes it possible to:
-- Test specific parsers in isolation
-- Apply only trusted configuration layers (e.g. CI pipelines)
-- Extend or replace default parsing logic
+## Programmatic overrides
+
+`AbstractJHarmonizerMojo` and `BaseCommand` (CLI) build a `FlexibleUnifiedConfig` from
+their own command-line / Mojo parameters and merge it on top of the file-loaded overlay:
+
+| Parameter (Mojo / CLI)                                               | Field overridden in overlay         |
+|----------------------------------------------------------------------|-------------------------------------|
+| `jharmonizer.backupsEnabled` / `--no-backup`                         | `backupsEnabled`                    |
+| `jharmonizer.printProcessingStatistics` / `--no-statistics`          | `printProcessingStatistics`         |
+
+When neither file overlay nor parameter overlay is present, the embedded default is used
+as-is.
+
+## Compilation
+
+`Unified2CompiledModelCompiler.compile(UnifiedConfig)` produces `CompiledConfig`:
+
+- `MemberGroupCompiler.compileTopLevelGroups(...)` builds a DFS-ordered tree of
+  `CompiledMemberGroup` nodes and assigns post-order indexes. Each rule line in
+  `includes`/`excludes` is compiled into a single predicate over `MemberDescriptor`.
+- `TopLevelTypesOrderingCompiler.compileTopLevelTypesOrdering(...)` compiles the
+  top-level types ordering rules.
+- `formatting`, `backupsEnabled`, `printProcessingStatistics`, and `headerLine` are passed
+  through unchanged.
+
+`CompiledConfig` is the immutable runtime model handed to the rest of the pipeline.
+
+## Reference
+
+For the YAML schema accepted by the loader, see [`config-dsl.md`](config-dsl.md).

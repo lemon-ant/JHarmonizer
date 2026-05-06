@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+formatting:
+  fix-imports: true
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+
+backups-enabled: true
+processing-statistics-mode: FULL
+
+header-line:
+  character: "-"
+  left-padding: 2
+
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+    - [ interface ]
+    - [ enum ]
+    - [ annotation ]
+  ordering-rules: [ alpha ]
+
+type-members-ordering:
+  - name: SkipToString
+    excludes:
+      - =toString
+    ordering-rules: [ alpha ]
+    separator: none
+    groups: [ ]

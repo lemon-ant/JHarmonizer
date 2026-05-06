@@ -1,0 +1,53 @@
+{
+  "description": "Three groups linked in a dependency chain: Group1={victor,whiskey}->Group2={tango,uniform}->Group3={romeo,sierra}. Natural block key order would be romeo<tango<victor, but the dep chain reverses it entirely.",
+  "items": [
+    {
+      "name": "whiskey",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "victor",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "uniform",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "tango",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "sierra",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "romeo",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [
+    [
+      "whiskey",
+      "victor"
+    ],
+    [
+      "uniform",
+      "tango"
+    ],
+    [
+      "sierra",
+      "romeo"
+    ]
+  ],
+  "dependencies": [
+    {
+      "provider": "whiskey",
+      "dependent": "uniform"
+    },
+    {
+      "provider": "tango",
+      "dependent": "sierra"
+    }
+  ]
+}

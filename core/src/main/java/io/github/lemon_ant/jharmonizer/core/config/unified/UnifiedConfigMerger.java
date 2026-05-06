@@ -1,0 +1,169 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
+package io.github.lemon_ant.jharmonizer.core.config.unified;
+
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+
+/**
+ * Performs a field-wise overlay of FlexibleUnifiedConfig onto a STRICT baseline UnifiedConfig.
+ * No defaults are provided here; caller must supply the baseline with all fields fully set.
+ * Root member groups are merged only at the top level: new overlay groups are prepended,
+ * and groups with matching names replace baseline groups in their original positions.
+ * Unnamed baseline groups are kept in their original relative positions.
+ */
+@UtilityClass
+public class UnifiedConfigMerger {
+
+    /**
+     * Performs the merge.
+     * @param baseline the baseline
+     * @param overlay the overlay
+     * @return the result
+     */
+    @NonNull
+    public static UnifiedConfig merge(@NonNull UnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
+        UnifiedTopLevelTypesOrdering top =
+                overlay.getTopLevelTypesOrdering().orElse(baseline.getTopLevelTypesOrdering());
+        UnifiedFormatting formatting = overlay.getFormatting()
+                .map(flexFormatting -> mergeFormatting(baseline.getFormatting(), flexFormatting))
+                .orElse(baseline.getFormatting());
+        UnifiedHeaderLine header = overlay.getHeaderLine().orElse(baseline.getHeaderLine());
+        Boolean backupsEnabled = overlay.getBackupsEnabled().orElse(baseline.isBackupsEnabled());
+        ProcessingStatisticsMode processingStatisticsMode =
+                overlay.getProcessingStatisticsMode().orElse(baseline.getProcessingStatisticsMode());
+        List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
+                .map(overlayRootGroups -> mergeRootMemberGroups(baseline.getRootMemberGroups(), overlayRootGroups))
+                .orElse(baseline.getRootMemberGroups());
+
+        return UnifiedConfig.builder()
+                .topLevelTypesOrdering(top)
+                .formatting(formatting)
+                .headerLine(header)
+                .backupsEnabled(backupsEnabled)
+                .processingStatisticsMode(processingStatisticsMode)
+                .rootMemberGroups(root)
+                .build();
+    }
+
+    /**
+     * Performs a field-wise overlay of one flexible config onto another flexible config.
+     *
+     * @param baseline the baseline flexible config
+     * @param overlay the overlay flexible config
+     * @return merged flexible config
+     */
+    @NonNull
+    public static FlexibleUnifiedConfig merge(
+            @NonNull FlexibleUnifiedConfig baseline, @NonNull FlexibleUnifiedConfig overlay) {
+        UnifiedTopLevelTypesOrdering top = overlay.getTopLevelTypesOrdering()
+                .orElse(baseline.getTopLevelTypesOrdering().orElse(null));
+        FlexibleUnifiedFormatting formatting = overlay.getFormatting()
+                .map(overlayFormatting -> baseline.getFormatting()
+                        .map(baselineFormatting -> mergeFlexibleFormatting(baselineFormatting, overlayFormatting))
+                        .orElse(overlayFormatting))
+                .orElse(baseline.getFormatting().orElse(null));
+        UnifiedHeaderLine header =
+                overlay.getHeaderLine().orElse(baseline.getHeaderLine().orElse(null));
+        Boolean backupsEnabled =
+                overlay.getBackupsEnabled().orElse(baseline.getBackupsEnabled().orElse(null));
+        ProcessingStatisticsMode processingStatisticsMode = overlay.getProcessingStatisticsMode()
+                .orElse(baseline.getProcessingStatisticsMode().orElse(null));
+        List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
+                .map(overlayRootGroups -> baseline.getRootMemberGroups()
+                        .map(baselineRootGroups -> mergeRootMemberGroups(baselineRootGroups, overlayRootGroups))
+                        .orElse(overlayRootGroups))
+                .orElse(baseline.getRootMemberGroups().orElse(null));
+
+        FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder builder = FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(top)
+                .formatting(formatting)
+                .backupsEnabled(backupsEnabled)
+                .processingStatisticsMode(processingStatisticsMode)
+                .headerLine(header);
+        if (root != null) {
+            builder.rootMemberGroups(root);
+        }
+        return builder.build();
+    }
+
+    @NonNull
+    private static UnifiedFormatting mergeFormatting(UnifiedFormatting baseline, FlexibleUnifiedFormatting overlay) {
+        return new UnifiedFormatting(
+                overlay.getFixImports().orElse(baseline.isFixImports()),
+                overlay.getFormatterStyle().orElse(baseline.getFormatterStyle()),
+                overlay.getBlankLineAfterTypeHeader().orElse(baseline.isBlankLineAfterTypeHeader()),
+                overlay.getBlankLineBeforeComment().orElse(baseline.isBlankLineBeforeComment()),
+                overlay.getBlankLineBetweenFields().orElse(baseline.isBlankLineBetweenFields()));
+    }
+
+    @NonNull
+    private static FlexibleUnifiedFormatting mergeFlexibleFormatting(
+            FlexibleUnifiedFormatting baseline, FlexibleUnifiedFormatting overlay) {
+        return FlexibleUnifiedFormatting.builder()
+                .fixImports(
+                        overlay.getFixImports().orElse(baseline.getFixImports().orElse(null)))
+                .formatterStyle(overlay.getFormatterStyle()
+                        .orElse(baseline.getFormatterStyle().orElse(null)))
+                .blankLineAfterTypeHeader(overlay.getBlankLineAfterTypeHeader()
+                        .orElse(baseline.getBlankLineAfterTypeHeader().orElse(null)))
+                .blankLineBeforeComment(overlay.getBlankLineBeforeComment()
+                        .orElse(baseline.getBlankLineBeforeComment().orElse(null)))
+                .blankLineBetweenFields(overlay.getBlankLineBetweenFields()
+                        .orElse(baseline.getBlankLineBetweenFields().orElse(null)))
+                .build();
+    }
+
+    @NonNull
+    private static List<UnifiedMemberGroup> mergeRootMemberGroups(
+            List<UnifiedMemberGroup> baselineRootGroups, List<UnifiedMemberGroup> overlayRootGroups) {
+        Map<String, Integer> baselineRootGroupIndicesByName = collectNamedGroupIndicesInOrder(baselineRootGroups);
+        List<UnifiedMemberGroup> mergedBaselineRootGroups = new ArrayList<>(baselineRootGroups);
+        List<UnifiedMemberGroup> prependedNewRootGroups = collectPrependedNewRootGroups(
+                overlayRootGroups, mergedBaselineRootGroups, baselineRootGroupIndicesByName);
+        return Stream.concat(prependedNewRootGroups.stream(), mergedBaselineRootGroups.stream())
+                .toList();
+    }
+
+    @NonNull
+    private static Map<String, Integer> collectNamedGroupIndicesInOrder(List<UnifiedMemberGroup> memberGroups) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<String, Integer> groupIndicesByName = new HashMap<>();
+        for (int groupIndex = 0; groupIndex < memberGroups.size(); groupIndex++) {
+            UnifiedMemberGroup memberGroup = memberGroups.get(groupIndex);
+            String groupName = memberGroup.getGroupName();
+            if (groupName == null) {
+                continue;
+            }
+            if (groupIndicesByName.putIfAbsent(groupName, groupIndex) != null) {
+                throw new IllegalStateException("Baseline root member group names must be unique");
+            }
+        }
+        return groupIndicesByName;
+    }
+
+    @NonNull
+    private static List<UnifiedMemberGroup> collectPrependedNewRootGroups(
+            List<UnifiedMemberGroup> overlayRootGroups,
+            List<UnifiedMemberGroup> mergedBaselineRootGroups,
+            Map<String, Integer> baselineRootGroupIndicesByName) {
+        List<UnifiedMemberGroup> prependedNewRootGroups = new ArrayList<>();
+        for (UnifiedMemberGroup overlayRootGroup : overlayRootGroups) {
+            String overlayGroupName = overlayRootGroup.getGroupName();
+            Integer baselineGroupIndex =
+                    overlayGroupName == null ? null : baselineRootGroupIndicesByName.get(overlayGroupName);
+            if (baselineGroupIndex == null) {
+                prependedNewRootGroups.add(overlayRootGroup);
+                continue;
+            }
+            mergedBaselineRootGroups.set(baselineGroupIndex, overlayRootGroup);
+        }
+        return prependedNewRootGroups;
+    }
+}

@@ -1,33 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.antonlem.jharmonizer</groupId>
+    <groupId>io.github.lemon-ant.jharmonizer</groupId>
     <artifactId>jharmonizer-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>JHarmonizer Parent</name>
+    <description>A Java source harmonization toolkit that keeps class member layout deterministic and readable.</description>
+    <url>https://github.com/lemon-ant/JHarmonizer</url>
+    <inceptionYear>2026</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>AntonLem</id>
+            <name>Anton Lem</name>
+            <email>antonlem78@gmail.com</email>
+            <url>https://github.com/AntonLem</url>
+        </developer>
+    </developers>
 
     <modules>
+        <module>dependency-aware-sorting</module>
         <module>core</module>
+        <module>cli</module>
+        <module>maven-plugin</module>
     </modules>
 
+    <scm>
+        <connection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</connection>
+        <developerConnection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</developerConnection>
+        <tag>v1.0.0</tag>
+        <url>https://github.com/lemon-ant/JHarmonizer</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/lemon-ant/JHarmonizer/issues</url>
+    </issueManagement>
+
     <properties>
-        <maven-clean-plugin.version>3.4.1</maven-clean-plugin.version>
-        <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
+        <!-- Late-bound by Surefire so JaCoCo can inject its test agent without leaving an unresolved @{argLine}. -->
+        <argLine/>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+        <!-- Late-bound by Failsafe so integration-test coverage can inject its agent without unresolved placeholders. -->
+        <failsafeArgLine/>
+        <glob-path-finder.version>1.1.0</glob-path-finder.version>
+        <jackson.version>2.21.3</jackson.version>
+        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+        <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
+        <jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
+        <jmh.version>1.37</jmh.version>
+        <jspecify.version>1.0.0</jspecify.version>
+        <license-maven-plugin.version>5.0.0</license-maven-plugin.version>
+        <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
+        <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
         <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+        <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <maven-project-info-reports-plugin.version>3.9.0</maven-project-info-reports-plugin.version>
+        <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-site-plugin.version>3.21.0</maven-site-plugin.version>
-        <maven.compiler.release>21</maven.compiler.release>
-        <palantir-java-format.version>2.72.0</palantir-java-format.version>
+        <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.testRelease>21</maven.compiler.testRelease>
+        <!-- Default local repository base; can still be overridden via -Dmaven.repo.local. -->
+        <maven.repo.local>${settings.localRepository}</maven.repo.local>
+        <!--
+            Mockito's inline mock maker currently self-attaches a Byte Buddy agent by default, which emits JDK warnings
+            and will be blocked in a future JDK release. Preloading mockito-core as a javaagent keeps test output clean
+            and remains compatible when dynamic attach is disabled by default.
+        -->
+        <mockito.agent.argLine>"-javaagent:${maven.repo.local}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</mockito.agent.argLine>
+        <mockito.version>5.23.0</mockito.version>
+        <palantir-java-format.version>2.90.0</palantir-java-format.version>
+        <pmd.version>7.24.0</pmd.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
-        <spotbugs.version>4.9.3</spotbugs.version>
-        <spotless-maven-plugin.version>2.44.5</spotless-maven-plugin.version>
+        <spoon.version>11.2.1</spoon.version>
+        <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
+        <spotbugs.version>4.9.8</spotbugs.version>
+        <spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -35,9 +104,29 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-bom</artifactId>
-                <version>5.18.0</version>
+                <version>${mockito.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!--
+                Temporary transitive vulnerability workaround: palantir-java-format 2.90.0 still resolves Jackson
+                modules to 2.21.1, which is behind this project's patched Jackson line.
+                Import the BOM here so all Jackson modules stay pinned to ${jackson.version} until that upstream
+                dependency tree is updated and no longer forces an older Jackson version. Remove this override once
+                palantir-java-format (or any other direct dependency that brings Jackson transitively) stops resolving
+                below ${jackson.version}.
+            -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>${jspecify.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.spotbugs</groupId>
@@ -52,39 +141,55 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
-                <version>5.13.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>3.27.3</version>
+                <version>3.27.7</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.19.0</version>
+                <version>2.22.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.18.0</version>
+                <version>3.20.0</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.38</version>
+                <version>1.18.46</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.5.18</version>
+                <version>1.5.32</version>
                 <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
@@ -96,10 +201,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -127,19 +228,65 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco-maven-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven-clean-plugin.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.4.2</version>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.0</version>
+                    <version>3.15.0</version>
+                    <configuration>
+                        <proc>full</proc>
+                        <testRelease>${maven.compiler.testRelease}</testRelease>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven-install-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven-deploy-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.3</version>
+                    <version>3.5.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven-gpg-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>${central-publishing-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
@@ -199,6 +346,79 @@
                         </java>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>com.mycila</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${license-maven-plugin.version}</version>
+                    <configuration>
+                        <strictCheck>true</strictCheck>
+                        <licenseSets>
+                            <licenseSet>
+                                <header>${maven.multiModuleProjectDirectory}/quality-gates/license-header.txt</header>
+                                <includes>
+                                    <include>.editorconfig</include>
+                                    <include>.gitattributes</include>
+                                    <include>.github/**/*.md</include>
+                                    <include>.github/**/*.yml</include>
+                                    <include>.gitignore</include>
+                                    <include>*.md</include>
+                                    <include>**/*.bat</include>
+                                    <include>**/*.groovy</include>
+                                    <include>**/*.java</include>
+                                    <include>**/*.md</include>
+                                    <include>**/*.properties</include>
+                                    <include>**/*.sh</include>
+                                    <include>**/*.xml</include>
+                                    <include>**/*.yml</include>
+                                </includes>
+                                <excludes>
+                                    <exclude>LICENSE</exclude>
+                                    <exclude>target/**</exclude>
+                                    <!--
+                                        docs/**/*.java files are 3rd-party reference/example files
+                                        with their own upstream Apache-2.0 headers.  We must not
+                                        overwrite them with our project SPDX header.
+                                    -->
+                                    <exclude>docs/**/*.java</exclude>
+                                    <!--
+                                        *.~java files use a tilde-prefixed extension to prevent the
+                                        Java compiler from treating them as source files (they contain
+                                        intentionally invalid or incomplete code).  The license-maven-plugin
+                                        mapping key would need to be "~java", which is not a valid XML
+                                        element name, so these files cannot be mapped to a comment style
+                                        automatically.  Their SPDX headers are maintained manually.
+                                    -->
+                                    <exclude>**/*.~java</exclude>
+                                </excludes>
+                            </licenseSet>
+                        </licenseSets>
+                        <!--
+                            Built-in DOUBLESLASH_STYLE, SCRIPT_STYLE, and XML_STYLE all wrap the
+                            header block with extra first/end lines and blank-line padding that do
+                            not match the compact single-line-prefix convention used throughout this
+                            repository. Custom types in license-header-styles.xml omit those
+                            wrappers to produce and accept the exact format already present in all
+                            tracked source files.
+                        -->
+                        <headerDefinitions>
+                            <headerDefinition>${maven.multiModuleProjectDirectory}/quality-gates/license-header-styles.xml</headerDefinition>
+                        </headerDefinitions>
+                        <mapping>
+                            <bat>BAT_REM_STYLE</bat>
+                            <editorconfig>SCRIPT_SIMPLE</editorconfig>
+                            <gitattributes>SCRIPT_SIMPLE</gitattributes>
+                            <gitignore>SCRIPT_SIMPLE</gitignore>
+                            <groovy>DOUBLESLASH_SIMPLE</groovy>
+                            <java>DOUBLESLASH_SIMPLE</java>
+                            <md>MARKDOWN_BLOCK_COMMENT</md>
+                            <properties>SCRIPT_SIMPLE</properties>
+                            <sh>SCRIPT_SIMPLE</sh>
+                            <xml>XML_BLOCK_COMMENT</xml>
+                            <yml>SCRIPT_SIMPLE</yml>
+                        </mapping>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -206,7 +426,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.2</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>1.12.0</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>enforce-versions</id>
@@ -216,7 +443,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>3.3.9</version>
+                                    <version>3.6.3</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>21</version>
@@ -228,17 +455,149 @@
                             </rules>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>enforce-bytecode-version</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <rules>
+                                <enforceBytecodeVersion>
+                                    <maxJdkVersion>17</maxJdkVersion>
+                                    <ignoredScopes>
+                                        <ignoredScope>provided</ignoredScope>
+                                        <ignoredScope>test</ignoredScope>
+                                    </ignoredScopes>
+                                </enforceBytecodeVersion>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
+        <!-- Profile to build and install javadoc jar. -->
+        <profile>
+            <id>doc</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile to build and install sources jar. -->
+        <profile>
+            <id>src</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile for publishing release artifacts to Maven Central via Sonatype Central Portal.
+             Attaches sources and javadoc, GPG-signs all artifacts, and deploys via
+             central-publishing-maven-plugin. Activate with: mvn deploy -Prelease
+             Requires MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_TOKEN in settings.xml (server id: central)
+             and MAVEN_GPG_PASSPHRASE env variable set for the signer. -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <phase>verify</phase>
+                                <configuration>
+                                    <!-- Allow non-interactive passphrase supply via env MAVEN_GPG_PASSPHRASE. -->
+                                    <passphraseEnvName>MAVEN_GPG_PASSPHRASE</passphraseEnvName>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <!-- extensions=true replaces the standard deploy lifecycle. -->
+                        <extensions>true</extensions>
+                        <configuration>
+                            <!-- Matches server id in ~/.m2/settings.xml. -->
+                            <publishingServerId>central</publishingServerId>
+                            <!-- Manual publish: deploy uploads + validates, but does NOT auto-release.
+                                 After the build passes, open central.sonatype.com, verify the bundle,
+                                 then click Publish. Set autoPublish=true once the first release has been confirmed. -->
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>reformat-poms</id>
             <activation>
                 <property>
-                    <name>!ci-pipeline</name>
+                    <name>!ci</name>
                 </property>
             </activation>
             <build>
@@ -264,7 +623,7 @@
             <id>reformat-sources</id>
             <activation>
                 <property>
-                    <name>!ci-pipeline</name>
+                    <name>!ci</name>
                 </property>
             </activation>
             <build>
@@ -277,6 +636,20 @@
                                 <id>reformat-sources</id>
                                 <goals>
                                     <goal>apply</goal>
+                                </goals>
+                                <phase>validate</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-license-headers</id>
+                                <goals>
+                                    <goal>format</goal>
                                 </goals>
                                 <phase>validate</phase>
                             </execution>
@@ -324,8 +697,22 @@
                     </plugin>
 
                     <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>check-spdx-headers</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>validate</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
                         <artifactId>maven-pmd-plugin</artifactId>
-                        <version>3.27.0</version>
+                        <version>${maven-pmd-plugin.version}</version>
                         <configuration>
                             <linkXRef>false</linkXRef>
                             <printFailingErrors>true</printFailingErrors>
@@ -333,6 +720,18 @@
                                 <ruleset>${maven.multiModuleProjectDirectory}/quality-gates/pmd-custom-ruleset.xml</ruleset>
                             </rulesets>
                         </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>net.sourceforge.pmd</groupId>
+                                <artifactId>pmd-core</artifactId>
+                                <version>${pmd.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>net.sourceforge.pmd</groupId>
+                                <artifactId>pmd-java</artifactId>
+                                <version>${pmd.version}</version>
+                            </dependency>
+                        </dependencies>
 
                         <executions>
                             <execution>
@@ -355,6 +754,67 @@
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>prepare-jacoco-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Append so later test executions in the same module do not overwrite earlier coverage data. -->
+                                    <append>true</append>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>prepare-jacoco-agent-integration</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Append so unit-test and integration-test coverage can accumulate in one module build. -->
+                                    <append>true</append>
+                                    <propertyName>failsafeArgLine</propertyName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>build-jacoco-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                            <execution>
+                                <id>enforce-jacoco-coverage</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                                <configuration>
+                                    <rules>
+                                        <rule>
+                                            <element>BUNDLE</element>
+                                            <limits>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>${jacoco.minimum.branch.coverage}</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>${jacoco.minimum.line.coverage}</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                    </rules>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

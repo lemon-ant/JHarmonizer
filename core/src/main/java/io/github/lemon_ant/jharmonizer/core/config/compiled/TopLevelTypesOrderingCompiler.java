@@ -1,0 +1,55 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
+package io.github.lemon_ant.jharmonizer.core.config.compiled;
+
+import static java.util.stream.Collectors.toUnmodifiableSet;
+
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDeclarationFlagsUtil;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
+import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+
+/**
+ * Compiles unified top-level ordering into a pure data model with ordered predicates.
+ * Semantics:
+ * - includes-only;
+ * - each unified "type group" becomes a single OR-by-kind predicate;
+ * - optional head predicate (IS_MAIN_TYPE) is prepended when mainTypeFirst is enabled.
+ */
+@UtilityClass
+class TopLevelTypesOrderingCompiler {
+
+    /**
+     * Compile top-level ordering from the unified config.
+     *
+     * @param unifiedTopLevelTypesOrdering unified definition with type groups and mainTypeFirst flag
+     * @return compiled order with ordered predicates (types-only)
+     */
+    @NonNull
+    CompiledTopLevelTypesOrdering compileTopLevelTypesOrdering(
+            @NonNull UnifiedTopLevelTypesOrdering unifiedTopLevelTypesOrdering) {
+        List<Predicate<MemberDescriptor>> compiledTopLevelTypesSelectors =
+                unifiedTopLevelTypesOrdering.getTopLevelTypeSelectors().stream()
+                        .<Predicate<MemberDescriptor>>map(topLevelTypeSelector -> {
+                            Set<MemberKind> memberKinds = topLevelTypeSelector.getTypeKinds().stream()
+                                    .map(UnifiedTypeKind::getMemberKind)
+                                    .collect(toUnmodifiableSet());
+
+                            int requiredDeclarationFlagsMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                                    memberKinds, Set.of(), Set.of());
+                            return RuleAtomPredicates.createMaskContainsAny(requiredDeclarationFlagsMask);
+                        })
+                        .toList();
+
+        return new CompiledTopLevelTypesOrdering(
+                unifiedTopLevelTypesOrdering.isMainTypeFirst(),
+                OrderingRuleCompiler.compileOrderingRules(unifiedTopLevelTypesOrdering.getOrderingRules()),
+                compiledTopLevelTypesSelectors);
+    }
+}

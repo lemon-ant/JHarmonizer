@@ -1,0 +1,37 @@
+{
+  "description": "Two groups with a cross-group dependency that inverts natural alphabetical block order. Group1={nu,omega} (key='nu'), Group2={lambda,mu} (key='lambda'). Natural: Group2 < Group1. Dependency omega->lambda forces Group1 first.",
+  "items": [
+    {
+      "name": "omega",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "nu",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "mu",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "lambda",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [
+    [
+      "omega",
+      "nu"
+    ],
+    [
+      "mu",
+      "lambda"
+    ]
+  ],
+  "dependencies": [
+    {
+      "provider": "omega",
+      "dependent": "lambda"
+    }
+  ]
+}

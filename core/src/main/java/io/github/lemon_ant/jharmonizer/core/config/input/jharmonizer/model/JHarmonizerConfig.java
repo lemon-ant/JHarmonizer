@@ -1,0 +1,66 @@
+// SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
+package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
+import java.util.Collections;
+import java.util.List;
+import lombok.NonNull;
+import lombok.Value;
+import org.apache.commons.lang3.Validate;
+
+/**
+ * Root deserialization model for a JHarmonizer YAML configuration file.
+ * Holds formatting settings, backup flag, header-line descriptor,
+ * member-group ordering definitions, and top-level type ordering.
+ */
+@Value
+public class JHarmonizerConfig {
+
+    @NonNull
+    JHarmonizerFormatting formatting;
+
+    boolean backupsEnabled;
+
+    @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
+
+    @NonNull
+    JHarmonizerHeaderLine headerLine;
+
+    @NonNull
+    List<JHarmonizerMemberGroup> memberGroups;
+
+    @NonNull
+    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
+
+    // TODO Make it package
+    /**
+     * Creates a new JHarmonizerConfig.
+     * @param topLevelTypesOrdering the top level types ordering
+     * @param formatting the formatting
+     * @param backupsEnabled the backups enabled
+     * @param processingStatisticsMode the processing statistics mode
+     * @param headerLine the header line
+     * @param memberGroups the member groups
+     */
+    public JHarmonizerConfig(
+            @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
+                    JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
+            @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
+            @JsonProperty(value = "backups-enabled", required = true) boolean backupsEnabled,
+            @NonNull @JsonProperty(value = "processing-statistics-mode", required = true)
+                    ProcessingStatisticsMode processingStatisticsMode,
+            @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
+            @NonNull @JsonProperty(value = "type-members-ordering", required = true)
+                    List<@NonNull JHarmonizerMemberGroup> memberGroups) {
+        this.topLevelTypesOrdering = topLevelTypesOrdering;
+        this.formatting = formatting;
+        this.backupsEnabled = backupsEnabled;
+        this.processingStatisticsMode = processingStatisticsMode;
+        this.headerLine = headerLine;
+        Validate.notEmpty(memberGroups, "type-members-ordering cannot be empty");
+        this.memberGroups = Collections.unmodifiableList(memberGroups);
+    }
+}

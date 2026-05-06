@@ -1,0 +1,25 @@
+{
+  "description": "All three items belong to a single group. Items are sorted alphabetically within the group regardless of input order.",
+  "items": [
+    {
+      "name": "cherry",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "apple",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "banana",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [
+    [
+      "cherry",
+      "apple",
+      "banana"
+    ]
+  ],
+  "dependencies": []
+}

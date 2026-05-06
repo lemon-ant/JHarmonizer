@@ -1,0 +1,73 @@
+{
+  "description": "Complex mix: three groups, four singletons, and multi-level cross-group dependencies. Group1={xray,zulu} (key='xray') -> Group2={victor,whiskey} (key='victor') -> Group3={sierra,tango} (key='sierra'). Singleton romeo->papa. Singletons quebec and yankee are unconstrained. Lex tie-break determines order among free nodes: quebec < romeo < xray < yankee.",
+  "items": [
+    {
+      "name": "zulu",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "yankee",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "xray",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "whiskey",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "victor",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "tango",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "sierra",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "romeo",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "quebec",
+      "numeration": "STATIC"
+    },
+    {
+      "name": "papa",
+      "numeration": "STATIC"
+    }
+  ],
+  "groups": [
+    [
+      "zulu",
+      "xray"
+    ],
+    [
+      "whiskey",
+      "victor"
+    ],
+    [
+      "tango",
+      "sierra"
+    ]
+  ],
+  "dependencies": [
+    {
+      "provider": "xray",
+      "dependent": "victor"
+    },
+    {
+      "provider": "whiskey",
+      "dependent": "sierra"
+    },
+    {
+      "provider": "romeo",
+      "dependent": "papa"
+    }
+  ]
+}

@@ -1,82 +1,106 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Sorter
 
 ## Purpose
 
-This document describes the design and responsibilities of the member sorting component in the JHarmonizer tool.
-The purpose of the sorter is to provide consistent, configurable ordering of all class members in a Java source file,
-to ensure readability, maintainability, and stability of diffs.
+Reorder all members inside every type of a parsed Java file so that the resulting
+declaration order matches the active configuration (the compiled member-group tree),
+while honouring the declaration-order dependency graph and accessor co-location.
 
-## What Gets Sorted
+## What gets sorted
 
-The sorter is responsible for ordering the following elements within a Java class:
+The sorter handles every Spoon `CtTypeMember` kind:
 
-- Fields
-- Initializer blocks (static and instance)
-- Constructors
-- Methods (static and instance)
-- Inner classes and interfaces
+- fields,
+- enum constants,
+- record components,
+- static and instance initializer blocks,
+- constructors,
+- methods,
+- nested types (classes, interfaces, enums, records, annotations).
 
-## Input
+Sorting is recursive: nested types are processed with the same configuration as the
+enclosing type.
 
-The sorter operates on:
+## Input / output
 
-- An **AST model** of a parsed Java class (produced by a separate parser step).
-- A **Configuration** object containing:
-  - Expected member ordering (e.g. fields → constructors → methods)
-  - Visibility ordering (e.g. public → protected → package-private → private)
-  - Sorting rules within categories (e.g. alphabetical)
-  - Options for nested class processing
-  - Special cases: getter/setter pairs, constructors, initialization blocks
+Input: a `SpoonAstModel` (see [`03-Parser.md`](03-Parser.md)) plus a `CompiledConfig`
+(see [`02-Configurator.md`](02-Configurator.md)).
 
-## Algorithm Overview
+Output: the AST with members reordered in place. The serializer (Spoon custom printer)
+later writes the AST back to text in the new order.
 
-1. **Group Members by Type**:
-   All members are classified (fields, methods, etc.) and grouped accordingly.
+## Implementation map
 
-2. **Recursive Processing of Inner Classes**:
-   The sorter recursively applies itself to inner classes using the same configuration.
+The Spoon-backed sorter lives in
+`io.github.lemon_ant.jharmonizer.core.sorter.spoon`:
 
-3. **Sort All Categories Except Fields**:
-   Standard sorting is applied:
-   - First by visibility
-   - Then by alphabetic name (if configured)
+| Class                                | Role                                                                                                  |
+|--------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `Sorter` / `SortingResult`           | Public sorter facade and per-type sorting result.                                                     |
+| `SpoonSorter`                        | Top-level driver: walks types, dispatches members into compiled groups, emits sorted output.          |
+| `TypeMemberGrouper`                  | Dispatches each member to its leaf member group via the compiled selector predicates.                 |
+| `NaturalMemberGroupResolver` / `EffectiveMemberGroupResolver` | Resolve which compiled group claims a given member, with first-match-wins semantics.    |
+| `GroupMembersOrderer`                | Orders members inside a single leaf group; computes accessor super-clusters and property clusters.    |
+| `OrderingKeyFactory`                 | Builds `OrderingKey` / `ClusteredOrderingKey` instances used by the comparators.                      |
+| `ComparatorUtils`                    | Pre-computed comparator constants for `preserve` / `alpha` / `visibility-asc` / `visibility-desc` plus tie-breakers. |
+| `SortableTypeMember`                 | Lightweight data holder that pairs a `CtTypeMember` with its ordering keys.                           |
+| `MemberGroupBlock` / `GroupBoundaryMarker` | Output blocks and inter-group boundary markers used during serialization.                       |
+| `SpoonMemberDescriptorFactory`       | Adapts Spoon `CtTypeMember` instances into `MemberDescriptor`s consumed by compiled selectors.        |
+| `SpoonTypeMemberUtils`               | Visibility ranking and other shared per-member utilities.                                             |
+| `dependency_graph/`                  | Declaration-order dependency providers and graph builder. See [`declaration-order-dependencies.md`](declaration-order-dependencies.md). |
 
-4. **Special Handling for Fields**:
-   Fields may depend on each other:
-   ```java
-   int b = 42;
-   int a = b + 1;
-   ```
-   In this case, `b` must appear **before** `a`, regardless of alphabetical or visibility preferences.
+## High-level algorithm
 
-   The algorithm must:
-   - Build a **dependency graph** of fields
-   - Attempt to apply desired order **without violating dependency constraints**
-   - If conflicts arise, prioritize correctness and preserve original order as fallback
+For each type processed (top-level and nested):
 
-5. **Output**:
-   - An updated AST with members sorted according to the resolved order.
+1. **Dispatch**: every member is routed to exactly one leaf group of the compiled
+   member-group tree by `TypeMemberGrouper`. Dispatch uses first-match-wins over the
+   DFS post-order of the compiled tree.
+2. **Build the dependency graph**: `MemberDependencyGraphBuilder` runs every
+   `*DependencyProvider` over the type and produces a `MemberDependencyGraph` of
+   declaration-order arcs. See [`declaration-order-dependencies.md`](declaration-order-dependencies.md).
+3. **Order each leaf group**: `GroupMembersOrderer` builds `SortableTypeMember`
+   instances, computes accessor super-clusters and property clusters via
+   `OrderingKeyFactory`, and applies the comparator chain produced by
+   `ComparatorUtils.buildClusteredOrderingComparator(...)`. The comparator chain is
+   driven by the inherited `ordering-rules` of the leaf group.
+4. **Repair against the dependency graph**: the per-group ordering is passed to
+   `SimplifiedDependencyAwareSorter`, which performs the dependency-aware
+   provider-lift repair pass described in
+   [`sorting-algorythm.md`](sorting-algorythm.md).
+5. **Render**: ordered groups are emitted as `MemberGroupBlock`s with separator
+   directives (`new-line`, `header`, `none`) propagated to the printer.
 
-## Design Considerations
+## Top-level types
 
-- **Field Dependencies** are the most complex challenge.
-- The algorithm must be **deterministic** and repeatable.
+Top-level types of a compilation unit are sorted independently by `SpoonSorter` using
+`UnifiedTopLevelTypesOrdering` (see [`config-dsl.md`](config-dsl.md#top-level-types-ordering)),
+with the same `OrderingKey` machinery but a member-only comparator
+(`buildMemberOnlyOrderingComparator`).
 
-## Testing Strategy for Fields Resorting
+## Determinism
 
-Even before final parser selection, the sorting logic can be prototyped using in-memory mock models that simulate
-class members and their relationships. This allows testing of:
+Sorting is fully deterministic: every comparator falls back through a stable chain
+(rule key → `srcStart` → alpha key → visibility), so two runs over the same input
+produce byte-identical AST orderings.
 
-- Sorting correctness
-- Dependency resolution
-- Corner cases like:
-  - Circular dependencies
-  - Annotated fields/methods
-  - Static and non-static member interleaving
+## Opt-out interaction
 
-## Requirements
+Members of types marked `@jharmonizer:fully-off` are not sorted at all (the original
+source range is reproduced verbatim by the printer). Members of types marked
+`@jharmonizer:sort-off` skip the dispatch / ordering step but are still re-emitted by
+the formatter. See [`docs/directives.md`](directives.md).
 
-- Recursively support nested classes
-- Fully configurable via `Configuration`
-- Operate on an AST model (from JavaParser or Spoon, etc.)
-- Compatible with Java 21 constructs
+## Algorithmic deep-dive
+
+The full ordering algorithm — accessor clustering, the comparator chain, and the
+dependency-graph repair pass — is documented in
+[`sorting-algorythm.md`](sorting-algorythm.md). The post-sort *relocation
+detector* (which produces the human-friendly "move *N* members before *X*" report)
+is a separate diagnostic pass and is documented in its own file:
+[`relocation-detector.md`](relocation-detector.md).

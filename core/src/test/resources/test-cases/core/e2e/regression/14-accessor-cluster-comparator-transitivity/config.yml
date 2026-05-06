@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+formatting:
+  fix-imports: false
+  formatter-style: PALANTIR
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+backups-enabled: false
+processing-statistics-mode: FULL
+header-line:
+  character: "-"
+  left-padding: 2
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - [ class ]
+  ordering-rules: [ preserve ]
+type-members-ordering:
+  - name: Methods
+    includes: ~.*
+    ordering-rules: preserve
+    separator: none
+    groups:
+      - name: Fields
+        ordering-rules: preserve
+        includes: field
+      # Single ALPHA group that intentionally mixes:
+      #   * unpaired single-clustered accessors of multiple properties
+      #     (each property has only a getter or only a setter, so the
+      #     accessor-bundle path never groups them);
+      #   * non-accessor methods.
+      # Regression: with the previous comparator the ALPHA branch compared
+      # accessor pairs by their JavaBeans property name but compared
+      # accessor-vs-non-accessor by the full method-signature alphaKey, which
+      # was non-transitive (e.g. property "apple" < "zebra" but method
+      # "getZebra" < "setApple") and made TimSort throw or produced
+      # nondeterministic ordering.
+      #
+      # New contract: every accessor joins one indivisible super-cluster.
+      # Non-accessor methods can never sort between two property clusters of
+      # the super-cluster — they go either entirely above or entirely below
+      # it. Inside the super-cluster, property clusters are compared by
+      # propertyName for the ALPHA rule. Here that yields:
+      # apple < bravo < charlie < xray < yankee < zebra (one member each).
+      # The super-cluster's representative is the global minimum own-key
+      # among all accessor methods (across all property clusters):
+      # getXray's alphaKey ("getXray():java.lang.String") is first among all
+      # six accessor alphaKeys (g < m < s). Since getXray < middle() in alpha
+      # order, the entire super-cluster sorts BEFORE middle().
+      - name: All Methods
+        keepAccessorsTogether: true
+        ordering-rules: alpha
+        includes: method

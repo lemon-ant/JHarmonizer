@@ -1,0 +1,30 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package io.github.lemon_ant.jharmonizer.core.e2e;
+
+// Escaped fixture (.~java): intentionally excluded from automated e2e execution.
+// Missing behavior variant: longer chain static -> new instance -> instance field -> helper -> Type.field.
+public class F04StaticNewInstanceTypeFieldLongChainEscapedSample {
+    private static int zzz = new F04StaticNewInstanceTypeFieldLongChainEscapedSample().aaa;
+    private int aaa = loadBravoWithMixedQualification();
+    private static int bravo = 10;
+
+    private int loadBravoWithMixedQualification() {
+        // Mixed TypeName. and this. usage in one initializer graph.
+        return F04StaticNewInstanceTypeFieldLongChainEscapedSample.bravo
+                + this.localAdjustment();
+    }
+
+    private int localAdjustment() {
+        return 1;
+    }
+
+    public static void main(String[] args) {
+        // Correct behavior in original order: bravo defaults to 0 at aaa-read point, so zzz == 1.
+        if (zzz != 1 || bravo != 10) {
+            throw new IllegalStateException("Unexpected values: zzz=" + zzz + ", bravo=" + bravo);
+        }
+    }
+}

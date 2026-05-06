@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+top-level-types-ordering:
+  main-type-first: true
+  type-groups:
+    - class
+  ordering-rules: preserve
+
+formatting:
+  fix-imports: true
+  formatter-style: palantir
+  blank-line-after-type-header: false
+  blank-line-before-comment: true
+  blank-line-between-fields: false
+
+backups-enabled: false
+processing-statistics-mode: FULL
+
+header-line:
+  character: '#'
+  left-padding: 1
+
+type-members-ordering:
+  - name: Synthetic root
+    ordering-rules: preserve
+    includes:
+      - field
+      - method
+      - constructor
+      - initializer
+      - class
+      - interface
+      - enum
+      - record
+      - annotation
+    groups:
+      - name: Fields
+        ordering-rules: preserve
+        includes: field
+        groups:
+          - name: Any fields
+            ordering-rules: preserve
+            includes: field
+            groups:
+              - name: Alpha fields
+                ordering-rules: preserve
+                includes:
+                  - [field, =alpha]
+
+          - name: Other fields
+            ordering-rules: preserve
+            includes: field
+
+      - name: Methods
+        ordering-rules: preserve
+        includes: method
+
+      - name: Default Rule
+        ordering-rules: preserve
+        includes:
+          - field
+          - method
+          - constructor
+          - initializer
+          - class
+          - interface
+          - enum
+          - record
+          - annotation

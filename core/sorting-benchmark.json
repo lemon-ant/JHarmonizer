@@ -1,0 +1,71 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.github.lemon_ant.jharmonizer.core.sorter.SortingAlgorithmBenchmark.benchmarkSortingOnly",
+        "mode" : "avgt",
+        "threads" : 4,
+        "forks" : 0,
+        "jvm" : "C:\\Program Files\\Microsoft\\jdk-21.0.8.9-hotspot\\bin\\java.exe",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "--enable-native-access=ALL-UNNAMED",
+            "-Dclassworlds.conf=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\bin\\m2.conf",
+            "-Dmaven.home=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12",
+            "-Dlibrary.jansi.path=C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.12\\lib\\jansi-native",
+            "-Dmaven.multiModuleProjectDirectory=W:\\JHarmonizer",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 5,
+        "warmupTime" : "10 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "10 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "measurementBatchSize" : "1000"
+        },
+        "primaryMetric" : {
+            "score" : 465.51291180805526,
+            "scoreError" : 53.65168420273821,
+            "scoreConfidence" : [
+                411.861227605317,
+                519.1645960107935
+            ],
+            "scorePercentiles" : {
+                "0.0" : 439.7682491986166,
+                "50.0" : 450.9533174375588,
+                "90.0" : 552.147099986194,
+                "95.0" : 560.3717991830065,
+                "99.0" : 560.3717991830065,
+                "99.9" : 560.3717991830065,
+                "99.99" : 560.3717991830065,
+                "99.999" : 560.3717991830065,
+                "99.9999" : 560.3717991830065,
+                "100.0" : 560.3717991830065
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    462.5096501504329,
+                    560.3717991830065,
+                    450.8028505292208,
+                    439.7682491986166,
+                    444.837209694664,
+                    446.8830032000988,
+                    478.12480721488095,
+                    471.6210472288961,
+                    449.1067173348391,
+                    451.1037843458968
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

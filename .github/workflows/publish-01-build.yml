@@ -1,0 +1,104 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+
+name: 01-Build Artifacts
+
+on:
+  push:
+    branches: [ main ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 (baseline)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build once
+        run: mvn -B -ntp -Dci=true clean verify
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: "**/target/site/jacoco/jacoco.xml"
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Attach sources and javadoc
+        run: mvn -B -ntp -Dci=true -DskipTests -Dskip-quality-gates=true -Ddoclint=none source:jar javadoc:jar
+
+      - name: Stage dist and runtime dependencies
+        run: |
+          mkdir -p dist deps
+          find . -path "*/target/*.jar" \
+            ! -name "original-*.jar" \
+            ! -path "*/target/dependency/*" \
+            -exec cp {} dist/ \;
+          mvn -q -Dci=true -DskipTests -Dskip-quality-gates=true -DincludeScope=runtime dependency:copy-dependencies
+          find . -path "*/target/dependency/*.jar" -exec cp {} deps/ \;
+          echo "Dist:" && ls -l dist
+          echo "Deps:" && ls -l deps || true
+
+      - name: Create and compile consumer runner
+        run: |
+          mkdir -p runner
+          cat > runner/Runner.java <<'JAVA'
+          import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
+          import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
+          import io.github.lemon_ant.jharmonizer.core.flow.FlowType;
+          import java.nio.file.Paths;
+          import java.util.Collections;
+
+          public class Runner {
+            public static void main(String[] args) {
+              SrcProcessingResult result = new SrcProcessor().processSources(
+                  Paths.get("."), Collections.singleton("runner/no-matching-file.java"), Collections.emptySet(), FlowType.CHECK_ALL);
+              if (!result.isSuccess()) {
+                throw new IllegalStateException("JHarmonizer core compatibility runner failed");
+              }
+              System.out.println("OK");
+            }
+          }
+          JAVA
+          CORE_JAR=$(ls dist/jharmonizer-core-*.jar | grep -v -- '-sources.jar' | grep -v -- '-javadoc.jar' | head -n1)
+          SORTING_JAR=$(ls dist/dependency-aware-sorting-*.jar | grep -v -- '-sources.jar' | grep -v -- '-javadoc.jar' | head -n1)
+          javac --release 17 -cp "$CORE_JAR:$SORTING_JAR:deps/*:runner" -d runner runner/Runner.java
+          echo "Runner compiled:" && ls -l runner
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: jharmonizer-dist
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Upload runtime deps
+        uses: actions/upload-artifact@v4
+        with:
+          name: jharmonizer-deps-runtime
+          path: deps/*
+          if-no-files-found: error
+
+      - name: Upload precompiled runner classes
+        uses: actions/upload-artifact@v4
+        with:
+          name: jharmonizer-runner
+          path: runner/*
+          if-no-files-found: error

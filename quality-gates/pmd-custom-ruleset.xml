@@ -1,13 +1,34 @@
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
 <ruleset name="JHarmonizer: Custom Ruleset"
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0">
     <description>Everything except LawOfDemeter</description>
 
-    <rule ref="category/java/bestpractices.xml"/>
+    <rule ref="category/java/bestpractices.xml">
+        <!-- An exhaustive switch that also has a defensive default throw is a valid safety net
+             for when new enum values are added later.  The PMD rule would force removal of the
+             default, which would cause new enum values to silently do nothing. -->
+        <exclude name="ExhaustiveSwitchHasDefault"/>
+        <!--
+            PMD 7 paradox: UnnecessaryWarningSuppression fires whenever a @SuppressWarnings("PMD.X")
+            successfully suppresses a real violation.  This makes it impossible to use @SuppressWarnings
+            for legitimate cases (e.g. AvoidCatchingGenericException on MethodHandle.invokeExact).
+            Excluding the rule globally is the only practical fix.
+        -->
+        <exclude name="UnnecessaryWarningSuppression"/>
+    </rule>
     <!-- TODO It's too strict to use and should be reconsidered
     <ruleset>category/java/codestyle.xml</ruleset>
     -->
     <rule ref="category/java/design.xml">
         <exclude name="LawOfDemeter"/>
+    </rule>
+    <rule ref="category/java/design.xml/LoosePackageCoupling">
+        <properties>
+            <property name="packages" value="io.github.lemon_ant.jharmonizer"/>
+        </properties>
     </rule>
     <!-- TODO Activate it
     ruleset>category/java/documentation.xml</ruleset>

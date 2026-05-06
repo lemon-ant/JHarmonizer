@@ -1,128 +1,106 @@
-# Central Processor
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# Source Processor (`SrcProcessor`)
 
 ## Purpose
 
-`Processor` is the main orchestrator of the system. It performs configuration aggregation first,
-then manages the full transformation pipeline:
-- Parsing Java source code into an abstract syntax tree (AST)
-- Sorting class members according to the specified configuration
-- Serializing the sorted AST back to source code
-- Formatting the final source code using `PalantirJavaFormat`.
+`io.github.lemon_ant.jharmonizer.core.SrcProcessor` is the entry point of the core
+module. It owns the `CompiledConfig` and per-run components (`Formatter`, `Sorter`,
+`PrinterConfig`) and dispatches each processing run to one of the three flows.
 
-## Dual Flow Overview
+## Construction
 
-The Processor supports two distinct execution flows:
-
-### 1. Restructure Flow
-- Full processing pipeline: config → parse → sort → serialize → format
-- Produces a new source code
-- Optionally writes to file(s)
-- Can return stats (count, size, duration)
-
-### 2. Check Flow
-- Same pipeline as above, but only in memory
-- Compares input and output
-- Throws if restructuring would alter content
-- Used for CI/linting
-
-
-## Public API Methods
-
-### 1. Process a single Java source code string
 ```java
-String restructure(String inputJavaCode, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
+new SrcProcessor()                                  // default config only
+new SrcProcessor(FlexibleUnifiedConfig externalConfig) // default + overlay
 ```
-- **Input**:
-  - Java source code string
-  - Configuration input (`OverridingConfiguration`)
-  - Flags indicating which config parsers are enabled/disabled
-- **Output**: Transformed and formatted Java code string
 
-### 2. Process a single Java file
+The constructor compiles the active config via
+`ConfigurationManager.overrideDefaultConfig(externalConfig)` (see
+[`02-Configurator.md`](02-Configurator.md)), then builds the per-run helpers:
+
+- `Formatter(formatter-style, fix-imports)` — Palantir wrapper.
+- `Sorter(compiledConfig)` — member sorter.
+- `PrinterConfig(blank-line-after-type-header, blank-line-before-comment, blank-line-between-fields)` — passed to the Spoon custom printer.
+
+## Public API
+
 ```java
-FileProcessingStatisitic restructure(Path inputFilePath, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
+SrcProcessingResult processSources(
+        Path baseDir,
+        Collection<String> includeGlobs,
+        Collection<String> excludeGlobs,
+        FlowType flowType);
 ```
-- Reads file content, processes it, and overwrites or replaces the original file
-- **Output**: Processing statistic: processing time, size before and after transformation, error count, etc.
 
-### 3. Process a directory of Java files (recursively, in parallel)
-```java
-ProcessingReport restructure(Path inputDirectory, OverridingConfiguration configuration, Path configFile, ConfigParserFlags flags);
-```
-- Recursively processes `.java` files in the directory
-- Executes processing in parallel threads
-- **Output**: `ProcessingReport` containing:
-  - Number of processed files
-  - Total and average processing time
-  - Min/max file size
-  - Error count
-  - etc.
+| Parameter      | Description                                                                                  |
+|----------------|----------------------------------------------------------------------------------------------|
+| `baseDir`      | Root directory to scan (relative paths are resolved against it).                             |
+| `includeGlobs` | `PathMatcher` `glob:` patterns of files to include (`**/*.java`, etc.).                      |
+| `excludeGlobs` | `PathMatcher` `glob:` patterns of files to exclude.                                          |
+| `flowType`     | One of `REORDER`, `CHECK_ALL`, `CHECK_FAIL_FAST`.                                            |
 
-## Internal Processing Flow
+There are no separate single-file or single-string entry points — the same call
+processes one file or many files depending on the resolved file set.
 
-1. **Configure**: All entry points first invoke `Configurator` to collect and merge all configuration sources into a final `Configuration`.
-2. **Parse**: Java source is parsed into an AST via a chosen parser (e.g., `JavaParser`, `Spoon`).
-3. **Sort**: Members of the AST are reordered using `ASTSorter` based on configuration.
-4. **Serialize**: AST is converted back to Java source code.
-5. **Format**: Final code is formatted using `formatSourceAndFixImports()` with the appropriate style (Palantir/Google/AOSP).
+## Result
 
-## Extensibility and Flexibility
+`SrcProcessingResult` carries:
 
-- **Multi-source configuration support**: YAML, IDE settings, inline configs.
-- **Parser control flags**: selectively enable/disable configuration sources.
-- **Contextual outputs**: method output varies depending on target (string, file, directory).
-- **Metrics & logging hooks**: optionally integrated for performance tracking and diagnostics.
+- `AggregatedProcessingStatistic` — file count, total size, wall-clock and CPU
+  timings, per-status breakdown, list of files with unexpected errors, list of
+  non-conforming files.
+- `boolean success` — computed by the active flow (`flow.isSuccessful(...)`).
 
-## Check Mode (Validation Without Rewrite)
+The CLI / Maven plugin layer maps `success` to the documented exit codes.
 
-In addition to full restructuring, the Processor also provides a **`check` mode**.  
-This flow performs the same pipeline (configuration → parsing → sorting → serialization → formatting) but **only in memory** and does **not write any changes**.  
-It compares the original input with the result and throws an exception if restructuring would make changes.
+## Flow types
 
-### Purpose:
-Used in CI or quality gates to validate whether code is already correctly structured.
+| `FlowType`        | Implementation       | Modifying | Stream behavior        | Success rule                                          |
+|-------------------|----------------------|-----------|------------------------|-------------------------------------------------------|
+| `REORDER`         | `ReorderFlow`        | yes       | parallel, full         | `true` unless an unexpected per-file error occurred.  |
+| `CHECK_ALL`       | `CheckAllFlow`       | no        | parallel, full         | `true` only when no file is non-conforming.           |
+| `CHECK_FAIL_FAST` | `CheckFailFastFlow`  | no        | parallel, short-circuit | `true` only when no file is non-conforming. Stops at the first non-conforming file. |
 
-### Public Methods:
+## Internal pipeline
 
-All configuration parameters were omitted for simplicity.
+For each source file (driven by the parallel `Stream<SrcFile>` returned by
+`SrcFilesHandler.readJavaFiles(...)`, i.e. already-loaded source wrappers), the active flow runs:
 
-- `void check(Path directory)`
-  - Recursively checks all `.java` files in a directory.
-  - If any file differs from its restructured version, throws `CodeNotRestructuredException`.
+1. **Parse** — `SpoonParser.parseJavaSrcFile(srcFile, printerConfig)` →
+   `SpoonAstModel` (also resolves opt-out directives).
+2. **Opt-out short-circuit** — if the file is `@jharmonizer:fully-off`, the original
+   text is reused verbatim and the flow records `SKIPPED_BY_OPT_OUT`.
+3. **Sort** — `Sorter.sort(...)` reorders members per `CompiledConfig`.
+4. **Serialize** — `SpoonCustomSrcPrinter` re-emits Java source from the reordered AST.
+5. **Format** — `Formatter.formatSrc(...)` runs the Palantir pass and (optionally)
+   import fixing, skipping ranges marked `@jharmonizer:fully-off`.
+6. **Diff** — `DiffReporter` compares original and rewritten text when needed by the flow.
+7. **Write / report** — `REORDER` writes the new text to disk (with optional `.bak`
+   backup); the `CHECK_*` flows only record the violation.
 
-- `void check(Path file)`
-  - Checks a single file.
+Each step is timed individually and the timing flows into `FlowProcessingStats`.
 
-- `void check(String javaSource)`
-  - Checks a raw Java source string.
+## Statistics output
 
-### Exception Behavior:
+When `print-processing-statistics: true` (default), the run finishes by calling
+`ProcessingStatisticsPrintService.render(...)` on the aggregated statistic and logging
+it at `INFO`. When statistics are disabled, only a one-line debug summary plus a list
+of files with unexpected errors is logged.
 
-If restructuring changes the code, a `CodeNotRestructuredException` is thrown.  
-The exception should contain:
-- Path or origin description
-- Unified diff for diagnostics
+## Backups
 
+Backups are controlled by `backups-enabled` in the configuration (default `true`,
+overridable via the CLI `--no-backup` flag and the Maven plugin
+`jharmonizer.backupsEnabled` parameter). Only `REORDER` writes — and only when the
+output text actually differs from the input. The backup file is `<file>.bak` in the
+same directory.
 
-## Additional Note: Compilation Validation Step
+## Configuration validation as a pre-step
 
-In certain cases, if the selected AST parser fails to clearly identify invalid Java source files (e.g., files with 
-syntactical or structural corruption), it may be necessary to integrate a lightweight and embeddable Java compiler into
-the processing pipeline. 
-
-The idea is to pre-validate each file by attempting to compile it before parsing and restructuring. This compilation
-phase can serve as a safeguard to ensure that the file is valid Java code. If the compiler fails with a meaningful 
-error message, it can prevent the restructuring pipeline from executing on a broken file and help log or report the 
-cause of failure.
-
-This step may be performed in parallel or as a pre-processing phase before invoking the AST parser. The need for this 
-step will depend on the behavior of the selected parser and should be evaluated after initial POC validation.
-
-## Backup Handling Before File Overwrite
-
-To prevent accidental data loss when overwriting files during restructuring, especially in environments where no version control is used, implement an optional backup mechanism.
-
-- **Condition**: A backup file should be created **only if** the output differs from the original input (i.e. the file is modified).
-- **Backup naming convention**: Append a `.bak` or `.backup` extension to the original filename (e.g. `MyClass.java.bak`).
-- **Activation**: This feature should be configurable via `Configuration`, e.g. a flag like `createFileBackup = true`.
-- **Rationale**: Enables safe recovery if something goes wrong during restructuring, or if a user prefers to manually inspect changes.
+There is no separate "compile each file with javac before parsing" step. Spoon parse
+failures are wrapped in `SpoonModelBuildException`, captured per file, and reported as
+`ERROR` in the per-file processing status without aborting the run.
