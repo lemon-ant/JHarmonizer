@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <groupId>io.github.lemon-ant.jharmonizer.it</groupId>
     <artifactId>reorder-basic-it</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>IT: reorder-basic</name>
 

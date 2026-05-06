@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
     <artifactId>jharmonizer-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>JHarmonizer Parent</name>
@@ -44,7 +44,7 @@ SPDX-License-Identifier: Apache-2.0
     <scm>
         <connection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</connection>
         <developerConnection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v1.0.0</tag>
         <url>https://github.com/lemon-ant/JHarmonizer</url>
     </scm>
 
