@@ -7,10 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Supported versions
 
-No stable version has been released yet. Version 1.0.0 is the upcoming first release.
-Once 1.0.0 is published, the latest stable release will be the supported version.
-
-If you discover a vulnerability in the current pre-release code, please report it using the channel below.
+The latest stable release is supported. As of now, this means version **1.0.0**.
 
 ## Reporting a vulnerability
 

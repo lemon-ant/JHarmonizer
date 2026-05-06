@@ -31,7 +31,7 @@ Spotless); it runs after `generate-sources` and before `compile`.
         <plugin>
             <groupId>io.github.lemon-ant.jharmonizer</groupId>
             <artifactId>jharmonizer-maven-plugin</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <executions>
                 <execution>
                     <phase>process-sources</phase>
@@ -56,7 +56,7 @@ before any compilation happens:
         <plugin>
             <groupId>io.github.lemon-ant.jharmonizer</groupId>
             <artifactId>jharmonizer-maven-plugin</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <executions>
                 <execution>
                     <goals>
