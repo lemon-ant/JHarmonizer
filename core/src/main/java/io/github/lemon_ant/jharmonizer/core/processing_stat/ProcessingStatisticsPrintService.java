@@ -17,8 +17,6 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
-// Sonar/PMD: utility class with many constants is intentional — each is a layout parameter.
-
 /**
  * Renders processing statistics into a structured log-friendly report.
  */
