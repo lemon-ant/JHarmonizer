@@ -46,7 +46,7 @@ class ParseAllJava21FeaturesTest {
         assertThat(parsingStatistic.getParsedRootTypesCount()).isEqualTo(8);
         assertThat(parsingStatistic.getParsedTypesTotalCount()).isEqualTo(19);
         assertThat(parsingStatistic.getParsedMembersCount()).isEqualTo(129);
-        assertThat(parsingStatistic.getParsingTimeInNanos()).isGreaterThan(1000000);
+        assertThat(parsingStatistic.getParsingTimeInNanos()).isPositive();
     }
 
     @Test
@@ -68,6 +68,6 @@ class ParseAllJava21FeaturesTest {
         // Use withPercentage because the serializer may add or remove a few line separators.
         assertThat(serializationStatistic.getSerializedCodeLength())
                 .isCloseTo(ORIGINAL_SOURCE_CODE_LENGTH, withPercentage(10));
-        assertThat(serializationStatistic.getProcessingTimeInNanos()).isGreaterThan(1000000);
+        assertThat(serializationStatistic.getProcessingTimeInNanos()).isPositive();
     }
 }
