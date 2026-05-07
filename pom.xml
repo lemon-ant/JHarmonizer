@@ -620,6 +620,8 @@ SPDX-License-Identifier: Apache-2.0
                         <configuration>
                             <!-- Point javadoc at delomboked sources so all generated types are visible. -->
                             <sourcepath>${project.build.directory}/delombok</sourcepath>
+                            <!-- Disable doclint because JDK 21 currently reports broken links during javadoc generation. -->
+                            <doclint>none</doclint>
                         </configuration>
                         <executions>
                             <execution>
