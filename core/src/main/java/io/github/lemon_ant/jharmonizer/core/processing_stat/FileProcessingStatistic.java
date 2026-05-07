@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResult;
 import java.nio.file.Path;
 import lombok.AccessLevel;
@@ -19,6 +16,7 @@ import lombok.Value;
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileProcessingStatistic {
+
     @NonNull
     Path path;
 

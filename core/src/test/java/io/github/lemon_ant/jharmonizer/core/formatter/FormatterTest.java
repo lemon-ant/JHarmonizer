@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.formatter;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle.NONE;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle.PALANTIR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,20 +51,6 @@ class FormatterTest {
     }
 
     @Test
-    void formatSource_withFullExclusionRange_keepSrcUnchanged() {
-        // Given
-        Formatter formatter = new Formatter(PALANTIR, false);
-        String srcCode = "class Person {  }\n";
-
-        // When
-        FormattingResult formattingResult = formatter.formatSrc(
-                srcCode, Path.of("Person.java"), List.of(new SrcCharacterRange(0, srcCode.length())));
-
-        // Then
-        assertThat(formattingResult.getFormattedSrcCode()).isEqualTo(srcCode);
-    }
-
-    @Test
     void formatSource_middleExclusionRange_preserveExcludedFragment() {
         // Given
         Formatter formatter = new Formatter(PALANTIR, false);
@@ -106,16 +89,31 @@ class FormatterTest {
     }
 
     @Test
-    void formatSrc_noneStyleWithoutFixImports_returnsSrcCodeUnchanged() {
+    void formatSource_withFullExclusionRange_keepSrcUnchanged() {
         // Given
-        Formatter formatter = new Formatter(NONE, false);
-        String srcCode = "class Unchanged  { }";
+        Formatter formatter = new Formatter(PALANTIR, false);
+        String srcCode = "class Person {  }\n";
 
         // When
-        FormattingResult formattingResult = formatter.formatSrc(srcCode, Path.of("Unchanged.java"), List.of());
+        FormattingResult formattingResult = formatter.formatSrc(
+                srcCode, Path.of("Person.java"), List.of(new SrcCharacterRange(0, srcCode.length())));
 
         // Then
         assertThat(formattingResult.getFormattedSrcCode()).isEqualTo(srcCode);
+    }
+
+    @Test
+    void formatSrc_fullExclusionRangeWithFixImports_fixesImportsOnUnformattedSrc() {
+        // Given
+        Formatter formatter = new Formatter(PALANTIR, true);
+        String srcCode = "import java.util.List; class FullExclude { int  x; }";
+
+        // When
+        FormattingResult formattingResult = formatter.formatSrc(
+                srcCode, Path.of("FullExclude.java"), List.of(new SrcCharacterRange(0, srcCode.length())));
+
+        // Then
+        assertThat(formattingResult.getFormattedSrcCode()).doesNotContain("import java.util.List;");
     }
 
     @Test
@@ -132,6 +130,19 @@ class FormatterTest {
     }
 
     @Test
+    void formatSrc_noneStyleWithoutFixImports_returnsSrcCodeUnchanged() {
+        // Given
+        Formatter formatter = new Formatter(NONE, false);
+        String srcCode = "class Unchanged  { }";
+
+        // When
+        FormattingResult formattingResult = formatter.formatSrc(srcCode, Path.of("Unchanged.java"), List.of());
+
+        // Then
+        assertThat(formattingResult.getFormattedSrcCode()).isEqualTo(srcCode);
+    }
+
+    @Test
     void formatSrc_withExclusionRangeAndFixImports_fixesImportsAfterPartialFormatting() {
         // Given
         Formatter formatter = new Formatter(PALANTIR, true);
@@ -142,20 +153,6 @@ class FormatterTest {
         // When
         FormattingResult formattingResult =
                 formatter.formatSrc(srcCode, Path.of("Partial.java"), List.of(new SrcCharacterRange(start, end)));
-
-        // Then
-        assertThat(formattingResult.getFormattedSrcCode()).doesNotContain("import java.util.List;");
-    }
-
-    @Test
-    void formatSrc_fullExclusionRangeWithFixImports_fixesImportsOnUnformattedSrc() {
-        // Given
-        Formatter formatter = new Formatter(PALANTIR, true);
-        String srcCode = "import java.util.List; class FullExclude { int  x; }";
-
-        // When
-        FormattingResult formattingResult = formatter.formatSrc(
-                srcCode, Path.of("FullExclude.java"), List.of(new SrcCharacterRange(0, srcCode.length())));
 
         // Then
         assertThat(formattingResult.getFormattedSrcCode()).doesNotContain("import java.util.List;");

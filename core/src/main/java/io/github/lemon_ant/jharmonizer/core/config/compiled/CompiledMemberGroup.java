@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.List;
@@ -22,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 @Value
 @Builder
 public class CompiledMemberGroup {
+
     @NonNull
     @Singular
     List<@NonNull CompiledMemberGroup> compiledSubGroups; // unmodifiable after build, ordered
@@ -34,6 +32,11 @@ public class CompiledMemberGroup {
 
     int orderIndex;
 
+    @NonNull
+    @Singular
+    // TODO How to compile it???
+    List<@NonNull OrderingRule> orderingRules;
+
     @Builder.Default
     boolean relaxedForwardReferences = true;
 
@@ -42,11 +45,6 @@ public class CompiledMemberGroup {
 
     @NonNull
     UnifiedSeparator separator;
-
-    @NonNull
-    @Singular
-    // TODO How to compile it???
-    List<@NonNull OrderingRule> orderingRules;
 
     /**
      * Classifies the recursively.

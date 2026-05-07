@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -24,6 +21,30 @@ class SortingUtilsTest {
     void buildItemIndex_nullList_throwsNullPointerException() {
         // When
         Throwable thrown = catchThrowable(() -> SortingUtils.buildItemIndex(null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void resolveDependencyEdge_nullEdge_throwsNullPointerException() {
+        // Given
+        Map<String, Integer> emptyMap = Collections.emptyMap();
+
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(null, emptyMap));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void resolveDependencyEdge_nullMap_throwsNullPointerException() {
+        // Given
+        Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("provider", "dependent");
+
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(edge, null));
 
         // Then
         assertThat(thrown).isInstanceOf(NullPointerException.class);
@@ -54,30 +75,6 @@ class SortingUtilsTest {
     void validateNotAlreadyGrouped_nullMember_throwsNullPointerException() {
         // When
         Throwable thrown = catchThrowable(() -> SortingUtils.validateNotAlreadyGrouped(SortingUtils.UNASSIGNED, null));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void resolveDependencyEdge_nullEdge_throwsNullPointerException() {
-        // Given
-        Map<String, Integer> emptyMap = Collections.emptyMap();
-
-        // When
-        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(null, emptyMap));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void resolveDependencyEdge_nullMap_throwsNullPointerException() {
-        // Given
-        Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("provider", "dependent");
-
-        // When
-        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(edge, null));
 
         // Then
         assertThat(thrown).isInstanceOf(NullPointerException.class);

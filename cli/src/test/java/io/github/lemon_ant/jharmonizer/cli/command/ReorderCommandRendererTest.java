@@ -3,9 +3,6 @@
 
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
@@ -14,16 +11,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ReorderCommandRendererTest {
-
     private static final Path BASE_DIR = Path.of("/projects/my-project");
     private static final String FALLBACK_LAUNCHER = "jharmonizer";
-
-    @Test
-    void render_noOptionalArguments_returnsBaseCommand() {
-        // When / Then
-        assertThat(ReorderCommandRenderer.render(FALLBACK_LAUNCHER, BASE_DIR, Set.of(), Set.of(), null, false, null))
-                .isEqualTo("jharmonizer reorder --base-dir \"/projects/my-project\"");
-    }
 
     @Test
     void render_allOptionalArgumentsProvided_rendersCompleteCommand() {
@@ -51,11 +40,14 @@ class ReorderCommandRendererTest {
     }
 
     @Test
-    void render_fullStatisticsModeSet_appendsStatisticsModeFlag() {
+    void render_baseDirWithShellMetacharacters_escapesMetacharacters() {
+        // Given
+        Path dirWithMetachars = Path.of("/projects/$build");
+
         // When / Then
         assertThat(ReorderCommandRenderer.render(
-                        FALLBACK_LAUNCHER, BASE_DIR, Set.of(), Set.of(), null, false, ProcessingStatisticsMode.FULL))
-                .contains("--statistics-mode FULL");
+                        FALLBACK_LAUNCHER, dirWithMetachars, Set.of(), Set.of(), null, false, null))
+                .isEqualTo("jharmonizer reorder --base-dir \"/projects/\\$build\"");
     }
 
     @Test
@@ -70,14 +62,21 @@ class ReorderCommandRendererTest {
     }
 
     @Test
-    void render_baseDirWithShellMetacharacters_escapesMetacharacters() {
+    void render_customLauncherPrefix_prefixesReorderSubcommand() {
         // Given
-        Path dirWithMetachars = Path.of("/projects/$build");
+        String javaJarLauncher = "\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar";
 
         // When / Then
+        assertThat(ReorderCommandRenderer.render(javaJarLauncher, BASE_DIR, Set.of(), Set.of(), null, false, null))
+                .startsWith("\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar reorder");
+    }
+
+    @Test
+    void render_fullStatisticsModeSet_appendsStatisticsModeFlag() {
+        // When / Then
         assertThat(ReorderCommandRenderer.render(
-                        FALLBACK_LAUNCHER, dirWithMetachars, Set.of(), Set.of(), null, false, null))
-                .isEqualTo("jharmonizer reorder --base-dir \"/projects/\\$build\"");
+                        FALLBACK_LAUNCHER, BASE_DIR, Set.of(), Set.of(), null, false, ProcessingStatisticsMode.FULL))
+                .contains("--statistics-mode FULL");
     }
 
     @Test
@@ -89,12 +88,9 @@ class ReorderCommandRendererTest {
     }
 
     @Test
-    void render_customLauncherPrefix_prefixesReorderSubcommand() {
-        // Given
-        String javaJarLauncher = "\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar";
-
+    void render_noOptionalArguments_returnsBaseCommand() {
         // When / Then
-        assertThat(ReorderCommandRenderer.render(javaJarLauncher, BASE_DIR, Set.of(), Set.of(), null, false, null))
-                .startsWith("\"/opt/jdk-21/bin/java\" -jar jharmonizer-cli.jar reorder");
+        assertThat(ReorderCommandRenderer.render(FALLBACK_LAUNCHER, BASE_DIR, Set.of(), Set.of(), null, false, null))
+                .isEqualTo("jharmonizer reorder --base-dir \"/projects/my-project\"");
     }
 }

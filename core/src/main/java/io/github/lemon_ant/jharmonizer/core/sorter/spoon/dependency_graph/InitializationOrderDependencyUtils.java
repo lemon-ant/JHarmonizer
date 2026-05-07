@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireDeclaringType;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.DeclaringTypeFieldReferenceUtils.requireSrcStart;
@@ -31,29 +28,6 @@ import spoon.reflect.declaration.ModifierKind;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class InitializationOrderDependencyUtils {
-
-    private static boolean matchesInitializationMemberStaticness(CtTypeMember typeMember, boolean requiredStaticness) {
-        return (typeMember instanceof CtField<?> || typeMember instanceof CtAnonymousExecutable)
-                && typeMember.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness;
-    }
-
-    /**
-     * Resolves the initialization ast root.
-     * @param typeMember the type member
-     * @return the initialization ast root
-     */
-    @NonNull
-    static Optional<CtElement> resolveInitializationAstRoot(@NonNull CtTypeMember typeMember) {
-        if (typeMember instanceof CtField<?> fieldWithPotentialInitializer) {
-            return Optional.ofNullable(fieldWithPotentialInitializer.getDefaultExpression());
-        }
-
-        if (typeMember instanceof CtAnonymousExecutable initializerBlock) {
-            return Optional.ofNullable(initializerBlock.getBody());
-        }
-
-        return Optional.empty();
-    }
 
     /**
      * Returns whether is blank final field.
@@ -89,6 +63,24 @@ final class InitializationOrderDependencyUtils {
                 && DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(defaultExpression)
                         .map(foldedExpression -> foldedExpression instanceof CtLiteral<?>)
                         .orElse(false);
+    }
+
+    /**
+     * Resolves the initialization ast root.
+     * @param typeMember the type member
+     * @return the initialization ast root
+     */
+    @NonNull
+    static Optional<CtElement> resolveInitializationAstRoot(@NonNull CtTypeMember typeMember) {
+        if (typeMember instanceof CtField<?> fieldWithPotentialInitializer) {
+            return Optional.ofNullable(fieldWithPotentialInitializer.getDefaultExpression());
+        }
+
+        if (typeMember instanceof CtAnonymousExecutable initializerBlock) {
+            return Optional.ofNullable(initializerBlock.getBody());
+        }
+
+        return Optional.empty();
     }
 
     /**
@@ -139,8 +131,14 @@ final class InitializationOrderDependencyUtils {
                 .orElse(false);
     }
 
+    private static boolean matchesInitializationMemberStaticness(CtTypeMember typeMember, boolean requiredStaticness) {
+        return (typeMember instanceof CtField<?> || typeMember instanceof CtAnonymousExecutable)
+                && typeMember.getModifiers().contains(ModifierKind.STATIC) == requiredStaticness;
+    }
+
     @Value
     private static class ProviderCandidate {
+
         @NonNull
         CtTypeMember providerMember;
 

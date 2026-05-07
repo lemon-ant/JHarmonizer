@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
@@ -15,6 +12,24 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle
 import org.junit.jupiter.api.Test;
 
 class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
+
+    @Test
+    void convert2FlexibleUnified_fullPartialFormattingWithStyle_convertsFormatterStyle() {
+        // Given
+        JHarmonizerFlexibleFormatting flexibleFormatting =
+                new JHarmonizerFlexibleFormatting(null, FormatterStyle.PALANTIR, null, null, null);
+        JHarmonizerFlexibleConfig vendorConfig =
+                new JHarmonizerFlexibleConfig(null, flexibleFormatting, null, null, null, null);
+
+        // When
+        FlexibleUnifiedConfig unifiedConfig =
+                JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(vendorConfig);
+
+        // Then
+        assertThat(unifiedConfig.getFormatting()).isPresent();
+        assertThat(unifiedConfig.getFormatting().get().getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
+        assertThat(unifiedConfig.getFormatting().get().getFixImports()).isEmpty();
+    }
 
     @Test
     void convert2FlexibleUnified_memberGroupsMissing_keepsRootMemberGroupsAbsent() {
@@ -47,23 +62,5 @@ class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
         assertThat(unifiedConfig.getFormatting().get().getFormatterStyle()).isEmpty();
         assertThat(unifiedConfig.getFormatting().get().getBlankLineBetweenFields())
                 .isEmpty();
-    }
-
-    @Test
-    void convert2FlexibleUnified_fullPartialFormattingWithStyle_convertsFormatterStyle() {
-        // Given
-        JHarmonizerFlexibleFormatting flexibleFormatting =
-                new JHarmonizerFlexibleFormatting(null, FormatterStyle.PALANTIR, null, null, null);
-        JHarmonizerFlexibleConfig vendorConfig =
-                new JHarmonizerFlexibleConfig(null, flexibleFormatting, null, null, null, null);
-
-        // When
-        FlexibleUnifiedConfig unifiedConfig =
-                JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(vendorConfig);
-
-        // Then
-        assertThat(unifiedConfig.getFormatting()).isPresent();
-        assertThat(unifiedConfig.getFormatting().get().getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
-        assertThat(unifiedConfig.getFormatting().get().getFixImports()).isEmpty();
     }
 }

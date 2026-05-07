@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +45,39 @@ class SortingUtils {
             }
         }
         return Collections.unmodifiableMap(itemToIndex);
+    }
+
+    /**
+     * Resolves and validates a dependency edge — looks up both endpoints in the item index,
+     * verifies they exist in the input set and are not the same item.
+     *
+     * @param edge            the raw dependency edge
+     * @param itemToIndex     item-to-index map built from the input items
+     * @param <TNode> the item type
+     * @return a {@link ResolvedEdge} with validated item indices and original items
+     * @throws SortingException if the provider or dependent is unknown, or it is a self-dependency
+     */
+    @NonNull
+    static <TNode> ResolvedEdge<TNode> resolveDependencyEdge(
+            @NonNull Dependencies.Dependency<TNode> edge, @NonNull Map<TNode, Integer> itemToIndex) {
+        TNode provider = edge.getProvider();
+        TNode dependent = edge.getDependent();
+
+        Integer providerIndex = itemToIndex.get(provider);
+        if (providerIndex == null) {
+            throw new SortingException("Dependency references unknown provider: \"" + provider + "\"");
+        }
+
+        Integer dependentIndex = itemToIndex.get(dependent);
+        if (dependentIndex == null) {
+            throw new SortingException("Dependency references unknown dependent: \"" + dependent + "\"");
+        }
+
+        if (providerIndex.equals(dependentIndex)) {
+            throw new SortingException("Self-dependency on \"" + provider + "\" is not allowed");
+        }
+
+        return new ResolvedEdge<>(dependent, dependentIndex, provider, providerIndex);
     }
 
     // ------------------------------------------------------------------ //
@@ -97,46 +127,15 @@ class SortingUtils {
      */
     @Value
     static class ResolvedEdge<TNode> {
-        int providerIndex;
+
+        @NonNull
+        TNode dependent;
+
         int dependentIndex;
 
         @NonNull
         TNode provider;
 
-        @NonNull
-        TNode dependent;
-    }
-
-    /**
-     * Resolves and validates a dependency edge — looks up both endpoints in the item index,
-     * verifies they exist in the input set and are not the same item.
-     *
-     * @param edge            the raw dependency edge
-     * @param itemToIndex     item-to-index map built from the input items
-     * @param <TNode> the item type
-     * @return a {@link ResolvedEdge} with validated item indices and original items
-     * @throws SortingException if the provider or dependent is unknown, or it is a self-dependency
-     */
-    @NonNull
-    static <TNode> ResolvedEdge<TNode> resolveDependencyEdge(
-            @NonNull Dependencies.Dependency<TNode> edge, @NonNull Map<TNode, Integer> itemToIndex) {
-        TNode provider = edge.getProvider();
-        TNode dependent = edge.getDependent();
-
-        Integer providerIndex = itemToIndex.get(provider);
-        if (providerIndex == null) {
-            throw new SortingException("Dependency references unknown provider: \"" + provider + "\"");
-        }
-
-        Integer dependentIndex = itemToIndex.get(dependent);
-        if (dependentIndex == null) {
-            throw new SortingException("Dependency references unknown dependent: \"" + dependent + "\"");
-        }
-
-        if (providerIndex.equals(dependentIndex)) {
-            throw new SortingException("Self-dependency on \"" + provider + "\" is not allowed");
-        }
-
-        return new ResolvedEdge<>(providerIndex, dependentIndex, provider, dependent);
+        int providerIndex;
     }
 }

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collections;
@@ -20,6 +17,7 @@ import org.apache.commons.lang3.Validate;
 @Value
 @JsonDeserialize(using = TypeGroupDeserializer.class)
 public class JHarmonizerTopLevelTypeSelector {
+
     @NonNull
     Set<@NonNull JHarmonizerTypeKind> typeKinds;
 

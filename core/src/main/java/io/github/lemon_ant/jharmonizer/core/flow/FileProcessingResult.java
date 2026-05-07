@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.flow;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
@@ -32,6 +29,7 @@ import org.jspecify.annotations.Nullable;
 @Builder(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileProcessingResult {
+
     // TODO Make it non null???
     @Nullable
     String diff;
@@ -42,21 +40,21 @@ public class FileProcessingResult {
     @NonNull
     FormattingStatistic formattingStatistic;
 
+    // TODO Make it non null
+    @Nullable
+    Collection<MemberRelocation> memberRelocations;
+
     @NonNull
     ParsingStatistic parsingStatistic;
 
     @NonNull
     Path path;
 
-    // TODO Make it non null
-    @Nullable
-    Collection<MemberRelocation> memberRelocations;
-
     @NonNull
     SerializationStatistic serializationStatistic;
 
-    boolean stopRequested;
-
     @NonNull
     SortingStatistic sortingStatistic;
+
+    boolean stopRequested;
 }

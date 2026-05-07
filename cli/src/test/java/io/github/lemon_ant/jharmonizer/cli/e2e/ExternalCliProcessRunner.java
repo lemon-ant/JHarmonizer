@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,9 +22,14 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class ExternalCliProcessRunner {
-
-    private static final long PROCESS_TIMEOUT_SECONDS = 90;
     private static final String JAVA_TOOL_OPTIONS_MESSAGE_PREFIX = "Picked up JAVA_TOOL_OPTIONS: ";
+    private static final long PROCESS_TIMEOUT_SECONDS = 90;
+
+    static String normalizeErrorOutput(@NonNull String stderr) {
+        return stderr.lines()
+                .filter(line -> !line.startsWith(JAVA_TOOL_OPTIONS_MESSAGE_PREFIX))
+                .collect(Collectors.joining(System.lineSeparator()));
+    }
 
     static ExternalCliProcessResult run(
             @NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
@@ -63,6 +65,15 @@ class ExternalCliProcessRunner {
     }
 
     @NonNull
+    private static String getOutput(Future<String> outputFuture) throws InterruptedException {
+        try {
+            return outputFuture.get();
+        } catch (ExecutionException exception) {
+            throw new IllegalStateException("Failed to capture CLI process output", exception.getCause());
+        }
+    }
+
+    @NonNull
     private static String readAndMirror(InputStream inputStream, PrintStream mirrorStream) throws IOException {
         ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
@@ -73,20 +84,5 @@ class ExternalCliProcessRunner {
             mirrorStream.flush();
         }
         return outputBuffer.toString(StandardCharsets.UTF_8);
-    }
-
-    @NonNull
-    private static String getOutput(Future<String> outputFuture) throws InterruptedException {
-        try {
-            return outputFuture.get();
-        } catch (ExecutionException exception) {
-            throw new IllegalStateException("Failed to capture CLI process output", exception.getCause());
-        }
-    }
-
-    static String normalizeErrorOutput(@NonNull String stderr) {
-        return stderr.lines()
-                .filter(line -> !line.startsWith(JAVA_TOOL_OPTIONS_MESSAGE_PREFIX))
-                .collect(Collectors.joining(System.lineSeparator()));
     }
 }

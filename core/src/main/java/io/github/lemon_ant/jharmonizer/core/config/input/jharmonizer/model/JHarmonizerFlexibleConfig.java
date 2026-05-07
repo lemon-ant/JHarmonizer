@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,19 +25,19 @@ import org.jspecify.annotations.Nullable;
 public class JHarmonizerFlexibleConfig {
 
     @Nullable
-    JHarmonizerFlexibleFormatting formatting;
-
-    @Nullable
     Boolean backupsEnabled;
 
     @Nullable
-    ProcessingStatisticsMode processingStatisticsMode;
+    JHarmonizerFlexibleFormatting formatting;
 
     @Nullable
     JHarmonizerHeaderLine headerLine;
 
     @Nullable
     List<JHarmonizerMemberGroup> memberGroups;
+
+    @Nullable
+    ProcessingStatisticsMode processingStatisticsMode;
 
     @Nullable
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
@@ -80,16 +77,6 @@ public class JHarmonizerFlexibleConfig {
     }
 
     /**
-     * Returns the optional partial formatting override.
-     *
-     * @return the optional partial formatting override
-     */
-    @NonNull
-    public Optional<JHarmonizerFlexibleFormatting> getFormatting() {
-        return ofNullable(formatting);
-    }
-
-    /**
      * Returns the optional backups-enabled override.
      *
      * @return the optional backups-enabled override
@@ -100,13 +87,13 @@ public class JHarmonizerFlexibleConfig {
     }
 
     /**
-     * Returns the optional processing-statistics-mode override.
+     * Returns the optional partial formatting override.
      *
-     * @return the optional processing-statistics-mode override
+     * @return the optional partial formatting override
      */
     @NonNull
-    public Optional<ProcessingStatisticsMode> getProcessingStatisticsMode() {
-        return ofNullable(processingStatisticsMode);
+    public Optional<JHarmonizerFlexibleFormatting> getFormatting() {
+        return ofNullable(formatting);
     }
 
     /**
@@ -127,6 +114,16 @@ public class JHarmonizerFlexibleConfig {
     @NonNull
     public Optional<List<JHarmonizerMemberGroup>> getMemberGroups() {
         return ofNullable(memberGroups);
+    }
+
+    /**
+     * Returns the optional processing-statistics-mode override.
+     *
+     * @return the optional processing-statistics-mode override
+     */
+    @NonNull
+    public Optional<ProcessingStatisticsMode> getProcessingStatisticsMode() {
+        return ofNullable(processingStatisticsMode);
     }
 
     /**

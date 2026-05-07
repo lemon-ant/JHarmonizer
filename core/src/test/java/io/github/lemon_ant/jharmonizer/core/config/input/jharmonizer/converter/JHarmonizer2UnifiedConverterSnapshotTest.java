@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigLoaderHelper.DEFAULT_JHARMONIZER_CONFIG;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,13 +25,12 @@ import org.junit.jupiter.api.Test;
  * JHarmonizer2UnifiedConverterSnapshotTest#regenerateUnifiedConfigSnapshot_whenRun_overwritesSnapshotFile
  */
 class JHarmonizer2UnifiedConverterSnapshotTest {
-
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/expected-default-unified-config.json";
-    private static final URL SNAPSHOT_RESOURCE_URL =
-            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private static final URL SNAPSHOT_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
 
     @Test
     void compareUnifiedConfigSnapshot_defaultVendorConfig_matchesExpectedJson() throws Exception {

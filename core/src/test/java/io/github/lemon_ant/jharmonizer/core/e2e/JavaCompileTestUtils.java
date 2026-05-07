@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,7 +14,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class JavaCompileTestUtils {
-
     private static final int JAVA_RELEASE = 21;
     private static final String TEST_COMPILE_PREFIX = "test-compile-";
 
@@ -60,8 +56,8 @@ class JavaCompileTestUtils {
 
     @Value
     static class CompileResult {
+        Path diagnosticsPath;
         int exitCode;
         String output;
-        Path diagnosticsPath;
     }
 }

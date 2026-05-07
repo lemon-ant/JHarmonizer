@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Collections.unmodifiableList;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
@@ -24,16 +21,13 @@ import lombok.Value;
  */
 @Value
 public class CompiledConfig {
+    boolean backupsEnabled;
+
     /**
      * Cohesive formatting definition (preferred API).
      */
     @NonNull
     UnifiedFormatting formatting;
-
-    boolean backupsEnabled;
-
-    @NonNull
-    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Header line descriptor (character + leftPadding).
@@ -42,7 +36,11 @@ public class CompiledConfig {
     UnifiedHeaderLine headerLine;
 
     @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
+
+    @NonNull
     List<CompiledMemberGroup> rootMemberGroups;
+
     /**
      * Compiled top-level order as a sequence of predicates.
      * Compiler is responsible for populating it (including optional head predicates).

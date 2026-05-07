@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.nio.file.Path;
 import java.util.List;
 import lombok.NonNull;
@@ -12,25 +9,22 @@ import lombok.Value;
 
 @Value
 class ExternalCliProcessResult {
-    @NonNull
-    List<String> command;
 
     @NonNull
-    Path workingDirectory;
+    List<String> command;
 
     int exitCode;
 
     @NonNull
-    String stdout;
+    String stderr;
 
     @NonNull
-    String stderr;
+    String stdout;
 
     boolean timedOut;
 
-    String combinedOutput() {
-        return stdout + System.lineSeparator() + stderr;
-    }
+    @NonNull
+    Path workingDirectory;
 
     @Override
     public String toString() {
@@ -53,5 +47,9 @@ class ExternalCliProcessResult {
                 + "--- stderr ---"
                 + System.lineSeparator()
                 + stderr;
+    }
+
+    String combinedOutput() {
+        return stdout + System.lineSeparator() + stderr;
     }
 }

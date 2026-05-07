@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Optional.ofNullable;
 
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
@@ -30,23 +27,23 @@ import org.jspecify.annotations.Nullable;
 @Getter(AccessLevel.NONE)
 public class FlexibleUnifiedConfig {
 
+    @Nullable
+    Boolean backupsEnabled;
+
     /**
      * Partial formatting overlay (preferred API for flex configs).
      */
     @Nullable
     FlexibleUnifiedFormatting formatting;
 
-    @Nullable
-    Boolean backupsEnabled;
-
-    @Nullable
-    ProcessingStatisticsMode processingStatisticsMode;
-
     /**
      * Optional override for header line.
      */
     @Nullable
     UnifiedHeaderLine headerLine;
+
+    @Nullable
+    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Optional override for root member groups.
@@ -96,15 +93,6 @@ public class FlexibleUnifiedConfig {
     }
 
     /**
-     * Returns the formatting overlay.
-     * @return the formatting overlay
-     */
-    @NonNull
-    public Optional<FlexibleUnifiedFormatting> getFormatting() {
-        return ofNullable(formatting);
-    }
-
-    /**
      * Returns the backups enabled.
      * @return the backups enabled
      */
@@ -114,12 +102,12 @@ public class FlexibleUnifiedConfig {
     }
 
     /**
-     * Returns the processing statistics mode.
-     * @return the processing statistics mode
+     * Returns the formatting overlay.
+     * @return the formatting overlay
      */
     @NonNull
-    public Optional<ProcessingStatisticsMode> getProcessingStatisticsMode() {
-        return ofNullable(processingStatisticsMode);
+    public Optional<FlexibleUnifiedFormatting> getFormatting() {
+        return ofNullable(formatting);
     }
 
     /**
@@ -129,6 +117,15 @@ public class FlexibleUnifiedConfig {
     @NonNull
     public Optional<UnifiedHeaderLine> getHeaderLine() {
         return ofNullable(headerLine);
+    }
+
+    /**
+     * Returns the processing statistics mode.
+     * @return the processing statistics mode
+     */
+    @NonNull
+    public Optional<ProcessingStatisticsMode> getProcessingStatisticsMode() {
+        return ofNullable(processingStatisticsMode);
     }
 
     /**

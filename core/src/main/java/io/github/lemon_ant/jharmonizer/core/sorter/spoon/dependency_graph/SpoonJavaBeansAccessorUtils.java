@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static java.beans.Introspector.decapitalize;
 import static java.util.Objects.requireNonNull;
@@ -30,12 +27,11 @@ import spoon.reflect.reference.CtTypeReference;
  */
 @UtilityClass
 public class SpoonJavaBeansAccessorUtils {
-
     private static final List<AccessorMethodContract> ACCESSOR_METHOD_CONTRACTS = List.of(
-            new AccessorMethodContract("get", AccessorKind.GET, 0, AccessorMethodReturnType.NON_VOID),
-            new AccessorMethodContract("set", AccessorKind.SET, 1, AccessorMethodReturnType.VOID),
-            new AccessorMethodContract("is", AccessorKind.IS, 0, AccessorMethodReturnType.BOOLEAN),
-            new AccessorMethodContract("has", AccessorKind.HAS, 0, AccessorMethodReturnType.BOOLEAN));
+            new AccessorMethodContract(AccessorKind.GET, AccessorMethodReturnType.NON_VOID, 0, "get"),
+            new AccessorMethodContract(AccessorKind.SET, AccessorMethodReturnType.VOID, 1, "set"),
+            new AccessorMethodContract(AccessorKind.IS, AccessorMethodReturnType.BOOLEAN, 0, "is"),
+            new AccessorMethodContract(AccessorKind.HAS, AccessorMethodReturnType.BOOLEAN, 0, "has"));
 
     /**
      * Extracts the JavaBeans property name from a method using the full accessor contract
@@ -80,6 +76,19 @@ public class SpoonJavaBeansAccessorUtils {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    @Nullable
+    private static CtTypeReference<?> extractPropertyTypeReference(
+            CtMethod<?> candidateMethod, AccessorKind accessorKind) {
+        // For getters/is/has the property type is the return type; for setters it is the single parameter type.
+        return switch (accessorKind) {
+            case GET, IS, HAS -> candidateMethod.getType();
+            case SET ->
+                candidateMethod.getParameters().isEmpty()
+                        ? null
+                        : candidateMethod.getParameters().get(0).getType();
+        };
+    }
+
     private static boolean isPairedAccessor(
             AccessorMethodDescriptor leftDescriptor, AccessorMethodDescriptor rightDescriptor) {
         boolean samePropertyName = leftDescriptor.getPropertyName().equals(rightDescriptor.getPropertyName());
@@ -100,16 +109,6 @@ public class SpoonJavaBeansAccessorUtils {
         }
 
         return true;
-    }
-
-    @NonNull
-    private static Optional<AccessorMethodDescriptor> tryParseAccessorMethodDescriptor(CtMethod<?> candidateMethod) {
-        return ACCESSOR_METHOD_CONTRACTS.stream()
-                .filter(accessorMethodContract ->
-                        matchesAccessorMethodContract(candidateMethod, accessorMethodContract))
-                .map(accessorMethodContract -> tryBuildDescriptor(candidateMethod, accessorMethodContract))
-                .filter(Objects::nonNull)
-                .findFirst();
     }
 
     private static boolean matchesAccessorMethodContract(
@@ -173,17 +172,14 @@ public class SpoonJavaBeansAccessorUtils {
                 accessorMethodContract.getAccessorKind(), normalizedPropertyName, propertyType);
     }
 
-    @Nullable
-    private static CtTypeReference<?> extractPropertyTypeReference(
-            CtMethod<?> candidateMethod, AccessorKind accessorKind) {
-        // For getters/is/has the property type is the return type; for setters it is the single parameter type.
-        return switch (accessorKind) {
-            case GET, IS, HAS -> candidateMethod.getType();
-            case SET ->
-                candidateMethod.getParameters().isEmpty()
-                        ? null
-                        : candidateMethod.getParameters().get(0).getType();
-        };
+    @NonNull
+    private static Optional<AccessorMethodDescriptor> tryParseAccessorMethodDescriptor(CtMethod<?> candidateMethod) {
+        return ACCESSOR_METHOD_CONTRACTS.stream()
+                .filter(accessorMethodContract ->
+                        matchesAccessorMethodContract(candidateMethod, accessorMethodContract))
+                .map(accessorMethodContract -> tryBuildDescriptor(candidateMethod, accessorMethodContract))
+                .filter(Objects::nonNull)
+                .findFirst();
     }
 
     private enum AccessorKind {
@@ -193,25 +189,19 @@ public class SpoonJavaBeansAccessorUtils {
         HAS
     }
 
-    private enum AccessorMethodReturnType {
-        VOID,
-        NON_VOID,
-        BOOLEAN
-    }
-
     @Value
     private static class AccessorMethodContract {
 
         @NonNull
-        String methodNamePrefix;
+        AccessorKind accessorKind;
 
         @NonNull
-        AccessorKind accessorKind;
+        AccessorMethodReturnType accessorMethodReturnType;
 
         int expectedParameterCount;
 
         @NonNull
-        AccessorMethodReturnType accessorMethodReturnType;
+        String methodNamePrefix;
     }
 
     @Value
@@ -225,5 +215,11 @@ public class SpoonJavaBeansAccessorUtils {
 
         @NonNull
         CtTypeReference<?> propertyType;
+    }
+
+    private enum AccessorMethodReturnType {
+        VOID,
+        NON_VOID,
+        BOOLEAN
     }
 }

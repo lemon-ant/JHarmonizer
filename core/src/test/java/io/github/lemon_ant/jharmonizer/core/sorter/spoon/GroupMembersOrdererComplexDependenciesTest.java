@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.GroupMembersOrderer.orderMembersInsideGroups;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
@@ -84,6 +81,67 @@ class GroupMembersOrdererComplexDependenciesTest {
         emitSuccessfulRunSnapshot(stateSnapshot);
     }
 
+    private static void assertAccessorBundlingPreventsInterleaving(
+            List<String> srcAlphaKeys,
+            List<String> orderedAlphaKeys,
+            List<CtTypeMember> srcTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
+        List<String> methodKeysInSrcOrder = srcAlphaKeys.stream()
+                .filter(Constants.METHOD_ALPHA_KEYS::contains)
+                .toList();
+        assertThat(methodKeysInSrcOrder)
+                .containsExactly(
+                        Constants.SET_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.IS_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.GET_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.HAS_ENABLED_FLAG_ALPHA_KEY);
+        List<String> accessorKeysInOrderedResult = orderedAlphaKeys.stream()
+                .filter(Constants.ACCESSOR_ALPHA_KEYS::contains)
+                .toList();
+        assertThat(accessorKeysInOrderedResult)
+                .withFailMessage(
+                        "Accessor methods should stay bundled and alphabetically ordered.%n%s",
+                        buildDiagnosticReport(srcTypeMembers, orderedTypeMembers, dependencyGraph))
+                .containsExactly(
+                        Constants.GET_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.HAS_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.IS_ENABLED_FLAG_ALPHA_KEY,
+                        Constants.SET_ENABLED_FLAG_ALPHA_KEY);
+        int firstAccessorIndex = accessorKeysInOrderedResult.stream()
+                .mapToInt(accessorAlphaKey -> requireIndex(orderedAlphaKeys, accessorAlphaKey))
+                .min()
+                .orElseThrow();
+        int lastAccessorIndex = accessorKeysInOrderedResult.stream()
+                .mapToInt(accessorAlphaKey -> requireIndex(orderedAlphaKeys, accessorAlphaKey))
+                .max()
+                .orElseThrow();
+        assertThat(lastAccessorIndex - firstAccessorIndex + 1).isEqualTo(accessorKeysInOrderedResult.size());
+        int helloMethodIndex = requireIndex(orderedAlphaKeys, Constants.HELLO_ENABLED_FLAG_ALPHA_KEY);
+        assertThat(helloMethodIndex)
+                .withFailMessage(
+                        "Method '%s' should be after accessor bundle.%n%s",
+                        Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
+                        buildDiagnosticReport(srcTypeMembers, orderedTypeMembers, dependencyGraph))
+                .isGreaterThan(lastAccessorIndex);
+    }
+
+    private static void assertInitializerBlockIsAfterTheDeepestDependent(
+            List<String> orderedAlphaKeys,
+            List<CtTypeMember> srcTypeMembers,
+            List<CtTypeMember> orderedTypeMembers,
+            MemberDependencyGraph dependencyGraph) {
+        int deepestDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
+        int initializerBlockIndex = requireIndex(orderedAlphaKeys, Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY);
+        assertThat(initializerBlockIndex)
+                .withFailMessage(
+                        "Initializer block should be after '%s'.%n%s",
+                        Constants.C_DEPENDENT_ALPHA_KEY,
+                        buildDiagnosticReport(srcTypeMembers, orderedTypeMembers, dependencyGraph))
+                .isGreaterThan(deepestDependentIndex);
+    }
+
     private static void assertProvidersAreReorderedAlphabeticallyButStillBeforeDependents(
             List<String> srcAlphaKeys,
             List<String> orderedAlphaKeys,
@@ -157,67 +215,6 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .isLessThan(dDependentIndex);
     }
 
-    private static void assertInitializerBlockIsAfterTheDeepestDependent(
-            List<String> orderedAlphaKeys,
-            List<CtTypeMember> srcTypeMembers,
-            List<CtTypeMember> orderedTypeMembers,
-            MemberDependencyGraph dependencyGraph) {
-        int deepestDependentIndex = requireIndex(orderedAlphaKeys, Constants.C_DEPENDENT_ALPHA_KEY);
-        int initializerBlockIndex = requireIndex(orderedAlphaKeys, Constants.INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY);
-        assertThat(initializerBlockIndex)
-                .withFailMessage(
-                        "Initializer block should be after '%s'.%n%s",
-                        Constants.C_DEPENDENT_ALPHA_KEY,
-                        buildDiagnosticReport(srcTypeMembers, orderedTypeMembers, dependencyGraph))
-                .isGreaterThan(deepestDependentIndex);
-    }
-
-    private static void assertAccessorBundlingPreventsInterleaving(
-            List<String> srcAlphaKeys,
-            List<String> orderedAlphaKeys,
-            List<CtTypeMember> srcTypeMembers,
-            List<CtTypeMember> orderedTypeMembers,
-            MemberDependencyGraph dependencyGraph) {
-        List<String> methodKeysInSrcOrder = srcAlphaKeys.stream()
-                .filter(Constants.METHOD_ALPHA_KEYS::contains)
-                .toList();
-        assertThat(methodKeysInSrcOrder)
-                .containsExactly(
-                        Constants.SET_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.IS_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.GET_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.HAS_ENABLED_FLAG_ALPHA_KEY);
-        List<String> accessorKeysInOrderedResult = orderedAlphaKeys.stream()
-                .filter(Constants.ACCESSOR_ALPHA_KEYS::contains)
-                .toList();
-        assertThat(accessorKeysInOrderedResult)
-                .withFailMessage(
-                        "Accessor methods should stay bundled and alphabetically ordered.%n%s",
-                        buildDiagnosticReport(srcTypeMembers, orderedTypeMembers, dependencyGraph))
-                .containsExactly(
-                        Constants.GET_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.HAS_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.IS_ENABLED_FLAG_ALPHA_KEY,
-                        Constants.SET_ENABLED_FLAG_ALPHA_KEY);
-        int firstAccessorIndex = accessorKeysInOrderedResult.stream()
-                .mapToInt(accessorAlphaKey -> requireIndex(orderedAlphaKeys, accessorAlphaKey))
-                .min()
-                .orElseThrow();
-        int lastAccessorIndex = accessorKeysInOrderedResult.stream()
-                .mapToInt(accessorAlphaKey -> requireIndex(orderedAlphaKeys, accessorAlphaKey))
-                .max()
-                .orElseThrow();
-        assertThat(lastAccessorIndex - firstAccessorIndex + 1).isEqualTo(accessorKeysInOrderedResult.size());
-        int helloMethodIndex = requireIndex(orderedAlphaKeys, Constants.HELLO_ENABLED_FLAG_ALPHA_KEY);
-        assertThat(helloMethodIndex)
-                .withFailMessage(
-                        "Method '%s' should be after accessor bundle.%n%s",
-                        Constants.HELLO_ENABLED_FLAG_ALPHA_KEY,
-                        buildDiagnosticReport(srcTypeMembers, orderedTypeMembers, dependencyGraph))
-                .isGreaterThan(lastAccessorIndex);
-    }
-
     @NonNull
     private static String buildDiagnosticReport(
             List<CtTypeMember> srcTypeMembers,
@@ -273,12 +270,29 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     @NonNull
-    private static Map<String, String> renderMemberToGroup(
-            Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup) {
-        return memberToNaturalGroup.entrySet().stream()
+    private static List<String> deriveAlphaKeys(List<CtTypeMember> typeMembers) {
+        return typeMembers.stream().map(SpoonTypeMemberUtils::deriveAlphaKey).toList();
+    }
+
+    private static void emitSuccessfulRunSnapshot(String stateSnapshot) {
+        System.out.println("PASS_SNAPSHOT_START");
+        System.out.println(stateSnapshot);
+        System.out.println("PASS_SNAPSHOT_END");
+    }
+
+    @NonNull
+    private static Map<String, List<String>> renderDirectDependenciesByMember(
+            Map<String, CtTypeMember> srcMembersByAlphaKey,
+            MemberDependencyGraph dependencyGraph,
+            MemberDependencyEdgeKind edgeKind) {
+        return srcMembersByAlphaKey.entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> SpoonTypeMemberUtils.deriveAlphaKey(entry.getKey()),
-                        entry -> entry.getValue().getName(),
+                        Map.Entry::getKey,
+                        srcEntry ->
+                                dependencyGraph.findDirectDependents(srcEntry.getValue(), EnumSet.of(edgeKind)).stream()
+                                        .map(SpoonTypeMemberUtils::deriveAlphaKey)
+                                        .sorted()
+                                        .toList(),
                         (leftEntry, ignored) -> leftEntry,
                         LinkedHashMap::new));
     }
@@ -290,10 +304,15 @@ class GroupMembersOrdererComplexDependenciesTest {
                 .toList();
     }
 
-    private static void emitSuccessfulRunSnapshot(String stateSnapshot) {
-        System.out.println("PASS_SNAPSHOT_START");
-        System.out.println(stateSnapshot);
-        System.out.println("PASS_SNAPSHOT_END");
+    @NonNull
+    private static Map<String, String> renderMemberToGroup(
+            Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup) {
+        return memberToNaturalGroup.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> SpoonTypeMemberUtils.deriveAlphaKey(entry.getKey()),
+                        entry -> entry.getValue().getName(),
+                        (leftEntry, ignored) -> leftEntry,
+                        LinkedHashMap::new));
     }
 
     @NonNull
@@ -325,23 +344,6 @@ class GroupMembersOrdererComplexDependenciesTest {
     }
 
     @NonNull
-    private static Map<String, List<String>> renderDirectDependenciesByMember(
-            Map<String, CtTypeMember> srcMembersByAlphaKey,
-            MemberDependencyGraph dependencyGraph,
-            MemberDependencyEdgeKind edgeKind) {
-        return srcMembersByAlphaKey.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        srcEntry ->
-                                dependencyGraph.findDirectDependents(srcEntry.getValue(), EnumSet.of(edgeKind)).stream()
-                                        .map(SpoonTypeMemberUtils::deriveAlphaKey)
-                                        .sorted()
-                                        .toList(),
-                        (leftEntry, ignored) -> leftEntry,
-                        LinkedHashMap::new));
-    }
-
-    @NonNull
     private static Map<String, List<String>> renderTransitiveDependenciesByMember(
             Map<String, CtTypeMember> srcMembersByAlphaKey,
             MemberDependencyGraph dependencyGraph,
@@ -368,25 +370,7 @@ class GroupMembersOrdererComplexDependenciesTest {
         return index;
     }
 
-    @NonNull
-    private static List<String> deriveAlphaKeys(List<CtTypeMember> typeMembers) {
-        return typeMembers.stream().map(SpoonTypeMemberUtils::deriveAlphaKey).toList();
-    }
-
     private static class Constants {
-        private static final String GROUP_MEMBER_ORDERING_COMPLEX_FIXTURE_CLASSPATH_PATH = "/" + TEST_CASES_DIR
-                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleComplexFixture.java";
-        private static final String W_PROVIDER_ALPHA_KEY = "w_provider:int";
-        private static final String X_PROVIDER_ALPHA_KEY = "x_provider:int";
-        private static final String Y_PROVIDER_ALPHA_KEY = "y_provider:int";
-        private static final String Z_PROVIDER_ALPHA_KEY = "z_provider:int";
-        private static final Set<String> PROVIDER_ALPHA_KEYS =
-                Set.of(W_PROVIDER_ALPHA_KEY, X_PROVIDER_ALPHA_KEY, Y_PROVIDER_ALPHA_KEY, Z_PROVIDER_ALPHA_KEY);
-        private static final String A_DEPENDENT_ALPHA_KEY = "a_dependent:int";
-        private static final String B_DEPENDENT_ALPHA_KEY = "b_dependent:int";
-        private static final String C_DEPENDENT_ALPHA_KEY = "c_dependent:int";
-        private static final String D_DEPENDENT_ALPHA_KEY = "d_dependent:int";
-        private static final String INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY = "<init>";
         private static final String GET_ENABLED_FLAG_ALPHA_KEY = "getEnabledFlag():java.lang.Boolean";
         private static final String HAS_ENABLED_FLAG_ALPHA_KEY = "hasEnabledFlag():boolean";
         private static final String IS_ENABLED_FLAG_ALPHA_KEY = "isEnabledFlag():boolean";
@@ -396,12 +380,25 @@ class GroupMembersOrdererComplexDependenciesTest {
                 HAS_ENABLED_FLAG_ALPHA_KEY,
                 IS_ENABLED_FLAG_ALPHA_KEY,
                 SET_ENABLED_FLAG_ALPHA_KEY);
+        private static final String A_DEPENDENT_ALPHA_KEY = "a_dependent:int";
+        private static final String B_DEPENDENT_ALPHA_KEY = "b_dependent:int";
+        private static final String C_DEPENDENT_ALPHA_KEY = "c_dependent:int";
+        private static final String D_DEPENDENT_ALPHA_KEY = "d_dependent:int";
+        private static final String GROUP_MEMBER_ORDERING_COMPLEX_FIXTURE_CLASSPATH_PATH = "/" + TEST_CASES_DIR
+                + "/core/sorter/spoon/group-ordering-rule/valid/GroupOrderingRuleComplexFixture.java";
         private static final String HELLO_ENABLED_FLAG_ALPHA_KEY = "helloEnabledFlag():boolean";
+        private static final String INSTANCE_INITIALIZER_BLOCK_ALPHA_KEY = "<init>";
         private static final Set<String> METHOD_ALPHA_KEYS = Set.of(
                 GET_ENABLED_FLAG_ALPHA_KEY,
                 HAS_ENABLED_FLAG_ALPHA_KEY,
                 IS_ENABLED_FLAG_ALPHA_KEY,
                 SET_ENABLED_FLAG_ALPHA_KEY,
                 HELLO_ENABLED_FLAG_ALPHA_KEY);
+        private static final String W_PROVIDER_ALPHA_KEY = "w_provider:int";
+        private static final String X_PROVIDER_ALPHA_KEY = "x_provider:int";
+        private static final String Y_PROVIDER_ALPHA_KEY = "y_provider:int";
+        private static final String Z_PROVIDER_ALPHA_KEY = "z_provider:int";
+        private static final Set<String> PROVIDER_ALPHA_KEYS =
+                Set.of(W_PROVIDER_ALPHA_KEY, X_PROVIDER_ALPHA_KEY, Y_PROVIDER_ALPHA_KEY, Z_PROVIDER_ALPHA_KEY);
     }
 }

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import java.util.List;
 import lombok.NonNull;
 import lombok.Value;
@@ -20,10 +17,9 @@ import lombok.Value;
 @Value
 @SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName")
 public class Groups<TNode> {
+    private static final Groups<?> EMPTY_INSTANCE = new Groups<>(List.of());
 
     List<Group<TNode>> groups;
-
-    private static final Groups<?> EMPTY_INSTANCE = new Groups<>(List.of());
 
     /** Returns an empty grouping (no groups — every item is its own singleton block). */
     @NonNull

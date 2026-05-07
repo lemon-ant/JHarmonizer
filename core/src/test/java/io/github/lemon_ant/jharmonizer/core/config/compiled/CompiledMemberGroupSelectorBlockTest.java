@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
@@ -20,6 +17,22 @@ import org.junit.jupiter.api.Test;
 class CompiledMemberGroupSelectorBlockTest {
 
     @Test
+    void match_excludesTakePriorityOverIncludes_returnFalse() {
+        // Given
+        CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(
+                List.of(descriptor -> descriptor.getMemberKind() == MemberKind.FIELD),
+                List.of(descriptor -> descriptor.getDeclarationModifiers().contains(DeclarationModifier.STATIC)));
+        MemberDescriptor staticFieldDescriptor =
+                createFieldDescriptor("someStaticField", MemberAccess.PUBLIC, DeclarationModifier.STATIC);
+
+        // When
+        boolean matches = selectorBlock.match(staticFieldDescriptor);
+
+        // Then
+        assertThat(matches).isFalse();
+    }
+
+    @Test
     void match_includesAndExcludesEmpty_returnTrue() {
         // Given
         CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(List.of(), List.of());
@@ -30,6 +43,20 @@ class CompiledMemberGroupSelectorBlockTest {
 
         // Then
         assertThat(matches).isTrue();
+    }
+
+    @Test
+    void match_includesDoNotMatchAndExcludesEmpty_returnFalse() {
+        // Given
+        CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(
+                List.of(descriptor -> descriptor.getMemberKind() == MemberKind.METHOD), List.of());
+        MemberDescriptor fieldDescriptor = createFieldDescriptor("someField", MemberAccess.PUBLIC);
+
+        // When
+        boolean matches = selectorBlock.match(fieldDescriptor);
+
+        // Then
+        assertThat(matches).isFalse();
     }
 
     @Test
@@ -58,36 +85,6 @@ class CompiledMemberGroupSelectorBlockTest {
 
         // Then
         assertThat(matches).isTrue();
-    }
-
-    @Test
-    void match_includesDoNotMatchAndExcludesEmpty_returnFalse() {
-        // Given
-        CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(
-                List.of(descriptor -> descriptor.getMemberKind() == MemberKind.METHOD), List.of());
-        MemberDescriptor fieldDescriptor = createFieldDescriptor("someField", MemberAccess.PUBLIC);
-
-        // When
-        boolean matches = selectorBlock.match(fieldDescriptor);
-
-        // Then
-        assertThat(matches).isFalse();
-    }
-
-    @Test
-    void match_excludesTakePriorityOverIncludes_returnFalse() {
-        // Given
-        CompiledMemberGroupSelectorBlock selectorBlock = new CompiledMemberGroupSelectorBlock(
-                List.of(descriptor -> descriptor.getMemberKind() == MemberKind.FIELD),
-                List.of(descriptor -> descriptor.getDeclarationModifiers().contains(DeclarationModifier.STATIC)));
-        MemberDescriptor staticFieldDescriptor =
-                createFieldDescriptor("someStaticField", MemberAccess.PUBLIC, DeclarationModifier.STATIC);
-
-        // When
-        boolean matches = selectorBlock.match(staticFieldDescriptor);
-
-        // Then
-        assertThat(matches).isFalse();
     }
 
     @NonNull

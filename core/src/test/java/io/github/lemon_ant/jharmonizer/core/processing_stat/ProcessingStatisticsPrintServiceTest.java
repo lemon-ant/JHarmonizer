@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FILES_WITH_UNEXPECTED_ERRORS;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FORMATTING_TIME_SHARE;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.MAX_SIZE_FILE_PREFIX;
@@ -29,6 +26,24 @@ import org.junit.jupiter.api.parallel.Resources;
 class ProcessingStatisticsPrintServiceTest {
 
     @Test
+    void renderMinimal_withErrors_includesErrorCount() {
+        // Given
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(3)
+                .totalSizeInBytes(0)
+                .filesWithUnexpectedErrors(List.of(Path.of("Broken.java"), Path.of("Also.java")))
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.renderMinimal(stats);
+
+        // Then
+        assertThat(report).contains("2 unexpected error(s)");
+    }
+
+    @Test
     void renderMinimal_withNoErrors_returnsCompactSummaryLine() {
         // Given
         AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
@@ -45,24 +60,6 @@ class ProcessingStatisticsPrintServiceTest {
 
         // Then
         assertThat(report).contains("7 file(s)").contains("wall-clock").doesNotContain("unexpected error");
-    }
-
-    @Test
-    void renderMinimal_withErrors_includesErrorCount() {
-        // Given
-        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
-                .fileCount(3)
-                .totalSizeInBytes(0)
-                .filesWithUnexpectedErrors(List.of(Path.of("Broken.java"), Path.of("Also.java")))
-                .stopTriggerPaths(List.of())
-                .statusCounts(Map.of())
-                .build();
-
-        // When
-        String report = ProcessingStatisticsPrintService.renderMinimal(stats);
-
-        // Then
-        assertThat(report).contains("2 unexpected error(s)");
     }
 
     @Test
@@ -105,30 +102,6 @@ class ProcessingStatisticsPrintServiceTest {
         assertThat(report.indexOf("| " + WALL_CLOCK_TIME)).isLessThan(report.indexOf("| " + TOTAL_CPU_TIME));
         assertThat(report.indexOf("| " + SERIALIZATION_TIME_SHARE))
                 .isLessThan(report.indexOf("| " + FORMATTING_TIME_SHARE));
-    }
-
-    @Test
-    void render_withoutUnexpectedErrors_printsNoneBullet() {
-        // Given
-        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
-                .fileCount(0)
-                .totalSizeInBytes(0)
-                .totalProcessingTimeNanos(0)
-                .totalParsingTimeNanos(0)
-                .totalSortingTimeNanos(0)
-                .totalSerializationTimeNanos(0)
-                .totalFormattingTimeNanos(0)
-                .filesWithUnexpectedErrors(List.of())
-                .stopTriggerPaths(List.of())
-                .statusCounts(Map.of())
-                .build();
-
-        // When
-        String report = ProcessingStatisticsPrintService.render(stats);
-
-        // Then
-        assertThat(report).contains(UNEXPECTED_ERROR_FILES_HEADER + " none");
-        assertThat(report).doesNotContain(UNEXPECTED_ERROR_FILES_HEADER + "\n");
     }
 
     @Test
@@ -252,5 +225,29 @@ class ProcessingStatisticsPrintServiceTest {
         // Then
         assertThat(report).contains(MIN_SIZE_FILE_PREFIX).contains("Tiny.java");
         assertThat(report).doesNotContain(MAX_SIZE_FILE_PREFIX);
+    }
+
+    @Test
+    void render_withoutUnexpectedErrors_printsNoneBullet() {
+        // Given
+        AggregatedProcessingStatistic stats = AggregatedProcessingStatistic.builder()
+                .fileCount(0)
+                .totalSizeInBytes(0)
+                .totalProcessingTimeNanos(0)
+                .totalParsingTimeNanos(0)
+                .totalSortingTimeNanos(0)
+                .totalSerializationTimeNanos(0)
+                .totalFormattingTimeNanos(0)
+                .filesWithUnexpectedErrors(List.of())
+                .stopTriggerPaths(List.of())
+                .statusCounts(Map.of())
+                .build();
+
+        // When
+        String report = ProcessingStatisticsPrintService.render(stats);
+
+        // Then
+        assertThat(report).contains(UNEXPECTED_ERROR_FILES_HEADER + " none");
+        assertThat(report).doesNotContain(UNEXPECTED_ERROR_FILES_HEADER + "\n");
     }
 }

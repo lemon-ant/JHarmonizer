@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.optout;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Collections;
 import java.util.Map;
@@ -27,6 +24,16 @@ public class JHarmonizerOptOuts {
     Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes;
 
     /**
+     * Returns the shared empty opt-out summary.
+     *
+     * @return the shared empty opt-out summary
+     */
+    @NonNull
+    public static JHarmonizerOptOuts empty() {
+        return EMPTY_OPT_OUTS;
+    }
+
+    /**
      * Creates an opt-out summary for one source file.
      *
      * @param fileOptOutMode the file-level opt-out mode, or {@code null} when the file stays fully enabled
@@ -41,43 +48,12 @@ public class JHarmonizerOptOuts {
     }
 
     /**
-     * Returns the shared empty opt-out summary.
-     *
-     * @return the shared empty opt-out summary
-     */
-    @NonNull
-    public static JHarmonizerOptOuts empty() {
-        return EMPTY_OPT_OUTS;
-    }
-
-    /**
-     * Checks whether the file-level opt-out mode matches the requested mode.
-     *
-     * @param mode the mode to compare against the file-level opt-out
-     * @return {@code true} when the file-level opt-out equals the requested mode
-     */
-    public boolean hasFileOptOutMode(@NonNull JHarmonizerOptOutMode mode) {
-        return mode == fileOptOutMode;
-    }
-
-    /**
      * Checks whether neither file-level nor type-level opt-outs are configured.
      *
      * @return {@code true} when no opt-outs are configured
      */
     public boolean isEmpty() {
         return fileOptOutMode == null && typeOptOutModes.isEmpty();
-    }
-
-    /**
-     * Finds the opt-out mode configured directly for the given type.
-     *
-     * @param type the type to inspect
-     * @return the configured type-level opt-out mode, if present
-     */
-    @NonNull
-    public Optional<JHarmonizerOptOutMode> findTypeOptOutMode(@NonNull CtType<?> type) {
-        return Optional.ofNullable(typeOptOutModes.get(type));
     }
 
     /**
@@ -102,5 +78,26 @@ public class JHarmonizerOptOuts {
                         || entry.getValue() == JHarmonizerOptOutMode.SORTING_OFF)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * Checks whether the file-level opt-out mode matches the requested mode.
+     *
+     * @param mode the mode to compare against the file-level opt-out
+     * @return {@code true} when the file-level opt-out equals the requested mode
+     */
+    public boolean hasFileOptOutMode(@NonNull JHarmonizerOptOutMode mode) {
+        return mode == fileOptOutMode;
+    }
+
+    /**
+     * Finds the opt-out mode configured directly for the given type.
+     *
+     * @param type the type to inspect
+     * @return the configured type-level opt-out mode, if present
+     */
+    @NonNull
+    public Optional<JHarmonizerOptOutMode> findTypeOptOutMode(@NonNull CtType<?> type) {
+        return Optional.ofNullable(typeOptOutModes.get(type));
     }
 }

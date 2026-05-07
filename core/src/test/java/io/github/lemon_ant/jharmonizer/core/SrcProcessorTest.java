@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 reorders dependent static fields, breaking class initialization;
-// remove this directive once jharmonizer is upgraded to a version that respects static field dependencies.
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,65 +47,23 @@ import org.slf4j.LoggerFactory;
  * the full flow: config → parser → sorter → formatter.
  */
 class SrcProcessorTest {
-
-    private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final Collection<String> EXCLUDE_NO_FILES = List.of();
-    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
-            "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java");
     private static final String FLOW_LEVEL_FIXTURES_RESOURCE =
             "/" + TEST_CASES_DIR + "/core/source-processor/flow-level/";
+    private static final Path FLOW_LEVEL_FIXTURES_ROOT = resolveFlowLevelFixturesRoot();
     private static final URL FLOW_LEVEL_FIXTURES_ROOT_URL =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FLOW_LEVEL_FIXTURES_RESOURCE);
-    private static final Path FLOW_LEVEL_FIXTURES_ROOT = resolveFlowLevelFixturesRoot();
+    private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
+    private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
+            "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java");
     private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
-            package demo;
-            public class Sample {}
-            interface Alpha {}
-            """;
+        package demo;
+        public class Sample {}
+        interface Alpha {}
+        """;
 
     @TempDir
     Path temporaryDirectory;
-
-    @Test
-    void processSources_singleJavaFile_reorderFlowRewritesFile() throws Exception {
-        // Given
-        String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
-        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SrcProcessor srcProcessor = new SrcProcessor();
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-
-        // Then
-        assertThat(processedSrcCode).isNotBlank().isNotEqualTo(originalSrcCode);
-    }
-
-    @Test
-    void processSources_multipleJavaFiles_onlyIncludedFilesAreProcessed() throws Exception {
-        // Given
-        String unformattedSrcCode = "package demo; public class Included {private int x;}";
-        Path includedJavaFilePath = writeJavaFile(temporaryDirectory, "IncludedSample.java", unformattedSrcCode);
-        Path excludedJavaFilePath = writeJavaFile(temporaryDirectory, "ExcludedSample.java", unformattedSrcCode);
-        String includedOriginalSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
-        String excludedOriginalSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
-        Collection<String> includeGlobs = Set.of("Included*.java");
-        SrcProcessor srcProcessor = new SrcProcessor();
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.REORDER);
-        String includedProcessedSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
-        String excludedProcessedSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
-
-        // Then
-        assertThat(includedProcessedSrcCode)
-                .as("Included file must be processed")
-                .isNotEqualTo(includedOriginalSrcCode);
-        assertThat(excludedProcessedSrcCode)
-                .as("Excluded file must remain unchanged")
-                .isEqualTo(excludedOriginalSrcCode);
-    }
 
     @Test
     void processSources_alreadyReorderedFile_checkFailFastFlowCompletesWithoutExceptions() throws Exception {
@@ -126,6 +81,48 @@ class SrcProcessorTest {
         assertThat(result.isSuccess()).isTrue();
         String finalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(finalSrcCode).isNotBlank();
+    }
+
+    @Test
+    void processSources_checkAllWithLargeFormattingHunk_logsDiffLineOmissionSummary() throws Exception {
+        // Given
+        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "large-hunk");
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(scenarioRoot, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("lines omitted");
+        assertThat(listAppender.list)
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+    }
+
+    @Test
+    void processSources_checkAllWithManyFormattingHunks_logsDiffHunkOmissionSummary() throws Exception {
+        // Given
+        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "diff-truncation");
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(scenarioRoot, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("more changed hunks omitted");
+        assertThat(listAppender.list)
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
     }
 
     @Test
@@ -175,6 +172,76 @@ class SrcProcessorTest {
                 .extracting(FileProcessingStatistic::getPath)
                 .isEqualTo(scenarioRoot.resolve("B_Reordered.java"));
         assertScenarioMatchesExpectedSources(scenarioRoot, "check-all");
+    }
+
+    @Test
+    void processSources_checkFailFastWithFormattingViolation_logsFormattingDiff() throws Exception {
+        // Given
+        String poorlyFormattedCode = "package demo; public class FormattedOnly{int x;}";
+        writeJavaFile(temporaryDirectory, "FormattedOnly.java", poorlyFormattedCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs).contains("Detected formatting violations in:").contains("FormattedOnly.java");
+        assertThat(listAppender.list)
+                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+    }
+
+    @Test
+    void processSources_checkFailFastWithOrderingViolation_logsRelocationDetails() throws Exception {
+        // Given
+        String violatingCode = "package demo; public class ViolatingOrder { public void b(){} public void a(){} }";
+        writeJavaFile(temporaryDirectory, "ViolatingOrder.java", violatingCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        try {
+            srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(logs)
+                .contains("ordering violations")
+                .contains("ViolatingOrder.java")
+                .contains("-->");
+    }
+
+    @Test
+    void processSources_checkFailFastWithViolation_logsStoppedEarlyMessage() throws Exception {
+        // Given
+        String violatingCode = "package demo; public class ViolatingOrder { public void b(){} public void a(){} }";
+        writeJavaFile(temporaryDirectory, "ViolatingOrder.java", violatingCode);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+
+        // When
+        SrcProcessingResult srcProcessingResult;
+        try {
+            srcProcessingResult = srcProcessor.processSources(
+                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+        } finally {
+            detachListAppender(listAppender);
+        }
+        String logs = collectLogMessages(listAppender);
+
+        // Then
+        assertThat(srcProcessingResult.isSuccess()).isFalse();
+        assertThat(logs).contains("stopped early").contains("non-conforming").contains("Stop triggered by");
     }
 
     @Test
@@ -240,32 +307,28 @@ class SrcProcessorTest {
     }
 
     @Test
-    void processSources_unexpectedPerFileRuntimeError_logsErrorAndContinuesOtherFiles() throws Exception {
+    void processSources_multipleJavaFiles_onlyIncludedFilesAreProcessed() throws Exception {
         // Given
-        Path brokenJavaFilePath = writeJavaFile(
-                temporaryDirectory, "BrokenSample.java", "package demo; public class BrokenSample { void broken( }");
-        Path validJavaFilePath = writeJavaFile(
-                temporaryDirectory, "ValidSample.java", "package demo; public class ValidSample {private int x;}");
-        String brokenOriginalSrcCode = Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8);
-        String validOriginalSrcCode = Files.readString(validJavaFilePath, StandardCharsets.UTF_8);
+        String unformattedSrcCode = "package demo; public class Included {private int x;}";
+        Path includedJavaFilePath = writeJavaFile(temporaryDirectory, "IncludedSample.java", unformattedSrcCode);
+        Path excludedJavaFilePath = writeJavaFile(temporaryDirectory, "ExcludedSample.java", unformattedSrcCode);
+        String includedOriginalSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
+        String excludedOriginalSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
+        Collection<String> includeGlobs = Set.of("Included*.java");
         SrcProcessor srcProcessor = new SrcProcessor();
-        @Nullable Level initialLevel = enableDebugLogLevel();
-        ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
-        try {
-            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-        } finally {
-            detachListAppender(listAppender);
-            restoreLoggerLevel(initialLevel);
-        }
-        String logs = collectLogMessages(listAppender);
+        srcProcessor.processSources(temporaryDirectory, includeGlobs, EXCLUDE_NO_FILES, FlowType.REORDER);
+        String includedProcessedSrcCode = Files.readString(includedJavaFilePath, StandardCharsets.UTF_8);
+        String excludedProcessedSrcCode = Files.readString(excludedJavaFilePath, StandardCharsets.UTF_8);
 
         // Then
-        assertThat(logs).contains("JHarmonizer ERROR").contains("BrokenSample.java");
-        assertThat(logs).contains("Files encountered unexpected errors");
-        assertThat(Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8)).isEqualTo(brokenOriginalSrcCode);
-        assertThat(Files.readString(validJavaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(validOriginalSrcCode);
+        assertThat(includedProcessedSrcCode)
+                .as("Included file must be processed")
+                .isNotEqualTo(includedOriginalSrcCode);
+        assertThat(excludedProcessedSrcCode)
+                .as("Excluded file must remain unchanged")
+                .isEqualTo(excludedOriginalSrcCode);
     }
 
     @Test
@@ -290,108 +353,6 @@ class SrcProcessorTest {
         // Then
         String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         assertThat(processedSrcCode.indexOf("interface Alpha")).isLessThan(processedSrcCode.indexOf("class Sample"));
-    }
-
-    @Test
-    void processSources_reorderWithBackupsEnabled_createsBackupNextToSrc() throws Exception {
-        // Given
-        String unformattedSrcCode = "package demo; public class BackupEnabled {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSrcCode);
-        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SrcProcessor srcProcessor = new SrcProcessor(
-                FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-
-        // Then
-        Path backupFilePath =
-                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
-        assertThat(backupFilePath).exists();
-        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
-    }
-
-    @Test
-    void processSources_secondRunWithBackupsEnabled_replacesExistingBackup() throws Exception {
-        // Given
-        String firstSrcCode = "package demo; public class BackupTwice {private int x;}";
-        String secondSrcCode = "package demo; public class BackupTwice {private int y;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupTwice.java", firstSrcCode);
-        SrcProcessor srcProcessor = new SrcProcessor(
-                FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-        SrcFilesHandler.overwrite(javaFilePath, secondSrcCode);
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-
-        // Then
-        Path backupFilePath =
-                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
-        assertThat(backupFilePath).exists();
-        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(secondSrcCode);
-    }
-
-    @Test
-    void processSources_reorderWithBackupsDisabled_doesNotCreateBackup() throws Exception {
-        // Given
-        String unformattedSrcCode = "package demo; public class BackupDisabled {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSrcCode);
-        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        SrcProcessor srcProcessor = new SrcProcessor(
-                FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-
-        // Then
-        Path backupFilePath =
-                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
-        assertThat(backupFilePath).doesNotExist();
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
-    }
-
-    @Test
-    void processSources_reorderWithNoBackupOverride_doesNotCreateBackup() throws Exception {
-        // Given
-        String unformattedSrcCode = "package demo; public class BackupOverrideDisabled {private int x;}";
-        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSrcCode);
-        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        FlexibleUnifiedConfig effectiveConfig = UnifiedConfigMerger.merge(
-                FlexibleUnifiedConfig.builder().backupsEnabled(true).build(),
-                FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
-        SrcProcessor srcProcessor = new SrcProcessor(effectiveConfig);
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-
-        // Then
-        Path backupFilePath =
-                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
-        assertThat(backupFilePath).doesNotExist();
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
-    }
-
-    @Test
-    void processSources_processingStatisticsMinimal_logsMinimalSummaryLine() throws Exception {
-        // Given
-        writeJavaFile(temporaryDirectory, "MinimalSample.java", "package demo; public class MinimalSample {}");
-        SrcProcessor srcProcessor = new SrcProcessor(FlexibleUnifiedConfig.builder()
-                .processingStatisticsMode(ProcessingStatisticsMode.MINIMAL)
-                .build());
-        ListAppender<ILoggingEvent> listAppender = attachListAppender();
-
-        // When
-        try {
-            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
-        } finally {
-            detachListAppender(listAppender);
-        }
-        String logs = collectLogMessages(listAppender);
-
-        // Then
-        assertThat(logs).contains("JHarmonization:").contains("file(s)").contains("wall-clock");
     }
 
     @Test
@@ -428,121 +389,156 @@ class SrcProcessorTest {
     }
 
     @Test
-    void processSources_checkFailFastWithViolation_logsStoppedEarlyMessage() throws Exception {
+    void processSources_processingStatisticsMinimal_logsMinimalSummaryLine() throws Exception {
         // Given
-        String violatingCode = "package demo; public class ViolatingOrder { public void b(){} public void a(){} }";
-        writeJavaFile(temporaryDirectory, "ViolatingOrder.java", violatingCode);
-        SrcProcessor srcProcessor = new SrcProcessor();
+        writeJavaFile(temporaryDirectory, "MinimalSample.java", "package demo; public class MinimalSample {}");
+        SrcProcessor srcProcessor = new SrcProcessor(FlexibleUnifiedConfig.builder()
+                .processingStatisticsMode(ProcessingStatisticsMode.MINIMAL)
+                .build());
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
-        SrcProcessingResult srcProcessingResult;
         try {
-            srcProcessingResult = srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
         }
         String logs = collectLogMessages(listAppender);
 
         // Then
-        assertThat(srcProcessingResult.isSuccess()).isFalse();
-        assertThat(logs).contains("stopped early").contains("non-conforming").contains("Stop triggered by");
+        assertThat(logs).contains("JHarmonization:").contains("file(s)").contains("wall-clock");
     }
 
     @Test
-    void processSources_checkFailFastWithOrderingViolation_logsRelocationDetails() throws Exception {
+    void processSources_reorderWithBackupsDisabled_doesNotCreateBackup() throws Exception {
         // Given
-        String violatingCode = "package demo; public class ViolatingOrder { public void b(){} public void a(){} }";
-        writeJavaFile(temporaryDirectory, "ViolatingOrder.java", violatingCode);
-        SrcProcessor srcProcessor = new SrcProcessor();
-        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+        String unformattedSrcCode = "package demo; public class BackupDisabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupDisabled.java", unformattedSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
 
         // When
-        try {
-            srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
-        } finally {
-            detachListAppender(listAppender);
-        }
-        String logs = collectLogMessages(listAppender);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
-        assertThat(logs)
-                .contains("ordering violations")
-                .contains("ViolatingOrder.java")
-                .contains("-->");
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).doesNotExist();
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
     }
 
     @Test
-    void processSources_checkFailFastWithFormattingViolation_logsFormattingDiff() throws Exception {
+    void processSources_reorderWithBackupsEnabled_createsBackupNextToSrc() throws Exception {
         // Given
-        String poorlyFormattedCode = "package demo; public class FormattedOnly{int x;}";
-        writeJavaFile(temporaryDirectory, "FormattedOnly.java", poorlyFormattedCode);
-        SrcProcessor srcProcessor = new SrcProcessor();
-        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+        String unformattedSrcCode = "package demo; public class BackupEnabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupEnabled.java", unformattedSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
 
         // When
-        try {
-            srcProcessor.processSources(
-                    temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_FAIL_FAST);
-        } finally {
-            detachListAppender(listAppender);
-        }
-        String logs = collectLogMessages(listAppender);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
-        assertThat(logs).contains("Detected formatting violations in:").contains("FormattedOnly.java");
-        assertThat(listAppender.list)
-                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).exists();
+        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
     }
 
     @Test
-    void processSources_checkAllWithManyFormattingHunks_logsDiffHunkOmissionSummary() throws Exception {
+    void processSources_reorderWithNoBackupOverride_doesNotCreateBackup() throws Exception {
         // Given
-        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "diff-truncation");
-        SrcProcessor srcProcessor = new SrcProcessor();
-        ListAppender<ILoggingEvent> listAppender = attachListAppender();
+        String unformattedSrcCode = "package demo; public class BackupOverrideDisabled {private int x;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupOverrideDisabled.java", unformattedSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        FlexibleUnifiedConfig effectiveConfig = UnifiedConfigMerger.merge(
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build(),
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build());
+        SrcProcessor srcProcessor = new SrcProcessor(effectiveConfig);
 
         // When
-        try {
-            srcProcessor.processSources(scenarioRoot, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
-        } finally {
-            detachListAppender(listAppender);
-        }
-        String logs = collectLogMessages(listAppender);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
 
         // Then
-        assertThat(logs).contains("more changed hunks omitted");
-        assertThat(listAppender.list)
-                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).doesNotExist();
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(originalSrcCode);
     }
 
     @Test
-    void processSources_checkAllWithLargeFormattingHunk_logsDiffLineOmissionSummary() throws Exception {
+    void processSources_secondRunWithBackupsEnabled_replacesExistingBackup() throws Exception {
         // Given
-        Path scenarioRoot = copyScenarioInputToWorkingDirectory(temporaryDirectory, "large-hunk");
+        String firstSrcCode = "package demo; public class BackupTwice {private int x;}";
+        String secondSrcCode = "package demo; public class BackupTwice {private int y;}";
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "BackupTwice.java", firstSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build());
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        SrcFilesHandler.overwrite(javaFilePath, secondSrcCode);
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+
+        // Then
+        Path backupFilePath =
+                javaFilePath.resolveSibling(javaFilePath.getFileName().toString() + ".bak");
+        assertThat(backupFilePath).exists();
+        assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(secondSrcCode);
+    }
+
+    @Test
+    void processSources_singleJavaFile_reorderFlowRewritesFile() throws Exception {
+        // Given
+        String sampleSrcCode = TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_URL);
+        Path javaFilePath = writeJavaFile(temporaryDirectory, "SampleAllJava21FeaturesList.java", sampleSrcCode);
+        String originalSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
         SrcProcessor srcProcessor = new SrcProcessor();
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSrcCode).isNotBlank().isNotEqualTo(originalSrcCode);
+    }
+
+    @Test
+    void processSources_unexpectedPerFileRuntimeError_logsErrorAndContinuesOtherFiles() throws Exception {
+        // Given
+        Path brokenJavaFilePath = writeJavaFile(
+                temporaryDirectory, "BrokenSample.java", "package demo; public class BrokenSample { void broken( }");
+        Path validJavaFilePath = writeJavaFile(
+                temporaryDirectory, "ValidSample.java", "package demo; public class ValidSample {private int x;}");
+        String brokenOriginalSrcCode = Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8);
+        String validOriginalSrcCode = Files.readString(validJavaFilePath, StandardCharsets.UTF_8);
+        SrcProcessor srcProcessor = new SrcProcessor();
+        @Nullable Level initialLevel = enableDebugLogLevel();
         ListAppender<ILoggingEvent> listAppender = attachListAppender();
 
         // When
         try {
-            srcProcessor.processSources(scenarioRoot, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.CHECK_ALL);
+            srcProcessor.processSources(temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, FlowType.REORDER);
         } finally {
             detachListAppender(listAppender);
+            restoreLoggerLevel(initialLevel);
         }
         String logs = collectLogMessages(listAppender);
 
         // Then
-        assertThat(logs).contains("lines omitted");
-        assertThat(listAppender.list)
-                .anySatisfy(logEvent -> assertThat(logEvent.getLevel()).isEqualTo(Level.ERROR));
+        assertThat(logs).contains("JHarmonizer ERROR").contains("BrokenSample.java");
+        assertThat(logs).contains("Files encountered unexpected errors");
+        assertThat(Files.readString(brokenJavaFilePath, StandardCharsets.UTF_8)).isEqualTo(brokenOriginalSrcCode);
+        assertThat(Files.readString(validJavaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(validOriginalSrcCode);
     }
 
-    @NonNull
-    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
-        Path javaFilePath = baseDirectoryPath.resolve(fileName);
-        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    private static void assertScenarioMatchesExpectedSources(Path workingDirectory, String scenarioName) {
+        Map<String, String> expectedSources = readScenarioExpectedSources(scenarioName);
+        Map<String, String> actualSources = readDirectoryJavaSources(workingDirectory);
+        assertThat(actualSources).isEqualTo(expectedSources);
     }
 
     @NonNull
@@ -552,25 +548,6 @@ class SrcProcessorTest {
         listAppender.start();
         logger.addAppender(listAppender);
         return listAppender;
-    }
-
-    private static void detachListAppender(ListAppender<ILoggingEvent> listAppender) {
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        logger.detachAppender(listAppender);
-        listAppender.stop();
-    }
-
-    @Nullable
-    private static Level enableDebugLogLevel() {
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        Level initialLevel = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
-        return initialLevel;
-    }
-
-    private static void restoreLoggerLevel(@Nullable Level level) {
-        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
-        logger.setLevel(level);
     }
 
     @NonNull
@@ -600,16 +577,18 @@ class SrcProcessorTest {
         }
     }
 
-    private static void assertScenarioMatchesExpectedSources(Path workingDirectory, String scenarioName) {
-        Map<String, String> expectedSources = readScenarioExpectedSources(scenarioName);
-        Map<String, String> actualSources = readDirectoryJavaSources(workingDirectory);
-        assertThat(actualSources).isEqualTo(expectedSources);
+    private static void detachListAppender(ListAppender<ILoggingEvent> listAppender) {
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
+        logger.detachAppender(listAppender);
+        listAppender.stop();
     }
 
-    @NonNull
-    private static Map<String, String> readScenarioExpectedSources(String scenarioName) {
-        Path expectedDirectory = FLOW_LEVEL_FIXTURES_ROOT.resolve(scenarioName).resolve("expected");
-        return readDirectoryJavaSources(expectedDirectory);
+    @Nullable
+    private static Level enableDebugLogLevel() {
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
+        Level initialLevel = logger.getLevel();
+        logger.setLevel(Level.DEBUG);
+        return initialLevel;
     }
 
     @NonNull
@@ -629,6 +608,12 @@ class SrcProcessorTest {
     }
 
     @NonNull
+    private static Map<String, String> readScenarioExpectedSources(String scenarioName) {
+        Path expectedDirectory = FLOW_LEVEL_FIXTURES_ROOT.resolve(scenarioName).resolve("expected");
+        return readDirectoryJavaSources(expectedDirectory);
+    }
+
+    @NonNull
     private static String readSrcFile(Path srcFile) {
         try {
             return Files.readString(srcFile, StandardCharsets.UTF_8);
@@ -645,5 +630,16 @@ class SrcProcessorTest {
             throw new IllegalStateException(
                     "Failed to resolve flow-level fixture root URL: " + FLOW_LEVEL_FIXTURES_ROOT_URL, exception);
         }
+    }
+
+    private static void restoreLoggerLevel(@Nullable Level level) {
+        Logger logger = (Logger) LoggerFactory.getLogger(SrcProcessor.class);
+        logger.setLevel(level);
+    }
+
+    @NonNull
+    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
+        Path javaFilePath = baseDirectoryPath.resolve(fileName);
+        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 }

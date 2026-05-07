@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus;
 import java.nio.file.Path;
@@ -54,29 +51,31 @@ public class FlowProcessingStats {
     @Value
     public static class AggregatedProcessingStatistic {
         public static final int MAX_PATH_LENGTH = 100;
+
         long fileCount;
-        long totalSizeInBytes;
-        long totalProcessingTimeNanos;
-        long totalParsingTimeNanos;
-        long totalSortingTimeNanos;
-        long totalSerializationTimeNanos;
-        long totalFormattingTimeNanos;
-        long wallClockTimeNanos;
-
-        @Nullable
-        FileProcessingStatistic smallestFile;
-
-        @Nullable
-        FileProcessingStatistic largestFile;
 
         @NonNull
         List<@NonNull Path> filesWithUnexpectedErrors;
 
-        @NonNull
-        List<@NonNull Path> stopTriggerPaths;
+        @Nullable
+        FileProcessingStatistic largestFile;
+
+        @Nullable
+        FileProcessingStatistic smallestFile;
 
         @NonNull
         Map<@NonNull FileProcessingStatus, @NonNull Long> statusCounts;
+
+        @NonNull
+        List<@NonNull Path> stopTriggerPaths;
+
+        long totalFormattingTimeNanos;
+        long totalParsingTimeNanos;
+        long totalProcessingTimeNanos;
+        long totalSerializationTimeNanos;
+        long totalSizeInBytes;
+        long totalSortingTimeNanos;
+        long wallClockTimeNanos;
 
         @Builder(access = AccessLevel.PACKAGE)
         private AggregatedProcessingStatistic(
@@ -140,21 +139,21 @@ public class FlowProcessingStats {
         }
 
         /**
+         * Calculates the formatting time percentage.
+         *
+         * @return the formatting time percentage
+         */
+        double calculateFormattingTimePercent() {
+            return calculatePhasePercent(totalFormattingTimeNanos);
+        }
+
+        /**
          * Calculates the parsing time percentage.
          *
          * @return the parsing time percentage
          */
         double calculateParsingTimePercent() {
             return calculatePhasePercent(totalParsingTimeNanos);
-        }
-
-        /**
-         * Calculates the sorting time percentage.
-         *
-         * @return the sorting time percentage
-         */
-        double calculateSortingTimePercent() {
-            return calculatePhasePercent(totalSortingTimeNanos);
         }
 
         /**
@@ -167,12 +166,12 @@ public class FlowProcessingStats {
         }
 
         /**
-         * Calculates the formatting time percentage.
+         * Calculates the sorting time percentage.
          *
-         * @return the formatting time percentage
+         * @return the sorting time percentage
          */
-        double calculateFormattingTimePercent() {
-            return calculatePhasePercent(totalFormattingTimeNanos);
+        double calculateSortingTimePercent() {
+            return calculatePhasePercent(totalSortingTimeNanos);
         }
 
         private double calculatePhasePercent(long phaseTotalNanos) {
@@ -185,19 +184,19 @@ public class FlowProcessingStats {
 
     // Statistics container for collector
     static class StatsContainer {
-        private final AtomicLong wallClockStartNanos = new AtomicLong(System.nanoTime());
         private final LongAdder count = new LongAdder();
+        private final Map<FileProcessingStatus, LongAdder> fileStatusCounts = new ConcurrentHashMap<>();
         private final AtomicReference<FileProcessingStatistic> maxSize = new AtomicReference<>();
         private final AtomicReference<FileProcessingStatistic> minSize = new AtomicReference<>();
-        private final List<Path> unexpectedErrorPaths = Collections.synchronizedList(new ArrayList<>());
         private final List<Path> stopTriggerFilePaths = Collections.synchronizedList(new ArrayList<>());
-        private final Map<FileProcessingStatus, LongAdder> fileStatusCounts = new ConcurrentHashMap<>();
-        private final LongAdder totalSize = new LongAdder();
-        private final LongAdder totalTime = new LongAdder();
-        private final LongAdder totalParsingTime = new LongAdder();
-        private final LongAdder totalSortingTime = new LongAdder();
-        private final LongAdder totalSerializationTime = new LongAdder();
         private final LongAdder totalFormattingTime = new LongAdder();
+        private final LongAdder totalParsingTime = new LongAdder();
+        private final LongAdder totalSerializationTime = new LongAdder();
+        private final LongAdder totalSize = new LongAdder();
+        private final LongAdder totalSortingTime = new LongAdder();
+        private final LongAdder totalTime = new LongAdder();
+        private final List<Path> unexpectedErrorPaths = Collections.synchronizedList(new ArrayList<>());
+        private final AtomicLong wallClockStartNanos = new AtomicLong(System.nanoTime());
 
         /**
          * Accumulates a single per-file processing result into this container.

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.cli.command;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,25 +24,24 @@ import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class ReorderCommandTest {
-
-    private CommandLine commandLine;
-
-    private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
-            package demo;
-            public class Sample {}
-            interface Alpha {}
-            """;
     private static final String PARTIAL_TOP_LEVEL_TYPES_CONFIG = """
-            top-level-types-ordering:
-              main-type-first: false
-              type-groups:
-                - [ interface ]
-                - [ class ]
-              ordering-rules: [ alpha ]
-            """;
+        top-level-types-ordering:
+          main-type-first: false
+          type-groups:
+            - [ interface ]
+            - [ class ]
+          ordering-rules: [ alpha ]
+        """;
+    private static final String SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES = """
+        package demo;
+        public class Sample {}
+        interface Alpha {}
+        """;
 
     @TempDir
     Path temporaryDirectory;
+
+    private CommandLine commandLine;
 
     @BeforeEach
     void setUp() {
@@ -53,21 +49,22 @@ class ReorderCommandTest {
     }
 
     @Test
-    void reorderCommand_invoked_usesReorderFlow() {
+    void reorderCommand_configOptionSupportsPartialConfig_reordersUsingMergedDefaults() throws Exception {
+        // Given
+        Path javaFilePath = Files.writeString(
+                temporaryDirectory.resolve("Sample.java"),
+                SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES,
+                StandardCharsets.UTF_8);
+        Path configFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
+
         // When
-        int exitCode;
-        SrcProcessor constructedProcessor;
-        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
-                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = commandLine.execute("--base-dir", "src/main/java");
-            constructedProcessor = srcProcessorMocks.constructed().getFirst();
-        }
+        int exitCode =
+                commandLine.execute("--base-dir", temporaryDirectory.toString(), "--config", configFilePath.toString());
 
         // Then
         assertThat(exitCode).isZero();
-        verify(constructedProcessor)
-                .processSources(
-                        eq(Path.of("src/main/java").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        assertThat(processedSrcCode.indexOf("interface Alpha")).isLessThan(processedSrcCode.indexOf("class Sample"));
     }
 
     @Test
@@ -91,22 +88,21 @@ class ReorderCommandTest {
     }
 
     @Test
-    void reorderCommand_configOptionSupportsPartialConfig_reordersUsingMergedDefaults() throws Exception {
-        // Given
-        Path javaFilePath = Files.writeString(
-                temporaryDirectory.resolve("Sample.java"),
-                SOURCE_WITH_MULTIPLE_TOP_LEVEL_TYPES,
-                StandardCharsets.UTF_8);
-        Path configFilePath = writeConfigFile(temporaryDirectory.resolve("custom-config.yml"));
-
+    void reorderCommand_invoked_usesReorderFlow() {
         // When
-        int exitCode =
-                commandLine.execute("--base-dir", temporaryDirectory.toString(), "--config", configFilePath.toString());
+        int exitCode;
+        SrcProcessor constructedProcessor;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute("--base-dir", "src/main/java");
+            constructedProcessor = srcProcessorMocks.constructed().getFirst();
+        }
 
         // Then
         assertThat(exitCode).isZero();
-        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-        assertThat(processedSrcCode.indexOf("interface Alpha")).isLessThan(processedSrcCode.indexOf("class Sample"));
+        verify(constructedProcessor)
+                .processSources(
+                        eq(Path.of("src/main/java").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
     }
 
     @Test

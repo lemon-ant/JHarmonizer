@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,12 +24,6 @@ import org.jspecify.annotations.Nullable;
 public class JHarmonizerFlexibleFormatting {
 
     @Nullable
-    Boolean fixImports;
-
-    @Nullable
-    FormatterStyle formatterStyle;
-
-    @Nullable
     Boolean blankLineAfterTypeHeader;
 
     @Nullable
@@ -40,6 +31,12 @@ public class JHarmonizerFlexibleFormatting {
 
     @Nullable
     Boolean blankLineBetweenFields;
+
+    @Nullable
+    Boolean fixImports;
+
+    @Nullable
+    FormatterStyle formatterStyle;
 
     /**
      * Creates a partial formatting overlay. At least one parameter must be non-null.
@@ -71,26 +68,6 @@ public class JHarmonizerFlexibleFormatting {
     }
 
     /**
-     * Returns the optional fix-imports override.
-     *
-     * @return the optional fix-imports override
-     */
-    @NonNull
-    public Optional<Boolean> getFixImports() {
-        return ofNullable(fixImports);
-    }
-
-    /**
-     * Returns the optional formatter style override.
-     *
-     * @return the optional formatter style override
-     */
-    @NonNull
-    public Optional<FormatterStyle> getFormatterStyle() {
-        return ofNullable(formatterStyle);
-    }
-
-    /**
      * Returns the optional blank-line-after-type-header override.
      *
      * @return the optional blank-line-after-type-header override
@@ -118,5 +95,25 @@ public class JHarmonizerFlexibleFormatting {
     @NonNull
     public Optional<Boolean> getBlankLineBetweenFields() {
         return ofNullable(blankLineBetweenFields);
+    }
+
+    /**
+     * Returns the optional fix-imports override.
+     *
+     * @return the optional fix-imports override
+     */
+    @NonNull
+    public Optional<Boolean> getFixImports() {
+        return ofNullable(fixImports);
+    }
+
+    /**
+     * Returns the optional formatter style override.
+     *
+     * @return the optional formatter style override
+     */
+    @NonNull
+    public Optional<FormatterStyle> getFormatterStyle() {
+        return ofNullable(formatterStyle);
     }
 }

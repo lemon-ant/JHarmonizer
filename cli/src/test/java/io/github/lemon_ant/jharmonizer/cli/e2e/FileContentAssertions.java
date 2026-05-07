@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -13,7 +10,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class FileContentAssertions {
-
     static void assertFileChanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
         Path actualFile = actualProjectDirectory.resolve(relativePath);
         Path expectedFile = expectedProjectDirectory.resolve(relativePath);
@@ -22,15 +18,15 @@ class FileContentAssertions {
                 .isInstanceOf(AssertionError.class);
     }
 
-    static void assertFileUnchanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
-        assertThat(actualProjectDirectory.resolve(relativePath))
-                .as("Expected file to remain unchanged: %s", relativePath)
-                .hasSameTextualContentAs(expectedProjectDirectory.resolve(relativePath));
-    }
-
     static void assertFileMatches(Path expectedFile, Path actualProjectDirectory, String relativePath) {
         assertThat(actualProjectDirectory.resolve(relativePath))
                 .as("Expected file to match: %s", relativePath)
                 .hasSameTextualContentAs(expectedFile);
+    }
+
+    static void assertFileUnchanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
+        assertThat(actualProjectDirectory.resolve(relativePath))
+                .as("Expected file to remain unchanged: %s", relativePath)
+                .hasSameTextualContentAs(expectedProjectDirectory.resolve(relativePath));
     }
 }

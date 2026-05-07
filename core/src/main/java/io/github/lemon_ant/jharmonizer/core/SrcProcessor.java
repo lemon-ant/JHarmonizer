@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @RequiredArgsConstructor fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -46,17 +43,16 @@ import org.jspecify.annotations.Nullable;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings({"PMD.GuardLogStatement", "PMD.ExcessiveImports"})
 public final class SrcProcessor {
-
-    private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
-    private static final int MAX_TOTAL_PATH_LENGTH = 100;
     private static final int MAX_BULLET_LIST_PATH_LENGTH = 120;
+    private static final int MAX_TOTAL_PATH_LENGTH = 100;
+    private static final String SINGLE_FILE_LOG_PREFIX = "JHarmonizer";
     private static final String SUMMARY_STATUS_COMPLETED = "COMPLETED";
     private static final String SUMMARY_STATUS_COMPLETED_WITH_ERRORS = "COMPLETED_WITH_ERRORS";
 
     private final CompiledConfig config;
     private final Formatter formatter;
-    private final Sorter sorter;
     private final PrinterConfig printerConfig;
+    private final Sorter sorter;
 
     /**
      * Creates a new SrcProcessor.
@@ -72,30 +68,6 @@ public final class SrcProcessor {
      */
     public SrcProcessor(@Nullable FlexibleUnifiedConfig externalConfig) {
         this(ConfigurationManager.overrideDefaultConfig(externalConfig));
-    }
-
-    private SrcProcessor(CompiledConfig compiledConfig) {
-        this(
-                compiledConfig,
-                new Formatter(
-                        compiledConfig.getFormatting().getFormatterStyle(),
-                        compiledConfig.getFormatting().isFixImports()),
-                new Sorter(compiledConfig),
-                createPrinterConfig(compiledConfig.getFormatting()));
-    }
-
-    /**
-     * Extracts printer configuration flags from the unified formatting settings.
-     *
-     * @param formatting the unified formatting settings
-     * @return the printer config
-     */
-    @NonNull
-    private static PrinterConfig createPrinterConfig(@NonNull UnifiedFormatting formatting) {
-        return new PrinterConfig(
-                formatting.isBlankLineAfterTypeHeader(),
-                formatting.isBlankLineBeforeComment(),
-                formatting.isBlankLineBetweenFields());
     }
 
     /**
@@ -156,35 +128,34 @@ public final class SrcProcessor {
     }
 
     /**
-     * Creates the processing flow for the requested processing strategy.
+     * Extracts printer configuration flags from the unified formatting settings.
      *
-     * @param flowType the flow strategy to instantiate
-     * @return the matching processing flow
+     * @param formatting the unified formatting settings
+     * @return the printer config
      */
     @NonNull
-    private IFlow createFlow(FlowType flowType) {
-        return switch (flowType) {
-            case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
-            case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
-            case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
-        };
+    private static PrinterConfig createPrinterConfig(@NonNull UnifiedFormatting formatting) {
+        return new PrinterConfig(
+                formatting.isBlankLineAfterTypeHeader(),
+                formatting.isBlankLineBeforeComment(),
+                formatting.isBlankLineBetweenFields());
     }
 
-    private static void logDebugProcessingCompletionSummary(
-            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic, @NonNull FlowType flowType) {
-        String processingStatus =
-                aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().isEmpty()
-                        ? SUMMARY_STATUS_COMPLETED
-                        : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
-        log.debug(
-                "Processing completed (statistics disabled). flowType={}, status={}, processedFiles={}, totalSizeBytes={}, wallClockTimeNanos={}, totalCpuTimeNanos={}, unexpectedErrors={}",
-                flowType,
-                processingStatus,
-                aggregatedProcessingStatistic.getFileCount(),
-                aggregatedProcessingStatistic.getTotalSizeInBytes(),
-                aggregatedProcessingStatistic.getWallClockTimeNanos(),
-                aggregatedProcessingStatistic.getTotalProcessingTimeNanos(),
-                aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().size());
+    @NonNull
+    private static String formatBulletList(@NonNull String header, @NonNull List<Path> paths) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n  ").append(header).append(':');
+        paths.stream()
+                .sorted(Comparator.comparing(Path::toString))
+                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_BULLET_LIST_PATH_LENGTH))
+                .forEach(abbreviatedPath -> builder.append("\n    - ").append(abbreviatedPath));
+        return builder.toString();
+    }
+
+    @NonNull
+    private static String formatSingleFileLogMessage(Path path, String status) {
+        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH);
+        return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;
     }
 
     @SuppressWarnings("PMD.GuardLogStatement")
@@ -217,15 +188,22 @@ public final class SrcProcessor {
         }
     }
 
-    @NonNull
-    private static String formatBulletList(@NonNull String header, @NonNull List<Path> paths) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("\n  ").append(header).append(':');
-        paths.stream()
-                .sorted(Comparator.comparing(Path::toString))
-                .map(path -> PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_BULLET_LIST_PATH_LENGTH))
-                .forEach(abbreviatedPath -> builder.append("\n    - ").append(abbreviatedPath));
-        return builder.toString();
+    private static void logDebugProcessingCompletionSummary(
+            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic, @NonNull FlowType flowType) {
+        String processingStatus =
+                aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().isEmpty()
+                        ? SUMMARY_STATUS_COMPLETED
+                        : SUMMARY_STATUS_COMPLETED_WITH_ERRORS;
+        log.debug(
+                "Processing completed (statistics disabled). flowType={}, status={}, processedFiles={},"
+                        + " totalSizeBytes={}, wallClockTimeNanos={}, totalCpuTimeNanos={}, unexpectedErrors={}",
+                flowType,
+                processingStatus,
+                aggregatedProcessingStatistic.getFileCount(),
+                aggregatedProcessingStatistic.getTotalSizeInBytes(),
+                aggregatedProcessingStatistic.getWallClockTimeNanos(),
+                aggregatedProcessingStatistic.getTotalProcessingTimeNanos(),
+                aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().size());
     }
 
     private static void logFilesWithUnexpectedErrors(
@@ -236,12 +214,6 @@ public final class SrcProcessor {
         log.warn(
                 "Files encountered unexpected errors and were not processed correctly:{}",
                 formatBulletList("Affected files", aggregatedProcessingStatistic.getFilesWithUnexpectedErrors()));
-    }
-
-    @NonNull
-    private static String formatSingleFileLogMessage(Path path, String status) {
-        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(path, MAX_TOTAL_PATH_LENGTH);
-        return SINGLE_FILE_LOG_PREFIX + " " + status + " " + abbreviatedPath;
     }
 
     private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
@@ -256,6 +228,31 @@ public final class SrcProcessor {
         }
     }
 
+    private SrcProcessor(CompiledConfig compiledConfig) {
+        this(
+                compiledConfig,
+                new Formatter(
+                        compiledConfig.getFormatting().getFormatterStyle(),
+                        compiledConfig.getFormatting().isFixImports()),
+                createPrinterConfig(compiledConfig.getFormatting()),
+                new Sorter(compiledConfig));
+    }
+
+    /**
+     * Creates the processing flow for the requested processing strategy.
+     *
+     * @param flowType the flow strategy to instantiate
+     * @return the matching processing flow
+     */
+    @NonNull
+    private IFlow createFlow(FlowType flowType) {
+        return switch (flowType) {
+            case REORDER -> new ReorderFlow(formatter, config.isBackupsEnabled(), sorter, printerConfig);
+            case CHECK_ALL -> new CheckAllFlow(formatter, sorter, printerConfig);
+            case CHECK_FAIL_FAST -> new CheckFailFastFlow(formatter, sorter, printerConfig);
+        };
+    }
+
     private void logStartupBanner(
             @NonNull FlowType flowType,
             @NonNull Path baseDir,
@@ -266,7 +263,8 @@ public final class SrcProcessor {
                     flowType, baseDir, config.isBackupsEnabled(), includeGlobs, excludeGlobs));
         } else {
             log.debug(
-                    "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={}, backupsEnabled={}",
+                    "Starting source processing. flowType={}, baseDir={}, includeGlobs={}, excludeGlobs={},"
+                            + " backupsEnabled={}",
                     flowType,
                     baseDir,
                     includeGlobs,

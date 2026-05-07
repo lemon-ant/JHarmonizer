@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.cli.e2e;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -16,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 
 @UtilityClass
 class TemporaryProjectCopier {
-
     static Path copyProject(@NonNull String resourceRoot, @NonNull Path targetDirectory) throws IOException {
         Path srcDirectory = locateOriginalTestResource(resourceRoot);
         Files.createDirectories(targetDirectory);

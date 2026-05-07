@@ -109,7 +109,7 @@ public class SrcFilesHandler {
     private static SrcFile readFile(@NonNull Path file) {
         SrcFile srcFile;
         try {
-            srcFile = new SrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
+            srcFile = new SrcFile(file, Files.readString(file, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

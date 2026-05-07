@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.jharmonizer_maven_plugin;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.SrcProcessingResult;
 import io.github.lemon_ant.jharmonizer.core.SrcProcessor;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
@@ -38,6 +35,14 @@ import org.jspecify.annotations.Nullable;
 abstract class AbstractJHarmonizerMojo extends AbstractMojo {
 
     /**
+     * Overrides the {@code backupsEnabled} setting from the active configuration.
+     * When not set, the value from the configuration file is used; the embedded default is {@code true}.
+     */
+    @Parameter(property = "jharmonizer.backupsEnabled")
+    @Nullable
+    private Boolean backupsEnabled;
+
+    /**
      * Base directory to scan for Java source files.
      * When not configured, defaults to the project base directory ({@code ${project.basedir}})
      * with auto-derived include patterns for both {@code src/main/java} and {@code src/test/java}.
@@ -45,47 +50,6 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     @Parameter(property = "jharmonizer.baseDir")
     @Nullable
     private File baseDir;
-
-    /**
-     * Maven's main Java source directory. Used in the default scan configuration to derive
-     * an include pattern pointing at {@code src/main/java} relative to the project root.
-     */
-    @Parameter(defaultValue = "${project.build.sourceDirectory}", readonly = true)
-    private File mainSourceDirectory;
-
-    /**
-     * Maven's test Java source directory. Used in the default scan configuration to derive
-     * an include pattern pointing at {@code src/test/java} relative to the project root.
-     */
-    @Parameter(defaultValue = "${project.build.testSourceDirectory}", readonly = true)
-    private File testSourceDirectory;
-
-    /**
-     * The Maven project base directory. When {@code baseDir} is not explicitly configured,
-     * this is used as the single scan root and include patterns for both Java source directories
-     * are derived relative to it automatically.
-     */
-    @Parameter(defaultValue = "${project.basedir}", readonly = true)
-    private File projectBaseDir;
-
-    /**
-     * Glob patterns for Java source files to include in processing.
-     * When empty, all {@code .java} files under the configured base directory are included.
-     */
-    @Parameter(property = "jharmonizer.includes")
-    private Set<String> includes;
-
-    /**
-     * Glob patterns for Java source files to exclude from processing.
-     */
-    @Parameter(property = "jharmonizer.excludes")
-    private Set<String> excludes;
-
-    /**
-     * When {@code true}, skips execution of this goal entirely.
-     */
-    @Parameter(defaultValue = "false", property = "jharmonizer.skip")
-    private boolean skip;
 
     /**
      * Path to a YAML configuration file whose settings are merged over the built-in defaults.
@@ -98,12 +62,32 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private File configFile;
 
     /**
-     * Overrides the {@code backupsEnabled} setting from the active configuration.
-     * When not set, the value from the configuration file is used; the embedded default is {@code true}.
+     * Glob patterns for Java source files to exclude from processing.
      */
-    @Parameter(property = "jharmonizer.backupsEnabled")
-    @Nullable
-    private Boolean backupsEnabled;
+    @Parameter(property = "jharmonizer.excludes")
+    private Set<String> excludes;
+
+    /**
+     * When {@code true} and the processing result indicates a violation (e.g. non-conforming files
+     * in a check flow), the build is failed with a {@link MojoFailureException}.
+     * Set to {@code false} to report violations without breaking the build.
+     */
+    @Parameter(defaultValue = "true", property = "jharmonizer.failOnViolation")
+    private boolean failOnViolation;
+
+    /**
+     * Glob patterns for Java source files to include in processing.
+     * When empty, all {@code .java} files under the configured base directory are included.
+     */
+    @Parameter(property = "jharmonizer.includes")
+    private Set<String> includes;
+
+    /**
+     * Maven's main Java source directory. Used in the default scan configuration to derive
+     * an include pattern pointing at {@code src/main/java} relative to the project root.
+     */
+    @Parameter(defaultValue = "${project.build.sourceDirectory}", readonly = true)
+    private File mainSourceDirectory;
 
     /**
      * Overrides the {@code processingStatisticsMode} setting from the active configuration.
@@ -115,20 +99,25 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     private ProcessingStatisticsMode processingStatisticsMode;
 
     /**
-     * When {@code true} and the processing result indicates a violation (e.g. non-conforming files
-     * in a check flow), the build is failed with a {@link MojoFailureException}.
-     * Set to {@code false} to report violations without breaking the build.
+     * The Maven project base directory. When {@code baseDir} is not explicitly configured,
+     * this is used as the single scan root and include patterns for both Java source directories
+     * are derived relative to it automatically.
      */
-    @Parameter(defaultValue = "true", property = "jharmonizer.failOnViolation")
-    private boolean failOnViolation;
+    @Parameter(defaultValue = "${project.basedir}", readonly = true)
+    private File projectBaseDir;
 
     /**
-     * Returns the processing flow strategy implemented by the concrete goal.
-     *
-     * @return the flow type to execute
+     * When {@code true}, skips execution of this goal entirely.
      */
-    @NonNull
-    protected abstract FlowType getFlowType();
+    @Parameter(defaultValue = "false", property = "jharmonizer.skip")
+    private boolean skip;
+
+    /**
+     * Maven's test Java source directory. Used in the default scan configuration to derive
+     * an include pattern pointing at {@code src/test/java} relative to the project root.
+     */
+    @Parameter(defaultValue = "${project.build.testSourceDirectory}", readonly = true)
+    private File testSourceDirectory;
 
     /**
      * Validates parameters, builds configuration, and runs the selected JHarmonizer flow.
@@ -172,48 +161,47 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         }
     }
 
-    @Nullable
-    private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
-        return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
+    /**
+     * Returns the processing flow strategy implemented by the concrete goal.
+     *
+     * @return the flow type to execute
+     */
+    @NonNull
+    protected abstract FlowType getFlowType();
+
+    @SuppressWarnings("PMD.DoNotUseThreads")
+    private static void interruptCurrentThread() {
+        Thread.currentThread().interrupt();
     }
 
     private static boolean isCheckFlow(FlowType flowType) {
         return flowType == FlowType.CHECK_ALL || flowType == FlowType.CHECK_FAIL_FAST;
     }
 
-    @NonNull
-    private BaseDirContext resolveExplicitBaseDir() throws MojoExecutionException {
-        Path resolvedBaseDir = baseDir.toPath().toAbsolutePath().normalize();
-        if (!Files.isDirectory(resolvedBaseDir)) {
-            throw new MojoExecutionException("baseDir does not exist or is not a directory: " + resolvedBaseDir);
+    @Nullable
+    private static FlexibleUnifiedConfig mergeFlexibleConfigs(
+            FlexibleUnifiedConfig baselineConfig, FlexibleUnifiedConfig overlayConfig) {
+        if (baselineConfig == null) {
+            return overlayConfig;
         }
-        return new BaseDirContext(resolvedBaseDir, includes != null ? includes : Set.of());
+        if (overlayConfig == null) {
+            return baselineConfig;
+        }
+        return UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
     }
 
     @Nullable
-    private BaseDirContext resolveProjectBaseDir() throws MojoExecutionException {
-        if (projectBaseDir == null) {
-            throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
-                    + " Configure <baseDir> explicitly.");
-        }
-        Path projectBaseDirPath = projectBaseDir.toPath().toAbsolutePath().normalize();
-        if (!Files.isDirectory(projectBaseDirPath)) {
-            throw new MojoExecutionException(
-                    "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
-        }
-        try {
-            Set<String> effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
-            if (effectiveIncludes.isEmpty()) {
-                return null;
-            }
-            return new BaseDirContext(projectBaseDirPath, effectiveIncludes);
-        } catch (IllegalArgumentException e) {
-            throw new MojoExecutionException(
-                    "Cannot compute default source include patterns relative to project base directory '"
-                            + projectBaseDirPath + "'."
-                            + " Configure <baseDir> explicitly.",
-                    e);
-        }
+    private FlexibleUnifiedConfig buildConfig() {
+        FlexibleUnifiedConfig fileConfig = resolveFileConfig();
+
+        FlexibleUnifiedConfig paramOverrideConfig = (backupsEnabled != null || processingStatisticsMode != null)
+                ? FlexibleUnifiedConfig.builder()
+                        .backupsEnabled(backupsEnabled)
+                        .processingStatisticsMode(processingStatisticsMode)
+                        .build()
+                : null;
+
+        return mergeFlexibleConfigs(fileConfig, paramOverrideConfig);
     }
 
     @NonNull
@@ -245,17 +233,17 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
     }
 
     @Nullable
-    private FlexibleUnifiedConfig buildConfig() {
-        FlexibleUnifiedConfig fileConfig = resolveFileConfig();
+    private BaseDirContext resolveBaseDirContext() throws MojoExecutionException {
+        return baseDir != null ? resolveExplicitBaseDir() : resolveProjectBaseDir();
+    }
 
-        FlexibleUnifiedConfig paramOverrideConfig = (backupsEnabled != null || processingStatisticsMode != null)
-                ? FlexibleUnifiedConfig.builder()
-                        .backupsEnabled(backupsEnabled)
-                        .processingStatisticsMode(processingStatisticsMode)
-                        .build()
-                : null;
-
-        return mergeFlexibleConfigs(fileConfig, paramOverrideConfig);
+    @NonNull
+    private BaseDirContext resolveExplicitBaseDir() throws MojoExecutionException {
+        Path resolvedBaseDir = baseDir.toPath().toAbsolutePath().normalize();
+        if (!Files.isDirectory(resolvedBaseDir)) {
+            throw new MojoExecutionException("baseDir does not exist or is not a directory: " + resolvedBaseDir);
+        }
+        return new BaseDirContext(includes != null ? includes : Set.of(), resolvedBaseDir);
     }
 
     @Nullable
@@ -270,29 +258,39 @@ abstract class AbstractJHarmonizerMojo extends AbstractMojo {
         return JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromFile(configFilePath);
     }
 
-    @SuppressWarnings("PMD.DoNotUseThreads")
-    private static void interruptCurrentThread() {
-        Thread.currentThread().interrupt();
-    }
-
     @Nullable
-    private static FlexibleUnifiedConfig mergeFlexibleConfigs(
-            FlexibleUnifiedConfig baselineConfig, FlexibleUnifiedConfig overlayConfig) {
-        if (baselineConfig == null) {
-            return overlayConfig;
+    private BaseDirContext resolveProjectBaseDir() throws MojoExecutionException {
+        if (projectBaseDir == null) {
+            throw new MojoExecutionException("Project base directory (${project.basedir}) is not available."
+                    + " Configure <baseDir> explicitly.");
         }
-        if (overlayConfig == null) {
-            return baselineConfig;
+        Path projectBaseDirPath = projectBaseDir.toPath().toAbsolutePath().normalize();
+        if (!Files.isDirectory(projectBaseDirPath)) {
+            throw new MojoExecutionException(
+                    "Project base directory does not exist or is not a directory: " + projectBaseDirPath);
         }
-        return UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+        try {
+            Set<String> effectiveIncludes = computeDefaultIncludes(projectBaseDirPath);
+            if (effectiveIncludes.isEmpty()) {
+                return null;
+            }
+            return new BaseDirContext(effectiveIncludes, projectBaseDirPath);
+        } catch (IllegalArgumentException e) {
+            throw new MojoExecutionException(
+                    "Cannot compute default source include patterns relative to project base directory '"
+                            + projectBaseDirPath + "'."
+                            + " Configure <baseDir> explicitly.",
+                    e);
+        }
     }
 
     @Value
     private static class BaseDirContext {
-        @NonNull
-        Path resolvedBaseDir;
 
         @NonNull
         Set<String> effectiveIncludes;
+
+        @NonNull
+        Path resolvedBaseDir;
     }
 }

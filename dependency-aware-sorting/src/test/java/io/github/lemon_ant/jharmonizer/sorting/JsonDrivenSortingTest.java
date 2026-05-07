@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -55,46 +52,28 @@ import org.junit.jupiter.params.provider.MethodSource;
  * changes required.
  */
 class JsonDrivenSortingTest {
-
-    private static final String TEST_CASES_DIR = "test-cases";
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String TEST_CASES_DIR = "test-cases";
 
     // ------------------------------------------------------------------ //
-    // Test case loading                                                   //
+    // Parameterized tests                                                 //
     // ------------------------------------------------------------------ //
 
-    @Value
-    static class TestCase {
-        String name;
-        List<SortableTypeMember> items;
-        Groups<SortableTypeMember> groups;
-        Dependencies<SortableTypeMember> dependencies;
-        List<String> expected;
-        String description;
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("loadSimplifiedCompatibleCases")
+    @DisplayName("JSON-driven case — SimplifiedDependencyAwareSorter")
+    void simplifiedDependencyAwareSorter_jsonDrivenCompatibleCase_returnsExpectedOrder(TestCase tc) {
+        // Given
+        printCase(tc);
 
-        @Override
-        public String toString() {
-            return name;
-        }
+        // When
+        List<SortableTypeMember> result = SimplifiedDependencyAwareSorter.sort(
+                tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
+        List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
 
-        /** Returns {@code true} if this case satisfies the simplified algorithm preconditions. */
-        boolean isSimplifiedCompatible() {
-            Set<String> groupedNames = groups.getGroups().stream()
-                    .flatMap(group -> group.getItems().stream())
-                    .map(SortableTypeMember::getName)
-                    .collect(Collectors.toSet());
-
-            boolean hasOverlap = dependencies.getEdges().stream()
-                    .anyMatch(dependency -> groupedNames.contains(
-                                    dependency.getProvider().getName())
-                            || groupedNames.contains(dependency.getDependent().getName()));
-
-            return !hasOverlap;
-        }
-    }
-
-    static Stream<TestCase> loadSimplifiedCompatibleCases() throws IOException, URISyntaxException {
-        return loadAllCases().stream().filter(TestCase::isSimplifiedCompatible);
+        // Then
+        System.out.println("  Actual (simplified): " + actual);
+        assertThat(actual).as("Mismatch in simplified case '%s'", tc.getName()).isEqualTo(tc.getExpected());
     }
 
     private static List<TestCase> loadAllCases() throws IOException, URISyntaxException {
@@ -116,6 +95,10 @@ class JsonDrivenSortingTest {
                     })
                     .toList();
         }
+    }
+
+    static Stream<TestCase> loadSimplifiedCompatibleCases() throws IOException, URISyntaxException {
+        return loadAllCases().stream().filter(TestCase::isSimplifiedCompatible);
     }
 
     private static TestCase parseCase(Path dir) throws IOException {
@@ -177,36 +160,6 @@ class JsonDrivenSortingTest {
                 caseName, items, new Groups<>(groups), new Dependencies<>(edges), expectedNames, description);
     }
 
-    private static SortableTypeMember requireMember(Map<String, SortableTypeMember> itemMap, String name, Path dir) {
-        SortableTypeMember member = itemMap.get(name);
-        if (member == null) {
-            throw new IllegalArgumentException("Unknown item name '" + name + "' referenced in "
-                    + dir.resolve("input.json") + ". Check that the name is listed in the 'items' array.");
-        }
-        return member;
-    }
-
-    // ------------------------------------------------------------------ //
-    // Parameterized tests                                                 //
-    // ------------------------------------------------------------------ //
-
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("loadSimplifiedCompatibleCases")
-    @DisplayName("JSON-driven case — SimplifiedDependencyAwareSorter")
-    void simplifiedDependencyAwareSorter_jsonDrivenCompatibleCase_returnsExpectedOrder(TestCase tc) {
-        // Given
-        printCase(tc);
-
-        // When
-        List<SortableTypeMember> result = SimplifiedDependencyAwareSorter.sort(
-                tc.getItems(), tc.getGroups(), tc.getDependencies(), SortableTypeMember.DEFAULT_ORDER);
-        List<String> actual = result.stream().map(SortableTypeMember::getName).toList();
-
-        // Then
-        System.out.println("  Actual (simplified): " + actual);
-        assertThat(actual).as("Mismatch in simplified case '%s'", tc.getName()).isEqualTo(tc.getExpected());
-    }
-
     private static void printCase(TestCase tc) {
         System.out.printf("%n=== %s ===%n%s%n", tc.getName(), tc.getDescription());
         System.out.println("  Input items : "
@@ -226,5 +179,48 @@ class JsonDrivenSortingTest {
                                 + dependency.getDependent().getName())
                         .toList());
         System.out.println("  Expected    : " + tc.getExpected());
+    }
+
+    private static SortableTypeMember requireMember(Map<String, SortableTypeMember> itemMap, String name, Path dir) {
+        SortableTypeMember member = itemMap.get(name);
+        if (member == null) {
+            throw new IllegalArgumentException("Unknown item name '" + name + "' referenced in "
+                    + dir.resolve("input.json") + ". Check that the name is listed in the 'items' array.");
+        }
+        return member;
+    }
+
+    // ------------------------------------------------------------------ //
+    // Test case loading                                                   //
+    // ------------------------------------------------------------------ //
+
+    @Value
+    static class TestCase {
+        Dependencies<SortableTypeMember> dependencies;
+        String description;
+        List<String> expected;
+        Groups<SortableTypeMember> groups;
+        List<SortableTypeMember> items;
+        String name;
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
+        /** Returns {@code true} if this case satisfies the simplified algorithm preconditions. */
+        boolean isSimplifiedCompatible() {
+            Set<String> groupedNames = groups.getGroups().stream()
+                    .flatMap(group -> group.getItems().stream())
+                    .map(SortableTypeMember::getName)
+                    .collect(Collectors.toSet());
+
+            boolean hasOverlap = dependencies.getEdges().stream()
+                    .anyMatch(dependency -> groupedNames.contains(
+                                    dependency.getProvider().getName())
+                            || groupedNames.contains(dependency.getDependent().getName()));
+
+            return !hasOverlap;
+        }
     }
 }

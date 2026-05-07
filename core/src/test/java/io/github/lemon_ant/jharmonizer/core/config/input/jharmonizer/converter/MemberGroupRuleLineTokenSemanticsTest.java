@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
@@ -32,37 +29,6 @@ import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class MemberGroupRuleLineTokenSemanticsTest {
-
-    @Test
-    void compileSelectorBlock_staticInitializerTokens_requireInitializerKindAndStaticModifier() {
-        // Given
-        UnifiedMemberGroupRuleLine staticInitializerRuleLine =
-                MemberGroupRuleLineParser.parse(Set.of("STATIC", "Initializer"));
-        UnifiedMemberGroupSelectorBlock selectorBlock =
-                new UnifiedMemberGroupSelectorBlock(Set.of(), Set.of(staticInitializerRuleLine));
-        UnifiedMemberGroup rootGroup = UnifiedMemberGroup.builder()
-                .groupName("StaticInitializers")
-                .selectorBlock(selectorBlock)
-                .separator(UnifiedSeparator.NONE)
-                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
-                .build();
-        CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
-        MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
-                .memberKind(MemberKind.INIT_BLOCK)
-                .declarationModifier(DeclarationModifier.STATIC)
-                .build();
-        MemberDescriptor instanceInitializerDescriptor =
-                MemberDescriptor.builder().memberKind(MemberKind.INIT_BLOCK).build();
-
-        // When
-        boolean matchesStaticInitializer = compiledRootGroup.getSelectorBlock().match(staticInitializerDescriptor);
-        boolean matchesInstanceInitializer =
-                compiledRootGroup.getSelectorBlock().match(instanceInitializerDescriptor);
-
-        // Then
-        assertThat(matchesStaticInitializer).isTrue();
-        assertThat(matchesInstanceInitializer).isFalse();
-    }
 
     @Test
     void compileSelectorBlock_instanceInitializerTokens_includeInitializerButExcludeStatic() {
@@ -93,6 +59,37 @@ class MemberGroupRuleLineTokenSemanticsTest {
         // Then
         assertThat(matchesStaticInitializer).isFalse();
         assertThat(matchesInstanceInitializer).isTrue();
+    }
+
+    @Test
+    void compileSelectorBlock_staticInitializerTokens_requireInitializerKindAndStaticModifier() {
+        // Given
+        UnifiedMemberGroupRuleLine staticInitializerRuleLine =
+                MemberGroupRuleLineParser.parse(Set.of("STATIC", "Initializer"));
+        UnifiedMemberGroupSelectorBlock selectorBlock =
+                new UnifiedMemberGroupSelectorBlock(Set.of(), Set.of(staticInitializerRuleLine));
+        UnifiedMemberGroup rootGroup = UnifiedMemberGroup.builder()
+                .groupName("StaticInitializers")
+                .selectorBlock(selectorBlock)
+                .separator(UnifiedSeparator.NONE)
+                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
+                .build();
+        CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
+        MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
+                .memberKind(MemberKind.INIT_BLOCK)
+                .declarationModifier(DeclarationModifier.STATIC)
+                .build();
+        MemberDescriptor instanceInitializerDescriptor =
+                MemberDescriptor.builder().memberKind(MemberKind.INIT_BLOCK).build();
+
+        // When
+        boolean matchesStaticInitializer = compiledRootGroup.getSelectorBlock().match(staticInitializerDescriptor);
+        boolean matchesInstanceInitializer =
+                compiledRootGroup.getSelectorBlock().match(instanceInitializerDescriptor);
+
+        // Then
+        assertThat(matchesStaticInitializer).isTrue();
+        assertThat(matchesInstanceInitializer).isFalse();
     }
 
     @NonNull

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,17 +44,17 @@ public class JHarmonizerMemberGroup implements Serializable {
     @SuppressFBWarnings("EI_EXPOSE_REP")
     List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
 
-    @Nullable
-    Boolean relaxedForwardReferences;
-
     @NonNull
     String name;
 
     @Nullable
-    JHarmonizerSeparator separator;
+    List<JHarmonizerOrderingRule> orderingRules;
 
     @Nullable
-    List<JHarmonizerOrderingRule> orderingRules;
+    Boolean relaxedForwardReferences;
+
+    @Nullable
+    JHarmonizerSeparator separator;
 
     @Builder
     private JHarmonizerMemberGroup(

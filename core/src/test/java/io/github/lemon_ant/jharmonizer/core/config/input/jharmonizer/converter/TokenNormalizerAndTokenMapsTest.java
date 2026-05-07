@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
@@ -15,6 +12,21 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class TokenNormalizerAndTokenMapsTest {
+
+    @Test
+    void normalizeTokens_matcherTokens_preserveOriginalCase() {
+        // Given — name-regex, exact-name, and annotation-matcher tokens must keep their case
+        // so that patterns like ~.*Test$ and @ExtendWith match the actual source identifiers
+        Set<String> rawTokens = Set.of("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$", "class");
+
+        // When
+        Set<String> normalizedTokens = TokenNormalizer.normalizeTokens(rawTokens);
+
+        // Then
+        assertThat(normalizedTokens)
+                .contains("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$")
+                .contains("class");
+    }
 
     @Test
     void normalizeTokens_mixedCasingWhitespaceAndNulls_returnsTrimmedLowercaseNonBlankTokens() {
@@ -32,21 +44,6 @@ class TokenNormalizerAndTokenMapsTest {
 
         // Then
         assertThat(normalizedTokens).containsExactlyInAnyOrder("static", "initializer", "field");
-    }
-
-    @Test
-    void normalizeTokens_matcherTokens_preserveOriginalCase() {
-        // Given — name-regex, exact-name, and annotation-matcher tokens must keep their case
-        // so that patterns like ~.*Test$ and @ExtendWith match the actual source identifiers
-        Set<String> rawTokens = Set.of("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$", "class");
-
-        // When
-        Set<String> normalizedTokens = TokenNormalizer.normalizeTokens(rawTokens);
-
-        // Then
-        assertThat(normalizedTokens)
-                .contains("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$")
-                .contains("class");
     }
 
     @Test

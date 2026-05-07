@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.MemberGroupRuleLineCompiler.compileRuleLine;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess.PUBLIC;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind.FIELD;
@@ -20,75 +17,6 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class AnnotationMatchingPredicatesTest {
-
-    @Test
-    void createAnnotationExactFqnOrSimple_matcherUsesSimpleName_matchQualifiedAnnotationName() {
-        // Given
-        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
-                .memberKind(FIELD)
-                .memberAccess(PUBLIC)
-                .name("field")
-                .annotationQualifiedName("a.b.Foo")
-                .build();
-
-        // When
-        Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("Foo");
-
-        // Then
-        assertThat(predicate.test(memberDescriptor)).isTrue();
-    }
-
-    @Test
-    void createAnnotationExactFqnOrSimple_matcherUsesQualifiedName_matchQualifiedAnnotationName() {
-        // Given
-        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
-                .memberKind(FIELD)
-                .memberAccess(PUBLIC)
-                .name("field")
-                .annotationQualifiedName("a.b.Foo")
-                .build();
-
-        // When
-        Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("a.b.Foo");
-
-        // Then
-        assertThat(predicate.test(memberDescriptor)).isTrue();
-    }
-
-    @Test
-    void createAnnotationExactFqnOrSimple_expectedNameDoesNotMatch_returnsFalse() {
-        // Given
-        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
-                .memberKind(FIELD)
-                .memberAccess(PUBLIC)
-                .name("field")
-                .annotationQualifiedName("a.b.Foo")
-                .build();
-
-        // When
-        Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("Bar");
-
-        // Then
-        assertThat(predicate.test(memberDescriptor)).isFalse();
-    }
-
-    @Test
-    void createAnnotationRegexFqnOrSimple_patternMatchesSimpleNameDerivedFromFqcn_returnsTrue() {
-        // Given
-        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
-                .memberKind(FIELD)
-                .memberAccess(PUBLIC)
-                .name("field")
-                .annotationQualifiedName("a.b.Foo")
-                .build();
-
-        // When
-        Predicate<MemberDescriptor> predicate =
-                RuleAtomPredicates.createAnnotationRegexFqnOrSimple(Pattern.compile("F.."));
-
-        // Then
-        assertThat(predicate.test(memberDescriptor)).isTrue();
-    }
 
     @Test
     void compileRuleLine_annotationExact_compiledPredicateMatchesBySimpleName() {
@@ -163,5 +91,74 @@ class AnnotationMatchingPredicatesTest {
                 .build();
         assertThat(compiledPredicate.test(descriptorWithTwoAnnotations)).isTrue();
         assertThat(compiledPredicate.test(descriptorWithOnlyOneAnnotation)).isFalse();
+    }
+
+    @Test
+    void createAnnotationExactFqnOrSimple_expectedNameDoesNotMatch_returnsFalse() {
+        // Given
+        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
+                .memberKind(FIELD)
+                .memberAccess(PUBLIC)
+                .name("field")
+                .annotationQualifiedName("a.b.Foo")
+                .build();
+
+        // When
+        Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("Bar");
+
+        // Then
+        assertThat(predicate.test(memberDescriptor)).isFalse();
+    }
+
+    @Test
+    void createAnnotationExactFqnOrSimple_matcherUsesQualifiedName_matchQualifiedAnnotationName() {
+        // Given
+        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
+                .memberKind(FIELD)
+                .memberAccess(PUBLIC)
+                .name("field")
+                .annotationQualifiedName("a.b.Foo")
+                .build();
+
+        // When
+        Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("a.b.Foo");
+
+        // Then
+        assertThat(predicate.test(memberDescriptor)).isTrue();
+    }
+
+    @Test
+    void createAnnotationExactFqnOrSimple_matcherUsesSimpleName_matchQualifiedAnnotationName() {
+        // Given
+        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
+                .memberKind(FIELD)
+                .memberAccess(PUBLIC)
+                .name("field")
+                .annotationQualifiedName("a.b.Foo")
+                .build();
+
+        // When
+        Predicate<MemberDescriptor> predicate = RuleAtomPredicates.createAnnotationExactFqnOrSimple("Foo");
+
+        // Then
+        assertThat(predicate.test(memberDescriptor)).isTrue();
+    }
+
+    @Test
+    void createAnnotationRegexFqnOrSimple_patternMatchesSimpleNameDerivedFromFqcn_returnsTrue() {
+        // Given
+        MemberDescriptor memberDescriptor = MemberDescriptor.builder()
+                .memberKind(FIELD)
+                .memberAccess(PUBLIC)
+                .name("field")
+                .annotationQualifiedName("a.b.Foo")
+                .build();
+
+        // When
+        Predicate<MemberDescriptor> predicate =
+                RuleAtomPredicates.createAnnotationRegexFqnOrSimple(Pattern.compile("F.."));
+
+        // Then
+        assertThat(predicate.test(memberDescriptor)).isTrue();
     }
 }

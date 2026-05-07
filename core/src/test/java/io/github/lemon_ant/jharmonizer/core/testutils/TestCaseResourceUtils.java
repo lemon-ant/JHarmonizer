@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.testutils;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -28,19 +25,46 @@ public class TestCaseResourceUtils {
     public static final String TEST_CASES_DIR = "test-cases";
 
     @NonNull
-    public static URL requireClasspathResourceUrl(@NonNull String classpathAbsolutePath) {
+    @Deprecated
+    public static InputStream openClasspathResourceStream(
+            @NonNull Class<?> anchorClass, @NonNull String classpathAbsolutePath) {
         if (!classpathAbsolutePath.startsWith("/")) {
             throw new IllegalArgumentException(
                     "Expected an absolute classpath resource path starting with '/', but got: "
                             + classpathAbsolutePath);
         }
 
-        URL resolvedUrl = TestCaseResourceUtils.class.getResource(classpathAbsolutePath);
-        if (resolvedUrl == null) {
+        InputStream inputStream = anchorClass.getResourceAsStream(classpathAbsolutePath);
+        if (inputStream == null) {
             throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
         }
 
-        return resolvedUrl;
+        return inputStream;
+    }
+
+    @NonNull
+    public static InputStream openClasspathResourceStream(@NonNull String classpathAbsolutePath) {
+        URL resourceUrl = requireClasspathResourceUrl(classpathAbsolutePath);
+        try {
+            return resourceUrl.openStream();
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to open resource URL: " + resourceUrl, ioException);
+        }
+    }
+
+    @NonNull
+    public static String readClasspathResourceAsString(@NonNull String classpathAbsolutePath) {
+        URL resourceUrl = requireClasspathResourceUrl(classpathAbsolutePath);
+        return readClasspathResourceAsString(resourceUrl);
+    }
+
+    @NonNull
+    public static String readClasspathResourceAsString(@NonNull URL resourceUrl) {
+        try (InputStream inputStream = resourceUrl.openStream()) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to read resource URL: " + resourceUrl, ioException);
+        }
     }
 
     @NonNull
@@ -60,31 +84,19 @@ public class TestCaseResourceUtils {
     }
 
     @NonNull
-    public static InputStream openClasspathResourceStream(@NonNull String classpathAbsolutePath) {
-        URL resourceUrl = requireClasspathResourceUrl(classpathAbsolutePath);
-        try {
-            return resourceUrl.openStream();
-        } catch (IOException ioException) {
-            throw new UncheckedIOException("Failed to open resource URL: " + resourceUrl, ioException);
-        }
-    }
-
-    @NonNull
-    @Deprecated
-    public static InputStream openClasspathResourceStream(
-            @NonNull Class<?> anchorClass, @NonNull String classpathAbsolutePath) {
+    public static URL requireClasspathResourceUrl(@NonNull String classpathAbsolutePath) {
         if (!classpathAbsolutePath.startsWith("/")) {
             throw new IllegalArgumentException(
                     "Expected an absolute classpath resource path starting with '/', but got: "
                             + classpathAbsolutePath);
         }
 
-        InputStream inputStream = anchorClass.getResourceAsStream(classpathAbsolutePath);
-        if (inputStream == null) {
+        URL resolvedUrl = TestCaseResourceUtils.class.getResource(classpathAbsolutePath);
+        if (resolvedUrl == null) {
             throw new IllegalStateException("Classpath resource not found: " + classpathAbsolutePath);
         }
 
-        return inputStream;
+        return resolvedUrl;
     }
 
     @NonNull
@@ -116,20 +128,5 @@ public class TestCaseResourceUtils {
                             .formatted(relativePathSegment, directoryResourceUrl),
                     exception);
         }
-    }
-
-    @NonNull
-    public static String readClasspathResourceAsString(@NonNull URL resourceUrl) {
-        try (InputStream inputStream = resourceUrl.openStream()) {
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException("Failed to read resource URL: " + resourceUrl, ioException);
-        }
-    }
-
-    @NonNull
-    public static String readClasspathResourceAsString(@NonNull String classpathAbsolutePath) {
-        URL resourceUrl = requireClasspathResourceUrl(classpathAbsolutePath);
-        return readClasspathResourceAsString(resourceUrl);
     }
 }

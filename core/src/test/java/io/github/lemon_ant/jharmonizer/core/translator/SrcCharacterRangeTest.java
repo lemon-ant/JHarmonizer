@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -13,13 +10,12 @@ import org.junit.jupiter.api.Test;
 class SrcCharacterRangeTest {
 
     @Test
-    void constructor_validRange_createsRangeSuccessfully() {
+    void constructor_endLessThanStart_throwsIllegalArgumentException() {
         // When
-        SrcCharacterRange srcCharacterRange = new SrcCharacterRange(0, 10);
+        Throwable thrown = catchThrowable(() -> new SrcCharacterRange(10, 5));
 
         // Then
-        assertThat(srcCharacterRange.getStartInclusive()).isZero();
-        assertThat(srcCharacterRange.getEndExclusive()).isEqualTo(10);
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(">=");
     }
 
     @Test
@@ -32,11 +28,12 @@ class SrcCharacterRangeTest {
     }
 
     @Test
-    void constructor_endLessThanStart_throwsIllegalArgumentException() {
+    void constructor_validRange_createsRangeSuccessfully() {
         // When
-        Throwable thrown = catchThrowable(() -> new SrcCharacterRange(10, 5));
+        SrcCharacterRange srcCharacterRange = new SrcCharacterRange(0, 10);
 
         // Then
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(">=");
+        assertThat(srcCharacterRange.getStartInclusive()).isZero();
+        assertThat(srcCharacterRange.getEndExclusive()).isEqualTo(10);
     }
 }

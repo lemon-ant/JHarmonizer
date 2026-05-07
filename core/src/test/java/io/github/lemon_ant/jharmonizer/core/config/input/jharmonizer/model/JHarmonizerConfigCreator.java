@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
@@ -13,22 +10,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 // TODO Rename
 public class JHarmonizerConfigCreator {
-    public static JHarmonizerHeaderLine createHeaderLine(char character, int leftPadding) {
-        return new JHarmonizerHeaderLine(character, leftPadding);
-    }
-
-    public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
-            boolean mainTypeFirst,
-            @NonNull List<@NonNull JHarmonizerTopLevelTypeSelector> typeGroups,
-            @NonNull List<@NonNull JHarmonizerOrderingRule> orderingRules) {
-        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, orderingRules);
-    }
-
-    public static JHarmonizerTopLevelTypeSelector createTypeGroup(
-            @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
-        return new JHarmonizerTopLevelTypeSelector(typeKinds);
-    }
-
     public static JHarmonizerFormatting createFormatting(boolean fixImports, @NonNull FormatterStyle formatterStyle) {
         return new JHarmonizerFormatting(fixImports, formatterStyle, true, true, false);
     }
@@ -51,5 +32,21 @@ public class JHarmonizerConfigCreator {
             boolean blankLineBetweenFields) {
         return new JHarmonizerFormatting(
                 fixImports, formatterStyle, blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields);
+    }
+
+    public static JHarmonizerHeaderLine createHeaderLine(char character, int leftPadding) {
+        return new JHarmonizerHeaderLine(character, leftPadding);
+    }
+
+    public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
+            boolean mainTypeFirst,
+            @NonNull List<@NonNull JHarmonizerTopLevelTypeSelector> typeGroups,
+            @NonNull List<@NonNull JHarmonizerOrderingRule> orderingRules) {
+        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, orderingRules);
+    }
+
+    public static JHarmonizerTopLevelTypeSelector createTypeGroup(
+            @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
+        return new JHarmonizerTopLevelTypeSelector(typeKinds);
     }
 }

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting.benchmark;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
 import io.github.lemon_ant.jharmonizer.sorting.Group;
 import io.github.lemon_ant.jharmonizer.sorting.Groups;
@@ -37,6 +34,20 @@ import org.openjdk.jmh.infra.Blackhole;
 @Threads(4)
 @Fork(0)
 public class SimplifiedSortingBenchmark {
+    Dependencies<SortableTypeMember> deps5000;
+    Dependencies<SortableTypeMember> deps500;
+    Dependencies<SortableTypeMember> deps50Empty;
+    Dependencies<SortableTypeMember> deps50c;
+    Groups<SortableTypeMember> groups5000;
+    Groups<SortableTypeMember> groups500;
+    Groups<SortableTypeMember> groups50C;
+    Groups<SortableTypeMember> groups50Empty;
+
+    // --- 5000 items, with groups + deps (no overlap) ---
+    List<SortableTypeMember> items5000;
+
+    // --- 500 items, with groups + deps (no overlap) ---
+    List<SortableTypeMember> items500;
 
     // ------------------------------------------------------------------ //
     // Shared (read-only) state                                            //
@@ -44,23 +55,9 @@ public class SimplifiedSortingBenchmark {
 
     // --- 50 items, no constraints ---
     List<SortableTypeMember> items50;
-    Groups<SortableTypeMember> groups50Empty;
-    Dependencies<SortableTypeMember> deps50Empty;
 
     // --- 50 items, with groups + deps (no overlap) ---
     List<SortableTypeMember> items50c;
-    Groups<SortableTypeMember> groups50C;
-    Dependencies<SortableTypeMember> deps50c;
-
-    // --- 500 items, with groups + deps (no overlap) ---
-    List<SortableTypeMember> items500;
-    Groups<SortableTypeMember> groups500;
-    Dependencies<SortableTypeMember> deps500;
-
-    // --- 5000 items, with groups + deps (no overlap) ---
-    List<SortableTypeMember> items5000;
-    Groups<SortableTypeMember> groups5000;
-    Dependencies<SortableTypeMember> deps5000;
 
     @Setup(Level.Trial)
     public void setup() {
@@ -88,6 +85,18 @@ public class SimplifiedSortingBenchmark {
         deps5000 = makeSimplifiedDeps(items5000, 1000, cl5000 * 2);
     }
 
+    @Benchmark
+    public void simplified_5000_withConstraints(Blackhole bh) {
+        bh.consume(SimplifiedDependencyAwareSorter.sort(
+                items5000, groups5000, deps5000, SortableTypeMember.DEFAULT_ORDER));
+    }
+
+    @Benchmark
+    public void simplified_500_withConstraints(Blackhole bh) {
+        bh.consume(
+                SimplifiedDependencyAwareSorter.sort(items500, groups500, deps500, SortableTypeMember.DEFAULT_ORDER));
+    }
+
     // ------------------------------------------------------------------ //
     // Benchmarks – SimplifiedDependencyAwareSorter                        //
     // ------------------------------------------------------------------ //
@@ -104,18 +113,6 @@ public class SimplifiedSortingBenchmark {
                 SimplifiedDependencyAwareSorter.sort(items50c, groups50C, deps50c, SortableTypeMember.DEFAULT_ORDER));
     }
 
-    @Benchmark
-    public void simplified_500_withConstraints(Blackhole bh) {
-        bh.consume(
-                SimplifiedDependencyAwareSorter.sort(items500, groups500, deps500, SortableTypeMember.DEFAULT_ORDER));
-    }
-
-    @Benchmark
-    public void simplified_5000_withConstraints(Blackhole bh) {
-        bh.consume(SimplifiedDependencyAwareSorter.sort(
-                items5000, groups5000, deps5000, SortableTypeMember.DEFAULT_ORDER));
-    }
-
     // ------------------------------------------------------------------ //
     // Data generators                                                     //
     // ------------------------------------------------------------------ //
@@ -126,19 +123,6 @@ public class SimplifiedSortingBenchmark {
                 .limit(n)
                 .mapToObj(i -> SortableTypeMember.staticMember(String.format("item%05d", i)))
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Creates groups from the <em>first</em> {@code numGroups * groupSize} members,
-     * leaving the rest available for dependency edges (no overlap).
-     */
-    private static Groups<SortableTypeMember> makeSimplifiedGrouping(
-            List<SortableTypeMember> allItems, int numGroups, int groupSize) {
-        List<Group<SortableTypeMember>> groups = IntStream.range(0, numGroups)
-                .mapToObj(groupIndex ->
-                        new Group<>(allItems.subList(groupIndex * groupSize, groupIndex * groupSize + groupSize)))
-                .toList();
-        return new Groups<>(groups);
     }
 
     /**
@@ -161,5 +145,18 @@ public class SimplifiedSortingBenchmark {
                         allItems.get(totalSize - 1 - i), allItems.get(totalSize - 1 - i - stride)))
                 .toList();
         return new Dependencies<>(edges);
+    }
+
+    /**
+     * Creates groups from the <em>first</em> {@code numGroups * groupSize} members,
+     * leaving the rest available for dependency edges (no overlap).
+     */
+    private static Groups<SortableTypeMember> makeSimplifiedGrouping(
+            List<SortableTypeMember> allItems, int numGroups, int groupSize) {
+        List<Group<SortableTypeMember>> groups = IntStream.range(0, numGroups)
+                .mapToObj(groupIndex ->
+                        new Group<>(allItems.subList(groupIndex * groupSize, groupIndex * groupSize + groupSize)))
+                .toList();
+        return new Groups<>(groups);
     }
 }

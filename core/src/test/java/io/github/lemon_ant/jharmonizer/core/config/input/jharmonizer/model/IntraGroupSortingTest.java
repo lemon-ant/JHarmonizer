@@ -2,15 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Test;
 
 class IntraGroupSortingTest {
+
+    @Test
+    void fromString_unknownValue_throwsIllegalArgumentException() {
+        // When
+        Throwable thrown = catchThrowable(() -> IntraGroupSorting.fromString("unsupported_mode"));
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+    }
 
     @Test
     void fromString_validLowercaseName_returnsMatchingEnum() {
@@ -28,14 +34,5 @@ class IntraGroupSortingTest {
 
         // Then
         assertThat(intraGroupSorting).isEqualTo(IntraGroupSorting.VISIBILITY_ASC);
-    }
-
-    @Test
-    void fromString_unknownValue_throwsIllegalArgumentException() {
-        // When
-        Throwable thrown = catchThrowable(() -> IntraGroupSorting.fromString("unsupported_mode"));
-
-        // Then
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
     }
 }

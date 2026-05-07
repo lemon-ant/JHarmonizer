@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.diff;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders enum fields, breaking constructor argument binding;
-// remove this directive once jharmonizer is upgraded to a version that fixes the field-ordering bug.
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import lombok.AccessLevel;
@@ -68,14 +65,14 @@ public enum WhitespaceVisualizationStyle {
      */
     ASCII_SAFE(".", "--->", "", Constants.ELLIPSIS, "|");
 
-    /** Symbol used to replace each space character in source lines. */
-    String spaceMark;
-
-    /** Symbol used to replace each tab character in source lines. */
-    String tabMark;
-
-    /** Symbol appended at the end of every source line, or empty if not applicable. */
-    String eolMark;
+    /**
+     * Marker used as a visual separator between the first and last members of a truncated
+     * relocation chunk, e.g. {@code ¦ (2 members omitted)}.
+     * {@code ¦} (U+00A6) for {@link #UNICODE}, and {@link #LATIN_SAFE}
+     * (present in all charsets at those tiers, including IBM850 and CP1252);
+     * {@code |} for {@link #ASCII_SAFE}.
+     */
+    String chunkOmissionMark;
 
     /**
      * Single-character ellipsis marker used in omission summaries such as
@@ -85,14 +82,14 @@ public enum WhitespaceVisualizationStyle {
      */
     String ellipsisMark;
 
-    /**
-     * Marker used as a visual separator between the first and last members of a truncated
-     * relocation chunk, e.g. {@code ¦ (2 members omitted)}.
-     * {@code ¦} (U+00A6) for {@link #UNICODE}, and {@link #LATIN_SAFE}
-     * (present in all charsets at those tiers, including IBM850 and CP1252);
-     * {@code |} for {@link #ASCII_SAFE}.
-     */
-    String chunkOmissionMark;
+    /** Symbol appended at the end of every source line, or empty if not applicable. */
+    String eolMark;
+
+    /** Symbol used to replace each space character in source lines. */
+    String spaceMark;
+
+    /** Symbol used to replace each tab character in source lines. */
+    String tabMark;
 
     /**
      * Selects the appropriate style by comparing how the display charset (terminal) and the encoder

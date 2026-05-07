@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,14 +16,13 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
-
     private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
     private static final int ORIGINAL_SOURCE_CODE_LENGTH = 10053;
+    private static final Path SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH = Path.of("SampleAllJava21FeaturesList.java");
     private static final String SAMPLE_ALL_JAVA21_RESOURCE_PATH =
             "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java";
     private static final String SAMPLE_ALL_JAVA21_SOURCE_CODE =
             TestCaseResourceUtils.readClasspathResourceAsString(SAMPLE_ALL_JAVA21_RESOURCE_PATH);
-    private static final Path SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH = Path.of("SampleAllJava21FeaturesList.java");
 
     @Test
     void parseSrcFile_validSampleAllJava21FeaturesList_returnExpectedParsingResult() {

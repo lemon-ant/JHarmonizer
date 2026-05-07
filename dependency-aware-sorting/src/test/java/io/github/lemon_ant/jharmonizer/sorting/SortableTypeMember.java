@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.util.Comparator;
 import lombok.NonNull;
 import lombok.Value;
@@ -19,6 +16,30 @@ import lombok.Value;
  */
 @Value
 public class SortableTypeMember {
+
+    /**
+     * Default comparator: {@code STATIC} members first (by name), then {@code DYNAMIC}
+     * members (by name).
+     */
+    public static final Comparator<SortableTypeMember> DEFAULT_ORDER = Comparator.comparing(
+                    (SortableTypeMember member) -> member.getOrderingKey().getNumeration())
+            .thenComparing(member -> member.getOrderingKey().getName());
+
+    @NonNull
+    OrderingKey orderingKey;
+
+    public static SortableTypeMember dynamicMember(String name) {
+        return new SortableTypeMember(new OrderingKey(name, Numeration.DYNAMIC));
+    }
+
+    public static SortableTypeMember staticMember(String name) {
+        return new SortableTypeMember(new OrderingKey(name, Numeration.STATIC));
+    }
+
+    /** Returns the name from the ordering key (convenience accessor). */
+    public String getName() {
+        return orderingKey.getName();
+    }
 
     /**
      * Defines whether a member is static (fixed, known upfront) or dynamic (runtime/generated).
@@ -37,6 +58,7 @@ public class SortableTypeMember {
      */
     @Value
     public static class OrderingKey {
+
         @NonNull
         String name;
 
@@ -50,29 +72,5 @@ public class SortableTypeMember {
             this.name = name;
             this.numeration = numeration;
         }
-    }
-
-    /**
-     * Default comparator: {@code STATIC} members first (by name), then {@code DYNAMIC}
-     * members (by name).
-     */
-    public static final Comparator<SortableTypeMember> DEFAULT_ORDER = Comparator.comparing(
-                    (SortableTypeMember member) -> member.getOrderingKey().getNumeration())
-            .thenComparing(member -> member.getOrderingKey().getName());
-
-    @NonNull
-    OrderingKey orderingKey;
-
-    public static SortableTypeMember staticMember(String name) {
-        return new SortableTypeMember(new OrderingKey(name, Numeration.STATIC));
-    }
-
-    public static SortableTypeMember dynamicMember(String name) {
-        return new SortableTypeMember(new OrderingKey(name, Numeration.DYNAMIC));
-    }
-
-    /** Returns the name from the ordering key (convenience accessor). */
-    public String getName() {
-        return orderingKey.getName();
     }
 }

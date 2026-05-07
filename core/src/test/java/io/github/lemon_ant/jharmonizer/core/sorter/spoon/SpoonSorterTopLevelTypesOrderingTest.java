@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,31 +35,6 @@ class SpoonSorterTopLevelTypesOrderingTest {
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE_ROOT);
 
     @Test
-    void sortCompilationUnitRecursively_mainTypeFirstAndGroupedAlpha_reorderTopLevelTypes() {
-        // Given
-        SpoonAstModel spoonAstModel = parseFixture("MainTypeFirstFixture.java");
-        SpoonSorter spoonSorter = new SpoonSorter(createCompiledConfig(UnifiedTopLevelTypesOrdering.builder()
-                .mainTypeFirst(true)
-                .topLevelTypeSelectors(List.of(
-                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.CLASS, UnifiedTypeKind.RECORD)),
-                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.INTERFACE)),
-                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.ENUM)),
-                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.ANNOTATION))))
-                .orderingRules(List.of(UnifiedOrderingRule.VISIBILITY_DESC, UnifiedOrderingRule.ALPHA))
-                .build()));
-
-        // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit(), Set.of());
-
-        // Then
-        assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
-                        .map(type -> type.getSimpleName())
-                        .toList())
-                .containsExactly(
-                        "MainTypeFirstFixture", "AlphaHelper", "BravoRecord", "AlphaContract", "ZebraKind", "Marker");
-    }
-
-    @Test
     void sortCompilationUnitRecursively_groupedPreserveWithoutMainTypeFirst_keepOriginalOrderInsideGroups() {
         // Given
         SpoonAstModel spoonAstModel = parseFixture("PreserveGroupedFixture.java");
@@ -91,6 +63,31 @@ class SpoonSorterTopLevelTypesOrderingTest {
                         "BetaEnum",
                         "GammaRecord",
                         "AlphaClass");
+    }
+
+    @Test
+    void sortCompilationUnitRecursively_mainTypeFirstAndGroupedAlpha_reorderTopLevelTypes() {
+        // Given
+        SpoonAstModel spoonAstModel = parseFixture("MainTypeFirstFixture.java");
+        SpoonSorter spoonSorter = new SpoonSorter(createCompiledConfig(UnifiedTopLevelTypesOrdering.builder()
+                .mainTypeFirst(true)
+                .topLevelTypeSelectors(List.of(
+                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.CLASS, UnifiedTypeKind.RECORD)),
+                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.INTERFACE)),
+                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.ENUM)),
+                        new UnifiedTopLevelTypeSelector(Set.of(UnifiedTypeKind.ANNOTATION))))
+                .orderingRules(List.of(UnifiedOrderingRule.VISIBILITY_DESC, UnifiedOrderingRule.ALPHA))
+                .build()));
+
+        // When
+        spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit(), Set.of());
+
+        // Then
+        assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
+                        .map(type -> type.getSimpleName())
+                        .toList())
+                .containsExactly(
+                        "MainTypeFirstFixture", "AlphaHelper", "BravoRecord", "AlphaContract", "ZebraKind", "Marker");
     }
 
     @Test
@@ -125,12 +122,6 @@ class SpoonSorterTopLevelTypesOrderingTest {
     }
 
     @NonNull
-    private static SpoonAstModel parseFixture(String fixtureFileName) {
-        URL fixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(FIXTURES_RESOURCE_ROOT_URL, fixtureFileName);
-        return SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource(fixtureResourceUrl);
-    }
-
-    @NonNull
     private static CompiledConfig createCompiledConfig(UnifiedTopLevelTypesOrdering topLevelTypesOrdering) {
         UnifiedMemberGroup rootMemberGroup = UnifiedMemberGroup.builder()
                 .groupName("Root")
@@ -147,5 +138,11 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .rootMemberGroup(rootMemberGroup)
                 .build();
         return Unified2CompiledModelCompiler.compile(unifiedConfig);
+    }
+
+    @NonNull
+    private static SpoonAstModel parseFixture(String fixtureFileName) {
+        URL fixtureResourceUrl = TestCaseResourceUtils.resolveRelativeUrl(FIXTURES_RESOURCE_ROOT_URL, fixtureFileName);
+        return SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource(fixtureResourceUrl);
     }
 }

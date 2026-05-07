@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.NonNull;
@@ -21,32 +18,15 @@ import lombok.Value;
  */
 @Value
 public class Dependencies<TNode> {
+    private static final Dependencies<?> EMPTY_INSTANCE = new Dependencies<>(List.of());
 
     List<Dependency<TNode>> edges;
-
-    private static final Dependencies<?> EMPTY_INSTANCE = new Dependencies<>(List.of());
 
     /** Returns an empty dependency set (no ordering constraints). */
     @NonNull
     @SuppressWarnings("unchecked")
     public static <TNode> Dependencies<TNode> empty() {
         return (Dependencies<TNode>) EMPTY_INSTANCE;
-    }
-
-    /**
-     * A single {@code provider → dependent} ordering constraint.
-     *
-     * @param <TNode> the type of items
-     * @param provider  the item that must appear first
-     * @param dependent the item that must appear after its provider
-     */
-    @Value
-    public static class Dependency<TNode> {
-        @NonNull
-        TNode provider;
-
-        @NonNull
-        TNode dependent;
     }
 
     /**
@@ -67,5 +47,22 @@ public class Dependencies<TNode> {
                 .mapToObj(i -> new Dependency<>(pairs[i], pairs[i + 1]))
                 .toList();
         return new Dependencies<>(list);
+    }
+
+    /**
+     * A single {@code provider → dependent} ordering constraint.
+     *
+     * @param <TNode> the type of items
+     * @param provider  the item that must appear first
+     * @param dependent the item that must appear after its provider
+     */
+    @Value
+    public static class Dependency<TNode> {
+
+        @NonNull
+        TNode dependent;
+
+        @NonNull
+        TNode provider;
     }
 }

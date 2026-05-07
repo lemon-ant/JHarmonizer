@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.jharmonizer_maven_plugin;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -37,44 +34,12 @@ class CheckFastMojoTest {
     }
 
     @Test
-    void execute_nonConformingFiles_throwsMojoFailureException() {
-        // Given
-        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckFastMojo checkFastMojo = new CheckFastMojo();
-        MojoTestUtils.injectField(checkFastMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkFastMojo, "failOnViolation", true);
-
-        // When
-        Throwable thrown = catchThrowable(checkFastMojo::execute);
-
-        // Then
-        assertThat(thrown)
-                .isInstanceOf(MojoFailureException.class)
-                .hasMessageContaining("do not conform to the configured ordering");
-    }
-
-    @Test
     void execute_nonConformingFilesAndFailOnViolationFalse_completesWithoutException() throws Exception {
         // Given
         MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckFastMojo checkFastMojo = new CheckFastMojo();
         MojoTestUtils.injectField(checkFastMojo, "baseDir", MojoTestUtils.toFile(tempDir));
         MojoTestUtils.injectField(checkFastMojo, "failOnViolation", false);
-
-        // When
-        Throwable thrown = catchThrowable(checkFastMojo::execute);
-
-        // Then
-        assertThat(thrown).isNull();
-    }
-
-    @Test
-    void execute_skipTrue_skipsExecutionWithoutException() throws Exception {
-        // Given
-        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckFastMojo checkFastMojo = new CheckFastMojo();
-        MojoTestUtils.injectField(checkFastMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkFastMojo, "skip", true);
 
         // When
         Throwable thrown = catchThrowable(checkFastMojo::execute);
@@ -98,5 +63,37 @@ class CheckFastMojoTest {
 
         // Then
         verify(mockLog).warn(argThat((CharSequence msg) -> msg.toString().contains("jharmonizer:reorder")));
+    }
+
+    @Test
+    void execute_nonConformingFiles_throwsMojoFailureException() {
+        // Given
+        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
+        CheckFastMojo checkFastMojo = new CheckFastMojo();
+        MojoTestUtils.injectField(checkFastMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkFastMojo, "failOnViolation", true);
+
+        // When
+        Throwable thrown = catchThrowable(checkFastMojo::execute);
+
+        // Then
+        assertThat(thrown)
+                .isInstanceOf(MojoFailureException.class)
+                .hasMessageContaining("do not conform to the configured ordering");
+    }
+
+    @Test
+    void execute_skipTrue_skipsExecutionWithoutException() throws Exception {
+        // Given
+        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
+        CheckFastMojo checkFastMojo = new CheckFastMojo();
+        MojoTestUtils.injectField(checkFastMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkFastMojo, "skip", true);
+
+        // When
+        Throwable thrown = catchThrowable(checkFastMojo::execute);
+
+        // Then
+        assertThat(thrown).isNull();
     }
 }

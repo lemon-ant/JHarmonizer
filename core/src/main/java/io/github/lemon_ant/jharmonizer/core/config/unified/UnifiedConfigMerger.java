@@ -149,11 +149,11 @@ public class UnifiedConfigMerger {
     @NonNull
     private static UnifiedFormatting mergeFormatting(UnifiedFormatting baseline, FlexibleUnifiedFormatting overlay) {
         return new UnifiedFormatting(
-                overlay.getFixImports().orElse(baseline.isFixImports()),
-                overlay.getFormatterStyle().orElse(baseline.getFormatterStyle()),
                 overlay.getBlankLineAfterTypeHeader().orElse(baseline.isBlankLineAfterTypeHeader()),
                 overlay.getBlankLineBeforeComment().orElse(baseline.isBlankLineBeforeComment()),
-                overlay.getBlankLineBetweenFields().orElse(baseline.isBlankLineBetweenFields()));
+                overlay.getBlankLineBetweenFields().orElse(baseline.isBlankLineBetweenFields()),
+                overlay.getFixImports().orElse(baseline.isFixImports()),
+                overlay.getFormatterStyle().orElse(baseline.getFormatterStyle()));
     }
 
     @NonNull

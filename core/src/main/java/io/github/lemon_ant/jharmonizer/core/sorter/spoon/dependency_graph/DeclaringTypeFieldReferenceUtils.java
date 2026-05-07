@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,55 +31,6 @@ import spoon.reflect.visitor.filter.TypeFilter;
 @UtilityClass
 @Slf4j
 class DeclaringTypeFieldReferenceUtils {
-
-    /**
-     * Performs the require declaring type.
-     * @param typeMember the type member
-     * @return the result
-     */
-    @NonNull
-    static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
-        CtType<?> declaringType = typeMember.getDeclaringType();
-        if (declaringType != null) {
-            return declaringType;
-        }
-
-        SourcePosition memberPosition = typeMember.getPosition();
-
-        throw new IllegalStateException(
-                "Expected type member to have declaring type (member must come from CtType.getTypeMembers()). "
-                        + "typeMember=" + typeMember.getShortRepresentation()
-                        + ", position=" + memberPosition);
-    }
-
-    /**
-     * Finds same-type field accesses that target fields declared before the dependent member in source order,
-     * or all same-type field accesses when relaxed mode is off.
-     *
-     * @param dependentMember the dependent member
-     * @param dependentMemberAstRoot the AST root to scan for field accesses
-     * @param relaxedForwardReferences when {@code true}, only fields declared before the member are included;
-     *     when {@code false}, all same-type field accesses are included
-     * @return the matching field accesses
-     */
-    @NonNull
-    static Set<ReferencedFieldAccess> findReferencedFieldAccesses(
-            @NonNull CtTypeMember dependentMember,
-            @NonNull CtElement dependentMemberAstRoot,
-            boolean relaxedForwardReferences) {
-        CtType<?> declaringType = requireDeclaringType(dependentMember);
-
-        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
-                .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
-                .map(fieldAccess -> new ReferencedFieldAccess(
-                        (CtField<?>) fieldAccess.getVariable().getDeclaration(), fieldAccess))
-                // In relaxed mode, only include fields declared before the dependent (position-guarded).
-                // In strict mode (relaxedForwardReferences=false), include all field accesses regardless of position.
-                .filter(referencedFieldAccess -> !relaxedForwardReferences
-                        || isProviderDeclaredBeforeDependentMember(
-                                referencedFieldAccess.getProviderField(), dependentMember))
-                .collect(Collectors.toUnmodifiableSet());
-    }
 
     /**
      * Finds the fields read by member.
@@ -140,43 +88,67 @@ class DeclaringTypeFieldReferenceUtils {
         }
     }
 
+    /**
+     * Finds same-type field accesses that target fields declared before the dependent member in source order,
+     * or all same-type field accesses when relaxed mode is off.
+     *
+     * @param dependentMember the dependent member
+     * @param dependentMemberAstRoot the AST root to scan for field accesses
+     * @param relaxedForwardReferences when {@code true}, only fields declared before the member are included;
+     *     when {@code false}, all same-type field accesses are included
+     * @return the matching field accesses
+     */
     @NonNull
-    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldAccessesInSameType(
-            CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
-        TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
-        return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
-                .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
-                .filter(fieldAccess -> isInDeclaringTypeScope(declaringType, memberAstRoot, fieldAccess))
-                .filter(fieldAccess -> Optional.ofNullable(
-                                fieldAccess.getVariable().getDeclaration())
-                        .map(field -> isFieldDeclaredInType(field, declaringType))
-                        .orElse(false));
+    static Set<ReferencedFieldAccess> findReferencedFieldAccesses(
+            @NonNull CtTypeMember dependentMember,
+            @NonNull CtElement dependentMemberAstRoot,
+            boolean relaxedForwardReferences) {
+        CtType<?> declaringType = requireDeclaringType(dependentMember);
+
+        return streamFieldAccessesInSameType(dependentMemberAstRoot, declaringType, CtFieldAccess.class)
+                .filter(fieldAccess -> !isPureWriteOnlyAssignment(fieldAccess))
+                .map(fieldAccess -> new ReferencedFieldAccess(
+                        fieldAccess, (CtField<?>) fieldAccess.getVariable().getDeclaration()))
+                // In relaxed mode, only include fields declared before the dependent (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all field accesses regardless of position.
+                .filter(referencedFieldAccess -> !relaxedForwardReferences
+                        || isProviderDeclaredBeforeDependentMember(
+                                referencedFieldAccess.getProviderField(), dependentMember))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
-        return field.getDeclaringType() == declaringType;
+    /**
+     * Returns whether the field access uses simple-name (implicit) syntax rather than a qualified target.
+     *
+     * <p>Simple-name accesses (e.g., {@code FIELD}) are subject to Java's forward-reference restriction
+     * inside field initializers and initializer blocks, so they must be tracked as ordering dependencies.
+     * Qualified accesses (e.g., {@code ClassName.FIELD} or {@code this.field}) are not restricted.
+     *
+     * @param fieldAccess the field access to inspect
+     * @return {@code true} for simple-name (implicit-target) accesses; otherwise {@code false}
+     */
+    static boolean isImplicitFieldAccess(@NonNull CtFieldAccess<?> fieldAccess) {
+        return fieldAccess.getTarget() == null || fieldAccess.getTarget().isImplicit();
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean isPureWriteOnlyAssignment(CtFieldAccess<?> fieldAccess) {
-        if (!(fieldAccess instanceof CtFieldWrite<?>)) {
-            return false;
+    /**
+     * Performs the require declaring type.
+     * @param typeMember the type member
+     * @return the result
+     */
+    @NonNull
+    static CtType<?> requireDeclaringType(@NonNull CtTypeMember typeMember) {
+        CtType<?> declaringType = typeMember.getDeclaringType();
+        if (declaringType != null) {
+            return declaringType;
         }
 
-        CtElement parent = fieldAccess.getParent();
-        if (!(parent instanceof CtAssignment<?, ?> assignment) || parent instanceof CtOperatorAssignment<?, ?>) {
-            return false;
-        }
+        SourcePosition memberPosition = typeMember.getPosition();
 
-        return assignment.getAssigned() == fieldAccess;
-    }
-
-    private static boolean isProviderDeclaredBeforeDependentMember(
-            CtTypeMember providerMember, CtTypeMember dependentMember) {
-        int dependentSrcStart = requireSrcStart(dependentMember);
-        int providerSrcStart = requireSrcStart(providerMember);
-        return providerSrcStart < dependentSrcStart;
+        throw new IllegalStateException(
+                "Expected type member to have declaring type (member must come from CtType.getTypeMembers()). "
+                        + "typeMember=" + typeMember.getShortRepresentation()
+                        + ", position=" + memberPosition);
     }
 
     /**
@@ -195,6 +167,11 @@ class DeclaringTypeFieldReferenceUtils {
                         + "CtType.getTypeMembers()). "
                         + "typeMember=" + typeMember.getShortRepresentation()
                         + ", position=" + memberPosition);
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isFieldDeclaredInType(CtField<?> field, CtType<?> declaringType) {
+        return field.getDeclaringType() == declaringType;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
@@ -232,27 +209,48 @@ class DeclaringTypeFieldReferenceUtils {
         return false;
     }
 
-    /**
-     * Returns whether the field access uses simple-name (implicit) syntax rather than a qualified target.
-     *
-     * <p>Simple-name accesses (e.g., {@code FIELD}) are subject to Java's forward-reference restriction
-     * inside field initializers and initializer blocks, so they must be tracked as ordering dependencies.
-     * Qualified accesses (e.g., {@code ClassName.FIELD} or {@code this.field}) are not restricted.
-     *
-     * @param fieldAccess the field access to inspect
-     * @return {@code true} for simple-name (implicit-target) accesses; otherwise {@code false}
-     */
-    static boolean isImplicitFieldAccess(@NonNull CtFieldAccess<?> fieldAccess) {
-        return fieldAccess.getTarget() == null || fieldAccess.getTarget().isImplicit();
+    private static boolean isProviderDeclaredBeforeDependentMember(
+            CtTypeMember providerMember, CtTypeMember dependentMember) {
+        int dependentSrcStart = requireSrcStart(dependentMember);
+        int providerSrcStart = requireSrcStart(providerMember);
+        return providerSrcStart < dependentSrcStart;
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static boolean isPureWriteOnlyAssignment(CtFieldAccess<?> fieldAccess) {
+        if (!(fieldAccess instanceof CtFieldWrite<?>)) {
+            return false;
+        }
+
+        CtElement parent = fieldAccess.getParent();
+        if (!(parent instanceof CtAssignment<?, ?> assignment) || parent instanceof CtOperatorAssignment<?, ?>) {
+            return false;
+        }
+
+        return assignment.getAssigned() == fieldAccess;
+    }
+
+    @NonNull
+    private static <T extends CtFieldAccess<?>> Stream<T> streamFieldAccessesInSameType(
+            CtElement memberAstRoot, CtType<?> declaringType, Class<T> fieldAccessClass) {
+        TypeFilter<T> fieldAccessTypeFilter = new TypeFilter<>(fieldAccessClass);
+        return memberAstRoot.getElements(fieldAccessTypeFilter).stream()
+                .filter(fieldAccess -> !(fieldAccess.getVariable().getDeclaration() instanceof CtEnumValue<?>))
+                .filter(fieldAccess -> isInDeclaringTypeScope(declaringType, memberAstRoot, fieldAccess))
+                .filter(fieldAccess -> Optional.ofNullable(
+                                fieldAccess.getVariable().getDeclaration())
+                        .map(field -> isFieldDeclaredInType(field, declaringType))
+                        .orElse(false));
     }
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class ReferencedFieldAccess {
-        @NonNull
-        CtField<?> providerField;
 
         @NonNull
         CtFieldAccess<?> fieldAccess;
+
+        @NonNull
+        CtField<?> providerField;
     }
 }

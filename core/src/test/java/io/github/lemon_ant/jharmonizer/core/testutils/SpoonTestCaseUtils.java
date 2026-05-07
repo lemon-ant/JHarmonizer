@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.testutils;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static java.util.Objects.requireNonNull;
 
@@ -26,8 +23,16 @@ import spoon.reflect.declaration.CtTypeMember;
 
 @UtilityClass
 public class SpoonTestCaseUtils {
-
     private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
+
+    public static SpoonAstModel parseAstModelFromJavaFixtureResource(URL javaFixtureResource) {
+        requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
+
+        String srcCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
+        return SpoonParser.parseJavaSrcFile(
+                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))),
+                DEFAULT_PRINTER_CONFIG);
+    }
 
     public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource) {
         SpoonAstModel spoonAstModel = parseAstModelFromJavaFixtureResource(javaFixtureResource);
@@ -37,13 +42,64 @@ public class SpoonTestCaseUtils {
                         "Expected a main type to be detected for fixture URL: " + javaFixtureResource));
     }
 
-    public static SpoonAstModel parseAstModelFromJavaFixtureResource(URL javaFixtureResource) {
-        requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
+    public static MemberDescriptor requireMemberDescriptorByName(
+            Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedName) {
+        requireNonNull(describedMembers, "describedMembers cannot be null");
+        requireNonNull(expectedName, "expectedName cannot be null");
 
-        String srcCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
-        return SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))),
-                DEFAULT_PRINTER_CONFIG);
+        return describedMembers.values().stream()
+                .filter(memberDescriptor ->
+                        memberDescriptor.getName().filter(expectedName::equals).isPresent())
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("No member descriptor found for name: %s. Available named members: %s"
+                                .formatted(
+                                        expectedName,
+                                        describedMembers.values().stream()
+                                                .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
+                                                .sorted()
+                                                .toList())));
+    }
+
+    @NonNull
+    public static CtTypeMember requireTypeMemberBySimpleName(
+            @NonNull Collection<CtTypeMember> typeMembers, @NonNull String expectedSimpleName) {
+        return typeMembers.stream()
+                .filter(typeMember -> expectedSimpleName.equals(typeMember.getSimpleName()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("No type member found for simple name: %s. Available members: %s"
+                                .formatted(
+                                        expectedSimpleName,
+                                        typeMembers.stream()
+                                                .map(CtTypeMember::getSimpleName)
+                                                .sorted()
+                                                .toList())));
+    }
+
+    @NonNull
+    public static CtTypeMember requireTypeMemberBySimpleName(
+            Map<CtTypeMember, ?> typeMembers, String expectedSimpleName) {
+        return requireTypeMemberBySimpleName(typeMembers.keySet(), expectedSimpleName);
+    }
+
+    public static MemberDescriptor requireUniqueMemberDescriptorByKind(
+            Map<CtTypeMember, MemberDescriptor> describedMembers, MemberKind expectedKind) {
+        requireNonNull(describedMembers, "describedMembers cannot be null");
+        requireNonNull(expectedKind, "expectedKind cannot be null");
+
+        List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
+                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == expectedKind)
+                .sorted(Comparator.comparing(
+                        memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
+                .toList();
+
+        if (matchingDescriptors.size() != 1) {
+            throw new IllegalStateException("Expected exactly one descriptor with kind %s, but found: %s"
+                    .formatted(expectedKind, matchingDescriptors));
+        }
+
+        return matchingDescriptors.getFirst();
     }
 
     /**
@@ -68,65 +124,5 @@ public class SpoonTestCaseUtils {
         }
 
         return urlPath.substring(fileNameStartIndex);
-    }
-
-    @NonNull
-    public static CtTypeMember requireTypeMemberBySimpleName(
-            Map<CtTypeMember, ?> typeMembers, String expectedSimpleName) {
-        return requireTypeMemberBySimpleName(typeMembers.keySet(), expectedSimpleName);
-    }
-
-    @NonNull
-    public static CtTypeMember requireTypeMemberBySimpleName(
-            @NonNull Collection<CtTypeMember> typeMembers, @NonNull String expectedSimpleName) {
-        return typeMembers.stream()
-                .filter(typeMember -> expectedSimpleName.equals(typeMember.getSimpleName()))
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalStateException("No type member found for simple name: %s. Available members: %s"
-                                .formatted(
-                                        expectedSimpleName,
-                                        typeMembers.stream()
-                                                .map(CtTypeMember::getSimpleName)
-                                                .sorted()
-                                                .toList())));
-    }
-
-    public static MemberDescriptor requireMemberDescriptorByName(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, String expectedName) {
-        requireNonNull(describedMembers, "describedMembers cannot be null");
-        requireNonNull(expectedName, "expectedName cannot be null");
-
-        return describedMembers.values().stream()
-                .filter(memberDescriptor ->
-                        memberDescriptor.getName().filter(expectedName::equals).isPresent())
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalStateException("No member descriptor found for name: %s. Available named members: %s"
-                                .formatted(
-                                        expectedName,
-                                        describedMembers.values().stream()
-                                                .flatMap(memberDescriptor -> memberDescriptor.getName().stream())
-                                                .sorted()
-                                                .toList())));
-    }
-
-    public static MemberDescriptor requireUniqueMemberDescriptorByKind(
-            Map<CtTypeMember, MemberDescriptor> describedMembers, MemberKind expectedKind) {
-        requireNonNull(describedMembers, "describedMembers cannot be null");
-        requireNonNull(expectedKind, "expectedKind cannot be null");
-
-        List<MemberDescriptor> matchingDescriptors = describedMembers.values().stream()
-                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == expectedKind)
-                .sorted(Comparator.comparing(
-                        memberDescriptor -> memberDescriptor.getName().orElse("<unnamed>")))
-                .toList();
-
-        if (matchingDescriptors.size() != 1) {
-            throw new IllegalStateException("Expected exactly one descriptor with kind %s, but found: %s"
-                    .formatted(expectedKind, matchingDescriptors));
-        }
-
-        return matchingDescriptors.getFirst();
     }
 }

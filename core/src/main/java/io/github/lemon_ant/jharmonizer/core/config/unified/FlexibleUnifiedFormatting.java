@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Optional.ofNullable;
 
 import java.util.Optional;
@@ -26,18 +23,6 @@ import org.jspecify.annotations.Nullable;
 public class FlexibleUnifiedFormatting {
 
     /**
-     * Optional override for whether to fix/reorder imports in the final formatting pass.
-     */
-    @Nullable
-    Boolean fixImports;
-
-    /**
-     * Optional override for the formatter style hint.
-     */
-    @Nullable
-    UnifiedFormatterStyle formatterStyle;
-
-    /**
      * Optional override for whether to insert a blank line after the type declaration header.
      */
     @Nullable
@@ -54,6 +39,18 @@ public class FlexibleUnifiedFormatting {
      */
     @Nullable
     Boolean blankLineBetweenFields;
+
+    /**
+     * Optional override for whether to fix/reorder imports in the final formatting pass.
+     */
+    @Nullable
+    Boolean fixImports;
+
+    /**
+     * Optional override for the formatter style hint.
+     */
+    @Nullable
+    UnifiedFormatterStyle formatterStyle;
 
     /**
      * Creates a partial formatting overlay. At least one parameter must be non-null.
@@ -86,26 +83,6 @@ public class FlexibleUnifiedFormatting {
     }
 
     /**
-     * Returns the optional fix-imports override.
-     *
-     * @return the optional fix-imports override
-     */
-    @NonNull
-    public Optional<Boolean> getFixImports() {
-        return ofNullable(fixImports);
-    }
-
-    /**
-     * Returns the optional formatter style override.
-     *
-     * @return the optional formatter style override
-     */
-    @NonNull
-    public Optional<UnifiedFormatterStyle> getFormatterStyle() {
-        return ofNullable(formatterStyle);
-    }
-
-    /**
      * Returns the optional blank-line-after-type-header override.
      *
      * @return the optional blank-line-after-type-header override
@@ -133,5 +110,25 @@ public class FlexibleUnifiedFormatting {
     @NonNull
     public Optional<Boolean> getBlankLineBetweenFields() {
         return ofNullable(blankLineBetweenFields);
+    }
+
+    /**
+     * Returns the optional fix-imports override.
+     *
+     * @return the optional fix-imports override
+     */
+    @NonNull
+    public Optional<Boolean> getFixImports() {
+        return ofNullable(fixImports);
+    }
+
+    /**
+     * Returns the optional formatter style override.
+     *
+     * @return the optional formatter style override
+     */
+    @NonNull
+    public Optional<UnifiedFormatterStyle> getFormatterStyle() {
+        return ofNullable(formatterStyle);
     }
 }

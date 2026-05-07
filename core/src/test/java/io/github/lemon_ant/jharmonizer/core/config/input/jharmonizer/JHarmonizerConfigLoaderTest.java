@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -31,83 +28,36 @@ import org.junit.jupiter.api.io.TempDir;
 
 // TODO Refactor
 class JHarmonizerConfigLoaderTest {
-    private static final String INVALID_INCLUDES_CONFIG_PATH =
-            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-duplicate-types.yml";
-    private static final String STRICT_MISSING_GROUP_NAME_CONFIG_PATH =
-            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-missing-member-group-name.yml";
-    private static final String FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH = "/" + TEST_CASES_DIR
-            + "/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml";
-    private static final String SIMPLE_WORKING_CONFIG_PATH =
-            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/simplest-working-config.yml";
-    private static final String PARTIAL_FORMATTING_FLEX_CONFIG_PATH =
-            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/partial-formatting-flex-config.yml";
-    private static final String INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH =
-            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-empty-formatting-flex-config.yml";
     private static final String EXCLUDES_ONLY_GROUP_CONFIG_PATH =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/excludes-only-group-config.yml";
+    private static final String FLEXIBLE_MISSING_GROUP_NAME_CONFIG_PATH = "/" + TEST_CASES_DIR
+            + "/core/config/input/jharmonizer/invalid-flexible-config-missing-member-group-name.yml";
+    private static final String INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-empty-formatting-flex-config.yml";
+    private static final String INVALID_INCLUDES_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-duplicate-types.yml";
     private static final String INVALID_NEITHER_INCLUDES_NOR_EXCLUDES_CONFIG_PATH =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-neither-includes-nor-excludes.yml";
     private static final URL MIXED_GROUP_SYNTAX_CONFIG_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/top-level-types-ordering-mixed-group-syntax.yml");
+    private static final String PARTIAL_FORMATTING_FLEX_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/partial-formatting-flex-config.yml";
+    private static final String SIMPLE_WORKING_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/simplest-working-config.yml";
+    private static final String STRICT_MISSING_GROUP_NAME_CONFIG_PATH =
+            "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/invalid-config-missing-member-group-name.yml";
 
     @Test
-    void loadFrom_emptyFile_throwsException(@TempDir Path tempDir) throws IOException {
-        // Given
-        File empty = tempDir.resolve("empty.yml").toFile();
-        assertThat(empty.createNewFile()).isTrue();
-        try (InputStream configYaml = Files.newInputStream(empty.toPath())) {
-
-            // When
-            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
-
-            // Then
-            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
-        }
-    }
-
-    @Test
-    void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() throws IOException {
-        // Given
-        try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(INVALID_INCLUDES_CONFIG_PATH)) {
-
-            // When
-            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
-
-            // Then
-            assertThat(thrown)
-                    .isInstanceOf(ValueInstantiationException.class)
-                    .hasMessageContaining("Duplicate", "found");
-        }
-    }
-
-    @Test
-    void loadFrom_missingRequiredField_throwsException(@TempDir Path tempDir) throws IOException {
-        // Given
-        File badFile = tempDir.resolve("bad.yml").toFile();
-        try (FileWriter writer = new FileWriter(badFile)) {
-            writer.write("top-level-types-ordering:\n main-type-first: true\n"); // Missing required "type-order"
-        }
-        try (InputStream configYaml = Files.newInputStream(badFile.toPath())) {
-
-            // When
-            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
-
-            // Then
-            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
-        }
-    }
-
-    @Test
-    void loadFrom_groupNameMissing_throwsException() throws IOException {
+    void loadFlexibleFrom_emptyFormattingSection_throwsException() throws IOException {
         // Given
         try (InputStream configYaml =
-                TestCaseResourceUtils.openClasspathResourceStream(STRICT_MISSING_GROUP_NAME_CONFIG_PATH)) {
+                TestCaseResourceUtils.openClasspathResourceStream(INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH)) {
 
             // When
-            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml));
 
             // Then
-            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
+            assertThat(thrown).isInstanceOf(ValueInstantiationException.class);
         }
     }
 
@@ -143,16 +93,94 @@ class JHarmonizerConfigLoaderTest {
     }
 
     @Test
-    void loadFlexibleFrom_emptyFormattingSection_throwsException() throws IOException {
+    void loadFrom_emptyFile_throwsException(@TempDir Path tempDir) throws IOException {
+        // Given
+        File empty = tempDir.resolve("empty.yml").toFile();
+        assertThat(empty.createNewFile()).isTrue();
+        try (InputStream configYaml = Files.newInputStream(empty.toPath())) {
+
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
+        }
+    }
+
+    @Test
+    void loadFrom_groupNameMissing_throwsException() throws IOException {
         // Given
         try (InputStream configYaml =
-                TestCaseResourceUtils.openClasspathResourceStream(INVALID_EMPTY_FORMATTING_FLEX_CONFIG_PATH)) {
+                TestCaseResourceUtils.openClasspathResourceStream(STRICT_MISSING_GROUP_NAME_CONFIG_PATH)) {
+
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
+        }
+    }
+
+    @Test
+    void loadFrom_groupWithNeitherIncludesNorExcludes_throwsValidationError() throws IOException {
+        // Given
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(INVALID_NEITHER_INCLUDES_NOR_EXCLUDES_CONFIG_PATH)) {
 
             // When
             Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml));
 
             // Then
-            assertThat(thrown).isInstanceOf(ValueInstantiationException.class);
+            assertThat(thrown)
+                    .isInstanceOf(ValueInstantiationException.class)
+                    .hasMessageContaining("includes", "excludes");
+        }
+    }
+
+    @Test
+    void loadFrom_groupWithOnlyExcludes_succeeds() throws IOException {
+        // Given
+        try (InputStream configYaml =
+                TestCaseResourceUtils.openClasspathResourceStream(EXCLUDES_ONLY_GROUP_CONFIG_PATH)) {
+
+            // When
+            JHarmonizerConfig config = JHarmonizerConfigLoader.loadFrom(configYaml);
+
+            // Then
+            assertThat(config.getMemberGroups()).hasSize(1);
+            assertThat(config.getMemberGroups().get(0).getName()).isEqualTo("SkipToString");
+        }
+    }
+
+    @Test
+    void loadFrom_invalidIncludesInTypeMembers_throwsValidationError() throws IOException {
+        // Given
+        try (InputStream configYaml = TestCaseResourceUtils.openClasspathResourceStream(INVALID_INCLUDES_CONFIG_PATH)) {
+
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown)
+                    .isInstanceOf(ValueInstantiationException.class)
+                    .hasMessageContaining("Duplicate", "found");
+        }
+    }
+
+    @Test
+    void loadFrom_missingRequiredField_throwsException(@TempDir Path tempDir) throws IOException {
+        // Given
+        File badFile = tempDir.resolve("bad.yml").toFile();
+        try (FileWriter writer = new FileWriter(badFile)) {
+            writer.write("top-level-types-ordering:\n main-type-first: true\n"); // Missing required "type-order"
+        }
+        try (InputStream configYaml = Files.newInputStream(badFile.toPath())) {
+
+            // When
+            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFrom(configYaml));
+
+            // Then
+            assertThat(thrown).isInstanceOf(MismatchedInputException.class);
         }
     }
 
@@ -207,36 +235,5 @@ class JHarmonizerConfigLoaderTest {
                 .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
         assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
-    }
-
-    @Test
-    void loadFrom_groupWithOnlyExcludes_succeeds() throws IOException {
-        // Given
-        try (InputStream configYaml =
-                TestCaseResourceUtils.openClasspathResourceStream(EXCLUDES_ONLY_GROUP_CONFIG_PATH)) {
-
-            // When
-            JHarmonizerConfig config = JHarmonizerConfigLoader.loadFrom(configYaml);
-
-            // Then
-            assertThat(config.getMemberGroups()).hasSize(1);
-            assertThat(config.getMemberGroups().get(0).getName()).isEqualTo("SkipToString");
-        }
-    }
-
-    @Test
-    void loadFrom_groupWithNeitherIncludesNorExcludes_throwsValidationError() throws IOException {
-        // Given
-        try (InputStream configYaml =
-                TestCaseResourceUtils.openClasspathResourceStream(INVALID_NEITHER_INCLUDES_NOR_EXCLUDES_CONFIG_PATH)) {
-
-            // When
-            Throwable thrown = catchThrowable(() -> JHarmonizerConfigLoader.loadFlexibleFrom(configYaml));
-
-            // Then
-            assertThat(thrown)
-                    .isInstanceOf(ValueInstantiationException.class)
-                    .hasMessageContaining("includes", "excludes");
-        }
     }
 }

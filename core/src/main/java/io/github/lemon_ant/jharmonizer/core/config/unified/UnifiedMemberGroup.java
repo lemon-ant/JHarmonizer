@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static java.util.Optional.ofNullable;
 
 import java.util.Collections;
@@ -42,6 +39,12 @@ public class UnifiedMemberGroup {
     List<UnifiedMemberGroup> memberSubGroups;
 
     /**
+     * Explicit internal members ordering for this group.
+     */
+    @Nullable
+    List<UnifiedOrderingRule> orderingRules;
+
+    /**
      * Whether forward references to fields declared later in source order are ignored for dependency resolution.
      * When {@code true} (default), the tool only considers references to fields above the current member.
      * When {@code false}, all same-type field references create ordering constraints regardless of source position.
@@ -60,12 +63,6 @@ public class UnifiedMemberGroup {
      */
     @Nullable
     UnifiedSeparator separator;
-
-    /**
-     * Explicit internal members ordering for this group.
-     */
-    @Nullable
-    List<UnifiedOrderingRule> orderingRules;
 
     @Builder
     private UnifiedMemberGroup(

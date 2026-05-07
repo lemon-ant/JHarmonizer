@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -15,7 +12,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TypeGroupDeserializerTest {
-
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     @Test

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -23,65 +20,22 @@ import org.junit.jupiter.api.Test;
  */
 class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSortingTest {
 
-    // --------------------------------------------------------- sort impl --- //
-
-    @Override
-    List<SortableTypeMember> sort(
-            List<SortableTypeMember> members,
-            Groups<SortableTypeMember> groups,
-            Dependencies<SortableTypeMember> dependencies) {
-        return SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER);
-    }
-
-    @Override
-    List<SortableTypeMember> sort(
-            List<SortableTypeMember> members,
-            Groups<SortableTypeMember> groups,
-            Dependencies<SortableTypeMember> dependencies,
-            Comparator<SortableTypeMember> comparator) {
-        return SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, comparator);
-    }
-
-    // --- null-argument guards --- //
-
     @Test
-    void sort_nullItems_throwsNullPointerException() {
+    void sort_groupMemberIsDependent_throwsSortingException() {
+        // Given
+        var members = staticItems("alpha", "beta", "gamma");
+        var groups = grouping(new String[] {"alpha", "beta"});
+        var dependencies = deps("gamma", "alpha");
+
         // When
-        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
-                null, Groups.empty(), Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER));
+        Throwable thrown = catchThrowable(() ->
+                SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER));
 
         // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void sort_nullGroups_throwsNullPointerException() {
-        // When
-        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
-                List.of(), null, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void sort_nullDependencies_throwsNullPointerException() {
-        // When
-        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
-                List.of(), Groups.empty(), null, SortableTypeMember.DEFAULT_ORDER));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void sort_nullComparator_throwsNullPointerException() {
-        // When
-        Throwable thrown = catchThrowable(
-                () -> SimplifiedDependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), null));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
+        assertThat(thrown)
+                .isInstanceOf(SortingException.class)
+                .hasMessageContaining("alpha")
+                .hasMessageContaining("dependent");
     }
 
     // --- simplified constraint validations --- //
@@ -105,24 +59,6 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
     }
 
     @Test
-    void sort_groupMemberIsDependent_throwsSortingException() {
-        // Given
-        var members = staticItems("alpha", "beta", "gamma");
-        var groups = grouping(new String[] {"alpha", "beta"});
-        var dependencies = deps("gamma", "alpha");
-
-        // When
-        Throwable thrown = catchThrowable(() ->
-                SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER));
-
-        // Then
-        assertThat(thrown)
-                .isInstanceOf(SortingException.class)
-                .hasMessageContaining("alpha")
-                .hasMessageContaining("dependent");
-    }
-
-    @Test
     void sort_groupSizeOfFour_returnsMembersGroupedAndSorted() {
         // Given
         var members = staticItems("delta", "charlie", "bravo", "alpha", "echo");
@@ -134,20 +70,6 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
 
         // Then
         assertThat(names(result)).containsExactly("alpha", "bravo", "charlie", "delta", "echo");
-    }
-
-    @Test
-    void sort_largeGroup_returnsMembersGroupedAndSorted() {
-        // Given
-        var members = staticItems("a", "b", "c", "d", "e");
-        var groups = grouping(new String[] {"a", "b", "c", "d", "e"});
-
-        // When
-        var result = SimplifiedDependencyAwareSorter.sort(
-                members, groups, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER);
-
-        // Then
-        assertThat(names(result)).containsExactly("a", "b", "c", "d", "e");
     }
 
     @Test
@@ -168,6 +90,20 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
     }
 
     @Test
+    void sort_largeGroup_returnsMembersGroupedAndSorted() {
+        // Given
+        var members = staticItems("a", "b", "c", "d", "e");
+        var groups = grouping(new String[] {"a", "b", "c", "d", "e"});
+
+        // When
+        var result = SimplifiedDependencyAwareSorter.sort(
+                members, groups, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER);
+
+        // Then
+        assertThat(names(result)).containsExactly("a", "b", "c", "d", "e");
+    }
+
+    @Test
     void sort_multipleGroupsWithDepsOnSingletons_allConstraintsHonoured() {
         // Given
         var members = staticItems("f", "e", "d", "c", "b", "a");
@@ -183,5 +119,66 @@ class SimplifiedDependencyAwareSorterTest extends AbstractDependencyAwareSorting
         assertThat(resultNames.indexOf("a")).isLessThan(resultNames.indexOf("b"));
         assertThat(resultNames.indexOf("e")).isLessThan(resultNames.indexOf("f"));
         assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("c"));
+    }
+
+    @Test
+    void sort_nullComparator_throwsNullPointerException() {
+        // When
+        Throwable thrown = catchThrowable(
+                () -> SimplifiedDependencyAwareSorter.sort(List.of(), Groups.empty(), Dependencies.empty(), null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void sort_nullDependencies_throwsNullPointerException() {
+        // When
+        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                List.of(), Groups.empty(), null, SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void sort_nullGroups_throwsNullPointerException() {
+        // When
+        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                List.of(), null, Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    // --- null-argument guards --- //
+
+    @Test
+    void sort_nullItems_throwsNullPointerException() {
+        // When
+        Throwable thrown = catchThrowable(() -> SimplifiedDependencyAwareSorter.sort(
+                null, Groups.empty(), Dependencies.empty(), SortableTypeMember.DEFAULT_ORDER));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    // --------------------------------------------------------- sort impl --- //
+
+    @Override
+    List<SortableTypeMember> sort(
+            List<SortableTypeMember> members,
+            Groups<SortableTypeMember> groups,
+            Dependencies<SortableTypeMember> dependencies) {
+        return SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, SortableTypeMember.DEFAULT_ORDER);
+    }
+
+    @Override
+    List<SortableTypeMember> sort(
+            List<SortableTypeMember> members,
+            Groups<SortableTypeMember> groups,
+            Dependencies<SortableTypeMember> dependencies,
+            Comparator<SortableTypeMember> comparator) {
+        return SimplifiedDependencyAwareSorter.sort(members, groups, dependencies, comparator);
     }
 }

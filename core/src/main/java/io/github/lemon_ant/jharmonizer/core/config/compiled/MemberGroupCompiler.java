@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroupSelectorBlock;
@@ -22,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
 class MemberGroupCompiler {
+
     /**
      * Entry point: builds all root groups and assigns post-order indices in one pass.
      * Indices are assigned AFTER children (post-order). Start index can be 0.
@@ -32,7 +30,7 @@ class MemberGroupCompiler {
         int currentIndex = 0;
         List<CompiledMemberGroup> compiledRoots = new ArrayList<>(unifiedRoots.size());
         GroupInheritanceContext rootInheritanceContext =
-                new GroupInheritanceContext(false, true, UnifiedSeparator.NONE, Collections.emptyList());
+                new GroupInheritanceContext(false, Collections.emptyList(), true, UnifiedSeparator.NONE);
         for (UnifiedMemberGroup unifiedRoot : unifiedRoots) {
             Pair<CompiledMemberGroup, Integer> rootResult =
                     compileGroupRecursively(unifiedRoot, currentIndex, rootInheritanceContext);
@@ -116,18 +114,19 @@ class MemberGroupCompiler {
                 Optional.ofNullable(unifiedGroup.getSeparator()).orElse(inheritedContext.getSeparator());
         List<UnifiedOrderingRule> orderingRules =
                 Optional.ofNullable(unifiedGroup.getOrderingRules()).orElse(inheritedContext.getOrderingRules());
-        return new GroupInheritanceContext(keepAccessorsTogether, relaxedForwardReferences, separator, orderingRules);
+        return new GroupInheritanceContext(keepAccessorsTogether, orderingRules, relaxedForwardReferences, separator);
     }
 
     @Value
     private static final class GroupInheritanceContext {
         boolean keepAccessorsTogether;
+
+        @NonNull
+        List<UnifiedOrderingRule> orderingRules;
+
         boolean relaxedForwardReferences;
 
         @NonNull
         UnifiedSeparator separator;
-
-        @NonNull
-        List<UnifiedOrderingRule> orderingRules;
     }
 }

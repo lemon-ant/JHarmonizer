@@ -54,7 +54,6 @@ class SrcAstTranslatorTest {
             class Beta{int z;  int a;}
             """;
         String fullyOffFragment = """
-            // @jharmonizer:fully-off
             class Gamma{int y;  int x;}
             """;
         String srcCode = """

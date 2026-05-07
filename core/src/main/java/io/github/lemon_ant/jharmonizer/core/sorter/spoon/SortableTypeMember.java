@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -50,9 +47,6 @@ import spoon.reflect.declaration.CtTypeMember;
 class SortableTypeMember {
 
     @NonNull
-    CtTypeMember typeMember;
-
-    @NonNull
     OrderingKey ownKey;
 
     @NonNull
@@ -61,18 +55,8 @@ class SortableTypeMember {
     @NonNull
     OrderingKey superClusterRepresentativeKey;
 
-    @Override
-    public String toString() {
-        return "member=" + describeTypeMember(typeMember)
-                + ", ownKey=" + ownKey
-                + ", propertyClusterRepresentativeKey=" + describeOrderingKey(propertyClusterRepresentativeKey)
-                + ", superClusterRepresentativeKey=" + describeOrderingKey(superClusterRepresentativeKey);
-    }
-
     @NonNull
-    private static String describeTypeMember(CtTypeMember typeMember) {
-        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
-    }
+    CtTypeMember typeMember;
 
     /**
      * Formats an ordering key with its identity hash so shared representative instances are
@@ -85,6 +69,19 @@ class SortableTypeMember {
     @NonNull
     private static String describeOrderingKey(OrderingKey orderingKey) {
         return orderingKey + "@" + System.identityHashCode(orderingKey);
+    }
+
+    @NonNull
+    private static String describeTypeMember(CtTypeMember typeMember) {
+        return typeMember.getClass().getSimpleName() + "@" + System.identityHashCode(typeMember);
+    }
+
+    @Override
+    public String toString() {
+        return "member=" + describeTypeMember(typeMember)
+                + ", ownKey=" + ownKey
+                + ", propertyClusterRepresentativeKey=" + describeOrderingKey(propertyClusterRepresentativeKey)
+                + ", superClusterRepresentativeKey=" + describeOrderingKey(superClusterRepresentativeKey);
     }
 
     /**
@@ -114,9 +111,6 @@ class SortableTypeMember {
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
     static class OrderingKey {
 
-        /** Source-start position used by the PRESERVE rule. */
-        int srcStart;
-
         /** Alphabetical sort key used by the ALPHA rule. For cluster representatives this is the property name. */
         @NonNull
         String alphaKey;
@@ -127,6 +121,9 @@ class SortableTypeMember {
          * they sort after all regular named members regardless of their source position.
          */
         int alphaSortingRank;
+
+        /** Source-start position used by the PRESERVE rule. */
+        int srcStart;
 
         /** Visibility rank used by the {@code VISIBILITY_ASC} / {@code VISIBILITY_DESC} rules. */
         int visibilityRank;

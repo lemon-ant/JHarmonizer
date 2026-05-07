@@ -137,9 +137,9 @@ class OrderingKeyFactory {
                         .orElseThrow(() ->
                                 new IllegalStateException("Empty accessor cluster for property: " + propertyName));
                 OrderingKey propertyRepresentativeKey = new OrderingKey(
-                        propertyTopOwnKey.getSrcStart(),
                         propertyName,
                         propertyTopOwnKey.getAlphaSortingRank(),
+                        propertyTopOwnKey.getSrcStart(),
                         propertyTopOwnKey.getVisibilityRank());
                 for (CtTypeMember accessor : propertyMembers) {
                     memberToPropertyRep.put(accessor, propertyRepresentativeKey);
@@ -164,7 +164,7 @@ class OrderingKeyFactory {
                     OrderingKey ownKey = memberToOwnKey.get(groupMember);
                     OrderingKey propertyRep = memberToPropertyRep.getOrDefault(groupMember, ownKey);
                     OrderingKey superRep = memberToSuperRep.getOrDefault(groupMember, ownKey);
-                    return new SortableTypeMember(groupMember, ownKey, propertyRep, superRep);
+                    return new SortableTypeMember(ownKey, propertyRep, superRep, groupMember);
                 })
                 .toList();
     }
@@ -172,9 +172,9 @@ class OrderingKeyFactory {
     @NonNull
     private static OrderingKey deriveOwnKey(CtTypeMember typeMember) {
         return new OrderingKey(
-                deriveSrcStart(typeMember),
                 deriveAlphaKey(typeMember),
                 deriveAlphaSortingRank(typeMember),
+                deriveSrcStart(typeMember),
                 deriveVisibilityRank(typeMember));
     }
 }

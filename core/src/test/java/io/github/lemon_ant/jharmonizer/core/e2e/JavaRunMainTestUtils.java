@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,7 +15,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class JavaRunMainTestUtils {
-
     private static final String TEST_RUN_PREFIX = "test-run-";
 
     static RunResult runJavaMainMethod(@NonNull Path srcFilePath, @NonNull Path classesOutputDirectoryPath)
@@ -45,13 +41,6 @@ class JavaRunMainTestUtils {
     }
 
     @NonNull
-    private static String resolveClassName(Path javaFile) {
-        String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
-        String packageName = extractPackageName(javaFile);
-        return packageName.isBlank() ? className : packageName + "." + className;
-    }
-
-    @NonNull
     private static String extractPackageName(Path javaFile) {
         try (Stream<String> lines = Files.lines(javaFile, StandardCharsets.UTF_8)) {
             return lines.map(String::trim)
@@ -65,11 +54,18 @@ class JavaRunMainTestUtils {
         }
     }
 
+    @NonNull
+    private static String resolveClassName(Path javaFile) {
+        String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
+        String packageName = extractPackageName(javaFile);
+        return packageName.isBlank() ? className : packageName + "." + className;
+    }
+
     @Value
     static class RunResult {
+        String className;
+        Path diagnosticsPath;
         int exitCode;
         String output;
-        Path diagnosticsPath;
-        String className;
     }
 }

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -37,18 +34,6 @@ class PathDisplayFormatUtilTest {
     }
 
     @Test
-    void abbreviatePathForDisplay_shortPath_returnsOriginalPath() {
-        // Given
-        Path shortPath = Path.of("DefaultConfigComplexTypesScenario.java");
-
-        // When
-        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(shortPath, 100);
-
-        // Then
-        assertThat(abbreviatedPath).isEqualTo(shortPath.toString());
-    }
-
-    @Test
     void abbreviatePathForDisplay_maxTotalLengthTooSmall_throwsIllegalArgumentException() {
         // Given
         Path path = Path.of("some/long/path/to/MyClass.java");
@@ -61,5 +46,17 @@ class PathDisplayFormatUtilTest {
         assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("maxTotalLength is too small");
+    }
+
+    @Test
+    void abbreviatePathForDisplay_shortPath_returnsOriginalPath() {
+        // Given
+        Path shortPath = Path.of("DefaultConfigComplexTypesScenario.java");
+
+        // When
+        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(shortPath, 100);
+
+        // Then
+        assertThat(abbreviatedPath).isEqualTo(shortPath.toString());
     }
 }

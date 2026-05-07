@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
 import java.util.List;
 import lombok.AccessLevel;
@@ -13,6 +10,21 @@ import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CompiledMemberGroupTestCreator {
+
+    @NonNull
+    public static CompiledMemberGroup createCompiledMemberGroup(
+            @NonNull String groupName, boolean keepAccessorsTogether, @NonNull List<OrderingRule> orderingRules) {
+        return CompiledMemberGroup.builder()
+                .name(groupName)
+                .orderIndex(1)
+                .keepAccessorsTogether(keepAccessorsTogether)
+                .relaxedForwardReferences(true)
+                .orderingRules(orderingRules)
+                .compiledSubGroups(List.of())
+                .selectorBlock(new CompiledMemberGroupSelectorBlock(List.of(), List.of()))
+                .separator(UnifiedSeparator.NONE)
+                .build();
+    }
 
     @NonNull
     public static CompiledMemberGroup createTrivialMemberGroup(
@@ -43,21 +55,6 @@ public final class CompiledMemberGroupTestCreator {
                 .selectorBlock(selectorBlock)
                 .separator(separator)
                 .orderingRule(OrderingRule.PRESERVE)
-                .build();
-    }
-
-    @NonNull
-    public static CompiledMemberGroup createCompiledMemberGroup(
-            @NonNull String groupName, boolean keepAccessorsTogether, @NonNull List<OrderingRule> orderingRules) {
-        return CompiledMemberGroup.builder()
-                .name(groupName)
-                .orderIndex(1)
-                .keepAccessorsTogether(keepAccessorsTogether)
-                .relaxedForwardReferences(true)
-                .orderingRules(orderingRules)
-                .compiledSubGroups(List.of())
-                .selectorBlock(new CompiledMemberGroupSelectorBlock(List.of(), List.of()))
-                .separator(UnifiedSeparator.NONE)
                 .build();
     }
 }

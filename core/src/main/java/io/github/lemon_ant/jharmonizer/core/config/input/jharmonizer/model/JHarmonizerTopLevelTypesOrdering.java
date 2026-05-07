@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collections;
@@ -22,7 +19,6 @@ import org.apache.commons.lang3.Validate;
  */
 @Value
 public class JHarmonizerTopLevelTypesOrdering {
-
     boolean mainTypeFirst;
 
     @NonNull
@@ -30,6 +26,17 @@ public class JHarmonizerTopLevelTypesOrdering {
 
     @NonNull
     List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors;
+
+    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
+        Set<JHarmonizerTypeKind> encounteredTypeKinds = EnumSet.noneOf(JHarmonizerTypeKind.class);
+        typeGroups.stream()
+                .flatMap(typeGroup -> typeGroup.getTypeKinds().stream())
+                .filter(typeKind -> !encounteredTypeKinds.add(typeKind))
+                .findFirst()
+                .ifPresent(duplicateKind -> {
+                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + duplicateKind);
+                });
+    }
 
     /**
      * Creates a new JHarmonizerTopLevelTypesOrdering.
@@ -53,16 +60,5 @@ public class JHarmonizerTopLevelTypesOrdering {
 
         Validate.notEmpty(orderingRules, "ordering-rules cannot be empty");
         this.orderingRules = Collections.unmodifiableList(orderingRules);
-    }
-
-    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
-        Set<JHarmonizerTypeKind> encounteredTypeKinds = EnumSet.noneOf(JHarmonizerTypeKind.class);
-        typeGroups.stream()
-                .flatMap(typeGroup -> typeGroup.getTypeKinds().stream())
-                .filter(typeKind -> !encounteredTypeKinds.add(typeKind))
-                .findFirst()
-                .ifPresent(duplicateKind -> {
-                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + duplicateKind);
-                });
     }
 }

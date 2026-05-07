@@ -2,28 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Test;
 
 class UnifiedMemberGroupRuleLineBuilderTest {
-
-    @Test
-    void build_selectorsMissing_illegalArgumentExceptionThrown() {
-        // Given
-        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
-                UnifiedMemberGroupRuleLine.builder();
-
-        // When
-        Throwable thrown = catchThrowable(unifiedMemberGroupRuleLineBuilder::build);
-
-        // Then
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("at least one selector");
-    }
 
     @Test
     void build_nameMatcherAssignedOnce_ruleLineBuilt() {
@@ -39,6 +23,19 @@ class UnifiedMemberGroupRuleLineBuilderTest {
         // Then
         assertThat(unifiedMemberGroupRuleLine).isNotNull();
         assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isSameAs(expectedUnifiedNameMatcher);
+    }
+
+    @Test
+    void build_selectorsMissing_illegalArgumentExceptionThrown() {
+        // Given
+        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
+                UnifiedMemberGroupRuleLine.builder();
+
+        // When
+        Throwable thrown = catchThrowable(unifiedMemberGroupRuleLineBuilder::build);
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("at least one selector");
     }
 
     @Test

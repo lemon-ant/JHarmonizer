@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.files_handler;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
-// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -24,17 +21,15 @@ class SrcFilesHandlerTest {
     Path tempDir;
 
     @Test
-    void backup_existingFile_renamedWithBakExtension() throws IOException {
+    void backup_directoryPath_throwsIOException() throws IOException {
         // Given
-        Path srcFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
+        Path directoryPath = Files.createDirectory(tempDir.resolve("mydir"));
 
         // When
-        SrcFilesHandler.renameToBackup(srcFile);
+        Throwable thrown = catchThrowable(() -> SrcFilesHandler.renameToBackup(directoryPath));
 
         // Then
-        Path expectedBackup = tempDir.resolve("Example.java.bak");
-        assertThat(expectedBackup).exists();
-        assertThat(srcFile).doesNotExist();
+        assertThat(thrown).isInstanceOf(UncheckedIOException.class).hasMessageContaining("not a valid file");
     }
 
     @Test
@@ -49,6 +44,20 @@ class SrcFilesHandlerTest {
         // Then
         assertThat(backupFile).exists();
         assertThat(Files.readString(backupFile)).isEqualTo("class Latest {}");
+        assertThat(srcFile).doesNotExist();
+    }
+
+    @Test
+    void backup_existingFile_renamedWithBakExtension() throws IOException {
+        // Given
+        Path srcFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
+
+        // When
+        SrcFilesHandler.renameToBackup(srcFile);
+
+        // Then
+        Path expectedBackup = tempDir.resolve("Example.java.bak");
+        assertThat(expectedBackup).exists();
         assertThat(srcFile).doesNotExist();
     }
 
@@ -81,22 +90,6 @@ class SrcFilesHandlerTest {
     }
 
     @Test
-    void readJavaFiles_validRequest_returnsMatchingSrcFiles() throws IOException {
-        // Given
-        Path javaFile = Files.writeString(tempDir.resolve("MyClass.java"), "class MyClass {}");
-        Files.writeString(tempDir.resolve("notes.txt"), "not java");
-
-        // When
-        List<SrcFile> srcFiles = SrcFilesHandler.readJavaFiles(tempDir, Set.of("**.java"), Set.of())
-                .collect(Collectors.toList());
-
-        // Then
-        assertThat(srcFiles)
-                .extracting(SrcFile::getPath)
-                .contains(javaFile.normalize().toAbsolutePath());
-    }
-
-    @Test
     void overwrite_existingFile_replacesFileContent() throws IOException {
         // Given
         Path srcPath = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
@@ -111,14 +104,18 @@ class SrcFilesHandlerTest {
     }
 
     @Test
-    void backup_directoryPath_throwsIOException() throws IOException {
+    void readJavaFiles_validRequest_returnsMatchingSrcFiles() throws IOException {
         // Given
-        Path directoryPath = Files.createDirectory(tempDir.resolve("mydir"));
+        Path javaFile = Files.writeString(tempDir.resolve("MyClass.java"), "class MyClass {}");
+        Files.writeString(tempDir.resolve("notes.txt"), "not java");
 
         // When
-        Throwable thrown = catchThrowable(() -> SrcFilesHandler.renameToBackup(directoryPath));
+        List<SrcFile> srcFiles = SrcFilesHandler.readJavaFiles(tempDir, Set.of("**.java"), Set.of())
+                .collect(Collectors.toList());
 
         // Then
-        assertThat(thrown).isInstanceOf(UncheckedIOException.class).hasMessageContaining("not a valid file");
+        assertThat(srcFiles)
+                .extracting(SrcFile::getPath)
+                .contains(javaFile.normalize().toAbsolutePath());
     }
 }

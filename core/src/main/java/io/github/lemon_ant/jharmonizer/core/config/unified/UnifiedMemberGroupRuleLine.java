@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.unified;
 
-// @jharmonizer:fully-off
-// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
-// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,21 +25,25 @@ public class UnifiedMemberGroupRuleLine {
      */
     @NonNull
     Set<@NonNull UnifiedAnnotationMatcher> annotationMatchers;
+
     /**
      * Required declaration modifiers (ALL-OF). Empty set ⇒ no constraint.
      */
     @NonNull
     Set<@NonNull DeclarationModifier> declarationModifiers;
+
     /**
      * Allowed access levels (OR). Empty set ⇒ no constraint.
      */
     @NonNull
     Set<@NonNull MemberAccess> memberAccesses;
+
     /**
      * Allowed kinds of the member (OR inside the set). Empty set ⇒ no constraint.
      */
     @NonNull
     Set<@NonNull MemberKind> memberKinds;
+
     /**
      * Optional name constraint (exact or regex). Null ⇒ no constraint.
      */
@@ -73,14 +74,6 @@ public class UnifiedMemberGroupRuleLine {
         validateAtLeastOneSelectorIsConfigured();
     }
 
-    private void validateAtLeastOneSelectorIsConfigured() {
-        if (!hasAnySelectorConfigured()) {
-            throw new IllegalArgumentException(
-                    this.getClass().getSimpleName() + " must have at least one selector configured: "
-                            + "memberKinds, memberAccesses, declarationModifiers, nameMatcher or annotationMatchers");
-        }
-    }
-
     private boolean hasAnySelectorConfigured() {
         boolean hasMemberKindsConfigured = !memberKinds.isEmpty();
         boolean hasMemberAccessesConfigured = !memberAccesses.isEmpty();
@@ -93,6 +86,14 @@ public class UnifiedMemberGroupRuleLine {
                 || hasDeclarationModifiersConfigured
                 || hasNameMatcherConfigured
                 || hasAnnotationMatchersConfigured;
+    }
+
+    private void validateAtLeastOneSelectorIsConfigured() {
+        if (!hasAnySelectorConfigured()) {
+            throw new IllegalArgumentException(
+                    this.getClass().getSimpleName() + " must have at least one selector configured: "
+                            + "memberKinds, memberAccesses, declarationModifiers, nameMatcher or annotationMatchers");
+        }
     }
 
     /**
