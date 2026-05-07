@@ -4,8 +4,6 @@
 name: 01-Build Artifacts
 
 on:
-  push:
-    branches: [ main ]
   release:
     types: [ published ]
   workflow_dispatch:
@@ -31,18 +29,12 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build once
-        run: mvn -B -ntp -Dci=true clean verify
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: "**/target/site/jacoco/jacoco.xml"
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Attach sources and javadoc
-        run: mvn -B -ntp -Dci=true -DskipTests -Dskip-quality-gates=true -Ddoclint=none source:jar javadoc:jar
+      - name: Build with sources and javadoc
+        # Profiles `src` and `doc` are defined in pom.xml and configure the source and javadoc
+        # plugins as lifecycle-bound executions. This is the standard Maven approach: plugin
+        # bindings live in the POM, not on the command line, and can be reproduced locally
+        # with the same `-Psrc,doc` flag.
+        run: mvn -B -ntp -Dci=true clean install -Psrc,doc
 
       - name: Stage dist and runtime dependencies
         run: |

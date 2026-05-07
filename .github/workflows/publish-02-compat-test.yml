@@ -8,8 +8,6 @@ on:
     workflows: ["01-Build Artifacts"]
     types: [ completed ]
 
-# workflow_run always runs on the default branch; use the triggering
-# run's head_branch to distinguish a push-to-main run from a release run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: true
@@ -40,8 +38,8 @@ jobs:
           if-no-files-found: error
 
   compat-matrix:
-    # Run only if 01 succeeded and base event was push(main) or release.
-    if: ${{ github.event.workflow_run.conclusion == 'success' && ((github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') || github.event.workflow_run.event == 'release') }}
+    # Run only if 01-Build Artifacts succeeded and the base event was a release.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'release' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
