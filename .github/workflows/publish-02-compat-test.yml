@@ -81,7 +81,6 @@ jobs:
         with:
           distribution: ${{ matrix.vendor }}
           java-version: ${{ matrix.java }}
-          cache: maven
 
       - name: Show java -version
         run: java -version
