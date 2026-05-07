@@ -252,7 +252,7 @@ class GenericSortingTest {
             int total = 500;
             var items = IntStream.range(0, total).boxed().collect(Collectors.toList());
             var depList = IntStream.range(401, 500)
-                    .mapToObj(i -> new Dependencies.Dependency<>(i, i - 1))
+                    .mapToObj(i -> new Dependencies.Dependency<>(i - 1, i))
                     .toList();
 
             // When

@@ -144,8 +144,8 @@ class JsonDrivenSortingTest {
         if (depsNode != null && depsNode.isArray()) {
             StreamSupport.stream(depsNode.spliterator(), false)
                     .map(dep -> new Dependencies.Dependency<>(
-                            requireMember(itemMap, dep.get("provider").asText(), dir),
-                            requireMember(itemMap, dep.get("dependent").asText(), dir)))
+                            requireMember(itemMap, dep.get("dependent").asText(), dir),
+                            requireMember(itemMap, dep.get("provider").asText(), dir)))
                     .forEach(edges::add);
         }
 
@@ -157,7 +157,7 @@ class JsonDrivenSortingTest {
         String description = input.has("description") ? input.get("description").asText() : caseName;
 
         return new TestCase(
-                caseName, items, new Groups<>(groups), new Dependencies<>(edges), expectedNames, description);
+                new Dependencies<>(edges), description, expectedNames, new Groups<>(groups), items, caseName);
     }
 
     private static void printCase(TestCase tc) {

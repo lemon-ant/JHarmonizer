@@ -37,7 +37,7 @@ class JavaRunMainTestUtils {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.APPEND);
 
-        return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
+        return new RunResult(className, diagnosticsPath, processExitCode, javaOutput);
     }
 
     @NonNull

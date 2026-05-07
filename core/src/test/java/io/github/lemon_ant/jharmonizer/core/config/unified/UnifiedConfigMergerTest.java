@@ -20,7 +20,7 @@ class UnifiedConfigMergerTest {
             .blankLineBetweenFields(false)
             .build();
     private static final UnifiedFormatting FORMATTING =
-            new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false);
+            new UnifiedFormatting(true, true, false, true, UnifiedFormatterStyle.PALANTIR);
     private static final UnifiedHeaderLine HEADER_LINE = new UnifiedHeaderLine('-', 2);
     private static final UnifiedMemberGroupSelectorBlock SELECTOR_BLOCK =
             UnifiedMemberGroupSelectorBlock.builder().build();

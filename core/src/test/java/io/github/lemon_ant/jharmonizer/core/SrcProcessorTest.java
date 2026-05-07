@@ -51,8 +51,6 @@ class SrcProcessorTest {
     private static final String FLOW_LEVEL_FIXTURES_RESOURCE =
             "/" + TEST_CASES_DIR + "/core/source-processor/flow-level/";
     private static final Path FLOW_LEVEL_FIXTURES_ROOT = resolveFlowLevelFixturesRoot();
-    private static final URL FLOW_LEVEL_FIXTURES_ROOT_URL =
-            TestCaseResourceUtils.requireClasspathDirectoryUrl(FLOW_LEVEL_FIXTURES_RESOURCE);
     private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
     private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java");
@@ -624,11 +622,12 @@ class SrcProcessorTest {
 
     @NonNull
     private static Path resolveFlowLevelFixturesRoot() {
+        URL flowLevelFixturesRootUrl = TestCaseResourceUtils.requireClasspathDirectoryUrl(FLOW_LEVEL_FIXTURES_RESOURCE);
         try {
-            return Path.of(FLOW_LEVEL_FIXTURES_ROOT_URL.toURI());
+            return Path.of(flowLevelFixturesRootUrl.toURI());
         } catch (URISyntaxException exception) {
             throw new IllegalStateException(
-                    "Failed to resolve flow-level fixture root URL: " + FLOW_LEVEL_FIXTURES_ROOT_URL, exception);
+                    "Failed to resolve flow-level fixture root URL: " + flowLevelFixturesRootUrl, exception);
         }
     }
 

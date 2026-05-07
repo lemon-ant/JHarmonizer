@@ -47,7 +47,7 @@ class JavaCompileTestUtils {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.APPEND);
 
-        return new CompileResult(processExitCode, javacOutput, diagnosticsPath);
+        return new CompileResult(diagnosticsPath, processExitCode, javacOutput);
     }
 
     private static void ensureOutputDirectoryExists(Path outputDirectoryPath) throws IOException {

@@ -41,7 +41,7 @@ class SortingUtilsTest {
     @Test
     void resolveDependencyEdge_nullMap_throwsNullPointerException() {
         // Given
-        Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("provider", "dependent");
+        Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("dependent", "provider");
 
         // When
         Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(edge, null));

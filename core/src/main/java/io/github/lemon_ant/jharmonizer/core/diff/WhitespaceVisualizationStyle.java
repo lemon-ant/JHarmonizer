@@ -46,7 +46,7 @@ public enum WhitespaceVisualizationStyle {
      * end-of-line, {@code ...} as ellipsis, {@code ¦} (U+00A6) as chunk omission mark.
      * Requires both the display and encoder charsets to encode U+2192 identically (e.g. UTF-8).
      */
-    UNICODE("·", "→→→→", "¶", Constants.ELLIPSIS, "¦"),
+    UNICODE("¦", Constants.ELLIPSIS, "¶", "·", "→→→→"),
 
     /**
      * Latin-1 supplement markers: {@code ·} for spaces, {@code --->} for tabs, {@code ¶} for
@@ -55,7 +55,7 @@ public enum WhitespaceVisualizationStyle {
      * Selected when both the display and encoder charsets encode U+00B7 and U+00B6 to the same bytes
      * but cannot encode U+2026 (e.g. ISO-8859-1/ISO-8859-1, IBM850/IBM850).
      */
-    LATIN_SAFE("·", "--->", "¶", Constants.ELLIPSIS, "¦"),
+    LATIN_SAFE("¦", Constants.ELLIPSIS, "¶", "·", "--->"),
 
     /**
      * ASCII-only whitespace markers: {@code .} for spaces, {@code --->} for tabs, no end-of-line
@@ -63,7 +63,7 @@ public enum WhitespaceVisualizationStyle {
      * Used when the display and encoder charsets produce different byte sequences for non-ASCII
      * markers, which would otherwise cause garbled output (e.g. CP850 display with CP1252 encoder).
      */
-    ASCII_SAFE(".", "--->", "", Constants.ELLIPSIS, "|");
+    ASCII_SAFE("|", Constants.ELLIPSIS, "", ".", "--->");
 
     /**
      * Marker used as a visual separator between the first and last members of a truncated

@@ -40,8 +40,6 @@ class SpoonMemberDescriptorFactoryTest {
             parseMainTypeFromResource("EnumWithConstantsAndRegularMembers.java");
     private static final CtType<?> RECORD_WITH_EXPLICIT_METHOD_AND_NO_IMPLICIT_MEMBERS =
             parseMainTypeFromResource("RecordWithExplicitMethodAndNoImplicitMembers.java");
-    private static final URL TEST_CASES_RESOURCE_ROOT_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(
-            "/" + TEST_CASES_DIR + "/core/sorter/spoon/member-descriptor/valid/");
 
     @Test
     void describeMembers_classTypeParsed_classifiesFieldsWithAccessAndModifiers() {
@@ -254,7 +252,9 @@ class SpoonMemberDescriptorFactoryTest {
 
     @NonNull
     private static CtType<?> parseMainTypeFromResource(String fileName) {
-        URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(TEST_CASES_RESOURCE_ROOT_URL, fileName);
+        URL testCasesResourceRootUrl = TestCaseResourceUtils.requireClasspathDirectoryUrl(
+                "/" + TEST_CASES_DIR + "/core/sorter/spoon/member-descriptor/valid/");
+        URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(testCasesResourceRootUrl, fileName);
         return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResource);
     }
 }

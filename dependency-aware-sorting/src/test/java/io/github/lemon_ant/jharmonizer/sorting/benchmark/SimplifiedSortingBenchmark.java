@@ -142,7 +142,7 @@ public class SimplifiedSortingBenchmark {
                     return provIdx >= firstFreeIdx && depIdx >= firstFreeIdx;
                 })
                 .mapToObj(i -> new Dependencies.Dependency<>(
-                        allItems.get(totalSize - 1 - i), allItems.get(totalSize - 1 - i - stride)))
+                        allItems.get(totalSize - 1 - i - stride), allItems.get(totalSize - 1 - i)))
                 .toList();
         return new Dependencies<>(edges);
     }

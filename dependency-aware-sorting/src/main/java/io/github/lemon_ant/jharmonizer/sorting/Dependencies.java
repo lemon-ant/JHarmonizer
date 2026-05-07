@@ -44,7 +44,7 @@ public class Dependencies<TNode> {
         }
         List<Dependency<TNode>> list = IntStream.iterate(0, i -> i + 2)
                 .limit(pairs.length / 2)
-                .mapToObj(i -> new Dependency<>(pairs[i], pairs[i + 1]))
+                .mapToObj(i -> new Dependency<>(pairs[i + 1], pairs[i]))
                 .toList();
         return new Dependencies<>(list);
     }

@@ -352,7 +352,7 @@ abstract class AbstractDependencyAwareSortingTest {
                 .mapToObj(i -> SortableTypeMember.staticMember(String.format("item%04d", i)))
                 .collect(Collectors.toList());
         var depList = IntStream.range(1, 500)
-                .mapToObj(i -> new Dependencies.Dependency<>(bigItems.get(i + 500), bigItems.get(i)))
+                .mapToObj(i -> new Dependencies.Dependency<>(bigItems.get(i), bigItems.get(i + 500)))
                 .toList();
         var bigDeps = new Dependencies<>(depList);
 

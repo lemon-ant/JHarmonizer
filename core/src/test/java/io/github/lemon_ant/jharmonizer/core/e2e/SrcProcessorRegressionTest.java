@@ -29,7 +29,8 @@ class SrcProcessorRegressionTest
     private static final String FIXTURES_RESOURCE = "/" + TEST_CASES_DIR + "/core/e2e/regression/";
 
     @NonNull
-    private static final Path FIXTURES_ROOT = resolveFixturesRoot();
+    private static final Path FIXTURES_ROOT =
+            resolveFixturesRoot(TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE));
 
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
@@ -105,12 +106,11 @@ class SrcProcessorRegressionTest
     }
 
     @NonNull
-    private static Path resolveFixturesRoot() {
+    private static Path resolveFixturesRoot(URL fixturesRootUrl) {
         try {
-            return Path.of(FIXTURE_RESOURCES_ROOT_DIR.toURI());
+            return Path.of(fixturesRootUrl.toURI());
         } catch (URISyntaxException exception) {
-            throw new IllegalArgumentException(
-                    "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
+            throw new IllegalArgumentException("Cannot convert fixtures URL to URI: " + fixturesRootUrl, exception);
         }
     }
 
