@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] — 2026-05-06
+## [1.0.1] — 2026-05-07
 
 ### Added
 
@@ -34,4 +34,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/benchmark.md` — JMH sorting benchmark usage.
 - GitHub Actions Verify workflow (`.github/workflows/verify.yml`) that builds and tests every push and pull request.
 
-[1.0.0]: https://github.com/lemon-ant/JHarmonizer/releases/tag/v1.0.0
+[1.0.1]: https://github.com/lemon-ant/JHarmonizer/releases/tag/v1.0.1
