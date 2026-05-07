@@ -55,7 +55,7 @@ which streams matching paths in parallel.
 <plugin>
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
     <artifactId>jharmonizer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <executions>
         <execution>
             <phase>process-sources</phase>
@@ -76,7 +76,7 @@ before compilation:
 <plugin>
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
     <artifactId>jharmonizer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <executions>
         <execution>
             <goals>
@@ -109,7 +109,7 @@ CI systems set to `true` automatically:
                 <plugin>
                     <groupId>io.github.lemon-ant.jharmonizer</groupId>
                     <artifactId>jharmonizer-maven-plugin</artifactId>
-                    <version>1.0.0</version>
+                    <version>1.0.1</version>
                     <executions>
                         <execution>
                             <phase>process-sources</phase>
@@ -137,7 +137,7 @@ CI systems set to `true` automatically:
                 <plugin>
                     <groupId>io.github.lemon-ant.jharmonizer</groupId>
                     <artifactId>jharmonizer-maven-plugin</artifactId>
-                    <version>1.0.0</version>
+                    <version>1.0.1</version>
                     <executions>
                         <execution>
                             <goals>
