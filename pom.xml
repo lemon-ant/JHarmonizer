@@ -67,6 +67,8 @@ SPDX-License-Identifier: Apache-2.0
         <jmh.version>1.37</jmh.version>
         <jspecify.version>1.0.0</jspecify.version>
         <license-maven-plugin.version>5.0.0</license-maven-plugin.version>
+        <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
+        <lombok.version>1.18.46</lombok.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
@@ -161,7 +163,7 @@ SPDX-License-Identifier: Apache-2.0
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.46</version>
+                <version>${lombok.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -272,6 +274,11 @@ SPDX-License-Identifier: Apache-2.0
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>${maven-javadoc-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok-maven-plugin</artifactId>
+                    <version>${lombok-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -481,16 +488,47 @@ SPDX-License-Identifier: Apache-2.0
 
     <profiles>
         <!-- Profile to build and install javadoc jar.
-             Uses doclint=none to suppress broken-link warnings that fail javadoc on JDK 21. -->
+             Uses doclint=none to suppress broken-link warnings that fail javadoc on JDK 21.
+             Runs delombok before javadoc so Lombok-generated types (e.g. *Builder) are visible
+             to javadoc type resolution and can be imported without "cannot find symbol" errors. -->
         <profile>
             <id>doc</id>
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok-maven-plugin</artifactId>
+                        <!-- Override the Lombok version bundled inside lombok-maven-plugin
+                             so delombok uses the same Lombok release as the compiler. -->
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <id>delombok-sources</id>
+                                <goals>
+                                    <goal>delombok</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <addOutputDirectory>false</addOutputDirectory>
+                                    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                                    <outputDirectory>${project.build.directory}/delombok</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <configuration>
                             <doclint>none</doclint>
+                            <!-- Point javadoc at delomboked sources so all generated types are visible. -->
+                            <sourcepath>${project.build.directory}/delombok</sourcepath>
                         </configuration>
                         <executions>
                             <execution>
@@ -550,8 +588,39 @@ SPDX-License-Identifier: Apache-2.0
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok-maven-plugin</artifactId>
+                        <!-- Override the Lombok version bundled inside lombok-maven-plugin
+                             so delombok uses the same Lombok release as the compiler. -->
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <id>delombok-sources</id>
+                                <goals>
+                                    <goal>delombok</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <addOutputDirectory>false</addOutputDirectory>
+                                    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                                    <outputDirectory>${project.build.directory}/delombok</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <!-- Point javadoc at delomboked sources so all generated types are visible. -->
+                            <sourcepath>${project.build.directory}/delombok</sourcepath>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
