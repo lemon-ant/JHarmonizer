@@ -30,13 +30,11 @@ jobs:
           cache: maven
 
       - name: Build with sources and javadoc
-        # `source:jar-no-fork javadoc:jar` are appended as additional goals to the lifecycle.
-        # Maven processes each reactor module fully through `install` before advancing to the
-        # next, so inter-module JARs (e.g. dependency-aware-sorting) are already in the local
-        # repository when `javadoc:jar` resolves the classpath for downstream modules.
-        # `source:jar-no-fork` is used instead of `source:jar` to avoid an internal lifecycle
-        # fork that would cause tests and quality gates to run a second time per module.
-        run: mvn -B -ntp -Dci=true -Ddoclint=none clean install source:jar-no-fork javadoc:jar
+        # Profiles `src` and `doc` are defined in pom.xml and configure the source and javadoc
+        # plugins as lifecycle-bound executions. This is the standard Maven approach: plugin
+        # bindings live in the POM, not on the command line, and can be reproduced locally
+        # with the same `-Psrc,doc` flag.
+        run: mvn -B -ntp -Dci=true clean install -Psrc,doc
 
       - name: Stage dist and runtime dependencies
         run: |
