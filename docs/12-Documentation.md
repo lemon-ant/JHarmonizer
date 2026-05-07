@@ -13,9 +13,12 @@ This document indexes the project's documentation set as it actually exists on d
 JHarmonizer/
 ├── README.md                  # Main entry point
 ├── CHANGELOG.md               # Release history
-├── CONTRIBUTING.md            # Contributor guide and build instructions
-├── SECURITY.md                # Security policy and contact
 ├── AGENTS.md                  # Repository-wide conventions for coding agents
+├── .github/
+│   ├── CONTRIBUTING.md        # Contributor guide and build instructions
+│   ├── SECURITY.md            # Security policy and contact
+│   ├── CODE_OF_CONDUCT.md     # Community code of conduct
+│   └── codecov.yml            # Codecov configuration
 ├── cli/
 │   └── README.md              # CLI fat-JAR usage, options and exit codes
 ├── core/

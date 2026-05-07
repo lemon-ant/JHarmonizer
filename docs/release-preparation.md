@@ -92,9 +92,9 @@ Search for the previous version string and replace every occurrence with `X.Y.Z`
 
 ---
 
-## 5. Update supported version in `SECURITY.md`
+## 5. Update supported version in `.github/SECURITY.md`
 
-`SECURITY.md` contains a **Supported versions** section. Replace the pre-release placeholder
+`.github/SECURITY.md` contains a **Supported versions** section. Replace the pre-release placeholder
 text with a statement that confirms the new version `X.Y.Z` is the supported release:
 
 ```markdown
@@ -119,7 +119,7 @@ Fix any failures before proceeding.
 Stage and commit **only** the release-related changes in a single commit:
 
 ```bash
-git add pom.xml CHANGELOG.md README.md SECURITY.md
+git add pom.xml CHANGELOG.md README.md .github/SECURITY.md
 git commit -m "chore: prepare release vX.Y.Z"
 ```
 
@@ -231,7 +231,7 @@ git push origin main
 | `pom.xml` (release commit) | `<version>` → `X.Y.Z`; `<scm><tag>` → `vX.Y.Z` |
 | `CHANGELOG.md` | New `## [X.Y.Z] — YYYY-MM-DD` section + bottom link |
 | `README.md` | Version in Maven and Gradle snippets → `X.Y.Z` |
-| `SECURITY.md` | `version **X.Y.Z**` (supported version) |
+| `.github/SECURITY.md` | `version **X.Y.Z**` (supported version) |
 | Git | New tag `vX.Y.Z` pushed to `origin` |
 | GitHub | Release published from tag `vX.Y.Z` |
 | `pom.xml` (post-release commit) | `<version>` → `X.Y.(Z+1)-SNAPSHOT`; `<scm><tag>` → `HEAD` |
