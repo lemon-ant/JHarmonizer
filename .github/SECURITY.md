@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Supported versions
 
-The latest stable release is supported. As of now, this means version **1.0.0**.
+The latest stable release is supported. As of now, this means version **1.0.1**.
 
 ## Reporting a vulnerability
 

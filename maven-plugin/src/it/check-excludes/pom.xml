@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <groupId>io.github.lemon-ant.jharmonizer.it</groupId>
     <artifactId>check-excludes-it</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>IT: check-excludes</name>
 

@@ -15,7 +15,7 @@ lifecycle, with no IDE coupling.
 <plugin>
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
     <artifactId>jharmonizer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </plugin>
 ```
 
@@ -41,7 +41,7 @@ report-only mode (violations are logged at ERROR, the build does not fail).
         <plugin>
             <groupId>io.github.lemon-ant.jharmonizer</groupId>
             <artifactId>jharmonizer-maven-plugin</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <executions>
                 <execution>
                     <id>jharmonizer-reorder</id>

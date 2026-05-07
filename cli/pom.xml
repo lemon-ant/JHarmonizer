@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
     <parent>
         <groupId>io.github.lemon-ant.jharmonizer</groupId>
         <artifactId>jharmonizer-parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
     <artifactId>jharmonizer-cli</artifactId>
     <name>JHarmonizer CLI</name>
