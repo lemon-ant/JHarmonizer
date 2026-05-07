@@ -46,61 +46,6 @@ public class JHarmonizerConfigLoader {
     }
 
     /**
-     * Loads the from.
-     * @param configInput the configuration input stream
-     * @return the from
-     */
-    @NonNull
-    static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
-        return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
-    }
-
-    /**
-     * Loads the from classpath resource.
-     * @param classpathResource the classpath resource to read
-     * @return the from classpath resource
-     */
-    @NonNull
-    static JHarmonizerConfig loadFromClasspathResource(@NonNull URL classpathResource) {
-        try (InputStream inputStream = classpathResource.openStream()) {
-            return JHarmonizerConfigLoader.loadFrom(inputStream);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException(
-                    "Failed to load JHarmonizer config from classpath URL: " + classpathResource, ioException);
-        }
-    }
-
-    /**
-     * Loads the from.
-     * @param yamlFile the YAML file to read
-     * @return the from
-     */
-    @NonNull
-    static JHarmonizerConfig loadFrom(@NonNull File yamlFile) {
-        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
-            return loadFrom(configYaml);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to load JHarmonizer config from file: " + yamlFile, e);
-        }
-    }
-
-    /**
-     * Loads a flexible {@link JHarmonizerFlexibleConfig} from a classpath resource URL.
-     *
-     * @param classpathResource classpath URL pointing to a YAML config
-     * @return parsed flexible vendor config
-     */
-    @NonNull
-    static JHarmonizerFlexibleConfig loadFlexibleFromClasspathResource(@NonNull URL classpathResource) {
-        try (InputStream inputStream = classpathResource.openStream()) {
-            return JHarmonizerConfigLoader.loadFlexibleFrom(inputStream);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException(
-                    "Failed to load flexible JHarmonizer config from classpath URL: " + classpathResource, ioException);
-        }
-    }
-
-    /**
      * Loads a flexible {@link JHarmonizerFlexibleConfig} from a YAML file on disk.
      *
      * @param yamlFile YAML config file
@@ -125,5 +70,60 @@ public class JHarmonizerConfigLoader {
     @NonNull
     static JHarmonizerFlexibleConfig loadFlexibleFrom(@NonNull InputStream configInput) throws IOException {
         return YAML_MAPPER.readValue(configInput, JHarmonizerFlexibleConfig.class);
+    }
+
+    /**
+     * Loads a flexible {@link JHarmonizerFlexibleConfig} from a classpath resource URL.
+     *
+     * @param classpathResource classpath URL pointing to a YAML config
+     * @return parsed flexible vendor config
+     */
+    @NonNull
+    static JHarmonizerFlexibleConfig loadFlexibleFromClasspathResource(@NonNull URL classpathResource) {
+        try (InputStream inputStream = classpathResource.openStream()) {
+            return JHarmonizerConfigLoader.loadFlexibleFrom(inputStream);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException(
+                    "Failed to load flexible JHarmonizer config from classpath URL: " + classpathResource, ioException);
+        }
+    }
+
+    /**
+     * Loads the from.
+     * @param yamlFile the YAML file to read
+     * @return the from
+     */
+    @NonNull
+    static JHarmonizerConfig loadFrom(@NonNull File yamlFile) {
+        try (InputStream configYaml = Files.newInputStream(yamlFile.toPath())) {
+            return loadFrom(configYaml);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load JHarmonizer config from file: " + yamlFile, e);
+        }
+    }
+
+    /**
+     * Loads the from.
+     * @param configInput the configuration input stream
+     * @return the from
+     */
+    @NonNull
+    static JHarmonizerConfig loadFrom(@NonNull InputStream configInput) throws IOException {
+        return YAML_MAPPER.readValue(configInput, JHarmonizerConfig.class);
+    }
+
+    /**
+     * Loads the from classpath resource.
+     * @param classpathResource the classpath resource to read
+     * @return the from classpath resource
+     */
+    @NonNull
+    static JHarmonizerConfig loadFromClasspathResource(@NonNull URL classpathResource) {
+        try (InputStream inputStream = classpathResource.openStream()) {
+            return JHarmonizerConfigLoader.loadFrom(inputStream);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException(
+                    "Failed to load JHarmonizer config from classpath URL: " + classpathResource, ioException);
+        }
     }
 }

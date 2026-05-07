@@ -32,27 +32,6 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
     private final SpoonTypePrinter typeStructurePrinter;
 
     /**
-     * Creates a new SpoonCustomSrcPrinter.
-     *
-     * @param env the Spoon printing environment
-     * @param srcCode the original source text being re-serialized
-     * @param sortingSkippedTypes the types that must be copied without sorting
-     * @param printerConfig the printer configuration
-     */
-    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
-    SpoonCustomSrcPrinter(
-            @NonNull Environment env,
-            @NonNull String srcCode,
-            @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull PrinterConfig printerConfig) {
-        super(env);
-        String lineSeparator = detectDominantLineSeparator(srcCode);
-        setLineSeparator(lineSeparator);
-        this.typeStructurePrinter =
-                new SpoonTypePrinter(srcCode, sortingSkippedTypes, getPrinterTokenWriter(), printerConfig);
-    }
-
-    /**
      * Visits an annotation type and prints it using the shared type-structure logic.
      *
      * @param annotationType the annotation type to print
@@ -69,45 +48,6 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
     @Override
     public <T> void visitCtClass(@NonNull CtClass<T> ctClass) {
         typeStructurePrinter.printType(ctClass);
-    }
-
-    /**
-     * Performs the visit ct enum.
-     * @param ctEnum the ct enum
-     */
-    @Override
-    public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
-        typeStructurePrinter.printType(ctEnum);
-    }
-
-    /**
-     * Performs the visit ct interface.
-     * @param intrface the intrface
-     */
-    @Override
-    public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
-        typeStructurePrinter.printType(intrface);
-    }
-
-    /**
-     * Performs the visit ct record.
-     * @param recordType the record type
-     */
-    @Override
-    public void visitCtRecord(@NonNull CtRecord recordType) {
-        typeStructurePrinter.printType(recordType);
-    }
-
-    /**
-     * Serializes the compilation unit and returns both the source code and skipped-type ranges.
-     *
-     * @param compilationUnit the compilation unit to print
-     * @return the serialized source with skipped-type ranges
-     */
-    @NonNull
-    SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
-        printCompilationUnit(compilationUnit);
-        return new SerializedSrcWithSkippedTypeRanges(getResult(), typeStructurePrinter.getSortingSkippedTypeRanges());
     }
 
     /**
@@ -145,5 +85,65 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
         if (!getResult().endsWith(getLineSeparator())) {
             getPrinterTokenWriter().writeln();
         }
+    }
+
+    /**
+     * Performs the visit ct enum.
+     * @param ctEnum the ct enum
+     */
+    @Override
+    public <T extends Enum<?>> void visitCtEnum(@NonNull CtEnum<T> ctEnum) {
+        typeStructurePrinter.printType(ctEnum);
+    }
+
+    /**
+     * Performs the visit ct interface.
+     * @param intrface the intrface
+     */
+    @Override
+    public <T> void visitCtInterface(@NonNull CtInterface<T> intrface) {
+        typeStructurePrinter.printType(intrface);
+    }
+
+    /**
+     * Performs the visit ct record.
+     * @param recordType the record type
+     */
+    @Override
+    public void visitCtRecord(@NonNull CtRecord recordType) {
+        typeStructurePrinter.printType(recordType);
+    }
+
+    /**
+     * Creates a new SpoonCustomSrcPrinter.
+     *
+     * @param env the Spoon printing environment
+     * @param srcCode the original source text being re-serialized
+     * @param sortingSkippedTypes the types that must be copied without sorting
+     * @param printerConfig the printer configuration
+     */
+    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
+    SpoonCustomSrcPrinter(
+            @NonNull Environment env,
+            @NonNull String srcCode,
+            @NonNull Set<CtType<?>> sortingSkippedTypes,
+            @NonNull PrinterConfig printerConfig) {
+        super(env);
+        String lineSeparator = detectDominantLineSeparator(srcCode);
+        setLineSeparator(lineSeparator);
+        this.typeStructurePrinter =
+                new SpoonTypePrinter(srcCode, sortingSkippedTypes, getPrinterTokenWriter(), printerConfig);
+    }
+
+    /**
+     * Serializes the compilation unit and returns both the source code and skipped-type ranges.
+     *
+     * @param compilationUnit the compilation unit to print
+     * @return the serialized source with skipped-type ranges
+     */
+    @NonNull
+    SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
+        printCompilationUnit(compilationUnit);
+        return new SerializedSrcWithSkippedTypeRanges(getResult(), typeStructurePrinter.getSortingSkippedTypeRanges());
     }
 }

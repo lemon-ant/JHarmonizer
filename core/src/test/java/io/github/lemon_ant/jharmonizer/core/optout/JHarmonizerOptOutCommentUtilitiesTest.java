@@ -20,13 +20,62 @@ import spoon.support.StandardEnvironment;
 class JHarmonizerOptOutCommentUtilitiesTest {
 
     @Test
-    void parseFileScopeOptOutMode_noDirectiveComment_returnsNull() {
+    void collectRawCommentsByRegex_emptySource_returnsEmptyList() {
+        // When
+        List<RawCommentMatch> rawCommentMatches = JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex("");
+
+        // Then
+        assertThat(rawCommentMatches).isEmpty();
+    }
+
+    @Test
+    void collectRawCommentsByRegex_srcWithLineAndBlockComments_returnsAllComments() {
+        // Given
+        String srcCode = "// line comment\nclass A { /* block comment */ }";
+
+        // When
+        List<RawCommentMatch> rawCommentMatches = JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex(srcCode);
+
+        // Then
+        assertThat(rawCommentMatches).hasSize(2);
+        assertThat(rawCommentMatches.get(0).getRawComment()).isEqualTo("// line comment\n");
+        assertThat(rawCommentMatches.get(1).getRawComment()).isEqualTo("/* block comment */");
+    }
+
+    @Test
+    void formatLocation_offsetZero_returnsLine1Column1() {
         // Given
         SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
 
         // When
-        JHarmonizerOptOutMode result =
-                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode("// normal comment", 0, srcFile);
+        String location = JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, 0);
+
+        // Then
+        assertThat(location).isEqualTo("A.java:1:1");
+    }
+
+    @Test
+    void formatLocation_srcOffsetWithNewlines_correctlyComputesLineAndColumn() {
+        // Given
+        String srcCode = "line1\nline2\nline3";
+        SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
+        int offsetOnLine2 = "line1\n".length() + 2;
+
+        // When
+        String location = JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, offsetOnLine2);
+
+        // Then
+        assertThat(location).startsWith("Sample.java:2:");
+    }
+
+    @Test
+    void parseFileScopeOptOutMode_directiveNotAtStart_returnsNull() {
+        // Given
+        SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
+
+        // When
+        JHarmonizerOptOutMode result = JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode(
+                "// some text @jharmonizer:fully-off", 0, srcFile);
 
         // Then
         assertThat(result).isNull();
@@ -46,19 +95,6 @@ class JHarmonizerOptOutCommentUtilitiesTest {
     }
 
     @Test
-    void parseFileScopeOptOutMode_sortOffBlockComment_returnsSortingOffMode() {
-        // Given
-        SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
-
-        // When
-        JHarmonizerOptOutMode result =
-                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode("/* @jharmonizer:sort-off */", 0, srcFile);
-
-        // Then
-        assertThat(result).isEqualTo(JHarmonizerOptOutMode.SORTING_OFF);
-    }
-
-    @Test
     void parseFileScopeOptOutMode_javadocComment_returnsNull() {
         // Given
         SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
@@ -72,16 +108,29 @@ class JHarmonizerOptOutCommentUtilitiesTest {
     }
 
     @Test
-    void parseFileScopeOptOutMode_directiveNotAtStart_returnsNull() {
+    void parseFileScopeOptOutMode_noDirectiveComment_returnsNull() {
         // Given
         SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
 
         // When
-        JHarmonizerOptOutMode result = JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode(
-                "// some text @jharmonizer:fully-off", 0, srcFile);
+        JHarmonizerOptOutMode result =
+                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode("// normal comment", 0, srcFile);
 
         // Then
         assertThat(result).isNull();
+    }
+
+    @Test
+    void parseFileScopeOptOutMode_sortOffBlockComment_returnsSortingOffMode() {
+        // Given
+        SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
+
+        // When
+        JHarmonizerOptOutMode result =
+                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode("/* @jharmonizer:sort-off */", 0, srcFile);
+
+        // Then
+        assertThat(result).isEqualTo(JHarmonizerOptOutMode.SORTING_OFF);
     }
 
     @Test
@@ -98,52 +147,16 @@ class JHarmonizerOptOutCommentUtilitiesTest {
     }
 
     @Test
-    void collectRawCommentsByRegex_srcWithLineAndBlockComments_returnsAllComments() {
+    void parseTypeOptOutMode_directiveNotAtStart_returnsNull() {
         // Given
-        String srcCode = "// line comment\nclass A { /* block comment */ }";
+        Factory factory = new FactoryImpl(new DefaultCoreFactory(), new StandardEnvironment());
+        CtComment comment = factory.createComment("some text @jharmonizer:fully-off", CommentType.INLINE);
 
         // When
-        List<RawCommentMatch> rawCommentMatches = JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex(srcCode);
+        JHarmonizerOptOutMode result = JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(comment);
 
         // Then
-        assertThat(rawCommentMatches).hasSize(2);
-        assertThat(rawCommentMatches.get(0).getRawComment()).isEqualTo("// line comment\n");
-        assertThat(rawCommentMatches.get(1).getRawComment()).isEqualTo("/* block comment */");
-    }
-
-    @Test
-    void collectRawCommentsByRegex_emptySource_returnsEmptyList() {
-        // When
-        List<RawCommentMatch> rawCommentMatches = JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex("");
-
-        // Then
-        assertThat(rawCommentMatches).isEmpty();
-    }
-
-    @Test
-    void formatLocation_srcOffsetWithNewlines_correctlyComputesLineAndColumn() {
-        // Given
-        String srcCode = "line1\nline2\nline3";
-        SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
-        int offsetOnLine2 = "line1\n".length() + 2;
-
-        // When
-        String location = JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, offsetOnLine2);
-
-        // Then
-        assertThat(location).startsWith("Sample.java:2:");
-    }
-
-    @Test
-    void formatLocation_offsetZero_returnsLine1Column1() {
-        // Given
-        SrcFile srcFile = createSrcFile("class A {}", Path.of("A.java"));
-
-        // When
-        String location = JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, 0);
-
-        // Then
-        assertThat(location).isEqualTo("A.java:1:1");
+        assertThat(result).isNull();
     }
 
     @Test
@@ -154,19 +167,6 @@ class JHarmonizerOptOutCommentUtilitiesTest {
 
         // When
         JHarmonizerOptOutMode result = JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(javadocComment);
-
-        // Then
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void parseTypeOptOutMode_directiveNotAtStart_returnsNull() {
-        // Given
-        Factory factory = new FactoryImpl(new DefaultCoreFactory(), new StandardEnvironment());
-        CtComment comment = factory.createComment("some text @jharmonizer:fully-off", CommentType.INLINE);
-
-        // When
-        JHarmonizerOptOutMode result = JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(comment);
 
         // Then
         assertThat(result).isNull();

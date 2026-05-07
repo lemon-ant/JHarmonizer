@@ -24,6 +24,20 @@ import lombok.extern.slf4j.Slf4j;
 public class SrcFilesHandler {
 
     /**
+     * Performs the overwrite.
+     * @param path the path to use
+     * @param fileContent the file content
+     */
+    public static void overwrite(@NonNull Path path, @NonNull String fileContent) {
+        try {
+            Files.writeString(path, fileContent, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        log.trace("File content has been overwritten at {}", path);
+    }
+
+    /**
      * Recursively resolves and reads all {@code .java} files matching the include and exclude globs
      * under the given base directory. GlobPathFinder scans the directory in parallel, so paths flow
      * directly through the pipeline without intermediate accumulation.
@@ -37,6 +51,29 @@ public class SrcFilesHandler {
     public static Stream<SrcFile> readJavaFiles(
             @NonNull Path baseDir, @NonNull Collection<String> includeGlobs, @NonNull Collection<String> excludeGlobs) {
         return findJavaFiles(baseDir, includeGlobs, excludeGlobs).map(SrcFilesHandler::readFile);
+    }
+
+    // TODO Hide in the Overwrite method
+    /**
+     * Renames the source file to its backup variant with a {@code .bak} suffix.
+     * If a backup already exists, it is replaced with the latest pre-overwrite source snapshot.
+     *
+     * @param srcFile the source file to back up
+     */
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
+    public static void renameToBackup(@NonNull Path srcFile) {
+        if (!Files.exists(srcFile) || !Files.isRegularFile(srcFile)) {
+            throw new UncheckedIOException(
+                    new IOException("Source file does not exist or is not a valid file: " + srcFile));
+        }
+
+        Path backupPath = srcFile.resolveSibling(srcFile.getFileName().toString() + ".bak");
+        try {
+            Files.move(srcFile, backupPath, REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        log.trace("File has been renamed to backup in {}", backupPath);
     }
 
     /**
@@ -63,20 +100,6 @@ public class SrcFilesHandler {
     }
 
     /**
-     * Performs the overwrite.
-     * @param path the path to use
-     * @param fileContent the file content
-     */
-    public static void overwrite(@NonNull Path path, @NonNull String fileContent) {
-        try {
-            Files.writeString(path, fileContent, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        log.trace("File content has been overwritten at {}", path);
-    }
-
-    /**
      * Reads a source file into a {@link SrcFile} value.
      *
      * @param file the source file to read
@@ -92,28 +115,5 @@ public class SrcFilesHandler {
         }
         log.trace("File content has been read from {}", file);
         return srcFile;
-    }
-
-    // TODO Hide in the Overwrite method
-    /**
-     * Renames the source file to its backup variant with a {@code .bak} suffix.
-     * If a backup already exists, it is replaced with the latest pre-overwrite source snapshot.
-     *
-     * @param srcFile the source file to back up
-     */
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
-    public static void renameToBackup(@NonNull Path srcFile) {
-        if (!Files.exists(srcFile) || !Files.isRegularFile(srcFile)) {
-            throw new UncheckedIOException(
-                    new IOException("Source file does not exist or is not a valid file: " + srcFile));
-        }
-
-        Path backupPath = srcFile.resolveSibling(srcFile.getFileName().toString() + ".bak");
-        try {
-            Files.move(srcFile, backupPath, REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        log.trace("File has been renamed to backup in {}", backupPath);
     }
 }

@@ -18,6 +18,23 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
         extends AbstractExplicitInitializerForwardReferenceDependencyProvider {
 
     /**
+     * Returns whether has explicit reference to.
+     * @param referrerField the referrer field
+     * @param referencedField the referenced field
+     * @return {@code true} if has explicit reference to; otherwise {@code false}
+     */
+    @Override
+    protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
+
+        return hasExplicitQualifiedReferenceTo(
+                referrerField,
+                referencedField,
+                (fieldAccess, ignoredDeclaringType) ->
+                        isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
+    }
+
+    /**
      * Returns whether is supported referenced field.
      * @param referencedField the referenced field
      * @return {@code true} if is supported referenced field; otherwise {@code false}
@@ -35,23 +52,6 @@ final class ExplicitDeclaringTypeInitializerFieldDependencyProvider
     @Override
     protected boolean isSupportedReferrerField(@NonNull CtField<?> referrerField) {
         return isStaticField(referrerField);
-    }
-
-    /**
-     * Returns whether has explicit reference to.
-     * @param referrerField the referrer field
-     * @param referencedField the referenced field
-     * @return {@code true} if has explicit reference to; otherwise {@code false}
-     */
-    @Override
-    protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
-        CtType<?> referrerDeclaringType = requireDeclaringType(referrerField);
-
-        return hasExplicitQualifiedReferenceTo(
-                referrerField,
-                referencedField,
-                (fieldAccess, ignoredDeclaringType) ->
-                        isExplicitDeclaringTypeQualifiedAccess(fieldAccess, referrerDeclaringType));
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")

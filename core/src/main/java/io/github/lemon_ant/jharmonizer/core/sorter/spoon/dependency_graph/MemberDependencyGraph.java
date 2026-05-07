@@ -75,82 +75,87 @@ Suggested micro-benchmark:
  */
 @SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.TooManyMethods"})
 public final class MemberDependencyGraph {
-
-    private static final int ALL_EDGE_KIND_MASK = (1 << MemberDependencyEdgeKind.values().length) - 1;
     private static final Set<MemberDependencyEdgeKind> ALL_EDGE_KINDS = EnumSet.allOf(MemberDependencyEdgeKind.class);
+    private static final int ALL_EDGE_KIND_MASK = (1 << MemberDependencyEdgeKind.values().length) - 1;
     private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
     private static final int ONE = 1;
 
-    private final Map<CtTypeMember, Set<MemberDependencyArc>> outgoingEdgesByProvider = new HashMap<>();
     private final Map<CtTypeMember, Set<MemberDependencyArc>> incomingEdgesByDependent = new HashMap<>();
-
+    private final Map<CtTypeMember, Set<MemberDependencyArc>> outgoingEdgesByProvider = new HashMap<>();
     private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveDependentsCacheByProvider =
             new HashMap<>();
     private final Map<CtTypeMember, Map<Integer, Set<CtTypeMember>>> transitiveProvidersCacheByDependent =
             new HashMap<>();
 
+    /**
+     * Finds the direct dependents.
+     * @param providerMember the provider member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching direct dependents
+     */
     @NonNull
-    private static Set<CtTypeMember> computeTransitiveNeighbors(
-            CtTypeMember startMember,
-            Set<MemberDependencyEdgeKind> allowedEdgeKinds,
-            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency) {
-        Set<CtTypeMember> visitedMembers = new HashSet<>();
-        Deque<CtTypeMember> processingQueue = new ArrayDeque<>();
-
-        processingQueue.add(startMember);
-
-        while (!processingQueue.isEmpty()) {
-            CtTypeMember currentMember = processingQueue.removeFirst();
-            findDirectNeighbors(adjacency, currentMember, allowedEdgeKinds).stream()
-                    .filter(visitedMembers::add)
-                    .forEach(processingQueue::addLast);
-        }
-
-        return Collections.unmodifiableSet(visitedMembers);
+    public Set<@NonNull CtTypeMember> findDirectDependents(
+            @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        return findDirectNeighbors(outgoingEdgesByProvider, providerMember, allowedEdgeKinds);
     }
 
-    private static int calculateAllowedEdgeKindsMask(Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        if (allowedEdgeKinds == null
-                || allowedEdgeKinds.isEmpty()
-                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
-            return ALL_EDGE_KIND_MASK;
-        }
-
-        return allowedEdgeKinds.stream()
-                .mapToInt(allowedEdgeKind -> 1 << allowedEdgeKind.ordinal())
-                .reduce(0, (leftMask, edgeKindBit) -> leftMask | edgeKindBit);
+    /**
+     * Finds the direct providers.
+     * @param dependentMember the dependent member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching direct providers
+     */
+    @NonNull
+    public Set<@NonNull CtTypeMember> findDirectProviders(
+            @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        return findDirectNeighbors(incomingEdgesByDependent, dependentMember, allowedEdgeKinds);
     }
 
+    /**
+     * Finds the transitive dependents.
+     * @param providerMember the provider member
+     * @return the matching transitive dependents
+     */
     @NonNull
-    private static Set<@NonNull CtTypeMember> findDirectNeighbors(
-            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency,
-            CtTypeMember vertex,
-            Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        Set<MemberDependencyArc> memberDependencyArcs = adjacency.get(vertex);
-        if (memberDependencyArcs == null || memberDependencyArcs.isEmpty()) {
-            return Set.of();
-        }
+    public Set<@NonNull CtTypeMember> findTransitiveDependents(@NonNull CtTypeMember providerMember) {
+        return findTransitiveDependents(providerMember, ALL_EDGE_KINDS);
+    }
 
-        boolean noFilteringRequested = allowedEdgeKinds == null
-                || allowedEdgeKinds.isEmpty()
-                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
+    /**
+     * Finds the transitive dependents.
+     * @param providerMember the provider member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching transitive dependents
+     */
+    @NonNull
+    public Set<@NonNull CtTypeMember> findTransitiveDependents(
+            @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        return findTransitiveNeighborsWithCaching(
+                providerMember, allowedEdgeKinds, transitiveDependentsCacheByProvider, outgoingEdgesByProvider);
+    }
 
-        Stream<MemberDependencyArc> dependencyEdgeStream = memberDependencyArcs.stream();
+    /**
+     * Finds the transitive providers.
+     * @param dependentMember the dependent member
+     * @return the matching transitive providers
+     */
+    @NonNull
+    public Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
+        return findTransitiveProviders(dependentMember, ALL_EDGE_KINDS);
+    }
 
-        if (!noFilteringRequested) {
-            if (allowedEdgeKinds.size() == ONE) {
-                MemberDependencyEdgeKind singleEdgeKind =
-                        allowedEdgeKinds.iterator().next();
-                dependencyEdgeStream =
-                        dependencyEdgeStream.filter(memberEdge -> memberEdge.getEdgeKind() == singleEdgeKind);
-            } else {
-                dependencyEdgeStream =
-                        dependencyEdgeStream.filter(memberEdge -> allowedEdgeKinds.contains(memberEdge.getEdgeKind()));
-            }
-        }
-
-        return dependencyEdgeStream.map(MemberDependencyArc::getAdjacentMember).collect(Collectors.toUnmodifiableSet());
+    /**
+     * Finds the transitive providers.
+     * @param dependentMember the dependent member
+     * @param allowedEdgeKinds the allowed edge kinds
+     * @return the matching transitive providers
+     */
+    @NonNull
+    public Set<@NonNull CtTypeMember> findTransitiveProviders(
+            @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        return findTransitiveNeighborsWithCaching(
+                dependentMember, allowedEdgeKinds, transitiveProvidersCacheByDependent, incomingEdgesByDependent);
     }
 
     /**
@@ -206,6 +211,86 @@ public final class MemberDependencyGraph {
         return List.of();
     }
 
+    private static int calculateAllowedEdgeKindsMask(Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        if (allowedEdgeKinds == null
+                || allowedEdgeKinds.isEmpty()
+                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length) {
+            return ALL_EDGE_KIND_MASK;
+        }
+
+        return allowedEdgeKinds.stream()
+                .mapToInt(allowedEdgeKind -> 1 << allowedEdgeKind.ordinal())
+                .reduce(0, (leftMask, edgeKindBit) -> leftMask | edgeKindBit);
+    }
+
+    @NonNull
+    private static Set<CtTypeMember> computeTransitiveNeighbors(
+            CtTypeMember startMember,
+            Set<MemberDependencyEdgeKind> allowedEdgeKinds,
+            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency) {
+        Set<CtTypeMember> visitedMembers = new HashSet<>();
+        Deque<CtTypeMember> processingQueue = new ArrayDeque<>();
+
+        processingQueue.add(startMember);
+
+        while (!processingQueue.isEmpty()) {
+            CtTypeMember currentMember = processingQueue.removeFirst();
+            findDirectNeighbors(adjacency, currentMember, allowedEdgeKinds).stream()
+                    .filter(visitedMembers::add)
+                    .forEach(processingQueue::addLast);
+        }
+
+        return Collections.unmodifiableSet(visitedMembers);
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static List<CtTypeMember> extractCyclePath(CtTypeMember cycleStart, Set<CtTypeMember> currentPath) {
+        List<CtTypeMember> cycle = new ArrayList<>();
+        boolean collecting = false;
+        for (CtTypeMember pathMember : currentPath) {
+            if (pathMember == cycleStart) {
+                collecting = true;
+            }
+            if (collecting) {
+                cycle.add(pathMember);
+            }
+        }
+        cycle.add(cycleStart);
+        return Collections.unmodifiableList(cycle);
+    }
+
+    @NonNull
+    private static Set<@NonNull CtTypeMember> findDirectNeighbors(
+            Map<CtTypeMember, Set<MemberDependencyArc>> adjacency,
+            CtTypeMember vertex,
+            Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
+        Set<MemberDependencyArc> memberDependencyArcs = adjacency.get(vertex);
+        if (memberDependencyArcs == null || memberDependencyArcs.isEmpty()) {
+            return Set.of();
+        }
+
+        boolean noFilteringRequested = allowedEdgeKinds == null
+                || allowedEdgeKinds.isEmpty()
+                || allowedEdgeKinds.size() == MemberDependencyEdgeKind.values().length;
+
+        Stream<MemberDependencyArc> dependencyEdgeStream = memberDependencyArcs.stream();
+
+        if (!noFilteringRequested) {
+            if (allowedEdgeKinds.size() == ONE) {
+                MemberDependencyEdgeKind singleEdgeKind =
+                        allowedEdgeKinds.iterator().next();
+                dependencyEdgeStream =
+                        dependencyEdgeStream.filter(memberEdge -> memberEdge.getEdgeKind() == singleEdgeKind);
+            } else {
+                dependencyEdgeStream =
+                        dependencyEdgeStream.filter(memberEdge -> allowedEdgeKinds.contains(memberEdge.getEdgeKind()));
+            }
+        }
+
+        return dependencyEdgeStream.map(MemberDependencyArc::getAdjacentMember).collect(Collectors.toUnmodifiableSet());
+    }
+
     @NonNull
     private List<CtTypeMember> detectCyclePathDfs(
             CtTypeMember current, Set<CtTypeMember> fullyVisited, Set<CtTypeMember> currentPath) {
@@ -227,93 +312,6 @@ public final class MemberDependencyGraph {
         currentPath.remove(current);
         fullyVisited.add(current);
         return List.of();
-    }
-
-    @NonNull
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static List<CtTypeMember> extractCyclePath(CtTypeMember cycleStart, Set<CtTypeMember> currentPath) {
-        List<CtTypeMember> cycle = new ArrayList<>();
-        boolean collecting = false;
-        for (CtTypeMember pathMember : currentPath) {
-            if (pathMember == cycleStart) {
-                collecting = true;
-            }
-            if (collecting) {
-                cycle.add(pathMember);
-            }
-        }
-        cycle.add(cycleStart);
-        return Collections.unmodifiableList(cycle);
-    }
-
-    /**
-     * Finds the transitive dependents.
-     * @param providerMember the provider member
-     * @return the matching transitive dependents
-     */
-    @NonNull
-    public Set<@NonNull CtTypeMember> findTransitiveDependents(@NonNull CtTypeMember providerMember) {
-        return findTransitiveDependents(providerMember, ALL_EDGE_KINDS);
-    }
-
-    /**
-     * Finds the transitive dependents.
-     * @param providerMember the provider member
-     * @param allowedEdgeKinds the allowed edge kinds
-     * @return the matching transitive dependents
-     */
-    @NonNull
-    public Set<@NonNull CtTypeMember> findTransitiveDependents(
-            @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        return findTransitiveNeighborsWithCaching(
-                providerMember, allowedEdgeKinds, transitiveDependentsCacheByProvider, outgoingEdgesByProvider);
-    }
-
-    /**
-     * Finds the transitive providers.
-     * @param dependentMember the dependent member
-     * @return the matching transitive providers
-     */
-    @NonNull
-    public Set<@NonNull CtTypeMember> findTransitiveProviders(@NonNull CtTypeMember dependentMember) {
-        return findTransitiveProviders(dependentMember, ALL_EDGE_KINDS);
-    }
-
-    /**
-     * Finds the transitive providers.
-     * @param dependentMember the dependent member
-     * @param allowedEdgeKinds the allowed edge kinds
-     * @return the matching transitive providers
-     */
-    @NonNull
-    public Set<@NonNull CtTypeMember> findTransitiveProviders(
-            @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        return findTransitiveNeighborsWithCaching(
-                dependentMember, allowedEdgeKinds, transitiveProvidersCacheByDependent, incomingEdgesByDependent);
-    }
-
-    /**
-     * Finds the direct dependents.
-     * @param providerMember the provider member
-     * @param allowedEdgeKinds the allowed edge kinds
-     * @return the matching direct dependents
-     */
-    @NonNull
-    public Set<@NonNull CtTypeMember> findDirectDependents(
-            @NonNull CtTypeMember providerMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        return findDirectNeighbors(outgoingEdgesByProvider, providerMember, allowedEdgeKinds);
-    }
-
-    /**
-     * Finds the direct providers.
-     * @param dependentMember the dependent member
-     * @param allowedEdgeKinds the allowed edge kinds
-     * @return the matching direct providers
-     */
-    @NonNull
-    public Set<@NonNull CtTypeMember> findDirectProviders(
-            @NonNull CtTypeMember dependentMember, @NonNull Set<MemberDependencyEdgeKind> allowedEdgeKinds) {
-        return findDirectNeighbors(incomingEdgesByDependent, dependentMember, allowedEdgeKinds);
     }
 
     @NonNull

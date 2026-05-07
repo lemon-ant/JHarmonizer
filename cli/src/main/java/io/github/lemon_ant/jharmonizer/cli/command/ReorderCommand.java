@@ -17,13 +17,6 @@ import picocli.CommandLine.Command;
 final class ReorderCommand extends BaseCommand {
 
     /**
-     * Creates a new {@code reorder} command.
-     */
-    ReorderCommand() {
-        // Required by Picocli (command instantiation).
-    }
-
-    /**
      * Returns the flow type.
      *
      * @return the flow type
@@ -32,5 +25,12 @@ final class ReorderCommand extends BaseCommand {
     @NonNull
     protected FlowType getFlowType() {
         return FlowType.REORDER;
+    }
+
+    /**
+     * Creates a new {@code reorder} command.
+     */
+    ReorderCommand() {
+        // Required by Picocli (command instantiation).
     }
 }

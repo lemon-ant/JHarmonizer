@@ -26,15 +26,6 @@ import org.apache.commons.lang3.Validate;
 
 @Slf4j
 public final class Formatter {
-
-    static {
-        // Open the jdk.compiler internals required by palantir-java-format before the
-        // first use of this class. Without this, the Maven plugin (unnamed module)
-        // can receive IllegalAccessError when palantir-java-format reflects into
-        // com.sun.tools.javac.* packages that are not opened by default.
-        PalantirModuleOpener.openRequiredJdkCompilerPackages();
-    }
-
     private static final Map<UnifiedFormatterStyle, Style> UNIFIED_2_PALANTIR_FORMATTING_STYLE = Map.ofEntries(
             /* UnifiedFormatterStyle.NONE is not mapped to return null */
             entry(UnifiedFormatterStyle.PALANTIR, Style.PALANTIR),
@@ -47,6 +38,14 @@ public final class Formatter {
     private final com.palantir.javaformat.java.Formatter formatter;
 
     private final Style formatterStyle;
+
+    static {
+        // Open the jdk.compiler internals required by palantir-java-format before the
+        // first use of this class. Without this, the Maven plugin (unnamed module)
+        // can receive IllegalAccessError when palantir-java-format reflects into
+        // com.sun.tools.javac.* packages that are not opened by default.
+        PalantirModuleOpener.openRequiredJdkCompilerPackages();
+    }
 
     /**
      * Creates a new Formatter.
@@ -76,36 +75,6 @@ public final class Formatter {
         String formattedSrc = formattingResult.getResult();
         return new FormattingResult(
                 formattedSrc, new FormattingStatistic(formattedSrc.length(), formattingResult.getNanos()));
-    }
-
-    @NonNull
-    private String applyFormatting(String srcCode, List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
-        if (formatterStyle == null) {
-            return fixImports ? invokePalantir(() -> formatter.fixImports(srcCode)) : srcCode;
-        }
-
-        if (formattingSkippedRanges.isEmpty()) {
-            return invokePalantir(
-                    () -> fixImports ? formatter.formatSourceAndFixImports(srcCode) : formatter.formatSource(srcCode));
-        }
-
-        String partlyFormattedSrc = srcCode;
-        Collection<Range<Integer>> formattingRanges = invertExcludedRanges(srcCode.length(), formattingSkippedRanges);
-        if (!formattingRanges.isEmpty()) {
-            partlyFormattedSrc = invokePalantir(() -> formatter.formatSource(srcCode, formattingRanges));
-        }
-
-        String formattedSrc = partlyFormattedSrc;
-        return fixImports ? invokePalantir(() -> formatter.fixImports(formattedSrc)) : formattedSrc;
-    }
-
-    @NonNull
-    private static String invokePalantir(FormattingOperation formattingOperation) {
-        try {
-            return formattingOperation.execute();
-        } catch (FormatterException exception) {
-            throw new IllegalArgumentException("Palantir formatting failure: " + exception.getMessage(), exception);
-        }
     }
 
     /**
@@ -147,6 +116,36 @@ public final class Formatter {
         }
 
         return Collections.unmodifiableList(includedRanges);
+    }
+
+    @NonNull
+    private static String invokePalantir(FormattingOperation formattingOperation) {
+        try {
+            return formattingOperation.execute();
+        } catch (FormatterException exception) {
+            throw new IllegalArgumentException("Palantir formatting failure: " + exception.getMessage(), exception);
+        }
+    }
+
+    @NonNull
+    private String applyFormatting(String srcCode, List<@NonNull SrcCharacterRange> formattingSkippedRanges) {
+        if (formatterStyle == null) {
+            return fixImports ? invokePalantir(() -> formatter.fixImports(srcCode)) : srcCode;
+        }
+
+        if (formattingSkippedRanges.isEmpty()) {
+            return invokePalantir(
+                    () -> fixImports ? formatter.formatSourceAndFixImports(srcCode) : formatter.formatSource(srcCode));
+        }
+
+        String partlyFormattedSrc = srcCode;
+        Collection<Range<Integer>> formattingRanges = invertExcludedRanges(srcCode.length(), formattingSkippedRanges);
+        if (!formattingRanges.isEmpty()) {
+            partlyFormattedSrc = invokePalantir(() -> formatter.formatSource(srcCode, formattingRanges));
+        }
+
+        String formattedSrc = partlyFormattedSrc;
+        return fixImports ? invokePalantir(() -> formatter.fixImports(formattedSrc)) : formattedSrc;
     }
 
     @FunctionalInterface

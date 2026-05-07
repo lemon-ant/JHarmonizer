@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.diff;
 
+// @jharmonizer:fully-off
+// jharmonizer v1.0.1 incorrectly reorders enum fields, breaking constructor argument binding;
+// remove this directive once jharmonizer is upgraded to a version that fixes the field-ordering bug.
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import lombok.AccessLevel;

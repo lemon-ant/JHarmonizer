@@ -31,7 +31,6 @@ import spoon.reflect.declaration.ModifierKind;
  */
 @UtilityClass
 class DeclarationHeaderRenderer {
-
     private static final String EMPTY_PARAMS = "()";
 
     /**
@@ -80,6 +79,24 @@ class DeclarationHeaderRenderer {
     }
 
     @NonNull
+    private static String buildBody(WhitespaceVisualizationStyle style) {
+        return " { " + style.getEllipsisMark() + " }";
+    }
+
+    @NonNull
+    private static String joinNonBlank(String... parts) {
+        return Stream.of(parts).filter(part -> !isBlank(part)).collect(joining(" "));
+    }
+
+    @NonNull
+    private static String renderConstructorHeader(
+            String modifiers, CtConstructor<?> constructor, WhitespaceVisualizationStyle style) {
+        String params = constructor.getParameters().isEmpty() ? EMPTY_PARAMS : "(" + style.getEllipsisMark() + ")";
+        String name = constructor.getDeclaringType().getSimpleName();
+        return joinNonBlank(modifiers, name + params) + buildBody(style);
+    }
+
+    @NonNull
     private static String renderInitializerHeader(
             CtAnonymousExecutable initializerBlock, WhitespaceVisualizationStyle style) {
         // buildBody() returns " { ... }" with a leading space; strip it for the instance case
@@ -97,29 +114,11 @@ class DeclarationHeaderRenderer {
     }
 
     @NonNull
-    private static String renderConstructorHeader(
-            String modifiers, CtConstructor<?> constructor, WhitespaceVisualizationStyle style) {
-        String params = constructor.getParameters().isEmpty() ? EMPTY_PARAMS : "(" + style.getEllipsisMark() + ")";
-        String name = constructor.getDeclaringType().getSimpleName();
-        return joinNonBlank(modifiers, name + params) + buildBody(style);
-    }
-
-    @NonNull
-    private static String buildBody(WhitespaceVisualizationStyle style) {
-        return " { " + style.getEllipsisMark() + " }";
-    }
-
-    @NonNull
     private static String renderModifiers(CtTypeMember member) {
         return member.getModifiers().stream()
                 .sorted(Comparator.comparingInt(ModifierKind::ordinal))
                 .map(ModifierKind::toString)
                 .collect(joining(" "));
-    }
-
-    @NonNull
-    private static String joinNonBlank(String... parts) {
-        return Stream.of(parts).filter(part -> !isBlank(part)).collect(joining(" "));
     }
 
     @NonNull

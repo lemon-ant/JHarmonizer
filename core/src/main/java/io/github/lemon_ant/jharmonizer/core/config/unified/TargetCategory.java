@@ -17,8 +17,10 @@ public enum TargetCategory {
     INIT_BLOCK(false), // static / instance initializer blocks
     ENUM_CONSTANT(false), // enum constant entries
     RECORD_COMPONENT(false), // record component entries
-    TYPE(true), // all TYPE_* kinds
-    ;
+    TYPE(true),
+
+// all TYPE_* kinds
+;
 
     /**
      * Whether explicit access level applies (must be provided).

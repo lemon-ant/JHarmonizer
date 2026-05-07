@@ -15,6 +15,20 @@ final class ExplicitThisInitializerFieldDependencyProvider
         extends AbstractExplicitInitializerForwardReferenceDependencyProvider {
 
     /**
+     * Returns whether has explicit reference to.
+     * @param referrerField the referrer field
+     * @param referencedField the referenced field
+     * @return {@code true} if has explicit reference to; otherwise {@code false}
+     */
+    @Override
+    protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
+        return hasExplicitQualifiedReferenceTo(
+                referrerField,
+                referencedField,
+                ExplicitThisInitializerFieldDependencyProvider::isExplicitThisQualifiedAccess);
+    }
+
+    /**
      * Returns whether is supported referenced field.
      * @param referencedField the referenced field
      * @return {@code true} if is supported referenced field; otherwise {@code false}
@@ -32,20 +46,6 @@ final class ExplicitThisInitializerFieldDependencyProvider
     @Override
     protected boolean isSupportedReferrerField(@NonNull CtField<?> referrerField) {
         return !isStaticField(referrerField);
-    }
-
-    /**
-     * Returns whether has explicit reference to.
-     * @param referrerField the referrer field
-     * @param referencedField the referenced field
-     * @return {@code true} if has explicit reference to; otherwise {@code false}
-     */
-    @Override
-    protected boolean hasExplicitReferenceTo(@NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField) {
-        return hasExplicitQualifiedReferenceTo(
-                referrerField,
-                referencedField,
-                ExplicitThisInitializerFieldDependencyProvider::isExplicitThisQualifiedAccess);
     }
 
     private static boolean isExplicitThisQualifiedAccess(CtFieldAccess<?> fieldAccess, CtType<?> ignoredDeclaringType) {

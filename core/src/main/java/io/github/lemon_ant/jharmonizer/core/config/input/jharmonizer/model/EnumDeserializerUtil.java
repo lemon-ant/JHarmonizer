@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @UtilityClass
 class EnumDeserializerUtil {
+
     /**
      * Performs the deserialize.
      * @param enumClass the enum type to read from

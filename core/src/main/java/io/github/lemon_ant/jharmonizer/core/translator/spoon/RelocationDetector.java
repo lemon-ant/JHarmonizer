@@ -93,6 +93,61 @@ public class RelocationDetector {
     }
 
     /**
+     * Builds a flat snapshot of all type members declared in the compilation unit,
+     * in source-code order (DFS: each type node followed by its own members recursively).
+     *
+     * <p>The returned list contains both the root type declarations and all their nested
+     * members, interleaved in the order they appear in source code. The position of each
+     * element in this list reflects its order in the original code. This snapshot can be
+     * compared against the member order after sorting to detect relocations.
+     *
+     * @param compilationUnit the compilation unit to snapshot
+     * @return immutable flat list of all type members in their original source order
+     */
+    @NonNull
+    static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
+        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit).toList();
+    }
+
+    private static void addMovedChunk(
+            List<? extends CtTypeMember> scopeMembers,
+            int chunkStart,
+            int chunkEndExclusive,
+            List<MemberRelocation> relocations) {
+        CtTypeMember predecessor = chunkStart > 0 ? scopeMembers.get(chunkStart - 1) : null;
+        CtTypeMember successor = chunkEndExclusive < scopeMembers.size() ? scopeMembers.get(chunkEndExclusive) : null;
+        List<CtTypeMember> chunk = List.copyOf(scopeMembers.subList(chunkStart, chunkEndExclusive));
+        relocations.add(new MemberRelocation(chunk, predecessor, successor));
+    }
+
+    /**
+     * Builds a map from each tracked member to its index in the flat original member-order snapshot.
+     * Members with invalid positions are skipped.
+     *
+     * <p>Uses {@link IdentityHashMap} so that two distinct {@code CtTypeMember} objects with
+     * structurally identical content (e.g. {@code void alpha()} in an outer class and the same
+     * signature in a nested type) are never confused with each other. Spoon's
+     * {@code CtElementImpl.equals} performs a structural comparison via {@code EqualsVisitor},
+     * so a plain {@code HashMap} would overwrite the outer member's index with the nested
+     * member's index whenever their structure happens to match.
+     *
+     * @param memberOrder the flat member order snapshot
+     * @return identity-keyed map from type member to original-order index
+     */
+    @NonNull
+    private static Map<CtTypeMember, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<CtTypeMember, Integer> result = new IdentityHashMap<>();
+        for (int i = 0; i < memberOrder.size(); i++) {
+            CtTypeMember member = memberOrder.get(i);
+            if (member.getPosition().isValidPosition()) {
+                result.put(member, i);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Computes the minimal moved set for {@code scopeMembers} via Longest Increasing Subsequence
      * over their original-source indices, then groups consecutive moved members in the sorted
      * order into a single {@link MemberRelocation} chunk.
@@ -111,6 +166,23 @@ public class RelocationDetector {
         int[] origIdx = computeOriginalIndices(scopeMembers, originalIndex);
         boolean[] inLis = computeLisMask(origIdx);
         emitMovedChunks(scopeMembers, origIdx, inLis, relocations);
+    }
+
+    /**
+     * Checks the direct members of {@code type} for relocations, then recurses into nested types.
+     *
+     * @param type           the type whose member scope to check
+     * @param originalIndex  map from type member to its position in the flat original-order snapshot
+     * @param relocations    accumulator for detected relocations
+     */
+    private static void collectTypeMemberRelocations(
+            CtType<?> type, Map<CtTypeMember, Integer> originalIndex, List<MemberRelocation> relocations) {
+        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
+        collectScopeRelocations(members, originalIndex, relocations);
+        members.stream()
+                .filter(typeMember -> typeMember instanceof CtType<?>)
+                .map(typeMember -> (CtType<?>) typeMember)
+                .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalIndex, relocations));
     }
 
     /**
@@ -167,77 +239,5 @@ public class RelocationDetector {
 
     private static boolean isMoved(int[] origIdx, boolean[] inLis, int position) {
         return origIdx[position] != UNTRACKED && !inLis[position];
-    }
-
-    private static void addMovedChunk(
-            List<? extends CtTypeMember> scopeMembers,
-            int chunkStart,
-            int chunkEndExclusive,
-            List<MemberRelocation> relocations) {
-        CtTypeMember predecessor = chunkStart > 0 ? scopeMembers.get(chunkStart - 1) : null;
-        CtTypeMember successor = chunkEndExclusive < scopeMembers.size() ? scopeMembers.get(chunkEndExclusive) : null;
-        List<CtTypeMember> chunk = List.copyOf(scopeMembers.subList(chunkStart, chunkEndExclusive));
-        relocations.add(new MemberRelocation(chunk, predecessor, successor));
-    }
-
-    /**
-     * Checks the direct members of {@code type} for relocations, then recurses into nested types.
-     *
-     * @param type           the type whose member scope to check
-     * @param originalIndex  map from type member to its position in the flat original-order snapshot
-     * @param relocations    accumulator for detected relocations
-     */
-    private static void collectTypeMemberRelocations(
-            CtType<?> type, Map<CtTypeMember, Integer> originalIndex, List<MemberRelocation> relocations) {
-        List<CtTypeMember> members = streamExplicitSrcTypeMembers(type).toList();
-        collectScopeRelocations(members, originalIndex, relocations);
-        members.stream()
-                .filter(typeMember -> typeMember instanceof CtType<?>)
-                .map(typeMember -> (CtType<?>) typeMember)
-                .forEach(nestedType -> collectTypeMemberRelocations(nestedType, originalIndex, relocations));
-    }
-
-    /**
-     * Builds a flat snapshot of all type members declared in the compilation unit,
-     * in source-code order (DFS: each type node followed by its own members recursively).
-     *
-     * <p>The returned list contains both the root type declarations and all their nested
-     * members, interleaved in the order they appear in source code. The position of each
-     * element in this list reflects its order in the original code. This snapshot can be
-     * compared against the member order after sorting to detect relocations.
-     *
-     * @param compilationUnit the compilation unit to snapshot
-     * @return immutable flat list of all type members in their original source order
-     */
-    @NonNull
-    static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
-        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit).toList();
-    }
-
-    /**
-     * Builds a map from each tracked member to its index in the flat original member-order snapshot.
-     * Members with invalid positions are skipped.
-     *
-     * <p>Uses {@link IdentityHashMap} so that two distinct {@code CtTypeMember} objects with
-     * structurally identical content (e.g. {@code void alpha()} in an outer class and the same
-     * signature in a nested type) are never confused with each other. Spoon's
-     * {@code CtElementImpl.equals} performs a structural comparison via {@code EqualsVisitor},
-     * so a plain {@code HashMap} would overwrite the outer member's index with the nested
-     * member's index whenever their structure happens to match.
-     *
-     * @param memberOrder the flat member order snapshot
-     * @return identity-keyed map from type member to original-order index
-     */
-    @NonNull
-    private static Map<CtTypeMember, Integer> buildOriginalIndexMap(List<CtTypeMember> memberOrder) {
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtTypeMember, Integer> result = new IdentityHashMap<>();
-        for (int i = 0; i < memberOrder.size(); i++) {
-            CtTypeMember member = memberOrder.get(i);
-            if (member.getPosition().isValidPosition()) {
-                result.put(member, i);
-            }
-        }
-        return result;
     }
 }

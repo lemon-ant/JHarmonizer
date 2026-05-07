@@ -15,7 +15,6 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class PathDisplayFormatUtil {
-
     private static final String ELLIPSIS = "...";
     private static final int MINIMAL_JAVA_FILE_NAME_LENGTH = "A.java".length();
 
@@ -67,6 +66,18 @@ public class PathDisplayFormatUtil {
         return renderAbbreviatedPath(fileSystemSeparator, selectedTailElements);
     }
 
+    @NonNull
+    private static String extractFileName(Path pathToFile) {
+        Path fileNamePath = pathToFile.getFileName();
+        return fileNamePath == null ? "" : fileNamePath.toString();
+    }
+
+    @NonNull
+    private static String renderAbbreviatedPath(String fileSystemSeparator, Deque<String> selectedTailElements) {
+        String abbreviatedTail = String.join(fileSystemSeparator, selectedTailElements);
+        return ELLIPSIS + fileSystemSeparator + abbreviatedTail;
+    }
+
     private static void validateMaxTotalLength(int maxTotalLength, int abbreviationPrefixLength) {
 
         int minJavaPathLength = abbreviationPrefixLength + PathDisplayFormatUtil.MINIMAL_JAVA_FILE_NAME_LENGTH;
@@ -78,17 +89,5 @@ public class PathDisplayFormatUtil {
                     + " + minimal file name length " + PathDisplayFormatUtil.MINIMAL_JAVA_FILE_NAME_LENGTH
                     + "), but was: " + maxTotalLength);
         }
-    }
-
-    @NonNull
-    private static String renderAbbreviatedPath(String fileSystemSeparator, Deque<String> selectedTailElements) {
-        String abbreviatedTail = String.join(fileSystemSeparator, selectedTailElements);
-        return ELLIPSIS + fileSystemSeparator + abbreviatedTail;
-    }
-
-    @NonNull
-    private static String extractFileName(Path pathToFile) {
-        Path fileNamePath = pathToFile.getFileName();
-        return fileNamePath == null ? "" : fileNamePath.toString();
     }
 }

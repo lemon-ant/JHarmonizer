@@ -18,23 +18,18 @@ import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class CheckAllFlowIntegrationTest {
-
     private static final CheckAllFlow FLOW = createFlow();
 
     @Test
-    void processStream_fullyOffOptOut_returnsSkippedResult() {
-        // Given
-        SrcFile srcFile =
-                createSrcFile("// @jharmonizer:fully-off\nclass Z { void b() {} void a() {} }\n", Path.of("Z.java"));
+    void isSuccessful_hasModifications_returnsFalse() {
+        // When / Then
+        assertThat(FLOW.isSuccessful(true)).isFalse();
+    }
 
-        // When
-        FileProcessingResult fileProcessingResult =
-                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
-
-        // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
-        assertThat(fileProcessingResult.getDiff()).isNull();
-        assertThat(fileProcessingResult.getMemberRelocations()).isNull();
+    @Test
+    void isSuccessful_noModifications_returnsTrue() {
+        // When / Then
+        assertThat(FLOW.isSuccessful(false)).isTrue();
     }
 
     @Test
@@ -53,18 +48,34 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processStream_membersOutOfOrder_returnsReorderedResult() {
-        // Given: file is properly formatted but members are out of alphabetical order
-        SrcFile srcFile = createSrcFile("class A {\n    void b() {}\n\n    void a() {}\n}\n", Path.of("A.java"));
+    void processStream_formattingOnlyViolation_returnsFormattedResult() {
+        // Given
+        SrcFile srcFile = createSrcFile("class A{void a(){}}", Path.of("A.java"));
 
         // When
         FileProcessingResult fileProcessingResult =
                 FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
-        assertThat(fileProcessingResult.getDiff()).isEmpty();
-        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
+        assertThat(fileProcessingResult.getDiff()).isNotEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
+    }
+
+    @Test
+    void processStream_fullyOffOptOut_returnsSkippedResult() {
+        // Given
+        SrcFile srcFile =
+                createSrcFile("// @jharmonizer:fully-off\nclass Z { void b() {} void a() {} }\n", Path.of("Z.java"));
+
+        // When
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(fileProcessingResult.getDiff()).isNull();
+        assertThat(fileProcessingResult.getMemberRelocations()).isNull();
     }
 
     @Test
@@ -83,35 +94,18 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void processStream_formattingOnlyViolation_returnsFormattedResult() {
-        // Given
-        SrcFile srcFile = createSrcFile("class A{void a(){}}", Path.of("A.java"));
+    void processStream_membersOutOfOrder_returnsReorderedResult() {
+        // Given: file is properly formatted but members are out of alphabetical order
+        SrcFile srcFile = createSrcFile("class A {\n    void b() {}\n\n    void a() {}\n}\n", Path.of("A.java"));
 
         // When
         FileProcessingResult fileProcessingResult =
                 FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.FORMATTED);
-        assertThat(fileProcessingResult.getDiff()).isNotEmpty();
-        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
-    }
-
-    @Test
-    void processStream_sortingOffOptOut_skipsReorderingAndFormatsSrcCode() {
-        // Given
-        SrcFile srcFile = createSrcFile(
-                "// @jharmonizer:sort-off\npublic class B {\n    public void b() {}\n\n    public void a() {}\n}\n",
-                Path.of("B.java"));
-
-        // When
-        FileProcessingResult fileProcessingResult =
-                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
-
-        // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus())
-                .isIn(FileProcessingStatus.FORMATTED, FileProcessingStatus.CHECKED);
-        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
+        assertThat(fileProcessingResult.getDiff()).isEmpty();
+        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
     }
 
     @Test
@@ -131,15 +125,20 @@ class CheckAllFlowIntegrationTest {
     }
 
     @Test
-    void isSuccessful_noModifications_returnsTrue() {
-        // When / Then
-        assertThat(FLOW.isSuccessful(false)).isTrue();
-    }
+    void processStream_sortingOffOptOut_skipsReorderingAndFormatsSrcCode() {
+        // Given
+        SrcFile srcFile = createSrcFile(
+                "// @jharmonizer:sort-off\npublic class B {\n    public void b() {}\n\n    public void a() {}\n}\n",
+                Path.of("B.java"));
 
-    @Test
-    void isSuccessful_hasModifications_returnsFalse() {
-        // When / Then
-        assertThat(FLOW.isSuccessful(true)).isFalse();
+        // When
+        FileProcessingResult fileProcessingResult =
+                FLOW.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus())
+                .isIn(FileProcessingStatus.FORMATTED, FileProcessingStatus.CHECKED);
+        assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
     }
 
     @NonNull

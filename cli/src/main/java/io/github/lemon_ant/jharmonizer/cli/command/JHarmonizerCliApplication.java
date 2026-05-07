@@ -17,8 +17,6 @@ import picocli.CommandLine.Command;
         subcommands = {ReorderCommand.class, CheckAllCommand.class, CheckFastCommand.class})
 public final class JHarmonizerCliApplication {
 
-    private JHarmonizerCliApplication() {}
-
     /**
      * Starts the CLI application.
      * @param args the command-line arguments
@@ -27,4 +25,6 @@ public final class JHarmonizerCliApplication {
         int exitCode = new CommandLine(JHarmonizerCliApplication.class).execute(args);
         System.exit(exitCode);
     }
+
+    private JHarmonizerCliApplication() {}
 }

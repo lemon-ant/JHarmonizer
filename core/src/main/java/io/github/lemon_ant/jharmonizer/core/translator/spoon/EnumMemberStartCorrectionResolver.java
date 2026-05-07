@@ -80,8 +80,8 @@ final class EnumMemberStartCorrectionResolver {
         return patternBuilder.toString();
     }
 
-    private static char findPreviousNonWhitespace(char[] chars, int index) {
-        for (int cursor = index; cursor >= 0; cursor--) {
+    private static char findNextNonWhitespace(char[] chars, int index) {
+        for (int cursor = index; cursor < chars.length; cursor++) {
             if (!Character.isWhitespace(chars[cursor])) {
                 return chars[cursor];
             }
@@ -89,8 +89,8 @@ final class EnumMemberStartCorrectionResolver {
         return '\0';
     }
 
-    private static char findNextNonWhitespace(char[] chars, int index) {
-        for (int cursor = index; cursor < chars.length; cursor++) {
+    private static char findPreviousNonWhitespace(char[] chars, int index) {
+        for (int cursor = index; cursor >= 0; cursor--) {
             if (!Character.isWhitespace(chars[cursor])) {
                 return chars[cursor];
             }

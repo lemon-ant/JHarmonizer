@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.flow;
 
+// @jharmonizer:fully-off
+// jharmonizer v1.0.1 incorrectly reorders @Value class fields, breaking Lombok constructors;
+// remove this directive once jharmonizer is upgraded to a version that fixes the @Value field-ordering bug.
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFormattingOnlyFallbackResult;

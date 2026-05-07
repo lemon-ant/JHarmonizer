@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.processing_stat;
 
+// @jharmonizer:fully-off
+// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
+// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FILES_WITH_UNEXPECTED_ERRORS;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.FORMATTING_TIME_SHARE;
 import static io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsTestLabels.MAX_SIZE_FILE_PREFIX;

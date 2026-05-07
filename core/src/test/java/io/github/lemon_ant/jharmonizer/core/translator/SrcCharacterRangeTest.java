@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator;
 
+// @jharmonizer:fully-off
+// jharmonizer v1.0.1 incorrectly reorders dependent static fields in test classes;
+// remove this directive once jharmonizer is upgraded to a version that respects field initialization order.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 

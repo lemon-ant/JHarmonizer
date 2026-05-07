@@ -17,13 +17,12 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 class StartupBannerRenderer {
-
-    private static final String HEADER = "JHarmonizer started";
-    private static final int LABEL_WIDTH = "Base directory:".length() + 1;
-    private static final String LABEL_FORMAT = "%-" + LABEL_WIDTH + "s";
-    private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH);
     private static final char BACKSLASH = '\\';
+    private static final int LABEL_WIDTH = "Base directory:".length() + 1;
+    private static final String GLOB_CONTINUATION_INDENT = " ".repeat(LABEL_WIDTH);
     private static final Set<Character> GLOB_METACHARS = Set.of('*', '?', '[', ']', '{', '}', BACKSLASH);
+    private static final String HEADER = "JHarmonizer started";
+    private static final String LABEL_FORMAT = "%-" + LABEL_WIDTH + "s";
 
     /**
      * Builds a multiline startup banner describing the active processing parameters.
@@ -54,11 +53,6 @@ class StartupBannerRenderer {
         return String.join(System.lineSeparator(), lines);
     }
 
-    @NonNull
-    private static String renderRow(@NonNull String label, @NonNull String value) {
-        return String.format(LABEL_FORMAT, label) + value;
-    }
-
     private static void addGlobRows(
             @NonNull List<String> lines,
             @NonNull String label,
@@ -76,6 +70,10 @@ class StartupBannerRenderer {
         for (int globIndex = 1; globIndex < sortedGlobs.size(); globIndex++) {
             lines.add(GLOB_CONTINUATION_INDENT + sortedGlobs.get(globIndex));
         }
+    }
+
+    private static boolean isGlobMetachar(char c) {
+        return GLOB_METACHARS.contains(c);
     }
 
     /**
@@ -103,7 +101,8 @@ class StartupBannerRenderer {
         return result.toString();
     }
 
-    private static boolean isGlobMetachar(char c) {
-        return GLOB_METACHARS.contains(c);
+    @NonNull
+    private static String renderRow(@NonNull String label, @NonNull String value) {
+        return String.format(LABEL_FORMAT, label) + value;
     }
 }

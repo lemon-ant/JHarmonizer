@@ -78,38 +78,73 @@ class DependencyGraphUtils {
         return adjacencyLists;
     }
 
-    /**
-     * Validates that a dependency endpoint does not belong to a group super-node.
-     *
-     * @param superNodeIndex      the endpoint's super-node index
-     * @param firstSingletonIndex the boundary between group and singleton super-nodes
-     * @param member              the endpoint item (for error messages)
-     * @param role                either "provider" or "dependent" (for error messages)
-     */
-    private static void validateNotGroupedMember(
-            int superNodeIndex, int firstSingletonIndex, Object member, String role) {
-        if (superNodeIndex < firstSingletonIndex) {
-            throw new SortingException("Grouped member \"" + member + "\" cannot be a dependency " + role);
-        }
-    }
+    // ------------------------------------------------------------------ //
+    // Reverse adjacency                                                   //
+    // ------------------------------------------------------------------ //
 
     /**
-     * Adds a directed edge from {@code fromNode} to {@code toNode} if it doesn't already exist.
-     * Lazily allocates the adjacency list for {@code fromNode}.
+     * Builds reverse adjacency lists (dependent → list of providers).
+     *
+     * @param nodeCount      total number of super-nodes
+     * @param adjacencyLists forward adjacency lists (provider → dependents)
+     * @return reverse adjacency lists indexed by super-node
      */
     // Array parameter is intentional: varargs would add allocation overhead in this performance path.
     @SuppressWarnings("PMD.UseVarargs")
-    private static void addEdgeIfAbsent(IntList[] adjacencyLists, int fromNode, int toNode, int[] inDegree) {
-        IntList list = adjacencyLists[fromNode];
-        if (list == null) {
-            list = new IntArrayList(4);
-            adjacencyLists[fromNode] = list;
-            list.add(toNode);
-            inDegree[toNode]++;
-        } else if (!list.contains(toNode)) {
-            list.add(toNode);
-            inDegree[toNode]++;
+    @NonNull
+    static IntList[] buildReverseAdjacency(int nodeCount, @NonNull IntList[] adjacencyLists) {
+        IntList[] reverse = new IntList[nodeCount];
+        for (int from = 0; from < nodeCount; from++) {
+            IntList adj = adjacencyLists[from];
+            if (adj != null) {
+                for (int i = 0; i < adj.size(); i++) {
+                    int to = adj.getInt(i);
+                    if (reverse[to] == null) {
+                        reverse[to] = new IntArrayList(4);
+                    }
+                    reverse[to].add(from);
+                }
+            }
         }
+        return reverse;
+    }
+
+    // ------------------------------------------------------------------ //
+    // Base order and rank                                                 //
+    // ------------------------------------------------------------------ //
+
+    /**
+     * Sorts super-node indices {@code [0..nodeCount)} by the comparator to produce base order.
+     *
+     * @param nodeCount      total number of super-nodes
+     * @param nodeComparator comparator for super-node indices based on their keys
+     * @return an array of super-node indices in base order
+     */
+    @NonNull
+    static int[] computeBaseOrder(int nodeCount, @NonNull IntComparator nodeComparator) {
+        int[] order = new int[nodeCount];
+        for (int i = 0; i < nodeCount; i++) {
+            order[i] = i;
+        }
+        IntArrays.mergeSort(order, 0, nodeCount, nodeComparator);
+        return order;
+    }
+
+    /**
+     * Computes the inverse permutation of {@code baseOrder}: the rank of each super-node
+     * in the base order.
+     *
+     * @param baseOrder the base-order array (super-node indices sorted by comparator)
+     * @param nodeCount total number of super-nodes
+     * @return an array where {@code result[node]} is the rank of {@code node} in the base order
+     */
+    @NonNull
+    static int[] computeBaseRank(@NonNull int[] baseOrder, int nodeCount) {
+        int[] baseRank = new int[nodeCount];
+        for (int i = 0; i < nodeCount; i++) {
+            baseRank[baseOrder[i]] = i;
+        }
+        return baseRank;
     }
 
     // ------------------------------------------------------------------ //
@@ -161,72 +196,37 @@ class DependencyGraphUtils {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    // Base order and rank                                                 //
-    // ------------------------------------------------------------------ //
-
     /**
-     * Sorts super-node indices {@code [0..nodeCount)} by the comparator to produce base order.
-     *
-     * @param nodeCount      total number of super-nodes
-     * @param nodeComparator comparator for super-node indices based on their keys
-     * @return an array of super-node indices in base order
-     */
-    @NonNull
-    static int[] computeBaseOrder(int nodeCount, @NonNull IntComparator nodeComparator) {
-        int[] order = new int[nodeCount];
-        for (int i = 0; i < nodeCount; i++) {
-            order[i] = i;
-        }
-        IntArrays.mergeSort(order, 0, nodeCount, nodeComparator);
-        return order;
-    }
-
-    /**
-     * Computes the inverse permutation of {@code baseOrder}: the rank of each super-node
-     * in the base order.
-     *
-     * @param baseOrder the base-order array (super-node indices sorted by comparator)
-     * @param nodeCount total number of super-nodes
-     * @return an array where {@code result[node]} is the rank of {@code node} in the base order
-     */
-    @NonNull
-    static int[] computeBaseRank(@NonNull int[] baseOrder, int nodeCount) {
-        int[] baseRank = new int[nodeCount];
-        for (int i = 0; i < nodeCount; i++) {
-            baseRank[baseOrder[i]] = i;
-        }
-        return baseRank;
-    }
-
-    // ------------------------------------------------------------------ //
-    // Reverse adjacency                                                   //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Builds reverse adjacency lists (dependent → list of providers).
-     *
-     * @param nodeCount      total number of super-nodes
-     * @param adjacencyLists forward adjacency lists (provider → dependents)
-     * @return reverse adjacency lists indexed by super-node
+     * Adds a directed edge from {@code fromNode} to {@code toNode} if it doesn't already exist.
+     * Lazily allocates the adjacency list for {@code fromNode}.
      */
     // Array parameter is intentional: varargs would add allocation overhead in this performance path.
     @SuppressWarnings("PMD.UseVarargs")
-    @NonNull
-    static IntList[] buildReverseAdjacency(int nodeCount, @NonNull IntList[] adjacencyLists) {
-        IntList[] reverse = new IntList[nodeCount];
-        for (int from = 0; from < nodeCount; from++) {
-            IntList adj = adjacencyLists[from];
-            if (adj != null) {
-                for (int i = 0; i < adj.size(); i++) {
-                    int to = adj.getInt(i);
-                    if (reverse[to] == null) {
-                        reverse[to] = new IntArrayList(4);
-                    }
-                    reverse[to].add(from);
-                }
-            }
+    private static void addEdgeIfAbsent(IntList[] adjacencyLists, int fromNode, int toNode, int[] inDegree) {
+        IntList list = adjacencyLists[fromNode];
+        if (list == null) {
+            list = new IntArrayList(4);
+            adjacencyLists[fromNode] = list;
+            list.add(toNode);
+            inDegree[toNode]++;
+        } else if (!list.contains(toNode)) {
+            list.add(toNode);
+            inDegree[toNode]++;
         }
-        return reverse;
+    }
+
+    /**
+     * Validates that a dependency endpoint does not belong to a group super-node.
+     *
+     * @param superNodeIndex      the endpoint's super-node index
+     * @param firstSingletonIndex the boundary between group and singleton super-nodes
+     * @param member              the endpoint item (for error messages)
+     * @param role                either "provider" or "dependent" (for error messages)
+     */
+    private static void validateNotGroupedMember(
+            int superNodeIndex, int firstSingletonIndex, Object member, String role) {
+        if (superNodeIndex < firstSingletonIndex) {
+            throw new SortingException("Grouped member \"" + member + "\" cannot be a dependency " + role);
+        }
     }
 }

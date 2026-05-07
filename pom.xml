@@ -769,14 +769,13 @@ SPDX-License-Identifier: Apache-2.0
                                 <phase>validate</phase>
                                 <configuration>
                                     <!--
-                                        Violations are reported but do not fail the build.
-                                        jharmonizer v1.0.1 has a bug where reorder corrupts @Value inner class
-                                        fields (moves them out of the class), breaking Lombok-generated
-                                        constructors. Switch failOnViolation to true once jharmonizer is
-                                        upgraded to a version that fixes the @Value field-reordering bug, and
-                                        then run jharmonizer:reorder to clean up any remaining violations.
+                                        All files with @Value or @RequiredArgsConstructor that jharmonizer
+                                        would incorrectly reorder are shielded with // @jharmonizer:fully-off
+                                        directives. Remove those directives and re-enable jharmonizer:reorder
+                                        once jharmonizer is upgraded to a version that fixes the @Value /
+                                        Lombok-constructor field-ordering bug.
                                     -->
-                                    <failOnViolation>false</failOnViolation>
+                                    <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>
                         </executions>

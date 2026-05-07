@@ -29,7 +29,6 @@ import lombok.NonNull;
  * Optionally renames the original file to a backup before overwriting it.
  */
 public class ReorderFlow extends AbstractOptOutFlow {
-
     private final boolean backupsEnabled;
 
     /**
@@ -47,6 +46,16 @@ public class ReorderFlow extends AbstractOptOutFlow {
             @NonNull PrinterConfig printerConfig) {
         super(formatter, sorter, printerConfig, REORDER);
         this.backupsEnabled = backupsEnabled;
+    }
+
+    @Override
+    public boolean isModifyingFlow() {
+        return true;
+    }
+
+    @Override
+    public boolean isSuccessful(boolean hasModifications) {
+        return true;
     }
 
     /**
@@ -126,15 +135,5 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .formattingStatistic(formattingResult.getFormattingStatistic())
                 .fileProcessingStatus(defineFileProcessingStatus(false, hasChanges, false))
                 .build();
-    }
-
-    @Override
-    public boolean isSuccessful(boolean hasModifications) {
-        return true;
-    }
-
-    @Override
-    public boolean isModifyingFlow() {
-        return true;
     }
 }

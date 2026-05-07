@@ -31,22 +31,25 @@ class OptOutSrcProcessorIntegrationTest {
     Path temporaryDirectory;
 
     @Test
-    void processSources_fileOptOutOff_keepOriginalSrc() throws Exception {
+    void processSources_duplicateFileScopeOptOut_usesLastDirectiveAndProcesses() throws Exception {
         // Given
-        String originalSrcCode = """
-                // @jharmonizer:fully-off
-                import java.util.List;
-                class Z{int b;int a;}
-                class A{}
-                """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        // Two file-scope opt-out comments: the second one (FULLY_OFF) should win.
+        String srcCodeWithDuplicateOptOut = """
+            // @jharmonizer:sort-off
+            // @jharmonizer:fully-off
+            public class DuplicateOptOut {
+                public void b() {}
+                public void a() {}
+            }
+            """;
+        Path javaFilePath = writeJavaFile("DuplicateOptOut.java", srcCodeWithDuplicateOptOut);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
         srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
 
         // Then
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(srcCodeWithDuplicateOptOut);
     }
 
     @Test
@@ -55,24 +58,24 @@ class OptOutSrcProcessorIntegrationTest {
         // Keep the nested declarations compact and intentionally out of order so byte-for-byte preservation
         // proves that file-level fully-off ignores nested override directives and extra declarations.
         String originalSrcCode = """
+            // @jharmonizer:fully-off
+            class ZuluHelper{static String label(){return "zulu";}}
+            public class Sample{int zebra;
+                static class LaterOuter{static String label(){return "later";}}
+                int ant;
+                // @jharmonizer:sort-off
+                static class InnerSortOff{int zebra; static class BetaNested{static String describe(){return "beta";}} int ant; String describe(){return BetaNested.describe()+new AlphaNested().describe()+zebra+ant;} static class AlphaNested{static String describe(){return "alpha";}}}
                 // @jharmonizer:fully-off
-                class ZuluHelper{static String label(){return "zulu";}}
-                public class Sample{int zebra;
-                    static class LaterOuter{static String label(){return "later";}}
-                    int ant;
-                    // @jharmonizer:sort-off
-                    static class InnerSortOff{int zebra; static class BetaNested{static String describe(){return "beta";}} int ant; String describe(){return BetaNested.describe()+new AlphaNested().describe()+zebra+ant;} static class AlphaNested{static String describe(){return "alpha";}}}
-                    // @jharmonizer:fully-off
-                    static class InnerFullyOff{int zebra; static class LaterNested{static String describe(){return "later";}} int ant; String describe(){return LaterNested.describe()+zebra+ant;}}
-                    public static void main(String[] args){
-                        System.out.println(new Sample().describe());
-                    }
-                    String describe(){
-                        return new InnerSortOff().describe()+new InnerFullyOff().describe()+LaterOuter.label()+zebra+ant+ZuluHelper.label()+AlphaHelper.label();
-                    }
+                static class InnerFullyOff{int zebra; static class LaterNested{static String describe(){return "later";}} int ant; String describe(){return LaterNested.describe()+zebra+ant;}}
+                public static void main(String[] args){
+                    System.out.println(new Sample().describe());
                 }
-                class AlphaHelper{static String label(){return "alpha";}}
-                """;
+                String describe(){
+                    return new InnerSortOff().describe()+new InnerFullyOff().describe()+LaterOuter.label()+zebra+ant+ZuluHelper.label()+AlphaHelper.label();
+                }
+            }
+            class AlphaHelper{static String label(){return "alpha";}}
+            """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -84,14 +87,14 @@ class OptOutSrcProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_fileOptOutSortOff_formatWithoutSortingTopLevelTypes() throws Exception {
+    void processSources_fileMixedCaseSortOffDirective_formatWithoutSortingTopLevelTypes() throws Exception {
         // Given
         String originalSrcCode = """
-                // @jharmonizer:sort-off
-                import java.util.List;
-                class Z{int b;int a;}
-                class A{}
-                """;
+            // @JHarmonizer:SoRt-OfF
+            import java.util.List;
+            class Z{int b;int a;}
+            class A{}
+            """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -106,14 +109,33 @@ class OptOutSrcProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_fileMixedCaseSortOffDirective_formatWithoutSortingTopLevelTypes() throws Exception {
+    void processSources_fileOptOutOff_keepOriginalSrc() throws Exception {
         // Given
         String originalSrcCode = """
-                // @JHarmonizer:SoRt-OfF
-                import java.util.List;
-                class Z{int b;int a;}
-                class A{}
-                """;
+            // @jharmonizer:fully-off
+            import java.util.List;
+            class Z{int b;int a;}
+            class A{}
+            """;
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+
+        // Then
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
+    }
+
+    @Test
+    void processSources_fileOptOutSortOff_formatWithoutSortingTopLevelTypes() throws Exception {
+        // Given
+        String originalSrcCode = """
+            // @jharmonizer:sort-off
+            import java.util.List;
+            class Z{int b;int a;}
+            class A{}
+            """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -132,15 +154,15 @@ class OptOutSrcProcessorIntegrationTest {
             throws Exception {
         // Given
         String expectedFullyOffFragment = """
-                    // @jharmonizer:fully-off
-                    static class Inner{int z;  int a;}
-                """.stripTrailing();
+                // @jharmonizer:fully-off
+                static class Inner{int z;  int a;}
+            """.stripTrailing();
         String originalSrcCode = """
-                // @jharmonizer:sort-off
-                class Outer{int b;int a;
-                %s
-                }
-                """.formatted(expectedFullyOffFragment);
+            // @jharmonizer:sort-off
+            class Outer{int b;int a;
+            %s
+            }
+            """.formatted(expectedFullyOffFragment);
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -155,85 +177,50 @@ class OptOutSrcProcessorIntegrationTest {
     }
 
     @Test
-    void processSources_topLevelTypeOptOutOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
+    void processSources_nestedTypeOptOutOff_failFastReportsParentLevelRelocation() throws Exception {
         // Given
-        String ignoredFragment = """
-                /* @jharmonizer:fully-off */
-                class Beta {
-                    int z;   int a;
-                }
-                """;
         String originalSrcCode = """
-                class Gamma {}
+            class Outer {
+                int a;
+                int b;
 
-                /* @jharmonizer:fully-off */
-                class Beta {
-                    int z;   int a;
-                }
-
-                class Delta {}
-                class Alpha {}
-                """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+                // @jharmonizer:fully-off
+                static class Inner{int z;int a;}
+            }
+            """;
+        writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
         // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
-        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+        SrcProcessingResult result =
+                srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST);
 
         // Then
-        assertThat(processedSrcCode).contains(ignoredFragment);
-        assertThat(processedSrcCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
-    }
-
-    @Test
-    void processSources_topLevelTypeOptOutSortOff_keepTypeBodyOrderButFormatType() throws Exception {
-        // Given
-        String originalSrcCode = """
-                class Gamma {}
-
-                // @jharmonizer:sort-off
-                class Beta{int z;int a;}
-
-                class Delta {}
-                class Alpha {}
-                """;
-        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
-        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
-        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
-
-        // Then
-        assertThat(processedSrcCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
-        assertThat(processedSrcCode)
-                .contains("class Beta {\n    int z;\n    int a;\n}")
-                .doesNotContain("class Beta {\n    int a;\n    int z;\n}");
+        assertThat(result.isSuccess()).isFalse();
     }
 
     @Test
     void processSources_nestedTypeOptOutOff_preserveExactFragmentAndKeepImports() throws Exception {
         // Given
         String ignoredFragment = """
-                    /* @jharmonizer:fully-off */
-                    static class Inner {
-                        java.util.List<String> values;
-                        int z;   int a;
-                    }
-                """;
-        String originalSrcCode = """
-                class Outer {
-                    int b;
-                    int a;
-
-                    /* @jharmonizer:fully-off */
-                    static class Inner {
-                        java.util.List<String> values;
-                        int z;   int a;
-                    }
+                /* @jharmonizer:fully-off */
+                static class Inner {
+                    java.util.List<String> values;
+                    int z;   int a;
                 }
-                """;
+            """;
+        String originalSrcCode = """
+            class Outer {
+                int b;
+                int a;
+
+                /* @jharmonizer:fully-off */
+                static class Inner {
+                    java.util.List<String> values;
+                    int z;   int a;
+                }
+            }
+            """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -250,14 +237,14 @@ class OptOutSrcProcessorIntegrationTest {
     void processSources_nestedTypeOptOutSortOff_keepNestedMemberOrderAndFormatType() throws Exception {
         // Given
         String originalSrcCode = """
-                class Outer {
-                    int b;
-                    int a;
+            class Outer {
+                int b;
+                int a;
 
-                    // @jharmonizer:sort-off
-                    static class Inner{int z;int a;}
-                }
-                """;
+                // @jharmonizer:sort-off
+                static class Inner{int z;int a;}
+            }
+            """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -276,15 +263,15 @@ class OptOutSrcProcessorIntegrationTest {
     void processSources_nestedTypeOptOutSortOff_moveNestedTypeWithinParentOrdering() throws Exception {
         // Given
         String originalSrcCode = """
-                class Outer {
-                    int z;
+            class Outer {
+                int z;
 
-                    // @jharmonizer:sort-off
-                    static class Inner {int z;int a;}
+                // @jharmonizer:sort-off
+                static class Inner {int z;int a;}
 
-                    int a;
-                }
-                """;
+                int a;
+            }
+            """;
         Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
         SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
 
@@ -296,51 +283,6 @@ class OptOutSrcProcessorIntegrationTest {
         assertThat(processedSrcCode)
                 .containsSubsequence("static class Inner", "int a;", "int z;")
                 .contains("static class Inner {\n        int z;\n        int a;\n    }");
-    }
-
-    @Test
-    void processSources_nestedTypeOptOutOff_failFastReportsParentLevelRelocation() throws Exception {
-        // Given
-        String originalSrcCode = """
-                class Outer {
-                    int a;
-                    int b;
-
-                    // @jharmonizer:fully-off
-                    static class Inner{int z;int a;}
-                }
-                """;
-        writeJavaFile("Sample.java", originalSrcCode);
-        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
-
-        // When
-        SrcProcessingResult result =
-                srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.CHECK_FAIL_FAST);
-
-        // Then
-        assertThat(result.isSuccess()).isFalse();
-    }
-
-    @Test
-    void processSources_duplicateFileScopeOptOut_usesLastDirectiveAndProcesses() throws Exception {
-        // Given
-        // Two file-scope opt-out comments: the second one (FULLY_OFF) should win.
-        String srcCodeWithDuplicateOptOut = """
-                // @jharmonizer:sort-off
-                // @jharmonizer:fully-off
-                public class DuplicateOptOut {
-                    public void b() {}
-                    public void a() {}
-                }
-                """;
-        Path javaFilePath = writeJavaFile("DuplicateOptOut.java", srcCodeWithDuplicateOptOut);
-        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
-
-        // When
-        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
-
-        // Then
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(srcCodeWithDuplicateOptOut);
     }
 
     @Test
@@ -357,9 +299,62 @@ class OptOutSrcProcessorIntegrationTest {
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(packageSrcCode);
     }
 
-    private Path writeJavaFile(String fileName, String fileContent) throws Exception {
-        Path javaFilePath = temporaryDirectory.resolve(fileName);
-        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    @Test
+    void processSources_topLevelTypeOptOutOff_preserveExactFragmentAndSortRemainingTypes() throws Exception {
+        // Given
+        String ignoredFragment = """
+            /* @jharmonizer:fully-off */
+            class Beta {
+                int z;   int a;
+            }
+            """;
+        String originalSrcCode = """
+            class Gamma {}
+
+            /* @jharmonizer:fully-off */
+            class Beta {
+                int z;   int a;
+            }
+
+            class Delta {}
+            class Alpha {}
+            """;
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSrcCode).contains(ignoredFragment);
+        assertThat(processedSrcCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
+    }
+
+    @Test
+    void processSources_topLevelTypeOptOutSortOff_keepTypeBodyOrderButFormatType() throws Exception {
+        // Given
+        String originalSrcCode = """
+            class Gamma {}
+
+            // @jharmonizer:sort-off
+            class Beta{int z;int a;}
+
+            class Delta {}
+            class Alpha {}
+            """;
+        Path javaFilePath = writeJavaFile("Sample.java", originalSrcCode);
+        SrcProcessor srcProcessor = new SrcProcessor(OPT_OUT_TEST_CONFIG);
+
+        // When
+        srcProcessor.processSources(temporaryDirectory, List.of("*.java"), List.of(), FlowType.REORDER);
+        String processedSrcCode = Files.readString(javaFilePath, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(processedSrcCode).containsSubsequence("class Alpha", "class Beta", "class Delta", "class Gamma");
+        assertThat(processedSrcCode)
+                .contains("class Beta {\n    int z;\n    int a;\n}")
+                .doesNotContain("class Beta {\n    int a;\n    int z;\n}");
     }
 
     private static FlexibleUnifiedConfig createOptOutTestConfig() {
@@ -392,5 +387,10 @@ class OptOutSrcProcessorIntegrationTest {
                 .headerLine(new UnifiedHeaderLine('-', 0))
                 .rootMemberGroups(List.of(rootMemberGroup))
                 .build();
+    }
+
+    private Path writeJavaFile(String fileName, String fileContent) throws Exception {
+        Path javaFilePath = temporaryDirectory.resolve(fileName);
+        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
     }
 }
