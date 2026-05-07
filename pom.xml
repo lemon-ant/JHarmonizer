@@ -736,11 +736,13 @@ SPDX-License-Identifier: Apache-2.0
             </build>
         </profile>
 
+        <!-- Profile activated on CI (mvn -Dci=true verify) to verify sources match expected formatting and order.
+             Checks POM ordering (sortpom) and Java formatting (spotless) without modifying files. -->
         <profile>
-            <id>quality-gates</id>
+            <id>check-sources</id>
             <activation>
                 <property>
-                    <name>!skip-quality-gates</name>
+                    <name>ci</name>
                 </property>
             </activation>
             <build>
@@ -772,7 +774,19 @@ SPDX-License-Identifier: Apache-2.0
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
 
+        <profile>
+            <id>quality-gates</id>
+            <activation>
+                <property>
+                    <name>!skip-quality-gates</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>com.mycila</groupId>
                         <artifactId>license-maven-plugin</artifactId>
