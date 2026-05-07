@@ -10,9 +10,19 @@ SPDX-License-Identifier: Apache-2.0
 [![Java](https://img.shields.io/badge/java-17%2B-orange.svg)](https://adoptium.net/)
 [![Coverage](https://img.shields.io/codecov/c/github/lemon-ant/JHarmonizer)](https://codecov.io/gh/lemon-ant/JHarmonizer)
 
-JHarmonizer is a Java source harmonization tool that keeps class member layout deterministic and readable.
-It parses Java source, resolves grouping/sorting rules, applies dependency-safe reordering, and formats output
-using [Palantir Java Format](https://github.com/palantir/palantir-java-format).
+JHarmonizer **sorts and formats Java source files** while keeping the code safe.
+It reorders class members — fields, constructors, methods, nested types, initializer blocks — according to
+configurable rules, and formats the output with [Palantir Java Format](https://github.com/palantir/palantir-java-format).
+
+What sets it apart from a plain formatter: before moving any member, JHarmonizer builds a
+**declaration-order dependency graph** that captures the JLS rules governing field initializer references,
+static and instance block sequencing, enum constant initializers, blank-final assignment ordering, and
+cross-member back-references. The sorter honours those constraints so the reordered source **compiles and
+runs correctly** — not just looks different.
+
+> **Why not just use IntelliJ, Spotless, or Checkstyle?**
+> IDEs cannot run in CI, formatters do not reorder members, and checkers only flag without fixing.
+> See [docs/motivation.md](docs/motivation.md) for the full comparison.
 
 ## Quick Start
 
@@ -85,7 +95,17 @@ mvn jharmonizer:check-fast   # fail fast on first violation
 ### CLI
 
 JHarmonizer is also available as a standalone CLI fat JAR for use outside of Maven.
-See [`cli/README.md`](cli/README.md) for command-line usage, all options, exit codes, and CI integration examples.
+
+**Download directly** (no build required):
+[jharmonizer-cli-1.0.1.jar](https://repo1.maven.org/maven2/io/github/lemon-ant/jharmonizer/jharmonizer-cli/1.0.1/jharmonizer-cli-1.0.1.jar)
+
+Browse all versions on [Maven Central](https://central.sonatype.com/artifact/io.github.lemon-ant.jharmonizer/jharmonizer-cli).
+
+```bash
+java -jar jharmonizer-cli-1.0.1.jar reorder --base-dir src/main/java
+```
+
+See [`cli/README.md`](cli/README.md) for full command-line usage, all options, exit codes, and CI integration examples.
 
 ## ⭐ Ways to support this project
 
@@ -125,13 +145,15 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
 
 ## Roadmap (next versions)
 
-- Add selector matching by type (field type / method return type).
-- Add explicit enum constant ordering strategies.
-- Add automatic parameter-order harmonization for overriding methods and constructors: base/forwarded parameters first, extension parameters after them.
-- Add redundant-modifier cleanup pass that removes semantically useless Java modifiers (for example implicit interface/class member modifiers) while preserving behavior.
-- Add inter-procedural initializer dependency analysis.
+The five most impactful planned features for everyday Java development:
 
-The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.md) for the complete list.
+- **Enum constant ordering strategies** — configurable `PRESERVE` / `ALPHA_ASC` / `ALPHA_DESC` ordering for enum constants, with placement guarantees that keep them before other enum members.
+- **Record member ordering** — dedicated ordering strategies for record components, with safety guarantees that preserve generated member contracts and binary compatibility.
+- **Constants ordering expansion** — explicit, configurable ordering policies for all constants groups (not just the built-in defaults), with stable tie-breakers and deterministic output.
+- **Type-based member selectors** — match fields by declared type and methods by return type (e.g. `type.exact: "org.slf4j.Logger"`), enabling more precise grouping rules without relying on name conventions.
+- **Annotation ordering policies** — configurable `ALPHA` / `LENGTH_ASC` / `LENGTH_DESC` ordering for annotations on declarations, keeping annotation lists deterministic and reducing diff noise.
+
+The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.md) for the complete list, ordered from the most developer-visible features to the most internal improvements.
 
 ## Opt-out directives
 
