@@ -39,12 +39,12 @@ import picocli.CommandLine;
 class BaseCommandTest {
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
 
-    @TempDir
-    Path temporaryDirectory;
-
     private CommandLine commandLine;
     private String initialPattern;
     private Level initialRootLevel;
+
+    @TempDir
+    private Path temporaryDirectory;
 
     @BeforeEach
     void setUp() {

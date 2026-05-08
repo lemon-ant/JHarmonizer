@@ -767,16 +767,6 @@ SPDX-License-Identifier: Apache-2.0
                                     <goal>check-fast</goal>
                                 </goals>
                                 <phase>validate</phase>
-                                <configuration>
-                                    <!--
-                                        All files with @Value or @RequiredArgsConstructor that jharmonizer
-                                        would incorrectly reorder are shielded with // @jharmonizer:fully-off
-                                        directives. Remove those directives and re-enable jharmonizer:reorder
-                                        once jharmonizer is upgraded to a version that fixes the @Value /
-                                        Lombok-constructor field-ordering bug.
-                                    -->
-                                    <failOnViolation>true</failOnViolation>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
