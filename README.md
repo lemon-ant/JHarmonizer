@@ -148,10 +148,10 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
 The five most impactful planned features for everyday Java development:
 
 - **Enum constant ordering strategies** — configurable `PRESERVE` / `ALPHA_ASC` / `ALPHA_DESC` ordering for enum constants, with placement guarantees that keep them before other enum members.
-- **Record member ordering** — dedicated ordering strategies for record components, with safety guarantees that preserve generated member contracts and binary compatibility.
-- **Constants ordering expansion** — explicit, configurable ordering policies for all constants groups (not just the built-in defaults), with stable tie-breakers and deterministic output.
-- **Type-based member selectors** — match fields by declared type and methods by return type (e.g. `type.exact: "org.slf4j.Logger"`), enabling more precise grouping rules without relying on name conventions.
 - **Annotation ordering policies** — configurable `ALPHA` / `LENGTH_ASC` / `LENGTH_DESC` ordering for annotations on declarations, keeping annotation lists deterministic and reducing diff noise.
+- **Record member ordering** — dedicated ordering strategies for record components, with safety guarantees that preserve generated member contracts and binary compatibility.
+- **Vendor-format configuration adapters** — import existing IntelliJ IDEA or Eclipse formatter/arrangement profiles directly so teams do not have to duplicate their configuration in a separate `jharmonizer.yml`.
+- **Git-aware changed-files processing** — limit sorting and checking to files that actually changed in Git (working tree vs. index, branch vs. merge-base), so large repositories stay fast in CI and pre-commit hooks.
 
 The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.md) for the complete list, ordered from the most developer-visible features to the most internal improvements.
 
