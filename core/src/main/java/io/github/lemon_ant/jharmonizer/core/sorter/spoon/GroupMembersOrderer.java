@@ -35,17 +35,16 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @UtilityClass
 class GroupMembersOrderer {
-
     private static final Set<MemberDependencyEdgeKind> DECLARATION_DEPENDENCY_ONLY =
             EnumSet.of(MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-
-    private static final int ONE = 1;
 
     /**
      * Shared accessor super-cluster threshold; kept in sync with representative-key derivation by
      * centralizing the value in {@link OrderingKeyFactory}.
      */
     private static final int MIN_ACCESSORS_FOR_SUPER_CLUSTER = OrderingKeyFactory.MIN_ACCESSORS_FOR_SUPER_CLUSTER;
+
+    private static final int ONE = 1;
 
     /**
      * Orders the members inside each group block according to the group's ordering rules.
@@ -63,14 +62,73 @@ class GroupMembersOrderer {
                 .toList();
     }
 
+    /**
+     * Bundles every recognized JavaBeans accessor of the group into one indivisible accessor
+     * super-cluster {@link Group}. This guarantees that the accessor super-cluster is treated as
+     * a single super-node by {@link SimplifiedDependencyAwareSorter}, so non-accessor methods can
+     * never be interleaved between two property clusters of the accessor super-cluster — they are
+     * placed either entirely above or entirely below the accessor super-cluster, as decided by the
+     * cluster-aware comparator on the super-cluster's representative member.
+     *
+     * <p>Per-property cluster ordering (and the choice of cluster representative inside the
+     * accessor super-cluster) is purely a comparator concern; see
+     * {@link OrderingKeyFactory#createSortableMembers(List, boolean, List)} and
+     * {@link ComparatorUtils#buildSortableTypeMemberComparator(List)}.
+     *
+     * @param sortableTypeMembers all sortable members of the group
+     * @return a single-{@link Group} {@link Groups} bundling every accessor; {@link Groups#empty()}
+     *     when fewer than two accessors are present (a single accessor needs no bundling because
+     *     the cross-cluster comparator path is never triggered without a second accessor cluster)
+     */
     @NonNull
-    private static MemberGroupBlock orderMembersInsideGroup(
-            MemberGroupBlock memberGroupBlock, MemberDependencyGraph memberDependencyGraph) {
-        CompiledMemberGroup compiledMemberGroup = memberGroupBlock.getCompiledMemberGroup();
-        List<CtTypeMember> groupMembers = memberGroupBlock.getTypeMembers();
-        List<CtTypeMember> orderedMembers =
-                orderMembersInsideGroup(compiledMemberGroup, groupMembers, memberDependencyGraph);
-        return new MemberGroupBlock(compiledMemberGroup, orderedMembers);
+    private static Groups<SortableTypeMember> buildAccessorSuperCluster(List<SortableTypeMember> sortableTypeMembers) {
+        List<SortableTypeMember> accessors = sortableTypeMembers.stream()
+                .filter(sortable -> isAccessor(sortable.getTypeMember()))
+                .toList();
+        if (accessors.size() < MIN_ACCESSORS_FOR_SUPER_CLUSTER) {
+            return Groups.empty();
+        }
+        return new Groups<>(List.of(new Group<>(accessors)));
+    }
+
+    @NonNull
+    private static Dependencies<SortableTypeMember> buildDeclarationDependencies(
+            Set<CtTypeMember> groupMemberSet,
+            Set<CtTypeMember> bundledMembers,
+            MemberDependencyGraph memberDependencyGraph,
+            Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
+        List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();
+
+        for (CtTypeMember provider : groupMemberSet) {
+            if (bundledMembers.contains(provider)) {
+                continue;
+            }
+            for (CtTypeMember dependent :
+                    memberDependencyGraph.findDirectDependents(provider, DECLARATION_DEPENDENCY_ONLY)) {
+                if (!groupMemberSet.contains(dependent) || bundledMembers.contains(dependent)) {
+                    continue;
+                }
+                edges.add(new Dependencies.Dependency<>(
+                        typeMemberToSortable.get(dependent), typeMemberToSortable.get(provider)));
+            }
+        }
+
+        return edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(List.copyOf(edges));
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private static Map<CtTypeMember, SortableTypeMember> buildTypeMemberToSortableMap(
+            List<SortableTypeMember> sortableTypeMembers) {
+        // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
+        Map<CtTypeMember, SortableTypeMember> map = new HashMap<>(sortableTypeMembers.size() * 2);
+        sortableTypeMembers.forEach(sortable -> map.put(sortable.getTypeMember(), sortable));
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static boolean isAccessor(CtTypeMember typeMember) {
+        return typeMember instanceof CtMethod<?> method
+                && SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method).isPresent();
     }
 
     @NonNull
@@ -110,71 +168,12 @@ class GroupMembersOrderer {
     }
 
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private static Map<CtTypeMember, SortableTypeMember> buildTypeMemberToSortableMap(
-            List<SortableTypeMember> sortableTypeMembers) {
-        // Capacity * 2 ensures no resize at the default 0.75 load factor (threshold = capacity * 0.75).
-        Map<CtTypeMember, SortableTypeMember> map = new HashMap<>(sortableTypeMembers.size() * 2);
-        sortableTypeMembers.forEach(sortable -> map.put(sortable.getTypeMember(), sortable));
-        return Collections.unmodifiableMap(map);
-    }
-
-    /**
-     * Bundles every recognized JavaBeans accessor of the group into one indivisible accessor
-     * super-cluster {@link Group}. This guarantees that the accessor super-cluster is treated as
-     * a single super-node by {@link SimplifiedDependencyAwareSorter}, so non-accessor methods can
-     * never be interleaved between two property clusters of the accessor super-cluster — they are
-     * placed either entirely above or entirely below the accessor super-cluster, as decided by the
-     * cluster-aware comparator on the super-cluster's representative member.
-     *
-     * <p>Per-property cluster ordering (and the choice of cluster representative inside the
-     * accessor super-cluster) is purely a comparator concern; see
-     * {@link OrderingKeyFactory#createSortableMembers(List, boolean, List)} and
-     * {@link ComparatorUtils#buildSortableTypeMemberComparator(List)}.
-     *
-     * @param sortableTypeMembers all sortable members of the group
-     * @return a single-{@link Group} {@link Groups} bundling every accessor; {@link Groups#empty()}
-     *     when fewer than two accessors are present (a single accessor needs no bundling because
-     *     the cross-cluster comparator path is never triggered without a second accessor cluster)
-     */
-    @NonNull
-    private static Groups<SortableTypeMember> buildAccessorSuperCluster(List<SortableTypeMember> sortableTypeMembers) {
-        List<SortableTypeMember> accessors = sortableTypeMembers.stream()
-                .filter(sortable -> isAccessor(sortable.getTypeMember()))
-                .toList();
-        if (accessors.size() < MIN_ACCESSORS_FOR_SUPER_CLUSTER) {
-            return Groups.empty();
-        }
-        return new Groups<>(List.of(new Group<>(accessors)));
-    }
-
-    private static boolean isAccessor(CtTypeMember typeMember) {
-        return typeMember instanceof CtMethod<?> method
-                && SpoonJavaBeansAccessorUtils.findAccessorPropertyName(method).isPresent();
-    }
-
-    @NonNull
-    private static Dependencies<SortableTypeMember> buildDeclarationDependencies(
-            Set<CtTypeMember> groupMemberSet,
-            Set<CtTypeMember> bundledMembers,
-            MemberDependencyGraph memberDependencyGraph,
-            Map<CtTypeMember, SortableTypeMember> typeMemberToSortable) {
-        List<Dependencies.Dependency<SortableTypeMember>> edges = new ArrayList<>();
-
-        for (CtTypeMember provider : groupMemberSet) {
-            if (bundledMembers.contains(provider)) {
-                continue;
-            }
-            for (CtTypeMember dependent :
-                    memberDependencyGraph.findDirectDependents(provider, DECLARATION_DEPENDENCY_ONLY)) {
-                if (!groupMemberSet.contains(dependent) || bundledMembers.contains(dependent)) {
-                    continue;
-                }
-                edges.add(new Dependencies.Dependency<>(
-                        typeMemberToSortable.get(provider), typeMemberToSortable.get(dependent)));
-            }
-        }
-
-        return edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(List.copyOf(edges));
+    private static MemberGroupBlock orderMembersInsideGroup(
+            MemberGroupBlock memberGroupBlock, MemberDependencyGraph memberDependencyGraph) {
+        CompiledMemberGroup compiledMemberGroup = memberGroupBlock.getCompiledMemberGroup();
+        List<CtTypeMember> groupMembers = memberGroupBlock.getTypeMembers();
+        List<CtTypeMember> orderedMembers =
+                orderMembersInsideGroup(compiledMemberGroup, groupMembers, memberDependencyGraph);
+        return new MemberGroupBlock(compiledMemberGroup, orderedMembers);
     }
 }

@@ -22,18 +22,10 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 class ComparatorUtils {
-
-    private static final Comparator<OrderingKey> PRESERVE_COMPARATOR =
-            Comparator.comparingInt(OrderingKey::getSrcStart);
-
     private static final Comparator<OrderingKey> ALPHA_COMPARATOR =
             Comparator.comparingInt(OrderingKey::getAlphaSortingRank).thenComparing(OrderingKey::getAlphaKey);
-
-    private static final Comparator<OrderingKey> VISIBILITY_ASC_COMPARATOR =
-            Comparator.comparingInt(OrderingKey::getVisibilityRank).reversed();
-
-    private static final Comparator<OrderingKey> VISIBILITY_DESC_COMPARATOR =
-            Comparator.comparingInt(OrderingKey::getVisibilityRank);
+    private static final Comparator<OrderingKey> PRESERVE_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getSrcStart);
 
     /**
      * Default fallback comparator used when no ordering rules are configured: PRESERVE
@@ -43,6 +35,11 @@ class ComparatorUtils {
      */
     private static final Comparator<OrderingKey> DEFAULT_COMPARATOR =
             PRESERVE_COMPARATOR.thenComparing(ALPHA_COMPARATOR);
+
+    private static final Comparator<OrderingKey> VISIBILITY_ASC_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getVisibilityRank).reversed();
+    private static final Comparator<OrderingKey> VISIBILITY_DESC_COMPARATOR =
+            Comparator.comparingInt(OrderingKey::getVisibilityRank);
 
     /**
      * Builds a comparator over {@link OrderingKey} from the given ordering rules. Tie-breakers

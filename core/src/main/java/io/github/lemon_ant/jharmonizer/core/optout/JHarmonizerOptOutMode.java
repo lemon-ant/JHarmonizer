@@ -18,11 +18,6 @@ public enum JHarmonizerOptOutMode {
     private final String displayName;
     private final String token;
 
-    JHarmonizerOptOutMode(String displayName) {
-        this.displayName = displayName;
-        this.token = TOKEN_PREFIX + displayName;
-    }
-
     /**
      * Resolves an opt-out mode from the token found in source comments.
      *
@@ -36,5 +31,10 @@ public enum JHarmonizerOptOutMode {
                 .filter(mode -> mode.getToken().equals(normalizedToken))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported JHarmonizer opt-out token: " + token));
+    }
+
+    JHarmonizerOptOutMode(String displayName) {
+        this.displayName = displayName;
+        this.token = TOKEN_PREFIX + displayName;
     }
 }

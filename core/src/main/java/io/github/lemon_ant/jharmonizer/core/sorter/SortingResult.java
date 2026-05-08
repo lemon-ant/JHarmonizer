@@ -12,6 +12,7 @@ import lombok.Value;
  */
 @Value
 public class SortingResult {
+
     @NonNull
     SpoonAstModel sortedSpoonAstModel;
 

@@ -68,12 +68,6 @@ class DefaultConfigOrderingIntegrationTest {
                 .isLessThan(packagePrivateStaticNestedClassIndex);
     }
 
-    @NonNull
-    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
-        Path javaFilePath = baseDirectoryPath.resolve(fileName);
-        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
-    }
-
     private static int requireSrcFragmentIndex(String srcCode, String srcFragment) {
         int srcFragmentIndex = srcCode.indexOf(srcFragment);
         if (srcFragmentIndex < 0) {
@@ -82,20 +76,25 @@ class DefaultConfigOrderingIntegrationTest {
         return srcFragmentIndex;
     }
 
-    private static final class Constants {
+    @NonNull
+    private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
+        Path javaFilePath = baseDirectoryPath.resolve(fileName);
+        return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    }
 
-        private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
+    private static final class Constants {
         private static final Collection<String> EXCLUDE_NO_FILES = List.of();
+        private static final Collection<String> INCLUDE_ALL_JAVA_FILES = Set.of();
+        private static final String PACKAGE_PRIVATE_INNER_CLASS_FRAGMENT = "class InnerClass";
+        private static final String PACKAGE_PRIVATE_STATIC_NESTED_CLASS_FRAGMENT = "static class StaticNestedClass";
+        private static final String PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT = "public void assertionTest()";
+        private static final String PUBLIC_CONSTRUCTOR_FRAGMENT = "public SampleAllJava21FeaturesList()";
+        private static final String PUBLIC_ENHANCED_FOR_LOOP_METHOD_FRAGMENT = "public void enhancedForLoop()";
+        private static final String PUBLIC_INTERFACE_DEFAULT_METHOD_FRAGMENT = "public interface DefaultMethod";
+        private static final String PUBLIC_RECORD_PERSON_FRAGMENT = "public record Person(String name, int age)";
+        private static final String PUBLIC_STATIC_MAIN_METHOD_FRAGMENT = "public static void main(String[] args)";
         private static final String SAMPLE_ALL_JAVA21_FILE_NAME = "SampleAllJava21FeaturesList.java";
         private static final URL SAMPLE_ALL_JAVA21_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
                 "/" + TEST_CASES_DIR + "/core/translator/valid/SampleAllJava21FeaturesList.java");
-        private static final String PUBLIC_STATIC_MAIN_METHOD_FRAGMENT = "public static void main(String[] args)";
-        private static final String PUBLIC_CONSTRUCTOR_FRAGMENT = "public SampleAllJava21FeaturesList()";
-        private static final String PUBLIC_ASSERTION_TEST_METHOD_FRAGMENT = "public void assertionTest()";
-        private static final String PUBLIC_ENHANCED_FOR_LOOP_METHOD_FRAGMENT = "public void enhancedForLoop()";
-        private static final String PUBLIC_RECORD_PERSON_FRAGMENT = "public record Person(String name, int age)";
-        private static final String PUBLIC_INTERFACE_DEFAULT_METHOD_FRAGMENT = "public interface DefaultMethod";
-        private static final String PACKAGE_PRIVATE_INNER_CLASS_FRAGMENT = "class InnerClass";
-        private static final String PACKAGE_PRIVATE_STATIC_NESTED_CLASS_FRAGMENT = "static class StaticNestedClass";
     }
 }

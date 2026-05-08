@@ -12,6 +12,21 @@ import lombok.NonNull;
 public final class CompiledMemberGroupTestCreator {
 
     @NonNull
+    public static CompiledMemberGroup createCompiledMemberGroup(
+            @NonNull String groupName, boolean keepAccessorsTogether, @NonNull List<OrderingRule> orderingRules) {
+        return CompiledMemberGroup.builder()
+                .name(groupName)
+                .orderIndex(1)
+                .keepAccessorsTogether(keepAccessorsTogether)
+                .relaxedForwardReferences(true)
+                .orderingRules(orderingRules)
+                .compiledSubGroups(List.of())
+                .selectorBlock(new CompiledMemberGroupSelectorBlock(List.of(), List.of()))
+                .separator(UnifiedSeparator.NONE)
+                .build();
+    }
+
+    @NonNull
     public static CompiledMemberGroup createTrivialMemberGroup(
             @NonNull String groupName, boolean keepAccessorsTogether) {
         return createTrivialMemberGroup(groupName, keepAccessorsTogether, 0);
@@ -40,21 +55,6 @@ public final class CompiledMemberGroupTestCreator {
                 .selectorBlock(selectorBlock)
                 .separator(separator)
                 .orderingRule(OrderingRule.PRESERVE)
-                .build();
-    }
-
-    @NonNull
-    public static CompiledMemberGroup createCompiledMemberGroup(
-            @NonNull String groupName, boolean keepAccessorsTogether, @NonNull List<OrderingRule> orderingRules) {
-        return CompiledMemberGroup.builder()
-                .name(groupName)
-                .orderIndex(1)
-                .keepAccessorsTogether(keepAccessorsTogether)
-                .relaxedForwardReferences(true)
-                .orderingRules(orderingRules)
-                .compiledSubGroups(List.of())
-                .selectorBlock(new CompiledMemberGroupSelectorBlock(List.of(), List.of()))
-                .separator(UnifiedSeparator.NONE)
                 .build();
     }
 }

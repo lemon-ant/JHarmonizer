@@ -16,15 +16,12 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 final class HumanReadableFormatsUtils {
-
+    private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
+    private static final DecimalFormat DECIMAL_0 = new DecimalFormat("#,##0", DECIMAL_FORMAT_SYMBOLS);
+    private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
     private static final long KIB = 1024L;
     private static final long MIB = KIB * 1024L;
     private static final long GIB = MIB * 1024L;
-
-    private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
-
-    private static final DecimalFormat DECIMAL_0 = new DecimalFormat("#,##0", DECIMAL_FORMAT_SYMBOLS);
-    private static final DecimalFormat DECIMAL_1 = new DecimalFormat("#,##0.0", DECIMAL_FORMAT_SYMBOLS);
 
     /**
      * Formats the bytes.
@@ -50,24 +47,6 @@ final class HumanReadableFormatsUtils {
     }
 
     /**
-     * Formats the seconds microseconds from nanos.
-     * @param durationNanos the duration nanos
-     * @return the result
-     */
-    @NonNull
-    static String formatSecondsMicrosecondsFromNanos(long durationNanos) {
-        if (durationNanos < 0) {
-            throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
-        }
-
-        Duration duration = Duration.ofNanos(durationNanos);
-        long totalSeconds = duration.getSeconds();
-        int millisecondsPart = duration.getNano() / 1_000_000; // 0..999
-
-        return String.format(Locale.ROOT, "%d.%03d", totalSeconds, millisecondsPart);
-    }
-
-    /**
      * Formats the hms millis from nanos.
      * @param durationNanos the duration nanos
      * @return the result
@@ -89,6 +68,24 @@ final class HumanReadableFormatsUtils {
         long secondsPart = totalSeconds % 60L;
 
         return String.format(Locale.ROOT, "%d:%02d:%02d.%03d", totalHours, minutesPart, secondsPart, millisecondsPart);
+    }
+
+    /**
+     * Formats the seconds microseconds from nanos.
+     * @param durationNanos the duration nanos
+     * @return the result
+     */
+    @NonNull
+    static String formatSecondsMicrosecondsFromNanos(long durationNanos) {
+        if (durationNanos < 0) {
+            throw new IllegalArgumentException("Duration must be non-negative, but was: " + durationNanos + " ns");
+        }
+
+        Duration duration = Duration.ofNanos(durationNanos);
+        long totalSeconds = duration.getSeconds();
+        int millisecondsPart = duration.getNano() / 1_000_000; // 0..999
+
+        return String.format(Locale.ROOT, "%d.%03d", totalSeconds, millisecondsPart);
     }
 
     @NonNull

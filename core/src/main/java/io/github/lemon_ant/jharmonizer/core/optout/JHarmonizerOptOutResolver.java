@@ -38,23 +38,12 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @NonNull
-    private JHarmonizerOptOuts resolve() {
-        JHarmonizerOptOutMode fileOptOutMode =
-                JHarmonizerOptOutFileScopeResolver.resolveFileOptOutMode(srcFile, compilationUnit);
-        if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
-            return new JHarmonizerOptOuts(JHarmonizerOptOutMode.FULLY_OFF, Map.of());
-        }
-
-        @SuppressWarnings("PMD.UseConcurrentHashMap")
-        Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new HashMap<>();
-        boolean sortingDisabledInParents = fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF;
-        for (CtType<?> declaredType : compilationUnit.getDeclaredTypes()) {
-            collectTypeOptOutModes(declaredType, sortingDisabledInParents, typeOptOutModes);
-        }
-
-        return typeOptOutModes.isEmpty() && fileOptOutMode == null
-                ? JHarmonizerOptOuts.empty()
-                : new JHarmonizerOptOuts(fileOptOutMode, Collections.unmodifiableMap(typeOptOutModes));
+    private static List<CtComment> collectLeadingTypeComments(CtType<?> currentType) {
+        return currentType.getComments().stream()
+                .filter(comment -> comment.getPosition().getEndLine()
+                        < currentType.getPosition().getLine())
+                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
+                .toList();
     }
 
     private void collectTypeOptOutModes(
@@ -110,11 +99,22 @@ public final class JHarmonizerOptOutResolver {
     }
 
     @NonNull
-    private static List<CtComment> collectLeadingTypeComments(CtType<?> currentType) {
-        return currentType.getComments().stream()
-                .filter(comment -> comment.getPosition().getEndLine()
-                        < currentType.getPosition().getLine())
-                .sorted(Comparator.comparingInt(comment -> comment.getPosition().getSourceStart()))
-                .toList();
+    private JHarmonizerOptOuts resolve() {
+        JHarmonizerOptOutMode fileOptOutMode =
+                JHarmonizerOptOutFileScopeResolver.resolveFileOptOutMode(srcFile, compilationUnit);
+        if (fileOptOutMode == JHarmonizerOptOutMode.FULLY_OFF) {
+            return new JHarmonizerOptOuts(JHarmonizerOptOutMode.FULLY_OFF, Map.of());
+        }
+
+        @SuppressWarnings("PMD.UseConcurrentHashMap")
+        Map<CtType<?>, JHarmonizerOptOutMode> typeOptOutModes = new HashMap<>();
+        boolean sortingDisabledInParents = fileOptOutMode == JHarmonizerOptOutMode.SORTING_OFF;
+        for (CtType<?> declaredType : compilationUnit.getDeclaredTypes()) {
+            collectTypeOptOutModes(declaredType, sortingDisabledInParents, typeOptOutModes);
+        }
+
+        return typeOptOutModes.isEmpty() && fileOptOutMode == null
+                ? JHarmonizerOptOuts.empty()
+                : new JHarmonizerOptOuts(fileOptOutMode, Collections.unmodifiableMap(typeOptOutModes));
     }
 }

@@ -14,6 +14,7 @@ import lombok.Value;
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class FormattingResult {
+
     @NonNull
     String formattedSrcCode;
 

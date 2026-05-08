@@ -11,9 +11,10 @@ import lombok.Value;
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class SrcFile {
-    @NonNull
-    String srcCode;
 
     @NonNull
     Path path;
+
+    @NonNull
+    String srcCode;
 }

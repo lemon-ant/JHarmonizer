@@ -29,7 +29,6 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class FormattingViolationPrinter {
-
     private static final int MAX_PATH_DISPLAY_LENGTH = 120;
 
     /**

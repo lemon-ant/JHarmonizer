@@ -26,16 +26,22 @@ import org.junit.jupiter.params.provider.MethodSource;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SrcProcessorRegressionTest
         extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorRegressionTest.CompileAndRunSnapshot> {
-
     private static final String FIXTURES_RESOURCE = "/" + TEST_CASES_DIR + "/core/e2e/regression/";
+
+    @NonNull
+    private static final Path FIXTURES_ROOT =
+            resolveFixturesRoot(TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE));
+
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
 
-    @NonNull
-    private static final Path FIXTURES_ROOT = resolveFixturesRoot();
-
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
+        fixtureScenarioDirectoriesNumberingValidatedHaveUniqueSequentialNumbersWithoutGaps();
+    }
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
@@ -43,51 +49,28 @@ class SrcProcessorRegressionTest
         processFixtureInputFileMatchesExpectedAndCompileAfter(temporaryDirectory, scenarioDir, srcFile);
     }
 
-    @Test
-    void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
-        fixtureScenarioDirectoriesNumberingValidatedHaveUniqueSequentialNumbersWithoutGaps();
-    }
-
-    @Override
-    @NonNull
-    protected Path getFixturesRoot() {
-        return FIXTURES_ROOT;
-    }
-
-    @Override
-    @NonNull
-    protected Optional<Path> findScenarioConfigPath(Path fixtureScenario) {
-        Path scenarioConfigPath = fixtureScenario.resolve("config.yml");
-        return java.nio.file.Files.exists(scenarioConfigPath) ? Optional.of(scenarioConfigPath) : Optional.empty();
-    }
-
-    @Override
-    @NonNull
-    protected String resolveDirectoryNamePrefix() {
-        return "SrcProcessorRegressionE2E";
-    }
-
-    @Override
-    @NonNull
-    protected CompileAndRunSnapshot validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput) {
-        return captureCompileAndRunSnapshot(workingInputFile, compileBeforeOutput);
-    }
-
-    @Override
-    protected void validateAfterProcessing(
-            Path workingInputFile, Path compileAfterOutput, CompileAndRunSnapshot beforeSnapshot) {
-        CompileAndRunSnapshot afterSnapshot = captureCompileAndRunSnapshot(workingInputFile, compileAfterOutput);
-        assertRelaxedCompileAndRunConsistency(beforeSnapshot, afterSnapshot, workingInputFile);
-    }
-
-    @NonNull
-    private static Path resolveFixturesRoot() {
-        try {
-            return Path.of(FIXTURE_RESOURCES_ROOT_DIR.toURI());
-        } catch (URISyntaxException exception) {
-            throw new IllegalArgumentException(
-                    "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
+    private static void assertRelaxedCompileAndRunConsistency(
+            CompileAndRunSnapshot beforeSnapshot, CompileAndRunSnapshot afterSnapshot, Path srcFile) {
+        if (!beforeSnapshot.isCompiled()) {
+            return;
         }
+
+        assertThat(afterSnapshot.isCompiled())
+                .as("Expected processed source to remain compilable because original source compiled: %s", srcFile)
+                .isTrue();
+
+        if (!beforeSnapshot.isMainExecuted()) {
+            return;
+        }
+
+        assertThat(afterSnapshot.isMainExecuted())
+                .as(
+                        "Expected processed source main method to execute because original source main executed: %s",
+                        srcFile)
+                .isTrue();
+        assertThat(afterSnapshot.getMainExitCode())
+                .as("Expected processed source main method exit code to match original source: %s", srcFile)
+                .isEqualTo(beforeSnapshot.getMainExitCode());
     }
 
     @NonNull
@@ -122,28 +105,45 @@ class SrcProcessorRegressionTest
         }
     }
 
-    private static void assertRelaxedCompileAndRunConsistency(
-            CompileAndRunSnapshot beforeSnapshot, CompileAndRunSnapshot afterSnapshot, Path srcFile) {
-        if (!beforeSnapshot.isCompiled()) {
-            return;
+    @NonNull
+    private static Path resolveFixturesRoot(URL fixturesRootUrl) {
+        try {
+            return Path.of(fixturesRootUrl.toURI());
+        } catch (URISyntaxException exception) {
+            throw new IllegalArgumentException("Cannot convert fixtures URL to URI: " + fixturesRootUrl, exception);
         }
+    }
 
-        assertThat(afterSnapshot.isCompiled())
-                .as("Expected processed source to remain compilable because original source compiled: %s", srcFile)
-                .isTrue();
+    @Override
+    @NonNull
+    protected Optional<Path> findScenarioConfigPath(Path fixtureScenario) {
+        Path scenarioConfigPath = fixtureScenario.resolve("config.yml");
+        return java.nio.file.Files.exists(scenarioConfigPath) ? Optional.of(scenarioConfigPath) : Optional.empty();
+    }
 
-        if (!beforeSnapshot.isMainExecuted()) {
-            return;
-        }
+    @Override
+    @NonNull
+    protected Path getFixturesRoot() {
+        return FIXTURES_ROOT;
+    }
 
-        assertThat(afterSnapshot.isMainExecuted())
-                .as(
-                        "Expected processed source main method to execute because original source main executed: %s",
-                        srcFile)
-                .isTrue();
-        assertThat(afterSnapshot.getMainExitCode())
-                .as("Expected processed source main method exit code to match original source: %s", srcFile)
-                .isEqualTo(beforeSnapshot.getMainExitCode());
+    @Override
+    @NonNull
+    protected String resolveDirectoryNamePrefix() {
+        return "SrcProcessorRegressionE2E";
+    }
+
+    @Override
+    protected void validateAfterProcessing(
+            Path workingInputFile, Path compileAfterOutput, CompileAndRunSnapshot beforeSnapshot) {
+        CompileAndRunSnapshot afterSnapshot = captureCompileAndRunSnapshot(workingInputFile, compileAfterOutput);
+        assertRelaxedCompileAndRunConsistency(beforeSnapshot, afterSnapshot, workingInputFile);
+    }
+
+    @Override
+    @NonNull
+    protected CompileAndRunSnapshot validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput) {
+        return captureCompileAndRunSnapshot(workingInputFile, compileBeforeOutput);
     }
 
     @Value
@@ -158,17 +158,17 @@ class SrcProcessorRegressionTest
         }
 
         @NonNull
-        private static CompileAndRunSnapshot compiledWithoutMain() {
-            return new CompileAndRunSnapshot(true, false, Integer.MIN_VALUE);
-        }
-
-        @NonNull
         private static CompileAndRunSnapshot compiledWithMain(int mainExitCode) {
             return new CompileAndRunSnapshot(true, true, mainExitCode);
         }
 
         @NonNull
         private static CompileAndRunSnapshot compiledWithMainExecutionFailed() {
+            return new CompileAndRunSnapshot(true, false, Integer.MIN_VALUE);
+        }
+
+        @NonNull
+        private static CompileAndRunSnapshot compiledWithoutMain() {
             return new CompileAndRunSnapshot(true, false, Integer.MIN_VALUE);
         }
     }

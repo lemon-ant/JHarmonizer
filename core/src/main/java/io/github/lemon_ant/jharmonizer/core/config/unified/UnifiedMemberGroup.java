@@ -39,6 +39,12 @@ public class UnifiedMemberGroup {
     List<UnifiedMemberGroup> memberSubGroups;
 
     /**
+     * Explicit internal members ordering for this group.
+     */
+    @Nullable
+    List<UnifiedOrderingRule> orderingRules;
+
+    /**
      * Whether forward references to fields declared later in source order are ignored for dependency resolution.
      * When {@code true} (default), the tool only considers references to fields above the current member.
      * When {@code false}, all same-type field references create ordering constraints regardless of source position.
@@ -57,12 +63,6 @@ public class UnifiedMemberGroup {
      */
     @Nullable
     UnifiedSeparator separator;
-
-    /**
-     * Explicit internal members ordering for this group.
-     */
-    @Nullable
-    List<UnifiedOrderingRule> orderingRules;
 
     @Builder
     private UnifiedMemberGroup(

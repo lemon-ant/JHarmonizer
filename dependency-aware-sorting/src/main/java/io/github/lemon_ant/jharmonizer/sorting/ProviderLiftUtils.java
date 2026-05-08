@@ -73,6 +73,90 @@ class ProviderLiftUtils {
         return result;
     }
 
+    // ------------------------------------------------------------------ //
+    // Provider emission check                                             //
+    // ------------------------------------------------------------------ //
+
+    /**
+     * Returns {@code true} when every provider of {@code node} has already been emitted.
+     */
+    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
+    @SuppressWarnings("PMD.UseVarargs")
+    private static boolean allProvidersEmitted(int node, IntList[] reverseAdj, boolean[] emitted) {
+        IntList providers = reverseAdj[node];
+        if (providers == null) {
+            return true;
+        }
+        for (int i = 0; i < providers.size(); i++) {
+            if (!emitted[providers.getInt(i)]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Collects all zero-in-degree nodes from the subset into a priority queue
+     * ordered by base rank.
+     */
+    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
+    @SuppressWarnings("PMD.UseVarargs")
+    @NonNull
+    private static Queue<Integer> collectZeroInDegreeNodes(List<Integer> nodes, int[] subInDegree, int[] baseRank) {
+        Queue<Integer> ready = new PriorityQueue<>(Comparator.comparingInt(node -> baseRank[node]));
+        for (int node : nodes) {
+            if (subInDegree[node] == 0) {
+                ready.add(node);
+            }
+        }
+        return ready;
+    }
+
+    /**
+     * Computes in-degrees for each node in the subset, counting only edges
+     * whose source is also in the subset.
+     */
+    @NonNull
+    private static int[] computeSubGraphInDegrees(
+            List<Integer> nodes, Set<Integer> nodeSet, IntList[] reverseAdj, int arrayLength) {
+        int[] subInDegree = new int[arrayLength];
+        for (int node : nodes) {
+            IntList providers = reverseAdj[node];
+            if (providers != null) {
+                for (int i = 0; i < providers.size(); i++) {
+                    if (nodeSet.contains(providers.getInt(i))) {
+                        subInDegree[node]++;
+                    }
+                }
+            }
+        }
+        return subInDegree;
+    }
+
+    // ------------------------------------------------------------------ //
+    // Transitive provider closure                                         //
+    // ------------------------------------------------------------------ //
+
+    /**
+     * Computes the minimal set of unemitted transitive providers required to unblock
+     * {@code node}.  Uses iterative DFS on the reverse adjacency graph.
+     */
+    @NonNull
+    private static List<Integer> computeTransitiveProviderClosure(
+            int node, IntList[] reverseAdj, boolean[] emitted, int nodeCount) {
+        List<Integer> closure = new ArrayList<>();
+        boolean[] visited = new boolean[nodeCount];
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        seedStack(reverseAdj[node], emitted, visited, stack);
+        while (!stack.isEmpty()) {
+            int current = stack.pop();
+            closure.add(current);
+            seedStack(reverseAdj[current], emitted, visited, stack);
+        }
+        return closure;
+    }
+
     /**
      * Lifts the unemitted transitive provider closure of a blocked node as a contiguous block,
      * topologically sorts them, emits them, then emits the blocked node itself.
@@ -113,50 +197,32 @@ class ProviderLiftUtils {
         return writePos;
     }
 
-    // ------------------------------------------------------------------ //
-    // Provider emission check                                             //
-    // ------------------------------------------------------------------ //
-
     /**
-     * Returns {@code true} when every provider of {@code node} has already been emitted.
-     */
-    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
-    @SuppressWarnings("PMD.UseVarargs")
-    private static boolean allProvidersEmitted(int node, IntList[] reverseAdj, boolean[] emitted) {
-        IntList providers = reverseAdj[node];
-        if (providers == null) {
-            return true;
-        }
-        for (int i = 0; i < providers.size(); i++) {
-            if (!emitted[providers.getInt(i)]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // ------------------------------------------------------------------ //
-    // Transitive provider closure                                         //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Computes the minimal set of unemitted transitive providers required to unblock
-     * {@code node}.  Uses iterative DFS on the reverse adjacency graph.
+     * Runs Kahn's algorithm on the subset, consuming the ready queue and producing
+     * a topologically sorted list.
      */
     @NonNull
-    private static List<Integer> computeTransitiveProviderClosure(
-            int node, IntList[] reverseAdj, boolean[] emitted, int nodeCount) {
-        List<Integer> closure = new ArrayList<>();
-        boolean[] visited = new boolean[nodeCount];
-        Deque<Integer> stack = new ArrayDeque<>();
-
-        seedStack(reverseAdj[node], emitted, visited, stack);
-        while (!stack.isEmpty()) {
-            int current = stack.pop();
-            closure.add(current);
-            seedStack(reverseAdj[current], emitted, visited, stack);
+    private static List<Integer> runKahnOnSubset(
+            Queue<Integer> ready, int[] subInDegree, IntList[] adjacencyLists, Set<Integer> nodeSet, int expectedSize) {
+        List<Integer> sorted = new ArrayList<>(expectedSize);
+        while (!ready.isEmpty()) {
+            int current = ready.poll();
+            sorted.add(current);
+            IntList dependents = adjacencyLists[current];
+            if (dependents != null) {
+                for (int i = 0; i < dependents.size(); i++) {
+                    int dep = dependents.getInt(i);
+                    if (!nodeSet.contains(dep)) {
+                        continue;
+                    }
+                    subInDegree[dep]--;
+                    if (subInDegree[dep] == 0) {
+                        ready.add(dep);
+                    }
+                }
+            }
         }
-        return closure;
+        return sorted;
     }
 
     /**
@@ -200,71 +266,5 @@ class ProviderLiftUtils {
         int[] subInDegree = computeSubGraphInDegrees(nodes, nodeSet, reverseAdj, baseRank.length);
         Queue<Integer> ready = collectZeroInDegreeNodes(nodes, subInDegree, baseRank);
         return runKahnOnSubset(ready, subInDegree, adjacencyLists, nodeSet, nodes.size());
-    }
-
-    /**
-     * Computes in-degrees for each node in the subset, counting only edges
-     * whose source is also in the subset.
-     */
-    @NonNull
-    private static int[] computeSubGraphInDegrees(
-            List<Integer> nodes, Set<Integer> nodeSet, IntList[] reverseAdj, int arrayLength) {
-        int[] subInDegree = new int[arrayLength];
-        for (int node : nodes) {
-            IntList providers = reverseAdj[node];
-            if (providers != null) {
-                for (int i = 0; i < providers.size(); i++) {
-                    if (nodeSet.contains(providers.getInt(i))) {
-                        subInDegree[node]++;
-                    }
-                }
-            }
-        }
-        return subInDegree;
-    }
-
-    /**
-     * Collects all zero-in-degree nodes from the subset into a priority queue
-     * ordered by base rank.
-     */
-    // Array parameter is intentional: varargs would add allocation overhead in this performance path.
-    @SuppressWarnings("PMD.UseVarargs")
-    @NonNull
-    private static Queue<Integer> collectZeroInDegreeNodes(List<Integer> nodes, int[] subInDegree, int[] baseRank) {
-        Queue<Integer> ready = new PriorityQueue<>(Comparator.comparingInt(node -> baseRank[node]));
-        for (int node : nodes) {
-            if (subInDegree[node] == 0) {
-                ready.add(node);
-            }
-        }
-        return ready;
-    }
-
-    /**
-     * Runs Kahn's algorithm on the subset, consuming the ready queue and producing
-     * a topologically sorted list.
-     */
-    @NonNull
-    private static List<Integer> runKahnOnSubset(
-            Queue<Integer> ready, int[] subInDegree, IntList[] adjacencyLists, Set<Integer> nodeSet, int expectedSize) {
-        List<Integer> sorted = new ArrayList<>(expectedSize);
-        while (!ready.isEmpty()) {
-            int current = ready.poll();
-            sorted.add(current);
-            IntList dependents = adjacencyLists[current];
-            if (dependents != null) {
-                for (int i = 0; i < dependents.size(); i++) {
-                    int dep = dependents.getInt(i);
-                    if (!nodeSet.contains(dep)) {
-                        continue;
-                    }
-                    subInDegree[dep]--;
-                    if (subInDegree[dep] == 0) {
-                        ready.add(dep);
-                    }
-                }
-            }
-        }
-        return sorted;
     }
 }

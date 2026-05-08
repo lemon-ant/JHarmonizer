@@ -31,7 +31,6 @@ import lombok.NonNull;
  * each result passes through.
  */
 public class CheckFailFastFlow extends AbstractOptOutFlow {
-
     private final AtomicBoolean stopFlag = new AtomicBoolean(false);
 
     /**
@@ -46,18 +45,19 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         super(formatter, sorter, printerConfig, CHECK_FAIL_FAST);
     }
 
-    /**
-     * Extends the base JVM-shutdown pre-check with an early stop-flag guard,
-     * so that no further source files are processed once a violation has been detected.
-     * The stop-flag is set by {@link #postProcessResults} after the first violating result passes through.
-     *
-     * @param srcFiles the incoming stream of source files
-     * @return a stream that skips remaining files once the stop flag is set
-     */
     @Override
-    @NonNull
-    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
-        return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
+    public boolean isModifyingFlow() {
+        return false;
+    }
+
+    @Override
+    public boolean isSuccessful(boolean hasModifications) {
+        return !hasModifications;
+    }
+
+    @Override
+    protected boolean isStopRequestedOnFormattingChange() {
+        return true;
     }
 
     /**
@@ -75,6 +75,20 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
                 stopFlag.set(true);
             }
         });
+    }
+
+    /**
+     * Extends the base JVM-shutdown pre-check with an early stop-flag guard,
+     * so that no further source files are processed once a violation has been detected.
+     * The stop-flag is set by {@link #postProcessResults} after the first violating result passes through.
+     *
+     * @param srcFiles the incoming stream of source files
+     * @return a stream that skips remaining files once the stop flag is set
+     */
+    @Override
+    @NonNull
+    protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
+        return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
     }
 
     /**
@@ -98,20 +112,5 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
         return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, true);
-    }
-
-    @Override
-    protected boolean isStopRequestedOnFormattingChange() {
-        return true;
-    }
-
-    @Override
-    public boolean isSuccessful(boolean hasModifications) {
-        return !hasModifications;
-    }
-
-    @Override
-    public boolean isModifyingFlow() {
-        return false;
     }
 }

@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 class CheckAllCommandTest {
-
     private CommandLine commandLine;
 
     @BeforeEach
@@ -50,6 +49,28 @@ class CheckAllCommandTest {
     }
 
     @Test
+    void checkCommand_nonConformingFilesAndInfoDisabled_returnsCheckFailedExitCode() {
+        // Given
+        Logger baseCommandLogger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
+        Level previousLevel = baseCommandLogger.getLevel();
+        baseCommandLogger.setLevel(Level.WARN);
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildFailedResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        } finally {
+            baseCommandLogger.setLevel(previousLevel);
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
+    }
+
+    @Test
     void checkCommand_nonConformingFilesDetected_returnsCheckFailedExitCode() {
         // When
         int exitCode;
@@ -62,22 +83,6 @@ class CheckAllCommandTest {
 
         // Then
         assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
-    }
-
-    @Test
-    void checkCommand_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
-                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenThrow(new RuntimeException("Unexpected error"));
-                })) {
-            exitCode = commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -101,24 +106,18 @@ class CheckAllCommandTest {
     }
 
     @Test
-    void checkCommand_nonConformingFilesAndInfoDisabled_returnsCheckFailedExitCode() {
-        // Given
-        Logger baseCommandLogger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
-        Level previousLevel = baseCommandLogger.getLevel();
-        baseCommandLogger.setLevel(Level.WARN);
-
+    void checkCommand_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
         // When
         int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(CommandTestUtils.buildFailedResult());
-        })) {
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Unexpected error"));
+                })) {
             exitCode = commandLine.execute("--base-dir", "src");
-        } finally {
-            baseCommandLogger.setLevel(previousLevel);
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 }

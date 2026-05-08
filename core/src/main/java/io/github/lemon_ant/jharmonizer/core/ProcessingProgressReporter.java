@@ -16,17 +16,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 final class ProcessingProgressReporter {
-
-    private static final int PROGRESS_BATCH_SIZE = 100;
     private static final String PADDED_NUMBERS_FORMAT = "%4d";
+    private static final int PROGRESS_BATCH_SIZE = 100;
 
-    private final AtomicLong totalProcessed = new AtomicLong();
-    private final LongAdder reorderedCount = new LongAdder();
-    private final LongAdder formattedCount = new LongAdder();
-    private final LongAdder unchangedCount = new LongAdder();
     private final LongAdder checkedCount = new LongAdder();
-    private final LongAdder skippedCount = new LongAdder();
     private final LongAdder errorCount = new LongAdder();
+    private final LongAdder formattedCount = new LongAdder();
+    private final LongAdder reorderedCount = new LongAdder();
+    private final LongAdder skippedCount = new LongAdder();
+    private final AtomicLong totalProcessed = new AtomicLong();
+    private final LongAdder unchangedCount = new LongAdder();
 
     /**
      * Records a single processed file and logs periodic progress at INFO level.
@@ -56,7 +55,8 @@ final class ProcessingProgressReporter {
     @SuppressWarnings("PMD.GuardLogStatement")
     private void logBatchProgress(long count) {
         log.info(
-                "JHarmonization: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={}, errors={})",
+                "JHarmonization: {} files processed (reordered={}, formatted={}, unchanged={}, checked={}, skipped={},"
+                        + " errors={})",
                 String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, count),
                 String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, reorderedCount.sum()),
                 String.format(Locale.ROOT, PADDED_NUMBERS_FORMAT, formattedCount.sum()),

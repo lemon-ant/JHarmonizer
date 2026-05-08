@@ -41,17 +41,6 @@ public class SpoonSorter {
     @NonNull
     private final CompiledConfig compiledConfig;
 
-    /**
-     * Flattens blocks into a single member list preserving the block order.
-     * Group boundary markers are expected to be applied before flattening.
-     */
-    @NonNull
-    private static List<CtTypeMember> flattenMembers(List<MemberGroupBlock> memberGroupBlocks) {
-        return memberGroupBlocks.stream()
-                .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream())
-                .toList();
-    }
-
     public void sortCompilationUnitRecursively(
             @NonNull CtCompilationUnit compilationUnit, @NonNull Set<CtType<?>> sortingSkippedTypes) {
         reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
@@ -59,23 +48,9 @@ public class SpoonSorter {
         compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, sortingSkippedTypes, srcFile));
     }
 
-    private static void reorderTopLevelTypes(
-            CtCompilationUnit compilationUnit, CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
-        List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
-        if (declaredTypes.size() <= MAX_MEMBERS_WITHOUT_SORTING) {
-            return;
-        }
-
-        CtType<?> mainType =
-                compiledTopLevelTypesOrdering.isMainTypeFirst() ? SpoonTypeUtils.findMainType(compilationUnit) : null;
-        Comparator<OrderingKey> orderingComparator =
-                ComparatorUtils.buildOrderingKeyComparator(compiledTopLevelTypesOrdering.getOrderingRules());
-        Comparator<CtType<?>> declaredTypeComparator =
-                createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
-
-        List<CtType<?>> sortedDeclaredTypes =
-                declaredTypes.stream().sorted(declaredTypeComparator).toList();
-        compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private static int compareMainTypePriority(CtType<?> topLevelType, CtType<?> mainType, boolean mainTypeFirst) {
+        return mainTypeFirst ? BooleanUtils.toInteger(topLevelType != mainType) : 0;
     }
 
     @NonNull
@@ -108,9 +83,61 @@ public class SpoonSorter {
         return topLevelTypesSelectors.size();
     }
 
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static int compareMainTypePriority(CtType<?> topLevelType, CtType<?> mainType, boolean mainTypeFirst) {
-        return mainTypeFirst ? BooleanUtils.toInteger(topLevelType != mainType) : 0;
+    /**
+     * Flattens blocks into a single member list preserving the block order.
+     * Group boundary markers are expected to be applied before flattening.
+     */
+    @NonNull
+    private static List<CtTypeMember> flattenMembers(List<MemberGroupBlock> memberGroupBlocks) {
+        return memberGroupBlocks.stream()
+                .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream())
+                .toList();
+    }
+
+    private static void reorderTopLevelTypes(
+            CtCompilationUnit compilationUnit, CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
+        List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
+        if (declaredTypes.size() <= MAX_MEMBERS_WITHOUT_SORTING) {
+            return;
+        }
+
+        CtType<?> mainType =
+                compiledTopLevelTypesOrdering.isMainTypeFirst() ? SpoonTypeUtils.findMainType(compilationUnit) : null;
+        Comparator<OrderingKey> orderingComparator =
+                ComparatorUtils.buildOrderingKeyComparator(compiledTopLevelTypesOrdering.getOrderingRules());
+        Comparator<CtType<?>> declaredTypeComparator =
+                createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
+
+        List<CtType<?>> sortedDeclaredTypes =
+                declaredTypes.stream().sorted(declaredTypeComparator).toList();
+        compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
+    }
+
+    @NonNull
+    private static List<CtTypeMember> sortTypeMembers(CtType<?> type, CompiledMemberGroup rootMemberGroup) {
+        if (type.getTypeMembers().size() <= MAX_MEMBERS_WITHOUT_SORTING) {
+            return type.getTypeMembers();
+        }
+
+        Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = SpoonMemberDescriptorFactory.describeMembers(type);
+
+        Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember =
+                NaturalMemberGroupResolver.resolveNaturalGroups(rootMemberGroup, typeMember2Descriptor);
+
+        MemberDependencyGraph memberDependencyGraph =
+                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupByMember);
+
+        Map<CtTypeMember, CompiledMemberGroup> effectiveGroupByMember =
+                EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupByMember, memberDependencyGraph);
+
+        List<MemberGroupBlock> memberGroupBlocks =
+                TypeMemberGrouper.groupMembersByEffectiveGroups(effectiveGroupByMember);
+
+        List<MemberGroupBlock> orderedMemberGroupBlocks =
+                GroupMembersOrderer.orderMembersInsideGroups(memberGroupBlocks, memberDependencyGraph);
+
+        GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
+        return flattenMembers(orderedMemberGroupBlocks);
     }
 
     /**
@@ -147,32 +174,5 @@ public class SpoonSorter {
                 .getNestedTypes()
                 .forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes, srcFile));
         currentType.setTypeMembers(sortTypeMembers(currentType, rootMemberGroup));
-    }
-
-    @NonNull
-    private static List<CtTypeMember> sortTypeMembers(CtType<?> type, CompiledMemberGroup rootMemberGroup) {
-        if (type.getTypeMembers().size() <= MAX_MEMBERS_WITHOUT_SORTING) {
-            return type.getTypeMembers();
-        }
-
-        Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = SpoonMemberDescriptorFactory.describeMembers(type);
-
-        Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember =
-                NaturalMemberGroupResolver.resolveNaturalGroups(rootMemberGroup, typeMember2Descriptor);
-
-        MemberDependencyGraph memberDependencyGraph =
-                MemberDependencyGraphBuilder.buildDependencyGraph(naturalGroupByMember);
-
-        Map<CtTypeMember, CompiledMemberGroup> effectiveGroupByMember =
-                EffectiveMemberGroupResolver.resolveEffectiveGroups(naturalGroupByMember, memberDependencyGraph);
-
-        List<MemberGroupBlock> memberGroupBlocks =
-                TypeMemberGrouper.groupMembersByEffectiveGroups(effectiveGroupByMember);
-
-        List<MemberGroupBlock> orderedMemberGroupBlocks =
-                GroupMembersOrderer.orderMembersInsideGroups(memberGroupBlocks, memberDependencyGraph);
-
-        GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
-        return flattenMembers(orderedMemberGroupBlocks);
     }
 }

@@ -21,16 +21,13 @@ import lombok.Value;
  */
 @Value
 public class CompiledConfig {
+    boolean backupsEnabled;
+
     /**
      * Cohesive formatting definition (preferred API).
      */
     @NonNull
     UnifiedFormatting formatting;
-
-    boolean backupsEnabled;
-
-    @NonNull
-    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Header line descriptor (character + leftPadding).
@@ -39,7 +36,11 @@ public class CompiledConfig {
     UnifiedHeaderLine headerLine;
 
     @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
+
+    @NonNull
     List<CompiledMemberGroup> rootMemberGroups;
+
     /**
      * Compiled top-level order as a sequence of predicates.
      * Compiler is responsible for populating it (including optional head predicates).

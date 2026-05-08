@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
     <artifactId>jharmonizer-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>JHarmonizer Parent</name>
@@ -44,7 +44,7 @@ SPDX-License-Identifier: Apache-2.0
     <scm>
         <connection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</connection>
         <developerConnection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</developerConnection>
-        <tag>v1.0.1</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/lemon-ant/JHarmonizer</url>
     </scm>
 
@@ -64,6 +64,7 @@ SPDX-License-Identifier: Apache-2.0
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <jacoco.minimum.branch.coverage>0.85</jacoco.minimum.branch.coverage>
         <jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
+        <jharmonizer-maven-plugin.version>1.0.1</jharmonizer-maven-plugin.version>
         <jmh.version>1.37</jmh.version>
         <jspecify.version>1.0.0</jspecify.version>
         <license-maven-plugin.version>5.0.0</license-maven-plugin.version>
@@ -98,7 +99,6 @@ SPDX-License-Identifier: Apache-2.0
         <spoon.version>11.2.1</spoon.version>
         <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
-        <spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -342,15 +342,11 @@ SPDX-License-Identifier: Apache-2.0
                 </plugin>
 
                 <plugin>
-                    <groupId>com.diffplug.spotless</groupId>
-                    <artifactId>spotless-maven-plugin</artifactId>
-                    <version>${spotless-maven-plugin.version}</version>
+                    <groupId>io.github.lemon-ant.jharmonizer</groupId>
+                    <artifactId>jharmonizer-maven-plugin</artifactId>
+                    <version>${jharmonizer-maven-plugin.version}</version>
                     <configuration>
-                        <java>
-                            <palantirJavaFormat>
-                                <version>${palantir-java-format.version}</version>
-                            </palantirJavaFormat>
-                        </java>
+                        <backupsEnabled>false</backupsEnabled>
                     </configuration>
                 </plugin>
 
@@ -706,15 +702,15 @@ SPDX-License-Identifier: Apache-2.0
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.diffplug.spotless</groupId>
-                        <artifactId>spotless-maven-plugin</artifactId>
+                        <groupId>io.github.lemon-ant.jharmonizer</groupId>
+                        <artifactId>jharmonizer-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>reformat-sources</id>
                                 <goals>
-                                    <goal>apply</goal>
+                                    <goal>reorder</goal>
                                 </goals>
-                                <phase>validate</phase>
+                                <phase>process-sources</phase>
                             </execution>
                         </executions>
                     </plugin>
@@ -736,11 +732,13 @@ SPDX-License-Identifier: Apache-2.0
             </build>
         </profile>
 
+        <!-- Profile activated on CI (mvn -Dci=true verify) to verify sources match expected order.
+             Checks POM ordering (sortpom) and Java member ordering (jharmonizer) without modifying files. -->
         <profile>
-            <id>quality-gates</id>
+            <id>check-sources</id>
             <activation>
                 <property>
-                    <name>!skip-quality-gates</name>
+                    <name>ci</name>
                 </property>
             </activation>
             <build>
@@ -760,19 +758,31 @@ SPDX-License-Identifier: Apache-2.0
                     </plugin>
 
                     <plugin>
-                        <groupId>com.diffplug.spotless</groupId>
-                        <artifactId>spotless-maven-plugin</artifactId>
+                        <groupId>io.github.lemon-ant.jharmonizer</groupId>
+                        <artifactId>jharmonizer-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>check-sources</id>
                                 <goals>
-                                    <goal>check</goal>
+                                    <goal>check-fast</goal>
                                 </goals>
-                                <phase>initialize</phase>
+                                <phase>validate</phase>
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
 
+        <profile>
+            <id>quality-gates</id>
+            <activation>
+                <property>
+                    <name>!skip-quality-gates</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>com.mycila</groupId>
                         <artifactId>license-maven-plugin</artifactId>

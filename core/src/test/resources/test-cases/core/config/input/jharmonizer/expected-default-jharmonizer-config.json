@@ -1,13 +1,12 @@
 {
   "formatting" : {
-    "fixImports" : true,
-    "formatterStyle" : "PALANTIR",
     "blankLineAfterTypeHeader" : false,
     "blankLineBeforeComment" : true,
-    "blankLineBetweenFields" : false
+    "blankLineBetweenFields" : false,
+    "fixImports" : true,
+    "formatterStyle" : "PALANTIR"
   },
   "backupsEnabled" : true,
-  "processingStatisticsMode" : "MINIMAL",
   "headerLine" : {
     "character" : "-",
     "leftPadding" : 3
@@ -872,6 +871,7 @@
     } ],
     "orderingRules" : [ "PRESERVE" ]
   } ],
+  "processingStatisticsMode" : "MINIMAL",
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,
     "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],

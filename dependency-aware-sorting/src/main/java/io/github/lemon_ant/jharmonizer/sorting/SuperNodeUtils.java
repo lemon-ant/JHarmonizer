@@ -85,7 +85,34 @@ class SuperNodeUtils {
                 dataPosition);
 
         return new SuperNodes<>(
-                itemToSuperNode, memberIndices, nodeOffset, nodeLength, nodeKeys, totalNodeCount, firstSingletonIndex);
+                totalNodeCount, firstSingletonIndex, itemToSuperNode, memberIndices, nodeKeys, nodeLength, nodeOffset);
+    }
+
+    // ------------------------------------------------------------------ //
+    // Expand super-node order to items                                    //
+    // ------------------------------------------------------------------ //
+
+    /**
+     * Expands the super-node order into the final item list.
+     *
+     * @param superNodeOrder ordered array of super-node indices
+     * @param superNodes     the super-node layout
+     * @param items          the original item list
+     * @param <TNode> the item type
+     * @return the items in the computed order
+     */
+    @NonNull
+    static <TNode> List<TNode> expandOrder(
+            @NonNull int[] superNodeOrder, @NonNull SuperNodes<TNode> superNodes, @NonNull List<TNode> items) {
+        List<TNode> result = new ArrayList<>(items.size());
+        for (int nodeIndex : superNodeOrder) {
+            int start = superNodes.getNodeOffset()[nodeIndex];
+            int memberCount = superNodes.getNodeLength()[nodeIndex];
+            for (int i = start; i < start + memberCount; i++) {
+                result.add(items.get(superNodes.getMemberIndices()[i]));
+            }
+        }
+        return result;
     }
 
     /**
@@ -157,53 +184,6 @@ class SuperNodeUtils {
         return currentSuperNodeCount;
     }
 
-    /**
-     * Resolves group item identities to indices, validates uniqueness, and populates
-     * {@code itemToSuperNode} and {@code memberIndices} arrays.
-     */
-    private static <TNode> void resolveGroupMembers(
-            List<TNode> groupItems,
-            Map<TNode, Integer> itemToIndex,
-            int[] itemToSuperNode,
-            int superNodeIndex,
-            int[] memberIndices,
-            int dataPosition) {
-        for (int j = 0; j < groupItems.size(); j++) {
-            TNode item = groupItems.get(j);
-            int itemIndex = SortingUtils.resolveGroupMemberIndex(itemToIndex, item);
-            SortingUtils.validateNotAlreadyGrouped(itemToSuperNode[itemIndex], item);
-            itemToSuperNode[itemIndex] = superNodeIndex;
-            memberIndices[dataPosition + j] = itemIndex;
-        }
-    }
-
-    // ------------------------------------------------------------------ //
-    // Expand super-node order to items                                    //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Expands the super-node order into the final item list.
-     *
-     * @param superNodeOrder ordered array of super-node indices
-     * @param superNodes     the super-node layout
-     * @param items          the original item list
-     * @param <TNode> the item type
-     * @return the items in the computed order
-     */
-    @NonNull
-    static <TNode> List<TNode> expandOrder(
-            @NonNull int[] superNodeOrder, @NonNull SuperNodes<TNode> superNodes, @NonNull List<TNode> items) {
-        List<TNode> result = new ArrayList<>(items.size());
-        for (int nodeIndex : superNodeOrder) {
-            int start = superNodes.getNodeOffset()[nodeIndex];
-            int memberCount = superNodes.getNodeLength()[nodeIndex];
-            for (int i = start; i < start + memberCount; i++) {
-                result.add(items.get(superNodes.getMemberIndices()[i]));
-            }
-        }
-        return result;
-    }
-
     // ------------------------------------------------------------------ //
     // Intra-group sorting                                                 //
     // ------------------------------------------------------------------ //
@@ -227,6 +207,26 @@ class SuperNodeUtils {
         }
     }
 
+    /**
+     * Resolves group item identities to indices, validates uniqueness, and populates
+     * {@code itemToSuperNode} and {@code memberIndices} arrays.
+     */
+    private static <TNode> void resolveGroupMembers(
+            List<TNode> groupItems,
+            Map<TNode, Integer> itemToIndex,
+            int[] itemToSuperNode,
+            int superNodeIndex,
+            int[] memberIndices,
+            int dataPosition) {
+        for (int j = 0; j < groupItems.size(); j++) {
+            TNode item = groupItems.get(j);
+            int itemIndex = SortingUtils.resolveGroupMemberIndex(itemToIndex, item);
+            SortingUtils.validateNotAlreadyGrouped(itemToSuperNode[itemIndex], item);
+            itemToSuperNode[itemIndex] = superNodeIndex;
+            memberIndices[dataPosition + j] = itemIndex;
+        }
+    }
+
     // ------------------------------------------------------------------ //
     // Super-node data structure                                           //
     // ------------------------------------------------------------------ //
@@ -243,19 +243,26 @@ class SuperNodeUtils {
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class SuperNodes<TNode> {
-        /** Item index → super-node index. */
-        int[] itemToSuperNode;
-        /** Flat item-index storage, grouped by super-node. */
-        int[] memberIndices;
-        /** Per-super-node start position in {@code memberIndices}. */
-        int[] nodeOffset;
-        /** Per-super-node item count. */
-        int[] nodeLength;
-        /** Per-super-node comparator-minimum item (tie-break key). */
-        TNode[] nodeKeys;
+
         /** Total number of super-nodes. */
         int count;
+
         /** Index of the first singleton (non-group) super-node. */
         int firstSingletonIndex;
+
+        /** Item index → super-node index. */
+        int[] itemToSuperNode;
+
+        /** Flat item-index storage, grouped by super-node. */
+        int[] memberIndices;
+
+        /** Per-super-node comparator-minimum item (tie-break key). */
+        TNode[] nodeKeys;
+
+        /** Per-super-node item count. */
+        int[] nodeLength;
+
+        /** Per-super-node start position in {@code memberIndices}. */
+        int[] nodeOffset;
     }
 }

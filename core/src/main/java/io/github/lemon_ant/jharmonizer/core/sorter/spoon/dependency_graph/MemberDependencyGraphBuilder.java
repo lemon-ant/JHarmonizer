@@ -26,7 +26,6 @@ import spoon.reflect.declaration.CtTypeMember;
 @Slf4j
 @UtilityClass
 public class MemberDependencyGraphBuilder {
-
     private static final Collection<@NonNull MemberDependencyProvider> memberDependencyProviders = List.of(
             new AccessorPairDependencyProvider(),
             new EnumConstantInitializerDependencyProvider(),
@@ -85,6 +84,14 @@ public class MemberDependencyGraphBuilder {
     }
 
     @NonNull
+    private static String buildCycleErrorMessage(List<CtTypeMember> cyclePath) {
+        return "Dependency cycle detected among members of type '"
+                + requireDeclaringTypeName(cyclePath.get(0))
+                + "': "
+                + formatCyclePath(cyclePath);
+    }
+
+    @NonNull
     private static MemberDependencyGraph buildDependencyGraphInternal(
             @NonNull Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
             boolean forceRelaxedForwardReferences) {
@@ -111,13 +118,8 @@ public class MemberDependencyGraphBuilder {
     }
 
     @NonNull
-    private static CompiledMemberGroup resolveNaturalGroupOrThrow(
-            CtTypeMember typeMember, Map<CtTypeMember, CompiledMemberGroup> typeMember2CompiledMemberGroup) {
-
-        return Optional.ofNullable(typeMember2CompiledMemberGroup.get(typeMember))
-                .orElseThrow(() -> new IllegalStateException("Natural group was not resolved for type member. "
-                        + "Expected typeMember2CompiledMemberGroup to contain all explicit (source) type members. "
-                        + "Missing member: " + typeMember));
+    private static String formatCyclePath(List<CtTypeMember> cyclePath) {
+        return cyclePath.stream().map(CtTypeMember::getSimpleName).collect(Collectors.joining(" -> "));
     }
 
     @NonNull
@@ -131,15 +133,12 @@ public class MemberDependencyGraphBuilder {
     }
 
     @NonNull
-    private static String buildCycleErrorMessage(List<CtTypeMember> cyclePath) {
-        return "Dependency cycle detected among members of type '"
-                + requireDeclaringTypeName(cyclePath.get(0))
-                + "': "
-                + formatCyclePath(cyclePath);
-    }
+    private static CompiledMemberGroup resolveNaturalGroupOrThrow(
+            CtTypeMember typeMember, Map<CtTypeMember, CompiledMemberGroup> typeMember2CompiledMemberGroup) {
 
-    @NonNull
-    private static String formatCyclePath(List<CtTypeMember> cyclePath) {
-        return cyclePath.stream().map(CtTypeMember::getSimpleName).collect(Collectors.joining(" -> "));
+        return Optional.ofNullable(typeMember2CompiledMemberGroup.get(typeMember))
+                .orElseThrow(() -> new IllegalStateException("Natural group was not resolved for type member. "
+                        + "Expected typeMember2CompiledMemberGroup to contain all explicit (source) type members. "
+                        + "Missing member: " + typeMember));
     }
 }

@@ -16,6 +16,7 @@ import lombok.Value;
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileProcessingStatistic {
+
     @NonNull
     Path path;
 

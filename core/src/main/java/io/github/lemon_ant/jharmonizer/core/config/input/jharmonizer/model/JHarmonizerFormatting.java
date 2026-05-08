@@ -12,17 +12,13 @@ import lombok.Value;
  */
 @Value
 public class JHarmonizerFormatting {
-
+    boolean blankLineAfterTypeHeader;
+    boolean blankLineBeforeComment;
+    boolean blankLineBetweenFields;
     boolean fixImports;
 
     @NonNull
     FormatterStyle formatterStyle;
-
-    boolean blankLineAfterTypeHeader;
-
-    boolean blankLineBeforeComment;
-
-    boolean blankLineBetweenFields;
 
     /**
      * Creates a new JHarmonizerFormatting.

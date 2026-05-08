@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public final class Sorter {
+
     // TODO Try to remove this field and make the class static util
     private final SpoonSorter spoonSorter;
 

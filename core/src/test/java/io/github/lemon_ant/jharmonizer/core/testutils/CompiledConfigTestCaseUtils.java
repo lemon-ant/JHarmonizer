@@ -13,7 +13,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CompiledConfigTestCaseUtils {
-
     public static CompiledMemberGroup compileSingleRootMemberGroupFromJHarmonizerConfigResource(
             @NonNull URL configResource) {
         UnifiedConfig unifiedConfig =

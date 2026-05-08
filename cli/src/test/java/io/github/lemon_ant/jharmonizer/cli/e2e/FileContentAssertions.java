@@ -10,7 +10,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class FileContentAssertions {
-
     static void assertFileChanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
         Path actualFile = actualProjectDirectory.resolve(relativePath);
         Path expectedFile = expectedProjectDirectory.resolve(relativePath);
@@ -19,15 +18,15 @@ class FileContentAssertions {
                 .isInstanceOf(AssertionError.class);
     }
 
-    static void assertFileUnchanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
-        assertThat(actualProjectDirectory.resolve(relativePath))
-                .as("Expected file to remain unchanged: %s", relativePath)
-                .hasSameTextualContentAs(expectedProjectDirectory.resolve(relativePath));
-    }
-
     static void assertFileMatches(Path expectedFile, Path actualProjectDirectory, String relativePath) {
         assertThat(actualProjectDirectory.resolve(relativePath))
                 .as("Expected file to match: %s", relativePath)
                 .hasSameTextualContentAs(expectedFile);
+    }
+
+    static void assertFileUnchanged(Path expectedProjectDirectory, Path actualProjectDirectory, String relativePath) {
+        assertThat(actualProjectDirectory.resolve(relativePath))
+                .as("Expected file to remain unchanged: %s", relativePath)
+                .hasSameTextualContentAs(expectedProjectDirectory.resolve(relativePath));
     }
 }

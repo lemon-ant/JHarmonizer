@@ -12,9 +12,6 @@ import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class UnifiedConfigMergerTest {
-
-    private static final UnifiedFormatting FORMATTING =
-            new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false);
     private static final FlexibleUnifiedFormatting FLEXIBLE_FORMATTING = FlexibleUnifiedFormatting.builder()
             .fixImports(true)
             .formatterStyle(UnifiedFormatterStyle.PALANTIR)
@@ -22,6 +19,8 @@ class UnifiedConfigMergerTest {
             .blankLineBeforeComment(true)
             .blankLineBetweenFields(false)
             .build();
+    private static final UnifiedFormatting FORMATTING =
+            new UnifiedFormatting(true, true, false, true, UnifiedFormatterStyle.PALANTIR);
     private static final UnifiedHeaderLine HEADER_LINE = new UnifiedHeaderLine('-', 2);
     private static final UnifiedMemberGroupSelectorBlock SELECTOR_BLOCK =
             UnifiedMemberGroupSelectorBlock.builder().build();
@@ -32,19 +31,212 @@ class UnifiedConfigMergerTest {
             .build();
 
     @Test
-    void merge_rootMemberGroupsNotProvided_preservesBaselineGroups() {
+    void merge_baselineRootGroupNameMissing_preservesUnnamedGroupInOriginalPosition() {
         // Given
-        UnifiedMemberGroup baselineFirstGroup = createGroup("Default Rule");
-        UnifiedMemberGroup baselineSecondGroup = createGroup("Units");
-        UnifiedConfig baselineConfig = createConfig(List.of(baselineFirstGroup, baselineSecondGroup));
+        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup unnamedBaselineGroup = createGroup(null);
+        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
+        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup overlayNewUnnamedGroup = createGroup(null);
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(overlayReplacementNamedGroup, overlayNewUnnamedGroup))
+                .build();
+
+        // When
+        UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(
+                createConfig(List.of(baselineNamedGroup, unnamedBaselineGroup, baselineTrailingNamedGroup)),
+                overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .containsExactly(
+                        overlayNewUnnamedGroup,
+                        overlayReplacementNamedGroup,
+                        unnamedBaselineGroup,
+                        baselineTrailingNamedGroup);
+    }
+
+    @Test
+    void merge_duplicateBaselineNames_throwsException() {
+        // Given
+        UnifiedMemberGroup firstBaselineGroup = createGroup("Default Rule");
+        UnifiedMemberGroup duplicateBaselineGroup = createGroup("Default Rule", List.of(createGroup("Duplicate")));
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().rootMemberGroups(List.of()).build();
+
+        // When
+        Throwable thrown = catchThrowable(() -> UnifiedConfigMerger.merge(
+                createConfig(List.of(firstBaselineGroup, duplicateBaselineGroup)), overlayConfig));
+
+        // Then
+        assertThat(thrown)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Baseline root member group names must be unique");
+    }
+
+    @Test
+    void merge_flexibleBaselineUnnamedGroupsProvided_preservesUnnamedPositions() {
+        // Given
+        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup baselineUnnamedGroup = createGroup(null);
+        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(baselineNamedGroup, baselineUnnamedGroup, baselineTrailingNamedGroup))
+                .build();
+        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
+        UnifiedMemberGroup overlayNewNamedGroup = createGroup("Audit");
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(overlayReplacementNamedGroup, overlayNewNamedGroup))
+                .build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .contains(List.of(
+                        overlayNewNamedGroup,
+                        overlayReplacementNamedGroup,
+                        baselineUnnamedGroup,
+                        baselineTrailingNamedGroup));
+    }
+
+    @Test
+    void merge_flexibleConfigsWithoutRootGroupsProvided_keepsRootGroupsAbsent() {
+        // Given
+        FlexibleUnifiedConfig baselineConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build();
         FlexibleUnifiedConfig overlayConfig =
                 FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getBackupsEnabled()).contains(false);
+        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
+    }
+
+    @Test
+    void merge_flexibleOverlayProvided_overridesBackupsAndKeepsBaselineFields() {
+        // Given
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
+                .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)
+                .formatting(FLEXIBLE_FORMATTING)
+                .backupsEnabled(true)
+                .headerLine(HEADER_LINE)
+                .rootMemberGroups(List.of(createGroup("Default Rule")))
+                .build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getBackupsEnabled()).contains(false);
+        assertThat(mergedConfig.getFormatting()).contains(FLEXIBLE_FORMATTING);
+        assertThat(mergedConfig.getTopLevelTypesOrdering()).contains(TOP_LEVEL_TYPES_ORDERING);
+        assertThat(mergedConfig.getHeaderLine()).contains(HEADER_LINE);
+        assertThat(mergedConfig.getRootMemberGroups()).contains(List.of(createGroup("Default Rule")));
+    }
+
+    @Test
+    void merge_flexibleRootGroupsMissingOnBothSides_keepsRootMemberGroupsAbsent() {
+        // Given
+        FlexibleUnifiedConfig baselineConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(true).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
+    }
+
+    @Test
+    void merge_flexibleRootGroupsProvided_mergesRootGroupsLikeStrictMerge() {
+        // Given
+        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
+        UnifiedMemberGroup baselineUnitsGroup = createGroup("Units");
+        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(baselineDefaultGroup, baselineUnitsGroup))
+                .build();
+        UnifiedMemberGroup replacementDefaultGroup = createGroup("Default Rule");
+        UnifiedMemberGroup newAuditGroup = createGroup("Audit");
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(replacementDefaultGroup, newAuditGroup))
+                .build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups())
+                .contains(List.of(newAuditGroup, replacementDefaultGroup, baselineUnitsGroup));
+    }
+
+    @Test
+    void merge_overlayRootGroupNameMissing_prependsUnnamedGroup() {
+        // Given
+        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
+        UnifiedMemberGroup unnamedOverlayGroup = createGroup(null);
+        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
+                .rootMemberGroups(List.of(unnamedOverlayGroup))
+                .build();
+
+        // When
+        UnifiedConfig mergedConfig =
+                UnifiedConfigMerger.merge(createConfig(List.of(baselineDefaultGroup)), overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getRootMemberGroups()).containsExactly(unnamedOverlayGroup, baselineDefaultGroup);
+    }
+
+    @Test
+    void merge_partialFormattingOverlayApplied_overlayFieldsOverrideBaselineFormattingFields() {
+        // Given
+        UnifiedConfig baselineConfig = createConfig(List.of(createGroup("Default Rule")));
+        FlexibleUnifiedFormatting overlayFormatting =
+                FlexibleUnifiedFormatting.builder().fixImports(false).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().formatting(overlayFormatting).build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
 
         // Then
-        assertThat(mergedConfig.getRootMemberGroups()).containsExactly(baselineFirstGroup, baselineSecondGroup);
+        assertThat(mergedConfig.getFormatting().isFixImports()).isFalse();
+        assertThat(mergedConfig.getFormatting().getFormatterStyle()).isEqualTo(UnifiedFormatterStyle.PALANTIR);
+        assertThat(mergedConfig.getFormatting().isBlankLineAfterTypeHeader()).isTrue();
+    }
+
+    @Test
+    void merge_partialFormattingOverlayOnFlexible_mergesFormattingFieldsFromBothSides() {
+        // Given
+        FlexibleUnifiedFormatting baselineFormatting = FlexibleUnifiedFormatting.builder()
+                .fixImports(true)
+                .formatterStyle(UnifiedFormatterStyle.PALANTIR)
+                .build();
+        FlexibleUnifiedConfig baselineConfig =
+                FlexibleUnifiedConfig.builder().formatting(baselineFormatting).build();
+        FlexibleUnifiedFormatting overlayFormatting =
+                FlexibleUnifiedFormatting.builder().blankLineBetweenFields(true).build();
+        FlexibleUnifiedConfig overlayConfig =
+                FlexibleUnifiedConfig.builder().formatting(overlayFormatting).build();
+
+        // When
+        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
+
+        // Then
+        assertThat(mergedConfig.getFormatting()).isPresent();
+        FlexibleUnifiedFormatting mergedFormatting =
+                mergedConfig.getFormatting().get();
+        assertThat(mergedFormatting.getFixImports()).contains(true);
+        assertThat(mergedFormatting.getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
+        assertThat(mergedFormatting.getBlankLineBetweenFields()).contains(true);
     }
 
     @Test
@@ -100,212 +292,19 @@ class UnifiedConfigMergerTest {
     }
 
     @Test
-    void merge_overlayRootGroupNameMissing_prependsUnnamedGroup() {
+    void merge_rootMemberGroupsNotProvided_preservesBaselineGroups() {
         // Given
-        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
-        UnifiedMemberGroup unnamedOverlayGroup = createGroup(null);
-        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
-                .rootMemberGroups(List.of(unnamedOverlayGroup))
-                .build();
-
-        // When
-        UnifiedConfig mergedConfig =
-                UnifiedConfigMerger.merge(createConfig(List.of(baselineDefaultGroup)), overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getRootMemberGroups()).containsExactly(unnamedOverlayGroup, baselineDefaultGroup);
-    }
-
-    @Test
-    void merge_baselineRootGroupNameMissing_preservesUnnamedGroupInOriginalPosition() {
-        // Given
-        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
-        UnifiedMemberGroup unnamedBaselineGroup = createGroup(null);
-        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
-        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
-        UnifiedMemberGroup overlayNewUnnamedGroup = createGroup(null);
-        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
-                .rootMemberGroups(List.of(overlayReplacementNamedGroup, overlayNewUnnamedGroup))
-                .build();
-
-        // When
-        UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(
-                createConfig(List.of(baselineNamedGroup, unnamedBaselineGroup, baselineTrailingNamedGroup)),
-                overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getRootMemberGroups())
-                .containsExactly(
-                        overlayNewUnnamedGroup,
-                        overlayReplacementNamedGroup,
-                        unnamedBaselineGroup,
-                        baselineTrailingNamedGroup);
-    }
-
-    @Test
-    void merge_duplicateBaselineNames_throwsException() {
-        // Given
-        UnifiedMemberGroup firstBaselineGroup = createGroup("Default Rule");
-        UnifiedMemberGroup duplicateBaselineGroup = createGroup("Default Rule", List.of(createGroup("Duplicate")));
-        FlexibleUnifiedConfig overlayConfig =
-                FlexibleUnifiedConfig.builder().rootMemberGroups(List.of()).build();
-
-        // When
-        Throwable thrown = catchThrowable(() -> UnifiedConfigMerger.merge(
-                createConfig(List.of(firstBaselineGroup, duplicateBaselineGroup)), overlayConfig));
-
-        // Then
-        assertThat(thrown)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Baseline root member group names must be unique");
-    }
-
-    @Test
-    void merge_flexibleOverlayProvided_overridesBackupsAndKeepsBaselineFields() {
-        // Given
-        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
-                .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)
-                .formatting(FLEXIBLE_FORMATTING)
-                .backupsEnabled(true)
-                .headerLine(HEADER_LINE)
-                .rootMemberGroups(List.of(createGroup("Default Rule")))
-                .build();
+        UnifiedMemberGroup baselineFirstGroup = createGroup("Default Rule");
+        UnifiedMemberGroup baselineSecondGroup = createGroup("Units");
+        UnifiedConfig baselineConfig = createConfig(List.of(baselineFirstGroup, baselineSecondGroup));
         FlexibleUnifiedConfig overlayConfig =
                 FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
-
-        // When
-        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getBackupsEnabled()).contains(false);
-        assertThat(mergedConfig.getFormatting()).contains(FLEXIBLE_FORMATTING);
-        assertThat(mergedConfig.getTopLevelTypesOrdering()).contains(TOP_LEVEL_TYPES_ORDERING);
-        assertThat(mergedConfig.getHeaderLine()).contains(HEADER_LINE);
-        assertThat(mergedConfig.getRootMemberGroups()).contains(List.of(createGroup("Default Rule")));
-    }
-
-    @Test
-    void merge_flexibleConfigsWithoutRootGroupsProvided_keepsRootGroupsAbsent() {
-        // Given
-        FlexibleUnifiedConfig baselineConfig =
-                FlexibleUnifiedConfig.builder().backupsEnabled(true).build();
-        FlexibleUnifiedConfig overlayConfig =
-                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
-
-        // When
-        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getBackupsEnabled()).contains(false);
-        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
-    }
-
-    @Test
-    void merge_flexibleRootGroupsProvided_mergesRootGroupsLikeStrictMerge() {
-        // Given
-        UnifiedMemberGroup baselineDefaultGroup = createGroup("Default Rule");
-        UnifiedMemberGroup baselineUnitsGroup = createGroup("Units");
-        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
-                .rootMemberGroups(List.of(baselineDefaultGroup, baselineUnitsGroup))
-                .build();
-        UnifiedMemberGroup replacementDefaultGroup = createGroup("Default Rule");
-        UnifiedMemberGroup newAuditGroup = createGroup("Audit");
-        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
-                .rootMemberGroups(List.of(replacementDefaultGroup, newAuditGroup))
-                .build();
-
-        // When
-        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getRootMemberGroups())
-                .contains(List.of(newAuditGroup, replacementDefaultGroup, baselineUnitsGroup));
-    }
-
-    @Test
-    void merge_flexibleBaselineUnnamedGroupsProvided_preservesUnnamedPositions() {
-        // Given
-        UnifiedMemberGroup baselineNamedGroup = createGroup("Default Rule");
-        UnifiedMemberGroup baselineUnnamedGroup = createGroup(null);
-        UnifiedMemberGroup baselineTrailingNamedGroup = createGroup("Trailing");
-        FlexibleUnifiedConfig baselineConfig = FlexibleUnifiedConfig.builder()
-                .rootMemberGroups(List.of(baselineNamedGroup, baselineUnnamedGroup, baselineTrailingNamedGroup))
-                .build();
-        UnifiedMemberGroup overlayReplacementNamedGroup = createGroup("Default Rule");
-        UnifiedMemberGroup overlayNewNamedGroup = createGroup("Audit");
-        FlexibleUnifiedConfig overlayConfig = FlexibleUnifiedConfig.builder()
-                .rootMemberGroups(List.of(overlayReplacementNamedGroup, overlayNewNamedGroup))
-                .build();
-
-        // When
-        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getRootMemberGroups())
-                .contains(List.of(
-                        overlayNewNamedGroup,
-                        overlayReplacementNamedGroup,
-                        baselineUnnamedGroup,
-                        baselineTrailingNamedGroup));
-    }
-
-    @Test
-    void merge_flexibleRootGroupsMissingOnBothSides_keepsRootMemberGroupsAbsent() {
-        // Given
-        FlexibleUnifiedConfig baselineConfig =
-                FlexibleUnifiedConfig.builder().backupsEnabled(true).build();
-        FlexibleUnifiedConfig overlayConfig =
-                FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
-
-        // When
-        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getRootMemberGroups()).isEmpty();
-    }
-
-    @Test
-    void merge_partialFormattingOverlayApplied_overlayFieldsOverrideBaselineFormattingFields() {
-        // Given
-        UnifiedConfig baselineConfig = createConfig(List.of(createGroup("Default Rule")));
-        FlexibleUnifiedFormatting overlayFormatting =
-                FlexibleUnifiedFormatting.builder().fixImports(false).build();
-        FlexibleUnifiedConfig overlayConfig =
-                FlexibleUnifiedConfig.builder().formatting(overlayFormatting).build();
 
         // When
         UnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
 
         // Then
-        assertThat(mergedConfig.getFormatting().isFixImports()).isFalse();
-        assertThat(mergedConfig.getFormatting().getFormatterStyle()).isEqualTo(UnifiedFormatterStyle.PALANTIR);
-        assertThat(mergedConfig.getFormatting().isBlankLineAfterTypeHeader()).isTrue();
-    }
-
-    @Test
-    void merge_partialFormattingOverlayOnFlexible_mergesFormattingFieldsFromBothSides() {
-        // Given
-        FlexibleUnifiedFormatting baselineFormatting = FlexibleUnifiedFormatting.builder()
-                .fixImports(true)
-                .formatterStyle(UnifiedFormatterStyle.PALANTIR)
-                .build();
-        FlexibleUnifiedConfig baselineConfig =
-                FlexibleUnifiedConfig.builder().formatting(baselineFormatting).build();
-        FlexibleUnifiedFormatting overlayFormatting =
-                FlexibleUnifiedFormatting.builder().blankLineBetweenFields(true).build();
-        FlexibleUnifiedConfig overlayConfig =
-                FlexibleUnifiedConfig.builder().formatting(overlayFormatting).build();
-
-        // When
-        FlexibleUnifiedConfig mergedConfig = UnifiedConfigMerger.merge(baselineConfig, overlayConfig);
-
-        // Then
-        assertThat(mergedConfig.getFormatting()).isPresent();
-        FlexibleUnifiedFormatting mergedFormatting =
-                mergedConfig.getFormatting().get();
-        assertThat(mergedFormatting.getFixImports()).contains(true);
-        assertThat(mergedFormatting.getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
-        assertThat(mergedFormatting.getBlankLineBetweenFields()).contains(true);
+        assertThat(mergedConfig.getRootMemberGroups()).containsExactly(baselineFirstGroup, baselineSecondGroup);
     }
 
     private static UnifiedConfig createConfig(List<UnifiedMemberGroup> rootMemberGroups) {

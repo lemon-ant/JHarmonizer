@@ -15,6 +15,7 @@ import org.apache.commons.lang3.Validate;
 @Value
 // TODO Remove this type
 public class UnifiedTopLevelTypeSelector {
+
     @NonNull
     Set<@NonNull UnifiedTypeKind> typeKinds;
 

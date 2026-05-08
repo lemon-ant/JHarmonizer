@@ -21,6 +21,7 @@ import org.apache.commons.lang3.Validate;
  */
 @Value
 public class UnifiedConfig {
+    boolean backupsEnabled;
 
     /**
      * Cohesive formatting definition (preferred API).
@@ -28,16 +29,14 @@ public class UnifiedConfig {
     @NonNull
     UnifiedFormatting formatting;
 
-    boolean backupsEnabled;
-
-    @NonNull
-    ProcessingStatisticsMode processingStatisticsMode;
-
     /**
      * Header line descriptor (character + leftPadding).
      */
     @NonNull
     UnifiedHeaderLine headerLine;
+
+    @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
 
     /**
      * Root member groups.

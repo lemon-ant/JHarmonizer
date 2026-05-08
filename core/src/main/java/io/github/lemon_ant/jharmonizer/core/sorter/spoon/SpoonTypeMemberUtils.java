@@ -41,53 +41,18 @@ public class SpoonTypeMemberUtils {
     }
 
     /**
-     * Performs the derive alpha sorting rank.
-     * @param typeMember the type member
-     * @return the result
+     * Streams the explicit source type members.
+     * @param declaringType the declaring type
+     * @return the stream of explicit source type members
      */
-    static int deriveAlphaSortingRank(@NonNull CtTypeMember typeMember) {
-        if (typeMember instanceof CtAnonymousExecutable) {
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * Performs the derive visibility rank.
-     * @param typeMember the type member
-     * @return the result
-     */
-    static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
-        if (typeMember instanceof CtAnonymousExecutable) {
-            // Initializer blocks do not declare an explicit visibility modifier;
-            // treat them as private for visibility ordering purposes.
-            return 3;
-        }
-
-        // Ascending: public (0) -> protected (1) -> package-private (2) -> private (3)
-        Set<ModifierKind> modifiers = typeMember.getModifiers();
-        if (modifiers.contains(ModifierKind.PUBLIC)) {
-            return 0;
-        }
-        if (modifiers.contains(ModifierKind.PROTECTED)) {
-            return 1;
-        }
-        if (modifiers.contains(ModifierKind.PRIVATE)) {
-            return 3;
-        }
-        return 2; // package-private
-    }
-
-    /**
-     * Derives the source-start position of the given type member.
-     * @param typeMember the type member
-     * @return the source-start position, or {@link Integer#MAX_VALUE} when the position is absent
-     */
-    static int deriveSrcStart(@NonNull CtTypeMember typeMember) {
-        if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
-            return Integer.MAX_VALUE;
-        }
-        return typeMember.getPosition().getSourceStart();
+    @NonNull
+    public static Stream<@NonNull CtTypeMember> streamExplicitSrcTypeMembers(@NonNull CtType<?> declaringType) {
+        return declaringType.getTypeMembers().stream()
+                .filter(typeMember -> typeMember.getPosition() != null
+                        && typeMember.getPosition().isValidPosition())
+                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
+                Disabled until the source printer can correctly print record headers/components. */
+                .filter(typeMember -> !typeMember.isImplicit());
     }
 
     /**
@@ -120,12 +85,60 @@ public class SpoonTypeMemberUtils {
         return typeMember.getClass().getSimpleName() + ":" + deriveSrcStart(typeMember);
     }
 
+    /**
+     * Performs the derive alpha sorting rank.
+     * @param typeMember the type member
+     * @return the result
+     */
+    static int deriveAlphaSortingRank(@NonNull CtTypeMember typeMember) {
+        if (typeMember instanceof CtAnonymousExecutable) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Derives the source-start position of the given type member.
+     * @param typeMember the type member
+     * @return the source-start position, or {@link Integer#MAX_VALUE} when the position is absent
+     */
+    static int deriveSrcStart(@NonNull CtTypeMember typeMember) {
+        if (typeMember.getPosition() == null || !typeMember.getPosition().isValidPosition()) {
+            return Integer.MAX_VALUE;
+        }
+        return typeMember.getPosition().getSourceStart();
+    }
+
+    /**
+     * Performs the derive visibility rank.
+     * @param typeMember the type member
+     * @return the result
+     */
+    static int deriveVisibilityRank(@NonNull CtTypeMember typeMember) {
+        if (typeMember instanceof CtAnonymousExecutable) {
+            // Initializer blocks do not declare an explicit visibility modifier;
+            // treat them as private for visibility ordering purposes.
+            return 3;
+        }
+
+        // Ascending: public (0) -> protected (1) -> package-private (2) -> private (3)
+        Set<ModifierKind> modifiers = typeMember.getModifiers();
+        if (modifiers.contains(ModifierKind.PUBLIC)) {
+            return 0;
+        }
+        if (modifiers.contains(ModifierKind.PROTECTED)) {
+            return 1;
+        }
+        if (modifiers.contains(ModifierKind.PRIVATE)) {
+            return 3;
+        }
+        return 2; // package-private
+    }
+
     @NonNull
-    private static String deriveMethodAlphaKey(CtMethod<?> method) {
-        String methodName = method.getSimpleName();
-        String parameters = deriveParameterTypeList(method.getParameters());
-        String returnType = method.getType() == null ? "" : method.getType().getQualifiedName();
-        return methodName + "(" + parameters + "):" + returnType;
+    private static String deriveAnonymousExecutableAlphaKey(CtAnonymousExecutable anonymousExecutable) {
+        boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
+        return isStaticInitializer ? "<clinit>" : "<init>";
     }
 
     @NonNull
@@ -142,18 +155,11 @@ public class SpoonTypeMemberUtils {
     }
 
     @NonNull
-    private static String deriveAnonymousExecutableAlphaKey(CtAnonymousExecutable anonymousExecutable) {
-        boolean isStaticInitializer = anonymousExecutable.getModifiers().contains(ModifierKind.STATIC);
-        return isStaticInitializer ? "<clinit>" : "<init>";
-    }
-
-    @NonNull
-    private static String deriveRecordComponentAlphaKey(CtRecordComponent recordComponent) {
-        String componentName = recordComponent.getSimpleName();
-        String componentType = recordComponent.getType() == null
-                ? ""
-                : recordComponent.getType().getQualifiedName();
-        return componentName + ":" + componentType;
+    private static String deriveMethodAlphaKey(CtMethod<?> method) {
+        String methodName = method.getSimpleName();
+        String parameters = deriveParameterTypeList(method.getParameters());
+        String returnType = method.getType() == null ? "" : method.getType().getQualifiedName();
+        return methodName + "(" + parameters + "):" + returnType;
     }
 
     @NonNull
@@ -167,18 +173,12 @@ public class SpoonTypeMemberUtils {
                 .collect(Collectors.joining(","));
     }
 
-    /**
-     * Streams the explicit source type members.
-     * @param declaringType the declaring type
-     * @return the stream of explicit source type members
-     */
     @NonNull
-    public static Stream<@NonNull CtTypeMember> streamExplicitSrcTypeMembers(@NonNull CtType<?> declaringType) {
-        return declaringType.getTypeMembers().stream()
-                .filter(typeMember -> typeMember.getPosition() != null
-                        && typeMember.getPosition().isValidPosition())
-                /* TODO(RECORDS_DISABLED): Remove this guard to start processing record implicit fields/components.
-                Disabled until the source printer can correctly print record headers/components. */
-                .filter(typeMember -> !typeMember.isImplicit());
+    private static String deriveRecordComponentAlphaKey(CtRecordComponent recordComponent) {
+        String componentName = recordComponent.getSimpleName();
+        String componentType = recordComponent.getType() == null
+                ? ""
+                : recordComponent.getType().getQualifiedName();
+        return componentName + ":" + componentType;
     }
 }

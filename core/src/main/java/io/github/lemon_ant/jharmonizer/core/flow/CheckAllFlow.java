@@ -33,6 +33,16 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         super(formatter, sorter, printerConfig, CHECK_ALL);
     }
 
+    @Override
+    public boolean isModifyingFlow() {
+        return false;
+    }
+
+    @Override
+    public boolean isSuccessful(boolean hasModifications) {
+        return !hasModifications;
+    }
+
     /**
      * Processes the source file by checking sorting first.
      * If sorting violations are detected, only the sorting report is produced and formatting is skipped,
@@ -57,15 +67,5 @@ public class CheckAllFlow extends AbstractOptOutFlow {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
         return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, false);
-    }
-
-    @Override
-    public boolean isSuccessful(boolean hasModifications) {
-        return !hasModifications;
-    }
-
-    @Override
-    public boolean isModifyingFlow() {
-        return false;
     }
 }

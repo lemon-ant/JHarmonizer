@@ -10,22 +10,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 // TODO Rename
 public class JHarmonizerConfigCreator {
-    public static JHarmonizerHeaderLine createHeaderLine(char character, int leftPadding) {
-        return new JHarmonizerHeaderLine(character, leftPadding);
-    }
-
-    public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
-            boolean mainTypeFirst,
-            @NonNull List<@NonNull JHarmonizerTopLevelTypeSelector> typeGroups,
-            @NonNull List<@NonNull JHarmonizerOrderingRule> orderingRules) {
-        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, orderingRules);
-    }
-
-    public static JHarmonizerTopLevelTypeSelector createTypeGroup(
-            @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
-        return new JHarmonizerTopLevelTypeSelector(typeKinds);
-    }
-
     public static JHarmonizerFormatting createFormatting(boolean fixImports, @NonNull FormatterStyle formatterStyle) {
         return new JHarmonizerFormatting(fixImports, formatterStyle, true, true, false);
     }
@@ -48,5 +32,21 @@ public class JHarmonizerConfigCreator {
             boolean blankLineBetweenFields) {
         return new JHarmonizerFormatting(
                 fixImports, formatterStyle, blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields);
+    }
+
+    public static JHarmonizerHeaderLine createHeaderLine(char character, int leftPadding) {
+        return new JHarmonizerHeaderLine(character, leftPadding);
+    }
+
+    public static JHarmonizerTopLevelTypesOrdering createTopLevelTypesOrdering(
+            boolean mainTypeFirst,
+            @NonNull List<@NonNull JHarmonizerTopLevelTypeSelector> typeGroups,
+            @NonNull List<@NonNull JHarmonizerOrderingRule> orderingRules) {
+        return new JHarmonizerTopLevelTypesOrdering(mainTypeFirst, typeGroups, orderingRules);
+    }
+
+    public static JHarmonizerTopLevelTypeSelector createTypeGroup(
+            @NonNull Set<@NonNull JHarmonizerTypeKind> typeKinds) {
+        return new JHarmonizerTopLevelTypeSelector(typeKinds);
     }
 }

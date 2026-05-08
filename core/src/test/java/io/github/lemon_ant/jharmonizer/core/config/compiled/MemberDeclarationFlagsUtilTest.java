@@ -15,6 +15,23 @@ import org.junit.jupiter.api.Test;
 class MemberDeclarationFlagsUtilTest {
 
     @Test
+    void containsAllRequiredDeclarationFlags_allRequiredBitsPresent_returnTrue() {
+        // Given
+        int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                MemberKind.FIELD,
+                MemberAccess.PRIVATE,
+                EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL));
+        int requiredDeclarationFlagsMask = deriveModifiersSegmentBitsMask(EnumSet.of(DeclarationModifier.STATIC));
+
+        // When
+        boolean containsAllRequiredDeclarationFlags = MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
+                featureMask, requiredDeclarationFlagsMask);
+
+        // Then
+        assertThat(containsAllRequiredDeclarationFlags).isTrue();
+    }
+
+    @Test
     void containsAllRequiredDeclarationFlags_anyRequiredBitMissing_returnFalse() {
         // Given
         int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
@@ -30,20 +47,27 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void containsAllRequiredDeclarationFlags_allRequiredBitsPresent_returnTrue() {
+    void encodeMemberDeclarationFlags_accessIsNull_affectOnlyAccessSegment() {
         // Given
-        int featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                MemberKind.FIELD,
-                MemberAccess.PRIVATE,
-                EnumSet.of(DeclarationModifier.STATIC, DeclarationModifier.FINAL));
-        int requiredDeclarationFlagsMask = deriveModifiersSegmentBitsMask(EnumSet.of(DeclarationModifier.STATIC));
+        int withNullAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                MemberKind.CONSTRUCTOR, null, EnumSet.noneOf(DeclarationModifier.class));
+        int withPackageAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                MemberKind.CONSTRUCTOR, MemberAccess.PACKAGE, EnumSet.noneOf(DeclarationModifier.class));
+        int allAccessBitsMask = deriveAllMemberAccessBitsMask();
+        int packageAccessBit = deriveAccessSegmentBit(MemberAccess.PACKAGE);
 
         // When
-        boolean containsAllRequiredDeclarationFlags = MemberDeclarationFlagsUtil.containsAllRequiredDeclarationFlags(
-                featureMask, requiredDeclarationFlagsMask);
+        int nullAccessSegment = withNullAccess & allAccessBitsMask;
+        int accessOnlyDifferenceMask = (withNullAccess ^ withPackageAccess) & allAccessBitsMask;
+        int nullAccessClearedMask = withNullAccess & ~allAccessBitsMask;
+        int packageAccessClearedMask = withPackageAccess & ~allAccessBitsMask;
 
         // Then
-        assertThat(containsAllRequiredDeclarationFlags).isTrue();
+        assertThat(nullAccessSegment).isZero();
+        assertThat(withPackageAccess & packageAccessBit).isEqualTo(packageAccessBit);
+        assertThat(accessOnlyDifferenceMask).isEqualTo(packageAccessBit);
+        assertThat(nullAccessClearedMask).isEqualTo(packageAccessClearedMask);
+        assertThat(withNullAccess).isNotZero();
     }
 
     @Test
@@ -135,30 +159,6 @@ class MemberDeclarationFlagsUtilTest {
     }
 
     @Test
-    void encodeMemberDeclarationFlags_accessIsNull_affectOnlyAccessSegment() {
-        // Given
-        int withNullAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                MemberKind.CONSTRUCTOR, null, EnumSet.noneOf(DeclarationModifier.class));
-        int withPackageAccess = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                MemberKind.CONSTRUCTOR, MemberAccess.PACKAGE, EnumSet.noneOf(DeclarationModifier.class));
-        int allAccessBitsMask = deriveAllMemberAccessBitsMask();
-        int packageAccessBit = deriveAccessSegmentBit(MemberAccess.PACKAGE);
-
-        // When
-        int nullAccessSegment = withNullAccess & allAccessBitsMask;
-        int accessOnlyDifferenceMask = (withNullAccess ^ withPackageAccess) & allAccessBitsMask;
-        int nullAccessClearedMask = withNullAccess & ~allAccessBitsMask;
-        int packageAccessClearedMask = withPackageAccess & ~allAccessBitsMask;
-
-        // Then
-        assertThat(nullAccessSegment).isZero();
-        assertThat(withPackageAccess & packageAccessBit).isEqualTo(packageAccessBit);
-        assertThat(accessOnlyDifferenceMask).isEqualTo(packageAccessBit);
-        assertThat(nullAccessClearedMask).isEqualTo(packageAccessClearedMask);
-        assertThat(withNullAccess).isNotZero();
-    }
-
-    @Test
     void encodeMemberDeclarationFlags_segmentsCompared_notOverlapAcrossKindAccessAndModifiers() {
         // Given
         int anyAccessBit = deriveAccessSegmentBit(MemberAccess.PUBLIC);
@@ -195,15 +195,15 @@ class MemberDeclarationFlagsUtilTest {
         return combinedAccessBitsMask;
     }
 
-    private static int encodeKindOnlyMask(MemberKind memberKind) {
-        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                memberKind, null, EnumSet.noneOf(DeclarationModifier.class));
-    }
-
     private static int deriveModifiersSegmentBitsMask(Set<DeclarationModifier> declarationModifiers) {
         int kindOnlyMask = encodeKindOnlyMask(MemberKind.FIELD);
         int encodedWithModifiers =
                 MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(MemberKind.FIELD, null, declarationModifiers);
         return encodedWithModifiers ^ kindOnlyMask;
+    }
+
+    private static int encodeKindOnlyMask(MemberKind memberKind) {
+        return MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                memberKind, null, EnumSet.noneOf(DeclarationModifier.class));
     }
 }

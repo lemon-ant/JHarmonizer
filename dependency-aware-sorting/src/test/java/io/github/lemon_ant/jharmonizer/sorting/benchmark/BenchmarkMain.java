@@ -21,7 +21,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
  * <p>Results are printed to stdout and also written to {@code benchmark-results.json}.
  */
 public class BenchmarkMain {
-
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(SimplifiedSortingBenchmark.class.getSimpleName())

@@ -37,7 +37,6 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 class ConsoleUnicodeDetector {
-
     private static final WhitespaceVisualizationStyle DETECTED_STYLE =
             WhitespaceVisualizationStyle.forCharsets(resolveStdoutCharset(), resolveEncoderCharset());
 

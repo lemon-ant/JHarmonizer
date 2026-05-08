@@ -31,37 +31,6 @@ import org.junit.jupiter.api.Test;
 class MemberGroupRuleLineTokenSemanticsTest {
 
     @Test
-    void compileSelectorBlock_staticInitializerTokens_requireInitializerKindAndStaticModifier() {
-        // Given
-        UnifiedMemberGroupRuleLine staticInitializerRuleLine =
-                MemberGroupRuleLineParser.parse(Set.of("STATIC", "Initializer"));
-        UnifiedMemberGroupSelectorBlock selectorBlock =
-                new UnifiedMemberGroupSelectorBlock(Set.of(), Set.of(staticInitializerRuleLine));
-        UnifiedMemberGroup rootGroup = UnifiedMemberGroup.builder()
-                .groupName("StaticInitializers")
-                .selectorBlock(selectorBlock)
-                .separator(UnifiedSeparator.NONE)
-                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
-                .build();
-        CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
-        MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
-                .memberKind(MemberKind.INIT_BLOCK)
-                .declarationModifier(DeclarationModifier.STATIC)
-                .build();
-        MemberDescriptor instanceInitializerDescriptor =
-                MemberDescriptor.builder().memberKind(MemberKind.INIT_BLOCK).build();
-
-        // When
-        boolean matchesStaticInitializer = compiledRootGroup.getSelectorBlock().match(staticInitializerDescriptor);
-        boolean matchesInstanceInitializer =
-                compiledRootGroup.getSelectorBlock().match(instanceInitializerDescriptor);
-
-        // Then
-        assertThat(matchesStaticInitializer).isTrue();
-        assertThat(matchesInstanceInitializer).isFalse();
-    }
-
-    @Test
     void compileSelectorBlock_instanceInitializerTokens_includeInitializerButExcludeStatic() {
         // Given
         UnifiedMemberGroupRuleLine initializerRuleLine = MemberGroupRuleLineParser.parse(Set.of("initializer"));
@@ -92,10 +61,41 @@ class MemberGroupRuleLineTokenSemanticsTest {
         assertThat(matchesInstanceInitializer).isTrue();
     }
 
+    @Test
+    void compileSelectorBlock_staticInitializerTokens_requireInitializerKindAndStaticModifier() {
+        // Given
+        UnifiedMemberGroupRuleLine staticInitializerRuleLine =
+                MemberGroupRuleLineParser.parse(Set.of("STATIC", "Initializer"));
+        UnifiedMemberGroupSelectorBlock selectorBlock =
+                new UnifiedMemberGroupSelectorBlock(Set.of(), Set.of(staticInitializerRuleLine));
+        UnifiedMemberGroup rootGroup = UnifiedMemberGroup.builder()
+                .groupName("StaticInitializers")
+                .selectorBlock(selectorBlock)
+                .separator(UnifiedSeparator.NONE)
+                .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
+                .build();
+        CompiledMemberGroup compiledRootGroup = compileSingleRootGroup(rootGroup);
+        MemberDescriptor staticInitializerDescriptor = MemberDescriptor.builder()
+                .memberKind(MemberKind.INIT_BLOCK)
+                .declarationModifier(DeclarationModifier.STATIC)
+                .build();
+        MemberDescriptor instanceInitializerDescriptor =
+                MemberDescriptor.builder().memberKind(MemberKind.INIT_BLOCK).build();
+
+        // When
+        boolean matchesStaticInitializer = compiledRootGroup.getSelectorBlock().match(staticInitializerDescriptor);
+        boolean matchesInstanceInitializer =
+                compiledRootGroup.getSelectorBlock().match(instanceInitializerDescriptor);
+
+        // Then
+        assertThat(matchesStaticInitializer).isTrue();
+        assertThat(matchesInstanceInitializer).isFalse();
+    }
+
     @NonNull
     private static CompiledMemberGroup compileSingleRootGroup(UnifiedMemberGroup rootGroup) {
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
-                .formatting(new UnifiedFormatting(true, UnifiedFormatterStyle.PALANTIR, true, true, false))
+                .formatting(new UnifiedFormatting(true, true, false, true, UnifiedFormatterStyle.PALANTIR))
                 .backupsEnabled(false)
                 .processingStatisticsMode(ProcessingStatisticsMode.FULL)
                 .headerLine(new UnifiedHeaderLine('-', 0))

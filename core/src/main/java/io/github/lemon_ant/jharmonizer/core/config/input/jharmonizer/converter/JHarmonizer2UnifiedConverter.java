@@ -58,7 +58,7 @@ public final class JHarmonizer2UnifiedConverter {
         return UnifiedConfig.builder()
                 .topLevelTypesOrdering(top)
                 .formatting(new UnifiedFormatting(
-                        fixImports, style, blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields))
+                        blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields, fixImports, style))
                 .backupsEnabled(backupsEnabled)
                 .processingStatisticsMode(processingStatisticsMode)
                 .headerLine(header)

@@ -24,9 +24,59 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @UtilityClass
 public class SpoonSrcPrinterUtils {
-
     public static final String GROUP_HEADER_METADATA = "GROUP_HEADER";
     public static final String GROUP_SEPARATOR_NEW_LINE = "\n";
+
+    /**
+     * Compiles a predicate that determines whether a blank line should be inserted after
+     * the type declaration header, before the first member. The predicate is compiled once.
+     * Enums always get a blank line after the header (after the constant list, before methods).
+     * When the flag is enabled, all types get a blank line after the header.
+     *
+     * @param config the printer configuration
+     * @return a predicate accepting the type and returning {@code true} when a blank line is needed
+     */
+    @NonNull
+    static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterConfig config) {
+        if (config.isBlankLineAfterTypeHeader()) {
+            return type -> true;
+        }
+        return type -> type instanceof CtEnum<?>;
+    }
+
+    /**
+     * Compiles a predicate that determines whether a separator is needed after a given member.
+     * Annotation-based blank lines are always active (Palantir formatter enforces them).
+     * When {@code blankLineBetweenFields} is enabled, all fields get a separator after them.
+     *
+     * @param config the printer configuration
+     * @return a predicate that returns {@code true} when a separator is needed after the member
+     */
+    @NonNull
+    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
+        if (config.isBlankLineBetweenFields()) {
+            return member -> true;
+        }
+        Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
+        return isNotField.or(member -> !member.getAnnotations().isEmpty());
+    }
+
+    /**
+     * Compiles a bi-predicate that determines whether a separator is needed before a given member.
+     * Annotation-based blank lines are always active (Palantir formatter enforces them).
+     * The blank-line-before-comment feature is handled separately in the printer via
+     * {@link SpoonTypeMemberUtils#hasLeadingCommentOnSeparateLine}, because it requires per-type context
+     * (the set of member declaration end lines) to filter out Spoon's misattributed trailing inline comments.
+     *
+     * @return a bi-predicate accepting (member, isFirst) that returns {@code true} when a separator is needed
+     */
+    @NonNull
+    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore() {
+        BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
+        BiPredicate<CtTypeMember, Boolean> annotationCheck =
+                (member, first) -> !member.getAnnotations().isEmpty();
+        return annotationCheck.or(basePredicate);
+    }
 
     /**
      * Detects the dominant line separator.
@@ -68,73 +118,6 @@ public class SpoonSrcPrinterUtils {
     }
 
     @NonNull
-    private static String selectDominantLineSeparator(int crlfCount, int lfCount, int crCount) {
-        if (crlfCount == 0 && lfCount == 0 && crCount == 0) {
-            return System.lineSeparator();
-        }
-
-        // Pick the dominant one; if tie, prefer CRLF > LF > CR (can be adjusted).
-        if (crlfCount >= lfCount && crlfCount >= crCount) {
-            return "\r\n";
-        }
-        if (lfCount >= crCount) {
-            return "\n";
-        }
-        return "\r";
-    }
-
-    /**
-     * Compiles a predicate that determines whether a separator is needed after a given member.
-     * Annotation-based blank lines are always active (Palantir formatter enforces them).
-     * When {@code blankLineBetweenFields} is enabled, all fields get a separator after them.
-     *
-     * @param config the printer configuration
-     * @return a predicate that returns {@code true} when a separator is needed after the member
-     */
-    @NonNull
-    static Predicate<CtTypeMember> compileNeedsSeparatorAfter(@NonNull PrinterConfig config) {
-        if (config.isBlankLineBetweenFields()) {
-            return member -> true;
-        }
-        Predicate<CtTypeMember> isNotField = member -> !(member instanceof CtField);
-        return isNotField.or(member -> !member.getAnnotations().isEmpty());
-    }
-
-    /**
-     * Compiles a bi-predicate that determines whether a separator is needed before a given member.
-     * Annotation-based blank lines are always active (Palantir formatter enforces them).
-     * The blank-line-before-comment feature is handled separately in the printer via
-     * {@link SpoonTypeMemberUtils#hasLeadingCommentOnSeparateLine}, because it requires per-type context
-     * (the set of member declaration end lines) to filter out Spoon's misattributed trailing inline comments.
-     *
-     * @return a bi-predicate accepting (member, isFirst) that returns {@code true} when a separator is needed
-     */
-    @NonNull
-    static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore() {
-        BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
-        BiPredicate<CtTypeMember, Boolean> annotationCheck =
-                (member, first) -> !member.getAnnotations().isEmpty();
-        return annotationCheck.or(basePredicate);
-    }
-
-    /**
-     * Compiles a predicate that determines whether a blank line should be inserted after
-     * the type declaration header, before the first member. The predicate is compiled once.
-     * Enums always get a blank line after the header (after the constant list, before methods).
-     * When the flag is enabled, all types get a blank line after the header.
-     *
-     * @param config the printer configuration
-     * @return a predicate accepting the type and returning {@code true} when a blank line is needed
-     */
-    @NonNull
-    static Predicate<CtType<?>> compileNeedsBlankLineAfterTypeHeader(@NonNull PrinterConfig config) {
-        if (config.isBlankLineAfterTypeHeader()) {
-            return type -> true;
-        }
-        return type -> type instanceof CtEnum<?>;
-    }
-
-    @NonNull
     private static BiPredicate<CtTypeMember, Boolean> compileBaseSeparatorBeforePredicate() {
         return (member, first) -> {
             boolean isNotField = !(member instanceof CtField);
@@ -148,5 +131,21 @@ public class SpoonSrcPrinterUtils {
                     .map(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
                     .orElse(false);
         };
+    }
+
+    @NonNull
+    private static String selectDominantLineSeparator(int crlfCount, int lfCount, int crCount) {
+        if (crlfCount == 0 && lfCount == 0 && crCount == 0) {
+            return System.lineSeparator();
+        }
+
+        // Pick the dominant one; if tie, prefer CRLF > LF > CR (can be adjusted).
+        if (crlfCount >= lfCount && crlfCount >= crCount) {
+            return "\r\n";
+        }
+        if (lfCount >= crCount) {
+            return "\n";
+        }
+        return "\r";
     }
 }

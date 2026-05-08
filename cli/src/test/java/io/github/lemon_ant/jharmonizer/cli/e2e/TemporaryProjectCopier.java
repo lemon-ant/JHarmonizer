@@ -13,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 
 @UtilityClass
 class TemporaryProjectCopier {
-
     static Path copyProject(@NonNull String resourceRoot, @NonNull Path targetDirectory) throws IOException {
         Path srcDirectory = locateOriginalTestResource(resourceRoot);
         Files.createDirectories(targetDirectory);

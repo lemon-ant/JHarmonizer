@@ -27,6 +27,13 @@ public enum DeclarationModifier {
     NON_SEALED(EnumSet.of(TargetCategory.TYPE)),
     ;
 
+    @Getter
+    private final Set<TargetCategory> applicableTargets;
+
+    // Global symmetric conflicts (no TargetCategory scoping)
+    @SuppressWarnings("PMD.UseEnumCollections")
+    private final Set<DeclarationModifier> conflicts = new HashSet<>();
+
     static {
         // METHOD-level pairs (but safe globally because of applicability filtering):
         conflict(ABSTRACT, FINAL);
@@ -45,25 +52,6 @@ public enum DeclarationModifier {
         // No FIELD-only conflicts in the current minimal model.
     }
 
-    @Getter
-    private final Set<TargetCategory> applicableTargets;
-    // Global symmetric conflicts (no TargetCategory scoping)
-    @SuppressWarnings("PMD.UseEnumCollections")
-    private final Set<DeclarationModifier> conflicts = new HashSet<>();
-
-    /**
-     * Creates a new DeclarationModifier.
-     * @param applicableTargets the applicable targets
-     */
-    DeclarationModifier(Set<TargetCategory> applicableTargets) {
-        this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
-    }
-
-    private static void conflict(DeclarationModifier a, DeclarationModifier b) {
-        a.conflicts.add(b);
-        b.conflicts.add(a);
-    }
-
     /**
      * Global conflict check. Category is ignored intentionally:
      * applicability per category is validated separately before conflicts are checked.
@@ -79,5 +67,18 @@ public enum DeclarationModifier {
      */
     boolean isApplicableTo(@NonNull TargetCategory targetCategory) {
         return applicableTargets.contains(targetCategory);
+    }
+
+    private static void conflict(DeclarationModifier a, DeclarationModifier b) {
+        a.conflicts.add(b);
+        b.conflicts.add(a);
+    }
+
+    /**
+     * Creates a new DeclarationModifier.
+     * @param applicableTargets the applicable targets
+     */
+    DeclarationModifier(Set<TargetCategory> applicableTargets) {
+        this.applicableTargets = Collections.unmodifiableSet(applicableTargets);
     }
 }

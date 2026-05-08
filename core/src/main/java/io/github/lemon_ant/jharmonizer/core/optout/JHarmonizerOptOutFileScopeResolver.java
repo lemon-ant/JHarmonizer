@@ -20,10 +20,10 @@ import spoon.reflect.visitor.filter.TypeFilter;
 final class JHarmonizerOptOutFileScopeResolver {
 
     @NonNull
-    private final SrcFile srcFile;
+    private final CtCompilationUnit compilationUnit;
 
     @NonNull
-    private final CtCompilationUnit compilationUnit;
+    private final SrcFile srcFile;
 
     /**
      * Resolves file-scope opt-out mode with AST-first logic and raw-source fallback.
@@ -35,52 +35,16 @@ final class JHarmonizerOptOutFileScopeResolver {
     @Nullable
     static JHarmonizerOptOutMode resolveFileOptOutMode(
             @NonNull SrcFile srcFile, @NonNull CtCompilationUnit compilationUnit) {
-        return new JHarmonizerOptOutFileScopeResolver(srcFile, compilationUnit).resolveFileOptOutMode();
+        return new JHarmonizerOptOutFileScopeResolver(compilationUnit, srcFile).resolveFileOptOutMode();
     }
 
-    @Nullable
-    private JHarmonizerOptOutMode resolveFileOptOutMode() {
-        if (requiresRawSrcFallback()) {
-            return resolveFromRawSrc();
-        }
-        return resolveFromAstComments();
-    }
-
-    private boolean requiresRawSrcFallback() {
-        CtCompilationUnit.UNIT_TYPE unitType = compilationUnit.getUnitType();
-        if (unitType == CtCompilationUnit.UNIT_TYPE.PACKAGE_DECLARATION
-                || unitType == CtCompilationUnit.UNIT_TYPE.MODULE_DECLARATION) {
-            return true;
-        }
-        return unitType == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
-                && compilationUnit.getDeclaredTypes().isEmpty();
-    }
-
-    @Nullable
-    private JHarmonizerOptOutMode resolveFromAstComments() {
-        List<FileScopeOptOutCandidate> fileComments =
-                compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
-                        .filter(comment -> isBeforeFirstDeclaredType(comment, compilationUnit))
-                        .sorted(Comparator.comparingInt(
-                                comment -> comment.getPosition().getSourceStart()))
-                        .map(comment -> new FileScopeOptOutCandidate(
-                                JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(comment),
-                                JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, comment.getPosition())))
-                        .toList();
-        return resolveFromCandidates(fileComments);
-    }
-
-    @Nullable
-    private JHarmonizerOptOutMode resolveFromRawSrc() {
-        List<FileScopeOptOutCandidate> rawFileComments =
-                JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex(srcFile.getSrcCode()).stream()
-                        .map(rawCommentMatch -> new FileScopeOptOutCandidate(
-                                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode(
-                                        rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset(), srcFile),
-                                JHarmonizerOptOutCommentUtilities.formatLocation(
-                                        srcFile, rawCommentMatch.getCommentOffset())))
-                        .toList();
-        return resolveFromCandidates(rawFileComments);
+    private static boolean isBeforeFirstDeclaredType(CtComment comment, CtCompilationUnit compilationUnit) {
+        return comment.getPosition().getSourceEnd()
+                < compilationUnit.getDeclaredTypes().stream()
+                        .map(CtElement::getPosition)
+                        .mapToInt(SourcePosition::getSourceStart)
+                        .min()
+                        .orElse(Integer.MAX_VALUE);
     }
 
     @Nullable
@@ -109,22 +73,59 @@ final class JHarmonizerOptOutFileScopeResolver {
         return fileOptOutMode;
     }
 
-    private static boolean isBeforeFirstDeclaredType(CtComment comment, CtCompilationUnit compilationUnit) {
-        return comment.getPosition().getSourceEnd()
-                < compilationUnit.getDeclaredTypes().stream()
-                        .map(CtElement::getPosition)
-                        .mapToInt(SourcePosition::getSourceStart)
-                        .min()
-                        .orElse(Integer.MAX_VALUE);
+    private boolean requiresRawSrcFallback() {
+        CtCompilationUnit.UNIT_TYPE unitType = compilationUnit.getUnitType();
+        if (unitType == CtCompilationUnit.UNIT_TYPE.PACKAGE_DECLARATION
+                || unitType == CtCompilationUnit.UNIT_TYPE.MODULE_DECLARATION) {
+            return true;
+        }
+        return unitType == CtCompilationUnit.UNIT_TYPE.TYPE_DECLARATION
+                && compilationUnit.getDeclaredTypes().isEmpty();
+    }
+
+    @Nullable
+    private JHarmonizerOptOutMode resolveFileOptOutMode() {
+        if (requiresRawSrcFallback()) {
+            return resolveFromRawSrc();
+        }
+        return resolveFromAstComments();
+    }
+
+    @Nullable
+    private JHarmonizerOptOutMode resolveFromAstComments() {
+        List<FileScopeOptOutCandidate> fileComments =
+                compilationUnit.getElements(new TypeFilter<>(CtComment.class)).stream()
+                        .filter(comment -> isBeforeFirstDeclaredType(comment, compilationUnit))
+                        .sorted(Comparator.comparingInt(
+                                comment -> comment.getPosition().getSourceStart()))
+                        .map(comment -> new FileScopeOptOutCandidate(
+                                JHarmonizerOptOutCommentUtilities.formatLocation(srcFile, comment.getPosition()),
+                                JHarmonizerOptOutCommentUtilities.parseTypeOptOutMode(comment)))
+                        .toList();
+        return resolveFromCandidates(fileComments);
+    }
+
+    @Nullable
+    private JHarmonizerOptOutMode resolveFromRawSrc() {
+        List<FileScopeOptOutCandidate> rawFileComments =
+                JHarmonizerOptOutCommentUtilities.collectRawCommentsByRegex(srcFile.getSrcCode()).stream()
+                        .map(rawCommentMatch -> new FileScopeOptOutCandidate(
+                                JHarmonizerOptOutCommentUtilities.formatLocation(
+                                        srcFile, rawCommentMatch.getCommentOffset()),
+                                JHarmonizerOptOutCommentUtilities.parseFileScopeOptOutMode(
+                                        rawCommentMatch.getRawComment(), rawCommentMatch.getCommentOffset(), srcFile)))
+                        .toList();
+        return resolveFromCandidates(rawFileComments);
     }
 
     @Value
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static class FileScopeOptOutCandidate {
-        @Nullable
-        JHarmonizerOptOutMode optOutMode;
 
         @NonNull
         String location;
+
+        @Nullable
+        JHarmonizerOptOutMode optOutMode;
     }
 }

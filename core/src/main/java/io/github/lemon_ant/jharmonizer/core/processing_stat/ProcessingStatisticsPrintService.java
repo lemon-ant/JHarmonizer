@@ -22,31 +22,12 @@ import org.jspecify.annotations.Nullable;
  */
 @UtilityClass
 public class ProcessingStatisticsPrintService {
-
-    private static final int METRIC_WIDTH = "Files with unexpected errors".length() + 1;
-    private static final int VALUE_WIDTH = 24;
+    private static final int DETAIL_PATH_MAX_LENGTH = 120;
     private static final String ELLIPSIS = "...";
     private static final int ELLIPSIS_LENGTH = ELLIPSIS.length();
-    private static final int DETAIL_PATH_MAX_LENGTH = 120;
     private static final String HEADER = "JHarmonization summary";
-
-    /**
-     * Builds a brief single-line summary: file count, wall-clock time, total size and error count.
-     *
-     * @param stats aggregated statistics to summarize
-     * @return a compact one-line summary suitable for logs
-     */
-    @NonNull
-    public static String renderMinimal(@NonNull AggregatedProcessingStatistic stats) {
-        int unexpectedErrorCount = stats.getFilesWithUnexpectedErrors().size();
-        return String.format(
-                Locale.ROOT,
-                "JHarmonization: %,d file(s), wall-clock %s, %s total%s",
-                stats.getFileCount(),
-                formatHmsMillisFromNanos(stats.getWallClockTimeNanos()),
-                formatBytes(stats.getTotalSizeInBytes()),
-                unexpectedErrorCount > 0 ? ", " + unexpectedErrorCount + " unexpected error(s)" : "");
-    }
+    private static final int METRIC_WIDTH = "Files with unexpected errors".length() + 1;
+    private static final int VALUE_WIDTH = 24;
 
     /**
      * Builds a pseudo-table report with a dedicated section for unexpected internal errors.
@@ -104,12 +85,22 @@ public class ProcessingStatisticsPrintService {
         return String.join(System.lineSeparator(), reportLines) + System.lineSeparator();
     }
 
+    /**
+     * Builds a brief single-line summary: file count, wall-clock time, total size and error count.
+     *
+     * @param stats aggregated statistics to summarize
+     * @return a compact one-line summary suitable for logs
+     */
     @NonNull
-    private static String formatSize(@Nullable FileProcessingStatistic fileProcessingStatistic) {
-        if (fileProcessingStatistic == null) {
-            return formatBytes(0L);
-        }
-        return formatBytes(fileProcessingStatistic.getSizeInBytes());
+    public static String renderMinimal(@NonNull AggregatedProcessingStatistic stats) {
+        int unexpectedErrorCount = stats.getFilesWithUnexpectedErrors().size();
+        return String.format(
+                Locale.ROOT,
+                "JHarmonization: %,d file(s), wall-clock %s, %s total%s",
+                stats.getFileCount(),
+                formatHmsMillisFromNanos(stats.getWallClockTimeNanos()),
+                formatBytes(stats.getTotalSizeInBytes()),
+                unexpectedErrorCount > 0 ? ", " + unexpectedErrorCount + " unexpected error(s)" : "");
     }
 
     private static void addSizeBoundaryPaths(
@@ -129,20 +120,14 @@ public class ProcessingStatisticsPrintService {
     }
 
     @NonNull
-    private static String renderRow(@NonNull String metric, @NonNull String value) {
-        String metricCell = fitCell(metric, METRIC_WIDTH);
-        String valueCell = fitCell(value, VALUE_WIDTH);
-        return String.format("| %-" + METRIC_WIDTH + "s | %-" + VALUE_WIDTH + "s |", metricCell, valueCell);
-    }
-
-    @NonNull
-    private static String renderHeaderRow() {
-        return String.format("| %-" + (METRIC_WIDTH + VALUE_WIDTH + 3) + "s |", HEADER);
-    }
-
-    @NonNull
-    private static String renderSeparator(char separatorChar) {
-        return String.valueOf(separatorChar).repeat(METRIC_WIDTH + VALUE_WIDTH + 7);
+    private static String fitCell(@NonNull String value, int maxWidth) {
+        if (value.length() <= maxWidth) {
+            return value;
+        }
+        if (maxWidth <= ELLIPSIS_LENGTH) {
+            return value.substring(0, maxWidth);
+        }
+        return value.substring(0, maxWidth - ELLIPSIS_LENGTH) + ELLIPSIS;
     }
 
     @NonNull
@@ -152,13 +137,27 @@ public class ProcessingStatisticsPrintService {
     }
 
     @NonNull
-    private static String fitCell(@NonNull String value, int maxWidth) {
-        if (value.length() <= maxWidth) {
-            return value;
+    private static String formatSize(@Nullable FileProcessingStatistic fileProcessingStatistic) {
+        if (fileProcessingStatistic == null) {
+            return formatBytes(0L);
         }
-        if (maxWidth <= ELLIPSIS_LENGTH) {
-            return value.substring(0, maxWidth);
-        }
-        return value.substring(0, maxWidth - ELLIPSIS_LENGTH) + ELLIPSIS;
+        return formatBytes(fileProcessingStatistic.getSizeInBytes());
+    }
+
+    @NonNull
+    private static String renderHeaderRow() {
+        return String.format("| %-" + (METRIC_WIDTH + VALUE_WIDTH + 3) + "s |", HEADER);
+    }
+
+    @NonNull
+    private static String renderRow(@NonNull String metric, @NonNull String value) {
+        String metricCell = fitCell(metric, METRIC_WIDTH);
+        String valueCell = fitCell(value, VALUE_WIDTH);
+        return String.format("| %-" + METRIC_WIDTH + "s | %-" + VALUE_WIDTH + "s |", metricCell, valueCell);
+    }
+
+    @NonNull
+    private static String renderSeparator(char separatorChar) {
+        return String.valueOf(separatorChar).repeat(METRIC_WIDTH + VALUE_WIDTH + 7);
     }
 }

@@ -33,14 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @UtilityClass
 class PalantirModuleOpener {
-
     private static final List<String> PACKAGES_TO_OPEN = List.of(
             "com.sun.tools.javac.api",
             "com.sun.tools.javac.parser",
             "com.sun.tools.javac.util",
             "com.sun.tools.javac.file",
             "com.sun.tools.javac.tree");
-
     private static final AtomicBoolean opened = new AtomicBoolean();
 
     /**

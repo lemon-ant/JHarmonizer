@@ -35,20 +35,16 @@ class CheckAllMojoTest {
     }
 
     @Test
-    void execute_nonConformingFiles_throwsMojoFailureException() {
+    void execute_emptyDirectory_completesWithoutException() throws Exception {
         // Given
-        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
         CheckAllMojo checkAllMojo = new CheckAllMojo();
         MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", true);
 
         // When
         Throwable thrown = catchThrowable(checkAllMojo::execute);
 
         // Then
-        assertThat(thrown)
-                .isInstanceOf(MojoFailureException.class)
-                .hasMessageContaining("do not conform to the configured ordering");
+        assertThat(thrown).isNull();
     }
 
     @Test
@@ -64,6 +60,40 @@ class CheckAllMojoTest {
 
         // Then
         assertThat(thrown).isNull();
+    }
+
+    @Test
+    void execute_nonConformingFiles_logsReorderFixCommand() throws Exception {
+        // Given
+        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", false);
+        Log mockLog = mock(Log.class);
+        checkAllMojo.setLog(mockLog);
+
+        // When
+        checkAllMojo.execute();
+
+        // Then
+        verify(mockLog).warn(argThat((CharSequence msg) -> msg.toString().contains("jharmonizer:reorder")));
+    }
+
+    @Test
+    void execute_nonConformingFiles_throwsMojoFailureException() {
+        // Given
+        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
+        CheckAllMojo checkAllMojo = new CheckAllMojo();
+        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
+        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", true);
+
+        // When
+        Throwable thrown = catchThrowable(checkAllMojo::execute);
+
+        // Then
+        assertThat(thrown)
+                .isInstanceOf(MojoFailureException.class)
+                .hasMessageContaining("do not conform to the configured ordering");
     }
 
     @Test
@@ -98,35 +128,5 @@ class CheckAllMojoTest {
 
         // Then
         assertThat(thrown).isNull();
-    }
-
-    @Test
-    void execute_emptyDirectory_completesWithoutException() throws Exception {
-        // Given
-        CheckAllMojo checkAllMojo = new CheckAllMojo();
-        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-
-        // When
-        Throwable thrown = catchThrowable(checkAllMojo::execute);
-
-        // Then
-        assertThat(thrown).isNull();
-    }
-
-    @Test
-    void execute_nonConformingFiles_logsReorderFixCommand() throws Exception {
-        // Given
-        MojoTestUtils.copyResourceDirectory("/test-cases/check-non-conforming", tempDir);
-        CheckAllMojo checkAllMojo = new CheckAllMojo();
-        MojoTestUtils.injectField(checkAllMojo, "baseDir", MojoTestUtils.toFile(tempDir));
-        MojoTestUtils.injectField(checkAllMojo, "failOnViolation", false);
-        Log mockLog = mock(Log.class);
-        checkAllMojo.setLog(mockLog);
-
-        // When
-        checkAllMojo.execute();
-
-        // Then
-        verify(mockLog).warn(argThat((CharSequence msg) -> msg.toString().contains("jharmonizer:reorder")));
     }
 }

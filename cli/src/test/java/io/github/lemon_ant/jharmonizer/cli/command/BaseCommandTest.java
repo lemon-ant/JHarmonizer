@@ -37,15 +37,14 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 class BaseCommandTest {
-
     private static final String STDOUT_APPENDER_NAME = "STDOUT";
 
     private CommandLine commandLine;
-    private Level initialRootLevel;
     private String initialPattern;
+    private Level initialRootLevel;
 
     @TempDir
-    Path temporaryDirectory;
+    private Path temporaryDirectory;
 
     @BeforeEach
     void setUp() {
@@ -55,11 +54,20 @@ class BaseCommandTest {
         initialPattern = resolveCurrentLogPattern(rootLogger);
     }
 
-    @AfterEach
-    void tearDown() {
-        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(initialRootLevel);
-        restoreLogPattern(rootLogger, initialPattern);
+    @Test
+    void call_baseDirMissing_returnsProcessingErrorExitCode() throws Exception {
+        // Given
+        Path missingDirectoryPath = temporaryDirectory.resolve("missing-base-dir");
+
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
+            exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
+        }
+
+        // Then
+        assertThat(Files.exists(missingDirectoryPath)).isFalse();
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -80,6 +88,65 @@ class BaseCommandTest {
     }
 
     @Test
+    void call_baseDirOptionOmitted_usesCurrentDirectoryAsBaseDir() {
+        // When
+        int exitCode;
+        SrcProcessor constructedProcessor;
+        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
+                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute();
+            constructedProcessor = srcProcessorMocks.constructed().getFirst();
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        verify(constructedProcessor)
+                .processSources(eq(Path.of(".").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
+    }
+
+    @Test
+    void call_configFileMissing_returnsProcessingErrorExitCode() throws Exception {
+        // Given
+        Path missingConfigPath = temporaryDirectory.resolve("missing-config.yml");
+
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
+            exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
+        }
+
+        // Then
+        assertThat(Files.exists(missingConfigPath)).isFalse();
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
+    }
+
+    @Test
+    void call_externalConfigAndNoBackupBothProvided_backupsDisabledInMergedConfig() throws Exception {
+        // Given
+        Path configFilePath = Files.writeString(
+                temporaryDirectory.resolve("minimal-config.yml"), "backups-enabled: true\n", StandardCharsets.UTF_8);
+        AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
+
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            constructorArguments.set(context.arguments());
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildSuccessfulResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src", "--config", configFilePath.toString(), "--no-backup");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+        assertThat(constructorArguments.get()).hasSize(1);
+        Object constructorConfig = constructorArguments.get().getFirst();
+        assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
+        FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
+        assertThat(flexibleConfig.getBackupsEnabled()).contains(false);
+    }
+
+    @Test
     void call_includeOptionInvoked_parsesIncludePatternCorrectly() {
         // When
         int exitCode;
@@ -94,6 +161,22 @@ class BaseCommandTest {
         assertThat(exitCode).isZero();
         verify(constructedProcessor)
                 .processSources(any(Path.class), eq(Set.of("**/*.java")), any(), eq(FlowType.REORDER));
+    }
+
+    @Test
+    void call_missingBaseDir_returnsProcessingErrorExitCode() throws Exception {
+        // Given
+        Path missingDir = temporaryDirectory.resolve("missing");
+
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
+            exitCode = commandLine.execute("--base-dir", missingDir.toString());
+        }
+
+        // Then
+        assertThat(Files.exists(missingDir)).isFalse();
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -131,18 +214,6 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processingSucceeds_returnsOkExitCode() {
-        // When
-        int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-    }
-
-    @Test
     void call_noBackupOptionInvoked_disablesBackupsInSrcProcessor() {
         // Given
         CommandLine cmd = new CommandLine(new TestCommand());
@@ -166,6 +237,81 @@ class BaseCommandTest {
         assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
         FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
         assertThat(flexibleConfig.getBackupsEnabled()).contains(false);
+    }
+
+    @Test
+    void call_processingSucceeds_returnsOkExitCode() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = CommandTestUtils.mockSuccessfulProcessorConstruction()) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isZero();
+    }
+
+    @Test
+    void call_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Unexpected error"));
+                })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
+    }
+
+    @Test
+    void call_processorThrowsRuntimeWithBlankMessage_returnsProcessingErrorExitCode() throws Exception {
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("  "));
+                })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
+    }
+
+    @Test
+    void call_processorThrowsRuntimeWithoutMessage_returnsProcessingErrorExitCode() throws Exception {
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException());
+                })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
+    }
+
+    @Test
+    void call_reorderFlowWithNonSuccessResult_returnsNonZeroExitCode() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildFailedResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -220,70 +366,6 @@ class BaseCommandTest {
     }
 
     @Test
-    void call_processorThrowsRuntimeException_returnsProcessingErrorExitCode() throws Exception {
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
-                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenThrow(new RuntimeException("Unexpected error"));
-                })) {
-            exitCode = commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
-    void call_baseDirMissing_returnsProcessingErrorExitCode() throws Exception {
-        // Given
-        Path missingDirectoryPath = temporaryDirectory.resolve("missing-base-dir");
-
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
-            exitCode = commandLine.execute("--base-dir", missingDirectoryPath.toString());
-        }
-
-        // Then
-        assertThat(Files.exists(missingDirectoryPath)).isFalse();
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
-    void call_configFileMissing_returnsProcessingErrorExitCode() throws Exception {
-        // Given
-        Path missingConfigPath = temporaryDirectory.resolve("missing-config.yml");
-
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
-            exitCode = commandLine.execute("--base-dir", "src", "--config", missingConfigPath.toString());
-        }
-
-        // Then
-        assertThat(Files.exists(missingConfigPath)).isFalse();
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
-    void call_processorThrowsRuntimeWithoutMessage_returnsProcessingErrorExitCode() throws Exception {
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
-                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenThrow(new RuntimeException());
-                })) {
-            exitCode = commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
     void call_verboseOptionInvoked_setsDebugLevelAndVerbosePattern() {
         // When
         int exitCode;
@@ -296,81 +378,6 @@ class BaseCommandTest {
         Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         assertThat(rootLogger.getLevel()).isEqualTo(Level.DEBUG);
         assertThat(resolveCurrentLogPattern(rootLogger)).contains("%logger");
-    }
-
-    @Test
-    void call_verboseWithRuntimeException_returnsProcessingErrorExitCode() throws Exception {
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
-                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenThrow(new RuntimeException("Verbose error"));
-                })) {
-            exitCode = commandLine.execute("--base-dir", "src", "--verbose");
-        }
-
-        // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
-    void call_baseDirOptionOmitted_usesCurrentDirectoryAsBaseDir() {
-        // When
-        int exitCode;
-        SrcProcessor constructedProcessor;
-        try (MockedConstruction<SrcProcessor> srcProcessorMocks =
-                CommandTestUtils.mockSuccessfulProcessorConstruction()) {
-            exitCode = commandLine.execute();
-            constructedProcessor = srcProcessorMocks.constructed().getFirst();
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        verify(constructedProcessor)
-                .processSources(eq(Path.of(".").toAbsolutePath().normalize()), any(), any(), eq(FlowType.REORDER));
-    }
-
-    @Test
-    void call_externalConfigAndNoBackupBothProvided_backupsDisabledInMergedConfig() throws Exception {
-        // Given
-        Path configFilePath = Files.writeString(
-                temporaryDirectory.resolve("minimal-config.yml"), "backups-enabled: true\n", StandardCharsets.UTF_8);
-        AtomicReference<List<?>> constructorArguments = new AtomicReference<>();
-
-        // When
-        int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            constructorArguments.set(context.arguments());
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(CommandTestUtils.buildSuccessfulResult());
-        })) {
-            exitCode = commandLine.execute("--base-dir", "src", "--config", configFilePath.toString(), "--no-backup");
-        }
-
-        // Then
-        assertThat(exitCode).isZero();
-        assertThat(constructorArguments.get()).hasSize(1);
-        Object constructorConfig = constructorArguments.get().getFirst();
-        assertThat(constructorConfig).isInstanceOf(FlexibleUnifiedConfig.class);
-        FlexibleUnifiedConfig flexibleConfig = (FlexibleUnifiedConfig) constructorConfig;
-        assertThat(flexibleConfig.getBackupsEnabled()).contains(false);
-    }
-
-    @Test
-    void call_processorThrowsRuntimeWithBlankMessage_returnsProcessingErrorExitCode() throws Exception {
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
-                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenThrow(new RuntimeException("  "));
-                })) {
-            exitCode = commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -394,37 +401,6 @@ class BaseCommandTest {
 
         // Then
         assertThat(exitCode).isZero();
-    }
-
-    @Test
-    void call_missingBaseDir_returnsProcessingErrorExitCode() throws Exception {
-        // Given
-        Path missingDir = temporaryDirectory.resolve("missing");
-
-        // When
-        int exitCode;
-        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs()) {
-            exitCode = commandLine.execute("--base-dir", missingDir.toString());
-        }
-
-        // Then
-        assertThat(Files.exists(missingDir)).isFalse();
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
-    void call_reorderFlowWithNonSuccessResult_returnsNonZeroExitCode() {
-        // When
-        int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(CommandTestUtils.buildFailedResult());
-        })) {
-            exitCode = commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
     }
 
     @Test
@@ -452,13 +428,27 @@ class BaseCommandTest {
         assertThat(exitCode).isZero();
     }
 
-    private static final class TestCommand extends BaseCommand {
-
-        @Override
-        @NonNull
-        protected FlowType getFlowType() {
-            return FlowType.REORDER;
+    @Test
+    void call_verboseWithRuntimeException_returnsProcessingErrorExitCode() throws Exception {
+        // When
+        int exitCode;
+        try (AutoCloseable ignoredLogs = CommandTestUtils.suppressBaseCommandLogs();
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenThrow(new RuntimeException("Verbose error"));
+                })) {
+            exitCode = commandLine.execute("--base-dir", "src", "--verbose");
         }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
+    }
+
+    @AfterEach
+    void tearDown() {
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(initialRootLevel);
+        restoreLogPattern(rootLogger, initialPattern);
     }
 
     @Nullable
@@ -486,5 +476,14 @@ class BaseCommandTest {
         encoder.stop();
         encoder.setPattern(pattern);
         encoder.start();
+    }
+
+    private static final class TestCommand extends BaseCommand {
+
+        @Override
+        @NonNull
+        protected FlowType getFlowType() {
+            return FlowType.REORDER;
+        }
     }
 }

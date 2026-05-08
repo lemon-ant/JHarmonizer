@@ -12,7 +12,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TypeGroupDeserializerTest {
-
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     @Test

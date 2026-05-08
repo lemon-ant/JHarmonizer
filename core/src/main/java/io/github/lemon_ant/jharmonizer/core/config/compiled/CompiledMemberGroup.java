@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 @Value
 @Builder
 public class CompiledMemberGroup {
+
     @NonNull
     @Singular
     List<@NonNull CompiledMemberGroup> compiledSubGroups; // unmodifiable after build, ordered
@@ -31,6 +32,11 @@ public class CompiledMemberGroup {
 
     int orderIndex;
 
+    @NonNull
+    @Singular
+    // TODO How to compile it???
+    List<@NonNull OrderingRule> orderingRules;
+
     @Builder.Default
     boolean relaxedForwardReferences = true;
 
@@ -39,11 +45,6 @@ public class CompiledMemberGroup {
 
     @NonNull
     UnifiedSeparator separator;
-
-    @NonNull
-    @Singular
-    // TODO How to compile it???
-    List<@NonNull OrderingRule> orderingRules;
 
     /**
      * Classifies the recursively.

@@ -22,16 +22,33 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class ConfigModelSnapshotTest {
-
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/expected-default-jharmonizer-config.json";
-    private static final URL SNAPSHOT_RESOURCE_URL =
-            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    private static final Pattern SELECTOR_BLOCK_PATTERN = Pattern.compile(
-            "(?m)^(\\s+)\"(includes|excludes)\"\\s*:\\s*\\[(\\s*\\[[^\\n\\]]*\\](?:,\\s*\\[[^\\n\\]]*\\])*)\\s*\\](,?)$");
+    private static final Pattern SELECTOR_BLOCK_PATTERN =
+            Pattern.compile("(?m)^(\\s+)\"(includes|excludes)\"\\s*:\\s*\\[(\\s*\\[[^\\n"
+                    + "\\]]*\\](?:,\\s*\\[[^\\n"
+                    + "\\]]*\\])*)\\s*\\](,?)$");
     private static final Pattern SELECTOR_LINE_PATTERN = Pattern.compile("\\[[^\\]]*\\]");
+    private static final URL SNAPSHOT_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
+
+    @Test
+    @Disabled("Utility only. Run to regenerate expected-default-jharmonizer-config.json")
+    void regenerateSnapshot() throws Exception {
+        // Given
+        String newSnapshot = formatNestedSelectorLines(MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG));
+        Path snapshotPath = Path.of(FILE_PATH_TO_SNAPSHOT);
+
+        // When
+        Files.writeString(snapshotPath, newSnapshot, StandardCharsets.UTF_8);
+
+        // Then
+        assertThat(Files.readString(snapshotPath, StandardCharsets.UTF_8))
+                .as("Snapshot file should be readable immediately after write")
+                .isEqualTo(newSnapshot);
+    }
 
     @Test
     void serializeDefaultJHarmonizerConfig_serializedDefaultConfig_matchesSnapshot() throws Exception {
@@ -57,38 +74,6 @@ class ConfigModelSnapshotTest {
             """, FILE_PATH_TO_SNAPSHOT).isEqualToNormalizingNewlines(expectedJson);
     }
 
-    @Test
-    @Disabled("Utility only. Run to regenerate expected-default-jharmonizer-config.json")
-    void regenerateSnapshot() throws Exception {
-        // Given
-        String newSnapshot = formatNestedSelectorLines(MAPPER.writeValueAsString(DEFAULT_JHARMONIZER_CONFIG));
-        Path snapshotPath = Path.of(FILE_PATH_TO_SNAPSHOT);
-
-        // When
-        Files.writeString(snapshotPath, newSnapshot, StandardCharsets.UTF_8);
-
-        // Then
-        assertThat(Files.readString(snapshotPath, StandardCharsets.UTF_8))
-                .as("Snapshot file should be readable immediately after write")
-                .isEqualTo(newSnapshot);
-    }
-
-    @NonNull
-    private static String formatNestedSelectorLines(String json) {
-        Matcher selectorBlockMatcher = SELECTOR_BLOCK_PATTERN.matcher(json);
-        StringBuffer reformattedJson = new StringBuffer();
-        while (selectorBlockMatcher.find()) {
-            String baseIndent = selectorBlockMatcher.group(1);
-            String selectorField = selectorBlockMatcher.group(2);
-            String selectorItems = selectorBlockMatcher.group(3);
-            String trailingComma = selectorBlockMatcher.group(4);
-            String replacement = buildFormattedSelectorBlock(baseIndent, selectorField, selectorItems, trailingComma);
-            selectorBlockMatcher.appendReplacement(reformattedJson, Matcher.quoteReplacement(replacement));
-        }
-        selectorBlockMatcher.appendTail(reformattedJson);
-        return reformattedJson.toString();
-    }
-
     @NonNull
     private static String buildFormattedSelectorBlock(
             String baseIndent, String selectorField, String selectorItems, String trailingComma) {
@@ -108,5 +93,21 @@ class ConfigModelSnapshotTest {
         }
         formattedBlock.append('\n').append(baseIndent).append(']').append(trailingComma);
         return formattedBlock.toString();
+    }
+
+    @NonNull
+    private static String formatNestedSelectorLines(String json) {
+        Matcher selectorBlockMatcher = SELECTOR_BLOCK_PATTERN.matcher(json);
+        StringBuffer reformattedJson = new StringBuffer();
+        while (selectorBlockMatcher.find()) {
+            String baseIndent = selectorBlockMatcher.group(1);
+            String selectorField = selectorBlockMatcher.group(2);
+            String selectorItems = selectorBlockMatcher.group(3);
+            String trailingComma = selectorBlockMatcher.group(4);
+            String replacement = buildFormattedSelectorBlock(baseIndent, selectorField, selectorItems, trailingComma);
+            selectorBlockMatcher.appendReplacement(reformattedJson, Matcher.quoteReplacement(replacement));
+        }
+        selectorBlockMatcher.appendTail(reformattedJson);
+        return reformattedJson.toString();
     }
 }

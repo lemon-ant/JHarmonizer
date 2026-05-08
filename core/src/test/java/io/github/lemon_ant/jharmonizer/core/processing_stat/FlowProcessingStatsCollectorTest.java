@@ -15,6 +15,37 @@ import org.junit.jupiter.api.Test;
 class FlowProcessingStatsCollectorTest {
 
     @Test
+    void aggregatedStats_emptyStream_calculateAverageMethodsReturnZero() {
+        // When
+        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
+                Stream.<FileProcessingResult>empty().collect(FlowProcessingStats.statsCollector());
+
+        // Then
+        assertThat(aggregatedProcessingStatistic.calculateAverageProcessingTime())
+                .isZero();
+        assertThat(aggregatedProcessingStatistic.calculateAverageSize()).isZero();
+        assertThat(aggregatedProcessingStatistic.computeNonConformingFileCount())
+                .isZero();
+    }
+
+    @Test
+    void aggregatedStats_reorderedAndFormattedFiles_computeNonConformingFileCountIncludesBoth() {
+        // Given
+        List<FileProcessingResult> fileProcessingResults = List.of(
+                createResult(FileProcessingStatus.REORDERED, Path.of("R.java"), 10, false),
+                createResult(FileProcessingStatus.FORMATTED, Path.of("F.java"), 20, false),
+                createResult(FileProcessingStatus.CHECKED, Path.of("C.java"), 30, false));
+
+        // When
+        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
+                fileProcessingResults.stream().collect(FlowProcessingStats.statsCollector());
+
+        // Then
+        assertThat(aggregatedProcessingStatistic.computeNonConformingFileCount())
+                .isEqualTo(2L);
+    }
+
+    @Test
     void statsCollector_emptyStream_returnsZeroCountAndNullMinMax() {
         // When
         FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
@@ -29,25 +60,18 @@ class FlowProcessingStatsCollectorTest {
     }
 
     @Test
-    void statsCollector_singleFile_minEqualsMax() {
+    void statsCollector_errorFile_recordsInUnexpectedErrorPaths() {
         // Given
-        FileProcessingResult fileProcessingResult =
-                createResult(FileProcessingStatus.CHECKED, Path.of("A.java"), 100, false);
+        FileProcessingResult errorFileProcessingResult =
+                createResult(FileProcessingStatus.ERROR, Path.of("Broken.java"), 50, false);
 
         // When
         FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
-                Stream.of(fileProcessingResult).collect(FlowProcessingStats.statsCollector());
+                Stream.of(errorFileProcessingResult).collect(FlowProcessingStats.statsCollector());
 
         // Then
-        assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(1);
-        assertThat(aggregatedProcessingStatistic.getSmallestFile())
-                .isNotNull()
-                .extracting(FileProcessingStatistic::getSizeInBytes)
-                .isEqualTo(100L);
-        assertThat(aggregatedProcessingStatistic.getLargestFile())
-                .isNotNull()
-                .extracting(FileProcessingStatistic::getSizeInBytes)
-                .isEqualTo(100L);
+        assertThat(aggregatedProcessingStatistic.getFilesWithUnexpectedErrors())
+                .containsExactly(Path.of("Broken.java"));
     }
 
     @Test
@@ -77,49 +101,17 @@ class FlowProcessingStatsCollectorTest {
     }
 
     @Test
-    void statsCollector_errorFile_recordsInUnexpectedErrorPaths() {
+    void statsCollector_singleFile_minEqualsMax() {
         // Given
-        FileProcessingResult errorFileProcessingResult =
-                createResult(FileProcessingStatus.ERROR, Path.of("Broken.java"), 50, false);
+        FileProcessingResult fileProcessingResult =
+                createResult(FileProcessingStatus.CHECKED, Path.of("A.java"), 100, false);
 
         // When
         FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
-                Stream.of(errorFileProcessingResult).collect(FlowProcessingStats.statsCollector());
+                Stream.of(fileProcessingResult).collect(FlowProcessingStats.statsCollector());
 
         // Then
-        assertThat(aggregatedProcessingStatistic.getFilesWithUnexpectedErrors())
-                .containsExactly(Path.of("Broken.java"));
-    }
-
-    @Test
-    void statsCollector_stopRequestedFile_recordsInStopTriggerPaths() {
-        // Given
-        FileProcessingResult stopRequestedFileProcessingResult =
-                createResult(FileProcessingStatus.CHECKED, Path.of("Stop.java"), 100, true);
-
-        // When
-        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
-                Stream.of(stopRequestedFileProcessingResult).collect(FlowProcessingStats.statsCollector());
-
-        // Then
-        assertThat(aggregatedProcessingStatistic.getStopTriggerPaths()).containsExactly(Path.of("Stop.java"));
-    }
-
-    @Test
-    void statsContainerCombine_twoNonEmptyContainers_correctlyMergesMinMax() {
-        // Given
-        FlowProcessingStats.StatsContainer containerA = new FlowProcessingStats.StatsContainer();
-        containerA.accumulate(createResult(FileProcessingStatus.CHECKED, Path.of("Small.java"), 100, false));
-
-        FlowProcessingStats.StatsContainer containerB = new FlowProcessingStats.StatsContainer();
-        containerB.accumulate(createResult(FileProcessingStatus.CHECKED, Path.of("Large.java"), 1000, false));
-
-        // When
-        FlowProcessingStats.StatsContainer merged = containerA.combine(containerB);
-
-        // Then
-        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic = merged.toAggregatedStats();
-        assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(2);
+        assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(1);
         assertThat(aggregatedProcessingStatistic.getSmallestFile())
                 .isNotNull()
                 .extracting(FileProcessingStatistic::getSizeInBytes)
@@ -127,44 +119,7 @@ class FlowProcessingStatsCollectorTest {
         assertThat(aggregatedProcessingStatistic.getLargestFile())
                 .isNotNull()
                 .extracting(FileProcessingStatistic::getSizeInBytes)
-                .isEqualTo(1000L);
-    }
-
-    @Test
-    void statsContainerCombine_emptyOtherContainer_keepsCurrentMinMax() {
-        // Given
-        FlowProcessingStats.StatsContainer containerA = new FlowProcessingStats.StatsContainer();
-        containerA.accumulate(createResult(FileProcessingStatus.CHECKED, Path.of("A.java"), 200, false));
-        FlowProcessingStats.StatsContainer emptyContainer = new FlowProcessingStats.StatsContainer();
-
-        // When
-        FlowProcessingStats.StatsContainer merged = containerA.combine(emptyContainer);
-
-        // Then
-        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic = merged.toAggregatedStats();
-        assertThat(aggregatedProcessingStatistic.getSmallestFile())
-                .isNotNull()
-                .extracting(FileProcessingStatistic::getSizeInBytes)
-                .isEqualTo(200L);
-        assertThat(aggregatedProcessingStatistic.getLargestFile())
-                .isNotNull()
-                .extracting(FileProcessingStatistic::getSizeInBytes)
-                .isEqualTo(200L);
-    }
-
-    @Test
-    void statsContainerCombine_bothEmptyContainers_resultHasNullMinMax() {
-        // Given
-        FlowProcessingStats.StatsContainer containerA = new FlowProcessingStats.StatsContainer();
-        FlowProcessingStats.StatsContainer containerB = new FlowProcessingStats.StatsContainer();
-
-        // When
-        FlowProcessingStats.StatsContainer merged = containerA.combine(containerB);
-
-        // Then
-        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic = merged.toAggregatedStats();
-        assertThat(aggregatedProcessingStatistic.getSmallestFile()).isNull();
-        assertThat(aggregatedProcessingStatistic.getLargestFile()).isNull();
+                .isEqualTo(100L);
     }
 
     @Test
@@ -193,33 +148,78 @@ class FlowProcessingStatsCollectorTest {
     }
 
     @Test
-    void aggregatedStats_emptyStream_calculateAverageMethodsReturnZero() {
+    void statsCollector_stopRequestedFile_recordsInStopTriggerPaths() {
+        // Given
+        FileProcessingResult stopRequestedFileProcessingResult =
+                createResult(FileProcessingStatus.CHECKED, Path.of("Stop.java"), 100, true);
+
         // When
         FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
-                Stream.<FileProcessingResult>empty().collect(FlowProcessingStats.statsCollector());
+                Stream.of(stopRequestedFileProcessingResult).collect(FlowProcessingStats.statsCollector());
 
         // Then
-        assertThat(aggregatedProcessingStatistic.calculateAverageProcessingTime())
-                .isZero();
-        assertThat(aggregatedProcessingStatistic.calculateAverageSize()).isZero();
-        assertThat(aggregatedProcessingStatistic.computeNonConformingFileCount())
-                .isZero();
+        assertThat(aggregatedProcessingStatistic.getStopTriggerPaths()).containsExactly(Path.of("Stop.java"));
     }
 
     @Test
-    void aggregatedStats_reorderedAndFormattedFiles_computeNonConformingFileCountIncludesBoth() {
+    void statsContainerCombine_bothEmptyContainers_resultHasNullMinMax() {
         // Given
-        List<FileProcessingResult> fileProcessingResults = List.of(
-                createResult(FileProcessingStatus.REORDERED, Path.of("R.java"), 10, false),
-                createResult(FileProcessingStatus.FORMATTED, Path.of("F.java"), 20, false),
-                createResult(FileProcessingStatus.CHECKED, Path.of("C.java"), 30, false));
+        FlowProcessingStats.StatsContainer containerA = new FlowProcessingStats.StatsContainer();
+        FlowProcessingStats.StatsContainer containerB = new FlowProcessingStats.StatsContainer();
 
         // When
-        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic =
-                fileProcessingResults.stream().collect(FlowProcessingStats.statsCollector());
+        FlowProcessingStats.StatsContainer merged = containerA.combine(containerB);
 
         // Then
-        assertThat(aggregatedProcessingStatistic.computeNonConformingFileCount())
-                .isEqualTo(2L);
+        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic = merged.toAggregatedStats();
+        assertThat(aggregatedProcessingStatistic.getSmallestFile()).isNull();
+        assertThat(aggregatedProcessingStatistic.getLargestFile()).isNull();
+    }
+
+    @Test
+    void statsContainerCombine_emptyOtherContainer_keepsCurrentMinMax() {
+        // Given
+        FlowProcessingStats.StatsContainer containerA = new FlowProcessingStats.StatsContainer();
+        containerA.accumulate(createResult(FileProcessingStatus.CHECKED, Path.of("A.java"), 200, false));
+        FlowProcessingStats.StatsContainer emptyContainer = new FlowProcessingStats.StatsContainer();
+
+        // When
+        FlowProcessingStats.StatsContainer merged = containerA.combine(emptyContainer);
+
+        // Then
+        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic = merged.toAggregatedStats();
+        assertThat(aggregatedProcessingStatistic.getSmallestFile())
+                .isNotNull()
+                .extracting(FileProcessingStatistic::getSizeInBytes)
+                .isEqualTo(200L);
+        assertThat(aggregatedProcessingStatistic.getLargestFile())
+                .isNotNull()
+                .extracting(FileProcessingStatistic::getSizeInBytes)
+                .isEqualTo(200L);
+    }
+
+    @Test
+    void statsContainerCombine_twoNonEmptyContainers_correctlyMergesMinMax() {
+        // Given
+        FlowProcessingStats.StatsContainer containerA = new FlowProcessingStats.StatsContainer();
+        containerA.accumulate(createResult(FileProcessingStatus.CHECKED, Path.of("Small.java"), 100, false));
+
+        FlowProcessingStats.StatsContainer containerB = new FlowProcessingStats.StatsContainer();
+        containerB.accumulate(createResult(FileProcessingStatus.CHECKED, Path.of("Large.java"), 1000, false));
+
+        // When
+        FlowProcessingStats.StatsContainer merged = containerA.combine(containerB);
+
+        // Then
+        FlowProcessingStats.AggregatedProcessingStatistic aggregatedProcessingStatistic = merged.toAggregatedStats();
+        assertThat(aggregatedProcessingStatistic.getFileCount()).isEqualTo(2);
+        assertThat(aggregatedProcessingStatistic.getSmallestFile())
+                .isNotNull()
+                .extracting(FileProcessingStatistic::getSizeInBytes)
+                .isEqualTo(100L);
+        assertThat(aggregatedProcessingStatistic.getLargestFile())
+                .isNotNull()
+                .extracting(FileProcessingStatistic::getSizeInBytes)
+                .isEqualTo(1000L);
     }
 }

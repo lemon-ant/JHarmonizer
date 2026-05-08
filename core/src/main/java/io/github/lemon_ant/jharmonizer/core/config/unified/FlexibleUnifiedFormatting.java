@@ -23,18 +23,6 @@ import org.jspecify.annotations.Nullable;
 public class FlexibleUnifiedFormatting {
 
     /**
-     * Optional override for whether to fix/reorder imports in the final formatting pass.
-     */
-    @Nullable
-    Boolean fixImports;
-
-    /**
-     * Optional override for the formatter style hint.
-     */
-    @Nullable
-    UnifiedFormatterStyle formatterStyle;
-
-    /**
      * Optional override for whether to insert a blank line after the type declaration header.
      */
     @Nullable
@@ -51,6 +39,18 @@ public class FlexibleUnifiedFormatting {
      */
     @Nullable
     Boolean blankLineBetweenFields;
+
+    /**
+     * Optional override for whether to fix/reorder imports in the final formatting pass.
+     */
+    @Nullable
+    Boolean fixImports;
+
+    /**
+     * Optional override for the formatter style hint.
+     */
+    @Nullable
+    UnifiedFormatterStyle formatterStyle;
 
     /**
      * Creates a partial formatting overlay. At least one parameter must be non-null.
@@ -83,26 +83,6 @@ public class FlexibleUnifiedFormatting {
     }
 
     /**
-     * Returns the optional fix-imports override.
-     *
-     * @return the optional fix-imports override
-     */
-    @NonNull
-    public Optional<Boolean> getFixImports() {
-        return ofNullable(fixImports);
-    }
-
-    /**
-     * Returns the optional formatter style override.
-     *
-     * @return the optional formatter style override
-     */
-    @NonNull
-    public Optional<UnifiedFormatterStyle> getFormatterStyle() {
-        return ofNullable(formatterStyle);
-    }
-
-    /**
      * Returns the optional blank-line-after-type-header override.
      *
      * @return the optional blank-line-after-type-header override
@@ -130,5 +110,25 @@ public class FlexibleUnifiedFormatting {
     @NonNull
     public Optional<Boolean> getBlankLineBetweenFields() {
         return ofNullable(blankLineBetweenFields);
+    }
+
+    /**
+     * Returns the optional fix-imports override.
+     *
+     * @return the optional fix-imports override
+     */
+    @NonNull
+    public Optional<Boolean> getFixImports() {
+        return ofNullable(fixImports);
+    }
+
+    /**
+     * Returns the optional formatter style override.
+     *
+     * @return the optional formatter style override
+     */
+    @NonNull
+    public Optional<UnifiedFormatterStyle> getFormatterStyle() {
+        return ofNullable(formatterStyle);
     }
 }
