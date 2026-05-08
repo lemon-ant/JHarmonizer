@@ -96,4 +96,6 @@ JHarmonizer is the only open-source, CI-embeddable tool that:
      `~handle.*` at the top of a group.
    These atomic constraints compose freely — each rule line ANDs multiple constraints together; multiple
    rule lines OR together — giving fine-grained, codebase-aware control that adapts to every architectural
-   convention your project follows.
+   convention your project follows. And if the built-in defaults do not match your project's conventions,
+   every rule can be overridden or extended in a single `jharmonizer.yml` file — quickly, without touching
+   anything else.
