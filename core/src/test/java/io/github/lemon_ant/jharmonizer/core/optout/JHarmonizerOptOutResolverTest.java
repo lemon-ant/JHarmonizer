@@ -71,6 +71,7 @@ class JHarmonizerOptOutResolverTest {
     void parseJavaSrcResource_commentOnlyFullyOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
+            // @jharmonizer:fully-off
                 // Intentionally comment-only source.
             /*    No package, imports, module, or type declarations.    */
             """;
@@ -104,6 +105,7 @@ class JHarmonizerOptOutResolverTest {
     void parseJavaSrcResource_fileOptOutBeforePackage_resolveFileOptOutOff() {
         // Given
         String srcCode = """
+            // @jharmonizer:fully-off
             package demo;
 
             class Sample {}
@@ -160,6 +162,7 @@ class JHarmonizerOptOutResolverTest {
             package demo;
 
             class Sample {
+                // @jharmonizer:fully-off
                 int value;
             }
             """;
@@ -192,6 +195,7 @@ class JHarmonizerOptOutResolverTest {
     void parseJavaSrcResource_moduleInfoFullyOffThenSortOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
+            // @jharmonizer:fully-off
             // @jharmonizer:sort-off
             @Deprecated
             module demo.module {
@@ -211,6 +215,7 @@ class JHarmonizerOptOutResolverTest {
     void parseJavaSrcResource_packageInfoFullyOffBeforeJavadoc_resolveFileOptOutOff() {
         // Given
         String srcCode = """
+            // @jharmonizer:fully-off
             /**
              * Package docs.
              */
@@ -230,6 +235,7 @@ class JHarmonizerOptOutResolverTest {
     void parseJavaSrcResource_packageInfoFullyOffThenSortOff_resolveFileFullyOff() {
         // Given
         String srcCode = """
+            // @jharmonizer:fully-off
             // @jharmonizer:sort-off
             /**
              * Package docs.
@@ -252,6 +258,7 @@ class JHarmonizerOptOutResolverTest {
         String srcCode = """
             package demo;
 
+            // @jharmonizer:fully-off
             @Deprecated
             class Sample {}
             """;
@@ -313,6 +320,7 @@ class JHarmonizerOptOutResolverTest {
         // Given
         String srcCode = """
             // @jharmonizer:sort-off
+            // @jharmonizer:fully-off
             class Sample {}
             """;
 
@@ -330,6 +338,7 @@ class JHarmonizerOptOutResolverTest {
         String srcCode = """
             class Sample {
                 // @jharmonizer:sort-off
+                // @jharmonizer:fully-off
                 class Nested {}
             }
             """;

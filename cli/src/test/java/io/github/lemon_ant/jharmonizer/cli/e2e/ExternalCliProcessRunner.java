@@ -56,11 +56,11 @@ class ExternalCliProcessRunner {
             int exitCode = completed ? process.exitValue() : -1;
             return new ExternalCliProcessResult(
                     List.copyOf(command),
-                    workingDirectory.toAbsolutePath().normalize(),
                     exitCode,
-                    getOutput(stdoutFuture),
                     normalizeErrorOutput(getOutput(stderrFuture)),
-                    !completed);
+                    getOutput(stdoutFuture),
+                    !completed,
+                    workingDirectory.toAbsolutePath().normalize());
         }
     }
 

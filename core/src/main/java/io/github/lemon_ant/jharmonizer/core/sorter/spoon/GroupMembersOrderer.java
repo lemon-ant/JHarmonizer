@@ -109,7 +109,7 @@ class GroupMembersOrderer {
                     continue;
                 }
                 edges.add(new Dependencies.Dependency<>(
-                        typeMemberToSortable.get(provider), typeMemberToSortable.get(dependent)));
+                        typeMemberToSortable.get(dependent), typeMemberToSortable.get(provider)));
             }
         }
 

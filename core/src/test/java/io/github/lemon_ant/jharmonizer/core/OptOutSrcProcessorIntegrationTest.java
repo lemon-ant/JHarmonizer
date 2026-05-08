@@ -36,6 +36,7 @@ class OptOutSrcProcessorIntegrationTest {
         // Two file-scope opt-out comments: the second one (FULLY_OFF) should win.
         String srcCodeWithDuplicateOptOut = """
             // @jharmonizer:sort-off
+            // @jharmonizer:fully-off
             public class DuplicateOptOut {
                 public void b() {}
                 public void a() {}
@@ -57,12 +58,14 @@ class OptOutSrcProcessorIntegrationTest {
         // Keep the nested declarations compact and intentionally out of order so byte-for-byte preservation
         // proves that file-level fully-off ignores nested override directives and extra declarations.
         String originalSrcCode = """
+            // @jharmonizer:fully-off
             class ZuluHelper{static String label(){return "zulu";}}
             public class Sample{int zebra;
                 static class LaterOuter{static String label(){return "later";}}
                 int ant;
                 // @jharmonizer:sort-off
                 static class InnerSortOff{int zebra; static class BetaNested{static String describe(){return "beta";}} int ant; String describe(){return BetaNested.describe()+new AlphaNested().describe()+zebra+ant;} static class AlphaNested{static String describe(){return "alpha";}}}
+                // @jharmonizer:fully-off
                 static class InnerFullyOff{int zebra; static class LaterNested{static String describe(){return "later";}} int ant; String describe(){return LaterNested.describe()+zebra+ant;}}
                 public static void main(String[] args){
                     System.out.println(new Sample().describe());
@@ -109,6 +112,7 @@ class OptOutSrcProcessorIntegrationTest {
     void processSources_fileOptOutOff_keepOriginalSrc() throws Exception {
         // Given
         String originalSrcCode = """
+            // @jharmonizer:fully-off
             import java.util.List;
             class Z{int b;int a;}
             class A{}
@@ -150,6 +154,7 @@ class OptOutSrcProcessorIntegrationTest {
             throws Exception {
         // Given
         String expectedFullyOffFragment = """
+                // @jharmonizer:fully-off
                 static class Inner{int z;  int a;}
             """.stripTrailing();
         String originalSrcCode = """
@@ -179,6 +184,7 @@ class OptOutSrcProcessorIntegrationTest {
                 int a;
                 int b;
 
+                // @jharmonizer:fully-off
                 static class Inner{int z;int a;}
             }
             """;
