@@ -49,6 +49,14 @@ action inside the IDE. CI cannot run an IDE. A developer who forgets to reorder 
 uses VS Code or another editor, produces non-conforming code that slips through undetected. Configuration
 is also locked inside the IDE workspace and is not portable.
 
+Beyond the CI gap, both IDEs provide a single, global arrangement profile that applies uniformly to every
+class in the project. There is no way to tell the IDE: *"sort test classes differently from production
+classes; apply a separate layout to DTO/value-object classes; group Spring MVC handler methods by their
+HTTP-method annotation"*. The ordering rules are coarse-grained — you can define buckets by member kind
+and visibility, but you cannot match on class name patterns, annotation presence on the containing type,
+or any combination thereof. The result is a single one-size-fits-all layout that satisfies none of the
+special cases that inevitably arise in a real codebase.
+
 ### Checkstyle / PMD member-order checks
 
 These tools can report that a class violates a defined member order, but they **do not fix it**. They flag
@@ -74,3 +82,19 @@ JHarmonizer is the only open-source, CI-embeddable tool that:
 3. **Runs in CI** as a Maven plugin goal (`reorder`, `check-all`, `check-fast`) or as a standalone fat
    JAR — no IDE, no Docker, no manual step required.
 4. **Is open-source and free** under the Apache-2.0 license.
+5. **Applies different ordering rules to different class types through an advanced selector DSL.**
+   No other existing tool — including IntelliJ IDEA and Eclipse — provides this level of configuration
+   flexibility. The selector system lets you define entirely separate member layouts for different kinds
+   of classes matched by:
+   - **Class name regex** — e.g. apply one layout to classes whose name ends with `Test` and a different
+     layout to classes named `*Dto` or `*Config`.
+   - **Annotation presence** — e.g. group handler methods that carry any `@~.*Mapping$` annotation
+     together in Spring controllers, or place all `@Nested` test classes at the end of a JUnit 5 test suite.
+   - **Member kind, visibility, and modifiers in combination** — e.g. place `private static final`
+     constants first, then all `public` methods sorted alphabetically, then `private` helpers.
+   - **Exact or regex member names** — e.g. always place a method named `=execute` or members matching
+     `~handle.*` at the top of a group.
+   These selectors compose freely, giving fine-grained, codebase-aware control that adapts to every
+   architectural convention your project follows. And if the built-in defaults do not match your project's
+   conventions, every rule can be overridden or extended in a single `jharmonizer.yml` file — quickly,
+   without touching anything else.
