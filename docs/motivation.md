@@ -94,6 +94,7 @@ JHarmonizer is the only open-source, CI-embeddable tool that:
      constants first, then all `public` methods sorted alphabetically, then `private` helpers.
    - **Exact or regex member names** — e.g. always place a method named `=execute` or members matching
      `~handle.*` at the top of a group.
+
    These selectors compose freely, giving fine-grained, codebase-aware control that adapts to every
    architectural convention your project follows. And if the built-in defaults do not match your project's
    conventions, every rule can be overridden or extended in a single `jharmonizer.yml` file — quickly,
