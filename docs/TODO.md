@@ -27,10 +27,6 @@ To keep planning explicit, this backlog is split into two categories:
 
 ## Planned future features (new product functionality)
 
-> **Items are ordered from most developer-visible and immediately useful to most internal and complex.**
-> The first items are features you will notice in your daily work; the last items are internal
-> improvements that affect correctness, performance, or architecture but are invisible to end users.
-
 ### 1. Handle enum constants ordering explicitly (future work)
 
 #### Status
