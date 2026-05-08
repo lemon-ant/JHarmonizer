@@ -22,6 +22,9 @@ runs correctly** — not just looks different.
 
 > **Why not just use IntelliJ, Spotless, or Checkstyle?**
 > IDEs cannot run in CI, formatters do not reorder members, and checkers only flag without fixing.
+> IDE arrangement rules also apply a single global layout to every class — there is no way to define
+> different ordering rules for test classes, DTOs, annotated controllers, or other class-type selectors.
+> JHarmonizer's selector DSL provides that flexibility out of the box.
 > See [docs/motivation.md](docs/motivation.md) for the full comparison.
 
 ## Quick Start
