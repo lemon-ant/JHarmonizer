@@ -14,18 +14,17 @@ JHarmonizer **sorts and formats Java source files** while keeping the code safe.
 It reorders class members — fields, constructors, methods, nested types, initializer blocks — according to
 configurable rules, and formats the output with [Palantir Java Format](https://github.com/palantir/palantir-java-format).
 
-What sets it apart from a plain formatter: before moving any member, JHarmonizer builds a
-**declaration-order dependency graph** that captures the JLS rules governing field initializer references,
-static and instance block sequencing, enum constant initializers, blank-final assignment ordering, and
-cross-member back-references. The sorter honours those constraints so the reordered source **compiles and
-runs correctly** — not just looks different.
+What sets it apart from a plain formatter: formatters only adjust whitespace and style — they do not
+reorder members. JHarmonizer does reorder them, and before moving anything it checks which fields and
+blocks depend on each other's position so that the result **compiles and runs correctly** — not just
+looks different.
 
-> **Why not just use IntelliJ, Spotless, or Checkstyle?**
-> IDEs cannot run in CI, formatters do not reorder members, and checkers only flag without fixing.
-> IDE arrangement rules also apply a single global layout to every class — there is no way to define
-> different ordering rules for test classes, DTOs, annotated controllers, or other class-type selectors.
-> JHarmonizer's selector DSL provides that flexibility out of the box.
-> See [docs/motivation.md](docs/motivation.md) for the full comparison.
+**Why not just use IntelliJ or Checkstyle?**
+IDEs cannot run in CI, and checkers only flag without fixing.
+IDE arrangement rules also apply a single global layout to every class — there is no way to define
+different ordering rules for test classes, DTOs, annotated controllers, or other class-type selectors.
+JHarmonizer's selector DSL provides that flexibility out of the box.
+See [docs/motivation.md](docs/motivation.md) for the full comparison.
 
 ## Quick Start
 
