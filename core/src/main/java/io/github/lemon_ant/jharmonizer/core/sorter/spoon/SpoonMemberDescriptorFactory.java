@@ -42,8 +42,6 @@ import spoon.reflect.declaration.ModifierKind;
 @UtilityClass
 @SuppressWarnings("PMD.ExcessiveImports")
 class SpoonMemberDescriptorFactory {
-
-    private static final String INIT_NAME = "<init>";
     private static final List<Map.Entry<ModifierKind, MemberAccess>> ACCESS_BY_MODIFIER = List.of(
             Map.entry(ModifierKind.PUBLIC, MemberAccess.PUBLIC),
             Map.entry(ModifierKind.PROTECTED, MemberAccess.PROTECTED),
@@ -55,18 +53,7 @@ class SpoonMemberDescriptorFactory {
             // TODO Research: map ModifierKind.DEFAULT once semantics are confirmed for your model.
             // TODO Map SEALED / NON_SEALED once Spoon exposes them (Java 17+ features).
             );
-
-    /**
-     * Performs the describe members.
-     * @param type the type
-     * @return the resulting map
-     */
-    @NonNull
-    Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
-        return streamExplicitSrcTypeMembers(type)
-                .collect(Collectors.toUnmodifiableMap(
-                        Function.identity(), SpoonMemberDescriptorFactory::describeMember));
-    }
+    private static final String INIT_NAME = "<init>";
 
     /**
      * Performs the describe member.
@@ -90,32 +77,16 @@ class SpoonMemberDescriptorFactory {
                 .build();
     }
 
+    /**
+     * Performs the describe members.
+     * @param type the type
+     * @return the resulting map
+     */
     @NonNull
-    private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
-        if (typeMember instanceof CtEnumValue<?>) {
-            return MemberKind.ENUM_CONSTANT;
-        }
-        if (typeMember instanceof CtRecordComponent) {
-            return MemberKind.RECORD_COMPONENT;
-        }
-        if (typeMember instanceof CtField<?>) {
-            return MemberKind.FIELD;
-        }
-        if (typeMember instanceof CtMethod<?>) {
-            return MemberKind.METHOD;
-        }
-        if (typeMember instanceof CtConstructor<?>) {
-            return MemberKind.CONSTRUCTOR;
-        }
-        if (typeMember instanceof CtAnonymousExecutable) {
-            return MemberKind.INIT_BLOCK;
-        }
-        if (typeMember instanceof CtType<?> nestedType) {
-            return resolveNestedTypeKind(nestedType);
-        }
-
-        throw new IllegalArgumentException(
-                "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
+    Map<@NonNull CtTypeMember, @NonNull MemberDescriptor> describeMembers(@NonNull CtType<?> type) {
+        return streamExplicitSrcTypeMembers(type)
+                .collect(Collectors.toUnmodifiableMap(
+                        Function.identity(), SpoonMemberDescriptorFactory::describeMember));
     }
 
     @NonNull
@@ -150,26 +121,21 @@ class SpoonMemberDescriptorFactory {
     }
 
     @NonNull
-    private static MemberKind resolveNestedTypeKind(CtType<?> nestedType) {
-        // In Spoon annotation types may also appear as interfaces, so handle this first.
-        if (nestedType.isAnnotationType()) {
-            return MemberKind.TYPE_ANNOTATION;
-        }
-        if (nestedType instanceof CtEnum<?>) {
-            return MemberKind.TYPE_ENUM;
-        }
-        if (nestedType instanceof CtRecord) {
-            return MemberKind.TYPE_RECORD;
-        }
-        if (nestedType instanceof CtClass<?>) {
-            return MemberKind.TYPE_CLASS;
-        }
-        if (nestedType instanceof CtInterface<?>) {
-            return MemberKind.TYPE_INTERFACE;
-        }
+    private static Set<String> resolveAnnotationQualifiedNames(CtTypeMember typeMember) {
+        return typeMember.getAnnotations().stream()
+                .map(CtAnnotation::getAnnotationType)
+                .flatMap(annotationTypeReference ->
+                        Stream.of(annotationTypeReference.getQualifiedName(), annotationTypeReference.getSimpleName()))
+                .collect(Collectors.toUnmodifiableSet());
+    }
 
-        throw new IllegalArgumentException("Unsupported nested CtType: "
-                + nestedType.getClass().getName() + ", qualifiedName=" + nestedType.getQualifiedName());
+    @NonNull
+    private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
+        return typeMember.getModifiers().stream()
+                .map(DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> EnumSet.noneOf(DeclarationModifier.class)), Set::copyOf));
     }
 
     @Nullable
@@ -191,21 +157,31 @@ class SpoonMemberDescriptorFactory {
     }
 
     @NonNull
-    private static Set<DeclarationModifier> resolveDeclarationModifiers(CtTypeMember typeMember) {
-        return typeMember.getModifiers().stream()
-                .map(DECLARATION_MODIFIER_BY_SPOON_MODIFIER_KIND::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toCollection(() -> EnumSet.noneOf(DeclarationModifier.class)), Set::copyOf));
-    }
+    private static MemberKind resolveMemberKind(CtTypeMember typeMember) {
+        if (typeMember instanceof CtEnumValue<?>) {
+            return MemberKind.ENUM_CONSTANT;
+        }
+        if (typeMember instanceof CtRecordComponent) {
+            return MemberKind.RECORD_COMPONENT;
+        }
+        if (typeMember instanceof CtField<?>) {
+            return MemberKind.FIELD;
+        }
+        if (typeMember instanceof CtMethod<?>) {
+            return MemberKind.METHOD;
+        }
+        if (typeMember instanceof CtConstructor<?>) {
+            return MemberKind.CONSTRUCTOR;
+        }
+        if (typeMember instanceof CtAnonymousExecutable) {
+            return MemberKind.INIT_BLOCK;
+        }
+        if (typeMember instanceof CtType<?> nestedType) {
+            return resolveNestedTypeKind(nestedType);
+        }
 
-    @NonNull
-    private static Set<String> resolveAnnotationQualifiedNames(CtTypeMember typeMember) {
-        return typeMember.getAnnotations().stream()
-                .map(CtAnnotation::getAnnotationType)
-                .flatMap(annotationTypeReference ->
-                        Stream.of(annotationTypeReference.getQualifiedName(), annotationTypeReference.getSimpleName()))
-                .collect(Collectors.toUnmodifiableSet());
+        throw new IllegalArgumentException(
+                "Unsupported CtTypeMember kind. " + composeDebugExceptionMessage(typeMember));
     }
 
     @Nullable
@@ -215,5 +191,28 @@ class SpoonMemberDescriptorFactory {
             return null;
         }
         return name;
+    }
+
+    @NonNull
+    private static MemberKind resolveNestedTypeKind(CtType<?> nestedType) {
+        // In Spoon annotation types may also appear as interfaces, so handle this first.
+        if (nestedType.isAnnotationType()) {
+            return MemberKind.TYPE_ANNOTATION;
+        }
+        if (nestedType instanceof CtEnum<?>) {
+            return MemberKind.TYPE_ENUM;
+        }
+        if (nestedType instanceof CtRecord) {
+            return MemberKind.TYPE_RECORD;
+        }
+        if (nestedType instanceof CtClass<?>) {
+            return MemberKind.TYPE_CLASS;
+        }
+        if (nestedType instanceof CtInterface<?>) {
+            return MemberKind.TYPE_INTERFACE;
+        }
+
+        throw new IllegalArgumentException("Unsupported nested CtType: "
+                + nestedType.getClass().getName() + ", qualifiedName=" + nestedType.getQualifiedName());
     }
 }

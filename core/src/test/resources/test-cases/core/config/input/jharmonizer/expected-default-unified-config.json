@@ -1,17 +1,17 @@
 {
+  "backupsEnabled" : true,
   "formatting" : {
-    "fixImports" : true,
-    "formatterStyle" : "PALANTIR",
     "blankLineAfterTypeHeader" : false,
     "blankLineBeforeComment" : true,
-    "blankLineBetweenFields" : false
+    "blankLineBetweenFields" : false,
+    "fixImports" : true,
+    "formatterStyle" : "PALANTIR"
   },
-  "backupsEnabled" : true,
-  "processingStatisticsMode" : "MINIMAL",
   "headerLine" : {
     "character" : "-",
     "leftPadding" : 3
   },
+  "processingStatisticsMode" : "MINIMAL",
   "rootMemberGroups" : [ {
     "groupName" : "Test Classes",
     "keepAccessorsTogether" : null,
@@ -22,6 +22,7 @@
         "groupName" : "JUnit Constants",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -33,12 +34,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "JUnit Static fields",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -50,9 +51,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -64,8 +65,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "separator" : null
     }, {
       "groupName" : "JUnit Methods",
       "keepAccessorsTogether" : null,
@@ -73,6 +73,7 @@
         "groupName" : "JUnit Setup Methods",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : [ "PRESERVE" ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -96,12 +97,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : [ "PRESERVE" ]
+        "separator" : null
       }, {
         "groupName" : "JUnit Test Methods",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -152,12 +153,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "JUnit Teardown Methods",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : [ "PRESERVE" ],
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -181,12 +182,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : [ "PRESERVE" ]
+        "separator" : null
       }, {
         "groupName" : "Utility Methods",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -198,9 +199,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -212,12 +213,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "JUnit Test Configuration",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -232,12 +233,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "JUnit Nested Tests",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -252,9 +253,9 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     } ],
+    "orderingRules" : [ "ALPHA" ],
     "relaxedForwardReferences" : null,
     "selectorBlock" : {
       "excludes" : [ ],
@@ -314,8 +315,7 @@
         "nameMatcher" : null
       } ]
     },
-    "separator" : "NEW_LINE",
-    "orderingRules" : [ "ALPHA" ]
+    "separator" : "NEW_LINE"
   }, {
     "groupName" : "DTO and Entities",
     "keepAccessorsTogether" : null,
@@ -323,6 +323,7 @@
       "groupName" : "Serializable UID",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : [ "PRESERVE" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -337,8 +338,7 @@
           }
         } ]
       },
-      "separator" : "NEW_LINE",
-      "orderingRules" : [ "PRESERVE" ]
+      "separator" : "NEW_LINE"
     }, {
       "groupName" : "Fields",
       "keepAccessorsTogether" : null,
@@ -349,6 +349,7 @@
           "groupName" : "Public Constants",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ],
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -360,12 +361,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null
         }, {
           "groupName" : "Protected Constants",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ],
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -377,12 +378,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null
         }, {
           "groupName" : "Package-Private Constants",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ],
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -394,12 +395,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null
         }, {
           "groupName" : "Private Constants",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ],
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -411,9 +412,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -425,12 +426,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Static Fields",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -442,12 +443,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Final Instance Fields",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -459,9 +460,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -473,12 +474,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
-      "orderingRules" : null
+      "separator" : "NEW_LINE"
     }, {
       "groupName" : "Static Initializer Blocks",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : [ "PRESERVE" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -490,12 +491,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : [ "PRESERVE" ]
+      "separator" : null
     }, {
       "groupName" : "Static Methods",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -507,12 +508,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "Instance Initializer Blocks",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : [ "PRESERVE" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -524,12 +525,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : [ "PRESERVE" ]
+      "separator" : null
     }, {
       "groupName" : "Constructors",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -541,8 +542,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "Instance Methods",
       "keepAccessorsTogether" : null,
@@ -553,6 +553,7 @@
           "groupName" : "Accessor Methods",
           "keepAccessorsTogether" : true,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -567,12 +568,12 @@
               }
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Other Methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ {
@@ -623,12 +624,12 @@
             } ],
             "includes" : [ ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Basic Object Methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ],
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -679,9 +680,9 @@
               }
             } ]
           },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -693,12 +694,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Non-Public Methods",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -710,9 +711,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -724,9 +725,9 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     } ],
+    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],
     "relaxedForwardReferences" : null,
     "selectorBlock" : {
       "excludes" : [ {
@@ -831,8 +832,7 @@
         "nameMatcher" : null
       } ]
     },
-    "separator" : null,
-    "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+    "separator" : null
   }, {
     "groupName" : "Default Rule",
     "keepAccessorsTogether" : null,
@@ -840,6 +840,7 @@
       "groupName" : "Record components",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -851,12 +852,12 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "Enum constants",
       "keepAccessorsTogether" : null,
       "memberSubGroups" : [ ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -868,8 +869,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "Fields",
       "keepAccessorsTogether" : null,
@@ -883,6 +883,7 @@
             "groupName" : "serialVersionUID",
             "keepAccessorsTogether" : null,
             "memberSubGroups" : [ ],
+            "orderingRules" : [ "PRESERVE" ],
             "relaxedForwardReferences" : null,
             "selectorBlock" : {
               "excludes" : [ ],
@@ -897,12 +898,12 @@
                 }
               } ]
             },
-            "separator" : null,
-            "orderingRules" : [ "PRESERVE" ]
+            "separator" : null
           }, {
             "groupName" : "Logger fields",
             "keepAccessorsTogether" : null,
             "memberSubGroups" : [ ],
+            "orderingRules" : [ "PRESERVE" ],
             "relaxedForwardReferences" : null,
             "selectorBlock" : {
               "excludes" : [ ],
@@ -917,9 +918,9 @@
                 }
               } ]
             },
-            "separator" : null,
-            "orderingRules" : [ "PRESERVE" ]
+            "separator" : null
           } ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -931,9 +932,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -945,12 +946,12 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Instance final fields",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -962,9 +963,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -976,8 +977,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
-      "orderingRules" : [ "VISIBILITY_DESC", "ALPHA" ]
+      "separator" : "NEW_LINE"
     }, {
       "groupName" : "Initializers",
       "keepAccessorsTogether" : null,
@@ -985,6 +985,7 @@
         "groupName" : "Static initializers",
         "keepAccessorsTogether" : null,
         "memberSubGroups" : [ ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -996,9 +997,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : null,
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1010,8 +1011,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : null
+      "separator" : null
     }, {
       "groupName" : "Methods",
       "keepAccessorsTogether" : true,
@@ -1022,6 +1022,7 @@
           "groupName" : "Static methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1033,12 +1034,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1050,12 +1051,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ {
@@ -1106,12 +1107,12 @@
             } ],
             "includes" : [ ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Basic Object Methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : [ "ALPHA" ],
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1162,9 +1163,9 @@
               }
             } ]
           },
-          "separator" : null,
-          "orderingRules" : [ "ALPHA" ]
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1176,8 +1177,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Protected",
         "keepAccessorsTogether" : null,
@@ -1185,6 +1185,7 @@
           "groupName" : "Static methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1196,12 +1197,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1213,12 +1214,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1230,9 +1231,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1244,8 +1245,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Package-private",
         "keepAccessorsTogether" : null,
@@ -1253,6 +1253,7 @@
           "groupName" : "Static methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1264,12 +1265,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1281,12 +1282,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1298,9 +1299,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1312,8 +1313,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Private",
         "keepAccessorsTogether" : null,
@@ -1321,6 +1321,7 @@
           "groupName" : "Static methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1332,12 +1333,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Constructors",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1349,12 +1350,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Instance methods",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1366,9 +1367,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1380,9 +1381,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : [ "ALPHA" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1400,8 +1401,7 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : null,
-      "orderingRules" : [ "ALPHA" ]
+      "separator" : null
     }, {
       "groupName" : "Nested types",
       "keepAccessorsTogether" : null,
@@ -1412,6 +1412,7 @@
           "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1429,12 +1430,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1458,9 +1459,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1472,8 +1473,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Protected",
         "keepAccessorsTogether" : null,
@@ -1481,6 +1481,7 @@
           "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1498,12 +1499,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1527,9 +1528,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1541,8 +1542,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Package-private",
         "keepAccessorsTogether" : null,
@@ -1550,6 +1550,7 @@
           "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1567,12 +1568,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1596,9 +1597,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1610,8 +1611,7 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       }, {
         "groupName" : "Private",
         "keepAccessorsTogether" : null,
@@ -1619,6 +1619,7 @@
           "groupName" : "Annotations and Interfaces",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1636,12 +1637,12 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         }, {
           "groupName" : "Classes, Enums, and Records",
           "keepAccessorsTogether" : null,
           "memberSubGroups" : [ ],
+          "orderingRules" : null,
           "relaxedForwardReferences" : null,
           "selectorBlock" : {
             "excludes" : [ ],
@@ -1665,9 +1666,9 @@
               "nameMatcher" : null
             } ]
           },
-          "separator" : null,
-          "orderingRules" : null
+          "separator" : null
         } ],
+        "orderingRules" : null,
         "relaxedForwardReferences" : null,
         "selectorBlock" : {
           "excludes" : [ ],
@@ -1679,9 +1680,9 @@
             "nameMatcher" : null
           } ]
         },
-        "separator" : null,
-        "orderingRules" : null
+        "separator" : null
       } ],
+      "orderingRules" : [ "ALPHA" ],
       "relaxedForwardReferences" : null,
       "selectorBlock" : {
         "excludes" : [ ],
@@ -1717,9 +1718,9 @@
           "nameMatcher" : null
         } ]
       },
-      "separator" : "NEW_LINE",
-      "orderingRules" : [ "ALPHA" ]
+      "separator" : "NEW_LINE"
     } ],
+    "orderingRules" : [ "PRESERVE" ],
     "relaxedForwardReferences" : null,
     "selectorBlock" : {
       "excludes" : [ ],
@@ -1734,8 +1735,7 @@
         }
       } ]
     },
-    "separator" : null,
-    "orderingRules" : [ "PRESERVE" ]
+    "separator" : null
   } ],
   "topLevelTypesOrdering" : {
     "mainTypeFirst" : true,

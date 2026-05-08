@@ -24,12 +24,6 @@ import org.jspecify.annotations.Nullable;
 public class JHarmonizerFlexibleFormatting {
 
     @Nullable
-    Boolean fixImports;
-
-    @Nullable
-    FormatterStyle formatterStyle;
-
-    @Nullable
     Boolean blankLineAfterTypeHeader;
 
     @Nullable
@@ -37,6 +31,12 @@ public class JHarmonizerFlexibleFormatting {
 
     @Nullable
     Boolean blankLineBetweenFields;
+
+    @Nullable
+    Boolean fixImports;
+
+    @Nullable
+    FormatterStyle formatterStyle;
 
     /**
      * Creates a partial formatting overlay. At least one parameter must be non-null.
@@ -47,6 +47,10 @@ public class JHarmonizerFlexibleFormatting {
      * @param blankLineBeforeComment optional override for blank line before comment
      * @param blankLineBetweenFields optional override for blank line between fields
      */
+    // CPD-OFF: This vendor input model intentionally mirrors FlexibleUnifiedFormatting's structure.
+    // The two classes exist at different pipeline layers (Jackson deserialization vs. unified internal
+    // representation) and cannot share a common base without breaking @Value / @Builder constraints.
+    // Remove this suppression once the two types are consolidated or a shared abstraction is introduced.
     public JHarmonizerFlexibleFormatting(
             @Nullable @JsonProperty("fix-imports") Boolean fixImports,
             @Nullable @JsonProperty("formatter-style") FormatterStyle formatterStyle,
@@ -65,26 +69,6 @@ public class JHarmonizerFlexibleFormatting {
         this.blankLineAfterTypeHeader = blankLineAfterTypeHeader;
         this.blankLineBeforeComment = blankLineBeforeComment;
         this.blankLineBetweenFields = blankLineBetweenFields;
-    }
-
-    /**
-     * Returns the optional fix-imports override.
-     *
-     * @return the optional fix-imports override
-     */
-    @NonNull
-    public Optional<Boolean> getFixImports() {
-        return ofNullable(fixImports);
-    }
-
-    /**
-     * Returns the optional formatter style override.
-     *
-     * @return the optional formatter style override
-     */
-    @NonNull
-    public Optional<FormatterStyle> getFormatterStyle() {
-        return ofNullable(formatterStyle);
     }
 
     /**
@@ -115,5 +99,27 @@ public class JHarmonizerFlexibleFormatting {
     @NonNull
     public Optional<Boolean> getBlankLineBetweenFields() {
         return ofNullable(blankLineBetweenFields);
+    }
+
+    /**
+     * Returns the optional fix-imports override.
+     *
+     * @return the optional fix-imports override
+     */
+    @NonNull
+    public Optional<Boolean> getFixImports() {
+        return ofNullable(fixImports);
+    }
+
+    // CPD-ON
+
+    /**
+     * Returns the optional formatter style override.
+     *
+     * @return the optional formatter style override
+     */
+    @NonNull
+    public Optional<FormatterStyle> getFormatterStyle() {
+        return ofNullable(formatterStyle);
     }
 }

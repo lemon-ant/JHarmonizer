@@ -11,6 +11,7 @@ import lombok.Value;
  */
 @Value
 public class SerializationResult {
+
     @NonNull
     SerializationStatistic serializationStatistic;
 

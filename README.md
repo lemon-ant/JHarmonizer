@@ -198,7 +198,7 @@ See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output f
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+Contributions are welcome! Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) to get started.
 See [CHANGELOG.md](CHANGELOG.md) for what is planned.
 
 ## License

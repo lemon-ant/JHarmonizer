@@ -17,20 +17,19 @@ import org.apache.commons.lang3.Validate;
  */
 @Value
 public class JHarmonizerConfig {
-
-    @NonNull
-    JHarmonizerFormatting formatting;
-
     boolean backupsEnabled;
 
     @NonNull
-    ProcessingStatisticsMode processingStatisticsMode;
+    JHarmonizerFormatting formatting;
 
     @NonNull
     JHarmonizerHeaderLine headerLine;
 
     @NonNull
     List<JHarmonizerMemberGroup> memberGroups;
+
+    @NonNull
+    ProcessingStatisticsMode processingStatisticsMode;
 
     @NonNull
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;

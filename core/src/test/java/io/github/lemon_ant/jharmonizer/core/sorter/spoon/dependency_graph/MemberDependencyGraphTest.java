@@ -16,7 +16,6 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 class MemberDependencyGraphTest {
-
     private static final URL DEPENDENCY_GRAPH_FIXTURE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/" + TEST_CASES_DIR + "/core/sorter/spoon/dependency-graph/valid/DependencyGraphFixture.java");
     private static final CtType<?> PARSED_FIXTURE_MAIN_TYPE =
@@ -147,6 +146,22 @@ class MemberDependencyGraphTest {
     }
 
     @Test
+    void findTransitiveDependents_resultReturned_resultUnmodifiable() {
+        // Given
+        MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
+        memberDependencyGraph.addEdge(
+                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
+
+        // When
+        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(ALPHA_FIELD_MEMBER);
+
+        // Then
+        assertThat(transitiveDependents).containsExactly(BRAVO_FIELD_MEMBER);
+        assertThatThrownBy(() -> transitiveDependents.add(ALPHA_FIELD_MEMBER))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
     void findTransitiveProviders_graphAcyclic_transitiveProvidersReturned() {
         // Given
         MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
@@ -161,21 +176,5 @@ class MemberDependencyGraphTest {
 
         // Then
         assertThat(transitiveProviders).containsExactlyInAnyOrder(ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER);
-    }
-
-    @Test
-    void findTransitiveDependents_resultReturned_resultUnmodifiable() {
-        // Given
-        MemberDependencyGraph memberDependencyGraph = new MemberDependencyGraph();
-        memberDependencyGraph.addEdge(
-                ALPHA_FIELD_MEMBER, BRAVO_FIELD_MEMBER, MemberDependencyEdgeKind.DECLARATION_DEPENDENCY);
-
-        // When
-        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(ALPHA_FIELD_MEMBER);
-
-        // Then
-        assertThat(transitiveDependents).containsExactly(BRAVO_FIELD_MEMBER);
-        assertThatThrownBy(() -> transitiveDependents.add(ALPHA_FIELD_MEMBER))
-                .isInstanceOf(UnsupportedOperationException.class);
     }
 }

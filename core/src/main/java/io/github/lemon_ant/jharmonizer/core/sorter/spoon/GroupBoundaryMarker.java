@@ -18,6 +18,7 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @UtilityClass
 class GroupBoundaryMarker {
+
     /**
      * Performs the mark group boundaries.
      * @param orderedBlocks the ordered blocks

@@ -14,7 +14,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class JavaCompileTestUtils {
-
     private static final int JAVA_RELEASE = 21;
     private static final String TEST_COMPILE_PREFIX = "test-compile-";
 
@@ -48,7 +47,7 @@ class JavaCompileTestUtils {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.APPEND);
 
-        return new CompileResult(processExitCode, javacOutput, diagnosticsPath);
+        return new CompileResult(diagnosticsPath, processExitCode, javacOutput);
     }
 
     private static void ensureOutputDirectoryExists(Path outputDirectoryPath) throws IOException {
@@ -57,8 +56,8 @@ class JavaCompileTestUtils {
 
     @Value
     static class CompileResult {
+        Path diagnosticsPath;
         int exitCode;
         String output;
-        Path diagnosticsPath;
     }
 }

@@ -63,6 +63,29 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
     }
 
     @NonNull
+    private Set<String> parseCommaSeparated(String text) {
+        return Arrays.stream(StringUtils.split(text, ','))
+                .map(String::trim)
+                .filter(token -> !token.isEmpty())
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    private Set<String> parseNestedArrayItem(JsonParser jsonParser) throws IOException {
+        Set<String> group = new HashSet<>();
+        while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
+            JsonToken nestedToken = jsonParser.currentToken();
+            if (nestedToken != JsonToken.VALUE_STRING) {
+                throw new IllegalArgumentException("Unsupported nested selector item type: " + nestedToken
+                        + ". Nested arrays must contain only strings.");
+            }
+            group.addAll(parseCommaSeparated(jsonParser.getText()));
+        }
+
+        return Collections.unmodifiableSet(group);
+    }
+
+    @NonNull
     private Set<Set<String>> parseTopLevelArray(JsonParser jsonParser) throws IOException {
         Set<Set<String>> alternatives = new HashSet<>();
         Set<String> singleLineFlowGroup = new HashSet<>();
@@ -103,28 +126,5 @@ class SelectorsDeserializer extends JsonDeserializer<Set<Set<String>>> {
         }
 
         return Collections.unmodifiableSet(alternatives);
-    }
-
-    @NonNull
-    private Set<String> parseNestedArrayItem(JsonParser jsonParser) throws IOException {
-        Set<String> group = new HashSet<>();
-        while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-            JsonToken nestedToken = jsonParser.currentToken();
-            if (nestedToken != JsonToken.VALUE_STRING) {
-                throw new IllegalArgumentException("Unsupported nested selector item type: " + nestedToken
-                        + ". Nested arrays must contain only strings.");
-            }
-            group.addAll(parseCommaSeparated(jsonParser.getText()));
-        }
-
-        return Collections.unmodifiableSet(group);
-    }
-
-    @NonNull
-    private Set<String> parseCommaSeparated(String text) {
-        return Arrays.stream(StringUtils.split(text, ','))
-                .map(String::trim)
-                .filter(token -> !token.isEmpty())
-                .collect(Collectors.toUnmodifiableSet());
     }
 }

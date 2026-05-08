@@ -25,13 +25,12 @@ import org.junit.jupiter.api.Test;
  * JHarmonizer2UnifiedConverterSnapshotTest#regenerateUnifiedConfigSnapshot_whenRun_overwritesSnapshotFile
  */
 class JHarmonizer2UnifiedConverterSnapshotTest {
-
     private static final String CLASS_PATH_TO_SNAPSHOT =
             "/" + TEST_CASES_DIR + "/core/config/input/jharmonizer/expected-default-unified-config.json";
-    private static final URL SNAPSHOT_RESOURCE_URL =
-            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
     private static final String FILE_PATH_TO_SNAPSHOT = "src/test/resources" + CLASS_PATH_TO_SNAPSHOT;
     private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private static final URL SNAPSHOT_RESOURCE_URL =
+            TestCaseResourceUtils.requireClasspathResourceUrl(CLASS_PATH_TO_SNAPSHOT);
 
     @Test
     void compareUnifiedConfigSnapshot_defaultVendorConfig_matchesExpectedJson() throws Exception {

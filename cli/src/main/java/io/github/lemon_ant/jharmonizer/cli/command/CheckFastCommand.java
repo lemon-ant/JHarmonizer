@@ -17,13 +17,6 @@ import picocli.CommandLine.Command;
 final class CheckFastCommand extends BaseCommand {
 
     /**
-     * Creates a new {@code check-fast} command.
-     */
-    CheckFastCommand() {
-        super(ExitCodes.CHECK_FAILED);
-    }
-
-    /**
      * Returns the flow type.
      *
      * @return the flow type
@@ -32,5 +25,12 @@ final class CheckFastCommand extends BaseCommand {
     @NonNull
     protected FlowType getFlowType() {
         return FlowType.CHECK_FAIL_FAST;
+    }
+
+    /**
+     * Creates a new {@code check-fast} command.
+     */
+    CheckFastCommand() {
+        super(ExitCodes.CHECK_FAILED);
     }
 }

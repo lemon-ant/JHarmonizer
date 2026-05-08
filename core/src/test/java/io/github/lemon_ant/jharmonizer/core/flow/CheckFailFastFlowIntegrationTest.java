@@ -21,26 +21,27 @@ import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class CheckFailFastFlowIntegrationTest {
-
     private static final SrcFile CLEAN_FILE_A =
             createSrcFile("public class A {\n    public void a() {}\n}\n", Path.of("A.java"));
     private static final SrcFile CLEAN_FILE_B =
             createSrcFile("public class B {\n    public void b() {}\n}\n", Path.of("B.java"));
 
     @Test
-    void processStream_firstViolationDetected_returnsStopRequestedResult() {
+    void isSuccessful_hasModifications_returnsFalse() {
         // Given
         CheckFailFastFlow flow = createFlow();
-        SrcFile srcFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
 
-        // When
-        FileProcessingResult fileProcessingResult =
-                flow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+        // When / Then
+        assertThat(flow.isSuccessful(true)).isFalse();
+    }
 
-        // Then
-        assertThat(fileProcessingResult.isStopRequested()).isTrue();
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
-        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
+    @Test
+    void isSuccessful_noModifications_returnsTrue() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+
+        // When / Then
+        assertThat(flow.isSuccessful(false)).isTrue();
     }
 
     @Test
@@ -79,22 +80,6 @@ class CheckFailFastFlowIntegrationTest {
     }
 
     @Test
-    void processStream_fullyOffOptOut_returnsSkippedResultWithNoStopRequested() {
-        // Given
-        CheckFailFastFlow flow = createFlow();
-        SrcFile srcFile = createSrcFile(
-                "// @jharmonizer:fully-off\npublic class Z {\n    public void b() {}\n}\n", Path.of("Z.java"));
-
-        // When
-        FileProcessingResult fileProcessingResult =
-                flow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
-
-        // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
-        assertThat(fileProcessingResult.isStopRequested()).isFalse();
-    }
-
-    @Test
     void processStream_allCleanFiles_processesAllFilesWithoutStop() {
         // Given
         CheckFailFastFlow flow = createFlow();
@@ -111,6 +96,38 @@ class CheckFailFastFlowIntegrationTest {
     }
 
     @Test
+    void processStream_firstViolationDetected_returnsStopRequestedResult() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile srcFile = createSrcFile("class BViolation { int z; int a; }", Path.of("B_Violation.java"));
+
+        // When
+        FileProcessingResult fileProcessingResult =
+                flow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.isStopRequested()).isTrue();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
+        assertThat(fileProcessingResult.getMemberRelocations()).isNotEmpty();
+    }
+
+    @Test
+    void processStream_fullyOffOptOut_returnsSkippedResultWithNoStopRequested() {
+        // Given
+        CheckFailFastFlow flow = createFlow();
+        SrcFile srcFile = createSrcFile(
+                "// @jharmonizer:fully-off\npublic class Z {\n    public void b() {}\n}\n", Path.of("Z.java"));
+
+        // When
+        FileProcessingResult fileProcessingResult =
+                flow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(fileProcessingResult.isStopRequested()).isFalse();
+    }
+
+    @Test
     void processStream_violationOnFirstFile_skipsSecondFileBeforeMapping() {
         // Given
         CheckFailFastFlow flow = createFlow();
@@ -124,24 +141,6 @@ class CheckFailFastFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResults).hasSize(1);
         assertThat(fileProcessingResults.getFirst().isStopRequested()).isTrue();
-    }
-
-    @Test
-    void isSuccessful_noModifications_returnsTrue() {
-        // Given
-        CheckFailFastFlow flow = createFlow();
-
-        // When / Then
-        assertThat(flow.isSuccessful(false)).isTrue();
-    }
-
-    @Test
-    void isSuccessful_hasModifications_returnsFalse() {
-        // Given
-        CheckFailFastFlow flow = createFlow();
-
-        // When / Then
-        assertThat(flow.isSuccessful(true)).isFalse();
     }
 
     @NonNull

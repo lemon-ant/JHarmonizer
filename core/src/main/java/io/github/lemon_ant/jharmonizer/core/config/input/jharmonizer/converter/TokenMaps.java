@@ -13,14 +13,12 @@ import java.util.Map;
  * Centralized token dictionaries (immutable).
  */
 final class TokenMaps {
-
     static final Map<String, MemberAccess> ACCESS_BY_TOKEN = Map.ofEntries(
             entry("public", MemberAccess.PUBLIC),
             entry("protected", MemberAccess.PROTECTED),
             entry("package", MemberAccess.PACKAGE),
             entry("package-private", MemberAccess.PACKAGE),
             entry("private", MemberAccess.PRIVATE));
-
     static final Map<String, MemberKind> KIND_BY_TOKEN = Map.ofEntries(
             entry("field", MemberKind.FIELD),
             entry("method", MemberKind.METHOD),
@@ -34,7 +32,6 @@ final class TokenMaps {
             entry("annotation", MemberKind.TYPE_ANNOTATION),
             entry("enum-constant", MemberKind.ENUM_CONSTANT),
             entry("record-component", MemberKind.RECORD_COMPONENT));
-
     static final Map<String, DeclarationModifier> MODIFIER_BY_TOKEN = Map.ofEntries(
             entry("static", DeclarationModifier.STATIC),
             entry("final", DeclarationModifier.FINAL),

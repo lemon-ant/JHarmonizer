@@ -21,12 +21,26 @@ import org.mockito.MockedConstruction;
 import picocli.CommandLine;
 
 class CheckFastCommandTest {
-
     private CommandLine commandLine;
 
     @BeforeEach
     void setUp() {
         commandLine = new CommandLine(new CheckFastCommand());
+    }
+
+    @Test
+    void checkFastCommand_formattingChangesDetected_returnsCheckFailedExitCode() {
+        // When
+        int exitCode;
+        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any()))
+                    .thenReturn(CommandTestUtils.buildFailedResult());
+        })) {
+            exitCode = commandLine.execute("--base-dir", "src");
+        }
+
+        // Then
+        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
     }
 
     @Test
@@ -48,18 +62,23 @@ class CheckFastCommandTest {
     }
 
     @Test
-    void checkFastCommand_formattingChangesDetected_returnsCheckFailedExitCode() {
+    void checkFastCommand_nonConformingFiles_logsReorderFixHint() throws Exception {
+        // Given
+        List<ILoggingEvent> capturedLogs = new ArrayList<>();
+
         // When
-        int exitCode;
-        try (MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any()))
-                    .thenReturn(CommandTestUtils.buildFailedResult());
-        })) {
-            exitCode = commandLine.execute("--base-dir", "src");
+        try (AutoCloseable logCapture = CommandTestUtils.captureBaseCommandLogEvents(capturedLogs);
+                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
+                    when(mock.processSources(any(Path.class), any(), any(), any()))
+                            .thenReturn(CommandTestUtils.buildFailedResult());
+                })) {
+            commandLine.execute("--base-dir", "src");
         }
 
         // Then
-        assertThat(exitCode).isEqualTo(ExitCodes.CHECK_FAILED);
+        assertThat(capturedLogs)
+                .extracting(ILoggingEvent::getFormattedMessage)
+                .anyMatch(message -> message.contains("jharmonizer reorder"));
     }
 
     @Test
@@ -91,25 +110,5 @@ class CheckFastCommandTest {
 
         // Then
         assertThat(exitCode).isEqualTo(ExitCodes.PROCESSING_ERROR);
-    }
-
-    @Test
-    void checkFastCommand_nonConformingFiles_logsReorderFixHint() throws Exception {
-        // Given
-        List<ILoggingEvent> capturedLogs = new ArrayList<>();
-
-        // When
-        try (AutoCloseable logCapture = CommandTestUtils.captureBaseCommandLogEvents(capturedLogs);
-                MockedConstruction<SrcProcessor> ignored = mockConstruction(SrcProcessor.class, (mock, context) -> {
-                    when(mock.processSources(any(Path.class), any(), any(), any()))
-                            .thenReturn(CommandTestUtils.buildFailedResult());
-                })) {
-            commandLine.execute("--base-dir", "src");
-        }
-
-        // Then
-        assertThat(capturedLogs)
-                .extracting(ILoggingEvent::getFormattedMessage)
-                .anyMatch(message -> message.contains("jharmonizer reorder"));
     }
 }

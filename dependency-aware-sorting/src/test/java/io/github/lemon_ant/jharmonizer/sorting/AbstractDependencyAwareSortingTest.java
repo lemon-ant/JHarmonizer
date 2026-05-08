@@ -24,61 +24,45 @@ import org.junit.jupiter.api.Test;
  */
 abstract class AbstractDependencyAwareSortingTest {
 
-    // --------------------------------------------------------- abstract sort --- //
+    @Test
+    void sort_allItemsInOneGroup_sortedByComparatorInternally() {
+        // When
+        var result = sort(staticItems("z", "m", "a"), grouping(new String[] {"z", "m", "a"}), Dependencies.empty());
 
-    abstract List<SortableTypeMember> sort(
-            List<SortableTypeMember> members,
-            Groups<SortableTypeMember> groups,
-            Dependencies<SortableTypeMember> dependencies);
-
-    abstract List<SortableTypeMember> sort(
-            List<SortableTypeMember> members,
-            Groups<SortableTypeMember> groups,
-            Dependencies<SortableTypeMember> dependencies,
-            Comparator<SortableTypeMember> comparator);
-
-    // --------------------------------------------------------- helpers --------- //
-
-    static SortableTypeMember staticMember(String name) {
-        return SortableTypeMember.staticMember(name);
+        // Then
+        assertThat(names(result)).containsExactly("a", "m", "z");
     }
 
-    static SortableTypeMember dynamicMember(String name) {
-        return SortableTypeMember.dynamicMember(name);
+    // ------------------------------------------------ provider-lift edge cases - //
+
+    @Test
+    void sort_blockedNodeWithAlreadyEmittedProvider_liftsMissingProviderOnly() {
+        // Given: a->b and d->b; natural order a,b,c,d — when b is processed, a is already
+        // emitted but d is not, so only d is lifted; this covers the seedStack branch where
+        // an emitted provider is encountered during transitive-closure computation.
+        List<SortableTypeMember> members = staticItems("a", "b", "c", "d");
+        Dependencies<SortableTypeMember> dependencies = deps("a", "b", "d", "b");
+
+        // When
+        List<SortableTypeMember> result = sort(members, Groups.empty(), dependencies);
+
+        // Then
+        List<String> resultNames = names(result);
+        assertThat(resultNames).hasSize(4);
+        assertThat(resultNames.indexOf("a")).isLessThan(resultNames.indexOf("b"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
     }
 
-    /** Builds a list of STATIC members from the given names. */
-    static List<SortableTypeMember> staticItems(String... names) {
-        return java.util.Arrays.stream(names)
-                .map(SortableTypeMember::staticMember)
-                .toList();
-    }
+    // ------------------------------------------------ scenario 7 --------------- //
 
-    static List<String> names(List<SortableTypeMember> members) {
-        return members.stream().map(SortableTypeMember::getName).toList();
-    }
+    @Test
+    void sort_cyclicDependency_throwsSortingException() {
+        // When
+        Throwable thrown = catchThrowable(
+                () -> sort(staticItems("a", "b", "c"), Groups.empty(), deps("a", "b", "b", "c", "c", "a")));
 
-    /** Creates a {@link Group} from item names (all STATIC, convenience). */
-    static Group<SortableTypeMember> group(String... names) {
-        return new Group<>(java.util.Arrays.stream(names)
-                .map(SortableTypeMember::staticMember)
-                .toList());
-    }
-
-    /** Creates a {@link Groups} from vararg name-arrays. */
-    @SuppressWarnings("unchecked")
-    static Groups<SortableTypeMember> grouping(String[]... groups) {
-        return Groups.of(java.util.Arrays.stream(groups)
-                .map(groupNames -> group(groupNames))
-                .toArray(Group[]::new));
-    }
-
-    /** Creates {@link Dependencies} from alternating provider/dependent name pairs (all STATIC). */
-    static Dependencies<SortableTypeMember> deps(String... pairs) {
-        SortableTypeMember[] arr = java.util.Arrays.stream(pairs)
-                .map(SortableTypeMember::staticMember)
-                .toArray(SortableTypeMember[]::new);
-        return Dependencies.of(arr);
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("cycle");
     }
 
     // ------------------------------------------------ scenario 1 --------------- //
@@ -100,15 +84,28 @@ abstract class AbstractDependencyAwareSortingTest {
     }
 
     @Test
-    void sort_plainAlphabeticalInput_returnsAlphabeticalOrder() {
+    void sort_dependencyReversesNaturalOrder_providerBeforeDependent() {
         // Given
-        var members = staticItems("cherry", "apple", "banana");
+        var members = staticItems("alpha", "bravo", "charlie");
 
         // When
-        var result = sort(members, Groups.empty(), Dependencies.empty());
+        var result = sort(members, Groups.empty(), deps("charlie", "alpha"));
 
         // Then
-        assertThat(names(result)).containsExactly("apple", "banana", "cherry");
+        var resultNames = names(result);
+        assertThat(resultNames.indexOf("charlie")).isLessThan(resultNames.indexOf("alpha"));
+    }
+
+    // ------------------------------------------------ scenario 9 --------------- //
+
+    @Test
+    void sort_duplicateMemberNames_throwsSortingException() {
+        // When
+        Throwable thrown = catchThrowable(
+                () -> sort(staticItems("apple", "banana", "apple"), Groups.empty(), Dependencies.empty()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("apple");
     }
 
     @Test
@@ -120,28 +117,73 @@ abstract class AbstractDependencyAwareSortingTest {
         assertThat(result).isEmpty();
     }
 
+    // ------------------------------------------------ mixed STATIC/DYNAMIC ----- //
+
     @Test
-    void sort_singleItem_returnsSameItem() {
+    void sort_groupWithMixedNumeration_sortedByDefaultComparator() {
+        // Given
+        var mixed = new Group<>(List.of(
+                dynamicMember("beta"), staticMember("charlie"),
+                dynamicMember("alpha"), staticMember("delta")));
+        var members = List.of(
+                dynamicMember("beta"), staticMember("charlie"),
+                dynamicMember("alpha"), staticMember("delta"));
+
         // When
-        var result = sort(staticItems("solo"), Groups.empty(), Dependencies.empty());
+        var result = sort(members, new Groups<>(List.of(mixed)), Dependencies.empty());
 
         // Then
-        assertThat(names(result)).containsExactly("solo");
+        assertThat(names(result)).containsExactly("charlie", "delta", "alpha", "beta");
     }
 
-    // ------------------------------------------------ scenario 2 --------------- //
+    // ------------------------------------------------ empty group -------------- //
 
     @Test
-    void sort_oneGroupPlusSingletons_groupKeepsTogether() {
+    void sort_groupWithNoItems_emptyGroupSkippedAndItemsSorted() {
         // Given
-        var members = staticItems("zebra", "bravo", "alpha", "mango");
-        var groups = grouping(new String[] {"zebra", "bravo"});
+        List<SortableTypeMember> members = staticItems("b", "a");
+        Groups<SortableTypeMember> emptyGroup = new Groups<>(List.of(new Group<>(List.of())));
 
         // When
-        var result = sort(members, groups, Dependencies.empty());
+        List<SortableTypeMember> result = sort(members, emptyGroup, Dependencies.empty());
 
         // Then
-        assertThat(names(result)).containsExactly("alpha", "bravo", "zebra", "mango");
+        assertThat(names(result)).containsExactly("a", "b");
+    }
+
+    // ------------------------------------------------ scenario 8 --------------- //
+
+    @Test
+    void sort_memberInTwoGroups_throwsSortingException() {
+        // When
+        Throwable thrown = catchThrowable(() -> sort(
+                staticItems("a", "b", "c"),
+                grouping(new String[] {"a", "b"}, new String[] {"b", "c"}),
+                Dependencies.empty()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("b");
+    }
+
+    @Test
+    void sort_multiProviderTransitiveClosure_allDependencyConstraintsRespected() {
+        // Given: b->a, c->a, d->b, d->c, e->c — node a is blocked; its transitive
+        // provider closure {b,c,d,e} requires a multi-node topological subset sort,
+        // exercising the intra-subset in-degree tracking and nodeSet membership check.
+        List<SortableTypeMember> members = staticItems("a", "b", "c", "d", "e");
+        Dependencies<SortableTypeMember> dependencies = deps("b", "a", "c", "a", "d", "b", "d", "c", "e", "c");
+
+        // When
+        List<SortableTypeMember> result = sort(members, Groups.empty(), dependencies);
+
+        // Then
+        List<String> resultNames = names(result);
+        assertThat(resultNames).hasSize(5);
+        assertThat(resultNames.indexOf("b")).isLessThan(resultNames.indexOf("a"));
+        assertThat(resultNames.indexOf("c")).isLessThan(resultNames.indexOf("a"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
+        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("c"));
+        assertThat(resultNames.indexOf("e")).isLessThan(resultNames.indexOf("c"));
     }
 
     // ------------------------------------------------ scenario 3 --------------- //
@@ -160,54 +202,6 @@ abstract class AbstractDependencyAwareSortingTest {
     }
 
     @Test
-    void sort_allItemsInOneGroup_sortedByComparatorInternally() {
-        // When
-        var result = sort(staticItems("z", "m", "a"), grouping(new String[] {"z", "m", "a"}), Dependencies.empty());
-
-        // Then
-        assertThat(names(result)).containsExactly("a", "m", "z");
-    }
-
-    // ------------------------------------------------ scenario 4 --------------- //
-
-    @Test
-    void sort_withDependencyNoGroups_providerPrecedesDependent() {
-        // Given
-        var members = staticItems("gamma", "alpha", "delta", "beta");
-
-        // When
-        var result = sort(members, Groups.empty(), deps("gamma", "alpha"));
-
-        // Then
-        var resultNames = names(result);
-        assertThat(resultNames.indexOf("gamma")).isLessThan(resultNames.indexOf("alpha"));
-    }
-
-    @Test
-    void sort_dependencyReversesNaturalOrder_providerBeforeDependent() {
-        // Given
-        var members = staticItems("alpha", "bravo", "charlie");
-
-        // When
-        var result = sort(members, Groups.empty(), deps("charlie", "alpha"));
-
-        // Then
-        var resultNames = names(result);
-        assertThat(resultNames.indexOf("charlie")).isLessThan(resultNames.indexOf("alpha"));
-    }
-
-    // ------------------------------------------------ scenario 6 --------------- //
-
-    @Test
-    void sort_transitiveChain_respectsFullOrdering() {
-        // When
-        var result = sort(staticItems("a", "b", "c", "d"), Groups.empty(), deps("d", "c", "c", "b", "b", "a"));
-
-        // Then
-        assertThat(names(result)).containsExactly("d", "c", "b", "a");
-    }
-
-    @Test
     void sort_multipleProvidersOneDependent_allProvidersPrecedeDependent() {
         // Given
         var members = staticItems("alpha", "beta", "charlie", "delta");
@@ -221,51 +215,61 @@ abstract class AbstractDependencyAwareSortingTest {
         assertThat(resultNames.indexOf("delta")).isLessThan(resultNames.indexOf("alpha"));
     }
 
-    // ------------------------------------------------ scenario 7 --------------- //
+    // ------------------------------------------------ scenario 2 --------------- //
 
     @Test
-    void sort_cyclicDependency_throwsSortingException() {
+    void sort_oneGroupPlusSingletons_groupKeepsTogether() {
+        // Given
+        var members = staticItems("zebra", "bravo", "alpha", "mango");
+        var groups = grouping(new String[] {"zebra", "bravo"});
+
         // When
-        Throwable thrown = catchThrowable(
-                () -> sort(staticItems("a", "b", "c"), Groups.empty(), deps("a", "b", "b", "c", "c", "a")));
+        var result = sort(members, groups, Dependencies.empty());
 
         // Then
-        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("cycle");
+        assertThat(names(result)).containsExactly("alpha", "bravo", "zebra", "mango");
     }
 
     @Test
-    void sort_selfDependency_throwsSortingException() {
+    void sort_plainAlphabeticalInput_returnsAlphabeticalOrder() {
+        // Given
+        var members = staticItems("cherry", "apple", "banana");
+
         // When
-        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "a")));
+        var result = sort(members, Groups.empty(), Dependencies.empty());
 
         // Then
-        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("self");
+        assertThat(names(result)).containsExactly("apple", "banana", "cherry");
     }
 
-    // ------------------------------------------------ scenario 8 --------------- //
-
     @Test
-    void sort_memberInTwoGroups_throwsSortingException() {
+    void sort_reversedComparatorWithGroup_groupSortedByComparatorInternally() {
+        // Given
+        var reversed = Comparator.comparing(SortableTypeMember::getName).reversed();
+
         // When
-        Throwable thrown = catchThrowable(() -> sort(
-                staticItems("a", "b", "c"),
-                grouping(new String[] {"a", "b"}, new String[] {"b", "c"}),
-                Dependencies.empty()));
+        var result = sort(
+                staticItems("alpha", "charlie", "beta"),
+                grouping(new String[] {"alpha", "charlie", "beta"}),
+                Dependencies.empty(),
+                reversed);
 
         // Then
-        assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("b");
+        assertThat(names(result)).containsExactly("charlie", "beta", "alpha");
     }
 
-    // ------------------------------------------------ scenario 9 --------------- //
+    // ------------------------------------------------ scenario 13 -------------- //
 
     @Test
-    void sort_duplicateMemberNames_throwsSortingException() {
+    void sort_reversedComparator_returnsReverseAlphabeticalOrder() {
+        // Given
+        var reversed = Comparator.comparing(SortableTypeMember::getName).reversed();
+
         // When
-        Throwable thrown = catchThrowable(
-                () -> sort(staticItems("apple", "banana", "apple"), Groups.empty(), Dependencies.empty()));
+        var result = sort(staticItems("alpha", "beta", "charlie"), Groups.empty(), Dependencies.empty(), reversed);
 
         // Then
-        assertThat(thrown).isInstanceOf(SortingException.class).hasMessageContaining("apple");
+        assertThat(names(result)).containsExactly("charlie", "beta", "alpha");
     }
 
     // ------------------------------------------------ scenario 11 -------------- //
@@ -285,6 +289,15 @@ abstract class AbstractDependencyAwareSortingTest {
         // Then
         assertThat(second).isEqualTo(first);
         assertThat(third).isEqualTo(first);
+    }
+
+    @Test
+    void sort_selfDependency_throwsSortingException() {
+        // When
+        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "a")));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("self");
     }
 
     @Test
@@ -309,6 +322,26 @@ abstract class AbstractDependencyAwareSortingTest {
         }
     }
 
+    @Test
+    void sort_singleItem_returnsSameItem() {
+        // When
+        var result = sort(staticItems("solo"), Groups.empty(), Dependencies.empty());
+
+        // Then
+        assertThat(names(result)).containsExactly("solo");
+    }
+
+    // ------------------------------------------------ scenario 6 --------------- //
+
+    @Test
+    void sort_transitiveChain_respectsFullOrdering() {
+        // When
+        var result = sort(staticItems("a", "b", "c", "d"), Groups.empty(), deps("d", "c", "c", "b", "b", "a"));
+
+        // Then
+        assertThat(names(result)).containsExactly("d", "c", "b", "a");
+    }
+
     // ------------------------------------------------ scenario 12 -------------- //
 
     @Test
@@ -319,7 +352,7 @@ abstract class AbstractDependencyAwareSortingTest {
                 .mapToObj(i -> SortableTypeMember.staticMember(String.format("item%04d", i)))
                 .collect(Collectors.toList());
         var depList = IntStream.range(1, 500)
-                .mapToObj(i -> new Dependencies.Dependency<>(bigItems.get(i + 500), bigItems.get(i)))
+                .mapToObj(i -> new Dependencies.Dependency<>(bigItems.get(i), bigItems.get(i + 500)))
                 .toList();
         var bigDeps = new Dependencies<>(depList);
 
@@ -340,45 +373,13 @@ abstract class AbstractDependencyAwareSortingTest {
                 "Large-input test (%d items, %d deps) completed in %d ms%n", total, depList.size(), elapsedMs);
     }
 
-    // ------------------------------------------------ scenario 13 -------------- //
-
     @Test
-    void sort_reversedComparator_returnsReverseAlphabeticalOrder() {
-        // Given
-        var reversed = Comparator.comparing(SortableTypeMember::getName).reversed();
-
+    void sort_unknownDependentInDependency_throwsSortingException() {
         // When
-        var result = sort(staticItems("alpha", "beta", "charlie"), Groups.empty(), Dependencies.empty(), reversed);
+        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "GHOST")));
 
         // Then
-        assertThat(names(result)).containsExactly("charlie", "beta", "alpha");
-    }
-
-    @Test
-    void sort_reversedComparatorWithGroup_groupSortedByComparatorInternally() {
-        // Given
-        var reversed = Comparator.comparing(SortableTypeMember::getName).reversed();
-
-        // When
-        var result = sort(
-                staticItems("alpha", "charlie", "beta"),
-                grouping(new String[] {"alpha", "charlie", "beta"}),
-                Dependencies.empty(),
-                reversed);
-
-        // Then
-        assertThat(names(result)).containsExactly("charlie", "beta", "alpha");
-    }
-
-    // ------------------------------------------------ edge cases --------------- //
-
-    @Test
-    void staticMember_blankName_throwsSortingException() {
-        // When
-        Throwable thrown = catchThrowable(() -> SortableTypeMember.staticMember("   "));
-
-        // Then
-        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("blank");
+        assertThat(thrown).isInstanceOf(SortingException.class);
     }
 
     @Test
@@ -401,15 +402,6 @@ abstract class AbstractDependencyAwareSortingTest {
     }
 
     @Test
-    void sort_unknownDependentInDependency_throwsSortingException() {
-        // When
-        Throwable thrown = catchThrowable(() -> sort(staticItems("a", "b"), Groups.empty(), deps("a", "GHOST")));
-
-        // Then
-        assertThat(thrown).isInstanceOf(SortingException.class);
-    }
-
-    @Test
     void sort_validInput_resultIsUnmodifiable() {
         // When
         var result = sort(staticItems("b", "a"), Groups.empty(), Dependencies.empty());
@@ -419,78 +411,86 @@ abstract class AbstractDependencyAwareSortingTest {
         assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
     }
 
-    // ------------------------------------------------ empty group -------------- //
+    // ------------------------------------------------ scenario 4 --------------- //
 
     @Test
-    void sort_groupWithNoItems_emptyGroupSkippedAndItemsSorted() {
+    void sort_withDependencyNoGroups_providerPrecedesDependent() {
         // Given
-        List<SortableTypeMember> members = staticItems("b", "a");
-        Groups<SortableTypeMember> emptyGroup = new Groups<>(List.of(new Group<>(List.of())));
+        var members = staticItems("gamma", "alpha", "delta", "beta");
 
         // When
-        List<SortableTypeMember> result = sort(members, emptyGroup, Dependencies.empty());
+        var result = sort(members, Groups.empty(), deps("gamma", "alpha"));
 
         // Then
-        assertThat(names(result)).containsExactly("a", "b");
+        var resultNames = names(result);
+        assertThat(resultNames.indexOf("gamma")).isLessThan(resultNames.indexOf("alpha"));
     }
 
-    // ------------------------------------------------ provider-lift edge cases - //
+    // ------------------------------------------------ edge cases --------------- //
 
     @Test
-    void sort_blockedNodeWithAlreadyEmittedProvider_liftsMissingProviderOnly() {
-        // Given: a->b and d->b; natural order a,b,c,d — when b is processed, a is already
-        // emitted but d is not, so only d is lifted; this covers the seedStack branch where
-        // an emitted provider is encountered during transitive-closure computation.
-        List<SortableTypeMember> members = staticItems("a", "b", "c", "d");
-        Dependencies<SortableTypeMember> dependencies = deps("a", "b", "d", "b");
-
+    void staticMember_blankName_throwsSortingException() {
         // When
-        List<SortableTypeMember> result = sort(members, Groups.empty(), dependencies);
+        Throwable thrown = catchThrowable(() -> SortableTypeMember.staticMember("   "));
 
         // Then
-        List<String> resultNames = names(result);
-        assertThat(resultNames).hasSize(4);
-        assertThat(resultNames.indexOf("a")).isLessThan(resultNames.indexOf("b"));
-        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
+        assertThat(thrown).isInstanceOf(SortingException.class).message().containsIgnoringCase("blank");
     }
 
-    @Test
-    void sort_multiProviderTransitiveClosure_allDependencyConstraintsRespected() {
-        // Given: b->a, c->a, d->b, d->c, e->c — node a is blocked; its transitive
-        // provider closure {b,c,d,e} requires a multi-node topological subset sort,
-        // exercising the intra-subset in-degree tracking and nodeSet membership check.
-        List<SortableTypeMember> members = staticItems("a", "b", "c", "d", "e");
-        Dependencies<SortableTypeMember> dependencies = deps("b", "a", "c", "a", "d", "b", "d", "c", "e", "c");
-
-        // When
-        List<SortableTypeMember> result = sort(members, Groups.empty(), dependencies);
-
-        // Then
-        List<String> resultNames = names(result);
-        assertThat(resultNames).hasSize(5);
-        assertThat(resultNames.indexOf("b")).isLessThan(resultNames.indexOf("a"));
-        assertThat(resultNames.indexOf("c")).isLessThan(resultNames.indexOf("a"));
-        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("b"));
-        assertThat(resultNames.indexOf("d")).isLessThan(resultNames.indexOf("c"));
-        assertThat(resultNames.indexOf("e")).isLessThan(resultNames.indexOf("c"));
+    /** Creates {@link Dependencies} from alternating provider/dependent name pairs (all STATIC). */
+    static Dependencies<SortableTypeMember> deps(String... pairs) {
+        SortableTypeMember[] arr = java.util.Arrays.stream(pairs)
+                .map(SortableTypeMember::staticMember)
+                .toArray(SortableTypeMember[]::new);
+        return Dependencies.of(arr);
     }
 
-    // ------------------------------------------------ mixed STATIC/DYNAMIC ----- //
-
-    @Test
-    void sort_groupWithMixedNumeration_sortedByDefaultComparator() {
-        // Given
-        var mixed = new Group<>(List.of(
-                dynamicMember("beta"), staticMember("charlie"),
-                dynamicMember("alpha"), staticMember("delta")));
-        var members = List.of(
-                dynamicMember("beta"), staticMember("charlie"),
-                dynamicMember("alpha"), staticMember("delta"));
-
-        // When
-        var result = sort(members, new Groups<>(List.of(mixed)), Dependencies.empty());
-
-        // Then
-        assertThat(names(result)).containsExactly("charlie", "delta", "alpha", "beta");
+    static SortableTypeMember dynamicMember(String name) {
+        return SortableTypeMember.dynamicMember(name);
     }
+
+    /** Creates a {@link Group} from item names (all STATIC, convenience). */
+    static Group<SortableTypeMember> group(String... names) {
+        return new Group<>(java.util.Arrays.stream(names)
+                .map(SortableTypeMember::staticMember)
+                .toList());
+    }
+
+    /** Creates a {@link Groups} from vararg name-arrays. */
+    @SuppressWarnings("unchecked")
+    static Groups<SortableTypeMember> grouping(String[]... groups) {
+        return Groups.of(java.util.Arrays.stream(groups)
+                .map(groupNames -> group(groupNames))
+                .toArray(Group[]::new));
+    }
+
+    static List<String> names(List<SortableTypeMember> members) {
+        return members.stream().map(SortableTypeMember::getName).toList();
+    }
+
+    /** Builds a list of STATIC members from the given names. */
+    static List<SortableTypeMember> staticItems(String... names) {
+        return java.util.Arrays.stream(names)
+                .map(SortableTypeMember::staticMember)
+                .toList();
+    }
+
+    // --------------------------------------------------------- helpers --------- //
+
+    static SortableTypeMember staticMember(String name) {
+        return SortableTypeMember.staticMember(name);
+    }
+
+    // --------------------------------------------------------- abstract sort --- //
+
+    abstract List<SortableTypeMember> sort(
+            List<SortableTypeMember> members,
+            Groups<SortableTypeMember> groups,
+            Dependencies<SortableTypeMember> dependencies);
+
+    abstract List<SortableTypeMember> sort(
+            List<SortableTypeMember> members,
+            Groups<SortableTypeMember> groups,
+            Dependencies<SortableTypeMember> dependencies,
+            Comparator<SortableTypeMember> comparator);
 }

@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class SrcAstTranslatorTest {
-
     private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
 
     SrcFilesHandler srcFilesHandler;
@@ -48,43 +47,23 @@ class SrcAstTranslatorTest {
     }
 
     @Test
-    void serialize_validSpoonAstModel_returnSerializedCode() {
-        // Given: simple source code
-        String src = "class Demo { void m() {} }";
-        SrcFile srcFile = createSrcFile(src, Path.of("Demo.java"));
-        SpoonAstModel model =
-                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
-
-        // When
-        SerializationResult result = SrcAstTranslator.serialize(model);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSerializedSrcWithSkippedTypeRanges().getSerializedSrcCode())
-                .contains("class Demo");
-        assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
-        assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
-                .isGreaterThan(0);
-    }
-
-    @Test
     void serialize_sortOffAndFullyOffTypes_returnFormattingSkippedRangesOnlyForFullyOffTypes() {
         // Given
         String sortOffFragment = """
-                // @jharmonizer:sort-off
-                class Beta{int z;  int a;}
-                """;
+            // @jharmonizer:sort-off
+            class Beta{int z;  int a;}
+            """;
         String fullyOffFragment = """
-                // @jharmonizer:fully-off
-                class Gamma{int y;  int x;}
-                """;
+            // @jharmonizer:fully-off
+            class Gamma{int y;  int x;}
+            """;
         String srcCode = """
-                class Alpha {}
+            class Alpha {}
 
-                %s
+            %s
 
-                %s
-                """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
+            %s
+            """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
         SpoonAstModel spoonAstModel =
                 SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
@@ -103,6 +82,26 @@ class SrcAstTranslatorTest {
                 .satisfies(range -> assertThat(
                                 serializedSrcCode.substring(range.getStartInclusive(), range.getEndExclusive()))
                         .isEqualTo(fullyOffFragment));
+    }
+
+    @Test
+    void serialize_validSpoonAstModel_returnSerializedCode() {
+        // Given: simple source code
+        String src = "class Demo { void m() {} }";
+        SrcFile srcFile = createSrcFile(src, Path.of("Demo.java"));
+        SpoonAstModel model =
+                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
+
+        // When
+        SerializationResult result = SrcAstTranslator.serialize(model);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSerializedSrcWithSkippedTypeRanges().getSerializedSrcCode())
+                .contains("class Demo");
+        assertThat(result.getSerializationStatistic().getSerializedCodeLength()).isGreaterThan(0);
+        assertThat(result.getSerializationStatistic().getProcessingTimeInNanos())
+                .isGreaterThan(0);
     }
 
     @Test

@@ -34,15 +34,105 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 class SpoonMemberDescriptorFactoryTest {
-
-    private static final URL TEST_CASES_RESOURCE_ROOT_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(
-            "/" + TEST_CASES_DIR + "/core/sorter/spoon/member-descriptor/valid/");
     private static final CtType<?> CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES =
             parseMainTypeFromResource("ClassWithFieldsMethodsInitBlocksAndNestedTypes.java");
     private static final CtType<?> ENUM_WITH_CONSTANTS_AND_REGULAR_MEMBERS =
             parseMainTypeFromResource("EnumWithConstantsAndRegularMembers.java");
     private static final CtType<?> RECORD_WITH_EXPLICIT_METHOD_AND_NO_IMPLICIT_MEMBERS =
             parseMainTypeFromResource("RecordWithExplicitMethodAndNoImplicitMembers.java");
+
+    @Test
+    void describeMembers_classTypeParsed_classifiesFieldsWithAccessAndModifiers() {
+        // When
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
+
+        // Then
+        MemberDescriptor publicStaticFinalFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "PUBLIC_STATIC_FINAL_FIELD");
+        MemberDescriptor protectedFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "protectedField");
+        MemberDescriptor packageFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "packageField");
+        assertThat(publicStaticFinalFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
+        assertThat(publicStaticFinalFieldDescriptor.getMemberAccess()).contains(PUBLIC);
+        assertThat(publicStaticFinalFieldDescriptor.getDeclarationModifiers()).containsExactlyInAnyOrder(STATIC, FINAL);
+        assertThat(publicStaticFinalFieldDescriptor.getAnnotationQualifiedNames())
+                .contains("Deprecated")
+                .contains("java.lang.Deprecated");
+        assertThat(protectedFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
+        assertThat(protectedFieldDescriptor.getMemberAccess()).contains(PROTECTED);
+        assertThat(protectedFieldDescriptor.getDeclarationModifiers()).isEmpty();
+        assertThat(packageFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
+        assertThat(packageFieldDescriptor.getMemberAccess()).contains(PACKAGE);
+    }
+
+    @Test
+    void describeMembers_classTypeParsed_classifiesInitializerBlocksByStaticModifier() {
+        // When
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
+
+        // Then
+        List<MemberDescriptor> initBlockDescriptors = describedMembers.values().stream()
+                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == INIT_BLOCK)
+                .toList();
+        boolean hasStaticInitBlock = initBlockDescriptors.stream()
+                .anyMatch(memberDescriptor ->
+                        memberDescriptor.getDeclarationModifiers().contains(STATIC));
+        boolean hasInstanceInitBlock = initBlockDescriptors.stream()
+                .anyMatch(memberDescriptor ->
+                        memberDescriptor.getDeclarationModifiers().isEmpty());
+        assertThat(initBlockDescriptors).hasSize(2);
+        assertThat(hasStaticInitBlock).isTrue();
+        assertThat(hasInstanceInitBlock).isTrue();
+    }
+
+    @Test
+    void describeMembers_classTypeParsed_classifiesMethodsWithAccessAndModifiers() {
+        // When
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
+
+        // Then
+        MemberDescriptor privateStaticMethodDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "privateStaticMethod");
+        MemberDescriptor abstractMethodDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "abstractMethod");
+        assertThat(privateStaticMethodDescriptor.getMemberKind()).isEqualTo(METHOD);
+        assertThat(privateStaticMethodDescriptor.getMemberAccess()).contains(PRIVATE);
+        assertThat(privateStaticMethodDescriptor.getDeclarationModifiers()).containsExactly(STATIC);
+        assertThat(privateStaticMethodDescriptor.getAnnotationQualifiedNames())
+                .contains("Deprecated")
+                .contains("java.lang.Deprecated");
+        assertThat(abstractMethodDescriptor.getMemberKind()).isEqualTo(METHOD);
+        assertThat(abstractMethodDescriptor.getMemberAccess()).contains(PUBLIC);
+        assertThat(abstractMethodDescriptor.getDeclarationModifiers()).containsExactly(ABSTRACT);
+    }
+
+    @Test
+    void describeMembers_classTypeParsed_classifiesNestedTypesByKind() {
+        // When
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
+
+        // Then
+        MemberDescriptor nestedClassDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "PublicNestedClass");
+        MemberDescriptor nestedInterfaceDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "ProtectedNestedInterface");
+        MemberDescriptor nestedEnumDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedEnum");
+        MemberDescriptor nestedAnnotationDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedAnnotation");
+        MemberDescriptor nestedRecordDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedRecord");
+        assertThat(nestedClassDescriptor.getMemberKind()).isEqualTo(TYPE_CLASS);
+        assertThat(nestedInterfaceDescriptor.getMemberKind()).isEqualTo(TYPE_INTERFACE);
+        assertThat(nestedEnumDescriptor.getMemberKind()).isEqualTo(TYPE_ENUM);
+        assertThat(nestedAnnotationDescriptor.getMemberKind()).isEqualTo(TYPE_ANNOTATION);
+        assertThat(nestedRecordDescriptor.getMemberKind()).isEqualTo(TYPE_RECORD);
+    }
 
     @Test
     void describeMembers_classTypeParsed_describesAllExplicitMembers() {
@@ -76,54 +166,6 @@ class SpoonMemberDescriptorFactoryTest {
     }
 
     @Test
-    void describeMembers_classTypeParsed_classifiesFieldsWithAccessAndModifiers() {
-        // When
-        Map<CtTypeMember, MemberDescriptor> describedMembers =
-                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
-
-        // Then
-        MemberDescriptor publicStaticFinalFieldDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "PUBLIC_STATIC_FINAL_FIELD");
-        MemberDescriptor protectedFieldDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "protectedField");
-        MemberDescriptor packageFieldDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "packageField");
-        assertThat(publicStaticFinalFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
-        assertThat(publicStaticFinalFieldDescriptor.getMemberAccess()).contains(PUBLIC);
-        assertThat(publicStaticFinalFieldDescriptor.getDeclarationModifiers()).containsExactlyInAnyOrder(STATIC, FINAL);
-        assertThat(publicStaticFinalFieldDescriptor.getAnnotationQualifiedNames())
-                .contains("Deprecated")
-                .contains("java.lang.Deprecated");
-        assertThat(protectedFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
-        assertThat(protectedFieldDescriptor.getMemberAccess()).contains(PROTECTED);
-        assertThat(protectedFieldDescriptor.getDeclarationModifiers()).isEmpty();
-        assertThat(packageFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
-        assertThat(packageFieldDescriptor.getMemberAccess()).contains(PACKAGE);
-    }
-
-    @Test
-    void describeMembers_classTypeParsed_classifiesMethodsWithAccessAndModifiers() {
-        // When
-        Map<CtTypeMember, MemberDescriptor> describedMembers =
-                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
-
-        // Then
-        MemberDescriptor privateStaticMethodDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "privateStaticMethod");
-        MemberDescriptor abstractMethodDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "abstractMethod");
-        assertThat(privateStaticMethodDescriptor.getMemberKind()).isEqualTo(METHOD);
-        assertThat(privateStaticMethodDescriptor.getMemberAccess()).contains(PRIVATE);
-        assertThat(privateStaticMethodDescriptor.getDeclarationModifiers()).containsExactly(STATIC);
-        assertThat(privateStaticMethodDescriptor.getAnnotationQualifiedNames())
-                .contains("Deprecated")
-                .contains("java.lang.Deprecated");
-        assertThat(abstractMethodDescriptor.getMemberKind()).isEqualTo(METHOD);
-        assertThat(abstractMethodDescriptor.getMemberAccess()).contains(PUBLIC);
-        assertThat(abstractMethodDescriptor.getDeclarationModifiers()).containsExactly(ABSTRACT);
-    }
-
-    @Test
     void describeMembers_classTypeParsed_describesConstructorAsUnnamedMember() {
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers =
@@ -137,48 +179,17 @@ class SpoonMemberDescriptorFactoryTest {
     }
 
     @Test
-    void describeMembers_classTypeParsed_classifiesInitializerBlocksByStaticModifier() {
+    void describeMembers_enumTypeParsed_describesRegularEnumMembers() {
         // When
         Map<CtTypeMember, MemberDescriptor> describedMembers =
-                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
+                SpoonMemberDescriptorFactory.describeMembers(ENUM_WITH_CONSTANTS_AND_REGULAR_MEMBERS);
 
         // Then
-        List<MemberDescriptor> initBlockDescriptors = describedMembers.values().stream()
-                .filter(memberDescriptor -> memberDescriptor.getMemberKind() == INIT_BLOCK)
-                .toList();
-        boolean hasStaticInitBlock = initBlockDescriptors.stream()
-                .anyMatch(memberDescriptor ->
-                        memberDescriptor.getDeclarationModifiers().contains(STATIC));
-        boolean hasInstanceInitBlock = initBlockDescriptors.stream()
-                .anyMatch(memberDescriptor ->
-                        memberDescriptor.getDeclarationModifiers().isEmpty());
-        assertThat(initBlockDescriptors).hasSize(2);
-        assertThat(hasStaticInitBlock).isTrue();
-        assertThat(hasInstanceInitBlock).isTrue();
-    }
-
-    @Test
-    void describeMembers_classTypeParsed_classifiesNestedTypesByKind() {
-        // When
-        Map<CtTypeMember, MemberDescriptor> describedMembers =
-                SpoonMemberDescriptorFactory.describeMembers(CLASS_WITH_FIELDS_METHODS_INIT_BLOCKS_AND_NESTED_TYPES);
-
-        // Then
-        MemberDescriptor nestedClassDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "PublicNestedClass");
-        MemberDescriptor nestedInterfaceDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "ProtectedNestedInterface");
-        MemberDescriptor nestedEnumDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedEnum");
-        MemberDescriptor nestedAnnotationDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedAnnotation");
-        MemberDescriptor nestedRecordDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "NestedRecord");
-        assertThat(nestedClassDescriptor.getMemberKind()).isEqualTo(TYPE_CLASS);
-        assertThat(nestedInterfaceDescriptor.getMemberKind()).isEqualTo(TYPE_INTERFACE);
-        assertThat(nestedEnumDescriptor.getMemberKind()).isEqualTo(TYPE_ENUM);
-        assertThat(nestedAnnotationDescriptor.getMemberKind()).isEqualTo(TYPE_ANNOTATION);
-        assertThat(nestedRecordDescriptor.getMemberKind()).isEqualTo(TYPE_RECORD);
+        MemberDescriptor valueFieldDescriptor =
+                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "value");
+        assertThat(valueFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
+        assertThat(valueFieldDescriptor.getDeclarationModifiers()).contains(FINAL);
+        assertThat(valueFieldDescriptor.getMemberAccess()).contains(PRIVATE);
     }
 
     @Test
@@ -197,32 +208,6 @@ class SpoonMemberDescriptorFactoryTest {
         assertThat(describedMembers.values())
                 .noneMatch(memberDescriptor ->
                         memberDescriptor.getMemberKind().name().equals("ENUM_CONSTANT"));
-    }
-
-    @Test
-    void describeMembers_enumTypeParsed_describesRegularEnumMembers() {
-        // When
-        Map<CtTypeMember, MemberDescriptor> describedMembers =
-                SpoonMemberDescriptorFactory.describeMembers(ENUM_WITH_CONSTANTS_AND_REGULAR_MEMBERS);
-
-        // Then
-        MemberDescriptor valueFieldDescriptor =
-                SpoonTestCaseUtils.requireMemberDescriptorByName(describedMembers, "value");
-        assertThat(valueFieldDescriptor.getMemberKind()).isEqualTo(FIELD);
-        assertThat(valueFieldDescriptor.getDeclarationModifiers()).contains(FINAL);
-        assertThat(valueFieldDescriptor.getMemberAccess()).contains(PRIVATE);
-    }
-
-    @Test
-    void describeMembers_recordTypeParsed_doesNotReturnImplicitTypeMembers() {
-        // When
-        Map<CtTypeMember, MemberDescriptor> describedMembers =
-                SpoonMemberDescriptorFactory.describeMembers(RECORD_WITH_EXPLICIT_METHOD_AND_NO_IMPLICIT_MEMBERS);
-
-        // Then
-        boolean anyImplicitTypeMemberReturned =
-                describedMembers.keySet().stream().anyMatch(CtElement::isImplicit);
-        assertThat(anyImplicitTypeMemberReturned).isFalse();
     }
 
     @Test
@@ -253,9 +238,23 @@ class SpoonMemberDescriptorFactoryTest {
         assertThat(describedFieldNames).doesNotContain("beta");
     }
 
+    @Test
+    void describeMembers_recordTypeParsed_doesNotReturnImplicitTypeMembers() {
+        // When
+        Map<CtTypeMember, MemberDescriptor> describedMembers =
+                SpoonMemberDescriptorFactory.describeMembers(RECORD_WITH_EXPLICIT_METHOD_AND_NO_IMPLICIT_MEMBERS);
+
+        // Then
+        boolean anyImplicitTypeMemberReturned =
+                describedMembers.keySet().stream().anyMatch(CtElement::isImplicit);
+        assertThat(anyImplicitTypeMemberReturned).isFalse();
+    }
+
     @NonNull
     private static CtType<?> parseMainTypeFromResource(String fileName) {
-        URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(TEST_CASES_RESOURCE_ROOT_URL, fileName);
+        URL testCasesResourceRootUrl = TestCaseResourceUtils.requireClasspathDirectoryUrl(
+                "/" + TEST_CASES_DIR + "/core/sorter/spoon/member-descriptor/valid/");
+        URL javaFixtureResource = TestCaseResourceUtils.resolveRelativeUrl(testCasesResourceRootUrl, fileName);
         return SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(javaFixtureResource);
     }
 }

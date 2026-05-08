@@ -13,6 +13,7 @@ import lombok.Value;
  */
 @Value
 public class ParsingResult {
+
     @NonNull
     ParsingStatistic parsingStatistic;
 

@@ -47,19 +47,8 @@ class EffectiveMemberGroupResolver {
     }
 
     @NonNull
-    private static CompiledMemberGroup resolveEffectiveGroupForProvider(
-            CtTypeMember providerMember,
-            Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
-            MemberDependencyGraph memberDependencyGraph) {
-
-        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(providerMember);
-
-        return Stream.concat(Stream.of(providerMember), transitiveDependents.stream())
-                .map(typeMember -> requireNaturalMemberGroup(typeMember2NaturalMemberGroup, providerMember, typeMember))
-                .reduce(EffectiveMemberGroupResolver::selectEarlierGroup)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Expected at least the provider member to be present when resolving effective group. "
-                                + "providerMember=" + describeTypeMember(providerMember)));
+    private static String describeTypeMember(CtTypeMember typeMember) {
+        return typeMember.getClass().getSimpleName() + "(" + typeMember.getShortRepresentation() + ")";
     }
 
     @NonNull
@@ -80,8 +69,19 @@ class EffectiveMemberGroupResolver {
     }
 
     @NonNull
-    private static String describeTypeMember(CtTypeMember typeMember) {
-        return typeMember.getClass().getSimpleName() + "(" + typeMember.getShortRepresentation() + ")";
+    private static CompiledMemberGroup resolveEffectiveGroupForProvider(
+            CtTypeMember providerMember,
+            Map<CtTypeMember, CompiledMemberGroup> typeMember2NaturalMemberGroup,
+            MemberDependencyGraph memberDependencyGraph) {
+
+        Set<CtTypeMember> transitiveDependents = memberDependencyGraph.findTransitiveDependents(providerMember);
+
+        return Stream.concat(Stream.of(providerMember), transitiveDependents.stream())
+                .map(typeMember -> requireNaturalMemberGroup(typeMember2NaturalMemberGroup, providerMember, typeMember))
+                .reduce(EffectiveMemberGroupResolver::selectEarlierGroup)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Expected at least the provider member to be present when resolving effective group. "
+                                + "providerMember=" + describeTypeMember(providerMember)));
     }
 
     @NonNull

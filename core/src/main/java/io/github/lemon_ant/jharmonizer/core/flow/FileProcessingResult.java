@@ -29,6 +29,7 @@ import org.jspecify.annotations.Nullable;
 @Builder(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileProcessingResult {
+
     // TODO Make it non null???
     @Nullable
     String diff;
@@ -39,21 +40,21 @@ public class FileProcessingResult {
     @NonNull
     FormattingStatistic formattingStatistic;
 
+    // TODO Make it non null
+    @Nullable
+    Collection<MemberRelocation> memberRelocations;
+
     @NonNull
     ParsingStatistic parsingStatistic;
 
     @NonNull
     Path path;
 
-    // TODO Make it non null
-    @Nullable
-    Collection<MemberRelocation> memberRelocations;
-
     @NonNull
     SerializationStatistic serializationStatistic;
 
-    boolean stopRequested;
-
     @NonNull
     SortingStatistic sortingStatistic;
+
+    boolean stopRequested;
 }

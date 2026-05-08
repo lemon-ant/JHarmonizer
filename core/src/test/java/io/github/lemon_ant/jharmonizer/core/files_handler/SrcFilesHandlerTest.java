@@ -21,17 +21,15 @@ class SrcFilesHandlerTest {
     Path tempDir;
 
     @Test
-    void backup_existingFile_renamedWithBakExtension() throws IOException {
+    void backup_directoryPath_throwsIOException() throws IOException {
         // Given
-        Path srcFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
+        Path directoryPath = Files.createDirectory(tempDir.resolve("mydir"));
 
         // When
-        SrcFilesHandler.renameToBackup(srcFile);
+        Throwable thrown = catchThrowable(() -> SrcFilesHandler.renameToBackup(directoryPath));
 
         // Then
-        Path expectedBackup = tempDir.resolve("Example.java.bak");
-        assertThat(expectedBackup).exists();
-        assertThat(srcFile).doesNotExist();
+        assertThat(thrown).isInstanceOf(UncheckedIOException.class).hasMessageContaining("not a valid file");
     }
 
     @Test
@@ -46,6 +44,20 @@ class SrcFilesHandlerTest {
         // Then
         assertThat(backupFile).exists();
         assertThat(Files.readString(backupFile)).isEqualTo("class Latest {}");
+        assertThat(srcFile).doesNotExist();
+    }
+
+    @Test
+    void backup_existingFile_renamedWithBakExtension() throws IOException {
+        // Given
+        Path srcFile = Files.writeString(tempDir.resolve("Example.java"), "class Example {}");
+
+        // When
+        SrcFilesHandler.renameToBackup(srcFile);
+
+        // Then
+        Path expectedBackup = tempDir.resolve("Example.java.bak");
+        assertThat(expectedBackup).exists();
         assertThat(srcFile).doesNotExist();
     }
 
@@ -67,14 +79,28 @@ class SrcFilesHandlerTest {
         Path path1 = tempDir.resolve("A.java");
         Path path2 = tempDir.resolve("B.java");
 
-        SrcFile fc1a = new SrcFile("x", path1);
-        SrcFile fc1b = new SrcFile("x", path1);
-        SrcFile fc2 = new SrcFile("y", path2);
+        SrcFile fc1a = new SrcFile(path1, "x");
+        SrcFile fc1b = new SrcFile(path1, "x");
+        SrcFile fc2 = new SrcFile(path2, "y");
 
         // When / Then
         assertThat(fc1a).isEqualTo(fc1b);
         assertThat(fc1a.hashCode()).isEqualTo(fc1b.hashCode());
         assertThat(fc1a).isNotEqualTo(fc2);
+    }
+
+    @Test
+    void overwrite_existingFile_replacesFileContent() throws IOException {
+        // Given
+        Path srcPath = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
+        SrcFile srcFile = new SrcFile(srcPath, "new content");
+
+        // When
+        SrcFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
+
+        // Then
+        String newText = Files.readString(srcPath);
+        assertThat(newText).isEqualTo("new content");
     }
 
     @Test
@@ -91,31 +117,5 @@ class SrcFilesHandlerTest {
         assertThat(srcFiles)
                 .extracting(SrcFile::getPath)
                 .contains(javaFile.normalize().toAbsolutePath());
-    }
-
-    @Test
-    void overwrite_existingFile_replacesFileContent() throws IOException {
-        // Given
-        Path srcPath = Files.writeString(tempDir.resolve("Overwrite.java"), "old content");
-        SrcFile srcFile = new SrcFile("new content", srcPath);
-
-        // When
-        SrcFilesHandler.overwrite(srcFile.getPath(), srcFile.getSrcCode());
-
-        // Then
-        String newText = Files.readString(srcPath);
-        assertThat(newText).isEqualTo("new content");
-    }
-
-    @Test
-    void backup_directoryPath_throwsIOException() throws IOException {
-        // Given
-        Path directoryPath = Files.createDirectory(tempDir.resolve("mydir"));
-
-        // When
-        Throwable thrown = catchThrowable(() -> SrcFilesHandler.renameToBackup(directoryPath));
-
-        // Then
-        assertThat(thrown).isInstanceOf(UncheckedIOException.class).hasMessageContaining("not a valid file");
     }
 }

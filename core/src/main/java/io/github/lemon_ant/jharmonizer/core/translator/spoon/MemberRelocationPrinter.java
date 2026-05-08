@@ -24,11 +24,10 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @UtilityClass
 public class MemberRelocationPrinter {
-
-    private static final int MAX_PATH_DISPLAY_LENGTH = 120;
-    private static final int MAX_DISPLAYED_VIOLATIONS = 5;
-    private static final int MAX_DISPLAYED_CHUNK_MEMBERS = 3;
     private static final int INITIAL_OUTPUT_BUFFER_CAPACITY = 256;
+    private static final int MAX_DISPLAYED_CHUNK_MEMBERS = 3;
+    private static final int MAX_DISPLAYED_VIOLATIONS = 5;
+    private static final int MAX_PATH_DISPLAY_LENGTH = 120;
 
     /**
      * Formats the relocations into a human-readable string.
@@ -75,6 +74,24 @@ public class MemberRelocationPrinter {
         return sb.toString();
     }
 
+    private static void appendChunkLines(
+            StringBuilder sb, List<CtTypeMember> members, WhitespaceVisualizationStyle style) {
+        if (members.size() <= MAX_DISPLAYED_CHUNK_MEMBERS) {
+            for (CtTypeMember member : members) {
+                sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member, style)));
+            }
+        } else {
+            int omittedCount = members.size() - 2;
+            sb.append(lineSeparator())
+                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(0), style)))
+                    .append(lineSeparator())
+                    .append(String.format("      %s (%d members omitted)", style.getChunkOmissionMark(), omittedCount))
+                    .append(lineSeparator())
+                    .append(String.format(
+                            "    --> %s", renderDeclarationHeader(members.get(members.size() - 1), style)));
+        }
+    }
+
     private static void appendRelocationEntry(
             StringBuilder sb, MemberRelocation relocation, int index, WhitespaceVisualizationStyle style) {
         CtTypeMember firstMember = relocation.getRelocatedMembers().get(0);
@@ -92,24 +109,6 @@ public class MemberRelocationPrinter {
             sb.append(lineSeparator())
                     .append(String.format(
                             "        %s", renderDeclarationHeader(relocation.getSortedSuccessor(), style)));
-        }
-    }
-
-    private static void appendChunkLines(
-            StringBuilder sb, List<CtTypeMember> members, WhitespaceVisualizationStyle style) {
-        if (members.size() <= MAX_DISPLAYED_CHUNK_MEMBERS) {
-            for (CtTypeMember member : members) {
-                sb.append(lineSeparator()).append(String.format("    --> %s", renderDeclarationHeader(member, style)));
-            }
-        } else {
-            int omittedCount = members.size() - 2;
-            sb.append(lineSeparator())
-                    .append(String.format("    --> %s", renderDeclarationHeader(members.get(0), style)))
-                    .append(lineSeparator())
-                    .append(String.format("      %s (%d members omitted)", style.getChunkOmissionMark(), omittedCount))
-                    .append(lineSeparator())
-                    .append(String.format(
-                            "    --> %s", renderDeclarationHeader(members.get(members.size() - 1), style)));
         }
     }
 }

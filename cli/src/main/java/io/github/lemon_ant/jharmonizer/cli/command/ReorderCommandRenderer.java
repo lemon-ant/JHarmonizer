@@ -17,7 +17,6 @@ import org.jspecify.annotations.Nullable;
  */
 @UtilityClass
 class ReorderCommandRenderer {
-
     private static final int INITIAL_COMMAND_CAPACITY = 256;
 
     /**

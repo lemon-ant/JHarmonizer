@@ -113,7 +113,7 @@ Each pull request should:
 - address a single concern (one bug fix, one feature, or one refactoring);
 - include or update tests for any changed behavior;
 - keep all quality gates green (Spotless, SortPOM, PMD, SpotBugs, JaCoCo);
-- follow the conventions documented in [`AGENTS.md`](AGENTS.md) (general code conventions) and `docs/test-conventions.md` (test conventions, coming in a follow-up update);
+- follow the conventions documented in [`AGENTS.md`](../AGENTS.md) (general code conventions) and `../docs/test-conventions.md` (test conventions, coming in a follow-up update);
 - include SPDX metadata in every new file you add:
   ```
   SPDX-FileCopyrightText: <year> <Your Name> <your@email>

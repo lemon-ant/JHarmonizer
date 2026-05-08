@@ -20,28 +20,6 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class JHarmonizerConfigurationManager {
-    /**
-     * Parses the embedded default configuration into the unified model.
-     *
-     * @return the unified default configuration
-     */
-    @NonNull
-    public static UnifiedConfig parseUnifiedDefaultConfig() {
-        JHarmonizerConfig defaultJHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
-        return JHarmonizer2UnifiedConverter.convert2Unified(defaultJHarmonizerConfig);
-    }
-
-    /**
-     * Parses a classpath configuration resource into the unified model.
-     *
-     * @param classpathResource the classpath resource to read
-     * @return the unified configuration loaded from the resource
-     */
-    @NonNull
-    public static UnifiedConfig parseUnifiedConfigFromClasspathResource(@NonNull URL classpathResource) {
-        JHarmonizerConfig loadedConfig = JHarmonizerConfigLoader.loadFromClasspathResource(classpathResource);
-        return JHarmonizer2UnifiedConverter.convert2Unified(loadedConfig);
-    }
 
     /**
      * Parses a classpath configuration resource into the flexible unified model.
@@ -67,5 +45,28 @@ public class JHarmonizerConfigurationManager {
     public static FlexibleUnifiedConfig parseFlexibleUnifiedConfigFromFile(@NonNull Path configFilePath) {
         JHarmonizerFlexibleConfig flexibleConfig = JHarmonizerConfigLoader.loadFlexibleFrom(configFilePath.toFile());
         return JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(flexibleConfig);
+    }
+
+    /**
+     * Parses a classpath configuration resource into the unified model.
+     *
+     * @param classpathResource the classpath resource to read
+     * @return the unified configuration loaded from the resource
+     */
+    @NonNull
+    public static UnifiedConfig parseUnifiedConfigFromClasspathResource(@NonNull URL classpathResource) {
+        JHarmonizerConfig loadedConfig = JHarmonizerConfigLoader.loadFromClasspathResource(classpathResource);
+        return JHarmonizer2UnifiedConverter.convert2Unified(loadedConfig);
+    }
+
+    /**
+     * Parses the embedded default configuration into the unified model.
+     *
+     * @return the unified default configuration
+     */
+    @NonNull
+    public static UnifiedConfig parseUnifiedDefaultConfig() {
+        JHarmonizerConfig defaultJHarmonizerConfig = JHarmonizerConfigLoader.loadDefault();
+        return JHarmonizer2UnifiedConverter.convert2Unified(defaultJHarmonizerConfig);
     }
 }

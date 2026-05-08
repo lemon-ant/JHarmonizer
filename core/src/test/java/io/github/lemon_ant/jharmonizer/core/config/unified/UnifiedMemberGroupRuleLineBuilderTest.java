@@ -10,19 +10,6 @@ import org.junit.jupiter.api.Test;
 class UnifiedMemberGroupRuleLineBuilderTest {
 
     @Test
-    void build_selectorsMissing_illegalArgumentExceptionThrown() {
-        // Given
-        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
-                UnifiedMemberGroupRuleLine.builder();
-
-        // When
-        Throwable thrown = catchThrowable(unifiedMemberGroupRuleLineBuilder::build);
-
-        // Then
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("at least one selector");
-    }
-
-    @Test
     void build_nameMatcherAssignedOnce_ruleLineBuilt() {
         // Given
         UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
@@ -36,6 +23,19 @@ class UnifiedMemberGroupRuleLineBuilderTest {
         // Then
         assertThat(unifiedMemberGroupRuleLine).isNotNull();
         assertThat(unifiedMemberGroupRuleLine.getNameMatcher()).isSameAs(expectedUnifiedNameMatcher);
+    }
+
+    @Test
+    void build_selectorsMissing_illegalArgumentExceptionThrown() {
+        // Given
+        UnifiedMemberGroupRuleLine.UnifiedMemberGroupRuleLineBuilder unifiedMemberGroupRuleLineBuilder =
+                UnifiedMemberGroupRuleLine.builder();
+
+        // When
+        Throwable thrown = catchThrowable(unifiedMemberGroupRuleLineBuilder::build);
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("at least one selector");
     }
 
     @Test

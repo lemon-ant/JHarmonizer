@@ -15,6 +15,7 @@ import lombok.Value;
  */
 @Value
 public class CompiledMemberGroupSelectorBlock {
+
     @NonNull
     List<Predicate<MemberDescriptor>> excludePredicate; // immutable, ordered
 

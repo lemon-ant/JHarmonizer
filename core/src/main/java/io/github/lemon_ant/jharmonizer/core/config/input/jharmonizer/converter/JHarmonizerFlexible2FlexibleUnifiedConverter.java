@@ -46,12 +46,21 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
         return builder.build();
     }
 
-    @Nullable
-    private static UnifiedTopLevelTypesOrdering readTopLevelTypesOrdering(JHarmonizerFlexibleConfig vendorConfig) {
-        return vendorConfig
-                .getTopLevelTypesOrdering()
-                .map(TopLevelTypesOrderingMapper::map)
-                .orElse(null);
+    @NonNull
+    private static FlexibleUnifiedFormatting mapFlexibleFormatting(JHarmonizerFlexibleFormatting vendorFormatting) {
+        return FlexibleUnifiedFormatting.builder()
+                .fixImports(vendorFormatting.getFixImports().orElse(null))
+                .formatterStyle(vendorFormatting
+                        .getFormatterStyle()
+                        .map(FormatterStyle::getUnifiedFormatterStyle)
+                        .orElse(null))
+                .blankLineAfterTypeHeader(
+                        vendorFormatting.getBlankLineAfterTypeHeader().orElse(null))
+                .blankLineBeforeComment(
+                        vendorFormatting.getBlankLineBeforeComment().orElse(null))
+                .blankLineBetweenFields(
+                        vendorFormatting.getBlankLineBetweenFields().orElse(null))
+                .build();
     }
 
     @Nullable
@@ -79,20 +88,11 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 .orElse(null);
     }
 
-    @NonNull
-    private static FlexibleUnifiedFormatting mapFlexibleFormatting(JHarmonizerFlexibleFormatting vendorFormatting) {
-        return FlexibleUnifiedFormatting.builder()
-                .fixImports(vendorFormatting.getFixImports().orElse(null))
-                .formatterStyle(vendorFormatting
-                        .getFormatterStyle()
-                        .map(FormatterStyle::getUnifiedFormatterStyle)
-                        .orElse(null))
-                .blankLineAfterTypeHeader(
-                        vendorFormatting.getBlankLineAfterTypeHeader().orElse(null))
-                .blankLineBeforeComment(
-                        vendorFormatting.getBlankLineBeforeComment().orElse(null))
-                .blankLineBetweenFields(
-                        vendorFormatting.getBlankLineBetweenFields().orElse(null))
-                .build();
+    @Nullable
+    private static UnifiedTopLevelTypesOrdering readTopLevelTypesOrdering(JHarmonizerFlexibleConfig vendorConfig) {
+        return vendorConfig
+                .getTopLevelTypesOrdering()
+                .map(TopLevelTypesOrderingMapper::map)
+                .orElse(null);
     }
 }

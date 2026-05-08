@@ -11,18 +11,17 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class SpoonCustomSrcPrinterTest {
-
     private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
 
     @Test
     void serializeCompilationUnit_afterSkippedRangesHandedOff_throwIllegalStateException() {
         // Given
         String srcCode = """
-                class Alpha {}
+            class Alpha {}
 
-                // @jharmonizer:sort-off
-                class Beta { int z; int a; }
-                """;
+            // @jharmonizer:sort-off
+            class Beta { int z; int a; }
+            """;
         SpoonAstModel spoonAstModel =
                 SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Beta.java")), DEFAULT_PRINTER_CONFIG);
         SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
@@ -47,29 +46,29 @@ class SpoonCustomSrcPrinterTest {
     void serializeCompilationUnit_enumConstantsWithClassBodies_keepMembersOutsideConstantBody() {
         // Given
         String srcCode = """
-                enum Metric {
-                    FIRST {
-                        @Override
-                        long value() {
-                            return 1L;
-                        }
-                    },
-                    SECOND {
-                        @Override
-                        long value() {
-                            return 2L;
-                        }
-                    };
-
-                    private final long cached = 7L;
-
-                    abstract long value();
-
-                    long total() {
-                        return value() + cached;
+            enum Metric {
+                FIRST {
+                    @Override
+                    long value() {
+                        return 1L;
                     }
+                },
+                SECOND {
+                    @Override
+                    long value() {
+                        return 2L;
+                    }
+                };
+
+                private final long cached = 7L;
+
+                abstract long value();
+
+                long total() {
+                    return value() + cached;
                 }
-                """;
+            }
+            """;
         SpoonAstModel spoonAstModel =
                 SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Metric.java")), DEFAULT_PRINTER_CONFIG);
         SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(

@@ -17,7 +17,6 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 class NaturalMemberGroupResolverTest {
-
     private static final URL CONFIG_RESOURCE_URL = TestCaseResourceUtils.requireClasspathResourceUrl(
             "/" + TEST_CASES_DIR + "/core/sorter/spoon/natural-group-resolution/natural-group-resolution-config.yml");
     private static final URL FIXTURE_DIRECTORY_RESOURCE_URL = TestCaseResourceUtils.requireClasspathDirectoryUrl(

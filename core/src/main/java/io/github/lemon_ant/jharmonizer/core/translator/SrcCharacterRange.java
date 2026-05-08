@@ -7,8 +7,8 @@ import org.apache.commons.lang3.Validate;
 
 @Value
 public class SrcCharacterRange {
-    int startInclusive;
     int endExclusive;
+    int startInclusive;
 
     public SrcCharacterRange(int startInclusive, int endExclusive) {
         Validate.isTrue(startInclusive >= 0, "Range start must be non-negative: %s", startInclusive);

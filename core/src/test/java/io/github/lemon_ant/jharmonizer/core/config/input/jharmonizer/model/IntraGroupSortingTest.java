@@ -10,6 +10,15 @@ import org.junit.jupiter.api.Test;
 class IntraGroupSortingTest {
 
     @Test
+    void fromString_unknownValue_throwsIllegalArgumentException() {
+        // When
+        Throwable thrown = catchThrowable(() -> IntraGroupSorting.fromString("unsupported_mode"));
+
+        // Then
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void fromString_validLowercaseName_returnsMatchingEnum() {
         // When
         IntraGroupSorting intraGroupSorting = IntraGroupSorting.fromString("alpha");
@@ -25,14 +34,5 @@ class IntraGroupSortingTest {
 
         // Then
         assertThat(intraGroupSorting).isEqualTo(IntraGroupSorting.VISIBILITY_ASC);
-    }
-
-    @Test
-    void fromString_unknownValue_throwsIllegalArgumentException() {
-        // When
-        Throwable thrown = catchThrowable(() -> IntraGroupSorting.fromString("unsupported_mode"));
-
-        // Then
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
     }
 }

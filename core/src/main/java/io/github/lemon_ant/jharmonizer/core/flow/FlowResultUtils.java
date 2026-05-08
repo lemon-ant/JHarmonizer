@@ -30,19 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 class FlowResultUtils {
 
     /**
-     * Builds a synthetic {@link ParsingStatistic} for files that were never fully parsed
-     * (e.g., because Spoon model creation failed and only formatting was attempted).
-     *
-     * @param srcFile the source file whose code length feeds the statistic
-     * @return a synthetic statistic with zero parsed-type counts
-     */
-    @NonNull
-    static ParsingStatistic buildSyntheticParsingStatistic(@NonNull SrcFile srcFile) {
-        String srcCode = srcFile.getSrcCode();
-        return new ParsingStatistic(srcCode.length(), srcCode.getBytes(StandardCharsets.UTF_8).length, 0, 0, 0, 0);
-    }
-
-    /**
      * Builds a {@link FileProcessingResult} for the formatting-only fallback path,
      * used when Spoon model creation fails and only formatting can be applied.
      *
@@ -100,6 +87,19 @@ class FlowResultUtils {
                         new FormattingStatistic(srcFile.getSrcCode().length(), 0))
                 .fileProcessingStatus(FileProcessingStatus.SKIPPED)
                 .build();
+    }
+
+    /**
+     * Builds a synthetic {@link ParsingStatistic} for files that were never fully parsed
+     * (e.g., because Spoon model creation failed and only formatting was attempted).
+     *
+     * @param srcFile the source file whose code length feeds the statistic
+     * @return a synthetic statistic with zero parsed-type counts
+     */
+    @NonNull
+    static ParsingStatistic buildSyntheticParsingStatistic(@NonNull SrcFile srcFile) {
+        String srcCode = srcFile.getSrcCode();
+        return new ParsingStatistic(srcCode.length(), srcCode.getBytes(StandardCharsets.UTF_8).length, 0, 0, 0, 0);
     }
 
     /**

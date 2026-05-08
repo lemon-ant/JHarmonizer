@@ -21,13 +21,12 @@ import org.jspecify.annotations.Nullable;
  */
 @UtilityClass
 class CliLauncherDetector {
-
+    private static final char DOUBLE_QUOTE = '"';
     private static final String FALLBACK_LAUNCHER = "jharmonizer";
+    private static final String JAR_EXTENSION = ".jar";
     private static final String JAR_FLAG = "-jar";
     private static final String JHARMONIZER_JAR_NAME_PART = "jharmonizer";
-    private static final char DOUBLE_QUOTE = '"';
     private static final int MINIMUM_COMMANDLINE_TOKEN_COUNT = 2;
-    private static final String JAR_EXTENSION = ".jar";
 
     /**
      * Detects the launcher prefix for the current process.
@@ -154,6 +153,87 @@ class CliLauncherDetector {
         }
     }
 
+    @NonNull
+    @SuppressWarnings("PMD.UseVarargs")
+    private static String buildLauncherPrefix(String command, String[] args) {
+        int jarFlagIndex = findJarFlagIndex(args);
+        if (jarFlagIndex < 0) {
+            return FALLBACK_LAUNCHER;
+        }
+        String jarPath = args[jarFlagIndex + 1];
+        if (isNotJHarmonizerJar(jarPath)) {
+            return FALLBACK_LAUNCHER;
+        }
+        String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(command));
+        String normalizedJarPath = PathUtils.normalizeSeparators(Path.of(jarPath));
+        return quotePathForShell(normalizedJavaExe) + " " + JAR_FLAG + " " + quotePathForShell(normalizedJarPath);
+    }
+
+    @SuppressWarnings("PMD.UseVarargs")
+    private static int findJarFlagIndex(String[] args) {
+        for (int i = 0; i < args.length - 1; i++) {
+            if (JAR_FLAG.equals(args[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isNotJHarmonizerJar(@Nullable String jarPath) {
+        if (jarPath == null || jarPath.isBlank()) {
+            return true;
+        }
+        // Normalize separators on the raw string before extracting the filename so that
+        // Windows-style backslashes are handled correctly on any OS (Path.of() is platform-dependent).
+        String normalizedJarPath = jarPath.replace('\\', '/');
+        int lastSlash = normalizedJarPath.lastIndexOf('/');
+        String jarFileName = lastSlash >= 0 ? normalizedJarPath.substring(lastSlash + 1) : normalizedJarPath;
+        return !jarFileName.toLowerCase(Locale.ROOT).contains(JHARMONIZER_JAR_NAME_PART);
+    }
+
+    /**
+     * Extracts the program name (jar file path or class name) from the {@code sun.java.command}
+     * property value.
+     *
+     * <p>For jar invocations the program name ends at the {@code .jar} extension, so that jar
+     * paths containing spaces are not incorrectly truncated at the first space. For class-name
+     * invocations (which never contain spaces) the first space is used as the delimiter.
+     *
+     * @param sunJavaCommand the non-null, non-blank value of {@code sun.java.command}
+     * @return the extracted program name
+     */
+    @NonNull
+    private static String parseProgramNameFromSunCommand(String sunJavaCommand) {
+        // The HotSpot launcher stores the raw unquoted program argument in sun.java.command, so
+        // jar paths with spaces appear as-is without surrounding quotes.  Splitting on the first
+        // space would cut a path like "C:\Program Files\...\jharmonizer-cli.jar" at the first
+        // space.  We instead locate the ".jar" extension as the boundary, which is unambiguous.
+        String lowerCaseSunCommand = sunJavaCommand.toLowerCase(Locale.ROOT);
+        int jarExtensionIndex = lowerCaseSunCommand.indexOf(JAR_EXTENSION + " ");
+        if (jarExtensionIndex >= 0) {
+            return sunJavaCommand.substring(0, jarExtensionIndex + JAR_EXTENSION.length());
+        }
+        if (lowerCaseSunCommand.endsWith(JAR_EXTENSION)) {
+            return sunJavaCommand;
+        }
+        // No .jar extension — class-name invocation; class names cannot contain spaces.
+        int firstSpace = sunJavaCommand.indexOf(' ');
+        return firstSpace >= 0 ? sunJavaCommand.substring(0, firstSpace) : sunJavaCommand;
+    }
+
+    @NonNull
+    private static String quotePathForShell(String normalizedPath) {
+        // Apply the same escaping rules as ReorderCommandRenderer.quoteArg() so the launcher
+        // prefix is safe for paths that contain shell metacharacters such as $, `, or !.
+        // Paths are already separator-normalized, so backslashes do not need separate treatment.
+        String escaped = normalizedPath
+                .replace("\"", "\\\"")
+                .replace("$", "\\$")
+                .replace("`", "\\`")
+                .replace("!", "\\!");
+        return "\"" + escaped + "\"";
+    }
+
     /**
      * Splits a raw command-line string into tokens, respecting double-quoted sections.
      *
@@ -191,86 +271,5 @@ class CliLauncherDetector {
             tokens.add(currentToken.toString());
         }
         return tokens;
-    }
-
-    @NonNull
-    @SuppressWarnings("PMD.UseVarargs")
-    private static String buildLauncherPrefix(String command, String[] args) {
-        int jarFlagIndex = findJarFlagIndex(args);
-        if (jarFlagIndex < 0) {
-            return FALLBACK_LAUNCHER;
-        }
-        String jarPath = args[jarFlagIndex + 1];
-        if (isNotJHarmonizerJar(jarPath)) {
-            return FALLBACK_LAUNCHER;
-        }
-        String normalizedJavaExe = PathUtils.normalizeSeparators(Path.of(command));
-        String normalizedJarPath = PathUtils.normalizeSeparators(Path.of(jarPath));
-        return quotePathForShell(normalizedJavaExe) + " " + JAR_FLAG + " " + quotePathForShell(normalizedJarPath);
-    }
-
-    @SuppressWarnings("PMD.UseVarargs")
-    private static int findJarFlagIndex(String[] args) {
-        for (int i = 0; i < args.length - 1; i++) {
-            if (JAR_FLAG.equals(args[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Extracts the program name (jar file path or class name) from the {@code sun.java.command}
-     * property value.
-     *
-     * <p>For jar invocations the program name ends at the {@code .jar} extension, so that jar
-     * paths containing spaces are not incorrectly truncated at the first space. For class-name
-     * invocations (which never contain spaces) the first space is used as the delimiter.
-     *
-     * @param sunJavaCommand the non-null, non-blank value of {@code sun.java.command}
-     * @return the extracted program name
-     */
-    @NonNull
-    private static String parseProgramNameFromSunCommand(String sunJavaCommand) {
-        // The HotSpot launcher stores the raw unquoted program argument in sun.java.command, so
-        // jar paths with spaces appear as-is without surrounding quotes.  Splitting on the first
-        // space would cut a path like "C:\Program Files\...\jharmonizer-cli.jar" at the first
-        // space.  We instead locate the ".jar" extension as the boundary, which is unambiguous.
-        String lowerCaseSunCommand = sunJavaCommand.toLowerCase(Locale.ROOT);
-        int jarExtensionIndex = lowerCaseSunCommand.indexOf(JAR_EXTENSION + " ");
-        if (jarExtensionIndex >= 0) {
-            return sunJavaCommand.substring(0, jarExtensionIndex + JAR_EXTENSION.length());
-        }
-        if (lowerCaseSunCommand.endsWith(JAR_EXTENSION)) {
-            return sunJavaCommand;
-        }
-        // No .jar extension — class-name invocation; class names cannot contain spaces.
-        int firstSpace = sunJavaCommand.indexOf(' ');
-        return firstSpace >= 0 ? sunJavaCommand.substring(0, firstSpace) : sunJavaCommand;
-    }
-
-    private static boolean isNotJHarmonizerJar(@Nullable String jarPath) {
-        if (jarPath == null || jarPath.isBlank()) {
-            return true;
-        }
-        // Normalize separators on the raw string before extracting the filename so that
-        // Windows-style backslashes are handled correctly on any OS (Path.of() is platform-dependent).
-        String normalizedJarPath = jarPath.replace('\\', '/');
-        int lastSlash = normalizedJarPath.lastIndexOf('/');
-        String jarFileName = lastSlash >= 0 ? normalizedJarPath.substring(lastSlash + 1) : normalizedJarPath;
-        return !jarFileName.toLowerCase(Locale.ROOT).contains(JHARMONIZER_JAR_NAME_PART);
-    }
-
-    @NonNull
-    private static String quotePathForShell(String normalizedPath) {
-        // Apply the same escaping rules as ReorderCommandRenderer.quoteArg() so the launcher
-        // prefix is safe for paths that contain shell metacharacters such as $, `, or !.
-        // Paths are already separator-normalized, so backslashes do not need separate treatment.
-        String escaped = normalizedPath
-                .replace("\"", "\\\"")
-                .replace("$", "\\$")
-                .replace("`", "\\`")
-                .replace("!", "\\!");
-        return "\"" + escaped + "\"";
     }
 }

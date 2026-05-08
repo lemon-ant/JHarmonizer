@@ -58,37 +58,6 @@ public class MemberDescriptor {
     @Nullable
     String name;
 
-    // TODO Remove builder
-    @Builder
-    private MemberDescriptor(
-            @Nullable String name,
-            @NonNull MemberKind memberKind,
-            @Nullable MemberAccess memberAccess,
-            @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
-            @NonNull @Singular Set<@NonNull String> annotationQualifiedNames) {
-
-        this.name = validateAndNormalizeName(
-                name, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
-
-        String validationContext = formatValidationContext(
-                name, this.name, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
-
-        // --- access invariants
-        validateAccessForMemberKind(memberKind, memberAccess, validationContext);
-
-        // --- modifier legality checks (via TargetCategory + conflicts)
-        validateModifiers(memberKind, memberAccess, declarationModifiers, validationContext);
-
-        this.memberKind = memberKind;
-        this.memberAccess = memberAccess; // validated above for presence/absence
-        this.declarationModifiers = unmodifiableSet(new TreeSet<>(declarationModifiers));
-        this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
-
-        // Precompute featureMask once (kind + access + modifiers)
-        this.featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
-                this.memberKind, this.memberAccess, this.declarationModifiers);
-    }
-
     private static void enforceAbstractNotPrivate(
             TargetCategory targetCategory,
             @Nullable MemberAccess memberAccess,
@@ -111,6 +80,25 @@ public class MemberDescriptor {
                 && declarationModifiers.contains(DeclarationModifier.STATIC)) {
             throw new IllegalArgumentException("Illegal modifier combination for METHOD: abstract + static");
         }
+    }
+
+    @NonNull
+    private static String formatValidationContext(
+            @Nullable String rawName,
+            @Nullable String normalizedName,
+            MemberKind memberKind,
+            @Nullable MemberAccess memberAccess,
+            Set<DeclarationModifier> declarationModifiers,
+            Set<String> annotationQualifiedNames) {
+
+        return "\ncontext{memberKind=" + memberKind
+                + ",\ntargetCategory=" + memberKind.getTargetCategory()
+                + ",\nmemberAccess=" + memberAccess
+                + ",\nname.raw=" + rawName
+                + ",\nname.normalized=" + normalizedName
+                + ",\ndeclarationModifiers=" + declarationModifiers
+                + ",\nannotationQualifiedNames=" + annotationQualifiedNames
+                + "}";
     }
 
     private static void validateAccessForMemberKind(
@@ -208,38 +196,42 @@ public class MemberDescriptor {
         enforceAbstractNotStaticMethod(targetCategory, declarationModifiers);
     }
 
-    @NonNull
-    private static String formatValidationContext(
-            @Nullable String rawName,
-            @Nullable String normalizedName,
-            MemberKind memberKind,
+    // TODO Remove builder
+    @Builder
+    private MemberDescriptor(
+            @Nullable String name,
+            @NonNull MemberKind memberKind,
             @Nullable MemberAccess memberAccess,
-            Set<DeclarationModifier> declarationModifiers,
-            Set<String> annotationQualifiedNames) {
+            @NonNull @Singular Set<@NonNull DeclarationModifier> declarationModifiers,
+            @NonNull @Singular Set<@NonNull String> annotationQualifiedNames) {
 
-        return "\ncontext{memberKind=" + memberKind
-                + ",\ntargetCategory=" + memberKind.getTargetCategory()
-                + ",\nmemberAccess=" + memberAccess
-                + ",\nname.raw=" + rawName
-                + ",\nname.normalized=" + normalizedName
-                + ",\ndeclarationModifiers=" + declarationModifiers
-                + ",\nannotationQualifiedNames=" + annotationQualifiedNames
-                + "}";
+        this.name = validateAndNormalizeName(
+                name, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
+
+        String validationContext = formatValidationContext(
+                name, this.name, memberKind, memberAccess, declarationModifiers, annotationQualifiedNames);
+
+        // --- access invariants
+        validateAccessForMemberKind(memberKind, memberAccess, validationContext);
+
+        // --- modifier legality checks (via TargetCategory + conflicts)
+        validateModifiers(memberKind, memberAccess, declarationModifiers, validationContext);
+
+        this.memberKind = memberKind;
+        this.memberAccess = memberAccess; // validated above for presence/absence
+        this.declarationModifiers = unmodifiableSet(new TreeSet<>(declarationModifiers));
+        this.annotationQualifiedNames = unmodifiableSet(annotationQualifiedNames);
+
+        // Precompute featureMask once (kind + access + modifiers)
+        this.featureMask = MemberDeclarationFlagsUtil.encodeMemberDeclarationFlags(
+                this.memberKind, this.memberAccess, this.declarationModifiers);
     }
 
-    // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof MemberDescriptor that)) {
-            return false;
-        }
-        // featureMask covers: memberKind + memberAccess + declarationModifiers
-        return this.featureMask == that.featureMask
-                && Objects.equals(this.name, that.name)
-                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
+    /**
+     * True if this element is an initializer block (static or instance).
+     */
+    public boolean isInitializer() {
+        return memberKind.isInitializer();
     }
 
     /**
@@ -258,6 +250,13 @@ public class MemberDescriptor {
         return Optional.ofNullable(name);
     }
 
+    /**
+     * True if this element is a (nested) type declaration.
+     */
+    public boolean isType() {
+        return memberKind.isType();
+    }
+
     @Override
     public int hashCode() {
         int result = featureMask;
@@ -266,17 +265,18 @@ public class MemberDescriptor {
         return result;
     }
 
-    /**
-     * True if this element is an initializer block (static or instance).
-     */
-    public boolean isInitializer() {
-        return memberKind.isInitializer();
-    }
-
-    /**
-     * True if this element is a (nested) type declaration.
-     */
-    public boolean isType() {
-        return memberKind.isType();
+    // --- equals / hashCode (hand-written, lean for SpotBugs) ------------------
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof MemberDescriptor that)) {
+            return false;
+        }
+        // featureMask covers: memberKind + memberAccess + declarationModifiers
+        return this.featureMask == that.featureMask
+                && Objects.equals(this.name, that.name)
+                && this.annotationQualifiedNames.equals(that.annotationQualifiedNames);
     }
 }

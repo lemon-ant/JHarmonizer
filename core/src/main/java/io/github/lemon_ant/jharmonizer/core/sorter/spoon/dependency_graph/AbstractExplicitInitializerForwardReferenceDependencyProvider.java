@@ -58,30 +58,13 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
     }
 
     /**
-     * Returns whether the referenced field participates in this dependency rule.
-     *
-     * @param referencedField the referenced field to inspect
-     * @return {@code true} if the referenced field is supported; otherwise {@code false}
+     * Returns whether is static field.
+     * @param field the field
+     * @return {@code true} if is static field; otherwise {@code false}
      */
-    protected abstract boolean isSupportedReferencedField(@NonNull CtField<?> referencedField);
-
-    /**
-     * Returns whether the referrer field participates in this dependency rule.
-     *
-     * @param referrerField the referrer field to inspect
-     * @return {@code true} if the referrer field is supported; otherwise {@code false}
-     */
-    protected abstract boolean isSupportedReferrerField(@NonNull CtField<?> referrerField);
-
-    /**
-     * Returns whether the referrer field explicitly references the referenced field.
-     *
-     * @param referrerField the field containing the reference
-     * @param referencedField the referenced field to match
-     * @return {@code true} if the explicit reference exists; otherwise {@code false}
-     */
-    protected abstract boolean hasExplicitReferenceTo(
-            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
+    protected static boolean isStaticField(@NonNull CtField<?> field) {
+        return field.getModifiers().contains(ModifierKind.STATIC);
+    }
 
     /**
      * Returns whether has explicit qualified reference to.
@@ -114,42 +97,31 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 .anyMatch(candidateReferencedField -> candidateReferencedField == referencedField);
     }
 
-    @NonNull
-    private Set<CtTypeMember> findReferrerFieldsWithExplicitReferenceTo(
-            CtField<?> referencedField, boolean relaxedForwardReferences) {
-        int referencedFieldSrcStart = requireSrcStart(referencedField);
+    /**
+     * Returns whether the referrer field explicitly references the referenced field.
+     *
+     * @param referrerField the field containing the reference
+     * @param referencedField the referenced field to match
+     * @return {@code true} if the explicit reference exists; otherwise {@code false}
+     */
+    protected abstract boolean hasExplicitReferenceTo(
+            @NonNull CtField<?> referrerField, @NonNull CtField<?> referencedField);
 
-        return referencedField.getDeclaringType().getTypeMembers().stream()
-                .filter(typeMember -> typeMember instanceof CtField<?>)
-                // In relaxed mode, only include fields declared before the referenced field (position-guarded).
-                // In strict mode (relaxedForwardReferences=false), include all field members regardless of position.
-                .filter(typeMember ->
-                        !relaxedForwardReferences || requireSrcStart(typeMember) < referencedFieldSrcStart)
-                .map(typeMember -> (CtField<?>) typeMember)
-                .filter(this::isSupportedReferrerField)
-                .filter(referrerField -> hasExplicitReferenceTo(referrerField, referencedField))
-                .map(field -> (CtTypeMember) field)
-                .collect(Collectors.toUnmodifiableSet());
-    }
+    /**
+     * Returns whether the referenced field participates in this dependency rule.
+     *
+     * @param referencedField the referenced field to inspect
+     * @return {@code true} if the referenced field is supported; otherwise {@code false}
+     */
+    protected abstract boolean isSupportedReferencedField(@NonNull CtField<?> referencedField);
 
-    private static boolean isDefaultValueInitializer(CtField<?> referencedField) {
-        CtExpression<?> defaultExpression = referencedField.getDefaultExpression();
-        if (defaultExpression == null) {
-            return true;
-        }
-
-        Optional<CtExpression<?>> foldedExpression =
-                DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(defaultExpression);
-        if (foldedExpression.isEmpty()) {
-            return false;
-        }
-
-        CtExpression<?> evaluatedExpression = foldedExpression.get();
-        return isUnaryMinusZeroLiteral(evaluatedExpression)
-                || castLiteralExpression(evaluatedExpression)
-                        .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
-                        .orElse(false);
-    }
+    /**
+     * Returns whether the referrer field participates in this dependency rule.
+     *
+     * @param referrerField the referrer field to inspect
+     * @return {@code true} if the referrer field is supported; otherwise {@code false}
+     */
+    protected abstract boolean isSupportedReferrerField(@NonNull CtField<?> referrerField);
 
     @NonNull
     private static <T> Optional<CtLiteral<T>> castLiteralExpression(CtExpression<T> expression) {
@@ -177,6 +149,25 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
         };
     }
 
+    private static boolean isDefaultValueInitializer(CtField<?> referencedField) {
+        CtExpression<?> defaultExpression = referencedField.getDefaultExpression();
+        if (defaultExpression == null) {
+            return true;
+        }
+
+        Optional<CtExpression<?>> foldedExpression =
+                DeclaringTypeFieldReferenceUtils.findPartiallyEvaluatedExpression(defaultExpression);
+        if (foldedExpression.isEmpty()) {
+            return false;
+        }
+
+        CtExpression<?> evaluatedExpression = foldedExpression.get();
+        return isUnaryMinusZeroLiteral(evaluatedExpression)
+                || castLiteralExpression(evaluatedExpression)
+                        .map(literalExpression -> isDefaultLiteralValue(referencedField, literalExpression.getValue()))
+                        .orElse(false);
+    }
+
     private static boolean isNumericZeroLiteral(Object literalValue) {
         return literalValue instanceof Number numericLiteral && numericLiteral.doubleValue() == 0D;
     }
@@ -188,12 +179,21 @@ abstract class AbstractExplicitInitializerForwardReferenceDependencyProvider imp
                 && isNumericZeroLiteral(operandLiteral.getValue());
     }
 
-    /**
-     * Returns whether is static field.
-     * @param field the field
-     * @return {@code true} if is static field; otherwise {@code false}
-     */
-    protected static boolean isStaticField(@NonNull CtField<?> field) {
-        return field.getModifiers().contains(ModifierKind.STATIC);
+    @NonNull
+    private Set<CtTypeMember> findReferrerFieldsWithExplicitReferenceTo(
+            CtField<?> referencedField, boolean relaxedForwardReferences) {
+        int referencedFieldSrcStart = requireSrcStart(referencedField);
+
+        return referencedField.getDeclaringType().getTypeMembers().stream()
+                .filter(typeMember -> typeMember instanceof CtField<?>)
+                // In relaxed mode, only include fields declared before the referenced field (position-guarded).
+                // In strict mode (relaxedForwardReferences=false), include all field members regardless of position.
+                .filter(typeMember ->
+                        !relaxedForwardReferences || requireSrcStart(typeMember) < referencedFieldSrcStart)
+                .map(typeMember -> (CtField<?>) typeMember)
+                .filter(this::isSupportedReferrerField)
+                .filter(referrerField -> hasExplicitReferenceTo(referrerField, referencedField))
+                .map(field -> (CtTypeMember) field)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }

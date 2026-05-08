@@ -15,28 +15,7 @@ import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 class SelectorsDeserializerTest {
-
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-    @Test
-    void deserialize_scalarSingleToken_returnsSingleAndGroup() throws IOException {
-        assertThat(parseIncludes("include: a")).isEqualTo(Set.of(Set.of("a")));
-    }
-
-    @Test
-    void deserialize_scalarCommaSeparated_returnsSingleAndGroup() throws IOException {
-        assertThat(parseIncludes("include: a, b")).isEqualTo(Set.of(Set.of("a", "b")));
-    }
-
-    @Test
-    void deserialize_flowSequenceInOneLine_returnsSingleAndGroup() throws IOException {
-        assertThat(parseIncludes("include: [a, b]")).isEqualTo(Set.of(Set.of("a", "b")));
-    }
-
-    @Test
-    void deserialize_blockSequenceWithSingleTokens_returnsMultipleGroups() throws IOException {
-        assertThat(parseIncludes("include:\n  - a\n  - b\n")).isEqualTo(Set.of(Set.of("a"), Set.of("b")));
-    }
 
     @Test
     void deserialize_blockSequenceWithCommaSeparatedItems_returnsExpectedGroups() throws IOException {
@@ -49,6 +28,16 @@ class SelectorsDeserializerTest {
     }
 
     @Test
+    void deserialize_blockSequenceWithSingleTokens_returnsMultipleGroups() throws IOException {
+        assertThat(parseIncludes("include:\n  - a\n  - b\n")).isEqualTo(Set.of(Set.of("a"), Set.of("b")));
+    }
+
+    @Test
+    void deserialize_flowSequenceInOneLine_returnsSingleAndGroup() throws IOException {
+        assertThat(parseIncludes("include: [a, b]")).isEqualTo(Set.of(Set.of("a", "b")));
+    }
+
+    @Test
     void deserialize_returnsUnmodifiableOuterAndInnerSets() throws IOException {
         Set<Set<String>> result = parseIncludes("include: [a, b]");
 
@@ -57,11 +46,13 @@ class SelectorsDeserializerTest {
     }
 
     @Test
-    void deserialize_unsupportedTopLevelNodeType_throwsClearException() {
-        assertThatThrownBy(() -> parseIncludes("include:\n  key: value\n"))
-                .isInstanceOf(JsonMappingException.class)
-                .hasRootCauseInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Unsupported selector value type");
+    void deserialize_scalarCommaSeparated_returnsSingleAndGroup() throws IOException {
+        assertThat(parseIncludes("include: a, b")).isEqualTo(Set.of(Set.of("a", "b")));
+    }
+
+    @Test
+    void deserialize_scalarSingleToken_returnsSingleAndGroup() throws IOException {
+        assertThat(parseIncludes("include: a")).isEqualTo(Set.of(Set.of("a")));
     }
 
     @Test
@@ -78,6 +69,14 @@ class SelectorsDeserializerTest {
                 .isInstanceOf(JsonMappingException.class)
                 .hasRootCauseInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported nested selector item type");
+    }
+
+    @Test
+    void deserialize_unsupportedTopLevelNodeType_throwsClearException() {
+        assertThatThrownBy(() -> parseIncludes("include:\n  key: value\n"))
+                .isInstanceOf(JsonMappingException.class)
+                .hasRootCauseInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unsupported selector value type");
     }
 
     @NonNull

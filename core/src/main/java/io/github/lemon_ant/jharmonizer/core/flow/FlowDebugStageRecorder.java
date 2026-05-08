@@ -24,16 +24,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 final class FlowDebugStageRecorder {
-
     private static final Path BASE_OUTPUT_DIRECTORY = Path.of("debug");
-
     private static final DateTimeFormatter TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyMMdd'T'HHmmss").withZone(ZoneId.systemDefault());
 
     private final boolean enabled;
+    private final Path flowOutputDirectory;
     private final FlowType flowType;
     private final String runTimestampPrefix;
-    private final Path flowOutputDirectory;
 
     /**
      * Creates a new FlowDebugStageRecorder.
@@ -41,27 +39,6 @@ final class FlowDebugStageRecorder {
      */
     FlowDebugStageRecorder(@NonNull FlowType flowType) {
         this(flowType, Clock.systemDefaultZone());
-    }
-
-    @SuppressWarnings("PMD.GuardLogStatement")
-    private FlowDebugStageRecorder(FlowType flowType, Clock clock) {
-        this.enabled = log.isTraceEnabled();
-        this.flowType = flowType;
-        this.runTimestampPrefix = TIMESTAMP_FORMATTER.format(Instant.now(clock));
-        this.flowOutputDirectory = BASE_OUTPUT_DIRECTORY;
-
-        if (enabled) {
-            ensureDirectoryExists(flowOutputDirectory);
-            log.trace("Debug stage recorder enabled. Output directory: {}", flowOutputDirectory.toAbsolutePath());
-        }
-    }
-
-    private static void ensureDirectoryExists(Path directory) {
-        try {
-            Files.createDirectories(directory);
-        } catch (IOException ioException) {
-            throw new UncheckedIOException("Failed to create debug output directory: " + directory, ioException);
-        }
     }
 
     /**
@@ -92,6 +69,27 @@ final class FlowDebugStageRecorder {
             log.trace("Saved debug stage: {}", outputFile.toAbsolutePath());
         } catch (IOException ioException) {
             throw new UncheckedIOException("Failed to write debug stage file: " + outputFile, ioException);
+        }
+    }
+
+    private static void ensureDirectoryExists(Path directory) {
+        try {
+            Files.createDirectories(directory);
+        } catch (IOException ioException) {
+            throw new UncheckedIOException("Failed to create debug output directory: " + directory, ioException);
+        }
+    }
+
+    @SuppressWarnings("PMD.GuardLogStatement")
+    private FlowDebugStageRecorder(FlowType flowType, Clock clock) {
+        this.enabled = log.isTraceEnabled();
+        this.flowType = flowType;
+        this.runTimestampPrefix = TIMESTAMP_FORMATTER.format(Instant.now(clock));
+        this.flowOutputDirectory = BASE_OUTPUT_DIRECTORY;
+
+        if (enabled) {
+            ensureDirectoryExists(flowOutputDirectory);
+            log.trace("Debug stage recorder enabled. Output directory: {}", flowOutputDirectory.toAbsolutePath());
         }
     }
 

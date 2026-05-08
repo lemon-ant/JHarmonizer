@@ -10,6 +10,7 @@ import spoon.reflect.declaration.CtType;
 
 @Value
 public class SerializedSrcWithSkippedTypeRanges {
+
     @NonNull
     String serializedSrcCode;
 

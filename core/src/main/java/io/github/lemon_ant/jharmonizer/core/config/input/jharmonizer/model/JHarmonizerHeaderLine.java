@@ -11,7 +11,6 @@ import lombok.Value;
  */
 @Value
 public class JHarmonizerHeaderLine {
-
     char character;
     int leftPadding;
 

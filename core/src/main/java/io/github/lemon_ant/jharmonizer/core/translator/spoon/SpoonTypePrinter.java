@@ -39,18 +39,10 @@ import spoon.reflect.visitor.TokenWriter;
  * distinguish genuine leading comments from Spoon's misattributed trailing inline comments.
  */
 final class SpoonTypePrinter {
-    @NonNull
-    private final String originalSrcCode;
+    private final boolean blankLineBeforeComment;
 
     @NonNull
-    private final Set<CtType<?>> sortingSkippedTypes;
-
-    @Nullable
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private Map<CtType<?>, SrcCharacterRange> sortingSkippedTypeRanges = new HashMap<>();
-
-    @NonNull
-    private final TokenWriter tokenWriter;
+    private final Predicate<CtType<?>> needsBlankLineAfterTypeHeader;
 
     @NonNull
     private final Predicate<CtTypeMember> needsSeparatorAfter;
@@ -59,9 +51,17 @@ final class SpoonTypePrinter {
     private final BiPredicate<CtTypeMember, Boolean> needsSeparatorBefore;
 
     @NonNull
-    private final Predicate<CtType<?>> needsBlankLineAfterTypeHeader;
+    private final String originalSrcCode;
 
-    private final boolean blankLineBeforeComment;
+    @NonNull
+    private final Set<CtType<?>> sortingSkippedTypes;
+
+    @NonNull
+    private final TokenWriter tokenWriter;
+
+    @Nullable
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    private Map<CtType<?>, SrcCharacterRange> sortingSkippedTypeRanges = new HashMap<>();
 
     /**
      * Creates a new SpoonTypePrinter with compiled printer predicates.
@@ -83,6 +83,40 @@ final class SpoonTypePrinter {
         this.needsSeparatorBefore = compileNeedsSeparatorBefore();
         this.needsBlankLineAfterTypeHeader = compileNeedsBlankLineAfterTypeHeader(printerConfig);
         this.blankLineBeforeComment = printerConfig.isBlankLineBeforeComment();
+    }
+
+    @SuppressWarnings("PMD.NullAssignment")
+    @NonNull
+    Map<CtType<?>, SrcCharacterRange> getSortingSkippedTypeRanges() {
+        Map<CtType<?>, SrcCharacterRange> activeSortingSkippedTypeRanges = requireSortingSkippedTypeRanges();
+        // After handing the ranges off, the printer must not be reused for further skipped-range collection.
+        sortingSkippedTypeRanges = null;
+        return Collections.unmodifiableMap(activeSortingSkippedTypeRanges);
+    }
+
+    /**
+     * Prints an original source fragment while preserving indentation from the start of its line and collapsing
+     * every trailing run of spaces, tabs, and line separators to a single line separator in the output.
+     *
+     * @param start the first significant source index of the fragment
+     * @param end   the inclusive last source index of the fragment
+     * @return the active token writer after the fragment is written
+     */
+    @NonNull
+    TokenWriter printOriginalFragment(int start, int end) {
+        int startWithIndent = SrcCodeUtils.findIndentationStart(start, originalSrcCode);
+        try {
+            String originalCodeFragment =
+                    originalSrcCode.substring(startWithIndent, end + 1).stripTrailing();
+            return tokenWriter.writeCodeSnippet(originalCodeFragment).writeln();
+        } catch (IndexOutOfBoundsException exception) {
+            throw new IllegalStateException(
+                    "Invalid source fragment range: start=" + start
+                            + ", end=" + end
+                            + ", indentationStart=" + startWithIndent
+                            + ", sourceLength=" + originalSrcCode.length(),
+                    exception);
+        }
     }
 
     /**
@@ -127,63 +161,12 @@ final class SpoonTypePrinter {
         printOriginalFragment(maxMemberEnd + 1, typePosition.getSourceEnd());
     }
 
-    /**
-     * Prints an original source fragment while preserving indentation from the start of its line and collapsing
-     * every trailing run of spaces, tabs, and line separators to a single line separator in the output.
-     *
-     * @param start the first significant source index of the fragment
-     * @param end   the inclusive last source index of the fragment
-     * @return the active token writer after the fragment is written
-     */
-    @NonNull
-    TokenWriter printOriginalFragment(int start, int end) {
-        int startWithIndent = SrcCodeUtils.findIndentationStart(start, originalSrcCode);
-        try {
-            String originalCodeFragment =
-                    originalSrcCode.substring(startWithIndent, end + 1).stripTrailing();
-            return tokenWriter.writeCodeSnippet(originalCodeFragment).writeln();
-        } catch (IndexOutOfBoundsException exception) {
-            throw new IllegalStateException(
-                    "Invalid source fragment range: start=" + start
-                            + ", end=" + end
-                            + ", indentationStart=" + startWithIndent
-                            + ", sourceLength=" + originalSrcCode.length(),
-                    exception);
-        }
-    }
-
     private void printSkippedType(CtType<?> type) {
         int outputStart = tokenWriter.toString().length();
         printOriginalFragment(
                 type.getPosition().getSourceStart(), type.getPosition().getSourceEnd());
         int outputEndExclusive = tokenWriter.toString().length();
         requireSortingSkippedTypeRanges().put(type, new SrcCharacterRange(outputStart, outputEndExclusive));
-    }
-
-    private void printTypeMembers(
-            List<CtTypeMember> explicitTypeMembers,
-            Map<CtTypeMember, Integer> correctedEnumMemberStarts,
-            int typeDeclarationStartLine) {
-        // Collect the last source line of each member declaration. Trailing inline comments (e.g. // comment)
-        // are always on the last line of their member, so filtering by end line correctly identifies
-        // misattributed trailing comments even when the declaration spans multiple lines.
-        Set<Integer> memberDeclarationEndLines = explicitTypeMembers.stream()
-                .filter(member -> member.getPosition().isValidPosition())
-                .map(member -> member.getPosition().getEndLine())
-                .collect(Collectors.toUnmodifiableSet());
-        boolean first = true;
-        boolean previousElementNeedSeparatorAfter = false;
-        for (CtTypeMember member : explicitTypeMembers) {
-            previousElementNeedSeparatorAfter = printTypeMember(
-                    member,
-                    explicitTypeMembers,
-                    correctedEnumMemberStarts,
-                    first,
-                    previousElementNeedSeparatorAfter,
-                    memberDeclarationEndLines,
-                    typeDeclarationStartLine);
-            first = false;
-        }
     }
 
     private boolean printTypeMember(
@@ -233,13 +216,30 @@ final class SpoonTypePrinter {
         return currentElementNeedsSeparatorAfter;
     }
 
-    @SuppressWarnings("PMD.NullAssignment")
-    @NonNull
-    Map<CtType<?>, SrcCharacterRange> getSortingSkippedTypeRanges() {
-        Map<CtType<?>, SrcCharacterRange> activeSortingSkippedTypeRanges = requireSortingSkippedTypeRanges();
-        // After handing the ranges off, the printer must not be reused for further skipped-range collection.
-        sortingSkippedTypeRanges = null;
-        return Collections.unmodifiableMap(activeSortingSkippedTypeRanges);
+    private void printTypeMembers(
+            List<CtTypeMember> explicitTypeMembers,
+            Map<CtTypeMember, Integer> correctedEnumMemberStarts,
+            int typeDeclarationStartLine) {
+        // Collect the last source line of each member declaration. Trailing inline comments (e.g. // comment)
+        // are always on the last line of their member, so filtering by end line correctly identifies
+        // misattributed trailing comments even when the declaration spans multiple lines.
+        Set<Integer> memberDeclarationEndLines = explicitTypeMembers.stream()
+                .filter(member -> member.getPosition().isValidPosition())
+                .map(member -> member.getPosition().getEndLine())
+                .collect(Collectors.toUnmodifiableSet());
+        boolean first = true;
+        boolean previousElementNeedSeparatorAfter = false;
+        for (CtTypeMember member : explicitTypeMembers) {
+            previousElementNeedSeparatorAfter = printTypeMember(
+                    member,
+                    explicitTypeMembers,
+                    correctedEnumMemberStarts,
+                    first,
+                    previousElementNeedSeparatorAfter,
+                    memberDeclarationEndLines,
+                    typeDeclarationStartLine);
+            first = false;
+        }
     }
 
     @NonNull

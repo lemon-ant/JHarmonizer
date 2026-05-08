@@ -8,7 +8,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class ExecutableJarLocator {
-
     private static final String EXECUTABLE_JAR_PROPERTY = "jharmonizer.cli.executableJar";
 
     static Path locateExecutableJar() {

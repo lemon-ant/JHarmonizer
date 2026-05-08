@@ -16,7 +16,6 @@ import lombok.Value;
  */
 @Value
 public class Group<TNode> {
-
     List<TNode> items;
 
     /** Convenience factory: creates a group from the given items. */

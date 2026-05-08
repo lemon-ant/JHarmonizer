@@ -44,17 +44,17 @@ public class JHarmonizerMemberGroup implements Serializable {
     @SuppressFBWarnings("EI_EXPOSE_REP")
     List<@NonNull JHarmonizerMemberGroup> memberSubGroups;
 
-    @Nullable
-    Boolean relaxedForwardReferences;
-
     @NonNull
     String name;
 
     @Nullable
-    JHarmonizerSeparator separator;
+    List<JHarmonizerOrderingRule> orderingRules;
 
     @Nullable
-    List<JHarmonizerOrderingRule> orderingRules;
+    Boolean relaxedForwardReferences;
+
+    @Nullable
+    JHarmonizerSeparator separator;
 
     @Builder
     private JHarmonizerMemberGroup(

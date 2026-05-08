@@ -11,8 +11,10 @@ import lombok.Value;
  */
 @Value
 public class UnifiedNameMatcher {
+
     @NonNull
     UnifiedMatchMethod matchMethod;
+
     /**
      * Raw exact string or raw regex pattern (as provided in config).
      */

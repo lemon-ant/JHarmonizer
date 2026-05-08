@@ -15,15 +15,13 @@ import lombok.NonNull;
 public interface IFlow {
 
     /**
-     * Processes a stream of source files, applying the flow strategy to each.
-     * Implementations may extend the pipeline with additional steps
-     * (e.g. fail-fast flows add early termination logic).
+     * Indicates whether this flow modifies source files on disk.
+     * Returns {@code true} for reorder flows that rewrite files in place,
+     * and {@code false} for check flows that only report violations.
      *
-     * @param srcFiles the stream of source files to process
-     * @return a stream of per-file processing results
+     * @return {@code true} if this flow rewrites files; {@code false} if it only checks them
      */
-    @NonNull
-    Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles);
+    boolean isModifyingFlow();
 
     /**
      * Determines whether the processing run was successful based on
@@ -35,11 +33,13 @@ public interface IFlow {
     boolean isSuccessful(boolean hasModifications);
 
     /**
-     * Indicates whether this flow modifies source files on disk.
-     * Returns {@code true} for reorder flows that rewrite files in place,
-     * and {@code false} for check flows that only report violations.
+     * Processes a stream of source files, applying the flow strategy to each.
+     * Implementations may extend the pipeline with additional steps
+     * (e.g. fail-fast flows add early termination logic).
      *
-     * @return {@code true} if this flow rewrites files; {@code false} if it only checks them
+     * @param srcFiles the stream of source files to process
+     * @return a stream of per-file processing results
      */
-    boolean isModifyingFlow();
+    @NonNull
+    Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles);
 }

@@ -38,6 +38,9 @@ public class SpoonAstModel {
     CtType<?> mainType;
 
     @NonNull
+    JHarmonizerOptOuts optOuts;
+
+    @NonNull
     List<CtTypeMember> originalMemberOrder;
 
     @NonNull
@@ -45,9 +48,6 @@ public class SpoonAstModel {
 
     @NonNull
     Supplier<SerializedSrcWithSkippedTypeRanges> serializedSrcCode;
-
-    @NonNull
-    JHarmonizerOptOuts optOuts;
 
     /**
      * Returns the main type.

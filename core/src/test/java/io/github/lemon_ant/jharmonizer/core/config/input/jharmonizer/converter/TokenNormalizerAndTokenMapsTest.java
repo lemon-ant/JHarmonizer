@@ -14,6 +14,21 @@ import org.junit.jupiter.api.Test;
 class TokenNormalizerAndTokenMapsTest {
 
     @Test
+    void normalizeTokens_matcherTokens_preserveOriginalCase() {
+        // Given — name-regex, exact-name, and annotation-matcher tokens must keep their case
+        // so that patterns like ~.*Test$ and @ExtendWith match the actual source identifiers
+        Set<String> rawTokens = Set.of("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$", "class");
+
+        // When
+        Set<String> normalizedTokens = TokenNormalizer.normalizeTokens(rawTokens);
+
+        // Then
+        assertThat(normalizedTokens)
+                .contains("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$")
+                .contains("class");
+    }
+
+    @Test
     void normalizeTokens_mixedCasingWhitespaceAndNulls_returnsTrimmedLowercaseNonBlankTokens() {
         // Given
         Set<String> rawTokens = new HashSet<>();
@@ -29,21 +44,6 @@ class TokenNormalizerAndTokenMapsTest {
 
         // Then
         assertThat(normalizedTokens).containsExactlyInAnyOrder("static", "initializer", "field");
-    }
-
-    @Test
-    void normalizeTokens_matcherTokens_preserveOriginalCase() {
-        // Given — name-regex, exact-name, and annotation-matcher tokens must keep their case
-        // so that patterns like ~.*Test$ and @ExtendWith match the actual source identifiers
-        Set<String> rawTokens = Set.of("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$", "class");
-
-        // When
-        Set<String> normalizedTokens = TokenNormalizer.normalizeTokens(rawTokens);
-
-        // Then
-        assertThat(normalizedTokens)
-                .contains("~.*Test$", "~.*IT$", "=toString", "@BeforeEach", "@~.*Test$")
-                .contains("class");
     }
 
     @Test

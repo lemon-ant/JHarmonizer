@@ -16,13 +16,6 @@ import picocli.CommandLine.Command;
 final class CheckAllCommand extends BaseCommand {
 
     /**
-     * Creates a new {@code check-all} command.
-     */
-    CheckAllCommand() {
-        super(ExitCodes.CHECK_FAILED);
-    }
-
-    /**
      * Returns the flow type.
      *
      * @return the flow type
@@ -31,5 +24,12 @@ final class CheckAllCommand extends BaseCommand {
     @NonNull
     protected FlowType getFlowType() {
         return FlowType.CHECK_ALL;
+    }
+
+    /**
+     * Creates a new {@code check-all} command.
+     */
+    CheckAllCommand() {
+        super(ExitCodes.CHECK_FAILED);
     }
 }

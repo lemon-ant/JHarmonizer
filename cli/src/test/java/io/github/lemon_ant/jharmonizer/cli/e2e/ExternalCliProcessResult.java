@@ -9,25 +9,22 @@ import lombok.Value;
 
 @Value
 class ExternalCliProcessResult {
-    @NonNull
-    List<String> command;
 
     @NonNull
-    Path workingDirectory;
+    List<String> command;
 
     int exitCode;
 
     @NonNull
-    String stdout;
+    String stderr;
 
     @NonNull
-    String stderr;
+    String stdout;
 
     boolean timedOut;
 
-    String combinedOutput() {
-        return stdout + System.lineSeparator() + stderr;
-    }
+    @NonNull
+    Path workingDirectory;
 
     @Override
     public String toString() {
@@ -50,5 +47,9 @@ class ExternalCliProcessResult {
                 + "--- stderr ---"
                 + System.lineSeparator()
                 + stderr;
+    }
+
+    String combinedOutput() {
+        return stdout + System.lineSeparator() + stderr;
     }
 }

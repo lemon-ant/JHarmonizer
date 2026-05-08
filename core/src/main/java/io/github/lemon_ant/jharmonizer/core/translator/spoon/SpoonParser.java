@@ -19,7 +19,6 @@ import spoon.support.compiler.VirtualFile;
 
 @UtilityClass
 public class SpoonParser {
-
     private static final int JAVA_VERSION = 21;
 
     /**
@@ -73,16 +72,6 @@ public class SpoonParser {
                 .build();
     }
 
-    @NonNull
-    private static String describeModelBuildFailure(@NonNull RuntimeException exception) {
-        String exceptionType = exception.getClass().getSimpleName();
-        String exceptionMessage = exception.getMessage();
-        if (exceptionMessage == null || exceptionMessage.isBlank()) {
-            return exceptionType;
-        }
-        return exceptionType + ": " + exceptionMessage;
-    }
-
     /**
      * The Launcher is not a thread-safe and must be initialized for each thread
      *
@@ -98,6 +87,16 @@ public class SpoonParser {
         launcher.getEnvironment().setAutoImports(true);
         launcher.getEnvironment().setLevel("ERROR");
         return launcher;
+    }
+
+    @NonNull
+    private static String describeModelBuildFailure(@NonNull RuntimeException exception) {
+        String exceptionType = exception.getClass().getSimpleName();
+        String exceptionMessage = exception.getMessage();
+        if (exceptionMessage == null || exceptionMessage.isBlank()) {
+            return exceptionType;
+        }
+        return exceptionType + ": " + exceptionMessage;
     }
 
     @NonNull

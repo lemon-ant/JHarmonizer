@@ -55,77 +55,17 @@ public class SortingAlgorithmBenchmark {
     }
 
     @NonNull
-    private static Set<CtType<?>> resolveSkippedTypes(
-            @NonNull CtCompilationUnit workingCompilationUnit, @NonNull Set<String> skippedQualifiedNames) {
-        if (skippedQualifiedNames.isEmpty()) {
-            return Set.of();
-        }
-        Map<String, CtType<?>> typesByQualifiedName = streamTypesRecursively(workingCompilationUnit)
-                .collect(Collectors.toMap(CtType::getQualifiedName, Function.identity(), (first, second) -> first));
-        return skippedQualifiedNames.stream()
-                .map(typesByQualifiedName::get)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    @NonNull
-    private static Stream<CtType<?>> streamTypesRecursively(@NonNull CtCompilationUnit compilationUnit) {
-        return compilationUnit.getDeclaredTypes().stream().flatMap(SortingAlgorithmBenchmark::streamTypeTree);
-    }
-
-    @NonNull
-    private static Stream<CtType<?>> streamTypeTree(@NonNull CtType<?> rootType) {
-        Stream<CtType<?>> rootStream = Stream.of(rootType);
-        Stream<CtType<?>> nestedStream =
-                rootType.getNestedTypes().stream().flatMap(SortingAlgorithmBenchmark::streamTypeTree);
-        return Stream.concat(rootStream, nestedStream);
-    }
-
-    @State(Scope.Thread)
-    public static class BenchmarkState {
-        private static final String E2E_REORDER_FIXTURES_ROOT = "/" + TEST_CASES_DIR + "/core/e2e/reorder/";
-        private static final String E2E_REGRESSION_FIXTURES_ROOT = "/" + TEST_CASES_DIR + "/core/e2e/regression/";
-
-        private SpoonSorter spoonSorter;
-
-        @Param({"1000"})
-        private int measurementBatchSize;
-
-        private List<BenchmarkFixture> baseFixtures;
-        private List<BenchmarkFixture> iterationFixtures;
-
-        @Setup(Level.Trial)
-        public void setUp() {
-            CompiledConfig compiledConfig = ConfigurationManager.loadDefaultConfig();
-            spoonSorter = new SpoonSorter(compiledConfig);
-            List<Path> fixtureRoots = List.of(
-                    resolveClasspathDirectoryPath(E2E_REORDER_FIXTURES_ROOT),
-                    resolveClasspathDirectoryPath(E2E_REGRESSION_FIXTURES_ROOT));
-            baseFixtures = fixtureRoots.stream()
-                    .flatMap(SortingAlgorithmBenchmark::loadFixturesFromRoot)
-                    .toList();
-            iterationFixtures = baseFixtures;
-        }
-
-        @Setup(Level.Iteration)
-        public void prepareIterationBatch() {
-            if (measurementBatchSize <= baseFixtures.size()) {
-                iterationFixtures = baseFixtures.subList(0, measurementBatchSize);
-                return;
-            }
-            iterationFixtures = IntStream.range(0, measurementBatchSize)
-                    .mapToObj(i -> baseFixtures.get(i % baseFixtures.size()))
-                    .toList();
-        }
-    }
-
-    @Value
-    private static class BenchmarkFixture {
-        @NonNull
-        CtCompilationUnit compilationUnitTemplate;
-
-        @NonNull
-        Set<String> sortingSkippedTypeQualifiedNames;
+    private static Stream<BenchmarkFixture> loadFixturesFromRoot(@NonNull Path fixtureRoot) {
+        return SrcFilesHandler.readJavaFiles(fixtureRoot, List.of("**/input/*.java"), List.of())
+                .map(srcFile -> {
+                    SpoonAstModel spoonAstModel =
+                            SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false));
+                    Set<String> sortingSkippedTypeQualifiedNames =
+                            spoonAstModel.getOptOuts().getSortingSkippedTypes().stream()
+                                    .map(CtType::getQualifiedName)
+                                    .collect(Collectors.toUnmodifiableSet());
+                    return new BenchmarkFixture(spoonAstModel.getCompilationUnit(), sortingSkippedTypeQualifiedNames);
+                });
     }
 
     @NonNull
@@ -146,16 +86,77 @@ public class SortingAlgorithmBenchmark {
     }
 
     @NonNull
-    private static Stream<BenchmarkFixture> loadFixturesFromRoot(@NonNull Path fixtureRoot) {
-        return SrcFilesHandler.readJavaFiles(fixtureRoot, List.of("**/input/*.java"), List.of())
-                .map(srcFile -> {
-                    SpoonAstModel spoonAstModel =
-                            SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false));
-                    Set<String> sortingSkippedTypeQualifiedNames =
-                            spoonAstModel.getOptOuts().getSortingSkippedTypes().stream()
-                                    .map(CtType::getQualifiedName)
-                                    .collect(Collectors.toUnmodifiableSet());
-                    return new BenchmarkFixture(spoonAstModel.getCompilationUnit(), sortingSkippedTypeQualifiedNames);
-                });
+    private static Set<CtType<?>> resolveSkippedTypes(
+            @NonNull CtCompilationUnit workingCompilationUnit, @NonNull Set<String> skippedQualifiedNames) {
+        if (skippedQualifiedNames.isEmpty()) {
+            return Set.of();
+        }
+        Map<String, CtType<?>> typesByQualifiedName = streamTypesRecursively(workingCompilationUnit)
+                .collect(Collectors.toMap(CtType::getQualifiedName, Function.identity(), (first, second) -> first));
+        return skippedQualifiedNames.stream()
+                .map(typesByQualifiedName::get)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @NonNull
+    private static Stream<CtType<?>> streamTypeTree(@NonNull CtType<?> rootType) {
+        Stream<CtType<?>> rootStream = Stream.of(rootType);
+        Stream<CtType<?>> nestedStream =
+                rootType.getNestedTypes().stream().flatMap(SortingAlgorithmBenchmark::streamTypeTree);
+        return Stream.concat(rootStream, nestedStream);
+    }
+
+    @NonNull
+    private static Stream<CtType<?>> streamTypesRecursively(@NonNull CtCompilationUnit compilationUnit) {
+        return compilationUnit.getDeclaredTypes().stream().flatMap(SortingAlgorithmBenchmark::streamTypeTree);
+    }
+
+    @State(Scope.Thread)
+    public static class BenchmarkState {
+        private static final String E2E_REGRESSION_FIXTURES_ROOT = "/" + TEST_CASES_DIR + "/core/e2e/regression/";
+        private static final String E2E_REORDER_FIXTURES_ROOT = "/" + TEST_CASES_DIR + "/core/e2e/reorder/";
+
+        private List<BenchmarkFixture> baseFixtures;
+        private List<BenchmarkFixture> iterationFixtures;
+
+        @Param({"1000"})
+        private int measurementBatchSize;
+
+        private SpoonSorter spoonSorter;
+
+        @Setup(Level.Iteration)
+        public void prepareIterationBatch() {
+            if (measurementBatchSize <= baseFixtures.size()) {
+                iterationFixtures = baseFixtures.subList(0, measurementBatchSize);
+                return;
+            }
+            iterationFixtures = IntStream.range(0, measurementBatchSize)
+                    .mapToObj(i -> baseFixtures.get(i % baseFixtures.size()))
+                    .toList();
+        }
+
+        @Setup(Level.Trial)
+        public void setUp() {
+            CompiledConfig compiledConfig = ConfigurationManager.loadDefaultConfig();
+            spoonSorter = new SpoonSorter(compiledConfig);
+            List<Path> fixtureRoots = List.of(
+                    resolveClasspathDirectoryPath(E2E_REORDER_FIXTURES_ROOT),
+                    resolveClasspathDirectoryPath(E2E_REGRESSION_FIXTURES_ROOT));
+            baseFixtures = fixtureRoots.stream()
+                    .flatMap(SortingAlgorithmBenchmark::loadFixturesFromRoot)
+                    .toList();
+            iterationFixtures = baseFixtures;
+        }
+    }
+
+    @Value
+    private static class BenchmarkFixture {
+
+        @NonNull
+        CtCompilationUnit compilationUnitTemplate;
+
+        @NonNull
+        Set<String> sortingSkippedTypeQualifiedNames;
     }
 }

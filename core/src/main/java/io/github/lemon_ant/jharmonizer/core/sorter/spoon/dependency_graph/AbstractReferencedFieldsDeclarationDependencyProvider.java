@@ -43,6 +43,17 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
     }
 
     /**
+     * Resolves the initialization AST of the dependent member that should be scanned for order-dependent field
+     * references.
+     *
+     * <p>Examples include a field or enum-value default expression and an initializer-block body.
+     * If the member has no initialization AST or is not supported, implementations must return
+     * {@link Optional#empty()}.
+     */
+    @NonNull
+    protected abstract Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember);
+
+    /**
      * Returns whether the access is either a non-constant field access or an implicit compile-time-constant access.
      *
      * <p>Java allows qualified forward reads of compile-time constants, but same-type simple-name reads can become
@@ -57,15 +68,4 @@ abstract class AbstractReferencedFieldsDeclarationDependencyProvider implements 
                         referencedFieldAccess.getProviderField())
                 || DeclaringTypeFieldReferenceUtils.isImplicitFieldAccess(referencedFieldAccess.getFieldAccess());
     }
-
-    /**
-     * Resolves the initialization AST of the dependent member that should be scanned for order-dependent field
-     * references.
-     *
-     * <p>Examples include a field or enum-value default expression and an initializer-block body.
-     * If the member has no initialization AST or is not supported, implementations must return
-     * {@link Optional#empty()}.
-     */
-    @NonNull
-    protected abstract Optional<CtElement> resolveDependentInitializationAst(@NonNull CtTypeMember dependentMember);
 }

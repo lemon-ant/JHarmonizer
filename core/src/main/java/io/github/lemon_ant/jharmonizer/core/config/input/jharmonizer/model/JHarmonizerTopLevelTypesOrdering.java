@@ -19,7 +19,6 @@ import org.apache.commons.lang3.Validate;
  */
 @Value
 public class JHarmonizerTopLevelTypesOrdering {
-
     boolean mainTypeFirst;
 
     @NonNull
@@ -27,6 +26,17 @@ public class JHarmonizerTopLevelTypesOrdering {
 
     @NonNull
     List<@NonNull JHarmonizerTopLevelTypeSelector> topLevelTypeSelectors;
+
+    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
+        Set<JHarmonizerTypeKind> encounteredTypeKinds = EnumSet.noneOf(JHarmonizerTypeKind.class);
+        typeGroups.stream()
+                .flatMap(typeGroup -> typeGroup.getTypeKinds().stream())
+                .filter(typeKind -> !encounteredTypeKinds.add(typeKind))
+                .findFirst()
+                .ifPresent(duplicateKind -> {
+                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + duplicateKind);
+                });
+    }
 
     /**
      * Creates a new JHarmonizerTopLevelTypesOrdering.
@@ -50,16 +60,5 @@ public class JHarmonizerTopLevelTypesOrdering {
 
         Validate.notEmpty(orderingRules, "ordering-rules cannot be empty");
         this.orderingRules = Collections.unmodifiableList(orderingRules);
-    }
-
-    private static void validateUniqueTypeKinds(List<JHarmonizerTopLevelTypeSelector> typeGroups) {
-        Set<JHarmonizerTypeKind> encounteredTypeKinds = EnumSet.noneOf(JHarmonizerTypeKind.class);
-        typeGroups.stream()
-                .flatMap(typeGroup -> typeGroup.getTypeKinds().stream())
-                .filter(typeKind -> !encounteredTypeKinds.add(typeKind))
-                .findFirst()
-                .ifPresent(duplicateKind -> {
-                    throw new IllegalArgumentException("Duplicate JHarmonizerTypeKind found: " + duplicateKind);
-                });
     }
 }

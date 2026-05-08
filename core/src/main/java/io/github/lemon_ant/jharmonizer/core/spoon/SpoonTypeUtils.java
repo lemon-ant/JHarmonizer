@@ -22,6 +22,36 @@ public class SpoonTypeUtils {
     private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
     /**
+     * Finds the main type.
+     * @param compilationUnit the compilation unit to inspect
+     * @return the matching main type
+     */
+    @Nullable
+    public static CtType<?> findMainType(@NonNull CtCompilationUnit compilationUnit) {
+        List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
+        if (declaredTypes.size() == ONE_ROOT_TYPE) {
+            return declaredTypes.get(0);
+        }
+
+        String baseName = stripExtension(compilationUnit.getFile().getName());
+        CtType<?> fileNameMatchType = null;
+        for (CtType<?> type : declaredTypes) {
+            if (type.hasModifier(ModifierKind.PUBLIC)) {
+                // Any java file can contain only one main public class, that is main
+                return type;
+            }
+
+            // If there is no public class, we fall back to the class that matches the file name by its class name
+            if (fileNameMatchType == null && type.getSimpleName().equals(baseName)) {
+                fileNameMatchType = type;
+            }
+        }
+
+        // If name matching was found, then return this matched class, otherwise null
+        return fileNameMatchType;
+    }
+
+    /**
      * Returns the all type members.
      * @param compilationUnit the compilation unit to inspect
      * @return the all type members
@@ -73,36 +103,6 @@ public class SpoonTypeUtils {
         return streamRootTypes(compilationUnit).flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
-    /**
-     * Finds the main type.
-     * @param compilationUnit the compilation unit to inspect
-     * @return the matching main type
-     */
-    @Nullable
-    public static CtType<?> findMainType(@NonNull CtCompilationUnit compilationUnit) {
-        List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
-        if (declaredTypes.size() == ONE_ROOT_TYPE) {
-            return declaredTypes.get(0);
-        }
-
-        String baseName = stripExtension(compilationUnit.getFile().getName());
-        CtType<?> fileNameMatchType = null;
-        for (CtType<?> type : declaredTypes) {
-            if (type.hasModifier(ModifierKind.PUBLIC)) {
-                // Any java file can contain only one main public class, that is main
-                return type;
-            }
-
-            // If there is no public class, we fall back to the class that matches the file name by its class name
-            if (fileNameMatchType == null && type.getSimpleName().equals(baseName)) {
-                fileNameMatchType = type;
-            }
-        }
-
-        // If name matching was found, then return this matched class, otherwise null
-        return fileNameMatchType;
-    }
-
     @NonNull
     private static Stream<CtType<?>> streamRootTypes(CtCompilationUnit compilationUnit) {
         return getRootTypes(compilationUnit).stream();
@@ -125,6 +125,11 @@ public class SpoonTypeUtils {
         return Stream.concat(self, membersAndNested);
     }
 
+    @NonNull
+    private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
+        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonTypeUtils::streamTypesTree));
+    }
+
     /**
      * Returns the file name without its extension (the part before the last dot).
      *
@@ -135,10 +140,5 @@ public class SpoonTypeUtils {
     private static String stripExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         return dotIndex == -1 ? fileName : fileName.substring(0, dotIndex);
-    }
-
-    @NonNull
-    private static Stream<CtType<?>> streamTypesTree(CtType<?> type) {
-        return Stream.concat(Stream.of(type), type.getNestedTypes().stream().flatMap(SpoonTypeUtils::streamTypesTree));
     }
 }

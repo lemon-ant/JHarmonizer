@@ -14,17 +14,6 @@ import lombok.Value;
 public class UnifiedFormatting {
 
     /**
-     * Whether to fix/reorder imports in the final formatting pass.
-     */
-    boolean fixImports;
-
-    /**
-     * Formatter style hint (PALANTIR is our default contract).
-     */
-    @NonNull
-    UnifiedFormatterStyle formatterStyle;
-
-    /**
      * Whether to insert a blank line after the type declaration header, before the first member.
      */
     boolean blankLineAfterTypeHeader;
@@ -38,4 +27,15 @@ public class UnifiedFormatting {
      * Whether to insert a blank line between consecutive field declarations.
      */
     boolean blankLineBetweenFields;
+
+    /**
+     * Whether to fix/reorder imports in the final formatting pass.
+     */
+    boolean fixImports;
+
+    /**
+     * Formatter style hint (PALANTIR is our default contract).
+     */
+    @NonNull
+    UnifiedFormatterStyle formatterStyle;
 }

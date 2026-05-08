@@ -17,9 +17,26 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 class GroupBoundaryMarkerTest {
-
     private static final URL FIXTURE_URL = GroupBoundaryMarkerTest.class.getResource(
             "/" + TEST_CASES_DIR + "/core/sorter/spoon/type-member-grouper/valid/TypeMemberGrouperFixture.java");
+
+    @Test
+    void markGroupBoundaries_groupIsEmpty_skipSeparatorMetadataEmission() {
+        // Given
+        CtType<?> parsedMainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
+        CtTypeMember alphaFieldMember =
+                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "alpha");
+        List<MemberGroupBlock> orderedBlocks = List.of(
+                createGroupBlock("Empty header", UnifiedSeparator.HEADER, List.of()),
+                createGroupBlock("No separator member", UnifiedSeparator.NONE, List.of(alphaFieldMember)));
+
+        // When
+        GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
+
+        // Then
+        assertThat(alphaFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
+                .isNull();
+    }
 
     @Test
     void markGroupBoundaries_groupsContainMembers_writeMetadataOnlyToFirstMemberOfEachNonEmptyGroup() {
@@ -49,24 +66,6 @@ class GroupBoundaryMarkerTest {
         assertThat(charlieMethodMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
                 .isEqualTo(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
         assertThat(deltaMethodMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
-                .isNull();
-    }
-
-    @Test
-    void markGroupBoundaries_groupIsEmpty_skipSeparatorMetadataEmission() {
-        // Given
-        CtType<?> parsedMainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(FIXTURE_URL);
-        CtTypeMember alphaFieldMember =
-                SpoonTestCaseUtils.requireTypeMemberBySimpleName(parsedMainType.getTypeMembers(), "alpha");
-        List<MemberGroupBlock> orderedBlocks = List.of(
-                createGroupBlock("Empty header", UnifiedSeparator.HEADER, List.of()),
-                createGroupBlock("No separator member", UnifiedSeparator.NONE, List.of(alphaFieldMember)));
-
-        // When
-        GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
-
-        // Then
-        assertThat(alphaFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
                 .isNull();
     }
 

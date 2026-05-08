@@ -11,7 +11,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class E2EFileUtils {
-
     static void requireRegularFile(@NonNull Path srcFilePath, @NonNull String messagePrefix) {
         if (!Files.isRegularFile(srcFilePath)) {
             throw new IllegalArgumentException(messagePrefix + srcFilePath);

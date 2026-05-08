@@ -79,6 +79,13 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    private static boolean isFieldReadByInitializerBlock(CtAnonymousExecutable initializerBlock, CtField<?> field) {
+        return Optional.ofNullable(initializerBlock.getBody())
+                .map(body -> DeclaringTypeFieldReferenceUtils.findFieldsReadByMember(initializerBlock, body))
+                .map(readFields -> readFields.contains(field))
+                .orElse(false);
+    }
+
     @NonNull
     private static Stream<CtAnonymousExecutable> streamInitializerBlocksReadingField(
             CtType<?> declaringType,
@@ -97,12 +104,5 @@ final class InitializerBlockMutableFieldReadDependencyProvider implements Member
                 .filter(initializerBlock ->
                         !relaxedForwardReferences || requireSrcStart(initializerBlock) < dependentSrcStart)
                 .filter(initializerBlock -> isFieldReadByInitializerBlock(initializerBlock, field));
-    }
-
-    private static boolean isFieldReadByInitializerBlock(CtAnonymousExecutable initializerBlock, CtField<?> field) {
-        return Optional.ofNullable(initializerBlock.getBody())
-                .map(body -> DeclaringTypeFieldReferenceUtils.findFieldsReadByMember(initializerBlock, body))
-                .map(readFields -> readFields.contains(field))
-                .orElse(false);
     }
 }

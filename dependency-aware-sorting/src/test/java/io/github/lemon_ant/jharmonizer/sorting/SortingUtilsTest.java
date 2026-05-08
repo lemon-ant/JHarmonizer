@@ -27,6 +27,30 @@ class SortingUtilsTest {
     }
 
     @Test
+    void resolveDependencyEdge_nullEdge_throwsNullPointerException() {
+        // Given
+        Map<String, Integer> emptyMap = Collections.emptyMap();
+
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(null, emptyMap));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void resolveDependencyEdge_nullMap_throwsNullPointerException() {
+        // Given
+        Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("dependent", "provider");
+
+        // When
+        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(edge, null));
+
+        // Then
+        assertThat(thrown).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void resolveGroupMemberIndex_nullMap_throwsNullPointerException() {
         // When
         Throwable thrown = catchThrowable(() -> SortingUtils.resolveGroupMemberIndex(null, "item"));
@@ -51,30 +75,6 @@ class SortingUtilsTest {
     void validateNotAlreadyGrouped_nullMember_throwsNullPointerException() {
         // When
         Throwable thrown = catchThrowable(() -> SortingUtils.validateNotAlreadyGrouped(SortingUtils.UNASSIGNED, null));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void resolveDependencyEdge_nullEdge_throwsNullPointerException() {
-        // Given
-        Map<String, Integer> emptyMap = Collections.emptyMap();
-
-        // When
-        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(null, emptyMap));
-
-        // Then
-        assertThat(thrown).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void resolveDependencyEdge_nullMap_throwsNullPointerException() {
-        // Given
-        Dependencies.Dependency<String> edge = new Dependencies.Dependency<>("provider", "dependent");
-
-        // When
-        Throwable thrown = catchThrowable(() -> SortingUtils.resolveDependencyEdge(edge, null));
 
         // Then
         assertThat(thrown).isInstanceOf(NullPointerException.class);

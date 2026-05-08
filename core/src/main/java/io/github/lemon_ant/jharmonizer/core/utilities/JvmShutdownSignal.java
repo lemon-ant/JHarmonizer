@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("PMD.DoNotUseThreads")
 @UtilityClass
 public class JvmShutdownSignal {
-
     private static final AtomicBoolean SHUTTING_DOWN = new AtomicBoolean(false);
 
     static {

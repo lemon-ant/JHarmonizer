@@ -26,36 +26,6 @@ import lombok.experimental.UtilityClass;
 class MojoTestUtils {
 
     /**
-     * Injects a value into a declared field of the given object, searching up the class hierarchy.
-     * Uses reflection to replicate Maven's own parameter injection mechanism.
-     *
-     * @param target    the object to inject into
-     * @param fieldName the name of the field to set
-     * @param value     the value to assign
-     * @throws IllegalStateException if the field cannot be found or set
-     */
-    static void injectField(@NonNull Object target, @NonNull String fieldName, Object value) {
-        Class<?> searchClass = target.getClass();
-        while (searchClass != null) {
-            try {
-                Field declaredField = searchClass.getDeclaredField(fieldName);
-                declaredField.setAccessible(true);
-                declaredField.set(target, value);
-                return;
-            } catch (NoSuchFieldException e) {
-                searchClass = searchClass.getSuperclass();
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException(
-                        "Cannot inject field '" + fieldName + "' in "
-                                + target.getClass().getName(),
-                        e);
-            }
-        }
-        throw new IllegalStateException("Field '" + fieldName + "' not found in class hierarchy of "
-                + target.getClass().getName());
-    }
-
-    /**
      * Copies all classpath resources from the given resource directory into a target directory,
      * preserving the file names.
      *
@@ -87,26 +57,6 @@ class MojoTestUtils {
     }
 
     /**
-     * Reads the content of a classpath resource as a UTF-8 string.
-     *
-     * @param resourcePath the classpath path (must start with {@code /})
-     * @return the resource content
-     * @throws IllegalArgumentException if the resource cannot be found
-     * @throws UncheckedIOException     if reading fails
-     */
-    @NonNull
-    static String readResourceAsString(@NonNull String resourcePath) {
-        try (InputStream inputStream = MojoTestUtils.class.getResourceAsStream(resourcePath)) {
-            if (inputStream == null) {
-                throw new IllegalArgumentException("Classpath resource not found: " + resourcePath);
-            }
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to read classpath resource: " + resourcePath, e);
-        }
-    }
-
-    /**
      * Copies a single classpath resource to a target file path and returns the target path.
      *
      * @param resourcePath the classpath path (must start with {@code /})
@@ -125,6 +75,56 @@ class MojoTestUtils {
             return targetFile;
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to extract resource " + resourcePath, e);
+        }
+    }
+
+    /**
+     * Injects a value into a declared field of the given object, searching up the class hierarchy.
+     * Uses reflection to replicate Maven's own parameter injection mechanism.
+     *
+     * @param target    the object to inject into
+     * @param fieldName the name of the field to set
+     * @param value     the value to assign
+     * @throws IllegalStateException if the field cannot be found or set
+     */
+    static void injectField(@NonNull Object target, @NonNull String fieldName, Object value) {
+        Class<?> searchClass = target.getClass();
+        while (searchClass != null) {
+            try {
+                Field declaredField = searchClass.getDeclaredField(fieldName);
+                declaredField.setAccessible(true);
+                declaredField.set(target, value);
+                return;
+            } catch (NoSuchFieldException e) {
+                searchClass = searchClass.getSuperclass();
+            } catch (IllegalAccessException e) {
+                throw new IllegalStateException(
+                        "Cannot inject field '" + fieldName + "' in "
+                                + target.getClass().getName(),
+                        e);
+            }
+        }
+        throw new IllegalStateException("Field '" + fieldName + "' not found in class hierarchy of "
+                + target.getClass().getName());
+    }
+
+    /**
+     * Reads the content of a classpath resource as a UTF-8 string.
+     *
+     * @param resourcePath the classpath path (must start with {@code /})
+     * @return the resource content
+     * @throws IllegalArgumentException if the resource cannot be found
+     * @throws UncheckedIOException     if reading fails
+     */
+    @NonNull
+    static String readResourceAsString(@NonNull String resourcePath) {
+        try (InputStream inputStream = MojoTestUtils.class.getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Classpath resource not found: " + resourcePath);
+            }
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read classpath resource: " + resourcePath, e);
         }
     }
 

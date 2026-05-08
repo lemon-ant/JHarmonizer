@@ -14,6 +14,24 @@ import org.junit.jupiter.api.Test;
 class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
 
     @Test
+    void convert2FlexibleUnified_fullPartialFormattingWithStyle_convertsFormatterStyle() {
+        // Given
+        JHarmonizerFlexibleFormatting flexibleFormatting =
+                new JHarmonizerFlexibleFormatting(null, FormatterStyle.PALANTIR, null, null, null);
+        JHarmonizerFlexibleConfig vendorConfig =
+                new JHarmonizerFlexibleConfig(null, flexibleFormatting, null, null, null, null);
+
+        // When
+        FlexibleUnifiedConfig unifiedConfig =
+                JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(vendorConfig);
+
+        // Then
+        assertThat(unifiedConfig.getFormatting()).isPresent();
+        assertThat(unifiedConfig.getFormatting().get().getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
+        assertThat(unifiedConfig.getFormatting().get().getFixImports()).isEmpty();
+    }
+
+    @Test
     void convert2FlexibleUnified_memberGroupsMissing_keepsRootMemberGroupsAbsent() {
         // Given
         JHarmonizerFlexibleConfig vendorConfig = new JHarmonizerFlexibleConfig(null, null, true, null, null, null);
@@ -44,23 +62,5 @@ class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
         assertThat(unifiedConfig.getFormatting().get().getFormatterStyle()).isEmpty();
         assertThat(unifiedConfig.getFormatting().get().getBlankLineBetweenFields())
                 .isEmpty();
-    }
-
-    @Test
-    void convert2FlexibleUnified_fullPartialFormattingWithStyle_convertsFormatterStyle() {
-        // Given
-        JHarmonizerFlexibleFormatting flexibleFormatting =
-                new JHarmonizerFlexibleFormatting(null, FormatterStyle.PALANTIR, null, null, null);
-        JHarmonizerFlexibleConfig vendorConfig =
-                new JHarmonizerFlexibleConfig(null, flexibleFormatting, null, null, null, null);
-
-        // When
-        FlexibleUnifiedConfig unifiedConfig =
-                JHarmonizerFlexible2FlexibleUnifiedConverter.convert2FlexibleUnified(vendorConfig);
-
-        // Then
-        assertThat(unifiedConfig.getFormatting()).isPresent();
-        assertThat(unifiedConfig.getFormatting().get().getFormatterStyle()).contains(UnifiedFormatterStyle.PALANTIR);
-        assertThat(unifiedConfig.getFormatting().get().getFixImports()).isEmpty();
     }
 }

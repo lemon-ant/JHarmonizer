@@ -17,6 +17,7 @@ import org.apache.commons.lang3.Validate;
 @Value
 @JsonDeserialize(using = TypeGroupDeserializer.class)
 public class JHarmonizerTopLevelTypeSelector {
+
     @NonNull
     Set<@NonNull JHarmonizerTypeKind> typeKinds;
 

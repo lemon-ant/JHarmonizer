@@ -10,8 +10,74 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class DiffReporterTest {
-
     private static final String FILE_PATH = "com/example/Sample.java";
+
+    @Nested
+    class BlankLineVisualization {
+
+        @Test
+        void computeDiff_blankLineRemoved_visualizesAsParagraphMark() {
+            // Given
+            String original = "class A {\n\n    void a() {}\n}\n";
+            String revised = "class A {\n    void a() {}\n}\n";
+            WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
+
+            // When
+            String result = computeDiff(FILE_PATH, original, revised);
+
+            // Then
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|" + style.getEolMark()));
+        }
+    }
+
+    @Nested
+    class HunkTruncation {
+
+        @Test
+        void computeDiff_hunkWithMoreThanMaxChangedLines_truncatesWithLineOmissionSummary() {
+            // Given
+            String original = TestCaseResourceUtils.readClasspathResourceAsString(
+                    "/test-cases/core/diff/03-large-hunk/original.txt");
+            String revised = TestCaseResourceUtils.readClasspathResourceAsString(
+                    "/test-cases/core/diff/03-large-hunk/revised.txt");
+
+            // When
+            String result = computeDiff(FILE_PATH, original, revised);
+
+            // Then
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            long removedLineCount = java.util.Arrays.stream(diffLines)
+                    .filter(diffLine -> diffLine.startsWith("-"))
+                    .count();
+            long addedLineCount = java.util.Arrays.stream(diffLines)
+                    .filter(diffLine -> diffLine.startsWith("+"))
+                    .count();
+            assertThat(removedLineCount).isLessThanOrEqualTo(20);
+            assertThat(addedLineCount).isLessThanOrEqualTo(20);
+            assertThat(result).contains("more removed").contains("more added").contains("lines omitted");
+        }
+
+        @Test
+        void computeDiff_moreThanMaxHunksPerFile_truncatesWithOmissionSummary() {
+            // Given
+            String original = TestCaseResourceUtils.readClasspathResourceAsString(
+                    "/test-cases/core/diff/02-many-hunks/original.txt");
+            String revised = TestCaseResourceUtils.readClasspathResourceAsString(
+                    "/test-cases/core/diff/02-many-hunks/revised.txt");
+
+            // When
+            String result = computeDiff(FILE_PATH, original, revised);
+
+            // Then
+            String[] diffLines = result.split(System.lineSeparator(), -1);
+            long hunkHeaderCount = java.util.Arrays.stream(diffLines)
+                    .filter(diffLine -> diffLine.startsWith("@@ "))
+                    .count();
+            assertThat(hunkHeaderCount).isEqualTo(3);
+            assertThat(result).contains("more changed hunks omitted");
+        }
+    }
 
     @Nested
     class IdenticalTexts {
@@ -87,73 +153,6 @@ class DiffReporterTest {
                     .allSatisfy(diffLine -> assertThat(diffLine)
                             .doesNotContain(style.getSpaceMark())
                             .doesNotContain(style.getTabMark()));
-        }
-    }
-
-    @Nested
-    class BlankLineVisualization {
-
-        @Test
-        void computeDiff_blankLineRemoved_visualizesAsParagraphMark() {
-            // Given
-            String original = "class A {\n\n    void a() {}\n}\n";
-            String revised = "class A {\n    void a() {}\n}\n";
-            WhitespaceVisualizationStyle style = ConsoleUnicodeDetector.resolveStyle();
-
-            // When
-            String result = computeDiff(FILE_PATH, original, revised);
-
-            // Then
-            String[] diffLines = result.split(System.lineSeparator(), -1);
-            assertThat(diffLines).anySatisfy(diffLine -> assertThat(diffLine).isEqualTo("-|" + style.getEolMark()));
-        }
-    }
-
-    @Nested
-    class HunkTruncation {
-
-        @Test
-        void computeDiff_moreThanMaxHunksPerFile_truncatesWithOmissionSummary() {
-            // Given
-            String original = TestCaseResourceUtils.readClasspathResourceAsString(
-                    "/test-cases/core/diff/02-many-hunks/original.txt");
-            String revised = TestCaseResourceUtils.readClasspathResourceAsString(
-                    "/test-cases/core/diff/02-many-hunks/revised.txt");
-
-            // When
-            String result = computeDiff(FILE_PATH, original, revised);
-
-            // Then
-            String[] diffLines = result.split(System.lineSeparator(), -1);
-            long hunkHeaderCount = java.util.Arrays.stream(diffLines)
-                    .filter(diffLine -> diffLine.startsWith("@@ "))
-                    .count();
-            assertThat(hunkHeaderCount).isEqualTo(3);
-            assertThat(result).contains("more changed hunks omitted");
-        }
-
-        @Test
-        void computeDiff_hunkWithMoreThanMaxChangedLines_truncatesWithLineOmissionSummary() {
-            // Given
-            String original = TestCaseResourceUtils.readClasspathResourceAsString(
-                    "/test-cases/core/diff/03-large-hunk/original.txt");
-            String revised = TestCaseResourceUtils.readClasspathResourceAsString(
-                    "/test-cases/core/diff/03-large-hunk/revised.txt");
-
-            // When
-            String result = computeDiff(FILE_PATH, original, revised);
-
-            // Then
-            String[] diffLines = result.split(System.lineSeparator(), -1);
-            long removedLineCount = java.util.Arrays.stream(diffLines)
-                    .filter(diffLine -> diffLine.startsWith("-"))
-                    .count();
-            long addedLineCount = java.util.Arrays.stream(diffLines)
-                    .filter(diffLine -> diffLine.startsWith("+"))
-                    .count();
-            assertThat(removedLineCount).isLessThanOrEqualTo(20);
-            assertThat(addedLineCount).isLessThanOrEqualTo(20);
-            assertThat(result).contains("more removed").contains("more added").contains("lines omitted");
         }
     }
 }

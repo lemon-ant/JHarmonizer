@@ -14,7 +14,6 @@ import org.apache.commons.lang3.Validate;
  */
 @Value
 public class UnifiedTopLevelTypesOrdering {
-
     boolean mainTypeFirst;
 
     @NonNull

@@ -26,20 +26,13 @@ class ReorderFlowIntegrationTest {
     Path temporaryDirectory;
 
     @Test
-    void processStream_fullyOffOptOut_returnsSkippedResultAndLeavesFileUnchanged() throws IOException {
+    void isSuccessful_withOrWithoutModifications_alwaysReturnsTrue() {
         // Given
-        String originalSrcCode = "// @jharmonizer:fully-off\nclass Z { void b() {} void a() {} }\n";
-        Path javaFilePath = writeJavaFile("Z.java", originalSrcCode);
-        SrcFile srcFile = createSrcFile(originalSrcCode, javaFilePath);
         ReorderFlow reorderFlow = createFlow(false);
 
-        // When
-        FileProcessingResult fileProcessingResult =
-                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
-
-        // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
+        // When / Then
+        assertThat(reorderFlow.isSuccessful(false)).isTrue();
+        assertThat(reorderFlow.isSuccessful(true)).isTrue();
     }
 
     @Test
@@ -60,11 +53,11 @@ class ReorderFlowIntegrationTest {
     }
 
     @Test
-    void processStream_unformattedFileWithoutBackups_rewritesFileNoBackup() throws IOException {
+    void processStream_fullyOffOptOut_returnsSkippedResultAndLeavesFileUnchanged() throws IOException {
         // Given
-        String unformattedSrcCode = "class B { void b() {} void a() {} }";
-        Path javaFilePath = writeJavaFile("B.java", unformattedSrcCode);
-        SrcFile srcFile = createSrcFile(unformattedSrcCode, javaFilePath);
+        String originalSrcCode = "// @jharmonizer:fully-off\nclass Z { void b() {} void a() {} }\n";
+        Path javaFilePath = writeJavaFile("Z.java", originalSrcCode);
+        SrcFile srcFile = createSrcFile(originalSrcCode, javaFilePath);
         ReorderFlow reorderFlow = createFlow(false);
 
         // When
@@ -72,12 +65,8 @@ class ReorderFlowIntegrationTest {
                 reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus())
-                .isNotEqualTo(FileProcessingStatus.UNCHANGED)
-                .isNotEqualTo(FileProcessingStatus.SKIPPED);
-        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(unformattedSrcCode);
-        Path backupFilePath = javaFilePath.resolveSibling("B.java.bak");
-        assertThat(backupFilePath).doesNotExist();
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
     }
 
     @Test
@@ -102,13 +91,24 @@ class ReorderFlowIntegrationTest {
     }
 
     @Test
-    void isSuccessful_withOrWithoutModifications_alwaysReturnsTrue() {
+    void processStream_unformattedFileWithoutBackups_rewritesFileNoBackup() throws IOException {
         // Given
+        String unformattedSrcCode = "class B { void b() {} void a() {} }";
+        Path javaFilePath = writeJavaFile("B.java", unformattedSrcCode);
+        SrcFile srcFile = createSrcFile(unformattedSrcCode, javaFilePath);
         ReorderFlow reorderFlow = createFlow(false);
 
-        // When / Then
-        assertThat(reorderFlow.isSuccessful(false)).isTrue();
-        assertThat(reorderFlow.isSuccessful(true)).isTrue();
+        // When
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus())
+                .isNotEqualTo(FileProcessingStatus.UNCHANGED)
+                .isNotEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(unformattedSrcCode);
+        Path backupFilePath = javaFilePath.resolveSibling("B.java.bak");
+        assertThat(backupFilePath).doesNotExist();
     }
 
     @NonNull

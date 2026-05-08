@@ -25,23 +25,6 @@ import org.slf4j.LoggerFactory;
 @UtilityClass
 class CommandTestUtils {
 
-    @NonNull
-    static MockedConstruction<SrcProcessor> mockSuccessfulProcessorConstruction() {
-        return mockConstruction(SrcProcessor.class, (mock, context) -> {
-            when(mock.processSources(any(Path.class), any(), any(), any())).thenReturn(buildSuccessfulResult());
-        });
-    }
-
-    /**
-     * Creates a real successful {@link SrcProcessingResult} for test stubs.
-     *
-     * @return a successful processing result with mock statistics
-     */
-    @NonNull
-    static SrcProcessingResult buildSuccessfulResult() {
-        return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), true);
-    }
-
     /**
      * Creates a real failed {@link SrcProcessingResult} for test stubs.
      *
@@ -52,12 +35,14 @@ class CommandTestUtils {
         return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), false);
     }
 
+    /**
+     * Creates a real successful {@link SrcProcessingResult} for test stubs.
+     *
+     * @return a successful processing result with mock statistics
+     */
     @NonNull
-    static AutoCloseable suppressBaseCommandLogs() {
-        Logger logger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
-        Level previousLevel = logger.getLevel();
-        logger.setLevel(Level.OFF);
-        return () -> logger.setLevel(previousLevel);
+    static SrcProcessingResult buildSuccessfulResult() {
+        return SrcProcessingResultCreator.create(mock(AggregatedProcessingStatistic.class), true);
     }
 
     /**
@@ -79,5 +64,20 @@ class CommandTestUtils {
             appender.stop();
             capturedEvents.addAll(appender.list);
         };
+    }
+
+    @NonNull
+    static MockedConstruction<SrcProcessor> mockSuccessfulProcessorConstruction() {
+        return mockConstruction(SrcProcessor.class, (mock, context) -> {
+            when(mock.processSources(any(Path.class), any(), any(), any())).thenReturn(buildSuccessfulResult());
+        });
+    }
+
+    @NonNull
+    static AutoCloseable suppressBaseCommandLogs() {
+        Logger logger = (Logger) LoggerFactory.getLogger(BaseCommand.class);
+        Level previousLevel = logger.getLevel();
+        logger.setLevel(Level.OFF);
+        return () -> logger.setLevel(previousLevel);
     }
 }

@@ -34,18 +34,6 @@ class PathDisplayFormatUtilTest {
     }
 
     @Test
-    void abbreviatePathForDisplay_shortPath_returnsOriginalPath() {
-        // Given
-        Path shortPath = Path.of("DefaultConfigComplexTypesScenario.java");
-
-        // When
-        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(shortPath, 100);
-
-        // Then
-        assertThat(abbreviatedPath).isEqualTo(shortPath.toString());
-    }
-
-    @Test
     void abbreviatePathForDisplay_maxTotalLengthTooSmall_throwsIllegalArgumentException() {
         // Given
         Path path = Path.of("some/long/path/to/MyClass.java");
@@ -58,5 +46,17 @@ class PathDisplayFormatUtilTest {
         assertThat(thrown)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("maxTotalLength is too small");
+    }
+
+    @Test
+    void abbreviatePathForDisplay_shortPath_returnsOriginalPath() {
+        // Given
+        Path shortPath = Path.of("DefaultConfigComplexTypesScenario.java");
+
+        // When
+        String abbreviatedPath = PathDisplayFormatUtil.abbreviatePathForDisplay(shortPath, 100);
+
+        // Then
+        assertThat(abbreviatedPath).isEqualTo(shortPath.toString());
     }
 }

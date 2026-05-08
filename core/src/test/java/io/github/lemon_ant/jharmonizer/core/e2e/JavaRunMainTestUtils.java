@@ -15,7 +15,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class JavaRunMainTestUtils {
-
     private static final String TEST_RUN_PREFIX = "test-run-";
 
     static RunResult runJavaMainMethod(@NonNull Path srcFilePath, @NonNull Path classesOutputDirectoryPath)
@@ -38,14 +37,7 @@ class JavaRunMainTestUtils {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.APPEND);
 
-        return new RunResult(processExitCode, javaOutput, diagnosticsPath, className);
-    }
-
-    @NonNull
-    private static String resolveClassName(Path javaFile) {
-        String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
-        String packageName = extractPackageName(javaFile);
-        return packageName.isBlank() ? className : packageName + "." + className;
+        return new RunResult(className, diagnosticsPath, processExitCode, javaOutput);
     }
 
     @NonNull
@@ -62,11 +54,18 @@ class JavaRunMainTestUtils {
         }
     }
 
+    @NonNull
+    private static String resolveClassName(Path javaFile) {
+        String className = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
+        String packageName = extractPackageName(javaFile);
+        return packageName.isBlank() ? className : packageName + "." + className;
+    }
+
     @Value
     static class RunResult {
+        String className;
+        Path diagnosticsPath;
         int exitCode;
         String output;
-        Path diagnosticsPath;
-        String className;
     }
 }

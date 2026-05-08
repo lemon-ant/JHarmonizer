@@ -22,9 +22,14 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class ExternalCliProcessRunner {
-
-    private static final long PROCESS_TIMEOUT_SECONDS = 90;
     private static final String JAVA_TOOL_OPTIONS_MESSAGE_PREFIX = "Picked up JAVA_TOOL_OPTIONS: ";
+    private static final long PROCESS_TIMEOUT_SECONDS = 90;
+
+    static String normalizeErrorOutput(@NonNull String stderr) {
+        return stderr.lines()
+                .filter(line -> !line.startsWith(JAVA_TOOL_OPTIONS_MESSAGE_PREFIX))
+                .collect(Collectors.joining(System.lineSeparator()));
+    }
 
     static ExternalCliProcessResult run(
             @NonNull Path executableJar, @NonNull Path workingDirectory, String... arguments)
@@ -51,11 +56,20 @@ class ExternalCliProcessRunner {
             int exitCode = completed ? process.exitValue() : -1;
             return new ExternalCliProcessResult(
                     List.copyOf(command),
-                    workingDirectory.toAbsolutePath().normalize(),
                     exitCode,
-                    getOutput(stdoutFuture),
                     normalizeErrorOutput(getOutput(stderrFuture)),
-                    !completed);
+                    getOutput(stdoutFuture),
+                    !completed,
+                    workingDirectory.toAbsolutePath().normalize());
+        }
+    }
+
+    @NonNull
+    private static String getOutput(Future<String> outputFuture) throws InterruptedException {
+        try {
+            return outputFuture.get();
+        } catch (ExecutionException exception) {
+            throw new IllegalStateException("Failed to capture CLI process output", exception.getCause());
         }
     }
 
@@ -70,20 +84,5 @@ class ExternalCliProcessRunner {
             mirrorStream.flush();
         }
         return outputBuffer.toString(StandardCharsets.UTF_8);
-    }
-
-    @NonNull
-    private static String getOutput(Future<String> outputFuture) throws InterruptedException {
-        try {
-            return outputFuture.get();
-        } catch (ExecutionException exception) {
-            throw new IllegalStateException("Failed to capture CLI process output", exception.getCause());
-        }
-    }
-
-    static String normalizeErrorOutput(@NonNull String stderr) {
-        return stderr.lines()
-                .filter(line -> !line.startsWith(JAVA_TOOL_OPTIONS_MESSAGE_PREFIX))
-                .collect(Collectors.joining(System.lineSeparator()));
     }
 }

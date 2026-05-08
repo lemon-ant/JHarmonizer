@@ -36,14 +36,13 @@ import org.jspecify.annotations.Nullable;
  */
 @UtilityClass
 public class MemberDeclarationFlagsUtil {
-
     private static final int DECLARATION_MODIFIER_COUNT = DeclarationModifier.values().length;
     private static final int DECLARATION_MODIFIER_OFFSET = 0;
     private static final int INTEGER_BITS_COUNT = 32;
     private static final int MEMBER_ACCESS_COUNT = MemberAccess.values().length;
     private static final int MEMBER_ACCESS_OFFSET = DECLARATION_MODIFIER_OFFSET + DECLARATION_MODIFIER_COUNT;
-    private static final int MEMBER_KIND_OFFSET = MEMBER_ACCESS_OFFSET + MEMBER_ACCESS_COUNT;
     private static final int MEMBER_KIND_COUNT = MemberKind.values().length;
+    private static final int MEMBER_KIND_OFFSET = MEMBER_ACCESS_OFFSET + MEMBER_ACCESS_COUNT;
     private static final int TOTAL_FEATURE_BITS = DECLARATION_MODIFIER_COUNT + MEMBER_ACCESS_COUNT + MEMBER_KIND_COUNT;
 
     static {
@@ -84,34 +83,6 @@ public class MemberDeclarationFlagsUtil {
     }
 
     /**
-     * Encodes multiple declaration attributes into a single bit mask.
-     * Combines flags for kinds, access levels, and modifiers using bitwise OR.
-     * Empty sets contribute 0 (i.e., no requirement for that category).
-     *
-     * @param memberKinds          non-null set of kinds to encode (may be empty)
-     * @param memberAccesses       non-null set of access levels to encode (may be empty)
-     * @param declarationModifiers non-null set of modifiers to encode (may be empty)
-     * @return bit mask equal to OR of all encoded kind, access, and modifier flags
-     */
-    public static int encodeMemberDeclarationFlags(
-            @NonNull Set<MemberKind> memberKinds,
-            @NonNull Set<MemberAccess> memberAccesses,
-            @NonNull Set<DeclarationModifier> declarationModifiers) {
-
-        int kindFlags = memberKinds.stream()
-                .mapToInt(MemberDeclarationFlagsUtil::encodeMemberKindToFlag)
-                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
-
-        int accessFlags = memberAccesses.stream()
-                .mapToInt(MemberDeclarationFlagsUtil::encodeMemberAccessToFlag)
-                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
-
-        int modifierFlags = encodeDeclarationModifiersToFlags(declarationModifiers);
-
-        return kindFlags | accessFlags | modifierFlags;
-    }
-
-    /**
      * Encodes member declaration flags into a single 32-bit mask.
      *
      * <p>The resulting mask is the bitwise OR of the three segments:</p>
@@ -138,6 +109,34 @@ public class MemberDeclarationFlagsUtil {
         return encodeMemberKindToFlag(memberKind)
                 | encodeMemberAccessToFlag(memberAccess)
                 | encodeDeclarationModifiersToFlags(declarationModifiers);
+    }
+
+    /**
+     * Encodes multiple declaration attributes into a single bit mask.
+     * Combines flags for kinds, access levels, and modifiers using bitwise OR.
+     * Empty sets contribute 0 (i.e., no requirement for that category).
+     *
+     * @param memberKinds          non-null set of kinds to encode (may be empty)
+     * @param memberAccesses       non-null set of access levels to encode (may be empty)
+     * @param declarationModifiers non-null set of modifiers to encode (may be empty)
+     * @return bit mask equal to OR of all encoded kind, access, and modifier flags
+     */
+    public static int encodeMemberDeclarationFlags(
+            @NonNull Set<MemberKind> memberKinds,
+            @NonNull Set<MemberAccess> memberAccesses,
+            @NonNull Set<DeclarationModifier> declarationModifiers) {
+
+        int kindFlags = memberKinds.stream()
+                .mapToInt(MemberDeclarationFlagsUtil::encodeMemberKindToFlag)
+                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
+
+        int accessFlags = memberAccesses.stream()
+                .mapToInt(MemberDeclarationFlagsUtil::encodeMemberAccessToFlag)
+                .reduce(0, (leftMask, rightMask) -> leftMask | rightMask);
+
+        int modifierFlags = encodeDeclarationModifiersToFlags(declarationModifiers);
+
+        return kindFlags | accessFlags | modifierFlags;
     }
 
     /**

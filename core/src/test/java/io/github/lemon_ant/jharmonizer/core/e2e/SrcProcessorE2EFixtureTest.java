@@ -24,18 +24,23 @@ import org.junit.jupiter.params.provider.MethodSource;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SrcProcessorE2EFixtureTest
         extends AbstractSrcProcessorScenarioE2ETest<SrcProcessorE2EFixtureTest.StrictValidationState> {
-
+    private static final String CONFIG_FILE = "config.yml";
     private static final String FIXTURES_RESOURCE = "/" + TEST_CASES_DIR + "/core/e2e/reorder/";
+
+    @NonNull
+    private static final Path FIXTURES_ROOT =
+            resolveFixturesRoot(TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE));
+
     private static final URL FIXTURE_RESOURCES_ROOT_DIR =
             TestCaseResourceUtils.requireClasspathDirectoryUrl(FIXTURES_RESOURCE);
 
-    @NonNull
-    private static final Path FIXTURES_ROOT = resolveFixturesRoot();
-
-    private static final String CONFIG_FILE = "config.yml";
-
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
+        fixtureScenarioDirectoriesNumberingValidatedHaveUniqueSequentialNumbersWithoutGaps();
+    }
 
     @ParameterizedTest(name = "[{index}] {0}/{1}")
     @MethodSource("fixtureInputFiles")
@@ -43,15 +48,13 @@ class SrcProcessorE2EFixtureTest
         processFixtureInputFileMatchesExpectedAndCompileAfter(temporaryDirectory, scenarioDir, srcFile);
     }
 
-    @Test
-    void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
-        fixtureScenarioDirectoriesNumberingValidatedHaveUniqueSequentialNumbersWithoutGaps();
-    }
-
-    @Override
     @NonNull
-    protected Path getFixturesRoot() {
-        return FIXTURES_ROOT;
+    private static Path resolveFixturesRoot(URL fixturesRootUrl) {
+        try {
+            return Path.of(fixturesRootUrl.toURI());
+        } catch (URISyntaxException exception) {
+            throw new IllegalArgumentException("Cannot convert fixtures URL to URI: " + fixturesRootUrl, exception);
+        }
     }
 
     @Override
@@ -62,23 +65,14 @@ class SrcProcessorE2EFixtureTest
 
     @Override
     @NonNull
-    protected String resolveDirectoryNamePrefix() {
-        return "SrcProcessorE2E";
+    protected Path getFixturesRoot() {
+        return FIXTURES_ROOT;
     }
 
     @Override
     @NonNull
-    protected StrictValidationState validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
-            throws Exception {
-        JavaCompileTestUtils.CompileResult compileBeforeResult =
-                compileJavaSrcWithRelease21(workingInputFile, compileBeforeOutput);
-        assertThat(compileBeforeResult.getExitCode())
-                .as(
-                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
-                        workingInputFile, compileBeforeResult.getOutput())
-                .isZero();
-        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
-        return StrictValidationState.INSTANCE;
+    protected String resolveDirectoryNamePrefix() {
+        return "SrcProcessorE2E";
     }
 
     @Override
@@ -94,14 +88,19 @@ class SrcProcessorE2EFixtureTest
         assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileAfterOutput);
     }
 
+    @Override
     @NonNull
-    private static Path resolveFixturesRoot() {
-        try {
-            return Path.of(FIXTURE_RESOURCES_ROOT_DIR.toURI());
-        } catch (URISyntaxException exception) {
-            throw new IllegalArgumentException(
-                    "Cannot convert fixtures URL to URI: " + FIXTURE_RESOURCES_ROOT_DIR, exception);
-        }
+    protected StrictValidationState validateBeforeProcessing(Path workingInputFile, Path compileBeforeOutput)
+            throws Exception {
+        JavaCompileTestUtils.CompileResult compileBeforeResult =
+                compileJavaSrcWithRelease21(workingInputFile, compileBeforeOutput);
+        assertThat(compileBeforeResult.getExitCode())
+                .as(
+                        "Expected javac --release 21 to compile file %s. Diagnostics:%n%s",
+                        workingInputFile, compileBeforeResult.getOutput())
+                .isZero();
+        assertMainMethodExecutionSucceedsWhenPresent(workingInputFile, compileBeforeOutput);
+        return StrictValidationState.INSTANCE;
     }
 
     enum StrictValidationState {

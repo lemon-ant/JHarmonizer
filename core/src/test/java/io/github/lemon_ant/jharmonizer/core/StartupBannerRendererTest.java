@@ -12,17 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class StartupBannerRendererTest {
-
     private static final Path BASE_DIR = Path.of("/project/src");
-
-    @Test
-    void render_defaultParameters_containsHeaderWithUnderline() {
-        // When
-        String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
-
-        // Then
-        assertThat(banner).contains("JHarmonizer started").contains("=".repeat("JHarmonizer started".length()));
-    }
 
     @Test
     void render_allFlowParameters_containsFlowAndBaseDirAndBackups() {
@@ -48,17 +38,17 @@ class StartupBannerRendererTest {
         assertThat(banner).contains("Backups:").contains("enabled");
     }
 
+    @Test
+    void render_defaultParameters_containsHeaderWithUnderline() {
+        // When
+        String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
+
+        // Then
+        assertThat(banner).contains("JHarmonizer started").contains("=".repeat("JHarmonizer started".length()));
+    }
+
     @Nested
     class GlobFormatting {
-
-        @Test
-        void render_emptyIncludeGlobs_showsAllPlaceholder() {
-            // When
-            String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
-
-            // Then
-            assertThat(banner).contains("Include globs:").contains("(all)");
-        }
 
         @Test
         void render_emptyExcludeGlobs_showsNonePlaceholder() {
@@ -70,13 +60,12 @@ class StartupBannerRendererTest {
         }
 
         @Test
-        void render_singleGlob_displayedWithoutPrefix() {
+        void render_emptyIncludeGlobs_showsAllPlaceholder() {
             // When
-            String banner =
-                    StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of("**/*.java"), List.of());
+            String banner = StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of(), List.of());
 
             // Then
-            assertThat(banner).contains("Include globs:").contains("**/*.java").doesNotContain("- **/*.java");
+            assertThat(banner).contains("Include globs:").contains("(all)");
         }
 
         @Test
@@ -111,6 +100,16 @@ class StartupBannerRendererTest {
             assertThat(banner).contains("**/.git/**").contains("**/build/**").contains("**/target/**");
             assertThat(banner.indexOf("**/.git/**")).isLessThan(banner.indexOf("**/build/**"));
             assertThat(banner.indexOf("**/build/**")).isLessThan(banner.indexOf("**/target/**"));
+        }
+
+        @Test
+        void render_singleGlob_displayedWithoutPrefix() {
+            // When
+            String banner =
+                    StartupBannerRenderer.render(FlowType.REORDER, BASE_DIR, true, Set.of("**/*.java"), List.of());
+
+            // Then
+            assertThat(banner).contains("Include globs:").contains("**/*.java").doesNotContain("- **/*.java");
         }
     }
 }
