@@ -4,7 +4,8 @@ SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 SPDX-License-Identifier: Apache-2.0
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+        child.project.url.inherit.append.path="false">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.lemon-ant.jharmonizer</groupId>
@@ -41,7 +42,9 @@ SPDX-License-Identifier: Apache-2.0
         <module>maven-plugin</module>
     </modules>
 
-    <scm>
+    <scm child.scm.connection.inherit.append.path="false"
+            child.scm.developerConnection.inherit.append.path="false"
+            child.scm.url.inherit.append.path="false">
         <connection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</connection>
         <developerConnection>scm:git:https://github.com/lemon-ant/JHarmonizer.git</developerConnection>
         <tag>HEAD</tag>
