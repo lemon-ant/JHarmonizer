@@ -47,6 +47,10 @@ in-house parallel directory walker,
 [`io.github.lemon-ant:glob-path-finder`](https://github.com/lemon-ant/glob-path-finder),
 which streams matching paths in parallel.
 
+For a quick project-level override, place `jharmonizer.yml` in the Maven project root.
+The plugin loads that default path automatically when the file exists. See the
+[reconfiguration guide](reconfiguration.md) for overlay examples and merge semantics.
+
 ## Sample usage
 
 ### Auto-reorder on every build

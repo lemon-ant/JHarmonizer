@@ -86,10 +86,10 @@ Each step is timed individually and the timing flows into `FlowProcessingStats`.
 
 ## Statistics output
 
-When `print-processing-statistics: true` (default), the run finishes by calling
-`ProcessingStatisticsPrintService.render(...)` on the aggregated statistic and logging
-it at `INFO`. When statistics are disabled, only a one-line debug summary plus a list
-of files with unexpected errors is logged.
+When `processing-statistics-mode` is `FULL` or `MINIMAL` (default), the run finishes
+by calling `ProcessingStatisticsPrintService.render(...)` on the aggregated statistic
+and logging it at `INFO`. When the mode is `DISABLED`, only a one-line debug summary
+plus a list of files with unexpected errors is logged.
 
 ## Backups
 

@@ -94,6 +94,30 @@ mvn jharmonizer:check-all        # report all violations
 mvn jharmonizer:check-fast   # fail fast on first violation
 ```
 
+### Reconfigure with the YAML DSL
+
+For Maven projects, create `jharmonizer.yml` in the project root next to `pom.xml` and put only the
+rules you want to override there. The Maven plugin loads that file automatically and merges it over the
+embedded defaults; if the file is absent, the defaults are used as-is.
+
+```yaml
+# jharmonizer.yml
+backups-enabled: false
+processing-statistics-mode: DISABLED
+
+type-members-ordering:
+  - name: Spring Controllers
+    includes:
+      - '@Controller'
+      - '@RestController'
+    ordering-rules: [ visibility-desc, alpha ]
+```
+
+Use `<configFile>` or `-Djharmonizer.configFile=...` if your project keeps the overlay under another name,
+for example `JHarmonizer.yaml`. See the [quick reconfiguration guide](docs/reconfiguration.md) for how
+Maven and CLI overlays are loaded and merged, and the [configuration DSL reference](docs/config-dsl.md) for
+all selector tokens, ordering rules, and YAML fields.
+
 ### CLI
 
 JHarmonizer is also available as a standalone CLI fat JAR for use outside of Maven.

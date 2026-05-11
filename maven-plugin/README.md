@@ -81,6 +81,7 @@ trees with glob include/exclude patterns and additional filters.
 
 For the full reference (parameter descriptions, profile snippet, log levels,
 backup behavior), see [`docs/09-Maven-plugin.md`](../docs/09-Maven-plugin.md).
+For quick YAML overlay examples, see [`docs/reconfiguration.md`](../docs/reconfiguration.md).
 
 ## How it dispatches
 

@@ -121,7 +121,7 @@ All commands share the same set of options (inherited from `BaseCommand`):
 | `--verbose` | `-v` | no | Enable DEBUG-level logging |
 | `--config` | `-c` | no | Path to custom YAML configuration file merged over defaults |
 | `--no-backup` | `-B` | no | Disable `.bak` file creation even if enabled in config |
-| `--no-statistics` | `-S` | no | Disable final processing statistics output |
+| `--statistics-mode` | `-s` | no | Processing statistics output mode: `FULL`, `MINIMAL`, or `DISABLED` |
 
 Glob patterns follow the `java.nio.file.PathMatcher` `glob:` syntax,
 e.g. `**/*.java`, `**/generated/**`.
