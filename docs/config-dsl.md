@@ -19,14 +19,14 @@ from the defaults; root member groups are merged by name (see
 ```yaml
 formatting: { ... }
 backups-enabled: true
-print-processing-statistics: true
+processing-statistics-mode: MINIMAL
 header-line: { ... }
 top-level-types-ordering: { ... }
 type-members-ordering:
   - { ... }
 ```
 
-All seven keys are required in a strict (non-flexible) configuration; in flexible/overlay
+All six top-level keys are required in a strict (non-flexible) configuration; in flexible/overlay
 configurations any of them may be omitted and inherited from the baseline.
 
 ## `formatting`
@@ -43,9 +43,9 @@ configurations any of them may be omitted and inherited from the baseline.
 
 `boolean`. When `true`, `reorder` writes a `<file>.bak` copy of every modified source.
 
-## `print-processing-statistics`
+## `processing-statistics-mode`
 
-`boolean`. When `true`, a final processing-statistics report is printed at the end of a run.
+`FULL`, `MINIMAL`, or `DISABLED`. Controls how much processing-statistics output is printed at the end of a run.
 
 ## `header-line`
 

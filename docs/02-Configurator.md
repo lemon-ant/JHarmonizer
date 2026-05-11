@@ -139,10 +139,10 @@ Overlays are merged with `UnifiedConfigMerger.merge(baseline, overlay)`. Behavio
 `AbstractJHarmonizerMojo` and `BaseCommand` (CLI) build a `FlexibleUnifiedConfig` from
 their own command-line / Mojo parameters and merge it on top of the file-loaded overlay:
 
-| Parameter (Mojo / CLI)                                               | Field overridden in overlay         |
-|----------------------------------------------------------------------|-------------------------------------|
-| `jharmonizer.backupsEnabled` / `--no-backup`                         | `backupsEnabled`                    |
-| `jharmonizer.printProcessingStatistics` / `--no-statistics`          | `printProcessingStatistics`         |
+| Parameter (Mojo / CLI)                                         | Field overridden in overlay  |
+|----------------------------------------------------------------|------------------------------|
+| `jharmonizer.backupsEnabled` / `--no-backup`                   | `backupsEnabled`             |
+| `jharmonizer.processingStatisticsMode` / `--statistics-mode`   | `processingStatisticsMode`   |
 
 When neither file overlay nor parameter overlay is present, the embedded default is used
 as-is.
@@ -156,11 +156,12 @@ as-is.
   `includes`/`excludes` is compiled into a single predicate over `MemberDescriptor`.
 - `TopLevelTypesOrderingCompiler.compileTopLevelTypesOrdering(...)` compiles the
   top-level types ordering rules.
-- `formatting`, `backupsEnabled`, `printProcessingStatistics`, and `headerLine` are passed
+- `formatting`, `backupsEnabled`, `processingStatisticsMode`, and `headerLine` are passed
   through unchanged.
 
 `CompiledConfig` is the immutable runtime model handed to the rest of the pipeline.
 
 ## Reference
 
+For user-facing reconfiguration workflows, see [`reconfiguration.md`](reconfiguration.md).
 For the YAML schema accepted by the loader, see [`config-dsl.md`](config-dsl.md).

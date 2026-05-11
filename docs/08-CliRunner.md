@@ -37,15 +37,15 @@ The CLI is aimed at:
 
 ## Shared options (from `BaseCommand`)
 
-| Option            | Short | Description                                                                                       |
-|-------------------|-------|---------------------------------------------------------------------------------------------------|
-| `--base-dir`      | `-b`  | Base directory containing Java source files. Defaults to the current directory when not provided. |
-| `--include`       | `-i`  | Glob patterns for files to include. Repeat the option or pass a comma-separated list.             |
-| `--exclude`       | `-e`  | Glob patterns for files to exclude. Repeat the option or pass a comma-separated list.             |
-| `--verbose`       | `-v`  | Enable DEBUG-level logging and switch to a verbose log pattern.                                   |
-| `--config`        | `-c`  | Path to a YAML configuration file merged over the embedded defaults.                              |
-| `--no-backup`     | `-B`  | Disable `.bak` file creation even when backups are enabled in configuration.                      |
-| `--no-statistics` | `-S`  | Disable the final processing statistics report output.                                            |
+| Option              | Short | Description                                                                                       |
+|---------------------|-------|---------------------------------------------------------------------------------------------------|
+| `--base-dir`        | `-b`  | Base directory containing Java source files. Defaults to the current directory when not provided. |
+| `--include`         | `-i`  | Glob patterns for files to include. Repeat the option or pass a comma-separated list.             |
+| `--exclude`         | `-e`  | Glob patterns for files to exclude. Repeat the option or pass a comma-separated list.             |
+| `--verbose`         | `-v`  | Enable DEBUG-level logging and switch to a verbose log pattern.                                   |
+| `--config`          | `-c`  | Path to a YAML configuration file merged over the embedded defaults.                              |
+| `--no-backup`       | `-B`  | Disable `.bak` file creation even when backups are enabled in configuration.                      |
+| `--statistics-mode` | `-s`  | Processing statistics output mode: `FULL`, `MINIMAL`, or `DISABLED`.                             |
 
 Glob patterns follow `java.nio.file.PathMatcher` `glob:` syntax (e.g. `**/*.java`).
 
