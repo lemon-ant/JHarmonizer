@@ -211,13 +211,6 @@ See [`docs/known-limitations.md`](docs/known-limitations.md) for details and wor
 mvn clean verify
 ```
 
-## Sorting performance benchmark (JMH)
-
-JHarmonizer includes a JMH benchmark that measures the sorting algorithm in isolation (without parsing,
-serialization, or formatting overhead). Activate with the `benchmark-sort` Maven profile.
-
-See [`docs/benchmark.md`](docs/benchmark.md) for usage instructions and output format.
-
 ## 📖 Documentation
 
 - [Javadoc (latest)](https://javadoc.io/doc/io.github.lemon-ant/jharmonizer-core)
