@@ -27,6 +27,7 @@ This file defines repository-wide conventions for coding agents working in this 
 
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
+- Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
 - Licensing policy is mandatory for all tracked files in this repository.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
   - Required file-level SPDX lines:

@@ -23,6 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
+- Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
 - Licensing policy is mandatory for all tracked files.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
   - Required SPDX lines:
