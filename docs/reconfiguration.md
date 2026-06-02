@@ -54,8 +54,6 @@ mvn jharmonizer:reorder -Djharmonizer.configFile=JHarmonizer.yaml
 ### Disable backups and detailed statistics
 
 ```yaml
-# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
-# SPDX-License-Identifier: Apache-2.0
 backups-enabled: false
 processing-statistics-mode: DISABLED
 ```
@@ -63,8 +61,6 @@ processing-statistics-mode: DISABLED
 ### Change only formatting behavior
 
 ```yaml
-# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
-# SPDX-License-Identifier: Apache-2.0
 formatting:
   fix-imports: true
   blank-line-between-fields: true
@@ -79,8 +75,6 @@ collects Spring controller classes and sorts their methods by visibility and nam
 while all other classes continue to use the embedded default rules.
 
 ```yaml
-# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
-# SPDX-License-Identifier: Apache-2.0
 type-members-ordering:
   - name: Spring Controllers
     includes:
@@ -107,8 +101,6 @@ same name as a default root group, the custom group replaces that default group 
 its original position.
 
 ```yaml
-# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
-# SPDX-License-Identifier: Apache-2.0
 type-members-ordering:
   - name: Default Rule
     includes: ~.*

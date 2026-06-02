@@ -26,21 +26,6 @@ different ordering rules for test classes, DTOs, annotated controllers, or other
 JHarmonizer's selector DSL provides that flexibility out of the box.
 See [docs/motivation.md](docs/motivation.md) for the full comparison.
 
-## Opt-out directives
-
-JHarmonizer supports two opt-out directives placed as source comments.
-
-```java
-// @jharmonizer:fully-off   // disable all harmonization for this file or type
-// @jharmonizer:sort-off    // disable sorting only; formatting still runs
-```
-
-Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) comment forms are supported.
-Directives can be placed at **file scope** (in the compilation-unit preamble) or **type scope** (immediately
-before a type declaration).
-
-For the full reference — placement rules, scope semantics, and unsupported tokens — see [`docs/directives.md`](docs/directives.md).
-
 ## Quick Start
 
 The primary usage pattern is to integrate JHarmonizer into the Maven build so sources are automatically
@@ -147,6 +132,21 @@ java -jar jharmonizer-cli-1.0.1.jar reorder --base-dir src/main/java
 ```
 
 See [`cli/README.md`](cli/README.md) for full command-line usage, all options, exit codes, and CI integration examples.
+
+## Opt-out directives
+
+JHarmonizer supports two opt-out directives placed as source comments.
+
+```java
+// @jharmonizer:fully-off   // disable all harmonization for this file or type
+// @jharmonizer:sort-off    // disable sorting only; formatting still runs
+```
+
+Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) comment forms are supported.
+Directives can be placed at **file scope** (in the compilation-unit preamble) or **type scope** (immediately
+before a type declaration).
+
+For the full reference — placement rules, scope semantics, and unsupported tokens — see [`docs/directives.md`](docs/directives.md).
 
 ## ⭐ Ways to support this project
 
