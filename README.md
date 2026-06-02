@@ -133,7 +133,7 @@ java -jar jharmonizer-cli-1.0.1.jar reorder --base-dir src/main/java
 
 See [`cli/README.md`](cli/README.md) for full command-line usage, all options, exit codes, and CI integration examples.
 
-## Opt-out directives
+### Opt-out directives
 
 JHarmonizer supports two opt-out directives placed as source comments.
 
