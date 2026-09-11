@@ -23,6 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
+- Use concise, factual technical language in documentation, comments, changelog entries, and commit messages. Omit conversational narration, decorative wording, repetition, and unnecessary detail.
 - Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
 - Licensing policy is mandatory for all tracked files.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
@@ -74,6 +75,9 @@ SPDX-License-Identifier: Apache-2.0
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`, or an established repository abbreviation such as the `src*` naming family.
 - Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
+- Repository build, test, coverage, and quality-gate tooling must be cross-platform and based on Java/JVM tools or Maven plugins. Do not add PowerShell, Bash, or batch scripts for these tasks.
+- Use the existing Maven plugins and JaCoCo for coverage collection, reports, and supported threshold checks. Document tool limitations and unreachable branches instead of introducing custom coverage-report parsers or counters.
+- Keep one-off measurement and diagnostic artifacts under `target/`; do not turn them into permanent repository tools unless explicitly requested.
 
 ## Test conventions
 
@@ -83,6 +87,9 @@ SPDX-License-Identifier: Apache-2.0
 - Make failures actionable with clear names and error messages.
 - Keep maintenance low through shared helpers and minimal duplication.
 - Avoid false regressions caused by broken fixtures; fixtures must compile.
+- Keep printer E2E coverage at or above 85% of lines and 80% of reachable branch outcomes for each printer implementation/helper class listed in `docs/printer-coverage.md`.
+- Measure printer coverage from an isolated E2E run through `SrcProcessor`, without merging unit-test coverage. Document every unreachable-branch exclusion in `docs/printer-coverage.md`; keep reachable outcomes counted.
+- Increase printer E2E coverage through real source/configuration inputs; do not use reflection, synthetic AST mutations, or production-code changes solely to make coverage paths reachable.
 
 ### Tooling and libraries
 

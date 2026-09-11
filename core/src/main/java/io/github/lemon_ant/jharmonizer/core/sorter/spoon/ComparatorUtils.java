@@ -70,14 +70,12 @@ class ComparatorUtils {
      * @return the sortable type member comparator
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Comparator<SortableTypeMember> buildSortableTypeMemberComparator(@NonNull List<OrderingRule> orderingRules) {
         Comparator<OrderingKey> base = buildOrderingKeyComparator(orderingRules);
         return (left, right) -> {
-            // Reference equality is intentional throughout: members that belong to the same
-            // accessor super-cluster share the same super-cluster representative instance, and
-            // members of the same property cluster share the same property representative
-            // instance. Non-clustered members use their own key as the representative
-            // (self-reference).
+            // Cluster members share representative key instances; unclustered members use their own keys.
+            // Reference equality distinguishes clusters whose ordering keys compare equal.
             OrderingKey leftSuperRep = left.getSuperClusterRepresentativeKey();
             OrderingKey rightSuperRep = right.getSuperClusterRepresentativeKey();
             if (leftSuperRep != rightSuperRep) {

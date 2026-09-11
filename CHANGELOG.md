@@ -14,9 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Printer E2E tests for declarations, comments, string contents, headerless files, and line separators.
+- Printer coverage measurements, unreachable-branch notes, and a Maven/JaCoCo reproduction command.
+
 ### Changed
 
-- Updated Palantir Java Formatter dependency to 2.91.0.
+- Updated Palantir Java Formatter dependency from 2.91.0 to 2.98.0.
+- Updated Spoon dependency from 11.2.1 to 11.5.0.
+- Added scoped PMD suppressions for intentional reference-identity comparisons.
+- Required cross-platform Java/Maven tooling and concise technical text in agent instructions.
 
 ## [1.0.1] — 2026-05-07
 

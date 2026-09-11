@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+formatting:
+  formatter-style: NONE
+  fix-imports: false
+backups-enabled: false
+processing-statistics-mode: DISABLED
+type-members-ordering:
+  - name: Printer comment placement
+    includes: class
+    ordering-rules: alpha
+    groups:
+      - name: Fields
+        includes: field
+        separator: header
+      - name: Methods
+        includes: method

@@ -27,6 +27,7 @@ This file defines repository-wide conventions for coding agents working in this 
 
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
+- Use concise, factual technical language in documentation, comments, changelog entries, and commit messages. Omit conversational narration, decorative wording, repetition, and unnecessary detail.
 - Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
 - Licensing policy is mandatory for all tracked files in this repository.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
@@ -81,6 +82,9 @@ This file defines repository-wide conventions for coding agents working in this 
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it should not be changed casually.
 - When debugging uncovers a non-obvious runtime/framework edge case (for example parser/evaluator recursion traps), document the guard/workaround with a nearby code comment so future refactors do not remove it accidentally.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
+- Repository build, test, coverage, and quality-gate tooling must be cross-platform and based on Java/JVM tools or Maven plugins. Do not add PowerShell, Bash, or batch scripts for these tasks.
+- Use the existing Maven plugins and JaCoCo for coverage collection, reports, and supported threshold checks. Document tool limitations and unreachable branches instead of introducing custom coverage-report parsers or counters.
+- Keep one-off measurement and diagnostic artifacts under `target/`; do not turn them into permanent repository tools unless explicitly requested.
 
 ## Test conventions
 
@@ -90,6 +94,9 @@ This file defines repository-wide conventions for coding agents working in this 
 - Make failures actionable with clear names and error messages.
 - Keep maintenance low through shared helpers and minimal duplication.
 - Avoid false regressions caused by broken fixtures; fixtures must compile.
+- Keep printer E2E coverage at or above 85% of lines and 80% of reachable branch outcomes for each printer implementation/helper class listed in `docs/printer-coverage.md`.
+- Measure printer coverage from an isolated E2E run through `SrcProcessor`, without merging unit-test coverage. Document every unreachable-branch exclusion in `docs/printer-coverage.md`; keep reachable outcomes counted.
+- Increase printer E2E coverage through real source/configuration inputs; do not use reflection, synthetic AST mutations, or production-code changes solely to make coverage paths reachable.
 
 ### Tooling and libraries
 

@@ -92,11 +92,11 @@ SPDX-License-Identifier: Apache-2.0
         -->
         <mockito.agent.argLine>"-javaagent:${maven.repo.local}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</mockito.agent.argLine>
         <mockito.version>5.23.0</mockito.version>
-        <palantir-java-format.version>2.91.0</palantir-java-format.version>
+        <palantir-java-format.version>2.98.0</palantir-java-format.version>
         <pmd.version>7.24.0</pmd.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <spoon.version>11.2.1</spoon.version>
+        <spoon.version>11.5.0</spoon.version>
         <spotbugs-maven-plugin.version>4.9.8.3</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
     </properties>
