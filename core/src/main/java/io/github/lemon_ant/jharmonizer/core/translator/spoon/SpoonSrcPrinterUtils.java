@@ -6,7 +6,6 @@
  */
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import lombok.NonNull;
@@ -64,6 +63,8 @@ public class SpoonSrcPrinterUtils {
     /**
      * Compiles a bi-predicate that determines whether a separator is needed before a given member.
      * Annotation-based blank lines are always active (Palantir formatter enforces them).
+     * Nested types require a separator even when they are the first member; their enclosing type owns it.
+     * Group headers are handled by the printer together with the other requests at the same boundary.
      * The blank-line-before-comment feature is handled separately in the printer via
      * {@link SpoonTypeMemberUtils#hasLeadingCommentOnSeparateLine}, because it requires per-type context
      * (the set of member declaration end lines) to filter out Spoon's misattributed trailing inline comments.
@@ -72,10 +73,9 @@ public class SpoonSrcPrinterUtils {
      */
     @NonNull
     static BiPredicate<CtTypeMember, Boolean> compileNeedsSeparatorBefore() {
-        BiPredicate<CtTypeMember, Boolean> basePredicate = compileBaseSeparatorBeforePredicate();
-        BiPredicate<CtTypeMember, Boolean> annotationCheck =
-                (member, first) -> !member.getAnnotations().isEmpty();
-        return annotationCheck.or(basePredicate);
+        return (member, first) -> member instanceof CtType<?>
+                || (!first && !(member instanceof CtField))
+                || !member.getAnnotations().isEmpty();
     }
 
     /**
@@ -115,22 +115,6 @@ public class SpoonSrcPrinterUtils {
         }
 
         return selectDominantLineSeparator(crlfCount, lfCount, crCount);
-    }
-
-    @NonNull
-    private static BiPredicate<CtTypeMember, Boolean> compileBaseSeparatorBeforePredicate() {
-        return (member, first) -> {
-            boolean isNotField = !(member instanceof CtField);
-            if (!first && isNotField) {
-                return true;
-            }
-
-            Optional<String> groupHeaderMetadata = Optional.ofNullable(member.getMetadata(GROUP_HEADER_METADATA))
-                    .map(Object::toString);
-            return groupHeaderMetadata
-                    .map(groupHeader -> !GROUP_SEPARATOR_NEW_LINE.equals(groupHeader))
-                    .orElse(false);
-        };
     }
 
     @NonNull

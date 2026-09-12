@@ -19,6 +19,7 @@ import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtRecord;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.DefaultTokenWriter;
 import spoon.reflect.visitor.printer.CommentOffset;
 
 /**
@@ -29,7 +30,10 @@ import spoon.reflect.visitor.printer.CommentOffset;
 class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
 
     @NonNull
-    private final SpoonTypePrinter typeStructurePrinter;
+    private final SpoonPrinterHelper printerHelper;
+
+    @NonNull
+    private final SpoonTypeStructurePrinter typeStructurePrinter;
 
     /**
      * Visits an annotation type and prints it using the shared type-structure logic.
@@ -62,29 +66,29 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
             super.visitCtCompilationUnit(compilationUnit);
             return;
         }
-        CtCompilationUnit outerCompilationUnit = this.sourceCompilationUnit;
-        try {
-            this.sourceCompilationUnit = compilationUnit;
-            List<CtType<?>> rootTypes = SpoonTypeUtils.getRootTypes(compilationUnit);
-            int firstTypeStart = rootTypes.stream()
-                    .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
-                    .min()
-                    .orElseThrow(IllegalStateException::new);
-            int typeDeclarationHeaderEnd = Math.max(firstTypeStart - 1, 0);
-            if (typeDeclarationHeaderEnd > 0) {
-                typeStructurePrinter.printOriginalFragment(0, typeDeclarationHeaderEnd);
-            }
+        List<CtType<?>> rootTypes = SpoonTypeUtils.getRootTypes(compilationUnit);
+        int firstTypeStart = rootTypes.stream()
+                .mapToInt(typeMember -> typeMember.getPosition().getSourceStart())
+                .min()
+                .orElseThrow(IllegalStateException::new);
+        if (typeStructurePrinter.printOriginalFragment(0, firstTypeStart - 1)) {
+            printerHelper.writeln();
+        }
 
-            rootTypes.forEach(this::scan);
-            getElementPrinterHelper().writeComment(compilationUnit, CommentOffset.AFTER);
-        } finally {
-            this.sourceCompilationUnit = outerCompilationUnit;
+        // The compilation unit owns root-type separators; nested-type separators belong to their parent.
+        boolean first = true;
+        for (CtType<?> rootType : rootTypes) {
+            if (!first) {
+                printerHelper.writeln();
+            }
+            scan(rootType);
+            first = false;
         }
-        // by convention, we add a newline at the end of the file
-        // we guard this with a check to avoid adding a newline if there is already one
-        if (!getResult().endsWith(getLineSeparator())) {
-            getPrinterTokenWriter().writeln();
-        }
+        // Preserve trailing comments attached to the compilation unit, which type fragments do not cover.
+        getElementPrinterHelper().writeComment(compilationUnit, CommentOffset.AFTER);
+        // TODO Can we avoid this method call and logically understand that we are at the end of the file and we
+        // must add a new line or it was added previously
+        printerHelper.terminateLine();
     }
 
     /**
@@ -129,10 +133,12 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
             @NonNull Set<CtType<?>> sortingSkippedTypes,
             @NonNull PrinterConfig printerConfig) {
         super(env);
+        this.printerHelper = new SpoonPrinterHelper(env);
+        setPrinterTokenWriter(new DefaultTokenWriter(printerHelper));
         String lineSeparator = detectDominantLineSeparator(srcCode);
         setLineSeparator(lineSeparator);
         this.typeStructurePrinter =
-                new SpoonTypePrinter(srcCode, sortingSkippedTypes, getPrinterTokenWriter(), printerConfig);
+                new SpoonTypeStructurePrinter(srcCode, sortingSkippedTypes, printerHelper, printerConfig);
     }
 
     /**
@@ -143,7 +149,8 @@ class SpoonCustomSrcPrinter extends DefaultJavaPrettyPrinter {
      */
     @NonNull
     SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(@NonNull CtCompilationUnit compilationUnit) {
-        printCompilationUnit(compilationUnit);
-        return new SerializedSrcWithSkippedTypeRanges(getResult(), typeStructurePrinter.getSortingSkippedTypeRanges());
+        String serializedSrcCode = printCompilationUnit(compilationUnit);
+        return new SerializedSrcWithSkippedTypeRanges(
+                serializedSrcCode, typeStructurePrinter.getSortingSkippedTypeRanges());
     }
 }

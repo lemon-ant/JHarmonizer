@@ -54,7 +54,7 @@ Sorter → SpoonCustomSrcPrinter → Formatter
 | `SpoonAstModel`                      | Immutable post-parse snapshot used by the rest of the pipeline.                                       |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
 | `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the serializer can compute relocations.  |
-| `SpoonCustomSrcPrinter` / `SpoonTypePrinter` / `SpoonSrcPrinterUtils` | Spoon-printer customization used when the AST is serialized back to text.        |
+| `SpoonCustomSrcPrinter` / `SpoonTypeStructurePrinter` / `SpoonSrcPrinterUtils` | Spoon-printer customization used when the AST is serialized back to text.        |
 | `EnumMemberStartCorrectionResolver`  | Compensates for Spoon offset quirks at the start of enum bodies.                                      |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
 
