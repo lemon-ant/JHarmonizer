@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Scope and maintenance
 
+- Applies to the whole repository unless a more specific convention document says otherwise.
 - Read `AGENTS.md` before making changes. It contains the repository-wide coding conventions.
 - Keep `.github/copilot-instructions.md` and `AGENTS.md` aligned.
 - `AGENTS.md` defines the repository-wide rules.
@@ -31,6 +32,7 @@ SPDX-License-Identifier: Apache-2.0
     - `SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>`
     - `SPDX-License-Identifier: Apache-2.0`
   - Exception: `LICENSE` keeps the canonical Apache-2.0 legal text and may omit SPDX header lines.
+  - Do not introduce additional third-party license headers unless a file is truly imported from a differently licensed upstream source.
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
 - Prefer explicit Java types over `var`.
@@ -45,6 +47,7 @@ SPDX-License-Identifier: Apache-2.0
   - For nested helper/data-carrier types created only by the enclosing type, keep their constructors `private`; tests are not a reason to widen constructor visibility.
 - Keep production models and value objects focused on state plus simple accessors or validation.
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing classes.
+- Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private method parameters may stay implicit when the intent is already obvious.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
 - If a boolean helper is always consumed through negation at its call sites, invert the helper logic and rename it so callers stay positive and direct.
 - Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `compute`, or `merge`.
@@ -57,6 +60,8 @@ SPDX-License-Identifier: Apache-2.0
   - Place method-level nullability annotations on their own line above the method declaration instead of inline in the signature.
   - This repository-wide rule also applies to private helper methods in tests.
 - Prefer static imports for frequently used assertion/helper methods when repeated type-qualified calls add noise.
+- Do not use `protected` fields; keep fields `private` and expose only the narrow protected accessor methods that subclasses actually need.
+- Prefer the shorter `src*` naming family (`srcFile`, `srcPath`, `srcCode`, `srcDiff`) for source-related variables and parameters.
 - Annotate every non-private method's reference-type parameters and non-primitive return type with explicit nullability using `lombok.NonNull` or `org.jspecify.annotations.Nullable`.
 - Do not change standard `Object` method signatures when overriding them.
   - Do not add nullability annotations to `Object` overrides just to satisfy local conventions.
@@ -87,9 +92,6 @@ SPDX-License-Identifier: Apache-2.0
 - Make failures actionable with clear names and error messages.
 - Keep maintenance low through shared helpers and minimal duplication.
 - Avoid false regressions caused by broken fixtures; fixtures must compile.
-- Keep printer E2E coverage at or above 85% of lines and 80% of reachable branch outcomes for each printer implementation/helper class listed in `docs/printer-coverage.md`.
-- Measure printer coverage from an isolated E2E run through `SrcProcessor`, without merging unit-test coverage. Document every unreachable-branch exclusion in `docs/printer-coverage.md`; keep reachable outcomes counted.
-- Increase printer E2E coverage through real source/configuration inputs; do not use reflection, synthetic AST mutations, or production-code changes solely to make coverage paths reachable.
 
 ### Tooling and libraries
 
@@ -174,10 +176,11 @@ SPDX-License-Identifier: Apache-2.0
 ### Shared test setup and one-time initialization
 
 - If multiple tests in the same test class use the same expensive or repetitive setup, initialize it once at the test-class level instead of recreating it in every test.
-- Prefer `private static final` constants for immutable, shareable objects created once.
+- Reserve `private static final` constants for simple fixed values such as strings, numbers, enums, and small literal collections. Immutability alone does not make prepared test data a constant.
 - Prefer `private final` fields when per-instance initialization is sufficient and the object is safe to share across tests in the class.
-- Use `@BeforeAll` for one-time initialization that cannot be expressed as a simple field initializer.
+- Use `@BeforeAll` for expensive or multi-step preparation such as loading fixtures, compiling configuration, parsing, sorting, or serializing source, even if this work could be hidden behind a method call in a field initializer. Store the prepared state in ordinary test fields, preferably instance fields when the test lifecycle allows it.
 - If `@BeforeAll` must be non-static, use `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`.
+- When `@MethodSource` providers consume state prepared in an instance `@BeforeAll`, make those providers non-static as well.
 - Do not share mutable objects across tests if the code under test may modify them.
 - In that case, keep a single immutable base representation and create a fresh copy per test, or initialize the mutable object in `@BeforeEach`.
 - Avoid duplicating the same setup snippet across multiple tests in the same class.
@@ -192,6 +195,7 @@ SPDX-License-Identifier: Apache-2.0
 - Prefer a nested `Constants` class once the constant list is long enough that it pushes test methods noticeably down the file or makes the start of the class hard to scan.
 - Keep the `Constants` nested class at the end of the test class.
 - Do not move everything into `Constants` mechanically.
+- Keep computed fixtures and prepared test state out of `Constants`, even when the result is a string or another immutable value; initialize that state in setup and store it in ordinary test fields.
 - Keep only the cluttering shared constants there, while ordinary test fields such as `@TempDir` stay near the top.
 
 ### Assertions and test utilities

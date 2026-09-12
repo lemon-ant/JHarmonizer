@@ -709,7 +709,8 @@ SPDX-License-Identifier: Apache-2.0
                                 <goals>
                                     <goal>reorder</goal>
                                 </goals>
-                                <phase>process-sources</phase>
+                                <!-- Keep this plugin before PMD: validate goals run in POM declaration order. -->
+                                <phase>validate</phase>
                             </execution>
                         </executions>
                     </plugin>

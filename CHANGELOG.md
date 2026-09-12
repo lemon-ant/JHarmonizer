@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Spoon dependency from 11.2.1 to 11.5.0.
 - Added scoped PMD suppressions for intentional reference-identity comparisons.
 - Required cross-platform Java/Maven tooling and concise technical text in agent instructions.
+- Run local source reordering in `validate` before PMD checks.
+- Clarified prepared test state and one-time setup rules in agent instructions.
 
 ## [1.0.1] — 2026-05-07
 
