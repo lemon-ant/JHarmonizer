@@ -25,6 +25,7 @@ SPDX-License-Identifier: Apache-2.0
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
 - Use concise, factual technical language in documentation, comments, changelog entries, and commit messages. Omit conversational narration, decorative wording, repetition, and unnecessary detail.
+- Create Git commits only when the user explicitly requests a commit for the current task. Authorization from a completed task does not carry over to a new task; otherwise leave changes uncommitted.
 - Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
 - Licensing policy is mandatory for all tracked files.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
