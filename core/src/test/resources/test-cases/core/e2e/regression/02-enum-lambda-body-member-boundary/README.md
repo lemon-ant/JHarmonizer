@@ -17,7 +17,7 @@ for the first method are misdetected.
 
 ## Why this is important for JHarmonizer
 
-When the start position is wrong, `SpoonTypePrinter` can print source fragments incorrectly (broken member boundaries
+When the start position is wrong, `SpoonTypeStructurePrinter` can print source fragments incorrectly (broken member boundaries
 produce incorrect rendered code).
 
 ## JHarmonizer workaround

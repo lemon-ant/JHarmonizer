@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated Palantir Java Formatter dependency to 2.91.0.
 
+### Fixed
+
+- Fixed duplicate blank lines in Spoon serialization before closing braces, between nested and top-level types, and at end of file. Declaration containers now own separators, combining header, member, and group spacing while preserving comments, opt-out fragments, and source line endings. Member source boundaries are indexed once, skipped-type offsets no longer copy the output buffer, and fragment indentation is retained without rescanning leading whitespace. Fragment-boundary detection is centralized in `SrcCodeUtils` with unit coverage for indentation, whitespace, and source ranges.
+- Generated member-group comments now retain the following member's source indentation before formatting.
+
 ## [1.0.1] — 2026-05-07
 
 ### Added
