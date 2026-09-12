@@ -21,48 +21,137 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("NotNullFieldNotInitialized")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SrcPrinterE2ETest {
     private static final String FIXTURES = "/test-cases/core/e2e/printer/";
-    private static final String COMMENT_PLACEMENT_INPUT = FIXTURES + "valid/input/CommentPlacementScenario.java";
-    private static final String ENUM_WHITESPACE_INPUT = FIXTURES + "valid/input/EnumWhitespaceScenario.java";
-    private static final String LINE_SEPARATORS_INPUT = FIXTURES + "valid/input/LineSeparatorsScenario.java";
-    private static final String TYPE_DECLARATIONS_EXPECTED = FIXTURES + "expected/TypeDeclarationsScenario.java";
-    private static final String TYPE_DECLARATIONS_INPUT = FIXTURES + "valid/input/TypeDeclarationsScenario.java";
 
-    private final SrcProcessor srcProcessor = new SrcProcessor(FlexibleUnifiedConfig.builder()
-            .formatting(FlexibleUnifiedFormatting.builder()
-                    .formatterStyle(NONE)
-                    .fixImports(false)
-                    .build())
-            .backupsEnabled(false)
-            .processingStatisticsMode(ProcessingStatisticsMode.DISABLED)
-            .build());
+    @NonNull
+    private String boundaryExpectedSrcCode;
+
+    @NonNull
+    private String boundaryInputSrcCode;
+
+    @NonNull
+    private SrcProcessor boundaryProcessor;
+
+    @NonNull
+    private SrcProcessor commentHeaderProcessor;
+
+    @NonNull
+    private String commentPlacementSrcCode;
+
+    @NonNull
+    private String enumWhitespaceSrcCode;
+
+    @NonNull
+    private SrcProcessor fieldGroupProcessor;
+
+    @NonNull
+    private String fieldGroupsSrcCode;
+
+    @NonNull
+    private String lineSeparatorsSrcCode;
+
+    @NonNull
+    private SrcProcessor srcProcessor;
 
     @TempDir
     private Path temporaryDirectory;
 
-    @Test
-    void reorder_commentsSharingDeclarationLines_preservesCommentsAndAddsGroupHeader() throws Exception {
-        // Given
-        SrcProcessor commentHeaderProcessor = new SrcProcessor(parseFlexibleUnifiedConfigFromClasspathResource(
+    @NonNull
+    private String topLevelTypesExpectedSrcCode;
+
+    @NonNull
+    private String topLevelTypesInputSrcCode;
+
+    @NonNull
+    private String typeDeclarationsExpectedSrcCode;
+
+    @NonNull
+    private String typeDeclarationsInputSrcCode;
+
+    @BeforeAll
+    void setUp() {
+        srcProcessor = createSrcProcessor(true);
+        fieldGroupProcessor = createSrcProcessor(false);
+        boundaryProcessor = new SrcProcessor(parseFlexibleUnifiedConfigFromClasspathResource(
+                requireClasspathResourceUrl(FIXTURES + "combined-boundaries.yml")));
+        commentHeaderProcessor = new SrcProcessor(parseFlexibleUnifiedConfigFromClasspathResource(
                 requireClasspathResourceUrl(FIXTURES + "comment-headers.yml")));
-        String inputSrc = readClasspathResourceAsString(COMMENT_PLACEMENT_INPUT).replace("\r\n", "\n");
-        Path srcFile = Files.writeString(temporaryDirectory.resolve("CommentPlacementScenario.java"), inputSrc);
+        String boundaryFixtures = "/test-cases/core/translator/spoon-printer-boundaries/";
+        boundaryInputSrcCode = readNormalizedFixture(boundaryFixtures + "valid/BoundarySample.java");
+        boundaryExpectedSrcCode = readNormalizedFixture(boundaryFixtures + "expected/BoundarySample.java");
+        commentPlacementSrcCode = readNormalizedFixture(FIXTURES + "valid/input/CommentPlacementScenario.java");
+        enumWhitespaceSrcCode = readNormalizedFixture(FIXTURES + "valid/input/EnumWhitespaceScenario.java");
+        fieldGroupsSrcCode = readNormalizedFixture(FIXTURES + "valid/input/FieldGroupsScenario.java");
+        lineSeparatorsSrcCode = readNormalizedFixture(FIXTURES + "valid/input/LineSeparatorsScenario.java");
+        String topLevelFixtures = "/test-cases/core/e2e/reorder/18-top-level-types-default-groups-ordering/";
+        topLevelTypesInputSrcCode = readNormalizedFixture(topLevelFixtures + "input/TopLevelTypesOrderingFixture.java");
+        topLevelTypesExpectedSrcCode =
+                readNormalizedFixture(topLevelFixtures + "expected/TopLevelTypesOrderingFixture.java");
+        typeDeclarationsInputSrcCode = readNormalizedFixture(FIXTURES + "valid/input/TypeDeclarationsScenario.java");
+        typeDeclarationsExpectedSrcCode = readNormalizedFixture(FIXTURES + "expected/TypeDeclarationsScenario.java");
+    }
+
+    @ParameterizedTest(name = "{0}, trailing line terminators: {2}")
+    @MethodSource("provideBoundaryVariants")
+    void reorder_combinedSeparatorsAndOptOut_preservesExactBoundaries(
+            @NonNull String scenario,
+            @NonNull String lineSeparator,
+            int trailingLineTerminators,
+            @NonNull String indentation)
+            throws Exception {
+        // Given
+        String inputSrcCode = boundaryInputSrcCode
+                        .stripTrailing()
+                        .replace("    ", indentation)
+                        .replace("\n", lineSeparator)
+                + lineSeparator.repeat(trailingLineTerminators);
+        Path srcFile = Files.writeString(temporaryDirectory.resolve("BoundarySample.java"), inputSrcCode);
+
+        // When
+        SrcProcessingResult result = processSrc(srcFile, boundaryProcessor);
+        String printedSrcCode = Files.readString(srcFile);
+        SrcProcessingResult repeatedResult = processSrc(srcFile, boundaryProcessor);
+        String repeatedSrcCode = Files.readString(srcFile);
+        CompileResult compilation = compileJavaSrcWithRelease21(srcFile, temporaryDirectory.resolve("classes"));
+
+        // Then
+        assertThat(result.isSuccess()).as(scenario).isTrue();
+        assertThat(repeatedResult.isSuccess()).as(scenario).isTrue();
+        assertThat(printedSrcCode)
+                .isEqualTo(boundaryExpectedSrcCode.replace("    ", indentation).replace("\n", lineSeparator));
+        assertThat(repeatedSrcCode).isEqualTo(printedSrcCode);
+        assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
+    }
+
+    @Test
+    void reorder_commentsSharingDeclarationLines_preservesCommentsAndStableGroupHeader() throws Exception {
+        // Given
+        Path srcFile =
+                Files.writeString(temporaryDirectory.resolve("CommentPlacementScenario.java"), commentPlacementSrcCode);
 
         // When
         SrcProcessingResult result = processSrc(srcFile, commentHeaderProcessor);
         String printedSrc = Files.readString(srcFile);
+        SrcProcessingResult repeatedResult = processSrc(srcFile, commentHeaderProcessor);
+        String repeatedSrc = Files.readString(srcFile);
         CompileResult compilation = compileJavaSrcWithRelease21(srcFile, temporaryDirectory.resolve("classes"));
 
         // Then
         assertThat(result.isSuccess()).isTrue();
+        assertThat(repeatedResult.isSuccess()).isTrue();
+        assertThat(repeatedSrc).isEqualTo(printedSrc);
         assertThat(printedSrc)
                 .containsOnlyOnce("// Fields\n")
                 .containsOnlyOnce("/* Fields */ int alpha;")
@@ -71,12 +160,28 @@ class SrcPrinterE2ETest {
         assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
     }
 
+    @Test
+    void reorder_distinctFieldGroups_preservesSingleGroupSeparator() throws Exception {
+        // Given
+        Path srcFile = Files.writeString(temporaryDirectory.resolve("FieldGroupsScenario.java"), fieldGroupsSrcCode);
+
+        // When
+        SrcProcessingResult result = processSrc(srcFile, fieldGroupProcessor);
+        String printedSrcCode = Files.readString(srcFile);
+        CompileResult compilation = compileJavaSrcWithRelease21(srcFile, temporaryDirectory.resolve("classes"));
+
+        // Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(printedSrcCode.lines()).containsSequence("    static int shared;", "", "    int instance;", "}");
+        assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"  ", "\u2003", "\u2003\u2003"})
-    void reorder_enumCommentWhitespace_preservesCommentsAndMemberContents(String commentWhitespace) throws Exception {
+    void reorder_enumCommentWhitespace_preservesCommentsAndMemberContents(@NonNull String commentWhitespace)
+            throws Exception {
         // Given
-        String inputSrc = readClasspathResourceAsString(ENUM_WHITESPACE_INPUT)
-                .replace("\r\n", "\n")
+        String inputSrc = enumWhitespaceSrcCode
                 .replace("the  double", "the" + commentWhitespace + "double")
                 .replace("<trailing-whitespace>", commentWhitespace);
         Path srcFile = Files.writeString(temporaryDirectory.resolve("EnumWhitespaceScenario.java"), inputSrc);
@@ -92,6 +197,25 @@ class SrcPrinterE2ETest {
                 .contains("// Keep the" + commentWhitespace + "double spacing." + commentWhitespace + "\n")
                 .contains("\"two  spaces\"", "return \"three   spaces\";")
                 .containsSubsequence("String alpha()", "String zebra()");
+        assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideNestedTypeProcessors")
+    void reorder_firstNestedType_insertsOneHeaderSeparator(@NonNull String scenario, @NonNull SrcProcessor processor)
+            throws Exception {
+        // Given
+        Path srcFile = Files.writeString(
+                temporaryDirectory.resolve("NestedOnly.java"), "class NestedOnly {\n    static class Inner {}\n}\n");
+
+        // When
+        SrcProcessingResult result = processSrc(srcFile, processor);
+        String printedSrcCode = Files.readString(srcFile);
+        CompileResult compilation = compileJavaSrcWithRelease21(srcFile, temporaryDirectory.resolve("classes"));
+
+        // Then
+        assertThat(result.isSuccess()).as(scenario).isTrue();
+        assertThat(printedSrcCode).isEqualTo("class NestedOnly {\n\n    static class Inner {}\n}\n");
         assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
     }
 
@@ -111,18 +235,17 @@ class SrcPrinterE2ETest {
         // Then
         assertThat(result.isSuccess()).isTrue();
         assertThat(printedSrc)
-                .isEqualTo("\nclass HeaderlessScenario{\nint alpha;\nint zebra;\n}\n".replace("\n", lineSeparator));
+                .isEqualTo("class HeaderlessScenario{\nint alpha;\nint zebra;\n}\n".replace("\n", lineSeparator));
         assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("lineSeparators")
+    @MethodSource("provideLineSeparators")
     void reorder_lineSeparatorVariants_preservesFragmentsAndUsesDominantSeparator(
-            String scenarioName, String inputSeparator, String expectedSeparator) throws Exception {
+            @NonNull String scenarioName, @NonNull String inputSeparator, @NonNull String expectedSeparator)
+            throws Exception {
         // Given
-        String inputSrc = readClasspathResourceAsString(LINE_SEPARATORS_INPUT)
-                .replace("\r\n", "\n")
-                .replace("\n", inputSeparator);
+        String inputSrc = lineSeparatorsSrcCode.replace("\n", inputSeparator);
         Path srcFile = Files.writeString(temporaryDirectory.resolve("LineSeparatorsScenario.java"), inputSrc);
         String originalHeader = inputSrc.substring(0, inputSrc.indexOf("class LineSeparatorsScenario"))
                 .stripTrailing();
@@ -138,17 +261,32 @@ class SrcPrinterE2ETest {
         assertThat(printedSrc)
                 .startsWith(originalHeader + expectedSeparator + expectedSeparator)
                 .contains("    int alpha;" + expectedSeparator + "    int zebra;" + expectedSeparator)
-                .endsWith(inputSeparator + "}" + expectedSeparator);
+                .endsWith(expectedSeparator + "}" + expectedSeparator);
+        assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
+    }
+
+    @Test
+    void reorder_topLevelKinds_sortsAndSeparatesEveryDeclarationKind() throws Exception {
+        // Given
+        Path srcFile = Files.writeString(
+                temporaryDirectory.resolve("TopLevelTypesOrderingFixture.java"), topLevelTypesInputSrcCode);
+
+        // When
+        SrcProcessingResult result = processSrc(srcFile, srcProcessor);
+        String printedSrcCode = Files.readString(srcFile);
+        CompileResult compilation = compileJavaSrcWithRelease21(srcFile, temporaryDirectory.resolve("classes"));
+
+        // Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(printedSrcCode).isEqualTo(topLevelTypesExpectedSrcCode);
         assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
     }
 
     @Test
     void reorder_typeDeclarationsAndComments_preservesUnformattedPrinterOutput() throws Exception {
         // Given
-        String inputSrc = readClasspathResourceAsString(TYPE_DECLARATIONS_INPUT).replace("\r\n", "\n");
-        String expectedSrc =
-                readClasspathResourceAsString(TYPE_DECLARATIONS_EXPECTED).replace("\r\n", "\n");
-        Path srcFile = Files.writeString(temporaryDirectory.resolve("TypeDeclarationsScenario.java"), inputSrc);
+        Path srcFile = Files.writeString(
+                temporaryDirectory.resolve("TypeDeclarationsScenario.java"), typeDeclarationsInputSrcCode);
 
         // When
         SrcProcessingResult result = processSrc(srcFile, srcProcessor);
@@ -157,12 +295,56 @@ class SrcPrinterE2ETest {
 
         // Then
         assertThat(result.isSuccess()).isTrue();
-        assertThat(printedSrc).isEqualTo(expectedSrc);
+        assertThat(printedSrc).isEqualTo(typeDeclarationsExpectedSrcCode);
+        assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideWhitespacePreambles")
+    void reorder_whitespaceOnlyPreamble_omitsEmptyHeader(
+            @NonNull String scenario, @NonNull String preamble, @NonNull String lineSeparator) throws Exception {
+        // Given
+        Path srcFile = Files.writeString(
+                temporaryDirectory.resolve("EmptyPreamble.java"), preamble + "class EmptyPreamble {}");
+
+        // When
+        SrcProcessingResult result = processSrc(srcFile, srcProcessor);
+        String printedSrcCode = Files.readString(srcFile);
+        CompileResult compilation = compileJavaSrcWithRelease21(srcFile, temporaryDirectory.resolve("classes"));
+
+        // Then
+        assertThat(result.isSuccess()).as(scenario).isTrue();
+        assertThat(printedSrcCode).isEqualTo("class EmptyPreamble {}" + lineSeparator);
         assertThat(compilation.getExitCode()).as(compilation.getOutput()).isZero();
     }
 
     @NonNull
-    private static Stream<Arguments> lineSeparators() {
+    private static SrcProcessor createSrcProcessor(boolean blankLineBeforeComment) {
+        return new SrcProcessor(FlexibleUnifiedConfig.builder()
+                .formatting(FlexibleUnifiedFormatting.builder()
+                        .formatterStyle(NONE)
+                        .fixImports(false)
+                        .blankLineBeforeComment(blankLineBeforeComment)
+                        .build())
+                .backupsEnabled(false)
+                .processingStatisticsMode(ProcessingStatisticsMode.DISABLED)
+                .build());
+    }
+
+    @NonNull
+    private static Stream<Arguments> provideBoundaryVariants() {
+        return Stream.of(
+                Arguments.of("LF", "\n", 0, "    "),
+                Arguments.of("LF", "\n", 3, "    "),
+                Arguments.of("CRLF", "\r\n", 0, "    "),
+                Arguments.of("CRLF", "\r\n", 3, "    "),
+                Arguments.of("CR", "\r", 0, "    "),
+                Arguments.of("CR", "\r", 3, "    "),
+                Arguments.of("LF with tabs", "\n", 3, "\t"));
+    }
+
+    @NonNull
+    private static Stream<Arguments> provideLineSeparators() {
         return Stream.of(
                 Arguments.of("LF", "\n", "\n"),
                 Arguments.of("CRLF", "\r\n", "\r\n"),
@@ -176,8 +358,28 @@ class SrcPrinterE2ETest {
     }
 
     @NonNull
+    private static Stream<Arguments> provideWhitespacePreambles() {
+        return Stream.of(
+                Arguments.of("LF", "\n\n", "\n"),
+                Arguments.of("CRLF", "\r\n\r\n", "\r\n"),
+                Arguments.of("spaces, tab and form feed", " \t\f\n", "\n"));
+    }
+
+    @NonNull
+    private static String readNormalizedFixture(String resourcePath) {
+        return readClasspathResourceAsString(resourcePath).replace("\r\n", "\n");
+    }
+
+    @NonNull
     private SrcProcessingResult processSrc(Path srcFile, SrcProcessor processor) {
         return processor.processSources(
                 temporaryDirectory, List.of(srcFile.getFileName().toString()), List.of(), FlowType.REORDER);
+    }
+
+    @NonNull
+    private Stream<Arguments> provideNestedTypeProcessors() {
+        return Stream.of(
+                Arguments.of("header separator disabled", srcProcessor),
+                Arguments.of("header separator enabled", boundaryProcessor));
     }
 }

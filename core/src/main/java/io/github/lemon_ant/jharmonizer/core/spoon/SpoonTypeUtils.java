@@ -137,6 +137,7 @@ public class SpoonTypeUtils {
      * @return the base name without the extension, or the original name when there is no dot
      */
     @NonNull
+    // TODO Find a better place for this
     private static String stripExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         return dotIndex == -1 ? fileName : fileName.substring(0, dotIndex);

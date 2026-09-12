@@ -20,10 +20,10 @@ This checklist tracks completed and remaining test coverage.
 
 - [x] **Boundary stitching correctness**
   - **Type:** E2E
-  - **Targets:** `SpoonCustomSrcPrinter`, `SpoonSrcPrinterUtils`
+  - **Targets:** `SpoonCustomSrcPrinter`, `SpoonTypeStructurePrinter`, `SpoonPrinterHelper`, `SrcCodeUtils`
   - **Goal:** no missing/extra braces, semicolons, or accidental merges of two members.
   - **Must assert:** output is syntactically valid and compiles.
-  - **Covered by:** `SrcPrinterE2ETest` checks declaration snapshots and compiles output with JDK 21; see [printer coverage](printer-coverage.md).
+  - **Covered by:** `SrcPrinterE2ETest` checks exact boundaries with formatting disabled, combined separator requests, LF/CRLF/CR endings, space/tab indentation, opt-out fragments, and repeated processing. Output compiles with JDK 21; see [printer coverage](printer-coverage.md).
 
 - [ ] **Package/import/header handling**
   - **Type:** component

@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Printer E2E tests for declarations, comments, string contents, headerless files, and line separators.
+- Printer E2E tests for declarations, comments, string contents, headerless files, whitespace-only preambles, line separators, group boundaries, opt-out preservation, and idempotence.
+- Printer buffer tests for empty output, missing line terminators, and existing LF/CRLF/CR endings.
 - Printer coverage measurements, unreachable-branch notes, and a Maven/JaCoCo reproduction command.
 
 ### Changed
@@ -27,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Required cross-platform Java/Maven tooling and concise technical text in agent instructions.
 - Run local source reordering in `validate` before PMD checks.
 - Clarified prepared test state and one-time setup rules in agent instructions.
+
+### Fixed
+
+- Fixed duplicate blank lines in Spoon serialization before closing braces, between nested and top-level types, and at end of file. Declaration containers now own separators, combining header, member, and group spacing while preserving comments, opt-out fragments, and source line endings. Member source boundaries are indexed once, skipped-type offsets no longer copy the output buffer, and fragment indentation is retained without rescanning leading whitespace. Fragment-boundary detection is centralized in `SrcCodeUtils` with unit coverage for indentation, whitespace, and source ranges.
+- Generated member-group comments now retain the following member's source indentation before formatting.
 
 ## [1.0.1] — 2026-05-07
 

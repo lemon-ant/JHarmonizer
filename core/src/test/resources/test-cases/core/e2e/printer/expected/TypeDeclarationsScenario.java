@@ -11,26 +11,19 @@ public class TypeDeclarationsScenario {
 
     void zebra() { }
 
-
     @interface NestedAnnotation {
         String alpha();
 
         String zebra();
-
     }
-
 
     interface NestedInterface {
         void alpha();
 
         void zebra();
-
     }
 
-
     static class EmptyNested { /* Keep the body comment. */ }
-
-
 
     enum NestedEnum {
         SECOND, FIRST;
@@ -40,18 +33,13 @@ public class TypeDeclarationsScenario {
         void alpha() { }
 
         void zebra() { }
-
     }
-
 
     record NestedRecord(int value) {
         int alpha() { return value; }
 
         int zebra() { return value; }
-
     }
-
 }
 
 class EmptySibling { /* Keep the sibling comment. */ }
-
