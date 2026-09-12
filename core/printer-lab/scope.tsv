@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+# role<TAB>path relative to core/src/main/java<TAB>methods (* = whole source type)
+implementation	io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonCustomSrcPrinter.java	*
+implementation	io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeStructurePrinter.java	*
+implementation	io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonPrinterHelper.java	*
+implementation	io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonSrcPrinterUtils.java	*
+implementation	io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeMemberUtils.java	*
+implementation	io/github/lemon_ant/jharmonizer/core/translator/spoon/EnumMemberStartCorrectionResolver.java	*
+shared	io/github/lemon_ant/jharmonizer/core/utilities/SrcCodeUtils.java	*
+contract	io/github/lemon_ant/jharmonizer/core/translator/spoon/PrinterConfig.java	*
+contract	io/github/lemon_ant/jharmonizer/core/translator/SerializedSrcWithSkippedTypeRanges.java	*
+contract	io/github/lemon_ant/jharmonizer/core/translator/SrcCharacterRange.java	*
+shared	io/github/lemon_ant/jharmonizer/core/spoon/SpoonTypeUtils.java	getRootTypes,hasNoDeclaredTypes

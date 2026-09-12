@@ -85,6 +85,9 @@ This file defines repository-wide conventions for coding agents working in this 
 - Repository build, test, coverage, and quality-gate tooling must be cross-platform and based on Java/JVM tools or Maven plugins. Do not add PowerShell, Bash, or batch scripts for these tasks.
 - Use the existing Maven plugins and JaCoCo for coverage collection, reports, and supported threshold checks. Document tool limitations and unreachable branches instead of introducing custom coverage-report parsers or counters.
 - Keep one-off measurement and diagnostic artifacts under `target/`; do not turn them into permanent repository tools unless explicitly requested.
+- The user-requested temporary printer experiment lives in `core/printer-lab/`, outside the root reactor, product artifacts, ordinary tests, and CI.
+  - For printer measurements or comparisons, follow `core/printer-lab/NEXT_AGENT.md` and `core/printer-lab/PROTOCOL.md`; preserve the frozen methodology and archived baseline.
+  - Keep generated scratch artifacts under the lab's `target/`; commit only the requested framework, documentation, and reviewed measurement evidence.
 
 ## Test conventions
 

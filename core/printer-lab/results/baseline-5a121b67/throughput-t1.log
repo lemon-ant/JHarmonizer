@@ -1,0 +1,1505 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+# JMH version: 1.37
+# VM version: JDK 21.0.8, OpenJDK 64-Bit Server VM, 21.0.8+9-LTS
+# VM invoker: C:\Program Files\Microsoft\jdk-21.0.8.9-hotspot\bin\java.exe
+# VM options: -Xms1g -Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dprinter.lab.corpus=W:\JHarmonizer\core\printer-lab\target\baseline-final-run\corpus
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 1 s each
+# Measurement: 5 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize
+# Parameters: (workload = fixtures)
+
+# Run progress: 0.00% complete, ETA 00:03:00
+# Fork: 1 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 119.160 ops/s
+# Warmup Iteration   2: 197.589 ops/s
+# Warmup Iteration   3: 351.116 ops/s
+# Warmup Iteration   4: 386.717 ops/s
+# Warmup Iteration   5: 373.030 ops/s
+Iteration   1: 488.427 ops/s
+                 gc.alloc.rate:                                 242.000 MB/sec
+                 gc.alloc.rate.norm:                            519911.967 B/op
+                 gc.count:                                      ≈ 0 counts
+                 mempool.CodeHeap 'non-nmethods'.used:          1649.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 3696.125 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10919.125 KiB
+                 mempool.Compressed Class Space.used:           3549.430 KiB
+                 mempool.G1 Eden Space.used:                    546816.000 KiB
+                 mempool.G1 Old Gen.used:                       9216.000 KiB
+                 mempool.G1 Survivor Space.used:                6696.156 KiB
+                 mempool.Metaspace.used:                        32137.430 KiB
+                 mempool.total.codeheap.used:                   16264.625 KiB
+                 mempool.total.used:                            614679.641 KiB
+
+Iteration   2: 469.286 ops/s
+                 gc.alloc.rate:                                 231.183 MB/sec
+                 gc.alloc.rate.norm:                            517126.945 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1636.125 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4101.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10965.375 KiB
+                 mempool.Compressed Class Space.used:           3550.492 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       9216.000 KiB
+                 mempool.G1 Survivor Space.used:                6696.156 KiB
+                 mempool.Metaspace.used:                        32154.289 KiB
+                 mempool.total.codeheap.used:                   16703.125 KiB
+                 mempool.total.used:                            689888.063 KiB
+
+Iteration   3: 885.602 ops/s
+                 gc.alloc.rate:                                 436.302 MB/sec
+                 gc.alloc.rate.norm:                            516795.499 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       16.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1617.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4247.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10969.125 KiB
+                 mempool.Compressed Class Space.used:           3550.492 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       9216.000 KiB
+                 mempool.G1 Survivor Space.used:                6570.352 KiB
+                 mempool.Metaspace.used:                        32157.398 KiB
+                 mempool.total.codeheap.used:                   16833.625 KiB
+                 mempool.total.used:                            689895.867 KiB
+
+Iteration   4: 828.771 ops/s
+                 gc.alloc.rate:                                 408.142 MB/sec
+                 gc.alloc.rate.norm:                            516701.332 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1629.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4376.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10990.375 KiB
+                 mempool.Compressed Class Space.used:           3550.492 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9216.000 KiB
+                 mempool.G1 Survivor Space.used:                6570.773 KiB
+                 mempool.Metaspace.used:                        32166.625 KiB
+                 mempool.total.codeheap.used:                   16996.375 KiB
+                 mempool.total.used:                            691092.266 KiB
+
+Iteration   5: 650.379 ops/s
+                 gc.alloc.rate:                                 318.129 MB/sec
+                 gc.alloc.rate.norm:                            521927.226 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       7.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1598.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4405.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11043.125 KiB
+                 mempool.Compressed Class Space.used:           3550.492 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       9216.000 KiB
+                 mempool.G1 Survivor Space.used:                6570.773 KiB
+                 mempool.Metaspace.used:                        32184.547 KiB
+                 mempool.total.codeheap.used:                   17046.625 KiB
+                 mempool.total.used:                            690136.438 KiB
+
+
+# Run progress: 8.33% complete, ETA 00:04:16
+# Fork: 2 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 159.963 ops/s
+# Warmup Iteration   2: 253.679 ops/s
+# Warmup Iteration   3: 304.863 ops/s
+# Warmup Iteration   4: 370.822 ops/s
+# Warmup Iteration   5: 405.327 ops/s
+Iteration   1: 348.513 ops/s
+                 gc.alloc.rate:                                 174.062 MB/sec
+                 gc.alloc.rate.norm:                            524179.037 B/op
+                 gc.count:                                      ≈ 0 counts
+                 mempool.CodeHeap 'non-nmethods'.used:          1637.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 3446.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11151.125 KiB
+                 mempool.Compressed Class Space.used:           3546.352 KiB
+                 mempool.G1 Eden Space.used:                    480256.000 KiB
+                 mempool.G1 Old Gen.used:                       8668.391 KiB
+                 mempool.G1 Survivor Space.used:                6550.219 KiB
+                 mempool.Metaspace.used:                        32095.352 KiB
+                 mempool.total.codeheap.used:                   16234.750 KiB
+                 mempool.total.used:                            547351.063 KiB
+
+Iteration   2: 621.240 ops/s
+                 gc.alloc.rate:                                 307.750 MB/sec
+                 gc.alloc.rate.norm:                            519771.448 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       7.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1640.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 3657.125 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11272.500 KiB
+                 mempool.Compressed Class Space.used:           3547.414 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8668.391 KiB
+                 mempool.G1 Survivor Space.used:                6550.219 KiB
+                 mempool.Metaspace.used:                        32107.484 KiB
+                 mempool.total.codeheap.used:                   16570.375 KiB
+                 mempool.total.used:                            689011.883 KiB
+
+Iteration   3: 941.961 ops/s
+                 gc.alloc.rate:                                 463.946 MB/sec
+                 gc.alloc.rate.norm:                            516830.992 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       13.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1626.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 3941.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11278.125 KiB
+                 mempool.Compressed Class Space.used:           3547.414 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8668.391 KiB
+                 mempool.G1 Survivor Space.used:                6712.438 KiB
+                 mempool.Metaspace.used:                        32110.594 KiB
+                 mempool.total.codeheap.used:                   16846.000 KiB
+                 mempool.total.used:                            689452.836 KiB
+
+Iteration   4: 1094.120 ops/s
+                 gc.alloc.rate:                                 538.906 MB/sec
+                 gc.alloc.rate.norm:                            516775.862 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1619.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4071.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11295.125 KiB
+                 mempool.Compressed Class Space.used:           3547.414 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8668.391 KiB
+                 mempool.G1 Survivor Space.used:                6876.047 KiB
+                 mempool.Metaspace.used:                        32118.664 KiB
+                 mempool.total.codeheap.used:                   16986.250 KiB
+                 mempool.total.used:                            689764.766 KiB
+
+Iteration   5: 1123.691 ops/s
+                 gc.alloc.rate:                                 549.838 MB/sec
+                 gc.alloc.rate.norm:                            519767.175 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       13.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1599.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4133.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11370.750 KiB
+                 mempool.Compressed Class Space.used:           3547.414 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8668.391 KiB
+                 mempool.G1 Survivor Space.used:                6760.820 KiB
+                 mempool.Metaspace.used:                        32135.789 KiB
+                 mempool.total.codeheap.used:                   17103.625 KiB
+                 mempool.total.used:                            689784.039 KiB
+
+
+# Run progress: 16.67% complete, ETA 00:03:47
+# Fork: 3 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 102.552 ops/s
+# Warmup Iteration   2: 190.191 ops/s
+# Warmup Iteration   3: 255.911 ops/s
+# Warmup Iteration   4: 255.396 ops/s
+# Warmup Iteration   5: 298.761 ops/s
+Iteration   1: 584.261 ops/s
+                 gc.alloc.rate:                                 289.419 MB/sec
+                 gc.alloc.rate.norm:                            519798.238 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       9.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1663.250 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 3669.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10948.125 KiB
+                 mempool.Compressed Class Space.used:           3546.852 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8826.078 KiB
+                 mempool.G1 Survivor Space.used:                6692.531 KiB
+                 mempool.Metaspace.used:                        32139.719 KiB
+                 mempool.total.codeheap.used:                   16280.375 KiB
+                 mempool.total.used:                            689053.555 KiB
+
+Iteration   2: 739.222 ops/s
+                 gc.alloc.rate:                                 364.740 MB/sec
+                 gc.alloc.rate.norm:                            517701.060 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       15.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1703.250 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4158.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10984.500 KiB
+                 mempool.Compressed Class Space.used:           3547.914 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8826.078 KiB
+                 mempool.G1 Survivor Space.used:                6976.453 KiB
+                 mempool.Metaspace.used:                        32151.453 KiB
+                 mempool.total.codeheap.used:                   16846.000 KiB
+                 mempool.total.used:                            689915.898 KiB
+
+Iteration   3: 1010.459 ops/s
+                 gc.alloc.rate:                                 498.529 MB/sec
+                 gc.alloc.rate.norm:                            517609.550 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1614.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4396.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     10992.750 KiB
+                 mempool.Compressed Class Space.used:           3547.914 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8826.078 KiB
+                 mempool.G1 Survivor Space.used:                6714.719 KiB
+                 mempool.Metaspace.used:                        32154.563 KiB
+                 mempool.total.codeheap.used:                   17003.875 KiB
+                 mempool.total.used:                            689815.148 KiB
+
+Iteration   4: 916.540 ops/s
+                 gc.alloc.rate:                                 451.887 MB/sec
+                 gc.alloc.rate.norm:                            517454.866 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       14.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1624.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4566.875 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11009.500 KiB
+                 mempool.Compressed Class Space.used:           3547.914 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8826.078 KiB
+                 mempool.G1 Survivor Space.used:                6741.016 KiB
+                 mempool.Metaspace.used:                        32163.789 KiB
+                 mempool.total.codeheap.used:                   17200.875 KiB
+                 mempool.total.used:                            690047.672 KiB
+
+Iteration   5: 904.172 ops/s
+                 gc.alloc.rate:                                 444.873 MB/sec
+                 gc.alloc.rate.norm:                            521153.514 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1615.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 4690.750 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     11086.625 KiB
+                 mempool.Compressed Class Space.used:           3547.914 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8826.078 KiB
+                 mempool.G1 Survivor Space.used:                6569.625 KiB
+                 mempool.Metaspace.used:                        32187.898 KiB
+                 mempool.total.codeheap.used:                   17392.375 KiB
+                 mempool.total.used:                            690091.891 KiB
+
+
+
+Result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize":
+  773.776 ±(99.9%) 254.413 ops/s [Average]
+  (min, avg, max) = (348.513, 773.776, 1123.691), stdev = 237.978
+  CI (99.9%): [519.363, 1028.189] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate":
+  381.314 ±(99.9%) 124.408 MB/sec [Average]
+  (min, avg, max) = (174.062, 381.314, 549.838), stdev = 116.371
+  CI (99.9%): [256.906, 505.722] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate.norm":
+  518900.314 ±(99.9%) 2421.768 B/op [Average]
+  (min, avg, max) = (516701.332, 518900.314, 524179.037), stdev = 2265.323
+  CI (99.9%): [516478.546, 521322.082] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.count":
+  19.000 ±(99.9%) 0.001 counts [Sum]
+  (min, avg, max) = (≈ 0, 1.267, 2.000), stdev = 0.704
+  CI (99.9%): [19.000, 19.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.time":
+  129.000 ±(99.9%) 0.001 ms [Sum]
+  (min, avg, max) = (≈ 0, 8.600, 16.000), stdev = 4.997
+  CI (99.9%): [129.000, 129.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used":
+  1703.250 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (1598.000, 1631.667, 1703.250), stdev = 26.323
+  CI (99.9%): [1703.250, 1703.250] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used":
+  4690.750 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (3446.625, 4103.842, 4690.750), stdev = 363.348
+  CI (99.9%): [4690.750, 4690.750] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used":
+  11370.750 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (10919.125, 11085.083, 11370.750), stdev = 149.198
+  CI (99.9%): [11370.750, 11370.750] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Compressed Class Space.used":
+  3550.492 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (3546.352, 3548.394, 3550.492), stdev = 1.464
+  CI (99.9%): [3550.492, 3550.492] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Eden Space.used":
+  622592.000 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (480256.000, 607232.000, 622592.000), stdev = 40067.067
+  CI (99.9%): [622592.000, 622592.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Old Gen.used":
+  9216.000 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (8668.391, 8903.490, 9216.000), stdev = 238.243
+  CI (99.9%): [9216.000, 9216.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Survivor Space.used":
+  6976.453 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (6550.219, 6683.220, 6976.453), stdev = 125.672
+  CI (99.9%): [6976.453, 6976.453] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Metaspace.used":
+  32187.898 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (32095.352, 32144.373, 32187.898), stdev = 27.402
+  CI (99.9%): [32187.898, 32187.898] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.codeheap.used":
+  17392.375 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (16234.750, 16820.592, 17392.375), stdev = 350.173
+  CI (99.9%): [17392.375, 17392.375] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.used":
+  691092.266 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (547351.063, 675332.068, 691092.266), stdev = 40353.981
+  CI (99.9%): [691092.266, 691092.266] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.8, OpenJDK 64-Bit Server VM, 21.0.8+9-LTS
+# VM invoker: C:\Program Files\Microsoft\jdk-21.0.8.9-hotspot\bin\java.exe
+# VM options: -Xms1g -Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dprinter.lab.corpus=W:\JHarmonizer\core\printer-lab\target\baseline-final-run\corpus
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 1 s each
+# Measurement: 5 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize
+# Parameters: (workload = flat128)
+
+# Run progress: 25.00% complete, ETA 00:03:27
+# Fork: 1 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 1035.817 ops/s
+# Warmup Iteration   2: 3279.645 ops/s
+# Warmup Iteration   3: 4072.846 ops/s
+# Warmup Iteration   4: 3963.334 ops/s
+# Warmup Iteration   5: 5084.055 ops/s
+Iteration   1: 5234.212 ops/s
+                 gc.alloc.rate:                                 668.161 MB/sec
+                 gc.alloc.rate.norm:                            133947.011 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       10.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1544.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2190.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7223.125 KiB
+                 mempool.Compressed Class Space.used:           3140.688 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8807.234 KiB
+                 mempool.G1 Survivor Space.used:                5829.969 KiB
+                 mempool.Metaspace.used:                        29215.352 KiB
+                 mempool.total.codeheap.used:                   10958.125 KiB
+                 mempool.total.used:                            680543.367 KiB
+
+Iteration   2: 4185.209 ops/s
+                 gc.alloc.rate:                                 534.310 MB/sec
+                 gc.alloc.rate.norm:                            133947.742 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1558.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2193.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7260.500 KiB
+                 mempool.Compressed Class Space.used:           3141.750 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8807.234 KiB
+                 mempool.G1 Survivor Space.used:                5829.969 KiB
+                 mempool.Metaspace.used:                        29227.227 KiB
+                 mempool.total.codeheap.used:                   11012.375 KiB
+                 mempool.total.used:                            680610.555 KiB
+
+Iteration   3: 5473.954 ops/s
+                 gc.alloc.rate:                                 698.756 MB/sec
+                 gc.alloc.rate.norm:                            133946.874 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1544.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2194.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7266.000 KiB
+                 mempool.Compressed Class Space.used:           3141.750 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8807.234 KiB
+                 mempool.G1 Survivor Space.used:                5598.469 KiB
+                 mempool.Metaspace.used:                        29230.336 KiB
+                 mempool.total.codeheap.used:                   11005.000 KiB
+                 mempool.total.used:                            680374.789 KiB
+
+Iteration   4: 5367.637 ops/s
+                 gc.alloc.rate:                                 685.367 MB/sec
+                 gc.alloc.rate.norm:                            133946.924 B/op
+                 gc.count:                                      3.000 counts
+                 gc.time:                                       16.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1544.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2195.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7284.000 KiB
+                 mempool.Compressed Class Space.used:           3141.750 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8807.234 KiB
+                 mempool.G1 Survivor Space.used:                5598.469 KiB
+                 mempool.Metaspace.used:                        29238.984 KiB
+                 mempool.total.codeheap.used:                   11023.750 KiB
+                 mempool.total.used:                            680402.188 KiB
+
+Iteration   5: 5485.183 ops/s
+                 gc.alloc.rate:                                 697.859 MB/sec
+                 gc.alloc.rate.norm:                            134072.852 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       9.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1558.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2199.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7330.000 KiB
+                 mempool.Compressed Class Space.used:           3141.750 KiB
+                 mempool.G1 Eden Space.used:                    624640.000 KiB
+                 mempool.G1 Old Gen.used:                       13725.438 KiB
+                 mempool.G1 Survivor Space.used:                5359.797 KiB
+                 mempool.Metaspace.used:                        29243.805 KiB
+                 mempool.total.codeheap.used:                   11088.125 KiB
+                 mempool.total.used:                            687198.914 KiB
+
+
+# Run progress: 33.33% complete, ETA 00:03:00
+# Fork: 2 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 663.644 ops/s
+# Warmup Iteration   2: 2360.369 ops/s
+# Warmup Iteration   3: 2811.614 ops/s
+# Warmup Iteration   4: 3701.831 ops/s
+# Warmup Iteration   5: 3180.881 ops/s
+Iteration   1: 3901.197 ops/s
+                 gc.alloc.rate:                                 505.436 MB/sec
+                 gc.alloc.rate.norm:                            135932.017 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       22.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1546.625 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2116.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7276.125 KiB
+                 mempool.Compressed Class Space.used:           3140.227 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.195 KiB
+                 mempool.G1 Survivor Space.used:                5593.750 KiB
+                 mempool.Metaspace.used:                        29224.219 KiB
+                 mempool.total.codeheap.used:                   10939.000 KiB
+                 mempool.total.used:                            680393.391 KiB
+
+Iteration   2: 4261.613 ops/s
+                 gc.alloc.rate:                                 552.072 MB/sec
+                 gc.alloc.rate.norm:                            135931.676 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1561.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2118.750 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7309.625 KiB
+                 mempool.Compressed Class Space.used:           3141.289 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.195 KiB
+                 mempool.G1 Survivor Space.used:                5505.227 KiB
+                 mempool.Metaspace.used:                        29239.539 KiB
+                 mempool.total.codeheap.used:                   10989.375 KiB
+                 mempool.total.used:                            680371.625 KiB
+
+Iteration   3: 3907.724 ops/s
+                 gc.alloc.rate:                                 506.181 MB/sec
+                 gc.alloc.rate.norm:                            135932.027 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       7.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1546.625 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2120.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7310.625 KiB
+                 mempool.Compressed Class Space.used:           3141.289 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.195 KiB
+                 mempool.G1 Survivor Space.used:                5598.156 KiB
+                 mempool.Metaspace.used:                        29241.883 KiB
+                 mempool.total.codeheap.used:                   10977.500 KiB
+                 mempool.total.used:                            680455.023 KiB
+
+Iteration   4: 5436.552 ops/s
+                 gc.alloc.rate:                                 704.416 MB/sec
+                 gc.alloc.rate.norm:                            135930.875 B/op
+                 gc.count:                                      3.000 counts
+                 gc.time:                                       19.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1560.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2121.875 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7335.000 KiB
+                 mempool.Compressed Class Space.used:           3141.289 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.195 KiB
+                 mempool.G1 Survivor Space.used:                5772.719 KiB
+                 mempool.Metaspace.used:                        29252.266 KiB
+                 mempool.total.codeheap.used:                   11017.625 KiB
+                 mempool.total.used:                            680680.094 KiB
+
+Iteration   5: 5586.378 ops/s
+                 gc.alloc.rate:                                 719.468 MB/sec
+                 gc.alloc.rate.norm:                            136078.885 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       14.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1560.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2127.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7383.625 KiB
+                 mempool.Compressed Class Space.used:           3141.289 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.195 KiB
+                 mempool.G1 Survivor Space.used:                5601.281 KiB
+                 mempool.Metaspace.used:                        29261.594 KiB
+                 mempool.total.codeheap.used:                   11072.000 KiB
+                 mempool.total.used:                            680572.359 KiB
+
+
+# Run progress: 41.67% complete, ETA 00:02:35
+# Fork: 3 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 1511.356 ops/s
+# Warmup Iteration   2: 3263.654 ops/s
+# Warmup Iteration   3: 3626.161 ops/s
+# Warmup Iteration   4: 3996.048 ops/s
+# Warmup Iteration   5: 3526.278 ops/s
+Iteration   1: 4200.036 ops/s
+                 gc.alloc.rate:                                 536.060 MB/sec
+                 gc.alloc.rate.norm:                            133939.746 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       5.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1564.250 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2160.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7351.375 KiB
+                 mempool.Compressed Class Space.used:           3142.977 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9034.078 KiB
+                 mempool.G1 Survivor Space.used:                5470.320 KiB
+                 mempool.Metaspace.used:                        29255.227 KiB
+                 mempool.total.codeheap.used:                   11075.625 KiB
+                 mempool.total.used:                            680570.227 KiB
+
+Iteration   2: 3310.124 ops/s
+                 gc.alloc.rate:                                 422.264 MB/sec
+                 gc.alloc.rate.norm:                            133940.749 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1564.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2163.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7382.000 KiB
+                 mempool.Compressed Class Space.used:           3144.039 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9034.078 KiB
+                 mempool.G1 Survivor Space.used:                5613.648 KiB
+                 mempool.Metaspace.used:                        29266.797 KiB
+                 mempool.total.codeheap.used:                   11110.125 KiB
+                 mempool.total.used:                            680760.688 KiB
+
+Iteration   3: 4430.331 ops/s
+                 gc.alloc.rate:                                 565.163 MB/sec
+                 gc.alloc.rate.norm:                            133939.539 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1550.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2164.750 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7395.500 KiB
+                 mempool.Compressed Class Space.used:           3144.039 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9034.078 KiB
+                 mempool.G1 Survivor Space.used:                5623.367 KiB
+                 mempool.Metaspace.used:                        29273.078 KiB
+                 mempool.total.codeheap.used:                   11110.750 KiB
+                 mempool.total.used:                            680777.313 KiB
+
+Iteration   4: 4306.923 ops/s
+                 gc.alloc.rate:                                 549.920 MB/sec
+                 gc.alloc.rate.norm:                            133939.647 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       9.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1550.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2165.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7409.375 KiB
+                 mempool.Compressed Class Space.used:           3144.039 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9034.078 KiB
+                 mempool.G1 Survivor Space.used:                5530.406 KiB
+                 mempool.Metaspace.used:                        29278.281 KiB
+                 mempool.total.codeheap.used:                   11125.375 KiB
+                 mempool.total.used:                            680704.180 KiB
+
+Iteration   5: 5269.857 ops/s
+                 gc.alloc.rate:                                 670.730 MB/sec
+                 gc.alloc.rate.norm:                            134093.711 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       10.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1550.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2168.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     7458.625 KiB
+                 mempool.Compressed Class Space.used:           3144.039 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9034.078 KiB
+                 mempool.G1 Survivor Space.used:                5499.414 KiB
+                 mempool.Metaspace.used:                        29286.930 KiB
+                 mempool.total.codeheap.used:                   11177.125 KiB
+                 mempool.total.used:                            680733.586 KiB
+
+
+
+Result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize":
+  4690.462 ±(99.9%) 794.386 ops/s [Average]
+  (min, avg, max) = (3310.124, 4690.462, 5586.378), stdev = 743.069
+  CI (99.9%): [3896.076, 5484.848] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate":
+  601.077 ±(99.9%) 101.089 MB/sec [Average]
+  (min, avg, max) = (422.264, 601.077, 719.468), stdev = 94.559
+  CI (99.9%): [499.988, 702.167] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate.norm":
+  134634.685 ±(99.9%) 1039.802 B/op [Average]
+  (min, avg, max) = (133939.539, 134634.685, 136078.885), stdev = 972.631
+  CI (99.9%): [133594.883, 135674.487] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.count":
+  30.000 ±(99.9%) 0.001 counts [Sum]
+  (min, avg, max) = (1.000, 2.000, 3.000), stdev = 0.535
+  CI (99.9%): [30.000, 30.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.time":
+  178.000 ±(99.9%) 0.001 ms [Sum]
+  (min, avg, max) = (5.000, 11.867, 22.000), stdev = 4.406
+  CI (99.9%): [178.000, 178.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used":
+  1564.875 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (1544.500, 1553.842, 1564.875), stdev = 7.688
+  CI (99.9%): [1564.875, 1564.875] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used":
+  2199.375 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (2116.250, 2159.917, 2199.375), stdev = 31.436
+  CI (99.9%): [2199.375, 2199.375] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used":
+  7458.625 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (7223.125, 7331.700, 7458.625), stdev = 65.088
+  CI (99.9%): [7458.625, 7458.625] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Compressed Class Space.used":
+  3144.039 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (3140.227, 3142.147, 3144.039), stdev = 1.320
+  CI (99.9%): [3144.039, 3144.039] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Eden Space.used":
+  624640.000 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (622592.000, 622728.533, 624640.000), stdev = 528.791
+  CI (99.9%): [624640.000, 624640.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Old Gen.used":
+  13725.438 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (8807.234, 9243.049, 13725.438), stdev = 1243.382
+  CI (99.9%): [13725.438, 13725.438] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Survivor Space.used":
+  5829.969 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (5359.797, 5601.664, 5829.969), stdev = 129.504
+  CI (99.9%): [5829.969, 5829.969] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Metaspace.used":
+  29286.930 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (29215.352, 29249.034, 29286.930), stdev = 21.107
+  CI (99.9%): [29286.930, 29286.930] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.codeheap.used":
+  11177.125 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (10939.000, 11045.458, 11177.125), stdev = 68.819
+  CI (99.9%): [11177.125, 11177.125] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.used":
+  687198.914 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (680371.625, 681009.886, 687198.914), stdev = 1718.151
+  CI (99.9%): [687198.914, 687198.914] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.8, OpenJDK 64-Bit Server VM, 21.0.8+9-LTS
+# VM invoker: C:\Program Files\Microsoft\jdk-21.0.8.9-hotspot\bin\java.exe
+# VM options: -Xms1g -Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dprinter.lab.corpus=W:\JHarmonizer\core\printer-lab\target\baseline-final-run\corpus
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 1 s each
+# Measurement: 5 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize
+# Parameters: (workload = flat1024)
+
+# Run progress: 50.00% complete, ETA 00:02:12
+# Fork: 1 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 376.306 ops/s
+# Warmup Iteration   2: 543.951 ops/s
+# Warmup Iteration   3: 419.916 ops/s
+# Warmup Iteration   4: 523.610 ops/s
+# Warmup Iteration   5: 597.690 ops/s
+Iteration   1: 587.431 ops/s
+                 gc.alloc.rate:                                 580.037 MB/sec
+                 gc.alloc.rate.norm:                            1035995.814 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1609.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2547.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8354.125 KiB
+                 mempool.Compressed Class Space.used:           3141.695 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8786.945 KiB
+                 mempool.G1 Survivor Space.used:                6280.344 KiB
+                 mempool.Metaspace.used:                        29687.742 KiB
+                 mempool.total.codeheap.used:                   12511.250 KiB
+                 mempool.total.used:                            682999.977 KiB
+
+Iteration   2: 625.931 ops/s
+                 gc.alloc.rate:                                 618.081 MB/sec
+                 gc.alloc.rate.norm:                            1035945.076 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       13.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1561.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2554.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8387.375 KiB
+                 mempool.Compressed Class Space.used:           3142.758 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8786.945 KiB
+                 mempool.G1 Survivor Space.used:                6280.344 KiB
+                 mempool.Metaspace.used:                        29703.625 KiB
+                 mempool.total.codeheap.used:                   12502.750 KiB
+                 mempool.total.used:                            683008.422 KiB
+
+Iteration   3: 595.113 ops/s
+                 gc.alloc.rate:                                 587.720 MB/sec
+                 gc.alloc.rate.norm:                            1035920.833 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1589.250 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2621.875 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8390.875 KiB
+                 mempool.Compressed Class Space.used:           3142.758 KiB
+                 mempool.G1 Eden Space.used:                    623616.000 KiB
+                 mempool.G1 Old Gen.used:                       14336.000 KiB
+                 mempool.G1 Survivor Space.used:                6279.172 KiB
+                 mempool.Metaspace.used:                        29706.352 KiB
+                 mempool.total.codeheap.used:                   12602.000 KiB
+                 mempool.total.used:                            689682.281 KiB
+
+Iteration   4: 620.334 ops/s
+                 gc.alloc.rate:                                 612.483 MB/sec
+                 gc.alloc.rate.norm:                            1035846.162 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       5.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1582.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2683.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8413.000 KiB
+                 mempool.Compressed Class Space.used:           3142.758 KiB
+                 mempool.G1 Eden Space.used:                    627712.000 KiB
+                 mempool.G1 Old Gen.used:                       14849.352 KiB
+                 mempool.G1 Survivor Space.used:                968.289 KiB
+                 mempool.Metaspace.used:                        29716.266 KiB
+                 mempool.total.codeheap.used:                   12678.875 KiB
+                 mempool.total.used:                            689067.539 KiB
+
+Iteration   5: 629.058 ops/s
+                 gc.alloc.rate:                                 616.070 MB/sec
+                 gc.alloc.rate.norm:                            1045852.740 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       4.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1575.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2701.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8433.125 KiB
+                 mempool.Compressed Class Space.used:           3142.758 KiB
+                 mempool.G1 Eden Space.used:                    627712.000 KiB
+                 mempool.G1 Old Gen.used:                       14849.352 KiB
+                 mempool.G1 Survivor Space.used:                470.813 KiB
+                 mempool.Metaspace.used:                        29722.117 KiB
+                 mempool.total.codeheap.used:                   12710.375 KiB
+                 mempool.total.used:                            688607.414 KiB
+
+
+# Run progress: 58.33% complete, ETA 00:01:51
+# Fork: 2 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 238.618 ops/s
+# Warmup Iteration   2: 370.588 ops/s
+# Warmup Iteration   3: 537.198 ops/s
+# Warmup Iteration   4: 601.201 ops/s
+# Warmup Iteration   5: 591.049 ops/s
+Iteration   1: 610.582 ops/s
+                 gc.alloc.rate:                                 602.924 MB/sec
+                 gc.alloc.rate.norm:                            1035998.732 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1601.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2573.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8333.750 KiB
+                 mempool.Compressed Class Space.used:           3140.234 KiB
+                 mempool.G1 Eden Space.used:                    621568.000 KiB
+                 mempool.G1 Old Gen.used:                       8811.844 KiB
+                 mempool.G1 Survivor Space.used:                6278.664 KiB
+                 mempool.Metaspace.used:                        29752.133 KiB
+                 mempool.total.codeheap.used:                   12508.875 KiB
+                 mempool.total.used:                            682059.750 KiB
+
+Iteration   2: 601.303 ops/s
+                 gc.alloc.rate:                                 593.804 MB/sec
+                 gc.alloc.rate.norm:                            1035946.186 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       13.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1560.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2579.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8367.250 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8811.844 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29767.313 KiB
+                 mempool.total.codeheap.used:                   12507.625 KiB
+                 mempool.total.used:                            682964.078 KiB
+
+Iteration   3: 551.614 ops/s
+                 gc.alloc.rate:                                 544.647 MB/sec
+                 gc.alloc.rate.norm:                            1035930.484 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1585.625 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2640.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8373.000 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       10515.219 KiB
+                 mempool.G1 Survivor Space.used:                6087.563 KiB
+                 mempool.Metaspace.used:                        29771.852 KiB
+                 mempool.total.codeheap.used:                   12598.875 KiB
+                 mempool.total.used:                            684706.805 KiB
+
+Iteration   4: 383.274 ops/s
+                 gc.alloc.rate:                                 378.384 MB/sec
+                 gc.alloc.rate.norm:                            1035883.704 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1582.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2707.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8396.000 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    627712.000 KiB
+                 mempool.G1 Old Gen.used:                       14543.984 KiB
+                 mempool.G1 Survivor Space.used:                4499.617 KiB
+                 mempool.Metaspace.used:                        29782.234 KiB
+                 mempool.total.codeheap.used:                   12685.250 KiB
+                 mempool.total.used:                            692364.383 KiB
+
+Iteration   5: 500.951 ops/s
+                 gc.alloc.rate:                                 493.816 MB/sec
+                 gc.alloc.rate.norm:                            1048405.976 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       2.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1563.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2714.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8425.125 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    627712.000 KiB
+                 mempool.G1 Old Gen.used:                       14543.984 KiB
+                 mempool.G1 Survivor Space.used:                433.695 KiB
+                 mempool.Metaspace.used:                        29790.484 KiB
+                 mempool.total.codeheap.used:                   12702.500 KiB
+                 mempool.total.used:                            688323.961 KiB
+
+
+# Run progress: 66.67% complete, ETA 00:01:30
+# Fork: 3 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 268.748 ops/s
+# Warmup Iteration   2: 387.494 ops/s
+# Warmup Iteration   3: 460.329 ops/s
+# Warmup Iteration   4: 480.873 ops/s
+# Warmup Iteration   5: 577.116 ops/s
+Iteration   1: 574.601 ops/s
+                 gc.alloc.rate:                                 567.403 MB/sec
+                 gc.alloc.rate.norm:                            1036024.922 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       10.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1607.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2608.125 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8872.875 KiB
+                 mempool.Compressed Class Space.used:           3140.586 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8688.227 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29801.258 KiB
+                 mempool.total.codeheap.used:                   13088.375 KiB
+                 mempool.total.used:                            683454.445 KiB
+
+Iteration   2: 611.295 ops/s
+                 gc.alloc.rate:                                 603.544 MB/sec
+                 gc.alloc.rate.norm:                            1035945.612 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1567.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2616.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8906.375 KiB
+                 mempool.Compressed Class Space.used:           3141.648 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8688.227 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29816.664 KiB
+                 mempool.total.codeheap.used:                   13089.625 KiB
+                 mempool.total.used:                            683472.164 KiB
+
+Iteration   3: 607.675 ops/s
+                 gc.alloc.rate:                                 600.049 MB/sec
+                 gc.alloc.rate.norm:                            1035933.463 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1570.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2662.250 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8907.375 KiB
+                 mempool.Compressed Class Space.used:           3141.648 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       10411.992 KiB
+                 mempool.G1 Survivor Space.used:                6415.484 KiB
+                 mempool.Metaspace.used:                        29819.008 KiB
+                 mempool.total.codeheap.used:                   13140.500 KiB
+                 mempool.total.used:                            685520.633 KiB
+
+Iteration   4: 513.518 ops/s
+                 gc.alloc.rate:                                 507.051 MB/sec
+                 gc.alloc.rate.norm:                            1035876.559 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       8.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1609.625 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2709.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8934.000 KiB
+                 mempool.Compressed Class Space.used:           3141.648 KiB
+                 mempool.G1 Eden Space.used:                    627712.000 KiB
+                 mempool.G1 Old Gen.used:                       14469.266 KiB
+                 mempool.G1 Survivor Space.used:                4640.469 KiB
+                 mempool.Metaspace.used:                        29831.586 KiB
+                 mempool.total.codeheap.used:                   13252.625 KiB
+                 mempool.total.used:                            693047.594 KiB
+
+Iteration   5: 603.106 ops/s
+                 gc.alloc.rate:                                 593.942 MB/sec
+                 gc.alloc.rate.norm:                            1046225.116 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1609.125 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2784.125 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8964.875 KiB
+                 mempool.Compressed Class Space.used:           3141.648 KiB
+                 mempool.G1 Eden Space.used:                    627712.000 KiB
+                 mempool.G1 Old Gen.used:                       14469.266 KiB
+                 mempool.G1 Survivor Space.used:                504.406 KiB
+                 mempool.Metaspace.used:                        29838.703 KiB
+                 mempool.total.codeheap.used:                   13358.125 KiB
+                 mempool.total.used:                            689024.148 KiB
+
+
+
+Result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize":
+  574.386 ±(99.9%) 69.885 ops/s [Average]
+  (min, avg, max) = (383.274, 574.386, 629.058), stdev = 65.371
+  CI (99.9%): [504.500, 644.271] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate":
+  566.664 ±(99.9%) 68.734 MB/sec [Average]
+  (min, avg, max) = (378.384, 566.664, 618.081), stdev = 64.294
+  CI (99.9%): [497.930, 635.398] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate.norm":
+  1038115.425 ±(99.9%) 4852.925 B/op [Average]
+  (min, avg, max) = (1035846.162, 1038115.425, 1048405.976), stdev = 4539.429
+  CI (99.9%): [1033262.500, 1042968.350] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.count":
+  28.000 ±(99.9%) 0.001 counts [Sum]
+  (min, avg, max) = (1.000, 1.867, 2.000), stdev = 0.352
+  CI (99.9%): [28.000, 28.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.time":
+  136.000 ±(99.9%) 0.001 ms [Sum]
+  (min, avg, max) = (2.000, 9.067, 13.000), stdev = 3.595
+  CI (99.9%): [136.000, 136.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used":
+  1609.625 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (1560.875, 1585.025, 1609.625), stdev = 18.571
+  CI (99.9%): [1609.625, 1609.625] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used":
+  2784.125 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (2547.625, 2646.875, 2784.125), stdev = 69.084
+  CI (99.9%): [2784.125, 2784.125] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used":
+  8964.875 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (8333.750, 8563.942, 8964.875), stdev = 260.356
+  CI (99.9%): [8964.875, 8964.875] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Compressed Class Space.used":
+  3142.758 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (3140.234, 3141.689, 3142.758), stdev = 0.780
+  CI (99.9%): [3142.758, 3142.758] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Eden Space.used":
+  627712.000 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (621568.000, 624640.000, 627712.000), stdev = 2625.003
+  CI (99.9%): [627712.000, 627712.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Old Gen.used":
+  14849.352 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (8688.227, 11704.163, 14849.352), stdev = 2843.013
+  CI (99.9%): [14849.352, 14849.352] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Survivor Space.used":
+  6415.484 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (433.695, 4504.724, 6415.484), stdev = 2509.871
+  CI (99.9%): [6415.484, 6415.484] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Metaspace.used":
+  29838.703 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (29687.742, 29767.156, 29838.703), stdev = 50.179
+  CI (99.9%): [29838.703, 29838.703] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.codeheap.used":
+  13358.125 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (12502.750, 12795.842, 13358.125), stdev = 300.725
+  CI (99.9%): [13358.125, 13358.125] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.used":
+  693047.594 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (682059.750, 686553.573, 693047.594), stdev = 3658.212
+  CI (99.9%): [693047.594, 693047.594] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.8, OpenJDK 64-Bit Server VM, 21.0.8+9-LTS
+# VM invoker: C:\Program Files\Microsoft\jdk-21.0.8.9-hotspot\bin\java.exe
+# VM options: -Xms1g -Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dprinter.lab.corpus=W:\JHarmonizer\core\printer-lab\target\baseline-final-run\corpus
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 1 s each
+# Measurement: 5 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize
+# Parameters: (workload = nested128)
+
+# Run progress: 75.00% complete, ETA 00:01:09
+# Fork: 1 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 206.760 ops/s
+# Warmup Iteration   2: 294.653 ops/s
+# Warmup Iteration   3: 486.585 ops/s
+# Warmup Iteration   4: 486.127 ops/s
+# Warmup Iteration   5: 458.622 ops/s
+Iteration   1: 480.937 ops/s
+                 gc.alloc.rate:                                 609.254 MB/sec
+                 gc.alloc.rate.norm:                            1329481.362 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1569.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2301.750 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8916.000 KiB
+                 mempool.Compressed Class Space.used:           3138.688 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9007.391 KiB
+                 mempool.G1 Survivor Space.used:                6275.406 KiB
+                 mempool.Metaspace.used:                        29781.703 KiB
+                 mempool.total.codeheap.used:                   12787.125 KiB
+                 mempool.total.used:                            683582.313 KiB
+
+Iteration   2: 477.390 ops/s
+                 gc.alloc.rate:                                 604.895 MB/sec
+                 gc.alloc.rate.norm:                            1329306.420 B/op
+                 gc.count:                                      3.000 counts
+                 gc.time:                                       16.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1592.250 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2360.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8947.750 KiB
+                 mempool.Compressed Class Space.used:           3139.750 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9007.391 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29790.633 KiB
+                 mempool.total.codeheap.used:                   12900.625 KiB
+                 mempool.total.used:                            683574.398 KiB
+
+Iteration   3: 495.297 ops/s
+                 gc.alloc.rate:                                 627.587 MB/sec
+                 gc.alloc.rate.norm:                            1329216.710 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1569.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2380.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8952.625 KiB
+                 mempool.Compressed Class Space.used:           3139.750 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9007.391 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29793.742 KiB
+                 mempool.total.codeheap.used:                   12902.750 KiB
+                 mempool.total.used:                            683579.633 KiB
+
+Iteration   4: 482.707 ops/s
+                 gc.alloc.rate:                                 611.609 MB/sec
+                 gc.alloc.rate.norm:                            1329163.455 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       13.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1572.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2409.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8969.250 KiB
+                 mempool.Compressed Class Space.used:           3139.750 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       9007.391 KiB
+                 mempool.G1 Survivor Space.used:                6276.883 KiB
+                 mempool.Metaspace.used:                        29801.813 KiB
+                 mempool.total.codeheap.used:                   12951.625 KiB
+                 mempool.total.used:                            683769.461 KiB
+
+Iteration   5: 461.690 ops/s
+                 gc.alloc.rate:                                 570.930 MB/sec
+                 gc.alloc.rate.norm:                            1349736.484 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       14.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1599.250 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2524.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     9080.250 KiB
+                 mempool.Compressed Class Space.used:           3139.750 KiB
+                 mempool.G1 Eden Space.used:                    623616.000 KiB
+                 mempool.G1 Old Gen.used:                       14473.227 KiB
+                 mempool.G1 Survivor Space.used:                6276.883 KiB
+                 mempool.Metaspace.used:                        29809.375 KiB
+                 mempool.total.codeheap.used:                   13204.000 KiB
+                 mempool.total.used:                            690519.234 KiB
+
+
+# Run progress: 83.33% complete, ETA 00:00:46
+# Fork: 2 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 226.615 ops/s
+# Warmup Iteration   2: 308.314 ops/s
+# Warmup Iteration   3: 436.770 ops/s
+# Warmup Iteration   4: 491.533 ops/s
+# Warmup Iteration   5: 488.296 ops/s
+Iteration   1: 489.156 ops/s
+                 gc.alloc.rate:                                 621.107 MB/sec
+                 gc.alloc.rate.norm:                            1332576.717 B/op
+                 gc.count:                                      3.000 counts
+                 gc.time:                                       16.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1563.750 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2324.125 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8596.750 KiB
+                 mempool.Compressed Class Space.used:           3141.711 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8769.125 KiB
+                 mempool.G1 Survivor Space.used:                6277.680 KiB
+                 mempool.Metaspace.used:                        29785.313 KiB
+                 mempool.total.codeheap.used:                   12484.625 KiB
+                 mempool.total.used:                            683050.453 KiB
+
+Iteration   2: 491.797 ops/s
+                 gc.alloc.rate:                                 624.671 MB/sec
+                 gc.alloc.rate.norm:                            1332465.762 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1599.375 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2389.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8631.125 KiB
+                 mempool.Compressed Class Space.used:           3142.773 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8769.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29802.367 KiB
+                 mempool.total.codeheap.used:                   12620.125 KiB
+                 mempool.total.used:                            683070.391 KiB
+
+Iteration   3: 485.290 ops/s
+                 gc.alloc.rate:                                 616.347 MB/sec
+                 gc.alloc.rate.norm:                            1332387.243 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       10.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1569.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2423.750 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8638.000 KiB
+                 mempool.Compressed Class Space.used:           3142.773 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8769.125 KiB
+                 mempool.G1 Survivor Space.used:                6277.164 KiB
+                 mempool.Metaspace.used:                        29808.344 KiB
+                 mempool.total.codeheap.used:                   12630.750 KiB
+                 mempool.total.used:                            683220.156 KiB
+
+Iteration   4: 486.729 ops/s
+                 gc.alloc.rate:                                 618.162 MB/sec
+                 gc.alloc.rate.norm:                            1332324.733 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1595.000 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2488.750 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8651.500 KiB
+                 mempool.Compressed Class Space.used:           3142.773 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8769.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29813.547 KiB
+                 mempool.total.codeheap.used:                   12735.250 KiB
+                 mempool.total.used:                            683196.695 KiB
+
+Iteration   5: 500.247 ops/s
+                 gc.alloc.rate:                                 627.663 MB/sec
+                 gc.alloc.rate.norm:                            1351323.020 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       16.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1578.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2559.375 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     8755.125 KiB
+                 mempool.Compressed Class Space.used:           3142.773 KiB
+                 mempool.G1 Eden Space.used:                    623616.000 KiB
+                 mempool.G1 Old Gen.used:                       14320.828 KiB
+                 mempool.G1 Survivor Space.used:                6034.539 KiB
+                 mempool.Metaspace.used:                        29820.664 KiB
+                 mempool.total.codeheap.used:                   12893.375 KiB
+                 mempool.total.used:                            689828.180 KiB
+
+
+# Run progress: 91.67% complete, ETA 00:00:22
+# Fork: 3 of 3
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+# Warmup Iteration   1: 159.987 ops/s
+# Warmup Iteration   2: 258.705 ops/s
+# Warmup Iteration   3: 241.332 ops/s
+# Warmup Iteration   4: 235.875 ops/s
+# Warmup Iteration   5: 235.875 ops/s
+Iteration   1: 294.249 ops/s
+                 gc.alloc.rate:                                 375.378 MB/sec
+                 gc.alloc.rate.norm:                            1340853.113 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       6.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1571.500 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2237.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     9478.625 KiB
+                 mempool.Compressed Class Space.used:           3140.234 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29888.055 KiB
+                 mempool.total.codeheap.used:                   13287.625 KiB
+                 mempool.total.used:                            683956.039 KiB
+
+Iteration   2: 317.569 ops/s
+                 gc.alloc.rate:                                 405.824 MB/sec
+                 gc.alloc.rate.norm:                            1340851.027 B/op
+                 gc.count:                                      1.000 counts
+                 gc.time:                                       8.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1568.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2259.500 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     9513.125 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29900.594 KiB
+                 mempool.total.codeheap.used:                   13341.500 KiB
+                 mempool.total.used:                            684023.516 KiB
+
+Iteration   3: 429.937 ops/s
+                 gc.alloc.rate:                                 549.541 MB/sec
+                 gc.alloc.rate.norm:                            1340750.906 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1577.125 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2316.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     9516.875 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29903.703 KiB
+                 mempool.total.codeheap.used:                   13410.000 KiB
+                 mempool.total.used:                            684095.125 KiB
+
+Iteration   4: 421.274 ops/s
+                 gc.alloc.rate:                                 538.419 MB/sec
+                 gc.alloc.rate.norm:                            1340661.185 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       12.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1560.875 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2322.000 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     9532.500 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29911.773 KiB
+                 mempool.total.codeheap.used:                   13415.375 KiB
+                 mempool.total.used:                            684108.570 KiB
+
+Iteration   5: 386.344 ops/s
+                 gc.alloc.rate:                                 488.170 MB/sec
+                 gc.alloc.rate.norm:                            1365534.245 B/op
+                 gc.count:                                      2.000 counts
+                 gc.time:                                       11.000 ms
+                 mempool.CodeHeap 'non-nmethods'.used:          1566.125 KiB
+                 mempool.CodeHeap 'non-profiled nmethods'.used: 2335.625 KiB
+                 mempool.CodeHeap 'profiled nmethods'.used:     9628.875 KiB
+                 mempool.Compressed Class Space.used:           3141.297 KiB
+                 mempool.G1 Eden Space.used:                    622592.000 KiB
+                 mempool.G1 Old Gen.used:                       8904.125 KiB
+                 mempool.G1 Survivor Space.used:                6144.000 KiB
+                 mempool.Metaspace.used:                        29918.891 KiB
+                 mempool.total.codeheap.used:                   13530.625 KiB
+                 mempool.total.used:                            684230.938 KiB
+
+
+
+Result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize":
+  446.708 ±(99.9%) 70.149 ops/s [Average]
+  (min, avg, max) = (294.249, 446.708, 500.247), stdev = 65.617
+  CI (99.9%): [376.559, 516.856] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate":
+  565.970 ±(99.9%) 87.553 MB/sec [Average]
+  (min, avg, max) = (375.378, 565.970, 627.663), stdev = 81.897
+  CI (99.9%): [478.417, 653.524] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.alloc.rate.norm":
+  1338442.159 ±(99.9%) 11170.444 B/op [Average]
+  (min, avg, max) = (1329163.455, 1338442.159, 1365534.245), stdev = 10448.840
+  CI (99.9%): [1327271.715, 1349612.603] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.count":
+  30.000 ±(99.9%) 0.001 counts [Sum]
+  (min, avg, max) = (1.000, 2.000, 3.000), stdev = 0.535
+  CI (99.9%): [30.000, 30.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:gc.time":
+  178.000 ±(99.9%) 0.001 ms [Sum]
+  (min, avg, max) = (6.000, 11.867, 16.000), stdev = 2.850
+  CI (99.9%): [178.000, 178.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used":
+  1599.375 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (1560.875, 1576.933, 1599.375), stdev = 13.086
+  CI (99.9%): [1599.375, 1599.375] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used":
+  2559.375 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (2237.500, 2375.533, 2559.375), stdev = 93.096
+  CI (99.9%): [2559.375, 2559.375] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used":
+  9628.875 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (8596.750, 9053.892, 9628.875), stdev = 380.373
+  CI (99.9%): [9628.875, 9628.875] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Compressed Class Space.used":
+  3142.773 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (3138.688, 3141.061, 3142.773), stdev = 1.351
+  CI (99.9%): [3142.773, 3142.773] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Eden Space.used":
+  623616.000 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (622592.000, 622728.533, 623616.000), stdev = 360.311
+  CI (99.9%): [623616.000, 623616.000] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Old Gen.used":
+  14473.227 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (8769.125, 9628.049, 14473.227), stdev = 1938.522
+  CI (99.9%): [14473.227, 14473.227] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.G1 Survivor Space.used":
+  6277.680 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (6034.539, 6180.970, 6277.680), stdev = 75.435
+  CI (99.9%): [6277.680, 6277.680] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.Metaspace.used":
+  29918.891 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (29781.703, 29835.368, 29918.891), stdev = 52.062
+  CI (99.9%): [29918.891, 29918.891] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.codeheap.used":
+  13530.625 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (12484.625, 13006.358, 13530.625), stdev = 333.517
+  CI (99.9%): [13530.625, 13530.625] (assumes normal distribution)
+
+Secondary result "io.github.lemon_ant.jharmonizer.printerlab.PrinterBenchmark.serialize:mempool.total.used":
+  690519.234 ±(99.9%) 0.001 KiB [Maximum]
+  (min, avg, max) = (683050.453, 684520.340, 690519.234), stdev = 2331.281
+  CI (99.9%): [690519.234, 690519.234] (assumes normal distribution)
+
+
+# Run complete. Total time: 00:04:35
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                                                                 (workload)   Mode  Cnt        Score       Error   Units
+PrinterBenchmark.serialize                                                  fixtures  thrpt   15      773.776 ±   254.413   ops/s
+PrinterBenchmark.serialize:gc.alloc.rate                                    fixtures  thrpt   15      381.314 ±   124.408  MB/sec
+PrinterBenchmark.serialize:gc.alloc.rate.norm                               fixtures  thrpt   15   518900.314 ±  2421.768    B/op
+PrinterBenchmark.serialize:gc.count                                         fixtures  thrpt   15       19.000              counts
+PrinterBenchmark.serialize:gc.time                                          fixtures  thrpt   15      129.000                  ms
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used             fixtures  thrpt   15     1703.250                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used    fixtures  thrpt   15     4690.750                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used        fixtures  thrpt   15    11370.750                 KiB
+PrinterBenchmark.serialize:mempool.Compressed Class Space.used              fixtures  thrpt   15     3550.492                 KiB
+PrinterBenchmark.serialize:mempool.G1 Eden Space.used                       fixtures  thrpt   15   622592.000                 KiB
+PrinterBenchmark.serialize:mempool.G1 Old Gen.used                          fixtures  thrpt   15     9216.000                 KiB
+PrinterBenchmark.serialize:mempool.G1 Survivor Space.used                   fixtures  thrpt   15     6976.453                 KiB
+PrinterBenchmark.serialize:mempool.Metaspace.used                           fixtures  thrpt   15    32187.898                 KiB
+PrinterBenchmark.serialize:mempool.total.codeheap.used                      fixtures  thrpt   15    17392.375                 KiB
+PrinterBenchmark.serialize:mempool.total.used                               fixtures  thrpt   15   691092.266                 KiB
+PrinterBenchmark.serialize                                                   flat128  thrpt   15     4690.462 ±   794.386   ops/s
+PrinterBenchmark.serialize:gc.alloc.rate                                     flat128  thrpt   15      601.077 ±   101.089  MB/sec
+PrinterBenchmark.serialize:gc.alloc.rate.norm                                flat128  thrpt   15   134634.685 ±  1039.802    B/op
+PrinterBenchmark.serialize:gc.count                                          flat128  thrpt   15       30.000              counts
+PrinterBenchmark.serialize:gc.time                                           flat128  thrpt   15      178.000                  ms
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used              flat128  thrpt   15     1564.875                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used     flat128  thrpt   15     2199.375                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used         flat128  thrpt   15     7458.625                 KiB
+PrinterBenchmark.serialize:mempool.Compressed Class Space.used               flat128  thrpt   15     3144.039                 KiB
+PrinterBenchmark.serialize:mempool.G1 Eden Space.used                        flat128  thrpt   15   624640.000                 KiB
+PrinterBenchmark.serialize:mempool.G1 Old Gen.used                           flat128  thrpt   15    13725.438                 KiB
+PrinterBenchmark.serialize:mempool.G1 Survivor Space.used                    flat128  thrpt   15     5829.969                 KiB
+PrinterBenchmark.serialize:mempool.Metaspace.used                            flat128  thrpt   15    29286.930                 KiB
+PrinterBenchmark.serialize:mempool.total.codeheap.used                       flat128  thrpt   15    11177.125                 KiB
+PrinterBenchmark.serialize:mempool.total.used                                flat128  thrpt   15   687198.914                 KiB
+PrinterBenchmark.serialize                                                  flat1024  thrpt   15      574.386 ±    69.885   ops/s
+PrinterBenchmark.serialize:gc.alloc.rate                                    flat1024  thrpt   15      566.664 ±    68.734  MB/sec
+PrinterBenchmark.serialize:gc.alloc.rate.norm                               flat1024  thrpt   15  1038115.425 ±  4852.925    B/op
+PrinterBenchmark.serialize:gc.count                                         flat1024  thrpt   15       28.000              counts
+PrinterBenchmark.serialize:gc.time                                          flat1024  thrpt   15      136.000                  ms
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used             flat1024  thrpt   15     1609.625                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used    flat1024  thrpt   15     2784.125                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used        flat1024  thrpt   15     8964.875                 KiB
+PrinterBenchmark.serialize:mempool.Compressed Class Space.used              flat1024  thrpt   15     3142.758                 KiB
+PrinterBenchmark.serialize:mempool.G1 Eden Space.used                       flat1024  thrpt   15   627712.000                 KiB
+PrinterBenchmark.serialize:mempool.G1 Old Gen.used                          flat1024  thrpt   15    14849.352                 KiB
+PrinterBenchmark.serialize:mempool.G1 Survivor Space.used                   flat1024  thrpt   15     6415.484                 KiB
+PrinterBenchmark.serialize:mempool.Metaspace.used                           flat1024  thrpt   15    29838.703                 KiB
+PrinterBenchmark.serialize:mempool.total.codeheap.used                      flat1024  thrpt   15    13358.125                 KiB
+PrinterBenchmark.serialize:mempool.total.used                               flat1024  thrpt   15   693047.594                 KiB
+PrinterBenchmark.serialize                                                 nested128  thrpt   15      446.708 ±    70.149   ops/s
+PrinterBenchmark.serialize:gc.alloc.rate                                   nested128  thrpt   15      565.970 ±    87.553  MB/sec
+PrinterBenchmark.serialize:gc.alloc.rate.norm                              nested128  thrpt   15  1338442.159 ± 11170.444    B/op
+PrinterBenchmark.serialize:gc.count                                        nested128  thrpt   15       30.000              counts
+PrinterBenchmark.serialize:gc.time                                         nested128  thrpt   15      178.000                  ms
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-nmethods'.used            nested128  thrpt   15     1599.375                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'non-profiled nmethods'.used   nested128  thrpt   15     2559.375                 KiB
+PrinterBenchmark.serialize:mempool.CodeHeap 'profiled nmethods'.used       nested128  thrpt   15     9628.875                 KiB
+PrinterBenchmark.serialize:mempool.Compressed Class Space.used             nested128  thrpt   15     3142.773                 KiB
+PrinterBenchmark.serialize:mempool.G1 Eden Space.used                      nested128  thrpt   15   623616.000                 KiB
+PrinterBenchmark.serialize:mempool.G1 Old Gen.used                         nested128  thrpt   15    14473.227                 KiB
+PrinterBenchmark.serialize:mempool.G1 Survivor Space.used                  nested128  thrpt   15     6277.680                 KiB
+PrinterBenchmark.serialize:mempool.Metaspace.used                          nested128  thrpt   15    29918.891                 KiB
+PrinterBenchmark.serialize:mempool.total.codeheap.used                     nested128  thrpt   15    13530.625                 KiB
+PrinterBenchmark.serialize:mempool.total.used                              nested128  thrpt   15   690519.234                 KiB
+
+Benchmark result is saved to W:\JHarmonizer\core\printer-lab\target\baseline-final-run\throughput-t1.raw.json

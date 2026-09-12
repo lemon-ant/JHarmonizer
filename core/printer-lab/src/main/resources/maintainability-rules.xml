@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+SPDX-License-Identifier: Apache-2.0
+-->
+<ruleset name="Printer maintainability screens" xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>Fixed diagnostic thresholds, not a production quality gate.</description>
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="10"/>
+            <property name="classReportLevel" value="80"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="15"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties><property name="reportLevel" value="200"/></properties>
+    </rule>
+    <rule ref="category/java/design.xml/CouplingBetweenObjects">
+        <properties><property name="threshold" value="20"/></properties>
+    </rule>
+    <rule ref="category/java/design.xml/ExcessiveParameterList">
+        <properties><property name="minimum" value="10"/></properties>
+    </rule>
+</ruleset>

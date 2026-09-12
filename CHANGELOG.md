@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Temporary standalone printer measurement lab with PMD 7.24.0, ArchUnit 1.5.0, and JMH 1.37; repeatable source/architecture metrics, isolated threaded performance and allocation measurements, archived baseline evidence, and instructions for comparing a replacement printer.
 - Printer E2E tests for declarations, comments, string contents, headerless files, whitespace-only preambles, line separators, group boundaries, opt-out preservation, and idempotence.
 - Printer buffer tests for empty output, missing line terminators, and existing LF/CRLF/CR endings.
 - Printer coverage measurements, unreachable-branch notes, and a Maven/JaCoCo reproduction command.
