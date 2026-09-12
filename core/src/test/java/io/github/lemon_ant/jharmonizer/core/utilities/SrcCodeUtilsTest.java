@@ -18,6 +18,61 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class SrcCodeUtilsTest {
 
+    @NonNull
+    private static Stream<Arguments> provideContentCharacters() {
+        return Stream.of(
+                Arguments.of("ordinary letter", 'x'),
+                Arguments.of("closing brace", '}'),
+                Arguments.of("comment start", '/'),
+                Arguments.of("non-breaking space U+00A0", '\u00A0'),
+                Arguments.of("figure space U+2007", '\u2007'),
+                Arguments.of("narrow non-breaking space U+202F", '\u202F'),
+                Arguments.of("next line U+0085", '\u0085'),
+                Arguments.of("zero width space U+200B", '\u200B'),
+                Arguments.of("byte order mark U+FEFF", '\uFEFF'));
+    }
+
+    @NonNull
+    private static Stream<Arguments> provideInvalidRanges() {
+        return Stream.of(
+                Arguments.of("negative start", -1, 0),
+                Arguments.of("end before an empty range", 0, -2),
+                Arguments.of("reversed range", 3, 1),
+                Arguments.of("end beyond source", 0, 4),
+                Arguments.of("empty range beyond EOF", 5, 4),
+                Arguments.of("end index overflow", 0, Integer.MAX_VALUE));
+    }
+
+    @NonNull
+    private static Stream<Arguments> provideWhitespaceBoundaries() {
+        return Stream.of(
+                Arguments.of("LF", "\n"),
+                Arguments.of("CR", "\r"),
+                Arguments.of("CRLF", "\r\n"),
+                Arguments.of("vertical tab U+000B", "\u000B"),
+                Arguments.of("form feed U+000C", "\f"),
+                Arguments.of("file separator U+001C", "\u001C"),
+                Arguments.of("group separator U+001D", "\u001D"),
+                Arguments.of("record separator U+001E", "\u001E"),
+                Arguments.of("unit separator U+001F", "\u001F"),
+                Arguments.of("ogham space U+1680", "\u1680"),
+                Arguments.of("en quad U+2000", "\u2000"),
+                Arguments.of("em quad U+2001", "\u2001"),
+                Arguments.of("en space U+2002", "\u2002"),
+                Arguments.of("em space U+2003", "\u2003"),
+                Arguments.of("three-per-em space U+2004", "\u2004"),
+                Arguments.of("four-per-em space U+2005", "\u2005"),
+                Arguments.of("six-per-em space U+2006", "\u2006"),
+                Arguments.of("punctuation space U+2008", "\u2008"),
+                Arguments.of("thin space U+2009", "\u2009"),
+                Arguments.of("hair space U+200A", "\u200A"),
+                Arguments.of("line separator U+2028", "\u2028"),
+                Arguments.of("paragraph separator U+2029", "\u2029"),
+                Arguments.of("medium mathematical space U+205F", "\u205F"),
+                Arguments.of("ideographic space U+3000", "\u3000"),
+                Arguments.of("multiple boundaries with intermediate indentation", "\r\n \t\f\n"));
+    }
+
     @Nested
     class FindFragmentEndExclusive {
 
@@ -269,60 +324,5 @@ class SrcCodeUtilsTest {
                     Arguments.of("Unicode whitespace before indentation", "\u2003 \ttext", 3, 1),
                     Arguments.of("indentation reaches EOF", " \t ", 3, 0));
         }
-    }
-
-    @NonNull
-    private static Stream<Arguments> provideContentCharacters() {
-        return Stream.of(
-                Arguments.of("ordinary letter", 'x'),
-                Arguments.of("closing brace", '}'),
-                Arguments.of("comment start", '/'),
-                Arguments.of("non-breaking space U+00A0", '\u00A0'),
-                Arguments.of("figure space U+2007", '\u2007'),
-                Arguments.of("narrow non-breaking space U+202F", '\u202F'),
-                Arguments.of("next line U+0085", '\u0085'),
-                Arguments.of("zero width space U+200B", '\u200B'),
-                Arguments.of("byte order mark U+FEFF", '\uFEFF'));
-    }
-
-    @NonNull
-    private static Stream<Arguments> provideInvalidRanges() {
-        return Stream.of(
-                Arguments.of("negative start", -1, 0),
-                Arguments.of("end before an empty range", 0, -2),
-                Arguments.of("reversed range", 3, 1),
-                Arguments.of("end beyond source", 0, 4),
-                Arguments.of("empty range beyond EOF", 5, 4),
-                Arguments.of("end index overflow", 0, Integer.MAX_VALUE));
-    }
-
-    @NonNull
-    private static Stream<Arguments> provideWhitespaceBoundaries() {
-        return Stream.of(
-                Arguments.of("LF", "\n"),
-                Arguments.of("CR", "\r"),
-                Arguments.of("CRLF", "\r\n"),
-                Arguments.of("vertical tab U+000B", "\u000B"),
-                Arguments.of("form feed U+000C", "\f"),
-                Arguments.of("file separator U+001C", "\u001C"),
-                Arguments.of("group separator U+001D", "\u001D"),
-                Arguments.of("record separator U+001E", "\u001E"),
-                Arguments.of("unit separator U+001F", "\u001F"),
-                Arguments.of("ogham space U+1680", "\u1680"),
-                Arguments.of("en quad U+2000", "\u2000"),
-                Arguments.of("em quad U+2001", "\u2001"),
-                Arguments.of("en space U+2002", "\u2002"),
-                Arguments.of("em space U+2003", "\u2003"),
-                Arguments.of("three-per-em space U+2004", "\u2004"),
-                Arguments.of("four-per-em space U+2005", "\u2005"),
-                Arguments.of("six-per-em space U+2006", "\u2006"),
-                Arguments.of("punctuation space U+2008", "\u2008"),
-                Arguments.of("thin space U+2009", "\u2009"),
-                Arguments.of("hair space U+200A", "\u200A"),
-                Arguments.of("line separator U+2028", "\u2028"),
-                Arguments.of("paragraph separator U+2029", "\u2029"),
-                Arguments.of("medium mathematical space U+205F", "\u205F"),
-                Arguments.of("ideographic space U+3000", "\u3000"),
-                Arguments.of("multiple boundaries with intermediate indentation", "\r\n \t\f\n"));
     }
 }
