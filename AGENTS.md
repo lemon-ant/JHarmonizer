@@ -174,10 +174,11 @@ This file defines repository-wide conventions for coding agents working in this 
 ### Shared test setup and one-time initialization
 
 - If multiple tests in the same test class use the same expensive or repetitive setup, initialize it once at the test-class level instead of recreating it in every test.
-- Prefer `private static final` constants for immutable, shareable objects created once.
+- Reserve `private static final` constants for simple fixed values such as strings, numbers, enums, and small literal collections. Immutability alone does not make prepared test data a constant.
 - Prefer `private final` fields when per-instance initialization is sufficient and the object is safe to share across tests in the class.
-- Use `@BeforeAll` for one-time initialization that cannot be expressed as a simple field initializer.
+- Use `@BeforeAll` for expensive or multi-step preparation such as loading fixtures, compiling configuration, parsing, sorting, or serializing source, even if this work could be hidden behind a method call in a field initializer. Store the prepared state in ordinary test fields, preferably instance fields when the test lifecycle allows it.
 - If `@BeforeAll` must be non-static, use `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`.
+- When `@MethodSource` providers consume state prepared in an instance `@BeforeAll`, make those providers non-static as well.
 - Do not share mutable objects across tests if the code under test may modify them.
 - In that case, keep a single immutable base representation and create a fresh copy per test, or initialize the mutable object in `@BeforeEach`.
 - Avoid duplicating the same setup snippet across multiple tests in the same class.
@@ -192,6 +193,7 @@ This file defines repository-wide conventions for coding agents working in this 
 - Prefer a nested `Constants` class once the constant list is long enough that it pushes test methods noticeably down the file or makes the start of the class hard to scan.
 - Keep the `Constants` nested class at the end of the test class.
 - Do not move everything into `Constants` mechanically.
+- Keep computed fixtures and prepared test state out of `Constants`, even when the result is a string or another immutable value; initialize that state in setup and store it in ordinary test fields.
 - Keep only the cluttering shared constants there, while ordinary test fields such as `@TempDir` stay near the top.
 
 ### Assertions and test utilities
