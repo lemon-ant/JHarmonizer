@@ -81,12 +81,6 @@ SPDX-License-Identifier: Apache-2.0
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`, or an established repository abbreviation such as the `src*` naming family.
 - Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
 - Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
-- Repository build, test, coverage, and quality-gate tooling must be cross-platform and based on Java/JVM tools or Maven plugins. Do not add PowerShell, Bash, or batch scripts for these tasks.
-- Use the existing Maven plugins and JaCoCo for coverage collection, reports, and supported threshold checks. Document tool limitations and unreachable branches instead of introducing custom coverage-report parsers or counters.
-- Keep one-off measurement and diagnostic artifacts under `target/`; do not turn them into permanent repository tools unless explicitly requested.
-- The user-requested temporary printer experiment lives in `core/printer-lab/`, outside the root reactor, product artifacts, ordinary tests, and CI.
-  - For printer measurements or comparisons, follow `core/printer-lab/NEXT_AGENT.md` and `core/printer-lab/PROTOCOL.md`; preserve the frozen methodology and archived baseline.
-  - Keep generated scratch artifacts under the lab's `target/`; commit only the requested framework, documentation, and reviewed measurement evidence.
 
 ## Test conventions
 
