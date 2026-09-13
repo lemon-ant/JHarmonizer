@@ -5,13 +5,23 @@ SPDX-License-Identifier: Apache-2.0
 
 # Temporary printer measurement laboratory
 
-This independent Maven project records a baseline for replacing the current source printer.
+This independent Maven project compares the inherited and replacement source printers.
 It is deliberately absent from the root reactor, production artifacts, normal tests and CI.
-Keep it until the implementation comparison is complete, then remove this directory and its
-references from the repository instructions and changelog as appropriate.
+Keep the laboratory and reviewed evidence until the user requests their removal. Remove this
+directory and its temporary instruction/changelog references together.
 
 Read [PROTOCOL.md](PROTOCOL.md) for exact definitions and limits. An agent repeating the
 experiment must follow [NEXT_AGENT.md](NEXT_AGENT.md), including the scope review.
+
+The reusable printer comparison uses the separately versioned
+[invocation-state protocol v2](experiments/invocation-state-v2/README.md).
+The original v1 instrument and archived evidence remain unchanged.
+
+The completed comparison of `5a121b67` and `0f6aa72d` is in the
+[replacement assessment](results/candidate-0f6aa72d-v2/assessment.md), with
+[all runtime counters](results/candidate-0f6aa72d-v2/runtime-details.md),
+[static inventories](results/candidate-0f6aa72d-v2/static-details.md) and
+[execution record](experiments/invocation-state-v2/execution.md).
 
 ## Build
 
@@ -26,8 +36,9 @@ mvn -B -ntp -f core/printer-lab/pom.xml clean package
 ```
 
 The first command installs the current core and its prerequisite. It is artifact preparation,
-not a correctness check. Run the project's ordinary `mvn -B -ntp verify` when production code
-changes. The second command builds only this lab and copies its runtime libraries into
+not a correctness check. Run `mvn -B -ntp -pl core verify -Dci=true` when core production code
+changes; full-project verification requires the user's explicit request. The second command
+builds only this lab and copies its runtime libraries into
 `core/printer-lab/target/lib`. Do not reuse an old lab JAR after rebuilding core.
 
 The default core dependency is `1.1.0-SNAPSHOT`. If the project version changes, supply

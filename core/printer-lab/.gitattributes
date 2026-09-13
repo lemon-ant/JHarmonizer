@@ -2,3 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 # Preserve JMH histogram spacing in original archived console output.
 results/**/*.log whitespace=-blank-at-eol
+# Blank context lines in unified patches retain their required leading space.
+experiments/**/*.patch whitespace=-blank-at-eol

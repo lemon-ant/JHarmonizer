@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Printer lab protocol v2 and complete inherited/reusable printer comparison, with a reproduced baseline, unchanged numerical instrument, raw JMH evidence, static metrics and documented trade-offs.
+
 ### Changed
 
 - Replaced the inherited Spoon source printer with standalone source-fragment printing, a direct output buffer, and indexed member boundaries. Preserved declaration output and skipped-type ranges; removed enum correction through Spoon pretty printing.

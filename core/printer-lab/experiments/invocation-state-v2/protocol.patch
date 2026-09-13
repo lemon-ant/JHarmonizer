@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+diff --git a/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterLab.java b/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterLab.java
+--- a/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterLab.java
++++ b/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterLab.java
+@@ -25,7 +25,7 @@
+ /** Command-line entry point for the temporary, independent printer experiment. */
+ @UtilityClass
+ public class PrinterLab {
+-    private static final String PROTOCOL = "printer-lab-v1";
++    private static final String PROTOCOL = "printer-lab-v2-invocation-state";
+ 
+     /**
+      * Runs capture, smoke, metrics, report, compare or archive; see README.md for arguments.
+diff --git a/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterBenchmark.java b/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterBenchmark.java
+--- a/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterBenchmark.java
++++ b/core/printer-lab/src/main/java/io/github/lemon_ant/jharmonizer/printerlab/PrinterBenchmark.java
+@@ -21,7 +21,7 @@
+ public class PrinterBenchmark {
+ 
+     /**
+-     * Measures fresh printer construction and serialization of already prepared models.
++     * Measures production serialization with fresh invocation state on already prepared models.
+      * @param state models private to this worker
+      * @param blackhole consumes every result, including its skipped ranges
+      */

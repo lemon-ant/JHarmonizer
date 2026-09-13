@@ -5,9 +5,13 @@ SPDX-License-Identifier: Apache-2.0
 
 # Instructions for the next printer measurement
 
-The user intends to replace the inherited Spoon printer with an implementation containing
-only our own printing code. When asked to measure that replacement, repeat this experiment.
+The inherited printer was replaced in `0f6aa72d`. When asked to measure another implementation,
+repeat this experiment and review the [completed comparison](results/candidate-0f6aa72d-v2/assessment.md).
 Do not redesign the experiment to suit the new implementation.
+
+The instructions below describe v1. For the reusable printer, apply the explicit
+[invocation-state v2 amendment](experiments/invocation-state-v2/README.md) identically to
+both isolated checkouts; it changes the required allocation lifecycle, not the instrument.
 
 ## Read and preserve
 
@@ -57,7 +61,8 @@ close competing builds/tests/debug sessions. Record actual conditions, free memo
 known background activity. The automatic machine check cannot detect thermal throttling.
 
 Run production correctness checks, including printer E2E tests and the existing helper tests.
-Run the ordinary `mvn -B -ntp verify` with JDK 21. Commit the replacement before measuring:
+Run `mvn -B -ntp -pl core verify -Dci=true` with JDK 21; full-project verification requires
+the user's explicit request. Commit the replacement before measuring:
 the lab rejects dirty production inputs so each result identifies a committed implementation.
 
 From the repository root:

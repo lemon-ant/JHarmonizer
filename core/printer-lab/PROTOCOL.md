@@ -187,8 +187,9 @@ allocation rate, GC counts/time and all original profiler counters. The profiler
 measurement JVM; small harness/background allocations can remain. It does not measure retained
 printer size or OS resident memory. See [JMH profiler examples](https://github.com/openjdk/jmh/blob/1.37/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_35_Profilers.java).
 
-`MemPoolProfiler` resets pool peaks before each iteration and reports maximum used bytes for
-each pool, with maximum aggregation. `mempool.total.used` is a **sum of pool peaks**, potentially
+`MemPoolProfiler` resets pool peaks before each iteration and reports maximum usage in **KiB**
+for each pool, with maximum aggregation. The generated report divides these values by 1024
+to show MiB. `mempool.total.used` is a **sum of pool peaks**, potentially
 from different moments; it includes prepared ASTs, metadata and code caches. It is neither
 RSS nor a simultaneous process high-water mark. A 1 GiB fixed heap can make these values similar
 even when allocation rates differ substantially. [JMH 1.37 implementation](https://github.com/openjdk/jmh/blob/1.37/jmh-core/src/main/java/org/openjdk/jmh/profile/MemPoolProfiler.java).
