@@ -14,13 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Printer lab protocol v2 and complete inherited/reusable printer comparison, with a reproduced baseline, unchanged numerical instrument, raw JMH evidence, static metrics and documented trade-offs.
-
 ### Changed
 
 - Replaced the inherited Spoon source printer with standalone source-fragment printing, a direct output buffer, and indexed member boundaries. Preserved declaration output and skipped-type ranges; removed enum correction through Spoon pretty printing.
+- On the four-workload JDK 21 corpus, mean printer serialization throughput reached 1.40–5.07× baseline across 1/2/4/8 workers; sampled p50/p95/p99 decreased for every workload. Allocated bytes per batch decreased by 6.7–66.2% across the measured cases.
+- Selected printer code decreased from 1000 to 701 physical lines and from 276 to 210 NCSS; summed Cyclo decreased from 106 to 81, Cognitive from 87 to 59, and external library target types from 21 to 11.
 - The source printer now copies the original tail after the last top-level type following one blank line. Preserves comment spelling, indentation, semicolons, trailing whitespace and the original file ending; removes separate footer rendering.
 - Updated Palantir Java Formatter dependency from 2.91.0 to 2.98.0.
 - Updated Spoon dependency from 11.2.1 to 11.5.0.

@@ -25,8 +25,7 @@ as fragments. Nested types recurse through the same layout operation. Synthetic 
 excluded; skipped types are copied as a whole and their UTF-16 output offsets are recorded.
 
 Each type indexes its original member starts in a sorted `int[]`. Binary search finds the next source
-boundary regardless of output order, including duplicate starts in multi-field declarations. For a
-type with `n` explicit members, indexing and boundary lookup take O(n log n) time and O(n) index space.
+boundary regardless of output order, including duplicate starts in multi-field declarations.
 The output uses one `StringBuilder`, initially sized to the original source, and appends source ranges
 directly. Interior line endings remain unchanged; generated lines use the dominant separator, with
 CRLF, LF, CR tie precedence. No serialized result is cached.
@@ -38,7 +37,7 @@ failed calls leave no state in the service. The service retains no source text o
 
 Spoon 11.5.0 provides correct member positions for the existing enum lambda/body regressions. The old
 enum correction, which generated text and searched it with a regular expression, has been removed.
-The fixture expectations and archived workload outputs are the compatibility reference, except for
+The fixture expectations are the compatibility reference, except for
 the source-tail behavior described below.
 
 The source tail starts after the greatest original end offset among top-level types, independently of
@@ -55,12 +54,6 @@ The tail can also contain empty top-level declarations (`;`), allowed by
 character, allowed by [JLS 3.5](https://docs.oracle.com/javase/specs/jls/se21/html/jls-3.html#jls-3.5).
 Copying through the source end preserves these forms, including Unicode escapes, without parsing them again.
 This intentionally replaces normalized footer rendering with source preservation before optional formatting.
-
-The temporary [printer lab](../core/printer-lab/NEXT_AGENT.md) defines performance comparisons.
-Its harness, corpus and archived baseline remain frozen; `scope.tsv` identifies the replacement classes.
-A full JMH comparison requires a committed candidate. Source changes alone do not establish a speedup.
-Reusing the configuration-only service changes the construction lifecycle assumed by the frozen
-v1 protocol. A future comparison must account for that change consistently in both implementations.
 
 `SpoonGroupSeparatorUtils` in `core.spoon` keeps the metadata key and blank-line marker private.
 Callers assign headers with `markHeader`, assign blank lines with `markBlankLine`, and read once

@@ -16,6 +16,3 @@ not fit literal fixtures. The local EditorConfig preserves significant comment w
 Scenarios `08`–`10` and `16` preserve the original tail after the last source type, following one blank
 line. Expected comments retain their literal spelling and spacing. Variants cover absent or repeated
 final terminators, trailing whitespace and terminal ASCII SUB, including its Unicode escape.
-
-The older `valid/input/` files are frozen inputs of `core/printer-lab/corpus.tsv`.
-Their paths and contents remain unchanged to preserve the archived comparison protocol.

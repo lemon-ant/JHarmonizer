@@ -49,7 +49,6 @@ regression uses the general regression runner and is outside the isolated covera
 Dedicated Java tests remain for virtual sources, exact skipped-range offsets, result immutability,
 printer reuse across sources and fragment-boundary utilities. End-of-file and
 Unicode whitespace variants transform the resource fixtures and reuse the common processing checks.
-The old `printer/valid/input/` files and boundary input remain frozen for `printer-lab/corpus.tsv`.
 
 ## Coverage counters
 
@@ -71,9 +70,6 @@ preservation use the shared E2E assertions. Footer expectations in scenarios `08
 the original comment spelling and spacing after one blank line. Expected files were adjusted for
 this contract change; declaration output, compilation and fixed-point checks remain intact.
 
-The standalone implementation copies source tails that the inherited printer rendered through Spoon.
-Percentages therefore use a different owned-code boundary from
-the [inherited-printer baseline](../core/printer-lab/results/baseline-5a121b67/assessment.md).
 `SpoonGroupSeparatorUtils` includes separator assignment and resolution into kind and header text; its full
 implementation is measured, including the assignment methods called by the sorter.
 
