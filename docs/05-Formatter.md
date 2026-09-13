@@ -8,9 +8,11 @@ SPDX-License-Identifier: Apache-2.0
 ## Purpose
 
 The formatter wrapper integrates the [Palantir Java Formatter](https://github.com/palantir/palantir-java-format) into
-the `JHarmonizer` toolchain to ensure clean and consistent Java code output **after deserialization** of an AST structure.
+the `JHarmonizer` toolchain to ensure clean and consistent Java code output **after deserialization** of an AST
+structure.
 
-This step is **critical** because deserialized Java code may lose indentation, import order, and other formatting features. Formatter ensures:
+This step is **critical** because deserialized Java code may lose indentation, import order, and other formatting
+features. Formatter ensures:
 
 - Correct indentation
 - Removal and ordering of imports
@@ -89,7 +91,8 @@ file after the partial formatting pass.
 
 ## Summary
 
-This wrapper is essential to finalize formatted, readable Java source code that adheres to a unified style. It should be executed only **after** AST transformation and serialization are complete.
+This wrapper is essential to finalize formatted, readable Java source code that adheres to a unified style. It should be
+executed only **after** AST transformation and serialization are complete.
 
 ## Known limitation: non-deterministic wrapping and reflow in Palantir formatter
 
@@ -199,4 +202,5 @@ are not valid Java grammar before external resource/template processing, so form
 When your sources contain template placeholders, you have two supported options:
 
 1. Put `// @jharmonizer:fully-off` on the first line to skip harmonization for that file.
-2. Keep processing enabled. The formatter will fail for files containing placeholders, JHarmonizer will report an `ERROR` for each such file, and the rest of the pipeline will continue to run.
+2. Keep processing enabled. The formatter will fail for files containing placeholders, JHarmonizer will report an
+   `ERROR` for each such file, and the rest of the pipeline will continue to run.

@@ -47,20 +47,20 @@ formatting stays disabled so it cannot hide extra separators. The existing enum-
 regression uses the general regression runner and is outside the isolated coverage measurement.
 
 Dedicated Java tests remain for virtual sources, exact skipped-range offsets, result immutability,
-printer reuse across sources and fragment-boundary utilities. End-of-file and
+independent serialization across sources and configurations, and fragment-boundary utilities. End-of-file and
 Unicode whitespace variants transform the resource fixtures and reuse the common processing checks.
 
 ## Coverage counters
 
 | Class | Lines (full total) | Raw branches | Excluded outcomes | Reachable branches |
 | --- | --- | --- | --- | --- |
-| `SpoonSrcPrinter` | 7/7 = 100% | 4/8 | 4 | 4/4 = 100% |
-| `SpoonSrcPrinter.Serialization` | 86/86 = 100% | 58/58 | 0 | 58/58 = 100% |
+| `SpoonSrcPrinter` | 5/5 = 100% | 4/8 | 4 | 4/4 = 100% |
+| `SpoonSrcPrinter.Serialization` | 87/87 = 100% | 58/58 | 0 | 58/58 = 100% |
 | `SrcPrinterOutput` | 50/54 = 92.59% | 31/34 | 3 | 31/31 = 100% |
 | `SpoonTypeMemberUtils` | 28/28 = 100% | 16/24 | 6 | 16/18 = 88.89% |
 | `SpoonGroupSeparatorUtils` | 18/18 = 100% | 10/14 | 4 | 10/10 = 100% |
 | `SrcCodeUtils` | 25/25 = 100% | 22/26 | 4 | 22/22 = 100% |
-| **Total** | **214/218 = 98.17%** | **141/164** | **21** | **141/143 = 98.60%** |
+| **Total** | **213/217 = 98.16%** | **141/164** | **21** | **141/143 = 98.60%** |
 
 JaCoCo supplies the raw counters. Reachable-branch percentages are reviewed calculations
 using the exclusions below; JaCoCo reports retain all branch outcomes.

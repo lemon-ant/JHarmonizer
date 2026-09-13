@@ -38,7 +38,8 @@ Place a directive in the compilation-unit preamble:
 
 Behavior:
 
-- `@jharmonizer:fully-off` — fully disable harmonization for the entire file (no sorting, no formatting, no import fixing)
+- `@jharmonizer:fully-off` — fully disable harmonization for the entire file (no sorting, no formatting, no import
+  fixing)
 - `@jharmonizer:sort-off` — disable sorting only for the entire file; formatting and import fixing still run
 
 ### Type scope
@@ -48,7 +49,8 @@ Place a directive immediately before a top-level or nested type declaration.
 Behavior:
 
 - `@jharmonizer:fully-off` — fully disable harmonization for that type subtree and preserve its original source text
-- `@jharmonizer:sort-off` — disable sorting only for that type subtree; it is still formatted together with the rest of the file
+- `@jharmonizer:sort-off` — disable sorting only for that type subtree; it is still formatted together with the rest of
+  the file
 
 ## Unsupported placements and tokens
 

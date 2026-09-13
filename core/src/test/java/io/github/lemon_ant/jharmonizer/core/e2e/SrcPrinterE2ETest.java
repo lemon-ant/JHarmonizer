@@ -31,7 +31,6 @@ class SrcPrinterE2ETest extends AbstractCompilableSrcProcessorE2ETest {
             int trailingLineTerminators,
             @NonNull String indentation)
             throws Exception {
-        // When / Then
         processFixtureVariant(
                 "05-combined-boundaries",
                 "BoundarySample.java",
@@ -45,7 +44,6 @@ class SrcPrinterE2ETest extends AbstractCompilableSrcProcessorE2ETest {
     void reorder_emptyPreamble_hasOnlyFinalLineTerminator(
             @NonNull String preamble, @NonNull String trailingTerminators, @NonNull String expectedSeparator)
             throws Exception {
-        // When / Then
         processVariant(
                 "07-line-separators",
                 "EmptyPreamble.java",
@@ -84,13 +82,11 @@ class SrcPrinterE2ETest extends AbstractCompilableSrcProcessorE2ETest {
     @MethodSource("footerInputFiles")
     void reorder_footerWithoutFinalTerminator_preservesFooter(@NonNull Path scenarioDir, @NonNull Path srcFile)
             throws Exception {
-        // When / Then
         processFixtureVariant(scenarioDir.toString(), srcFile.toString(), String::stripTrailing, String::stripTrailing);
     }
 
     @Test
     void reorder_headerlessSingleLineUnit_printsSortedMembersAndFinalNewline() throws Exception {
-        // When / Then
         processVariant(
                 "07-line-separators",
                 "HeaderlessScenario.java",

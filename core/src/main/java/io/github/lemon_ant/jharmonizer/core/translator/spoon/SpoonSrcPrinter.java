@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtEnum;
@@ -29,39 +30,35 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 /**
- * Reusable source-fragment printer retaining only immutable configuration.
+ * Stateless source-fragment printer with explicit configuration for each call.
  * Each invocation owns its output buffer and skipped-type ranges.
  */
+@UtilityClass
 final class SpoonSrcPrinter {
-
-    @NonNull
-    private final PrinterConfig printerConfig;
-
-    /**
-     * Creates a reusable printer with fixed spacing configuration.
-     * @param printerConfig spacing configuration
-     */
-    SpoonSrcPrinter(@NonNull PrinterConfig printerConfig) {
-        this.printerConfig = printerConfig;
-    }
 
     /**
      * Prints the current declaration order with independent state for each invocation.
+     * Calls for independent models may run concurrently with different configurations.
      * @param compilationUnit compilation unit with positions referring to {@code srcCode}
      * @param srcCode original source
      * @param sortingSkippedTypes types to copy without restructuring
+     * @param printerConfig immutable spacing configuration
      * @return printed source and immutable skipped-type ranges, independent of subsequent calls
      */
     @NonNull
-    SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(
+    static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(
             @NonNull CtCompilationUnit compilationUnit,
             @NonNull String srcCode,
-            @NonNull Set<CtType<?>> sortingSkippedTypes) {
-        return new Serialization(srcCode, sortingSkippedTypes).serializeCompilationUnit(compilationUnit);
+            @NonNull Set<CtType<?>> sortingSkippedTypes,
+            @NonNull PrinterConfig printerConfig) {
+        return new Serialization(srcCode, sortingSkippedTypes, printerConfig).serializeCompilationUnit(compilationUnit);
     }
 
     /** Confines mutable printing state to one invocation. */
-    private final class Serialization {
+    private static final class Serialization {
+
+        @NonNull
+        private final PrinterConfig printerConfig;
 
         @NonNull
         @SuppressWarnings("PMD.UseConcurrentHashMap")
@@ -79,9 +76,10 @@ final class SpoonSrcPrinter {
                     || !member.getAnnotations().isEmpty();
         }
 
-        private Serialization(String srcCode, Set<CtType<?>> sortingSkippedTypes) {
+        private Serialization(String srcCode, Set<CtType<?>> sortingSkippedTypes, PrinterConfig printerConfig) {
             srcPrinterOutput = new SrcPrinterOutput(srcCode);
             this.sortingSkippedTypes = sortingSkippedTypes;
+            this.printerConfig = printerConfig;
         }
 
         private boolean needsSeparatorAfter(CtTypeMember member) {

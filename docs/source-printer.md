@@ -5,14 +5,15 @@ SPDX-License-Identifier: Apache-2.0
 
 # Source printer
 
-`SpoonParser` retains one reusable `SpoonSrcPrinter` in the serialization supplier of each model.
+`SpoonParser` captures the immutable `PrinterConfig` in each model's serialization supplier.
+The supplier calls the stateless `SpoonSrcPrinter`; no printer instance is created per file.
 The printer uses Spoon declarations and source positions; all output code belongs to this project.
 It neither inherits from Spoon printers nor regenerates declarations through `CtElement.toString()`.
 Parsing, sorting, formatting and import cleanup retain their existing entry points.
 
 | Component | Responsibility |
 | --- | --- |
-| `SpoonSrcPrinter` | Immutable configuration and independent serialization calls |
+| `SpoonSrcPrinter` | Stateless serialization entry point with explicit configuration |
 | `SpoonSrcPrinter.Serialization` | Per-call state, declaration layout, member spacing and boundaries, skipped-type ranges |
 | `SrcPrinterOutput` | Source slices and tails, indentation, dominant line separator detection, output offsets |
 | `SpoonTypeMemberUtils` | Explicit members, effective ends and comment attribution |
@@ -30,10 +31,10 @@ The output uses one `StringBuilder`, initially sized to the original source, and
 directly. Interior line endings remain unchanged; generated lines use the dominant separator, with
 CRLF, LF, CR tie precedence. No serialized result is cached.
 
-Each call creates a private `Serialization` with its own output buffer and range map. The printer
-retains only `PrinterConfig`; source text, skipped types and compilation units are call arguments.
+Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
+Configuration, source text, skipped types and compilation units are call arguments; the printer has no shared state.
 The result wraps the collected map once. Later calls cannot alter earlier output or ranges, and
-failed calls leave no state in the service. The service retains no source text or buffer capacity between calls.
+calls for independent models may run concurrently with different configurations. Failed calls leave no shared state.
 
 Spoon 11.5.0 provides correct member positions for the existing enum lambda/body regressions. The old
 enum correction, which generated text and searched it with a regular expression, has been removed.

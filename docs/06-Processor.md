@@ -24,7 +24,8 @@ The constructor compiles the active config via
 
 - `Formatter(formatter-style, fix-imports)` — Palantir wrapper.
 - `Sorter(compiledConfig)` — member sorter.
-- `PrinterConfig(blank-line-after-type-header, blank-line-before-comment, blank-line-between-fields)` — passed to the Spoon custom printer.
+- `PrinterConfig(blank-line-after-type-header, blank-line-before-comment, blank-line-between-fields)` — passed to the
+  Spoon custom printer.
 
 ## Public API
 

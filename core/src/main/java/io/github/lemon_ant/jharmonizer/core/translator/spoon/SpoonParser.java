@@ -53,14 +53,13 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        SpoonSrcPrinter printer = new SpoonSrcPrinter(printerConfig);
         Supplier<SerializedSrcWithSkippedTypeRanges> serializedSrcCode = () -> {
             if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
                 return new SerializedSrcWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
             }
 
-            return printer.serializeCompilationUnit(
-                    compilationUnit, srcFile.getSrcCode(), optOuts.getSortingSkippedTypes());
+            return SpoonSrcPrinter.serializeCompilationUnit(
+                    compilationUnit, srcFile.getSrcCode(), optOuts.getSortingSkippedTypes(), printerConfig);
         };
         return SpoonAstModel.builder()
                 .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))

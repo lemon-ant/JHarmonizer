@@ -233,7 +233,8 @@ Initial capability set:
   - `HEAD` vs working tree,
   - merge-base against target branch,
   - “since last push” style heuristics.
-- Define deterministic fallback behavior when Git metadata is unavailable (archive, shallow checkout, detached environments).
+- Define deterministic fallback behavior when Git metadata is unavailable (archive, shallow checkout, detached
+  environments).
 
 #### Safety requirements
 - Never silently skip changed source files because of baseline ambiguity.
@@ -353,7 +354,8 @@ Java has multiple contexts where some modifiers are implied by language rules an
 add no semantic value when written explicitly.
 
 Common examples of truly implied modifiers:
-- `public` on interface members (methods, constants, nested types), where interface member visibility is implicitly public;
+- `public` on interface members (methods, constants, nested types), where interface member visibility is implicitly
+  public;
 - `public abstract` on interface methods (both are implicit unless using `default`/`static`/`private`);
 - `public static final` on interface fields (all interface fields are implicitly constants);
 - `static` on nested interfaces declared inside interfaces (implicitly static).
@@ -396,7 +398,8 @@ Introduce a modifier-normalization pass that:
 
 #### Status
 - [ ] Not implemented (captured as a future improvement)
-- [ ] Revisit after: core rewrite passes are stable and the modifier-normalization infrastructure from item 21 is in place
+- [ ] Revisit after: core rewrite passes are stable and the modifier-normalization infrastructure from item 21 is in
+  place
 
 #### Background
 JUnit Jupiter discovers test and lifecycle methods through reflection and does not require `public`
@@ -405,7 +408,8 @@ widens apparent API surface, and conflicts with the general minimal-access-level
 
 The intended convention is:
 - JUnit 5 test classes → package-private by default (no modifier).
-- Methods annotated with `@Test`, `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, `@TestTemplate` → package-private.
+- Methods annotated with `@Test`, `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, `@TestTemplate` →
+  package-private.
 - Lifecycle methods annotated with `@BeforeEach`, `@AfterEach`, `@BeforeAll`, `@AfterAll` → package-private.
 - `@Nested` test classes → package-private.
 - Helper methods, constants, and helper nested classes used only inside one test class → remain `private`.
@@ -436,7 +440,8 @@ Introduce a dedicated test-source visibility cleanup rule that:
 - Or a separate optional rule that can be composed with the main pipeline.
 
 #### Implementation outline (when revisited)
-- [ ] Determine whether this fits best as a modifier-normalization sub-pass of item 21 restricted to test sources, or as a standalone rule.
+- [ ] Determine whether this fits best as a modifier-normalization sub-pass of item 21 restricted to test sources, or as
+  a standalone rule.
 - [ ] Implement annotation detector for all JUnit Jupiter test and lifecycle annotations.
 - [ ] Implement visibility normalizer that removes `public` from supported declarations in test sources.
 - [ ] Add configuration flag: disabled by default; opt-in via explicit test-source-visibility cleanup flag.
@@ -446,7 +451,8 @@ Introduce a dedicated test-source visibility cleanup rule that:
   - `public` lifecycle method (`@BeforeEach`, `@AfterEach`, etc.) converted to package-private;
   - `public` `@Nested` class converted to package-private;
   - `private` helper method left unchanged;
-  - `public` helper method without JUnit annotation not changed (unless a separate helper-visibility rule is introduced);
+  - `public` helper method without JUnit annotation not changed (unless a separate helper-visibility rule is
+    introduced);
   - production class not changed;
   - invalid case not produced — JUnit entry points must not be made `private`.
 
@@ -506,7 +512,8 @@ initializer dependencies" entry and future full-project compilation ideas):
 - [ ] Implement `camelCase`/`PascalCase` → `UPPER_SNAKE_CASE` name derivation utility (shared, neutral package).
 - [ ] Add collision detection within the same type for the derived name.
 - [ ] Implement Phase 1 rewriter: private constant + in-class reference rename.
-- [ ] Add configuration flags: `rename-private-constants`, `rename-package-constants`, `rename-protected-constants`, `rename-public-constants`, `report-only`.
+- [ ] Add configuration flags: `rename-private-constants`, `rename-package-constants`, `rename-protected-constants`,
+  `rename-public-constants`, `report-only`.
 - [ ] Add E2E fixtures for simple rename, collision avoidance, and multi-reference scenarios.
 - [ ] Extend to Phase 2 once cross-file local analysis is proven stable.
 - [ ] Extend to Phase 3 after full project-wide AST/classpath analysis is available.
@@ -610,7 +617,8 @@ so they can be promoted to static for clarity and explicit dependencies.
 Add dependency-graph analysis to detect members that can safely become static:
 - detect methods with no `this`/instance-field dependency;
 - detect fields that are instance-declared but semantically static candidates;
-- optionally support controlled refactor mode for near-static methods by extracting required instance data into parameters.
+- optionally support controlled refactor mode for near-static methods by extracting required instance data into
+  parameters.
 
 #### Safety requirements
 - preserve behavior (including override/inheritance constraints);
@@ -724,7 +732,8 @@ Without a type selector, some default grouping rules are forced to rely on namin
 #### Decision for the first working version
 To avoid scope creep and ensure we ship a working end-to-end tool:
 - **Do not implement type-based matching in this version.**
-- In Default Rule, match `serialVersionUID` and logger fields **by name** (EXACT / REGEX) within the “static final fields” subgroup.
+- In Default Rule, match `serialVersionUID` and logger fields **by name** (EXACT / REGEX) within the “static final
+  fields” subgroup.
 
 #### Proposed solution (next version)
 Introduce a new selector atom for rule lines: **type matcher**.
@@ -874,7 +883,8 @@ Current declaration dependency detection handles direct field references found i
 A missing case:
 - field `A` default expression calls method `m()`;
 - `m()` reads field `B` (or calls `m2()` that reads `B`);
-- therefore `A` is implicitly order-dependent on `B`, even if `B` is not referenced directly in `A` initializer expression.
+- therefore `A` is implicitly order-dependent on `B`, even if `B` is not referenced directly in `A` initializer
+  expression.
 
 If we ignore this case, we may reorder members in a way that is unsafe for initialization semantics.
 
@@ -938,11 +948,14 @@ Scenario class (`ExplicitTypeInstanceReferrerForwardReference...`) uses this pat
 - static field `bravo` is declared later.
 
 The value observed at runtime depends on declaration order and class-init timing:
-- in the input variant, `zzz` is evaluated before `bravo` initializer runs, so `aaa` observes default static value and `zzz == 1`;
-- in the reordered variant, `aaa` is moved above `zzz`, which changes initialization sequence assumptions and breaks expected semantics.
+- in the input variant, `zzz` is evaluated before `bravo` initializer runs, so `aaa` observes default static value and
+  `zzz == 1`;
+- in the reordered variant, `aaa` is moved above `zzz`, which changes initialization sequence assumptions and breaks
+  expected semantics.
 
 #### Why current implementation fails
-Current dependency handling covers direct declaration dependencies and several local initializer cases, but does not yet fully protect this mixed pattern:
+Current dependency handling covers direct declaration dependencies and several local initializer cases, but does not yet
+fully protect this mixed pattern:
 - explicit declaring-type field access from instance initializer;
 - cross interaction between instance construction and static initialization ordering;
 - required constraints to keep runtime-observable values stable after reordering.
@@ -951,7 +964,8 @@ As a result, sorter can produce an order that is syntactically valid but semanti
 
 #### What to implement (plan)
 1. Re-enable this scenario as an active `.java` E2E fixture and confirm it fails reproducibly in `REORDER + CHECK` flow.
-2. Extend dependency extraction for field initializers to model explicit declaring-type static reads inside instance initializers used by static field initialization chains.
+2. Extend dependency extraction for field initializers to model explicit declaring-type static reads inside instance
+   initializers used by static field initialization chains.
 3. Add conservative ordering constraints so members participating in such chains are not moved across unsafe boundaries.
 4. Re-run full E2E + compile + runtime assertions; then keep scenario active as regression guard.
 
@@ -993,7 +1007,8 @@ Related parked lazy-context fixture (separate backlog track):
 
 #### Background
 JHarmonizer already has a compiled layer for grouping/classification:
-selectors and rule blocks are compiled once into “ready-to-run” predicates, so we can classify `CtTypeMember`s efficiently.
+selectors and rule blocks are compiled once into “ready-to-run” predicates, so we can classify `CtTypeMember`s
+efficiently.
 
 Sorting is still “runtime-heavy”:
 - For each group, we rebuild comparator chains based on `OrderingRule`s.
@@ -1173,7 +1188,8 @@ Core principles:
 
 #### Remaining gap
 - true multi-candidate-writer nearest-guaranteed-provider selection across multiple initialization members;
-- valid Java cannot express this shape without violating final-assignment rules, so active compile/run E2E fixtures cannot model it directly.
+- valid Java cannot express this shape without violating final-assignment rules, so active compile/run E2E fixtures
+  cannot model it directly.
 
 #### Backlog direction
 - keep this as a dedicated dependency-analysis improvement track;
@@ -1236,7 +1252,8 @@ because the return value of "spoon.reflect.reference.CtFieldReference.getDeclari
 
 #### Follow-up actions
 - [ ] Create upstream Spoon issue with a minimal reproducible sample based on method-reference field initializer.
-- [ ] Create upstream Spoon issue (or linked follow-up) for self-type class-literal partial-evaluation class-loading failure.
+- [ ] Create upstream Spoon issue (or linked follow-up) for self-type class-literal partial-evaluation class-loading
+  failure.
 - [ ] Attach the captured stack trace and no-classpath context to the upstream report.
 - [ ] Revisit local fallback scope after upstream fix becomes available.
 
@@ -1308,7 +1325,8 @@ upstream ticket and link it from our documentation once created.
 
 #### Status
 - [ ] Open investigation / upstream issue not yet created
-- [ ] Local workaround implemented and covered by regression fixture `10-non-idempotent-blank-line-in-field-group-after-sort`
+- [ ] Local workaround implemented and covered by regression fixture
+  `10-non-idempotent-blank-line-in-field-group-after-sort`
 
 #### Verified current behavior
 - When a type contains a member with a trailing inline `// comment` and members are reordered,
@@ -1356,7 +1374,8 @@ to `config`, triggering a spurious blank line before `config` (the first member 
 
 #### Status
 - [ ] Open investigation / upstream issue not yet created
-- [ ] Local workaround implemented and covered by regression fixture `11-non-idempotent-blank-line-after-nested-interface-sort`
+- [ ] Local workaround implemented and covered by regression fixture
+  `11-non-idempotent-blank-line-after-nested-interface-sort`
 
 #### Verified current behavior
 - When a nested type (e.g. `interface Builder`) has its own javadoc comment and is printed with no

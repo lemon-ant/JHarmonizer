@@ -4,6 +4,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinter.serializeCompilationUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -29,27 +30,28 @@ class SpoonSrcPrinterTest {
     private Path temporaryDirectory;
 
     @Test
-    void serializeCompilationUnit_reusedAcrossSources_keepsResultsIndependent() {
+    void serializeCompilationUnit_interleavedSourcesAndConfigurations_keepsResultsIndependent() {
         // Given
         String srcCode = readClasspathResourceAsString(
                 "/test-cases/core/e2e/printer/scenarios/05-combined-boundaries/input/BoundarySample.java");
         SpoonAstModel model =
                 SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")), printerConfig);
-        String otherSrcCode = "class Other {}\r\n";
+        String otherSrcCode = "class Other {\r\n    int value;\r\n}\r\n";
+        PrinterConfig otherPrinterConfig = new PrinterConfig(false, false, false);
         SpoonAstModel otherModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")), printerConfig);
-        SpoonSrcPrinter printer = new SpoonSrcPrinter(printerConfig);
-
-        // When
-        SerializedSrcWithSkippedTypeRanges firstResult = printer.serializeCompilationUnit(
-                model.getCompilationUnit(), srcCode, model.getOptOuts().getSortingSkippedTypes());
+                SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")), otherPrinterConfig);
+        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(
+                model.getCompilationUnit(), srcCode, model.getOptOuts().getSortingSkippedTypes(), printerConfig);
         Map<CtType<?>, SrcCharacterRange> originalRanges = Map.copyOf(firstResult.getSortingSkippedTypeRanges());
-        SerializedSrcWithSkippedTypeRanges otherResult = printer.serializeCompilationUnit(
+        SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(
                 otherModel.getCompilationUnit(),
                 otherSrcCode,
-                otherModel.getOptOuts().getSortingSkippedTypes());
-        SerializedSrcWithSkippedTypeRanges repeatedResult = printer.serializeCompilationUnit(
-                model.getCompilationUnit(), srcCode, model.getOptOuts().getSortingSkippedTypes());
+                otherModel.getOptOuts().getSortingSkippedTypes(),
+                otherPrinterConfig);
+
+        // When
+        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(
+                model.getCompilationUnit(), srcCode, model.getOptOuts().getSortingSkippedTypes(), printerConfig);
 
         // Then
         assertThat(firstResult.getSortingSkippedTypeRanges())
@@ -77,11 +79,11 @@ class SpoonSrcPrinterTest {
                 + "\n".repeat(trailingTerminators);
         Path srcPath = temporaryDirectory.resolve(fileName);
         SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(inputSrcCode, srcPath), printerConfig);
-
-        // When
         String printedSrcCode = model.getSerializedSrcCode().get().getSerializedSrcCode();
         SpoonAstModel repeatedModel =
                 SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath), printerConfig);
+
+        // When
         String repeatedSrcCode = repeatedModel.getSerializedSrcCode().get().getSerializedSrcCode();
 
         // Then

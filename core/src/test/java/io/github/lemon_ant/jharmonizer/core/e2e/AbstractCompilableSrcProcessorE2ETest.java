@@ -24,7 +24,6 @@ abstract class AbstractCompilableSrcProcessorE2ETest
 
     @Test
     void fixtureScenarioDirectories_numberingValidated_haveUniqueSequentialNumbersWithoutGaps() throws Exception {
-        // When / Then
         fixtureScenarioDirectoriesNumberingValidatedHaveUniqueSequentialNumbersWithoutGaps();
     }
 
@@ -32,7 +31,6 @@ abstract class AbstractCompilableSrcProcessorE2ETest
     @MethodSource("fixtureInputFiles")
     void processFixtureInputFile_configuredScenario_matchesExpectedAndCompiles(
             @NonNull Path scenarioDir, @NonNull Path srcFile) throws Exception {
-        // When / Then
         processFixtureInputFileMatchesExpectedAndCompileAfter(temporaryDirectory, scenarioDir, srcFile);
     }
 
