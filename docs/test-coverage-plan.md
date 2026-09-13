@@ -13,14 +13,14 @@ This checklist tracks completed and remaining test coverage.
 
 - [x] **Member body integrity**
   - **Type:** E2E
-  - **Targets:** `SpoonCustomSrcPrinter`
+  - **Targets:** `SpoonSrcPrinter`
   - **Goal:** when a member is moved, its **body text is unchanged** (except group separator insertion around boundaries).
   - **Must assert:** stable “sentinel” markers inside members stay exactly the same.
-  - **Covered by:** `SrcPrinterE2ETest` checks method bodies and string spacing with Palantir disabled.
+  - **Covered by:** `SrcPrinterE2ETest` uses full-output fixtures and whitespace variants through the shared E2E runner, with formatting disabled.
 
 - [x] **Boundary stitching correctness**
   - **Type:** E2E
-  - **Targets:** `SpoonCustomSrcPrinter`, `SpoonTypeStructurePrinter`, `SpoonPrinterHelper`, `SrcCodeUtils`
+  - **Targets:** `SpoonSrcPrinter`, `SrcPrinterOutput`, `SrcCodeUtils`
   - **Goal:** no missing/extra braces, semicolons, or accidental merges of two members.
   - **Must assert:** output is syntactically valid and compiles.
   - **Covered by:** `SrcPrinterE2ETest` checks exact boundaries with formatting disabled, combined separator requests, LF/CRLF/CR endings, space/tab indentation, opt-out fragments, and repeated processing. Output compiles with JDK 21; see [printer coverage](printer-coverage.md).

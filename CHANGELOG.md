@@ -14,24 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Temporary standalone printer measurement lab with PMD 7.24.0, ArchUnit 1.5.0, and JMH 1.37; repeatable source/architecture metrics, isolated threaded performance and allocation measurements, archived baseline evidence, and instructions for comparing a replacement printer.
-- Printer E2E tests for declarations, comments, string contents, headerless files, whitespace-only preambles, line separators, group boundaries, opt-out preservation, and idempotence.
-- Printer buffer tests for empty output, missing line terminators, and existing LF/CRLF/CR endings.
-- Printer coverage measurements, unreachable-branch notes, and a Maven/JaCoCo reproduction command.
-
 ### Changed
 
+- Replaced the inherited Spoon source printer with standalone source-fragment printing, a direct output buffer, and indexed member boundaries. Preserved declaration output and skipped-type ranges; removed enum correction through Spoon pretty printing.
+- The source printer now copies the original tail after the last top-level type following one blank line. Preserves comment spelling, indentation, semicolons, trailing whitespace and the original file ending; removes separate footer rendering.
 - Updated Palantir Java Formatter dependency from 2.91.0 to 2.98.0.
 - Updated Spoon dependency from 11.2.1 to 11.5.0.
-- Added scoped PMD suppressions for intentional reference-identity comparisons.
-- Required cross-platform Java/Maven tooling and concise technical text in agent instructions.
-- Run local source reordering in `validate` before PMD checks.
-- Clarified prepared test state and one-time setup rules in agent instructions.
 
 ### Fixed
 
+- Preserved footer comments after the last top-level type with trailing line terminators, virtual sources, and repeated processing, including reordered top-level declarations.
 - Fixed duplicate blank lines in Spoon serialization before closing braces, between nested and top-level types, and at end of file. Declaration containers now own separators, combining header, member, and group spacing while preserving comments, opt-out fragments, and source line endings. Member source boundaries are indexed once, skipped-type offsets no longer copy the output buffer, and fragment indentation is retained without rescanning leading whitespace. Fragment-boundary detection is centralized in `SrcCodeUtils` with unit coverage for indentation, whitespace, and source ranges.
 - Generated member-group comments now retain the following member's source indentation before formatting.
 

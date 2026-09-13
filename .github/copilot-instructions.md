@@ -80,7 +80,10 @@ SPDX-License-Identifier: Apache-2.0
 - When debugging uncovers a non-obvious runtime or framework edge case (for example parser or evaluator recursion traps), document the guard/workaround with a nearby code comment so future refactors do not remove it accidentally.
 - Prefer clear, fully descriptive variable names; avoid non-obvious abbreviations unless the abbreviation is an established term such as `URL`, `URI`, or `ID`, or an established repository abbreviation such as the `src*` naming family.
 - Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
-- Build and validate with JDK 21. The standard repository command is `mvn -B -ntp verify`.
+- Build and validate with JDK 21.
+- Automatically run tests only for the module being changed; for changes spanning modules, limit test runs to those modules.
+  - If prerequisite modules need to be built, skip their tests unless they are also being changed.
+  - The user runs full-project verification (`mvn -B -ntp verify`) when needed. Agents may run it only when explicitly requested for the current task.
 
 ## Test conventions
 
@@ -107,6 +110,13 @@ SPDX-License-Identifier: Apache-2.0
 - Before copying code into another test, search for an existing shared test utility and reuse it.
 - If similar fragments appear in more than one test, or are likely to be reused, extract them into a shared test utility class.
 - Re-run this reuse analysis when adding tests, refactoring tests, and during cleanup passes.
+- Before adding a scenario test, trace the existing runner's fixture discovery, configuration loading, compilation, output comparison, and repeated-processing checks.
+- Express source-output scenarios through the existing E2E fixtures before adding Java test methods:
+  - Use numbered scenario directories with `input/<Name>.java`, `expected/<Name>.java`, and `config.yml` under `core/e2e/reorder/` or `core/e2e/printer/scenarios/`; regression scenarios use `core/e2e/regression/` and may omit the config.
+  - These paths are relative to `src/test/resources/test-cases/`. The shared runner discovers inputs and matches expected files by name.
+- Reuse the shared runner's compilation, processing, full-output comparison, and `CHECK_FAIL_FAST` fixed-point check. Do not duplicate these steps in scenario-specific test code.
+- Distinguish fixture compilation from output compilation: Maven compiles `valid/**/*.java` inputs, while the E2E runner compiles original and processed sources. Neither requires an additional per-scenario compiler invocation or separate compilation of an identical expected file.
+- Keep separate Java tests only for contracts the fixture runner cannot express, such as source offsets, immutable result state, virtual sources, or invalid helper inputs. For line endings and whitespace variants, transform fixtures minimally and reuse the shared processing assertions.
 - When tests in a different package need to instantiate a production type with package-private construction, prefer a dedicated test creator/helper in the target package instead of widening production visibility.
 
 ### Naming
@@ -175,6 +185,7 @@ SPDX-License-Identifier: Apache-2.0
 
 - If multiple tests in the same test class use the same expensive or repetitive setup, initialize it once at the test-class level instead of recreating it in every test.
 - Reserve `private static final` constants for simple fixed values such as strings, numbers, enums, and small literal collections. Immutability alone does not make prepared test data a constant.
+- Initialize fixed fixture locations (`Path` or `URL`) as `private static final` constants through existing resource helpers. Do not introduce `@BeforeAll` or mutable fields solely to resolve a location.
 - Prefer `private final` fields when per-instance initialization is sufficient and the object is safe to share across tests in the class.
 - Use `@BeforeAll` for expensive or multi-step preparation such as loading fixtures, compiling configuration, parsing, sorting, or serializing source, even if this work could be hidden behind a method call in a field initializer. Store the prepared state in ordinary test fields, preferably instance fields when the test lifecycle allows it.
 - If `@BeforeAll` must be non-static, use `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`.

@@ -76,7 +76,7 @@ These come from `UnifiedFormatting` and flow through `CompiledConfig` into the w
 
 The other formatting flags — `blank-line-after-type-header`, `blank-line-before-comment`,
 `blank-line-between-fields` — are **not** applied by the Palantir formatter. They are
-honoured earlier, by the Spoon custom printer (`SpoonTypeStructurePrinter` / `SpoonSrcPrinterUtils`)
+honoured earlier, by the source printer (`SpoonSrcPrinter` / `SpoonSrcPrinterUtils`)
 during AST serialization, before the formatter runs.
 
 ## Formatting-skipped ranges

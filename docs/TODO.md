@@ -1241,31 +1241,16 @@ because the return value of "spoon.reflect.reference.CtFieldReference.getDeclari
 - [ ] Revisit local fallback scope after upstream fix becomes available.
 
 ---
-### 4. Spoon incorrect `sourceStart` for first explicit enum member after constant/lambda region
+### 4. Historical Spoon `sourceStart` error after enum constant/lambda regions
 
 #### Status
-- [ ] Open investigation / upstream issue not yet created
-- [ ] Local workaround implemented and covered by dedicated regression fixture
+- [x] Verified the existing lambda and constant-class-body regressions with Spoon 11.5.0.
+- [x] Removed the declaration-prefix regex and indirect pretty-printing workaround.
 
-#### Verified current behavior
-- For a specific enum shape, Spoon may report incorrect `sourceStart` for the **first explicit member** after
-  enum constants (for example a method declared right after constant declarations).
-- Observed in regression fixture:
-  `core/src/test/resources/test-cases/core/e2e/regression/02-enum-lambda-body-member-boundary`.
-- In this case, the reported start can be shifted into the preceding enum constant/lambda body zone, which breaks
-  member boundary slicing for source-preserving printing.
-
-#### Temporary workaround in code
-- `EnumMemberStartCorrectionResolver` applies targeted correction for enum member starts.
-- Correction flow:
-  - finds the earliest explicit enum member;
-  - searches declaration-prefix pattern inside the extracted source fragment;
-  - shifts start offset when Spoon start points before the real declaration.
-
-#### Follow-up actions
-- [ ] Create upstream Spoon issue with a minimal enum reproducer from regression `02-enum-lambda-body-member-boundary`.
-- [ ] Attach before/after `sourceStart` observations for affected members and expected boundary behavior.
-- [ ] Re-evaluate and simplify/remove local correction once Spoon fix is released and validated.
+The former failure shifted the first explicit member's start into an enum constant's lambda body.
+The current LF fixture reports `getDescriptor` at source offset 580, matching its declaration.
+Keep `core/src/test/resources/test-cases/core/e2e/regression/02-enum-lambda-body-member-boundary`
+and its expected output as the compatibility check for future Spoon updates.
 
 ---
 

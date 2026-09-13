@@ -33,7 +33,7 @@ The main flow of JHarmonizer can be summarized as:
 3. **Sorting**: Apply the configured ordering rules, honouring the declaration-order
    dependency graph and opt-out directives.
 4. **Serialization**: Render the reordered Spoon AST back to Java source text via
-   the customized Spoon printer (`SpoonCustomSrcPrinter`), preserving comments,
+   the standalone source printer (`SpoonSrcPrinter`), preserving comments,
    annotations, and any source ranges marked by `@jharmonizer:fully-off`.
 5. **Formatting**: Run the **Palantir** java-format pass and apply blank-line and
    import-fixing rules.

@@ -5,14 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 # Known limitations
 
-## Comments after the last top-level type
-
-The custom source printer can drop a standalone footer comment after the last top-level type.
-Reproduced with Spoon 11.5.0 and Palantir disabled.
-
-Spoon attaches the footer within the compilation unit's source range. The printer uses
-`CommentOffset.AFTER`, which selects comments beyond that range and omits the footer.
-
 ## Non-deterministic formatter output across repeated runs
 
 Palantir formatter can produce non-idempotent output for some long or heavily wrapped constructs.
