@@ -3,12 +3,13 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroupTestCreator.createTrivialMemberGroup;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.resolveSeparator;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator;
+import io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.GroupSeparator;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils;
 import java.net.URL;
 import java.util.List;
 import lombok.NonNull;
@@ -34,8 +35,9 @@ class GroupBoundaryMarkerTest {
         GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
 
         // Then
-        assertThat(alphaFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
-                .isNull();
+        assertThat(resolveSeparator(alphaFieldMember))
+                .extracting(GroupSeparator::getType, GroupSeparator::getHeaderText)
+                .containsExactly(UnifiedSeparator.NONE, null);
     }
 
     @Test
@@ -59,14 +61,18 @@ class GroupBoundaryMarkerTest {
         GroupBoundaryMarker.markGroupBoundaries(orderedBlocks);
 
         // Then
-        assertThat(alphaFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
-                .isEqualTo("Header fields");
-        assertThat(bravoFieldMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
-                .isNull();
-        assertThat(charlieMethodMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
-                .isEqualTo(SpoonSrcPrinterUtils.GROUP_SEPARATOR_NEW_LINE);
-        assertThat(deltaMethodMember.getMetadata(SpoonSrcPrinterUtils.GROUP_HEADER_METADATA))
-                .isNull();
+        assertThat(resolveSeparator(alphaFieldMember))
+                .extracting(GroupSeparator::getType, GroupSeparator::getHeaderText)
+                .containsExactly(UnifiedSeparator.HEADER, "Header fields");
+        assertThat(resolveSeparator(bravoFieldMember))
+                .extracting(GroupSeparator::getType, GroupSeparator::getHeaderText)
+                .containsExactly(UnifiedSeparator.NONE, null);
+        assertThat(resolveSeparator(charlieMethodMember))
+                .extracting(GroupSeparator::getType, GroupSeparator::getHeaderText)
+                .containsExactly(UnifiedSeparator.NEW_LINE, null);
+        assertThat(resolveSeparator(deltaMethodMember))
+                .extracting(GroupSeparator::getType, GroupSeparator::getHeaderText)
+                .containsExactly(UnifiedSeparator.NONE, null);
     }
 
     @NonNull

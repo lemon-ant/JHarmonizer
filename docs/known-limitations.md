@@ -87,10 +87,14 @@ public void enableComponentsAdvice(
 
 ### Workarounds
 
-1. **Inline comments:** avoid long trailing `//` comments; move long notes to a standalone line or a short block comment above the statement.
-2. **String concatenations:** prefer extracting long literals into named constants or helper variables so the formatter has fewer fragile wrap points.
-3. **Annotations and pointcuts:** keep argument values and expression strings shorter per line where practical to reduce wrap oscillation risk.
-4. **Persistent oscillation:** use `// @jharmonizer:sort-off` (keeps formatting but disables sorting) or `// @jharmonizer:fully-off` (disables all harmonization) as a temporary mitigation.
+1. **Inline comments:** avoid long trailing `//` comments; move long notes to a standalone line or a short block comment
+   above the statement.
+2. **String concatenations:** prefer extracting long literals into named constants or helper variables so the formatter
+   has fewer fragile wrap points.
+3. **Annotations and pointcuts:** keep argument values and expression strings shorter per line where practical to reduce
+   wrap oscillation risk.
+4. **Persistent oscillation:** use `// @jharmonizer:sort-off` (keeps formatting but disables sorting) or
+   `// @jharmonizer:fully-off` (disables all harmonization) as a temporary mitigation.
 
 ---
 

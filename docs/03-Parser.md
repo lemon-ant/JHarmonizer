@@ -43,7 +43,7 @@ SpoonAstModel
     ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
     └─ Supplier<SerializedSrcWithSkippedTypeRanges>  (lazy re-serialization)
     ↓
-Sorter → SpoonCustomSrcPrinter → Formatter
+Sorter → SpoonSrcPrinter → Formatter
 ```
 
 ## Key components
@@ -54,8 +54,7 @@ Sorter → SpoonCustomSrcPrinter → Formatter
 | `SpoonAstModel`                      | Immutable post-parse snapshot used by the rest of the pipeline.                                       |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
 | `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the serializer can compute relocations.  |
-| `SpoonCustomSrcPrinter` / `SpoonTypeStructurePrinter` / `SpoonSrcPrinterUtils` | Spoon-printer customization used when the AST is serialized back to text.        |
-| `EnumMemberStartCorrectionResolver`  | Compensates for Spoon offset quirks at the start of enum bodies.                                      |
+| `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
 
 ## What is preserved

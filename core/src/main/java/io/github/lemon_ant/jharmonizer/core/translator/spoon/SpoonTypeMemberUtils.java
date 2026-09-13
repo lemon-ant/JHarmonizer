@@ -2,21 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_HEADER_METADATA;
-
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import org.jspecify.annotations.Nullable;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Internal utilities for inspecting Spoon type members and their associated comments.
- * Separates member-inspection concerns from the separator-predicate compilation utilities
- * in {@link SpoonSrcPrinterUtils}.
- */
+/** Inspects explicit declarations, source boundaries and attached comments. */
 @UtilityClass
 class SpoonTypeMemberUtils {
 
@@ -56,49 +49,10 @@ class SpoonTypeMemberUtils {
     }
 
     /**
-     * Returns the group-header metadata string attached to the member, or {@code null} if absent.
-     *
-     * @param member the type member to inspect
-     * @return the group header, or {@code null}
-     */
-    @Nullable
-    static String findGroupHeader(@NonNull CtTypeMember member) {
-        Object groupHeaderMetadata = member.getMetadata(GROUP_HEADER_METADATA);
-        if (groupHeaderMetadata == null) {
-            return null;
-        }
-        return groupHeaderMetadata.toString();
-    }
-
-    /**
-     * Returns {@code true} when the member has at least one genuine leading comment: a comment
-     * whose end line is strictly before the member's own line, whose start line does not
-     * coincide with the last source line of any other member declaration, and whose start line
-     * is not before the enclosing type's own declaration line.
-     *
-     * <p>The second filter guards against Spoon's comment misattribution after member reordering.
-     * When members are reordered, Spoon sometimes attributes a trailing {@code //} comment from
-     * one member to the next element in the original source order. Such a comment always sits on
-     * the last line of the member it was originally trailing (its {@code endLine}), so filtering
-     * by {@code memberDeclarationEndLines} removes these spurious attributions while leaving
-     * genuine leading comments (which occupy their own lines, not the end line of a declaration)
-     * intact.
-     *
-     * <p>The third filter guards against a second Spoon misattribution pattern: when a nested type
-     * has no blank line between its opening brace and its first member, Spoon can attribute the
-     * enclosing type's own javadoc (which precedes the {@code interface}/{@code class} keyword) to
-     * that first inner member instead. Such a comment is guaranteed to start on a line strictly
-     * before the enclosing type's declaration start line, so filtering by
-     * {@code typeDeclarationStartLine} removes these spurious attributions while leaving genuine
-     * leading comments inside the type body (which start on or after the type's first declaration
-     * line) intact.
-     *
+     * Detects leading comments, excluding misplaced trailing comments and enclosing-type JavaDoc.
      * @param member the member to inspect
      * @param memberDeclarationEndLines the set of last source lines of declarations in the same type
-     * @param typeDeclarationStartLine the first source line of the enclosing type's declaration
-     *                                 (e.g. the line of the {@code interface} or {@code class}
-     *                                 keyword); comments starting before this line are outside the
-     *                                 type body and are filtered out
+     * @param typeDeclarationStartLine the enclosing type's declaration line
      * @return {@code true} if the member has a genuine leading comment
      */
     static boolean hasLeadingCommentOnSeparateLine(
@@ -107,6 +61,7 @@ class SpoonTypeMemberUtils {
             int typeDeclarationStartLine) {
         return member.getComments().stream()
                 .filter(comment -> comment.getPosition().isValidPosition())
+                // Spoon can attach a sibling's trailing comment or the enclosing type's JavaDoc to this member.
                 .filter(comment -> !memberDeclarationEndLines.contains(
                         comment.getPosition().getLine()))
                 .filter(comment -> comment.getPosition().getLine() >= typeDeclarationStartLine)

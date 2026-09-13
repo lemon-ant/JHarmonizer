@@ -58,9 +58,8 @@ public class SpoonParser {
                 return new SerializedSrcWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
             }
 
-            SpoonCustomSrcPrinter printer = new SpoonCustomSrcPrinter(
-                    launcher.getEnvironment(), srcFile.getSrcCode(), optOuts.getSortingSkippedTypes(), printerConfig);
-            return printer.serializeCompilationUnit(compilationUnit);
+            return SpoonSrcPrinter.serializeCompilationUnit(
+                    compilationUnit, srcFile.getSrcCode(), optOuts.getSortingSkippedTypes(), printerConfig);
         };
         return SpoonAstModel.builder()
                 .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))

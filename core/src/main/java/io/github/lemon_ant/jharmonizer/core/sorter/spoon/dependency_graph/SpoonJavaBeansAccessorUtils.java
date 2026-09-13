@@ -52,6 +52,7 @@ public class SpoonJavaBeansAccessorUtils {
      * Throws if the type contains a duplicate accessor kind for the same property.
      */
     @NonNull
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     static Set<@NonNull CtMethod<?>> findPairedAccessorMethods(@NonNull CtMethod<?> accessorMethod) {
         Optional<AccessorMethodDescriptor> accessorMethodDescriptor = tryParseAccessorMethodDescriptor(accessorMethod);
         if (accessorMethodDescriptor.isEmpty()) {
@@ -66,6 +67,7 @@ public class SpoonJavaBeansAccessorUtils {
         return streamExplicitSrcTypeMembers(declaringType)
                 .filter(typeMember -> typeMember instanceof CtMethod<?>)
                 .map(typeMember -> (CtMethod<?>) typeMember)
+                // Exclude this accessor instance; Spoon equality compares structure instead of node identity.
                 .filter(candidateMethod -> candidateMethod != accessorMethod)
                 .flatMap(
                         candidateMethod -> tryParseAccessorMethodDescriptor(candidateMethod)

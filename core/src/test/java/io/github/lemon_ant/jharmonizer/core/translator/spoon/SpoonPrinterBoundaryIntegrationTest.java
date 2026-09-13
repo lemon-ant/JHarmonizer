@@ -3,9 +3,9 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.markHeader;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.requireTypeMemberBySimpleName;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinterUtils.GROUP_HEADER_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
@@ -19,16 +19,12 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtType;
 
 @SuppressWarnings("NotNullFieldNotInitialized")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SpoonPrinterBoundaryIntegrationTest {
-
-    @NonNull
-    private String expectedSrcCode;
 
     @NonNull
     private String inputSrcCode;
@@ -38,14 +34,13 @@ class SpoonPrinterBoundaryIntegrationTest {
 
     @BeforeAll
     void setUp() {
-        String fixtureRoot = "/test-cases/core/translator/spoon-printer-boundaries/";
-        inputSrcCode = readClasspathResourceAsString(fixtureRoot + "valid/BoundarySample.java");
-        expectedSrcCode = readClasspathResourceAsString(fixtureRoot + "expected/BoundarySample.java");
+        inputSrcCode = readClasspathResourceAsString(
+                "/test-cases/core/e2e/printer/scenarios/05-combined-boundaries/input/BoundarySample.java");
     }
 
     @ParameterizedTest(name = "{0}, original trailing line terminators: {2}")
     @MethodSource("provideLineEndings")
-    void serialize_combinedSeparatorsAndOptOut_preservesExactSourceLayout(
+    void serialize_combinedSeparatorsAndOptOut_mapsPreservedFragment(
             @NonNull String style, @NonNull String lineSeparator, int trailingLineTerminators) {
         // Given
         String srcCode = inputSrcCode.stripTrailing().replace("\n", lineSeparator)
@@ -53,9 +48,8 @@ class SpoonPrinterBoundaryIntegrationTest {
         SpoonAstModel model =
                 SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")), printerConfig);
         CtType<?> mainType = model.getMainType().orElseThrow();
-        requireTypeMemberBySimpleName(mainType.getTypeMembers(), "first").putMetadata(GROUP_HEADER_METADATA, "Fields");
-        requireTypeMemberBySimpleName(mainType.getTypeMembers(), "Nested")
-                .putMetadata(GROUP_HEADER_METADATA, "Nested types");
+        markHeader(requireTypeMemberBySimpleName(mainType.getTypeMembers(), "first"), "Fields");
+        markHeader(requireTypeMemberBySimpleName(mainType.getTypeMembers(), "Nested"), "Nested types");
         SourcePosition preservedPosition = requireTypeMemberBySimpleName(mainType.getTypeMembers(), "Preserved")
                 .getPosition();
         String preservedFragment =
@@ -67,47 +61,12 @@ class SpoonPrinterBoundaryIntegrationTest {
                 SrcAstTranslator.serialize(model).getSerializedSrcWithSkippedTypeRanges();
 
         // Then
-        assertThat(result.getSerializedSrcCode()).isEqualTo(expectedSrcCode.replace("\n", lineSeparator));
         assertThat(result.getSortingSkippedTypeRanges()).hasSize(1);
         SrcCharacterRange preservedRange =
                 result.getSortingSkippedTypeRanges().values().iterator().next();
         assertThat(result.getSerializedSrcCode()
                         .substring(preservedRange.getStartInclusive(), preservedRange.getEndExclusive()))
                 .isEqualTo("    " + preservedFragment);
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void serialize_firstNestedType_keepsSingleHeaderSeparator(boolean blankLineAfterTypeHeader) {
-        // Given
-        String srcCode = "class Outer {\n    static class Inner {}\n}\n";
-        PrinterConfig config = new PrinterConfig(blankLineAfterTypeHeader, false, false);
-        SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Outer.java")), config);
-
-        // When
-        String printedSrcCode = SrcAstTranslator.serialize(model)
-                .getSerializedSrcWithSkippedTypeRanges()
-                .getSerializedSrcCode();
-
-        // Then
-        assertThat(printedSrcCode).isEqualTo("class Outer {\n\n    static class Inner {}\n}\n");
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"\n", "\r\n"})
-    void serialize_typeWithoutPreamble_hasOnlyFinalLineTerminator(@NonNull String lineSeparator) {
-        // Given
-        String srcCode = "class Empty {}" + lineSeparator.repeat(3);
-        SpoonAstModel model =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Empty.java")), printerConfig);
-
-        // When
-        String printedSrcCode = SrcAstTranslator.serialize(model)
-                .getSerializedSrcWithSkippedTypeRanges()
-                .getSerializedSrcCode();
-
-        // Then
-        assertThat(printedSrcCode).isEqualTo("class Empty {}" + lineSeparator);
     }
 
     @NonNull

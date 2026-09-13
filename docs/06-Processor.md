@@ -24,7 +24,8 @@ The constructor compiles the active config via
 
 - `Formatter(formatter-style, fix-imports)` — Palantir wrapper.
 - `Sorter(compiledConfig)` — member sorter.
-- `PrinterConfig(blank-line-after-type-header, blank-line-before-comment, blank-line-between-fields)` — passed to the Spoon custom printer.
+- `PrinterConfig(blank-line-after-type-header, blank-line-before-comment, blank-line-between-fields)` — passed to the
+  Spoon custom printer.
 
 ## Public API
 
@@ -75,7 +76,7 @@ For each source file (driven by the parallel `Stream<SrcFile>` returned by
 2. **Opt-out short-circuit** — if the file is `@jharmonizer:fully-off`, the original
    text is reused verbatim and the flow records `SKIPPED_BY_OPT_OUT`.
 3. **Sort** — `Sorter.sort(...)` reorders members per `CompiledConfig`.
-4. **Serialize** — `SpoonCustomSrcPrinter` re-emits Java source from the reordered AST.
+4. **Serialize** — `SpoonSrcPrinter` assembles source fragments in the reordered AST's declaration order.
 5. **Format** — `Formatter.formatSrc(...)` runs the Palantir pass and (optionally)
    import fixing, skipping ranges marked `@jharmonizer:fully-off`.
 6. **Diff** — `DiffReporter` compares original and rewritten text when needed by the flow.

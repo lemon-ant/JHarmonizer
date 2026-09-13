@@ -5,24 +5,29 @@ SPDX-License-Identifier: Apache-2.0
 
 # JHarmonizer — test coverage plan (remaining work)
 
-This document is a **checklist of test work that is still missing** in the current repo version.
-Use it as a contract/roadmap: we will implement tests **one item at a time** and tick them off.
+This checklist tracks completed and remaining test coverage.
 
 > Scope: `jharmonizer-core` (config pipeline, Spoon-based sorting, dependency graph, printing, formatting, flows).
 
 ## 8) Printing / reconstruction correctness (source slicing)
 
-- [ ] **Member body integrity**
-  - **Type:** component
-  - **Targets:** `SpoonCustomSrcPrinter`
-  - **Goal:** when a member is moved, its **body text is unchanged** (except group separator insertion around boundaries).
+- [x] **Member body integrity**
+  - **Type:** E2E
+  - **Targets:** `SpoonSrcPrinter`
+  - **Goal:** when a member is moved, its **body text is unchanged** (except group separator insertion around
+    boundaries).
   - **Must assert:** stable “sentinel” markers inside members stay exactly the same.
+  - **Covered by:** `SrcPrinterE2ETest` uses full-output fixtures and whitespace variants through the shared E2E runner,
+    with formatting disabled.
 
-- [ ] **Boundary stitching correctness**
-  - **Type:** component
-  - **Targets:** `SpoonCustomSrcPrinter`, `SpoonSrcPrinterUtils`
+- [x] **Boundary stitching correctness**
+  - **Type:** E2E
+  - **Targets:** `SpoonSrcPrinter`, `SrcPrinterOutput`, `SrcCodeUtils`
   - **Goal:** no missing/extra braces, semicolons, or accidental merges of two members.
   - **Must assert:** output is syntactically valid and compiles.
+  - **Covered by:** `SrcPrinterE2ETest` checks exact boundaries with formatting disabled, combined separator requests,
+    LF/CRLF/CR endings, space/tab indentation, opt-out fragments, and repeated processing. Output compiles with JDK 21;
+    see [printer coverage](printer-coverage.md).
 
 - [ ] **Package/import/header handling**
   - **Type:** component

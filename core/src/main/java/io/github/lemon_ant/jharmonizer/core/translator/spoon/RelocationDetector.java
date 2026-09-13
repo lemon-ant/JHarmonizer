@@ -79,6 +79,7 @@ public class RelocationDetector {
      * @return {@code true} if any element is at a different position in the sorted order;
      *         otherwise {@code false}
      */
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static boolean isRelocated(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
@@ -86,6 +87,7 @@ public class RelocationDetector {
         boolean mismatchFound = SpoonTypeUtils.streamDeclaredHierarchy(reorderedCompilationUnit)
                 .anyMatch(member -> {
                     int currentIndex = index.getAndIncrement();
+                    // The snapshot tracks node identities; structurally equal declarations can still move.
                     return currentIndex >= originalMemberOrder.size()
                             || originalMemberOrder.get(currentIndex) != member;
                 });

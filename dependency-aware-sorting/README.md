@@ -87,12 +87,16 @@ SimplifiedDependencyAwareSorter.sort(List.of(
 
 ## Ordering rules
 
-1. **No constraints** — members are ordered by the supplied comparator (default: `STATIC` first by name, then `DYNAMIC` by name).
+1. **No constraints** — members are ordered by the supplied comparator (default: `STATIC` first by name, then `DYNAMIC`
+   by name).
 2. **Group** — members in a group travel together as an indivisible block.
    - Within the block: comparator order.
-   - Block position among all blocks: determined by the block's **key** (comparator-minimum member in the block), unless dependencies force a different position.
-3. **Dependency `provider → dependent`** — the provider's block must appear before the dependent's block; overrides natural comparator order.
-4. **Group–dependency mutual exclusivity** (`SimplifiedDependencyAwareSorter` precondition) — a member that belongs to a group must not appear in any dependency (as provider or dependent); violating this raises `SortingException`.
+   - Block position among all blocks: determined by the block's **key** (comparator-minimum member in the block), unless
+     dependencies force a different position.
+3. **Dependency `provider → dependent`** — the provider's block must appear before the dependent's block; overrides
+   natural comparator order.
+4. **Group–dependency mutual exclusivity** (`SimplifiedDependencyAwareSorter` precondition) — a member that belongs to a
+   group must not appear in any dependency (as provider or dependent); violating this raises `SortingException`.
 5. **Cycle** — a cycle in the dependency graph raises `SortingException`.
 6. **Duplicate names** — two members with the same name raise `SortingException`.
 7. **Member in two groups** — raises `SortingException`.
@@ -169,7 +173,8 @@ All tests are in `src/test/java/io/github/lemon_ant/jharmonizer/sorting/` and co
 - Determinism checks across input permutations
 - Large-input sanity/performance-oriented scenarios
 
-**`SimplifiedDependencyAwareSorterTest`** — adds validation tests specific to the mutual-exclusivity constraint (group member used as provider or dependent raises `SortingException`).
+**`SimplifiedDependencyAwareSorterTest`** — adds validation tests specific to the mutual-exclusivity constraint (group
+member used as provider or dependent raises `SortingException`).
 
 **`GenericSortingTest`** — exercises the API with plain `String` and `Integer` items to verify true generalization.
 

@@ -57,10 +57,9 @@ core/
 │   ├── SrcProcessor.java                            # public entry point
 │   ├── config/                                      # vendor → unified → compiled config pipeline
 │   ├── flow/                                        # ReorderFlow / CheckAllFlow / CheckFailFastFlow
-│   ├── translator/spoon/                            # Spoon-backed parser, AST snapshot, opt-out resolver
+│   ├── translator/spoon/                            # SpoonParser, SpoonAstModel, SpoonSrcPrinter
 │   ├── sorter/spoon/                                # SpoonSorter, OrderingKeyFactory, ComparatorUtils
 │   ├── sorter/spoon/dependency_graph/               # *DependencyProvider catalog + MemberDependencyGraph
-│   ├── translator/spoon/printer/                    # SpoonCustomSrcPrinter (serialization)
 │   ├── formatter/                                   # Palantir wrapper + import fixer + blank-line policy
 │   ├── diff/                                        # DiffReporter
 │   ├── files_handler/                               # SrcFilesHandler (parallel stream powered by glob-path-finder)

@@ -12,7 +12,8 @@ SPDX-License-Identifier: Apache-2.0
 
 JHarmonizer **sorts and formats Java source files** while keeping the code safe.
 It reorders class members — fields, constructors, methods, nested types, initializer blocks — according to
-configurable rules, and formats the output with [Palantir Java Format](https://github.com/palantir/palantir-java-format).
+configurable rules, and formats the output with
+[Palantir Java Format](https://github.com/palantir/palantir-java-format).
 
 What sets it apart from a plain formatter: formatters only adjust whitespace and style — they do not
 reorder members. JHarmonizer does reorder them, and before moving anything it checks which fields and
@@ -125,7 +126,8 @@ JHarmonizer is also available as a standalone CLI fat JAR for use outside of Mav
 **Download directly** (no build required):
 [jharmonizer-cli-1.0.1.jar](https://repo1.maven.org/maven2/io/github/lemon-ant/jharmonizer/jharmonizer-cli/1.0.1/jharmonizer-cli-1.0.1.jar)
 
-Browse all versions on [Maven Central](https://central.sonatype.com/artifact/io.github.lemon-ant.jharmonizer/jharmonizer-cli).
+Browse all versions on
+[Maven Central](https://central.sonatype.com/artifact/io.github.lemon-ant.jharmonizer/jharmonizer-cli).
 
 ```bash
 java -jar jharmonizer-cli-1.0.1.jar reorder --base-dir src/main/java
@@ -146,7 +148,8 @@ Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) com
 Directives can be placed at **file scope** (in the compilation-unit preamble) or **type scope** (immediately
 before a type declaration).
 
-For the full reference — placement rules, scope semantics, and unsupported tokens — see [`docs/directives.md`](docs/directives.md).
+For the full reference — placement rules, scope semantics, and unsupported tokens — see
+[`docs/directives.md`](docs/directives.md).
 
 ## ⭐ Ways to support this project
 
@@ -188,13 +191,19 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
 
 The five most impactful planned features for everyday Java development:
 
-- **Enum constant ordering strategies** — configurable `PRESERVE` / `ALPHA_ASC` / `ALPHA_DESC` ordering for enum constants, with placement guarantees that keep them before other enum members.
-- **Annotation ordering policies** — configurable `ALPHA` / `LENGTH_ASC` / `LENGTH_DESC` ordering for annotations on declarations, keeping annotation lists deterministic and reducing diff noise.
-- **Record member ordering** — dedicated ordering strategies for record components, with safety guarantees that preserve generated member contracts and binary compatibility.
-- **Vendor-format configuration adapters** — import existing IntelliJ IDEA or Eclipse formatter/arrangement profiles directly so teams do not have to duplicate their configuration in a separate `jharmonizer.yml`.
-- **Git-aware changed-files processing** — limit sorting and checking to files that actually changed in Git (working tree vs. index, branch vs. merge-base), so large repositories stay fast in CI and pre-commit hooks.
+- **Enum constant ordering strategies** — configurable `PRESERVE` / `ALPHA_ASC` / `ALPHA_DESC` ordering for enum
+  constants, with placement guarantees that keep them before other enum members.
+- **Annotation ordering policies** — configurable `ALPHA` / `LENGTH_ASC` / `LENGTH_DESC` ordering for annotations on
+  declarations, keeping annotation lists deterministic and reducing diff noise.
+- **Record member ordering** — dedicated ordering strategies for record components, with safety guarantees that preserve
+  generated member contracts and binary compatibility.
+- **Vendor-format configuration adapters** — import existing IntelliJ IDEA or Eclipse formatter/arrangement profiles
+  directly so teams do not have to duplicate their configuration in a separate `jharmonizer.yml`.
+- **Git-aware changed-files processing** — limit sorting and checking to files that actually changed in Git (working
+  tree vs. index, branch vs. merge-base), so large repositories stay fast in CI and pre-commit hooks.
 
-The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.md) for the complete list, ordered from the most developer-visible features to the most internal improvements.
+The full idea backlog is significantly longer — see [docs/TODO.md](docs/TODO.md) for the complete list, ordered from the
+most developer-visible features to the most internal improvements.
 
 ## Known limitations
 

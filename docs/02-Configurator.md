@@ -112,7 +112,8 @@ per file.
 
 - `parseUnifiedDefaultConfig()` — returns the embedded baseline as `UnifiedConfig`.
 - `parseUnifiedConfigFromClasspathResource(URL)` — returns a strict unified config from the classpath.
-- `parseFlexibleUnifiedConfigFromClasspathResource(URL)` — returns a flexible (overlay) unified config from the classpath.
+- `parseFlexibleUnifiedConfigFromClasspathResource(URL)` — returns a flexible (overlay) unified config from the
+  classpath.
 - `parseFlexibleUnifiedConfigFromFile(Path)` — returns a flexible (overlay) unified config from disk.
 
 The manager class is marked with a `// TODO Merge with JHarmonizerConfigLoader`. Treat the

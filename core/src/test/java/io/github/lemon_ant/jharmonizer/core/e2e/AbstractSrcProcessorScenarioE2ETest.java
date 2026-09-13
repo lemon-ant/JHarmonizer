@@ -63,18 +63,6 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     }
 
     @NonNull
-    private static Path copyInputJavaFile(Path fixtureInputFile, Path workingScenarioRoot) {
-        Path targetFile = workingScenarioRoot.resolve(fixtureInputFile.getFileName());
-        try {
-            Files.createDirectories(targetFile.getParent());
-            Files.copy(fixtureInputFile, targetFile);
-            return targetFile;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to copy fixture input file: " + fixtureInputFile, exception);
-        }
-    }
-
-    @NonNull
     private static FlexibleUnifiedConfig disableProcessingStatisticsOutput(FlexibleUnifiedConfig flexibleConfig) {
         return FlexibleUnifiedConfig.builder()
                 .topLevelTypesOrdering(flexibleConfig.getTopLevelTypesOrdering().orElse(null))
@@ -183,20 +171,29 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
 
     protected final void processFixtureInputFileMatchesExpectedAndCompileAfter(
             Path temporaryDirectory, Path scenarioDir, Path srcFile) throws Exception {
-        // Given
         Path fixtureScenario = getFixturesRoot().resolve(scenarioDir);
-        Path fixtureInputFile = resolveInput(fixtureScenario).resolve(srcFile);
-        Path expectedSrcFile = resolveExpected(fixtureScenario).resolve(srcFile);
-        String scenarioName = scenarioDir.toString();
-        String inputSrcCode = Files.readString(fixtureInputFile, StandardCharsets.UTF_8);
-        String expectedSrcCode = Files.readString(expectedSrcFile, StandardCharsets.UTF_8);
+        String inputSrcCode = Files.readString(resolveInput(fixtureScenario).resolve(srcFile), StandardCharsets.UTF_8);
+        String expectedSrcCode =
+                Files.readString(resolveExpected(fixtureScenario).resolve(srcFile), StandardCharsets.UTF_8);
+        processSrcCodeMatchesExpectedAndCompileAfter(
+                temporaryDirectory, fixtureScenario, srcFile, inputSrcCode, expectedSrcCode);
+    }
 
+    protected final void processSrcCodeMatchesExpectedAndCompileAfter(
+            @NonNull Path temporaryDirectory,
+            @NonNull Path fixtureScenario,
+            @NonNull Path srcFile,
+            @NonNull String inputSrcCode,
+            @NonNull String expectedSrcCode)
+            throws Exception {
+        // Given
+        String scenarioName = fixtureScenario.getFileName().toString();
         Path workingScenarioRoot = temporaryDirectory
                 .resolve(resolveDirectoryNamePrefix() + "-working-dir")
                 .resolve(scenarioName);
-        Path workingInputFile = copyInputJavaFile(fixtureInputFile, workingScenarioRoot);
-        boolean unchangedFixture = inputSrcCode.equals(expectedSrcCode);
-
+        Files.createDirectories(workingScenarioRoot);
+        Path workingInputFile =
+                Files.writeString(workingScenarioRoot.resolve(srcFile), inputSrcCode, StandardCharsets.UTF_8);
         Path compileBeforeOutput = temporaryDirectory
                 .resolve(resolveDirectoryNamePrefix() + "-compile-before")
                 .resolve(scenarioName);
@@ -204,20 +201,17 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
                 .resolve(resolveDirectoryNamePrefix() + "-compile-after")
                 .resolve(scenarioName);
         ValidationStateT beforeValidationState = validateBeforeProcessing(workingInputFile, compileBeforeOutput);
-
-        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, unchangedFixture);
+        assertFileIsNotProcessedYet(fixtureScenario, workingInputFile, inputSrcCode.equals(expectedSrcCode));
 
         // When
-        runProcessorForSingleFile(
+        SrcProcessingResult result = runProcessorForSingleFile(
                 workingInputFile, findScenarioConfigPath(fixtureScenario).orElse(null), FlowType.REORDER);
 
         // Then
+        assertThat(result.isSuccess()).isTrue();
         assertFileProcessingIsDeterministic(fixtureScenario, workingInputFile);
-
         validateAfterProcessing(workingInputFile, compileAfterOutput, beforeValidationState);
-
-        String workingInputFileSrc = Files.readString(workingInputFile, StandardCharsets.UTF_8);
-        assertThat(workingInputFileSrc).isEqualTo(expectedSrcCode);
+        assertThat(Files.readString(workingInputFile, StandardCharsets.UTF_8)).isEqualTo(expectedSrcCode);
     }
 
     @NonNull
