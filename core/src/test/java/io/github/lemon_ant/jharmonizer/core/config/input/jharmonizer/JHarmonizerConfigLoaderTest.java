@@ -5,8 +5,10 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.fasterxml.jackson.databind.exc.InvalidNullException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
@@ -20,11 +22,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
+import lombok.NonNull;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 // TODO Refactor
 class JHarmonizerConfigLoaderTest {
@@ -235,5 +244,50 @@ class JHarmonizerConfigLoaderTest {
                 .containsExactly(JHarmonizerOrderingRule.VISIBILITY_DESC, JHarmonizerOrderingRule.ALPHA);
         assertThat(jharmonizerConfig.getFormatting().isFixImports()).isTrue();
         assertThat(jharmonizerConfig.getFormatting().getFormatterStyle()).isEqualTo(FormatterStyle.PALANTIR);
+    }
+
+    @Nested
+    class CollectionNullHandling {
+        private static final String FIXTURES = "/test-cases/core/config/input/jharmonizer/collection-null-handling/";
+
+        @Test
+        void loadFlexibleFrom_nullOptionalProperties_preservesUnsetOverrides() {
+            // When
+            JHarmonizerFlexibleConfig config = JHarmonizerConfigLoader.loadFlexibleFromClasspathResource(
+                    TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURES + "valid/optional-null-overrides.yml"));
+
+            // Then
+            assertThat(config.getAnnotationsOrdering()).isEmpty();
+            assertThat(config.getMemberGroups()).isEmpty();
+            assertThat(config.getTopLevelTypesOrdering()).isEmpty();
+            assertThat(config.getFormatting()).isEmpty();
+            assertThat(config.getHeaderLine()).isEmpty();
+            assertThat(config.getProcessingStatisticsMode()).isEmpty();
+            assertThat(config.getBackupsEnabled()).contains(false);
+        }
+
+        @ParameterizedTest
+        @MethodSource("nullCollectionConfigs")
+        void load_nullCollectionEntry_rejectsConfiguration(boolean flexible, @NonNull URL configResource) {
+            assertThatThrownBy(() -> {
+                        if (flexible) {
+                            JHarmonizerConfigLoader.loadFlexibleFromClasspathResource(configResource);
+                        } else {
+                            JHarmonizerConfigLoader.loadFromClasspathResource(configResource);
+                        }
+                    })
+                    .isInstanceOf(UncheckedIOException.class)
+                    .hasCauseInstanceOf(InvalidNullException.class);
+        }
+
+        @NonNull
+        private static Stream<Arguments> nullCollectionConfigs() {
+            return Stream.of("member-groups.yml", "member-subgroups.yml", "type-groups.yml")
+                    .flatMap(fixture -> Stream.of(false, true)
+                            .map(flexible -> Arguments.of(
+                                    flexible,
+                                    TestCaseResourceUtils.requireClasspathResourceUrl(
+                                            FIXTURES + "invalid/" + fixture))));
+        }
     }
 }

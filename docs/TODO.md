@@ -79,28 +79,33 @@ Placement rule (still mandatory):
 
 ---
 
-### 2. Annotation ordering policies (future version)
+### 2. Annotation ordering policies
 
 #### Status
-- [ ] Not implemented (explicitly deferred)
+- [x] Implemented through the global `annotations-ordering` setting.
 
 #### Problem statement
 When declarations have many annotations, order quickly becomes inconsistent and noisy in diffs.
 
-#### Proposed solution (next version)
-Add configurable annotation ordering modes:
-- `ALPHA` (alphabetical by normalized annotation name),
-- `LENGTH_ASC` / `LENGTH_DESC`,
-- combined policy (primary by length, secondary alphabetical tie-breaker).
+#### Implemented solution
+Configurable annotation ordering criteria:
+- `ALPHA` (alphabetical by simple annotation name),
+- `NAME_LENGTH_ASC` (shorter simple names first),
+- `DECLARATION_LENGTH_ASC` (shorter complete declarations first, including arguments),
+- `ARGUMENTS_ALPHA` (alphabetical argument text, including parameter names and assignments).
+
+Criteria combine in configured priority order. The default uses declaration length, name length, alphabetical name,
+then alphabetical argument text. An empty list preserves source order.
+See [`annotations-ordering`](config-dsl.md#annotations-ordering).
 
 #### Scope
-- types, methods, constructors, fields, parameters, record components.
+- packages, modules, types, methods, constructors, fields, parameters, local variables, record components, and type uses.
 
-#### Implementation outline (when revisited)
-- [ ] Add annotation-order strategy to config DSL.
-- [ ] Normalize names (simple vs qualified) before comparison.
-- [ ] Preserve relative order for exact ties to keep output stable.
-- [ ] Add fixture coverage for all supported declaration kinds.
+#### Implementation
+- [x] Add annotation-order criteria to the config DSL and compile a reusable comparator.
+- [x] Use simple annotation names before comparison.
+- [x] Preserve relative order for exact ties to keep output stable.
+- [x] Add fixture coverage for all supported declaration kinds.
 
 ---
 
@@ -608,10 +613,11 @@ Introduce a configurable pass that lowers visibility to the minimal safe level:
 
 #### Status
 - [ ] Not implemented (explicitly deferred)
+- [ ] Use the proposed [sorting and source-rewrite architecture](sorting-and-source-rewrites.md) before adding rewrites.
 
 #### Problem statement
-Some members are instance methods/fields but do not depend on instance state (or depend on very little),
-so they can be promoted to static for clarity and explicit dependencies.
+Some instance methods/fields do not depend on instance state and are candidates for conversion to static.
+Absence of instance-field access alone does not establish that conversion preserves behavior.
 
 #### Proposed solution (next version)
 Add dependency-graph analysis to detect members that can safely become static:
@@ -623,6 +629,8 @@ Add dependency-graph analysis to detect members that can safely become static:
 #### Safety requirements
 - preserve behavior (including override/inheritance constraints);
 - skip members where static conversion breaks API or framework contracts;
+- account for receiver evaluation, null receivers, method references, synchronization, and class type parameters;
+- treat unresolved dependencies as unknown; the current no-classpath model cannot prove every conversion safe;
 - provide conservative mode by default.
 
 #### Implementation outline (when revisited)
@@ -1103,13 +1111,19 @@ This is **explicitly deferred** until the non-generic version proves beneficial.
 ### 24. Replace current printer implementation with a specialized source-preserving printer
 
 #### Status
-- [ ] Not implemented (captured as a future major refactor)
+- [x] Standalone source-preserving printer implemented; see [current printer architecture](source-printer.md).
+- [ ] Explicit sorting result and support for future source rewrites remain deferred; see
+  [the follow-up design](sorting-and-source-rewrites.md).
 - [ ] Revisit after: first stable version is fully validated on real projects
 - [ ] Priority context: output correctness + deterministic formatting + runtime performance
 
+The proposal below records the original motivation and implementation checklist. Generic-printer inheritance is no
+longer a current limitation. The follow-up design defines the next migration; unfinished optimization ideas remain
+subject to measurement.
+
 #### Background
-Current printing logic evolved from overriding/extending an existing generic printer implementation.
-Over time, most of the meaningful behavior became custom, while inherited base behavior still leaks into
+The previous printing logic evolved from overriding/extending an existing generic printer implementation.
+Over time, most of the meaningful behavior became custom, while inherited base behavior still leaked into
 edge-case formatting decisions.
 
 At the same time, the project strategy is source-preserving where possible:
@@ -1120,7 +1134,7 @@ This source-preserving direction does not align well with a generic printer arch
 for broad AST serialization use cases.
 
 #### Problem statement
-The current printer track has three structural issues:
+The original proposal identified three structural issues:
 1) **Architecture mismatch**: extension-overrides on top of a generic printer make behavior harder to reason about;
 2) **Output quality risk**: inherited/default printer behavior may still produce undesirable formatting in edge cases;
 3) **Inefficient algorithms**: repeated scans over the same member/component collections (for first/next/related element
@@ -1503,5 +1517,42 @@ dedicated review pass.
   "Planned future features → 1. Compile group sorting once" if they fit that track).
 - [ ] Add micro-benchmarks for large groups (many accessors + many non-accessors) before/after any algorithmic
   change to guard against regressions.
+
+---
+
+### 10. Explicit sorting result and support for future source rewrites
+
+#### Status
+
+- [ ] Deferred architecture refactor; no sorter, parser, or printer changes are implemented by this entry.
+- [ ] Future semantic transformations remain separate features, including static-candidate conversion above.
+
+#### Problem and direction
+
+`SpoonSorter` mutates declaration order in the compilation unit, writes group separators to member
+metadata, and returns only the immutable annotation fragment groups. The returned `SpoonAstModel` shares the mutable
+AST with its input, so the result is spread across several channels and later sorting can affect earlier results.
+Annotation order is already computed only for source-fragment groups; AST annotation lists remain unchanged.
+
+Return one explicit hierarchy containing ordered scopes, member groups, separators, annotation content, source slices,
+and diagnostic identities. Keep Spoon for semantic analysis and dependency ordering. Prepare the data needed for
+printing so rendering does not depend on later mutations of Spoon nodes. Optional AST references remain acceptable
+for analysis or diagnostics; their presence does not make the whole object graph deeply immutable.
+
+Future code transformations need a consistent source/model revision before sorting. The recommended initial path is
+to plan edits from the AST, apply a validated batch to the source, and reparse the changed text. Immutable source
+snapshots and composable fragments leave room for generated text without requiring eager copies of every declaration.
+
+The [design analysis](sorting-and-source-rewrites.md) records the original proposal, current implementation evidence,
+alternatives, benefits, costs, source-position and comment constraints, the `static` example, and migration criteria.
+
+#### Follow-up actions
+
+- [ ] Introduce the explicit result without changing current output or sorting algorithms.
+- [ ] Preserve ordered `MemberGroupBlock` information and move separator ownership out of Spoon metadata.
+- [ ] Adapt printing, relocation reporting, and opt-out range tracking to the explicit result.
+- [ ] Verify unchanged input AST and independent results from repeated sorts with different configurations.
+- [ ] Add the source-rewrite stage separately, using versioned edits and reparsing before sorting.
+- [ ] Measure parsing, allocation, and rendering costs before choosing incremental AST/text synchronization.
 
 ---

@@ -20,13 +20,14 @@ from the defaults; root member groups are merged by name (see
 formatting: { ... }
 backups-enabled: true
 processing-statistics-mode: MINIMAL
+annotations-ordering: [ declaration-length-asc, name-length-asc, alpha, arguments-alpha ]
 header-line: { ... }
 top-level-types-ordering: { ... }
 type-members-ordering:
   - { ... }
 ```
 
-All six top-level keys are required in a strict (non-flexible) configuration; in flexible/overlay
+All seven top-level keys are required in a strict (non-flexible) configuration; in flexible/overlay
 configurations any of them may be omitted and inherited from the baseline.
 
 ## `formatting`
@@ -46,6 +47,54 @@ configurations any of them may be omitted and inherited from the baseline.
 ## `processing-statistics-mode`
 
 `FULL`, `MINIMAL`, or `DISABLED`. Controls how much processing-statistics output is printed at the end of a run.
+
+## `annotations-ordering`
+
+Global annotation sorting criteria, applied from left to right. Each next criterion resolves ties in the preceding
+criteria; complete ties retain their original order.
+
+| Criterion | Order |
+|-----------|-------|
+| `alpha` | Simple annotation name, A to Z, case-sensitive. |
+| `name-length-asc` | Shorter simple names first. |
+| `declaration-length-asc` | Shorter complete annotation declarations first, including arguments and internal comments. |
+| `arguments-alpha` | Case-sensitive alphabetical argument text, including parameter names and assignments. |
+
+The default is `[ declaration-length-asc, name-length-asc, alpha, arguments-alpha ]`. A single criterion may be written
+as a scalar, for example `annotations-ordering: arguments-alpha`. Tokens accept hyphens or underscores and are
+case-insensitive.
+Use `annotations-ordering: []` to preserve annotation order. An overlay replaces the whole criterion list; omitting
+the setting inherits the baseline.
+
+Declaration length counts the written qualified name, `@`, parentheses, parameter names, assignments, values, and
+comments inside the declaration. Inter-token whitespace is excluded; string contents count, with incidental text-block
+indentation removed. Comments outside the declaration are excluded from its length. The original annotation text is
+printed unchanged. Comments move according to their source adjacency:
+
+| Comment placement | Attachment |
+| --- | --- |
+| Starts on the same line as an annotation | Preceding annotation. |
+| Standalone block with no blank line before the next annotation | Following annotation, including when there is also no blank line above the block. |
+| Standalone block adjacent to the preceding annotation, with a blank line below the block | Preceding annotation. |
+| Blank lines above and below the block | Original source gap. |
+
+Declaration JavaDoc and file preambles retain their positions. A moved `//` comment retains a line break before the next
+Java token. A block attached below an annotation moves with its following blank line, preserving its attachment at the
+new position without leaving an extra blank line between annotations. Gaps around independent comment blocks remain in
+place. Blank lines inside a block comment do not separate it from an annotation.
+
+Argument comparison concatenates Java tokens inside the parentheses in their written order, excluding comments and
+inter-token whitespace. For example, `@Tag("aa")` precedes `@Tag("zz")`, and `@Tag(value = "aa")` compares as
+`value="aa"`.
+Constant references and expressions are compared as written, without evaluation. Annotations without parentheses sort
+before those with empty parentheses, followed by non-empty argument text: `@Tag`, `@Tag()`, `@Tag("")`. Parentheses
+containing only comments or whitespace compare as empty parentheses.
+
+Sorting applies to annotations on packages, modules, types and their descendants, including members, parameters,
+local variables, record components, and type uses. Adjacent annotations form a sorting group; other Java tokens separate
+groups. Annotation arguments and arrays of nested annotation values retain their order. Where Spoon omits annotations,
+the Java lexer supplies the source fragments and the same compiled comparator orders them.
+File and type opt-out directives also disable annotation sorting in their scope.
 
 ## `header-line`
 

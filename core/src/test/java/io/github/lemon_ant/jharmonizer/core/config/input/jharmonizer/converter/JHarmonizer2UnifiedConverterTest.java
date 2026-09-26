@@ -45,6 +45,7 @@ class JHarmonizer2UnifiedConverterTest {
                 );
 
         JHarmonizerConfig jHarmonizerConfig = new JHarmonizerConfig(
+                List.of(),
                 topLevel,
                 createFormatting(true, FormatterStyle.PALANTIR),
                 true,

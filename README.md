@@ -186,15 +186,17 @@ Every donation, no matter how small, directly accelerates the roadmap 🙏. Than
   constant initializers, instance and static initializer blocks, blank-final definite-assignment
   ordering, cross-type constant back-references, and accessor bundling.
 - Comment-based opt-out directives are supported for file scope and type scope.
+- Annotation ordering supports `ALPHA`, `NAME_LENGTH_ASC`, `DECLARATION_LENGTH_ASC`, and `ARGUMENTS_ALPHA`, with
+  configurable criterion priority and stable ties. Declaration length includes the written qualified name, parameter
+  names, values, and internal comments; inter-token whitespace is excluded. See
+  [`annotations-ordering`](docs/config-dsl.md#annotations-ordering).
 
 ## Roadmap (next versions)
 
-The five most impactful planned features for everyday Java development:
+The four most impactful planned features for everyday Java development:
 
 - **Enum constant ordering strategies** — configurable `PRESERVE` / `ALPHA_ASC` / `ALPHA_DESC` ordering for enum
   constants, with placement guarantees that keep them before other enum members.
-- **Annotation ordering policies** — configurable `ALPHA` / `LENGTH_ASC` / `LENGTH_DESC` ordering for annotations on
-  declarations, keeping annotation lists deterministic and reducing diff noise.
 - **Record member ordering** — dedicated ordering strategies for record components, with safety guarantees that preserve
   generated member contracts and binary compatibility.
 - **Vendor-format configuration adapters** — import existing IntelliJ IDEA or Eclipse formatter/arrangement profiles

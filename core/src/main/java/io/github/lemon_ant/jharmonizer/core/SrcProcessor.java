@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
@@ -103,7 +105,7 @@ public final class SrcProcessor {
                 })
                 .peek(fileProcessingResult ->
                         progressReporter.recordProcessedFile(fileProcessingResult.getFileProcessingStatus()))
-                .peek(SrcProcessor::logNonConformingFileDetails)
+                .peek(SrcProcessor::logOrderingAndFormattingViolations)
                 .collect(FlowProcessingStats.statsCollector());
 
         switch (config.getProcessingStatisticsMode()) {
@@ -134,7 +136,7 @@ public final class SrcProcessor {
      * @return the printer config
      */
     @NonNull
-    private static PrinterConfig createPrinterConfig(@NonNull UnifiedFormatting formatting) {
+    private static PrinterConfig createPrinterConfig(UnifiedFormatting formatting) {
         return new PrinterConfig(
                 formatting.isBlankLineAfterTypeHeader(),
                 formatting.isBlankLineBeforeComment(),
@@ -142,7 +144,7 @@ public final class SrcProcessor {
     }
 
     @NonNull
-    private static String formatBulletList(@NonNull String header, @NonNull List<Path> paths) {
+    private static String formatBulletList(String header, List<Path> paths) {
         StringBuilder builder = new StringBuilder();
         builder.append("\n  ").append(header).append(':');
         paths.stream()
@@ -160,9 +162,7 @@ public final class SrcProcessor {
 
     @SuppressWarnings("PMD.GuardLogStatement")
     private static void logCompletionMessage(
-            @NonNull FlowType flowType,
-            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic,
-            boolean isModifyingFlow) {
+            FlowType flowType, AggregatedProcessingStatistic aggregatedProcessingStatistic, boolean isModifyingFlow) {
         long modifiedFileCount = aggregatedProcessingStatistic.computeNonConformingFileCount();
         List<Path> stopTriggerPaths = aggregatedProcessingStatistic.getStopTriggerPaths();
         if (JvmShutdownSignal.isShuttingDown()) {
@@ -189,7 +189,7 @@ public final class SrcProcessor {
     }
 
     private static void logDebugProcessingCompletionSummary(
-            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic, @NonNull FlowType flowType) {
+            AggregatedProcessingStatistic aggregatedProcessingStatistic, FlowType flowType) {
         String processingStatus =
                 aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().isEmpty()
                         ? SUMMARY_STATUS_COMPLETED
@@ -206,8 +206,7 @@ public final class SrcProcessor {
                 aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().size());
     }
 
-    private static void logFilesWithUnexpectedErrors(
-            @NonNull AggregatedProcessingStatistic aggregatedProcessingStatistic) {
+    private static void logFilesWithUnexpectedErrors(AggregatedProcessingStatistic aggregatedProcessingStatistic) {
         if (aggregatedProcessingStatistic.getFilesWithUnexpectedErrors().isEmpty()) {
             return;
         }
@@ -216,14 +215,14 @@ public final class SrcProcessor {
                 formatBulletList("Affected files", aggregatedProcessingStatistic.getFilesWithUnexpectedErrors()));
     }
 
-    private static void logNonConformingFileDetails(@NonNull FileProcessingResult fileProcessingResult) {
+    private static void logOrderingAndFormattingViolations(FileProcessingResult fileProcessingResult) {
         if (fileProcessingResult.getMemberRelocations() != null
                 && !fileProcessingResult.getMemberRelocations().isEmpty()) {
             log.error(MemberRelocationPrinter.printRelocations(
                     fileProcessingResult.getPath(), fileProcessingResult.getMemberRelocations()));
         }
         String diff = fileProcessingResult.getDiff();
-        if (diff != null && !diff.isEmpty()) {
+        if (isNotBlank(diff)) {
             log.error(FormattingViolationPrinter.printFormattingViolation(fileProcessingResult.getPath(), diff));
         }
     }
@@ -254,10 +253,7 @@ public final class SrcProcessor {
     }
 
     private void logStartupBanner(
-            @NonNull FlowType flowType,
-            @NonNull Path baseDir,
-            @NonNull Collection<String> includeGlobs,
-            @NonNull Collection<String> excludeGlobs) {
+            FlowType flowType, Path baseDir, Collection<String> includeGlobs, Collection<String> excludeGlobs) {
         if (config.getProcessingStatisticsMode() == ProcessingStatisticsMode.FULL && log.isInfoEnabled()) {
             log.info(StartupBannerRenderer.render(
                     flowType, baseDir, config.isBackupsEnabled(), includeGlobs, excludeGlobs));

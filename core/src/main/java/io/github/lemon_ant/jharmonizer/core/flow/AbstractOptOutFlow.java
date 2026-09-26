@@ -6,6 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFormattingOnlyFallbackResult;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasReorderedAnnotations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter(AccessLevel.PROTECTED)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CouplingBetweenObjects", "PMD.TooManyMethods"})
+// TODO Annotations: The name of the class doesn't reflect it's abstracton functionality anymore, reconsider
 abstract class AbstractOptOutFlow implements IFlow {
 
     @NonNull
@@ -101,6 +103,8 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the processing result for the source file
      */
     @NonNull
+    // TODO Annotations: We need to reflect it name, that we check consequently sorting, and do not format if it was
+    // sorted
     protected final FileProcessingResult checkSortThenFormat(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
@@ -119,11 +123,20 @@ abstract class AbstractOptOutFlow implements IFlow {
                 ? List.of()
                 : findRelocations(
                         sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-        if (!memberRelocations.isEmpty()) {
+        boolean annotationsReordered =
+                !sortingAndSerializationResult.isSortingSkipped() && hasReorderedAnnotations(sortedSpoonAstModel);
+        if (!memberRelocations.isEmpty() || annotationsReordered) {
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
                     .memberRelocations(memberRelocations)
-                    .diff("")
+                    .diff(
+                            // TODO Annotations: Create a local explanatory variable before FileProcessingResult creaton
+                            annotationsReordered
+                                    ? computeDiff(
+                                            srcFile.getPath().toString(),
+                                            srcFile.getSrcCode(),
+                                            sortingAndSerializationResult.getSerializedSrcCode())
+                                    : "")
                     .parsingStatistic(parsingResult.getParsingStatistic())
                     .sortingStatistic(
                             sortingAndSerializationResult.getSortingResult().getSortingStatistic())

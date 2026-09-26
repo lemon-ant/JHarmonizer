@@ -5,8 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 
 # Source printer
 
-`SpoonParser` captures the immutable `PrinterConfig` in each model's serialization supplier.
-The supplier calls the stateless `SpoonSrcPrinter`; no printer instance is created per file.
+`SpoonParser` stores the original source, annotation fragments, and immutable `PrinterConfig` in `SpoonAstModel`.
+`SrcAstTranslator` passes the sorted model directly to the stateless `SpoonSrcPrinter`; no printer instance is stored.
 The printer uses Spoon declarations and source positions; all output code belongs to this project.
 It neither inherits from Spoon printers nor regenerates declarations through `CtElement.toString()`.
 Parsing, sorting, formatting and import cleanup retain their existing entry points.
@@ -16,7 +16,7 @@ Parsing, sorting, formatting and import cleanup retain their existing entry poin
 | `SpoonSrcPrinter` | Stateless serialization entry point with explicit configuration |
 | `SpoonSrcPrinter.Serialization` | Per-call state, declaration layout, member spacing and boundaries, skipped-type ranges |
 | `SrcPrinterOutput` | Source slices and tails, indentation, dominant line separator detection, output offsets |
-| `SpoonTypeMemberUtils` | Explicit members, effective ends and comment attribution |
+| `SpoonTypeMemberUtils` | Explicit members, effective source boundaries and comment attribution |
 | `SrcCodeUtils` | Shared source-fragment boundary operations |
 | `SpoonGroupSeparatorUtils` | Assigning separators and resolving their kind and header text |
 
@@ -27,12 +27,17 @@ excluded; skipped types are copied as a whole and their UTF-16 output offsets ar
 
 Each type indexes its original member starts in a sorted `int[]`. Binary search finds the next source
 boundary regardless of output order, including duplicate starts in multi-field declarations.
+Effective starts include annotations preceding Spoon's declaration range: a comment between annotations can otherwise
+make the range omit an earlier annotation. Top-level types, nested types, and members use the same boundary calculation.
 The output uses one `StringBuilder`, initially sized to the original source, and appends source ranges
 directly. Interior line endings remain unchanged; generated lines use the dominant separator, with
 CRLF, LF, CR tie precedence. No serialized result is cached.
 
 Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
-Configuration, source text, skipped types and compilation units are call arguments; the printer has no shared state.
+Configuration, source text, annotation order, skipped types and the compilation unit come from the supplied model;
+the printer has no shared state. `AnnotationFragmentIndex` receives sorted annotation groups explicitly, without
+metadata lookup. These groups alone determine annotation output order; AST annotation lists retain their parsed order
+and provide annotation presence for spacing decisions and positions for declaration boundaries.
 The result wraps the collected map once. Later calls cannot alter earlier output or ranges, and
 calls for independent models may run concurrently with different configurations. Failed calls leave no shared state.
 

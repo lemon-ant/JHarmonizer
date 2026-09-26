@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinter;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.nio.charset.StandardCharsets;
@@ -60,8 +61,8 @@ public final class SrcAstTranslator {
     public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
         log.trace("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
-                () -> sortedSpoonAstModel.getSerializedSrcCode().get());
+        TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult =
+                StopWatch.measure(() -> SpoonSrcPrinter.serializeCompilationUnit(sortedSpoonAstModel));
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = serializationTimedResult.getResult();
 
         return new SerializationResult(

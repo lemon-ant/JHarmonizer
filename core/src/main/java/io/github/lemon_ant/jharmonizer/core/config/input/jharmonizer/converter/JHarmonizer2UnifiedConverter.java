@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerAnnotationOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatterStyle;
@@ -56,6 +57,9 @@ public final class JHarmonizer2UnifiedConverter {
                 vendor.getMemberGroups().stream().map(MemberGroupMapper::map).toList();
 
         return UnifiedConfig.builder()
+                .annotationsOrdering(vendor.getAnnotationsOrdering().stream()
+                        .map(JHarmonizerAnnotationOrderingRule::getUnifiedOrderingRule)
+                        .toList())
                 .topLevelTypesOrdering(top)
                 .formatting(new UnifiedFormatting(
                         blankLineAfterTypeHeader, blankLineBeforeComment, blankLineBetweenFields, fixImports, style))

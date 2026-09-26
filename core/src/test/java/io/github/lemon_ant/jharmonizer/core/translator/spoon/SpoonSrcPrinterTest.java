@@ -40,18 +40,12 @@ class SpoonSrcPrinterTest {
         PrinterConfig otherPrinterConfig = new PrinterConfig(false, false, false);
         SpoonAstModel otherModel =
                 SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")), otherPrinterConfig);
-        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(
-                model.getCompilationUnit(), srcCode, model.getOptOuts().getSortingSkippedTypes(), printerConfig);
+        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(model);
         Map<CtType<?>, SrcCharacterRange> originalRanges = Map.copyOf(firstResult.getSortingSkippedTypeRanges());
-        SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(
-                otherModel.getCompilationUnit(),
-                otherSrcCode,
-                otherModel.getOptOuts().getSortingSkippedTypes(),
-                otherPrinterConfig);
+        SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(otherModel);
 
         // When
-        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(
-                model.getCompilationUnit(), srcCode, model.getOptOuts().getSortingSkippedTypes(), printerConfig);
+        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(model);
 
         // Then
         assertThat(firstResult.getSortingSkippedTypeRanges())
@@ -79,12 +73,12 @@ class SpoonSrcPrinterTest {
                 + "\n".repeat(trailingTerminators);
         Path srcPath = temporaryDirectory.resolve(fileName);
         SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(inputSrcCode, srcPath), printerConfig);
-        String printedSrcCode = model.getSerializedSrcCode().get().getSerializedSrcCode();
+        String printedSrcCode = serializeCompilationUnit(model).getSerializedSrcCode();
         SpoonAstModel repeatedModel =
                 SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath), printerConfig);
 
         // When
-        String repeatedSrcCode = repeatedModel.getSerializedSrcCode().get().getSerializedSrcCode();
+        String repeatedSrcCode = serializeCompilationUnit(repeatedModel).getSerializedSrcCode();
 
         // Then
         assertThat(printedSrcCode).isEqualTo(expectedSrcCode);

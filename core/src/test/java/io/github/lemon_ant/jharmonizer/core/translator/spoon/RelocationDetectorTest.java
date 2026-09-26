@@ -2,30 +2,51 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.overrideDefaultConfig;
+import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource;
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasRelocations;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasReorderedAnnotations;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.snapshotOriginalMemberOrder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.NonNull;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RelocationDetectorTest {
-    private static final CompiledConfig DEFAULT_CONFIG = ConfigurationManager.loadDefaultConfig();
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(
-            DEFAULT_CONFIG.getFormatting().isBlankLineAfterTypeHeader(),
-            DEFAULT_CONFIG.getFormatting().isBlankLineBeforeComment(),
-            DEFAULT_CONFIG.getFormatting().isBlankLineBetweenFields());
+    private CompiledConfig defaultConfig;
+    private PrinterConfig defaultPrinterConfig;
+
+    @BeforeAll
+    void setUp() {
+        defaultConfig = ConfigurationManager.loadDefaultConfig();
+        defaultPrinterConfig = new PrinterConfig(
+                defaultConfig.getFormatting().isBlankLineAfterTypeHeader(),
+                defaultConfig.getFormatting().isBlankLineBeforeComment(),
+                defaultConfig.getFormatting().isBlankLineBetweenFields());
+    }
 
     @Test
     void findRelocations_contiguousChunkMoved_reportsSingleRelocationWithMinimalMovedChunk() {
@@ -39,7 +60,7 @@ class RelocationDetectorTest {
                         + "    public void d() {}\n"
                         + "}\n",
                 Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
@@ -67,7 +88,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
@@ -89,7 +110,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<CtTypeMember> originalMemberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
 
@@ -111,7 +132,7 @@ class RelocationDetectorTest {
                         + "    public void c() {}\n"
                         + "}\n",
                 Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
@@ -137,7 +158,7 @@ class RelocationDetectorTest {
     void findRelocations_withEmptyOriginalMemberOrder_returnsEmptyList() {
         // Given
         SrcFile srcFile = createSrcFile("public class Sample {\n    public void a() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
 
         // When
@@ -148,19 +169,38 @@ class RelocationDetectorTest {
     }
 
     @Test
+    void isRelocated_annotationsOnly_returnsTrue() {
+        // Given
+        SrcFile srcFile = createSrcFile(
+                "@SuppressWarnings(\"all\") @Deprecated class AnnotationOnlyRelocation {}",
+                Path.of("AnnotationOnlyRelocation.java"));
+        SpoonAstModel parsedModel =
+                SrcAstTranslator.parse(srcFile, defaultPrinterConfig).getSpoonAstModel();
+        SpoonAstModel sortedModel = new Sorter(defaultConfig).sort(parsedModel).getSortedSpoonAstModel();
+
+        // When
+        boolean relocated = hasRelocations(sortedModel);
+
+        // Then
+        assertThat(sortedModel.getAnnotationGroups().get(0))
+                .extracting(fragment -> fragment.getDescriptor().getName())
+                .containsExactly("Deprecated", "SuppressWarnings");
+        assertThat(relocated).isTrue();
+    }
+
+    @Test
     void isRelocated_noChanges_returnsFalse() {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        List<CtTypeMember> originalMemberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
 
         // When
-        boolean isRelocated = RelocationDetector.isRelocated(originalMemberOrder, spoonAstModel.getCompilationUnit());
+        boolean relocated = hasRelocations(spoonAstModel);
 
         // Then
-        assertThat(isRelocated).isFalse();
+        assertThat(relocated).isFalse();
     }
 
     @Test
@@ -168,7 +208,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
@@ -188,5 +228,171 @@ class RelocationDetectorTest {
                 .findFirst()
                 .orElseThrow(
                         () -> new IllegalStateException("No method named '" + name + "' in " + type.getSimpleName()));
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class AnnotationRelocations {
+        private CompiledConfig annotationConfig;
+        private SpoonAstModel permutationModel;
+
+        @BeforeAll
+        void setUp() {
+            annotationConfig =
+                    overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(requireClasspathResourceUrl(
+                            "/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/config.yml")));
+            permutationModel = SrcAstTranslator.parse(
+                            createSrcFile(
+                                    "@Deprecated @SuppressWarnings(\"all\")"
+                                            + " @javax.annotation.processing.Generated(\"test\") class ThreeAnnotations"
+                                            + " {}",
+                                    Path.of("ThreeAnnotations.java")),
+                            defaultPrinterConfig)
+                    .getSpoonAstModel();
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "AnnotationLiteralAndCommentPreservation.java",
+                    "AnnotationOrderingOptOut.java",
+                    "EnumAndInterfaceAnnotationOrdering.java",
+                    "RecordComponentAnnotationOrdering.java",
+                    "TypeUseAnnotationOrdering.java",
+                    "module-info.java",
+                    "package-info.java"
+                })
+        void isRelocated_annotationLanguageConstructs_detectsSorting(@NonNull String fileName) {
+            // Given
+            SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(requireClasspathResourceUrl(
+                    "/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/input/" + fileName));
+            SpoonAstModel sortedModel =
+                    new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
+
+            // When
+            boolean relocated = hasRelocations(sortedModel);
+
+            // Then
+            assertThat(relocated).isTrue();
+            assertThat(hasReorderedAnnotations(sortedModel)).isTrue();
+            assertThat(hasReorderedAnnotations(parsedModel)).isFalse();
+            assertThat(findRelocations(sortedModel.getOriginalMemberOrder(), sortedModel.getCompilationUnit()))
+                    .isEmpty();
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "0, 1, 2, false",
+            "0, 2, 1, true",
+            "1, 0, 2, true",
+            "1, 2, 0, true",
+            "2, 0, 1, true",
+            "2, 1, 0, true"
+        })
+        void isRelocated_annotationPermutations_detectsEveryChangedOrder(
+                int first, int second, int third, boolean expectedRelocation) {
+            // Given
+            List<AnnotationSrcFragment> originalGroup =
+                    permutationModel.getAnnotationGroups().get(0);
+            SpoonAstModel reorderedModel = permutationModel.withAnnotationGroups(
+                    List.of(List.of(originalGroup.get(first), originalGroup.get(second), originalGroup.get(third))));
+
+            // When
+            boolean relocated = hasRelocations(reorderedModel);
+
+            // Then
+            assertThat(relocated).isEqualTo(expectedRelocation);
+            assertThat(hasReorderedAnnotations(reorderedModel)).isEqualTo(expectedRelocation);
+            assertThat(hasRelocations(permutationModel)).isFalse();
+        }
+
+        @Test
+        void isRelocated_disabledAnnotationSorting_returnsFalse() {
+            // Given
+            CompiledConfig disabledConfig = overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(
+                    requireClasspathResourceUrl("/test-cases/core/e2e/reorder/34-annotations-disabled/config.yml")));
+            SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(requireClasspathResourceUrl(
+                    "/test-cases/core/e2e/reorder/34-annotations-disabled/input/DisabledAnnotationOrdering.java"));
+            SpoonAstModel sortedModel =
+                    new Sorter(disabledConfig).sort(parsedModel).getSortedSpoonAstModel();
+
+            // When
+            boolean relocated = hasRelocations(sortedModel);
+
+            // Then
+            assertThat(sortedModel.getAnnotationGroups()).containsExactlyElementsOf(parsedModel.getAnnotationGroups());
+            assertThat(relocated).isFalse();
+        }
+
+        @Test
+        void isRelocated_onlyLaterAnnotationGroupChanges_returnsTrue() {
+            // Given
+            SrcFile srcFile = createSrcFile(
+                    "@Deprecated class LaterAnnotationGroup { @SuppressWarnings(\"all\") @Deprecated void execute() {}"
+                            + " }",
+                    Path.of("LaterAnnotationGroup.java"));
+            SpoonAstModel parsedModel =
+                    SrcAstTranslator.parse(srcFile, defaultPrinterConfig).getSpoonAstModel();
+            SpoonAstModel sortedModel =
+                    new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
+
+            // When
+            boolean relocated = hasRelocations(sortedModel);
+
+            // Then
+            assertThat(sortedModel.getAnnotationGroups().get(0))
+                    .containsExactlyElementsOf(parsedModel.getAnnotationGroups().get(0));
+            assertThat(relocated).isTrue();
+        }
+
+        @Test
+        void isRelocated_repeatedAnnotationArgumentsChangeOrder_returnsTrue() {
+            // Given
+            CompiledConfig argumentsConfig =
+                    overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(requireClasspathResourceUrl(
+                            "/test-cases/core/e2e/reorder/37-annotations-arguments-alpha/config.yml")));
+            SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(
+                    requireClasspathResourceUrl(
+                            "/test-cases/core/e2e/reorder/37-annotations-arguments-alpha/input/AlphabeticalAnnotationArgumentsOrdering.java"));
+            List<AnnotationSrcFragment> repeatedAnnotations =
+                    parsedModel.getAnnotationGroups().get(1);
+            SpoonAstModel repeatedAnnotationsModel = parsedModel.withAnnotationGroups(List.of(repeatedAnnotations));
+            SpoonAstModel sortedModel =
+                    new Sorter(argumentsConfig).sort(repeatedAnnotationsModel).getSortedSpoonAstModel();
+
+            // When
+            boolean relocated = hasRelocations(sortedModel);
+
+            // Then
+            assertThat(repeatedAnnotations)
+                    .extracting(fragment -> fragment.getDescriptor().getName())
+                    .containsExactly("Tag", "Tag");
+            assertThat(relocated).isTrue();
+            assertThat(hasReorderedAnnotations(sortedModel)).isTrue();
+            assertThat(findRelocations(sortedModel.getOriginalMemberOrder(), sortedModel.getCompilationUnit()))
+                    .isEmpty();
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "class UnchangedAnnotations {}",
+                    "@Deprecated class UnchangedAnnotations {}",
+                    "@Deprecated @SuppressWarnings(\"all\") class UnchangedAnnotations {}"
+                })
+        void isRelocated_unchangedAnnotations_returnsFalse(@NonNull String srcCode) {
+            // Given
+            SpoonAstModel parsedModel = SrcAstTranslator.parse(
+                            createSrcFile(srcCode, Path.of("UnchangedAnnotations.java")), defaultPrinterConfig)
+                    .getSpoonAstModel();
+            SpoonAstModel sortedModel =
+                    new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
+
+            // When
+            boolean relocated = hasRelocations(sortedModel);
+
+            // Then
+            assertThat(relocated).isFalse();
+        }
     }
 }

@@ -26,13 +26,28 @@ The sorter handles every Spoon `CtTypeMember` kind:
 Sorting is recursive: nested types are processed with the same configuration as the
 enclosing type.
 
+Global `annotations-ordering` also reorders source annotation groups on packages, modules, types, and their descendants.
+The configuration compiler builds the comparator once. During parsing, `AnnotationSourceScanner` captures source
+fragments and computes their keys, storing the immutable groups in `SpoonAstModel`. `SpoonAnnotationSorter` sorts each
+eligible source group once with that comparator, including annotations missing from Spoon's model.
+AST annotation lists retain their parsed order: printing consumes the sorted source groups directly, so a second AST
+scan and annotation sort would not affect output. Singleton groups and groups in excluded types retain their original
+order.
+The fragment printer emits original annotation slices with their attached comment blocks. Blank lines determine whether
+a standalone block belongs to the preceding or following annotation. Separate blocks and their surrounding gaps stay in
+place; declaration JavaDoc and file preambles retain their positions. The printer preserves line-comment terminators and
+moves blank lines with the blocks they attach to an annotation, removing redundant blank lines from the original
+position. Complete ties retain source order. See
+[`annotations-ordering`](config-dsl.md#annotations-ordering) for criteria, defaults, and comment attachment rules.
+
 ## Input / output
 
 Input: a `SpoonAstModel` (see [`03-Parser.md`](03-Parser.md)) plus a `CompiledConfig`
 (see [`02-Configurator.md`](02-Configurator.md)).
 
-Output: the AST with members reordered in place. The serializer (Spoon custom printer)
-later writes the AST back to text in the new order.
+Output: `SortingResult` contains a model wrapper with the new immutable annotation order. The underlying Spoon AST is
+shared with the input wrapper; declaration lists are reordered in place, while annotation lists remain unchanged.
+Serialization consumes the returned model to print declaration order from the AST and annotation order from the groups.
 
 ## Implementation map
 

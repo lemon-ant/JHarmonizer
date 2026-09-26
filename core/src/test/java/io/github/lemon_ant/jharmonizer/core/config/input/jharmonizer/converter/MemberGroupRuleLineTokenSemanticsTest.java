@@ -95,6 +95,7 @@ class MemberGroupRuleLineTokenSemanticsTest {
     @NonNull
     private static CompiledMemberGroup compileSingleRootGroup(UnifiedMemberGroup rootGroup) {
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
+                .annotationsOrdering(List.of())
                 .formatting(new UnifiedFormatting(true, true, false, true, UnifiedFormatterStyle.PALANTIR))
                 .backupsEnabled(false)
                 .processingStatisticsMode(ProcessingStatisticsMode.FULL)

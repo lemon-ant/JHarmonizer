@@ -6,7 +6,7 @@ import lombok.NonNull;
 
 /**
  * Outcome status of processing a single source file through a flow.
- * {@code REORDERED} means member order changed, {@code FORMATTED} means only formatting changed,
+ * {@code REORDERED} means declaration or annotation order changed, {@code FORMATTED} means only formatting changed,
  * {@code CHECKED} means the file was verified and no changes were needed,
  * {@code SKIPPED} means the file was intentionally skipped due to a file-level opt-out directive,
  * {@code UNCHANGED} means the file was left as-is in a non-checking flow,
@@ -24,7 +24,7 @@ public enum FileProcessingStatus {
     /**
      * Resolves the resulting processing status from the observed relocation and formatting outcomes.
      *
-     * @param hasRelocations whether member relocations were detected
+     * @param hasRelocations whether declaration or annotation relocations were detected
      * @param contentChanged whether the produced source text differs from the original
      * @param checkingOnly whether the flow only validates input without rewriting files
      * @return the resulting processing status

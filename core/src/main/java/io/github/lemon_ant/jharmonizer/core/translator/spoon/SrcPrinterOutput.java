@@ -6,10 +6,16 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFr
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import java.util.List;
 import lombok.NonNull;
 
 /** Owns one serialization buffer and copies source slices without intermediate strings. */
 final class SrcPrinterOutput {
+
+    @NonNull
+    // TODO Annotations: annotationFragments is a misleading name
+    private final AnnotationFragmentIndex annotationFragments;
 
     @NonNull
     // Each invocation owns a fresh buffer; capacity cannot accumulate across files.
@@ -30,9 +36,11 @@ final class SrcPrinterOutput {
     /**
      * Creates an output buffer using the original source's size and dominant line separator.
      * @param srcCode original source
+     * @param annotationGroups annotation fragments in the order to print
      */
-    SrcPrinterOutput(@NonNull String srcCode) {
+    SrcPrinterOutput(@NonNull String srcCode, @NonNull List<List<AnnotationSrcFragment>> annotationGroups) {
         this.srcCode = srcCode;
+        annotationFragments = new AnnotationFragmentIndex(srcCode, annotationGroups);
         lineSeparator = detectDominantLineSeparator(srcCode);
         buffer = new StringBuilder(srcCode.length());
     }
@@ -59,7 +67,7 @@ final class SrcPrinterOutput {
             }
             // Interior whitespace belongs to the fragment; surrounding gaps belong to its container.
             int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
-            buffer.append(srcCode, indentationStart, fragmentEndExclusive);
+            annotationFragments.append(buffer, srcCode, indentationStart, fragmentEndExclusive);
             writeln();
             return true;
         } catch (IndexOutOfBoundsException exception) {

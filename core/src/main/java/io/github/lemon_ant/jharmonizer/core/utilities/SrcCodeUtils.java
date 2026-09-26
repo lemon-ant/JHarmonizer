@@ -13,6 +13,26 @@ import lombok.experimental.UtilityClass;
 public class SrcCodeUtils {
 
     /**
+     * Counts line separators in a source slice, treating CRLF as one separator.
+     * @param start first source offset
+     * @param endExclusive end of the source slice
+     * @param srcCode source code text
+     * @return number of CR, LF, or CRLF separators in the slice
+     * @throws IndexOutOfBoundsException if the range is invalid for the source text
+     */
+    public static int countLineSeparators(int start, int endExclusive, @NonNull String srcCode) {
+        Objects.checkFromToIndex(start, endExclusive, srcCode.length());
+        int count = 0;
+        for (int offset = start; offset < endExclusive; offset++) {
+            char character = srcCode.charAt(offset);
+            if (character == '\r' || character == '\n' && (offset == start || srcCode.charAt(offset - 1) != '\r')) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Finds a fragment's exclusive end, excluding trailing {@linkplain Character#isWhitespace(char) whitespace}.
      *
      * @param start the first source index to inspect

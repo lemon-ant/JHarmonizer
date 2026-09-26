@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -22,6 +23,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -48,7 +51,8 @@ public class SortingAlgorithmBenchmark {
                     benchmarkFixture.getCompilationUnitTemplate().clone();
             Set<CtType<?>> skippedTypes =
                     resolveSkippedTypes(workingCompilationUnit, benchmarkFixture.getSortingSkippedTypeQualifiedNames());
-            state.spoonSorter.sortCompilationUnitRecursively(workingCompilationUnit, skippedTypes);
+            state.spoonSorter.sortCompilationUnitRecursively(
+                    workingCompilationUnit, skippedTypes, benchmarkFixture.getAnnotationGroups());
             benchmarkChecksum += workingCompilationUnit.getDeclaredTypes().size();
         }
         return benchmarkChecksum;
@@ -64,7 +68,10 @@ public class SortingAlgorithmBenchmark {
                             spoonAstModel.getOptOuts().getSortingSkippedTypes().stream()
                                     .map(CtType::getQualifiedName)
                                     .collect(Collectors.toUnmodifiableSet());
-                    return new BenchmarkFixture(spoonAstModel.getCompilationUnit(), sortingSkippedTypeQualifiedNames);
+                    return new BenchmarkFixture(
+                            spoonAstModel.getAnnotationGroups(),
+                            spoonAstModel.getCompilationUnit(),
+                            sortingSkippedTypeQualifiedNames);
                 });
     }
 
@@ -151,7 +158,11 @@ public class SortingAlgorithmBenchmark {
     }
 
     @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     private static class BenchmarkFixture {
+
+        @NonNull
+        List<List<AnnotationSrcFragment>> annotationGroups;
 
         @NonNull
         CtCompilationUnit compilationUnitTemplate;

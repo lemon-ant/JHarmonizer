@@ -15,7 +15,7 @@ class StaticBlockFieldInitializerForwardReferenceRegressionSample {
         ITEM_REGISTRY.put(3, "gamma");
     }
 
-    static final List<String> REGISTRY_SNAPSHOT = List.copyOf(ITEM_REGISTRY.values());
+    static final List<String> REGISTRY_SNAPSHOT = Collections.unmodifiableList(ITEM_REGISTRY.values());
 
     public static void main(String[] args) {
         if (REGISTRY_SNAPSHOT.size() != 3

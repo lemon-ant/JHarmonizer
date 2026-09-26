@@ -309,6 +309,7 @@ class UnifiedConfigMergerTest {
 
     private static UnifiedConfig createConfig(List<UnifiedMemberGroup> rootMemberGroups) {
         return UnifiedConfig.builder()
+                .annotationsOrdering(List.of())
                 .topLevelTypesOrdering(TOP_LEVEL_TYPES_ORDERING)
                 .formatting(FORMATTING)
                 .backupsEnabled(true)

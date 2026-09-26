@@ -48,7 +48,8 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit(), Set.of());
+        spoonSorter.sortCompilationUnitRecursively(
+                spoonAstModel.getCompilationUnit(), Set.of(), spoonAstModel.getAnnotationGroups());
 
         // Then
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
@@ -80,7 +81,8 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit(), Set.of());
+        spoonSorter.sortCompilationUnitRecursively(
+                spoonAstModel.getCompilationUnit(), Set.of(), spoonAstModel.getAnnotationGroups());
 
         // Then
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
@@ -106,7 +108,8 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel.getCompilationUnit(), Set.of());
+        spoonSorter.sortCompilationUnitRecursively(
+                spoonAstModel.getCompilationUnit(), Set.of(), spoonAstModel.getAnnotationGroups());
 
         // Then
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
@@ -130,6 +133,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .orderingRules(List.of(UnifiedOrderingRule.PRESERVE))
                 .build();
         UnifiedConfig unifiedConfig = UnifiedConfig.builder()
+                .annotationsOrdering(List.of())
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(new UnifiedFormatting(true, true, false, true, UnifiedFormatterStyle.PALANTIR))
                 .backupsEnabled(false)

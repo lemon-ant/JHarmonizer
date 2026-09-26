@@ -19,7 +19,7 @@ class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
         JHarmonizerFlexibleFormatting flexibleFormatting =
                 new JHarmonizerFlexibleFormatting(null, FormatterStyle.PALANTIR, null, null, null);
         JHarmonizerFlexibleConfig vendorConfig =
-                new JHarmonizerFlexibleConfig(null, flexibleFormatting, null, null, null, null);
+                new JHarmonizerFlexibleConfig(null, null, flexibleFormatting, null, null, null, null);
 
         // When
         FlexibleUnifiedConfig unifiedConfig =
@@ -34,7 +34,8 @@ class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
     @Test
     void convert2FlexibleUnified_memberGroupsMissing_keepsRootMemberGroupsAbsent() {
         // Given
-        JHarmonizerFlexibleConfig vendorConfig = new JHarmonizerFlexibleConfig(null, null, true, null, null, null);
+        JHarmonizerFlexibleConfig vendorConfig =
+                new JHarmonizerFlexibleConfig(null, null, null, true, null, null, null);
 
         // When
         FlexibleUnifiedConfig unifiedConfig =
@@ -50,7 +51,7 @@ class JHarmonizerFlexible2FlexibleUnifiedConverterTest {
         JHarmonizerFlexibleFormatting flexibleFormatting =
                 new JHarmonizerFlexibleFormatting(true, null, null, null, null);
         JHarmonizerFlexibleConfig vendorConfig =
-                new JHarmonizerFlexibleConfig(null, flexibleFormatting, null, null, null, null);
+                new JHarmonizerFlexibleConfig(null, null, flexibleFormatting, null, null, null, null);
 
         // When
         FlexibleUnifiedConfig unifiedConfig =

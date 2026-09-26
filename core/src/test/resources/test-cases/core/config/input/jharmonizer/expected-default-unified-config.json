@@ -1,4 +1,5 @@
 {
+  "annotationsOrdering" : [ "DECLARATION_LENGTH_ASC", "NAME_LENGTH_ASC", "ALPHA", "ARGUMENTS_ALPHA" ],
   "backupsEnabled" : true,
   "formatting" : {
     "blankLineAfterTypeHeader" : false,

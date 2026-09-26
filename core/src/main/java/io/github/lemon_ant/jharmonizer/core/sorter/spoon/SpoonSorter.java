@@ -9,6 +9,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.io.File;
 import java.util.Comparator;
@@ -41,11 +42,23 @@ public class SpoonSorter {
     @NonNull
     private final CompiledConfig compiledConfig;
 
-    public void sortCompilationUnitRecursively(
-            @NonNull CtCompilationUnit compilationUnit, @NonNull Set<CtType<?>> sortingSkippedTypes) {
+    /**
+     * Sorts declaration order in the AST and annotation source groups for printing.
+     * @param compilationUnit source model to update
+     * @param sortingSkippedTypes types excluded from sorting
+     * @param annotationGroups annotation fragments captured from the original source
+     * @return immutable annotation groups in the order to print
+     */
+    @NonNull
+    public List<List<AnnotationSrcFragment>> sortCompilationUnitRecursively(
+            @NonNull CtCompilationUnit compilationUnit,
+            @NonNull Set<CtType<?>> sortingSkippedTypes,
+            @NonNull List<List<AnnotationSrcFragment>> annotationGroups) {
         reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
         File srcFile = compilationUnit.getFile();
         compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, sortingSkippedTypes, srcFile));
+        return SpoonAnnotationSorter.sort(
+                sortingSkippedTypes, annotationGroups, compiledConfig.getAnnotationComparator());
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")

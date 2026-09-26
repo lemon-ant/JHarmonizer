@@ -537,6 +537,7 @@ public class HandleHttpRequest extends AbstractProcessor implements ListenCompon
                     new MultipartConfigElement(tempDir, requestMaxSize, requestMaxSize, readBufferSize));
             List<Part> parts = null;
             try {
+                // getParts() returns a Collection; indexed iteration below requires a List.
                 parts = List.copyOf(request.getParts());
                 int allPartsCount = parts.size();
                 final String contextIdentifier = UUID.randomUUID().toString();

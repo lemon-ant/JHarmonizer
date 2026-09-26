@@ -26,21 +26,20 @@ public final class Sorter {
     }
 
     /**
-     * Sorts the given SpoonASTModel.
+     * Reorders declarations in the working AST and returns a model with immutable sorted annotation groups.
      *
      * @param spoonAstModel the SpoonASTModel to sort
-     * @return a SortingResult containing the sorted SpoonASTModel and statistics
+     * @return the model to use for subsequent serialization, together with sorting statistics
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         log.trace("Sorting {}", spoonAstModel.getPath());
-        StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
-            spoonSorter.sortCompilationUnitRecursively(
-                    spoonAstModel.getCompilationUnit(),
-                    spoonAstModel.getOptOuts().getSortingSkippedTypes());
-            return spoonAstModel;
-        });
+        StopWatch.TimedResult<SpoonAstModel> sortingResult =
+                StopWatch.measure(() -> spoonAstModel.withAnnotationGroups(spoonSorter.sortCompilationUnitRecursively(
+                        spoonAstModel.getCompilationUnit(),
+                        spoonAstModel.getOptOuts().getSortingSkippedTypes(),
+                        spoonAstModel.getAnnotationGroups())));
 
         return new SortingResult(sortingResult.getResult(), new SortingStatistic(sortingResult.getNanos()));
     }

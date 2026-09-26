@@ -41,7 +41,9 @@ SpoonAstModel
     ├─ CtCompilationUnit       (Spoon AST)
     ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
     ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    └─ Supplier<SerializedSrcWithSkippedTypeRanges>  (lazy re-serialization)
+    ├─ annotationGroups        (immutable lexer fragments in the current annotation order)
+    ├─ srcCode                 (exact original text for source offsets)
+    └─ PrinterConfig           (immutable spacing configuration)
     ↓
 Sorter → SpoonSrcPrinter → Formatter
 ```
@@ -51,11 +53,16 @@ Sorter → SpoonSrcPrinter → Formatter
 | Class                                | Role                                                                                                  |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
 | `SpoonParser`                        | Entry point. Wraps the source in a `VirtualFile`, builds a `Launcher` with `complianceLevel = 21`, and assembles the `SpoonAstModel`. |
-| `SpoonAstModel`                      | Immutable post-parse snapshot used by the rest of the pipeline.                                       |
+| `SpoonAstModel`                      | Typed processing context with the mutable Spoon AST, immutable annotation groups, original source, and printer configuration. |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
 | `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the serializer can compute relocations.  |
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
+
+Annotation fragments belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
+declaration order in the AST and returns a model wrapper with the new immutable group order. AST annotation lists
+remain unchanged. Printing consumes that returned model directly;
+annotation order is neither stored in `CtCompilationUnit` metadata nor captured by a serialization supplier.
 
 ## What is preserved
 

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfig;
+import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -29,8 +31,11 @@ public class Unified2CompiledModelCompiler {
                 MemberGroupCompiler.compileTopLevelGroups(unifiedConfig.getRootMemberGroups());
         CompiledTopLevelTypesOrdering topLevelTypesOrdering =
                 TopLevelTypesOrderingCompiler.compileTopLevelTypesOrdering(unifiedConfig.getTopLevelTypesOrdering());
+        Comparator<AnnotationDescriptor> annotationComparator =
+                AnnotationOrderingCompiler.compile(unifiedConfig.getAnnotationsOrdering());
 
         return CompiledConfig.builder()
+                .annotationComparator(annotationComparator)
                 .rootMemberGroups(memberGroups)
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(unifiedConfig.getFormatting())

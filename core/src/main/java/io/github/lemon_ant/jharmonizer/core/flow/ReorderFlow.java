@@ -6,7 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.def
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
@@ -104,10 +104,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
                 .fileProcessingStatus(defineFileProcessingStatus(
-                        !sortingAndSerializationResult.isSortingSkipped()
-                                && isRelocated(
-                                        sortedSpoonAstModel.getOriginalMemberOrder(),
-                                        sortedSpoonAstModel.getCompilationUnit()),
+                        !sortingAndSerializationResult.isSortingSkipped() && hasRelocations(sortedSpoonAstModel),
                         hasChanges,
                         false))
                 .build();

@@ -48,6 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no
   behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
+- Report annotation ordering diffs with the existing formatting-violation message and diff renderer.
 - Prefer explicit Java types over `var`.
 - Prefer normal imports over repeated fully qualified class names.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode`
@@ -56,6 +57,12 @@ SPDX-License-Identifier: Apache-2.0
   mutability is required.
 - When a simple data-carrier class only needs a narrower constructor than Lombok's default, keep `@Value` and add the
   constructor visibility override instead of decomposing `@Value` into separate Lombok annotations.
+- For data carriers with more than five constructor parameters, use a named Lombok builder and keep the generated
+  constructor private, for example with `@AllArgsConstructor(access = AccessLevel.PRIVATE)`.
+- For data carriers with five or fewer constructor parameters, use Lombok's generated constructor and keep positional
+  calls aligned with declaration order. Remove builders unless features such as `toBuilder` are required.
+- Do not add explicit constructors solely to preserve parameter order across field sorting. Retain explicit
+  constructors only when needed for behavior such as validation, immutable snapshots, or deserialization.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out
   explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
@@ -66,6 +73,8 @@ SPDX-License-Identifier: Apache-2.0
 - Keep production models and value objects focused on state plus simple accessors or validation.
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing
     classes.
+- Keep scanner/parser result models limited to data consumed by downstream production code; retain temporary parsing
+  state in local variables or private implementation state.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private
   method parameters may stay implicit when the intent is already obvious.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
@@ -109,8 +118,18 @@ SPDX-License-Identifier: Apache-2.0
   including private/package-private helpers, so the receiver cannot mutate the handed-off instance.
 - Do not add a second unmodifiable wrapper or defensive copy when the collection already stays immutable upstream or
   never leaves the local method scope.
+- Immutable models accepting caller-owned collections must retain an immutable snapshot, not a read-only view of mutable
+  input. Reuse immutable instances where supported, for example through `List.copyOf`.
+  - Exception: annotation ordering criteria in strict and flexible YAML/unified configurations use unmodifiable views
+    without defensive copies. Callers must not mutate supplied lists after construction; do not add tests that assume
+    snapshot isolation for these criteria.
+- Reject null entries in YAML configuration collections during deserialization. Configure the YAML mapper centrally;
+  custom collection deserializers must enforce the same rule. Preserve nullable optional properties.
+- When a mutable buffer is reused or cleared after handoff, retain an immutable snapshot; an unmodifiable view still
+  reflects subsequent buffer mutations.
 - Non-obvious build/configuration workarounds must include a nearby comment that explains why the workaround exists,
   which upstream component requires it, and when it can be removed.
+- Document non-obvious regular expressions next to the pattern, including matching rules and examples that match or fail.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of
   an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it
   should not be changed casually.
@@ -121,7 +140,14 @@ SPDX-License-Identifier: Apache-2.0
   family.
 - Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use
   single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
+- Make a variable's domain role explicit when its type is generic, for example `annotationOwner` or
+  `annotationComparator`. Name maps by both values and key meaning, such as `annotationDescriptorsBySrcStartOffset`.
+- When collection ordering matters to its use, reflect that order in the variable name.
+- Name helper and data-carrier types after the entities they represent, for example `AnnotationSrcFragment`, so their
+  purpose remains clear at import and usage sites outside the enclosing class.
 - Build and validate with JDK 21.
+- Preserve the root `.mvn` directory: shared quality-gate paths use `maven.multiModuleProjectDirectory`. Validate changes
+  to shared build-resource paths from both the repository root and the affected module directory.
 - Automatically run tests only for the module being changed; for changes spanning modules, limit test runs to those
   modules.
   - If prerequisite modules need to be built, skip their tests unless they are also being changed.
@@ -197,6 +223,9 @@ SPDX-License-Identifier: Apache-2.0
 - Keep the condition minimal but specific.
 - Prefer `<ProductionClassName>Test` for unit tests.
 - Prefer `<FeatureOrScenarioName>Test` for integration tests that cover a pipeline.
+- Make test class names and main Java fixture type/file names describe the tested behavior without relying on package or
+  scenario-directory names.
+- Use distinct main fixture names for different scenarios; keep each `input/` and `expected/` pair aligned.
 - If you need multiple scenarios, prefer `@Nested` classes instead of splitting into many test classes.
 
 ### Structure

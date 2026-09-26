@@ -5,11 +5,9 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
-import java.util.Map;
-import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.Launcher;
@@ -24,7 +22,7 @@ public class SpoonParser {
     /**
      * Parses the java source resource.
      * @param srcFile the original source file
-     * @param printerConfig the printer configuration for the serialization supplier
+     * @param printerConfig the spacing configuration stored in the returned model
      * @return the java source resource
      */
     @NonNull
@@ -53,19 +51,15 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        Supplier<SerializedSrcWithSkippedTypeRanges> serializedSrcCode = () -> {
-            if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
-                return new SerializedSrcWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
-            }
-
-            return SpoonSrcPrinter.serializeCompilationUnit(
-                    compilationUnit, srcFile.getSrcCode(), optOuts.getSortingSkippedTypes(), printerConfig);
-        };
+        // Spoon's getOriginalSourceCode() may read the filesystem and returns null for virtual sources.
+        // Keep the supplied text and its annotation fragments in the processing model before reordering.
         return SpoonAstModel.builder()
+                .annotationGroups(AnnotationSourceScanner.scan(srcFile.getSrcCode()))
                 .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
-                .serializedSrcCode(serializedSrcCode)
+                .printerConfig(printerConfig)
+                .srcCode(srcFile.getSrcCode())
                 .optOuts(optOuts)
                 .path(srcFile.getPath())
                 .build();
