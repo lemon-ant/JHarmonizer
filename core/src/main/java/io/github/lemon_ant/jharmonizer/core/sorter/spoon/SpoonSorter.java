@@ -9,8 +9,8 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
@@ -44,22 +44,18 @@ public class SpoonSorter {
 
     /**
      * Sorts declaration order in the AST and finalizes sorted annotation source groups.
-     * @param compilationUnit source model to update
-     * @param sortingSkippedTypes types excluded from sorting
-     * @param annotationSrcGroups annotation fragments captured from the original source
-     * @return immutable annotation groups with sorted fragments and lazily computed replacement code
+     * @param spoonAstModel working AST with its opt-outs and original annotation source groups
+     * @return model with the updated AST and immutable sorted annotation source groups
      */
     @NonNull
-    // TODO Annotations: Can we pass SpoonASTModel with together with sortingSkippedTypes?
-    public List<AnnotationSrcGroup> sortCompilationUnitRecursively(
-            @NonNull CtCompilationUnit compilationUnit,
-            @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull List<AnnotationSrcGroup> annotationSrcGroups) {
+    public SpoonAstModel sortCompilationUnitRecursively(@NonNull SpoonAstModel spoonAstModel) {
+        CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
+        Set<CtType<?>> sortingSkippedTypes = spoonAstModel.getOptOuts().getSortingSkippedTypes();
         reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
         File srcFile = compilationUnit.getFile();
         compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, sortingSkippedTypes, srcFile));
-        return SpoonAnnotationSorter.sort(
-                sortingSkippedTypes, annotationSrcGroups, compiledConfig.getAnnotationComparator());
+        return spoonAstModel.withAnnotationSrcGroups(SpoonAnnotationSorter.sort(
+                sortingSkippedTypes, spoonAstModel.getAnnotationSrcGroups(), compiledConfig.getAnnotationComparator()));
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")

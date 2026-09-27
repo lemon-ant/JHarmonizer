@@ -48,8 +48,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(
-                spoonAstModel.getCompilationUnit(), Set.of(), spoonAstModel.getAnnotationSrcGroups());
+        spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
 
         // Then
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
@@ -81,8 +80,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(
-                spoonAstModel.getCompilationUnit(), Set.of(), spoonAstModel.getAnnotationSrcGroups());
+        spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
 
         // Then
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
@@ -108,8 +106,7 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(
-                spoonAstModel.getCompilationUnit(), Set.of(), spoonAstModel.getAnnotationSrcGroups());
+        spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
 
         // Then
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()

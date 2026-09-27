@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated `SpoonSorter` to accept and return the complete processing model, keeping declaration sorting, opt-outs, and
+  annotation groups together at the sorting boundary. Updated direct callers and benchmark model copying.
 - Documented the annotation scanner's lexical boundary after verifying Spoon 11.5.0 traversal gaps for array dimensions
   and receiver parameters. Added parser coverage for their exact source-group ranges without changing sorting behavior.
 - Centralized annotation scanner whitespace and line-boundary operations in `SrcCodeUtils`, preserving source offsets,

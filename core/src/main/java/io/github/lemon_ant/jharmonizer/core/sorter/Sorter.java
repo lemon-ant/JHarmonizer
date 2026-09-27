@@ -35,13 +35,8 @@ public final class Sorter {
     @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         log.trace("Sorting {}", spoonAstModel.getPath());
-        StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(
-                // TODO Annotations: Introduce an intermediate explanatory variable for
-                //  spoonSorter.sortCompilationUnitRecursively
-                () -> spoonAstModel.withAnnotationSrcGroups(spoonSorter.sortCompilationUnitRecursively(
-                        spoonAstModel.getCompilationUnit(),
-                        spoonAstModel.getOptOuts().getSortingSkippedTypes(),
-                        spoonAstModel.getAnnotationSrcGroups())));
+        StopWatch.TimedResult<SpoonAstModel> sortingResult =
+                StopWatch.measure(() -> spoonSorter.sortCompilationUnitRecursively(spoonAstModel));
 
         return new SortingResult(sortingResult.getResult(), new SortingStatistic(sortingResult.getNanos()));
     }

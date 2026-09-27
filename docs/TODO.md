@@ -1560,14 +1560,14 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 ### 11. Annotation review follow-ups
 
 Inventory of all 13 `TODO Annotations` comments found on 2026-09-27, grouped by priority. P1 addresses processing
-failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1 and 2 are
+failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1–3 and 13 are
 resolved; the other comments remain in their source locations.
 
 | Item | Priority | Source symbol | Follow-up | Status |
 | --- | --- | --- | --- | --- |
 | 1 | P1 | `FlowDebugStageRecorder` constructor | Remove automatic source snapshots from production flows; TRACE logging must not require writable debug storage. | Resolved |
 | 2 | P2 | `AnnotationSourceScanner` | Retain lexical scanning: the Spoon 11.5.0 annotation traversal misses array-dimension and receiver groups. | Resolved |
-| 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Open |
+| 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Resolved |
 | 4 | P2 | `SpoonAstModel.printerConfig` | Review ownership of processing-wide printer configuration. | Open |
 | 5 | P2 | `RelocationDetector.findRelocations` | Consider returning relocation diagnostics from sorting. | Open |
 | 6 | P2 | `RelocationDetector.hasRelocations` | Consider returning the combined change flag from sorting. | Open |
@@ -1577,7 +1577,7 @@ resolved; the other comments remain in their source locations.
 | 10 | P3 | `AbstractOptOutFlow` | Review the shared pipeline abstraction's name. | Open |
 | 11 | P3 | `AbstractOptOutFlow.checkSortThenFormat` | Make the sorting-first check and formatting short-circuit clear in its name. | Open |
 | 12 | P3 | `AbstractOptOutFlow.checkSortThenFormat` result construction | Extract the annotation diff into a descriptive local variable. | Open |
-| 13 | P3 | `Sorter.sort` | Extract sorted annotation groups into a descriptive local variable. | Open |
+| 13 | P3 | `Sorter.sort` | Remove nested group assembly by returning the updated model from `SpoonSorter`. | Resolved |
 
 Items 5–8 belong to the
 [explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites).
@@ -1593,5 +1593,10 @@ Item 2 is resolved by retaining the existing lexer. The
 [scanning-boundary review](source-printer.md#annotation-scanning-boundary) records the official API contracts, debugger
 evidence, alternatives, and regression coverage. AST annotation positions cannot define the scan boundaries while they
 omit supported source groups. This decision adds no parsing pass or dependency and changes no sorting behavior.
+
+Item 3 is resolved by passing `SpoonAstModel` into `SpoonSorter` and returning the model with sorted annotation groups.
+The sorter obtains the compilation unit, skipped types, and annotation groups from that model. This also resolves item 13:
+`Sorter` times one sorting call without assembling annotation groups. The benchmark copies the compilation unit together
+with its matching model state; its existing shared-type limitation is documented in [benchmark.md](benchmark.md).
 
 ---

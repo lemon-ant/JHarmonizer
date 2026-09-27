@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import spoon.Launcher;
 
 class SpoonParserTest {
+
     @NonNull
     private static final URL TYPE_USE_ANNOTATIONS = requireClasspathResourceUrl(
             "/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/input/TypeUseAnnotationOrdering.java");
@@ -71,7 +72,10 @@ class SpoonParserTest {
                 .containsExactly(
                         tuple(firstDimensionStart, srcCode.indexOf("[]", firstDimensionStart), "@Z @A "),
                         tuple(secondDimensionStart, srcCode.indexOf("[]", secondDimensionStart), "@D @C "),
-                        tuple(receiverStart, srcCode.indexOf("TypeUseAnnotationOrdering this", receiverStart), "@Z @A "));
+                        tuple(
+                                receiverStart,
+                                srcCode.indexOf("TypeUseAnnotationOrdering this", receiverStart),
+                                "@Z @A "));
     }
 
     @NonNull

@@ -28,10 +28,11 @@ import org.slf4j.LoggerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TraceLoggingFlowIntegrationTest {
-    private final Logger flowLogger = (Logger) LoggerFactory.getLogger(IFlow.class.getPackageName());
 
     @TempDir
     Path temporaryDirectory;
+
+    private final Logger flowLogger = (Logger) LoggerFactory.getLogger(IFlow.class.getPackageName());
 
     @Nullable
     private Level previousLogLevel;
@@ -47,11 +48,6 @@ class TraceLoggingFlowIntegrationTest {
     void enableTraceLogging() {
         previousLogLevel = flowLogger.getLevel();
         flowLogger.setLevel(Level.TRACE);
-    }
-
-    @AfterEach
-    void restoreLoggingLevel() {
-        flowLogger.setLevel(previousLogLevel);
     }
 
     @ParameterizedTest
@@ -80,5 +76,10 @@ class TraceLoggingFlowIntegrationTest {
             assertThat(result.getStatistics().getFilesWithUnexpectedErrors()).isEmpty();
             assertThat(Files.readString(srcPath)).isEqualTo(srcCode);
         }
+    }
+
+    @AfterEach
+    void restoreLoggingLevel() {
+        flowLogger.setLevel(previousLogLevel);
     }
 }
