@@ -13,6 +13,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledMode
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.net.URL;
 import java.util.List;
@@ -47,8 +48,9 @@ class SpoonAnnotationSorterTest {
         List<CtAnnotation<?>> originalAnnotations = List.copyOf(type.getAnnotations());
         List<SourcePosition> originalPositions =
                 originalAnnotations.stream().map(CtAnnotation::getPosition).toList();
-        List<List<AnnotationSrcFragment>> originalGroups = model.getAnnotationGroups();
-        List<AnnotationSrcFragment> originalTypeAnnotations = originalGroups.get(0);
+        List<AnnotationSrcGroup> originalGroups = model.getAnnotationSrcGroups();
+        List<AnnotationSrcFragment> originalTypeAnnotations =
+                originalGroups.get(0).getFragmentsInPrintOrder();
         Sorter sorter = new Sorter(compiledConfig);
 
         // When
@@ -63,20 +65,31 @@ class SpoonAnnotationSorterTest {
                 .allSatisfy(annotation -> assertThat(annotation.getParent()).isSameAs(type));
         assertThat(originalAnnotations.stream().map(CtAnnotation::getPosition).toList())
                 .containsExactlyElementsOf(originalPositions);
-        assertThat(sortedModel.getAnnotationGroups()).hasSameSizeAs(originalGroups);
-        assertThat(sortedModel.getAnnotationGroups().get(0))
+        assertThat(sortedModel.getAnnotationSrcGroups()).hasSameSizeAs(originalGroups);
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getFragmentsInPrintOrder())
                 .containsExactly(originalTypeAnnotations.get(1), originalTypeAnnotations.get(0));
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getStart())
+                .isEqualTo(originalGroups.get(0).getStart());
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getEndExclusive())
+                .isEqualTo(originalGroups.get(0).getEndExclusive());
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getGapsInSrcOrder())
+                .isSameAs(originalGroups.get(0).getGapsInSrcOrder());
         assertThat(originalTypeAnnotations)
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Zed", "Able");
-        assertThat(sortedModel.getAnnotationGroups().stream()
-                        .flatMap(List::stream)
+        assertThat(sortedModel.getAnnotationSrcGroups().stream()
+                        .flatMap(group -> group.getFragmentsInPrintOrder().stream())
                         .toList())
-                .containsExactlyInAnyOrderElementsOf(
-                        originalGroups.stream().flatMap(List::stream).toList());
-        assertThatThrownBy(() -> sortedModel.getAnnotationGroups().clear())
+                .containsExactlyInAnyOrderElementsOf(originalGroups.stream()
+                        .flatMap(group -> group.getFragmentsInPrintOrder().stream())
+                        .toList());
+        assertThatThrownBy(() -> sortedModel.getAnnotationSrcGroups().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> sortedModel.getAnnotationGroups().get(0).clear())
+        assertThatThrownBy(() -> sortedModel
+                        .getAnnotationSrcGroups()
+                        .get(0)
+                        .getFragmentsInPrintOrder()
+                        .clear())
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 }

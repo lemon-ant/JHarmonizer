@@ -35,11 +35,11 @@ public final class Sorter {
     @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         log.trace("Sorting {}", spoonAstModel.getPath());
-        StopWatch.TimedResult<SpoonAstModel> sortingResult =
-                StopWatch.measure(() -> spoonAstModel.withAnnotationGroups(spoonSorter.sortCompilationUnitRecursively(
+        StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(
+                () -> spoonAstModel.withAnnotationSrcGroups(spoonSorter.sortCompilationUnitRecursively(
                         spoonAstModel.getCompilationUnit(),
                         spoonAstModel.getOptOuts().getSortingSkippedTypes(),
-                        spoonAstModel.getAnnotationGroups())));
+                        spoonAstModel.getAnnotationSrcGroups())));
 
         return new SortingResult(sortingResult.getResult(), new SortingStatistic(sortingResult.getNanos()));
     }

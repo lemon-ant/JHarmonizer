@@ -79,6 +79,8 @@ This file defines repository-wide conventions for coding agents working in this 
     classes.
 - Keep scanner/parser result models limited to data consumed by downstream production code; retain temporary parsing
   state in local variables or private implementation state.
+- Prepare annotation text and comment/separator ownership during scanning. Print ordered groups from their prepared
+  fragments and fixed gaps instead of reconstructing individual source replacements.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private
   method parameters may stay implicit when the intent is already obvious.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.

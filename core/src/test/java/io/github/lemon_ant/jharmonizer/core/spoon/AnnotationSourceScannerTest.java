@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import java.util.List;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
@@ -23,15 +24,14 @@ class AnnotationSourceScannerTest {
         String srcCode = prefix + comments + "@B class Sample {}";
 
         // When
-        AnnotationSrcFragment fragment =
-                AnnotationSourceScanner.scan(srcCode).get(0).get(1);
+        AnnotationSrcFragment fragment = AnnotationSourceScanner.scan(srcCode)
+                .get(0)
+                .getFragmentsInPrintOrder()
+                .get(1);
 
         // Then
-        assertThat(fragment.getLeadingCommentStart()).isEqualTo(prefix.length());
+        assertThat(fragment.getSrcCode()).isEqualTo(comments + "@B");
         assertThat(fragment.getStart()).isEqualTo(prefix.length() + comments.length());
-        assertThat(fragment.getTrailingCommentEndExclusive())
-                .isEqualTo(prefix.length() + comments.length() + "@B".length());
-        assertThat(fragment.getFollowingTokenStart()).isEqualTo(srcCode.indexOf("class"));
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo("@B".length());
     }
 
@@ -49,16 +49,18 @@ class AnnotationSourceScannerTest {
         String srcCode = prefix + annotation + " /* trailing */ @B class Sample {}";
 
         // When
-        List<List<AnnotationSrcFragment>> groups = AnnotationSourceScanner.scan(srcCode);
+        List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan(srcCode);
 
         // Then
-        AnnotationSrcFragment fragment = groups.get(0).get(0);
+        AnnotationSrcGroup group = groups.get(0);
+        AnnotationSrcFragment fragment = group.getFragmentsInPrintOrder().get(0);
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo(annotation.length());
         assertThat(fragment.getStart()).isEqualTo(prefix.length());
-        assertThat(fragment.getFollowingTokenStart()).isEqualTo(srcCode.indexOf("@B"));
-        assertThat(fragment.getTrailingCommentEndExclusive())
-                .isEqualTo(prefix.length() + annotation.length() + " /* trailing */".length());
-        assertThat(groups.get(0).get(1).getDescriptor().getDeclarationLength()).isEqualTo("@B".length());
+        assertThat(fragment.getSrcCode()).isEqualTo(annotation + " /* trailing */");
+        assertThat(group.getStart()).isEqualTo(prefix.length());
+        assertThat(group.getEndExclusive()).isEqualTo(srcCode.indexOf("class"));
+        assertThat(group.getFragmentsInPrintOrder().get(1).getDescriptor().getDeclarationLength())
+                .isEqualTo("@B".length());
     }
 
     @ParameterizedTest
@@ -70,28 +72,42 @@ class AnnotationSourceScannerTest {
     @ParameterizedTest
     @ValueSource(strings = {"\n", "\r\n", "\r"})
     void scan_lineComment_countsCommentWithoutLineSeparator(@NonNull String lineSeparator) {
-        List<List<AnnotationSrcFragment>> groups =
-                AnnotationSourceScanner.scan("@A(// note  " + lineSeparator + "\"aa\")");
-        assertThat(groups.get(0).get(0).getDescriptor().getDeclarationLength())
+        List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan("@A(// note  " + lineSeparator + "\"aa\")");
+        assertThat(groups.get(0)
+                        .getFragmentsInPrintOrder()
+                        .get(0)
+                        .getDescriptor()
+                        .getDeclarationLength())
                 .isEqualTo("@A(// note  \"aa\")".length());
-        assertThat(groups.get(0).get(0).getDescriptor().getArguments()).isEqualTo("\"aa\"");
+        assertThat(groups.get(0)
+                        .getFragmentsInPrintOrder()
+                        .get(0)
+                        .getDescriptor()
+                        .getArguments())
+                .isEqualTo("\"aa\"");
     }
 
     @Test
     void scan_multipleGroups_preservesEachGroupAfterBufferReuse() {
-        List<List<AnnotationSrcFragment>> groups = AnnotationSourceScanner.scan(
-                "@Deprecated class AnnotationGroups { @SuppressWarnings(\"all\") void execute() {} }");
-        assertThat(groups).hasSize(2).allSatisfy(group -> assertThat(group).hasSize(1));
-        assertThat(groups.stream().flatMap(List::stream))
+        List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan(
+                "@Deprecated class AnnotationSrcGroups { @SuppressWarnings(\"all\") void execute() {} }");
+        assertThat(groups)
+                .hasSize(2)
+                .allSatisfy(
+                        group -> assertThat(group.getFragmentsInPrintOrder()).hasSize(1));
+        assertThat(groups.stream().flatMap(group -> group.getFragmentsInPrintOrder().stream()))
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
     }
 
     @Test
     void scan_returnedGroups_preventsMutation() {
-        List<List<AnnotationSrcFragment>> groups = AnnotationSourceScanner.scan("@Z @A class Sample {}");
+        List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan("@Z @A class Sample {}");
         assertThatThrownBy(groups::clear).isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> groups.get(0).clear()).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> groups.get(0).getFragmentsInPrintOrder().clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> groups.get(0).getGapsInSrcOrder().clear())
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @ParameterizedTest
@@ -104,18 +120,15 @@ class AnnotationSourceScannerTest {
 
         // When
         List<AnnotationSrcFragment> fragments =
-                AnnotationSourceScanner.scan(srcCode).get(0);
+                AnnotationSourceScanner.scan(srcCode).get(0).getFragmentsInPrintOrder();
 
         // Then
         AnnotationSrcFragment firstFragment = fragments.get(0);
-        assertThat(firstFragment.getTrailingCommentEndExclusive()).isEqualTo(commentedAnnotation.length());
-        assertThat(firstFragment.getTrailingLineSeparatorEndExclusive())
-                .isEqualTo(commentedAnnotation.length() + blankLineSeparator.length());
+        assertThat(firstFragment.getSrcCode()).isEqualTo(commentedAnnotation);
+        assertThat(firstFragment.getTrailingLineSeparators()).isEqualTo(blankLineSeparator);
         assertThat(firstFragment.getTrailingLineSeparatorCount()).isEqualTo(2);
-        assertThat(firstFragment.getFollowingTokenStart()).isEqualTo(srcCode.indexOf("@B"));
         assertThat(firstFragment.getDescriptor().getDeclarationLength()).isEqualTo("@A".length());
-        assertThat(fragments.get(1).getLeadingCommentStart())
-                .isEqualTo(firstFragment.getTrailingLineSeparatorEndExclusive());
+        assertThat(fragments.get(1).getSrcCode()).isEqualTo("// above" + lineSeparator + "@B");
     }
 
     @ParameterizedTest
@@ -127,13 +140,14 @@ class AnnotationSourceScannerTest {
         String srcCode = annotation + comments + "\n/* detached */\n@B class Sample {}";
 
         // When
-        AnnotationSrcFragment fragment =
-                AnnotationSourceScanner.scan(srcCode).get(0).get(0);
+        AnnotationSrcFragment fragment = AnnotationSourceScanner.scan(srcCode)
+                .get(0)
+                .getFragmentsInPrintOrder()
+                .get(0);
 
         // Then
-        assertThat(fragment.getTrailingCommentEndExclusive()).isEqualTo(annotation.length() + comments.length());
-        assertThat(fragment.getTrailingLineSeparatorEndExclusive())
-                .isEqualTo(fragment.getTrailingCommentEndExclusive());
+        assertThat(fragment.getSrcCode()).isEqualTo(annotation + comments);
+        assertThat(fragment.getTrailingLineSeparators()).isEmpty();
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo(annotation.length());
     }
 
@@ -146,22 +160,32 @@ class AnnotationSourceScannerTest {
         String srcCode = commentedAnnotation + lineSeparator + "// detached" + lineSeparator + "@B class Sample {}";
 
         // When
-        AnnotationSrcFragment fragment =
-                AnnotationSourceScanner.scan(srcCode).get(0).get(0);
+        AnnotationSrcFragment fragment = AnnotationSourceScanner.scan(srcCode)
+                .get(0)
+                .getFragmentsInPrintOrder()
+                .get(0);
 
         // Then
-        assertThat(fragment.getTrailingCommentEndExclusive()).isEqualTo(commentedAnnotation.length());
-        assertThat(fragment.getTrailingLineSeparatorEndExclusive())
-                .isEqualTo(commentedAnnotation.length() + lineSeparator.length());
+        assertThat(fragment.getSrcCode()).isEqualTo(commentedAnnotation);
+        assertThat(fragment.getTrailingLineSeparators()).isEqualTo(lineSeparator);
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo(annotation.length());
     }
 
     @Test
     void scan_whitespaceAndComments_countsDeclarationTokensAndComments() {
-        List<List<AnnotationSrcFragment>> groups =
+        List<AnnotationSrcGroup> groups =
                 AnnotationSourceScanner.scan("@A (value = 1 /* note */ + 2) @B class Sample {}");
-        assertThat(groups.get(0).get(0).getDescriptor().getDeclarationLength())
+        assertThat(groups.get(0)
+                        .getFragmentsInPrintOrder()
+                        .get(0)
+                        .getDescriptor()
+                        .getDeclarationLength())
                 .isEqualTo("@A(value=1/* note */+2)".length());
-        assertThat(groups.get(0).get(0).getDescriptor().getArguments()).isEqualTo("value=1+2");
+        assertThat(groups.get(0)
+                        .getFragmentsInPrintOrder()
+                        .get(0)
+                        .getDescriptor()
+                        .getArguments())
+                .isEqualTo("value=1+2");
     }
 }

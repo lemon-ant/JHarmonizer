@@ -54,7 +54,7 @@ public class SpoonParser {
         // Spoon's getOriginalSourceCode() may read the filesystem and returns null for virtual sources.
         // Keep the supplied text and its annotation fragments in the processing model before reordering.
         return SpoonAstModel.builder()
-                .annotationGroups(AnnotationSourceScanner.scan(srcFile.getSrcCode()))
+                .annotationSrcGroups(AnnotationSourceScanner.scan(srcFile.getSrcCode()))
                 .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)

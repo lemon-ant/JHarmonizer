@@ -89,7 +89,8 @@ public class RelocationDetector {
     public static boolean hasReorderedAnnotations(@NonNull SpoonAstModel sortedModel) {
         // Spoon annotation lists retain source order and omit some syntax. Lexer offsets are unique and unchanged:
         // every permutation of a group other than its original ascending order contains an adjacent inversion.
-        return sortedModel.getAnnotationGroups().stream()
+        return sortedModel.getAnnotationSrcGroups().stream()
+                .map(annotationGroup -> annotationGroup.getFragmentsInPrintOrder())
                 .anyMatch(annotationGroup -> IntStream.range(1, annotationGroup.size())
                         .anyMatch(annotationIndex ->
                                 annotationGroup.get(annotationIndex - 1).getStart()

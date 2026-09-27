@@ -41,7 +41,7 @@ SpoonAstModel
     ├─ CtCompilationUnit       (Spoon AST)
     ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
     ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    ├─ annotationGroups        (immutable lexer fragments in the current annotation order)
+    ├─ annotationSrcGroups     (group bounds, prepared fragments in print order, and fixed gaps)
     ├─ srcCode                 (exact original text for source offsets)
     └─ PrinterConfig           (immutable spacing configuration)
     ↓
@@ -63,6 +63,8 @@ Annotation fragments belong to `SpoonAstModel`, including annotations absent fro
 declaration order in the AST and returns a model wrapper with the new immutable group order. AST annotation lists
 remain unchanged. Printing consumes that returned model directly;
 annotation order is neither stored in `CtCompilationUnit` metadata nor captured by a serialization supplier.
+The scanner prepares each fragment's source text and attached-comment separators. Group boundaries and fixed gaps
+remain in source order when the sorter replaces a group's fragment order.
 
 ## What is preserved
 

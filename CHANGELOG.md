@@ -27,12 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Annotation scanning prepares fragment text, attached-comment separators, and fixed gaps in explicit source groups.
+  Printing visits group starts and appends the sorted fragments directly, without individual replacements or restoring
+  their source order. Group bounds and independent comments remain fixed.
 - Removed redundant collection copies and wrappers in dependency ordering and CLI process test results.
 - Declaration-only relocation detection is private; callers use the model-based check that also detects annotation order.
 - Annotation ordering models retain unmodifiable views of criteria without copying; callers must not mutate supplied lists.
-- Annotation fragments retain only fields consumed by sorting, relocation detection, and printing; removed the unused
-  annotation-only `endExclusive` offset and its calculation.
-- Annotation descriptors use Lombok-generated constructors, with call sites aligned to field declaration order.
+- Annotation fragments keep sorting keys, prepared text, the annotation offset, and required trailing separators.
+  Parsing-only comment and token offsets stay private in the scanner.
+- Annotation descriptors, fragments, and groups use Lombok-generated constructors, with call sites aligned to field
+  declaration order.
 - Annotation order is computed only from source-fragment groups. Removed the duplicate AST scan, descriptor index,
   and annotation-list mutations; source printing uses the single sorted order.
 - Annotation fragments and their sorted order now belong to `SpoonAstModel`, passed explicitly between parser, sorter,
@@ -60,8 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   annotation-only changes as reordering.
 - Annotation scanning snapshots each group before clearing its reusable buffer, preserving annotations for sorting
   and relocation detection.
-- Annotation fragments and replacements use named builders with private constructors, preventing source reordering
-  from changing the mapping between constructor arguments and fields.
 - Source printing includes annotations preceding Spoon's declaration start when a comment appears between annotations,
   preserving them during repeated processing of top-level types, nested types, and type members.
 - Annotation sorting moves a standalone comment block with the preceding annotation when they are adjacent and a blank

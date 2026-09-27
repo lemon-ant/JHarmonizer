@@ -7,7 +7,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -29,8 +29,7 @@ public class SpoonAstModel {
     /** Lexer-derived annotation groups; sorting replaces their immutable order for the printer. */
     @NonNull
     @With
-    // TODO Annotations: type name and field name are not consistent
-    List<List<AnnotationSrcFragment>> annotationGroups;
+    List<AnnotationSrcGroup> annotationSrcGroups;
 
     /** Spoon's mutable working AST; sorting reorders declarations but preserves annotation lists. */
     @NonNull

@@ -10,9 +10,9 @@ import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.With;
 import lombok.experimental.UtilityClass;
 import org.eclipse.jdt.core.compiler.IScanner;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
@@ -38,7 +38,7 @@ public class AnnotationSourceScanner {
      * @return immutable groups in source order
      */
     @NonNull
-    public static List<List<AnnotationSrcFragment>> scan(@NonNull String srcCode) {
+    public static List<AnnotationSrcGroup> scan(@NonNull String srcCode) {
         if (srcCode.indexOf('@') < 0 && srcCode.indexOf('\\') < 0) {
             return List.of();
         }
@@ -49,46 +49,128 @@ public class AnnotationSourceScanner {
         }
     }
 
+    private static int findIndentationEnd(String srcCode, int lineStart, int contentStart) {
+        int indentationEnd = lineStart;
+        while (indentationEnd < contentStart
+                && (srcCode.charAt(indentationEnd) == ' ' || srcCode.charAt(indentationEnd) == '\t')) {
+            indentationEnd++;
+        }
+        return indentationEnd;
+    }
+
+    private static int findLineSeparatorStart(String srcCode, int lineStart) {
+        int separatorStart = lineStart - 1;
+        if (srcCode.charAt(separatorStart) == '\n'
+                && separatorStart > 0
+                && srcCode.charAt(separatorStart - 1) == '\r') {
+            separatorStart--;
+        }
+        return separatorStart;
+    }
+
+    @NonNull
+    private static AnnotationSrcGap prepareGap(
+            String srcCode, AnnotationSrcFragment annotation, int start, int endExclusive) {
+        String gap = srcCode.substring(start, endExclusive);
+        int followingContentStart = start;
+        while (followingContentStart < endExclusive && Character.isWhitespace(srcCode.charAt(followingContentStart))) {
+            followingContentStart++;
+        }
+        int lineStart = Math.max(
+                        srcCode.lastIndexOf('\r', followingContentStart - 1),
+                        srcCode.lastIndexOf('\n', followingContentStart - 1))
+                + 1;
+        String indentedRemainder =
+                srcCode.substring(lineStart, findIndentationEnd(srcCode, lineStart, followingContentStart))
+                        + srcCode.substring(followingContentStart, endExclusive);
+        if (annotation.getTrailingLineSeparatorCount() == BLANK_LINE_SEPARATOR_COUNT && gap.isBlank()) {
+            // These blank lines belong to the departing lower comment block. A plain annotation leaves one
+            // line break; a commented annotation supplies its own separators before this slot's indentation.
+            return new AnnotationSrcGap(
+                    annotation.getStart(),
+                    indentedRemainder,
+                    gap,
+                    0,
+                    srcCode.substring(findLineSeparatorStart(srcCode, lineStart), lineStart) + indentedRemainder);
+        }
+        return new AnnotationSrcGap(
+                annotation.getStart(),
+                indentedRemainder,
+                gap,
+                countLineSeparators(start, followingContentStart, srcCode),
+                gap);
+    }
+
     /**
-     * Immutable source ranges and sorting keys for one annotation, including its attached comments.
-     * The descriptor keeps configuration comparators independent of the ranges needed for source-preserving printing.
+     * Prepared source text and sorting keys for one annotation, including its attached comments.
+     * Separators required by trailing comments remain separate so existing destination line breaks can be reused.
      */
     @Value
-    @Builder(access = AccessLevel.PRIVATE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    // TODO Annotations: Can we store source fragment here and possibly it avoid us to store many indexes and simplify
-    // printing
     public static class AnnotationSrcFragment {
 
         /** Sorting keys computed from the annotation's name, argument tokens, and internal comments. */
         @NonNull
         AnnotationDescriptor descriptor;
 
-        /** Next Java token after lexer lookahead; bounds the gap after the last annotation in a group. */
-        // TODO Annotations: Does it mean all fragments in the group have the same followingTokenStart? If yes we must
-        // document it
-        int followingTokenStart;
-
-        /** First attached leading comment, or the annotation's start when no such comment exists. */
-        // TODO Annotations: Do we need to distinguish in the outside logic between leadingCommentStart and start?
-        // If leading comments are undivided part of the fragment, do we need to treat them as internal part of the
-        // fragment? Is there a case when leading comments can be detached sorted and processed separately?
-        int leadingCommentStart;
+        /** Exact annotation text with attached leading and trailing comments, without final line separators. */
+        @NonNull
+        String srcCode;
 
         /** Offset of the opening {@code @}, used for original ordering, relocation detection, and opt-out ranges. */
-        // TODO Annotations: Why we cannot use start==leadingCommentStart for the same?
         int start;
-
-        /** First offset after the annotation and attached trailing comments, excluding final line separators. */
-        int trailingCommentEndExclusive;
 
         /** Minimum trailing separators: zero normally, one after {@code //}, two after an attached lower block. */
         int trailingLineSeparatorCount;
 
-        /** End of those separators in the input, for copying them when the annotation moves. */
-        // TODO Annotations: Do we really need several end indexes or we can have one end of the entire fragment that
-        // will include all trailing comments and line separator? This idea is for the external logic
-        int trailingLineSeparatorEndExclusive;
+        /** Original separators needed when a destination cannot preserve the trailing comment's attachment. */
+        @NonNull
+        String trailingLineSeparators;
+    }
+
+    /** Prepared gap text that stays in its source slot while adjacent annotations move. */
+    @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class AnnotationSrcGap {
+
+        /** Original preceding annotation's offset, used to preserve this gap verbatim when that annotation stays. */
+        int annotationStart;
+
+        /** Indentation and independent comments to append after separators supplied by a moved annotation. */
+        @NonNull
+        String indentedRemainder;
+
+        /** Unmodified gap for an annotation that remains in its original slot. */
+        @NonNull
+        String originalSrcCode;
+
+        /** Available leading separators; zero when the preceding attached comment block takes them with it. */
+        int retainedLineSeparatorCount;
+
+        /** Fixed gap text, with an attached lower comment block's blank lines reduced to one line break. */
+        @NonNull
+        String srcCode;
+    }
+
+    /** Original group boundaries and fixed gaps, with annotation fragments in their requested print order. */
+    @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class AnnotationSrcGroup {
+
+        /** First source offset after the final gap, before the following Java token. */
+        int endExclusive;
+
+        /** Sorting replaces this immutable list while preserving the original group boundaries and gaps. */
+        @NonNull
+        @With
+        List<AnnotationSrcFragment> fragmentsInPrintOrder;
+
+        /** One fixed gap after each original annotation slot, including the gap after the last annotation. */
+        @NonNull
+        List<AnnotationSrcGap> gapsInSrcOrder;
+
+        /** First attached leading comment, or the first annotation's opening {@code @}. */
+        int start;
     }
 
     private static final class Parsing {
@@ -248,15 +330,12 @@ public class AnnotationSourceScanner {
             }
             // Lookahead can cross a comment outside the declaration; only count comments inside its source bounds.
             declarationLength += declarationCommentEnd - declarationCommentStart;
-            return AnnotationSrcFragment.builder()
-                    .descriptor(new AnnotationDescriptor(arguments, declarationLength, name))
-                    .followingTokenStart(scanner.getCurrentTokenStartPosition())
-                    .leadingCommentStart(commentStart)
-                    .start(start)
-                    .trailingCommentEndExclusive(trailingCommentEndExclusive)
-                    .trailingLineSeparatorCount(trailingLineSeparatorCount)
-                    .trailingLineSeparatorEndExclusive(trailingLineSeparatorEndExclusive)
-                    .build();
+            return new AnnotationSrcFragment(
+                    new AnnotationDescriptor(arguments, declarationLength, name),
+                    srcCode.substring(commentStart, trailingCommentEndExclusive),
+                    start,
+                    trailingLineSeparatorCount,
+                    srcCode.substring(trailingCommentEndExclusive, trailingLineSeparatorEndExclusive));
         }
 
         @NonNull
@@ -281,26 +360,43 @@ public class AnnotationSourceScanner {
         }
 
         @NonNull
-        private List<List<AnnotationSrcFragment>> parseGroups() throws InvalidInputException {
-            List<List<AnnotationSrcFragment>> groups = new ArrayList<>();
+        private List<AnnotationSrcGroup> parseGroups() throws InvalidInputException {
+            List<AnnotationSrcGroup> groups = new ArrayList<>();
             List<AnnotationSrcFragment> group = new ArrayList<>();
+            List<AnnotationSrcGap> gaps = new ArrayList<>();
+            int groupStart = 0;
+            int groupEndExclusive = 0;
+            int gapStart = 0;
             while (token != ITerminalSymbols.TokenNameEOF) {
-                if (token == ITerminalSymbols.TokenNameAT) {
-                    AnnotationSrcFragment annotation = parseAnnotation();
-                    if (annotation != null) {
-                        group.add(annotation);
-                        continue;
+                if (group.isEmpty()) {
+                    groupStart = leadingCommentStart;
+                }
+                int fragmentStart = leadingCommentStart;
+                AnnotationSrcFragment annotation = token == ITerminalSymbols.TokenNameAT ? parseAnnotation() : null;
+                if (annotation != null) {
+                    if (!group.isEmpty()) {
+                        gaps.add(prepareGap(srcCode, group.get(group.size() - 1), gapStart, fragmentStart));
                     }
+                    group.add(annotation);
+                    gapStart = trailingCommentEndExclusive;
+                    groupEndExclusive = scanner.getCurrentTokenStartPosition();
+                    continue;
                 }
                 if (!group.isEmpty()) {
+                    // @interface is a declaration, not another fragment. Its leading comments stay in the final gap.
+                    gaps.add(prepareGap(srcCode, group.get(group.size() - 1), gapStart, groupEndExclusive));
                     // The lexer reuses this buffer; a read-only view would be emptied by clear().
-                    groups.add(List.copyOf(group));
+                    groups.add(new AnnotationSrcGroup(
+                            groupEndExclusive, List.copyOf(group), List.copyOf(gaps), groupStart));
                     group.clear();
+                    gaps.clear();
                 }
                 token = readNextToken();
             }
             if (!group.isEmpty()) {
-                groups.add(List.copyOf(group));
+                gaps.add(prepareGap(srcCode, group.get(group.size() - 1), gapStart, groupEndExclusive));
+                groups.add(
+                        new AnnotationSrcGroup(groupEndExclusive, List.copyOf(group), List.copyOf(gaps), groupStart));
             }
             return Collections.unmodifiableList(groups);
         }

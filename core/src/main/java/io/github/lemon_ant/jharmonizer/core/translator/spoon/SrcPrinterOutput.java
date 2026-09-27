@@ -6,7 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFr
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import java.util.List;
 import lombok.NonNull;
 
@@ -14,8 +14,7 @@ import lombok.NonNull;
 final class SrcPrinterOutput {
 
     @NonNull
-    // TODO Annotations: annotationFragments is a misleading name
-    private final AnnotationFragmentIndex annotationFragments;
+    private final AnnotationGroupPrinter annotationGroupPrinter;
 
     @NonNull
     // Each invocation owns a fresh buffer; capacity cannot accumulate across files.
@@ -36,11 +35,11 @@ final class SrcPrinterOutput {
     /**
      * Creates an output buffer using the original source's size and dominant line separator.
      * @param srcCode original source
-     * @param annotationGroups annotation fragments in the order to print
+     * @param annotationSrcGroups annotation fragments in the order to print
      */
-    SrcPrinterOutput(@NonNull String srcCode, @NonNull List<List<AnnotationSrcFragment>> annotationGroups) {
+    SrcPrinterOutput(@NonNull String srcCode, @NonNull List<AnnotationSrcGroup> annotationSrcGroups) {
         this.srcCode = srcCode;
-        annotationFragments = new AnnotationFragmentIndex(srcCode, annotationGroups);
+        annotationGroupPrinter = new AnnotationGroupPrinter(annotationSrcGroups);
         lineSeparator = detectDominantLineSeparator(srcCode);
         buffer = new StringBuilder(srcCode.length());
     }
@@ -67,7 +66,7 @@ final class SrcPrinterOutput {
             }
             // Interior whitespace belongs to the fragment; surrounding gaps belong to its container.
             int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
-            annotationFragments.append(buffer, srcCode, indentationStart, fragmentEndExclusive);
+            annotationGroupPrinter.append(buffer, srcCode, indentationStart, fragmentEndExclusive);
             writeln();
             return true;
         } catch (IndexOutOfBoundsException exception) {

@@ -29,7 +29,7 @@ and attached annotation fragments that the custom printer can consume directly. 
 | `SpoonSorter.sortCompilationUnitRecursively` | Mutates top-level types and nested member lists; returns annotation groups. |
 | `SpoonAnnotationSorter` | Orders lexical annotation groups; leaves AST annotation lists unchanged. |
 | `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
-| `Sorter.sort` | Uses `withAnnotationGroups`; the input and result wrappers retain the same mutable compilation unit. |
+| `Sorter.sort` | Uses `withAnnotationSrcGroups`; the input and result wrappers retain the same mutable compilation unit. |
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
 | `RelocationDetector` | Compares original node identities with the mutated AST traversal and detects annotation permutations from lexer source offsets. |
 

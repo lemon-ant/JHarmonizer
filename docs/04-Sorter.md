@@ -33,7 +33,8 @@ eligible source group once with that comparator, including annotations missing f
 AST annotation lists retain their parsed order: printing consumes the sorted source groups directly, so a second AST
 scan and annotation sort would not affect output. Singleton groups and groups in excluded types retain their original
 order.
-The fragment printer emits original annotation slices with their attached comment blocks. Blank lines determine whether
+The fragment printer emits prepared annotation strings with their attached comment blocks. Group boundaries and gaps
+remain fixed when the sorter replaces the immutable fragment order. Blank lines determine whether
 a standalone block belongs to the preceding or following annotation. Separate blocks and their surrounding gaps stay in
 place; declaration JavaDoc and file preambles retain their positions. The printer preserves line-comment terminators and
 moves blank lines with the blocks they attach to an annotation, removing redundant blank lines from the original

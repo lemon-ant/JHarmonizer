@@ -12,7 +12,7 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMem
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasMatchingLeadingComment;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.GroupSeparator;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
@@ -51,15 +51,14 @@ public final class SpoonSrcPrinter {
         String srcCode = model.getSrcCode();
         if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
             StringBuilder output = new StringBuilder(srcCode.length());
-            new AnnotationFragmentIndex(srcCode, model.getAnnotationGroups())
-                    .append(output, srcCode, 0, srcCode.length());
+            new AnnotationGroupPrinter(model.getAnnotationSrcGroups()).append(output, srcCode, 0, srcCode.length());
             return new SerializedSrcWithSkippedTypeRanges(output.toString(), Map.of());
         }
         return new Serialization(
                         srcCode,
                         model.getOptOuts().getSortingSkippedTypes(),
                         model.getPrinterConfig(),
-                        model.getAnnotationGroups())
+                        model.getAnnotationSrcGroups())
                 .serializeCompilationUnit(compilationUnit);
     }
 
@@ -92,8 +91,8 @@ public final class SpoonSrcPrinter {
                 String srcCode,
                 Set<CtType<?>> sortingSkippedTypes,
                 PrinterConfig printerConfig,
-                List<List<AnnotationSrcFragment>> annotationGroups) {
-            srcPrinterOutput = new SrcPrinterOutput(srcCode, annotationGroups);
+                List<AnnotationSrcGroup> annotationSrcGroups) {
+            srcPrinterOutput = new SrcPrinterOutput(srcCode, annotationSrcGroups);
             this.srcCode = srcCode;
             this.sortingSkippedTypes = sortingSkippedTypes;
             this.printerConfig = printerConfig;

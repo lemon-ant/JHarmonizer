@@ -18,6 +18,7 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
@@ -182,7 +183,7 @@ class RelocationDetectorTest {
         boolean relocated = hasRelocations(sortedModel);
 
         // Then
-        assertThat(sortedModel.getAnnotationGroups().get(0))
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getFragmentsInPrintOrder())
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
         assertThat(relocated).isTrue();
@@ -293,9 +294,12 @@ class RelocationDetectorTest {
                 int first, int second, int third, boolean expectedRelocation) {
             // Given
             List<AnnotationSrcFragment> originalGroup =
-                    permutationModel.getAnnotationGroups().get(0);
-            SpoonAstModel reorderedModel = permutationModel.withAnnotationGroups(
-                    List.of(List.of(originalGroup.get(first), originalGroup.get(second), originalGroup.get(third))));
+                    permutationModel.getAnnotationSrcGroups().get(0).getFragmentsInPrintOrder();
+            SpoonAstModel reorderedModel = permutationModel.withAnnotationSrcGroups(List.of(permutationModel
+                    .getAnnotationSrcGroups()
+                    .get(0)
+                    .withFragmentsInPrintOrder(
+                            List.of(originalGroup.get(first), originalGroup.get(second), originalGroup.get(third)))));
 
             // When
             boolean relocated = hasRelocations(reorderedModel);
@@ -320,7 +324,8 @@ class RelocationDetectorTest {
             boolean relocated = hasRelocations(sortedModel);
 
             // Then
-            assertThat(sortedModel.getAnnotationGroups()).containsExactlyElementsOf(parsedModel.getAnnotationGroups());
+            assertThat(sortedModel.getAnnotationSrcGroups())
+                    .containsExactlyElementsOf(parsedModel.getAnnotationSrcGroups());
             assertThat(relocated).isFalse();
         }
 
@@ -340,8 +345,8 @@ class RelocationDetectorTest {
             boolean relocated = hasRelocations(sortedModel);
 
             // Then
-            assertThat(sortedModel.getAnnotationGroups().get(0))
-                    .containsExactlyElementsOf(parsedModel.getAnnotationGroups().get(0));
+            assertThat(sortedModel.getAnnotationSrcGroups().get(0))
+                    .isEqualTo(parsedModel.getAnnotationSrcGroups().get(0));
             assertThat(relocated).isTrue();
         }
 
@@ -354,9 +359,9 @@ class RelocationDetectorTest {
             SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(
                     requireClasspathResourceUrl(
                             "/test-cases/core/e2e/reorder/37-annotations-arguments-alpha/input/AlphabeticalAnnotationArgumentsOrdering.java"));
-            List<AnnotationSrcFragment> repeatedAnnotations =
-                    parsedModel.getAnnotationGroups().get(1);
-            SpoonAstModel repeatedAnnotationsModel = parsedModel.withAnnotationGroups(List.of(repeatedAnnotations));
+            AnnotationSrcGroup repeatedAnnotations =
+                    parsedModel.getAnnotationSrcGroups().get(1);
+            SpoonAstModel repeatedAnnotationsModel = parsedModel.withAnnotationSrcGroups(List.of(repeatedAnnotations));
             SpoonAstModel sortedModel =
                     new Sorter(argumentsConfig).sort(repeatedAnnotationsModel).getSortedSpoonAstModel();
 
@@ -364,7 +369,7 @@ class RelocationDetectorTest {
             boolean relocated = hasRelocations(sortedModel);
 
             // Then
-            assertThat(repeatedAnnotations)
+            assertThat(repeatedAnnotations.getFragmentsInPrintOrder())
                     .extracting(fragment -> fragment.getDescriptor().getName())
                     .containsExactly("Tag", "Tag");
             assertThat(relocated).isTrue();

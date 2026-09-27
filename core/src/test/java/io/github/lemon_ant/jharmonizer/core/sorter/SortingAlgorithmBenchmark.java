@@ -8,7 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -52,7 +52,7 @@ public class SortingAlgorithmBenchmark {
             Set<CtType<?>> skippedTypes =
                     resolveSkippedTypes(workingCompilationUnit, benchmarkFixture.getSortingSkippedTypeQualifiedNames());
             state.spoonSorter.sortCompilationUnitRecursively(
-                    workingCompilationUnit, skippedTypes, benchmarkFixture.getAnnotationGroups());
+                    workingCompilationUnit, skippedTypes, benchmarkFixture.getAnnotationSrcGroups());
             benchmarkChecksum += workingCompilationUnit.getDeclaredTypes().size();
         }
         return benchmarkChecksum;
@@ -69,7 +69,7 @@ public class SortingAlgorithmBenchmark {
                                     .map(CtType::getQualifiedName)
                                     .collect(Collectors.toUnmodifiableSet());
                     return new BenchmarkFixture(
-                            spoonAstModel.getAnnotationGroups(),
+                            spoonAstModel.getAnnotationSrcGroups(),
                             spoonAstModel.getCompilationUnit(),
                             sortingSkippedTypeQualifiedNames);
                 });
@@ -162,7 +162,7 @@ public class SortingAlgorithmBenchmark {
     private static class BenchmarkFixture {
 
         @NonNull
-        List<List<AnnotationSrcFragment>> annotationGroups;
+        List<AnnotationSrcGroup> annotationSrcGroups;
 
         @NonNull
         CtCompilationUnit compilationUnitTemplate;

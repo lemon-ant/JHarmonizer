@@ -4,6 +4,7 @@ package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -25,15 +26,15 @@ class SpoonAnnotationSorter {
      * @return immutable groups with enabled annotations sorted and other groups preserved
      */
     @NonNull
-    static List<List<AnnotationSrcFragment>> sort(
+    static List<AnnotationSrcGroup> sort(
             @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull List<List<AnnotationSrcFragment>> annotationSrcGroups,
+            @NonNull List<AnnotationSrcGroup> annotationSrcGroups,
             @NonNull Comparator<AnnotationDescriptor> annotationComparator) {
         // The printer reads annotation order from these groups; reordering AST annotation lists would duplicate the
         // work.
         return annotationSrcGroups.stream()
-                .map(annotationSrcFragments ->
-                        sortAnnotationFragments(annotationSrcFragments, sortingSkippedTypes, annotationComparator))
+                .map(annotationSrcGroup ->
+                        sortAnnotationFragments(annotationSrcGroup, sortingSkippedTypes, annotationComparator))
                 .toList();
     }
 
@@ -44,19 +45,20 @@ class SpoonAnnotationSorter {
     }
 
     @NonNull
-    private static List<AnnotationSrcFragment> sortAnnotationFragments(
-            List<AnnotationSrcFragment> annotationSrcFragments,
+    private static AnnotationSrcGroup sortAnnotationFragments(
+            AnnotationSrcGroup annotationSrcGroup,
             Set<CtType<?>> sortingSkippedTypes,
             Comparator<AnnotationDescriptor> annotationComparator) {
+        List<AnnotationSrcFragment> annotationSrcFragments = annotationSrcGroup.getFragmentsInPrintOrder();
         if (annotationSrcFragments.size() < MINIMUM_SORTABLE_ANNOTATION_COUNT
                 || sortingSkippedTypes.stream()
                         .anyMatch(skippedType -> containsAnnotation(
                                 skippedType.getPosition(),
                                 annotationSrcFragments.get(0).getStart()))) {
-            return annotationSrcFragments;
+            return annotationSrcGroup;
         }
-        return annotationSrcFragments.stream()
+        return annotationSrcGroup.withFragmentsInPrintOrder(annotationSrcFragments.stream()
                 .sorted(Comparator.comparing(AnnotationSrcFragment::getDescriptor, annotationComparator))
-                .toList();
+                .toList());
     }
 }

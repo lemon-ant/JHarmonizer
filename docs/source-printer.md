@@ -16,6 +16,7 @@ Parsing, sorting, formatting and import cleanup retain their existing entry poin
 | `SpoonSrcPrinter` | Stateless serialization entry point with explicit configuration |
 | `SpoonSrcPrinter.Serialization` | Per-call state, declaration layout, member spacing and boundaries, skipped-type ranges |
 | `SrcPrinterOutput` | Source slices and tails, indentation, dominant line separator detection, output offsets |
+| `AnnotationGroupPrinter` | Group boundaries and sequential output of prepared annotation and gap text |
 | `SpoonTypeMemberUtils` | Explicit members, effective source boundaries and comment attribution |
 | `SrcCodeUtils` | Shared source-fragment boundary operations |
 | `SpoonGroupSeparatorUtils` | Assigning separators and resolving their kind and header text |
@@ -35,9 +36,18 @@ CRLF, LF, CR tie precedence. No serialized result is cached.
 
 Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
 Configuration, source text, annotation order, skipped types and the compilation unit come from the supplied model;
-the printer has no shared state. `AnnotationFragmentIndex` receives sorted annotation groups explicitly, without
-metadata lookup. These groups alone determine annotation output order; AST annotation lists retain their parsed order
-and provide annotation presence for spacing decisions and positions for declaration boundaries.
+the printer has no shared state. `AnnotationGroupPrinter` indexes each `AnnotationSrcGroup` by its original start.
+At a group boundary it appends the prepared fragments in print order, interleaved with the group's fixed gaps, then
+continues after the original group end. It does not rebuild source order or individual replacement ranges.
+`AnnotationSourceScanner` captures the exact annotation text with its attached comments and prepares the gaps once.
+Ordinary whitespace and independent comment blocks stay in their slots. Separators required by trailing line comments
+or attached lower comment blocks are supplied by the fragment when the destination gap cannot retain them.
+An annotation that stays in its original slot retains its unmodified gap, even when other group members move.
+For example, the blank gap in `@B\n\n@A` stays between the sorted annotations; the terminator of `@B // note\n@A`
+must also follow `@B` when it moves. These are separate ownership rules, so blindly concatenating annotations with
+their original trailing whitespace would change the output.
+The groups alone determine annotation output order; AST annotation lists retain their parsed order and provide
+annotation presence for spacing decisions and positions for declaration boundaries.
 The result wraps the collected map once. Later calls cannot alter earlier output or ranges, and
 calls for independent models may run concurrently with different configurations. Failed calls leave no shared state.
 
