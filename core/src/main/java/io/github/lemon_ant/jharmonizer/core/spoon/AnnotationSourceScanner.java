@@ -25,9 +25,14 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.core.util.PublicScanner;
 import org.jspecify.annotations.Nullable;
 
-/** Finds adjacent annotation fragments using the Java lexer already supplied by Spoon. */
+/**
+ * Finds adjacent annotation fragments using the Java lexer already supplied by Spoon.
+ *
+ * <p>Spoon 11.5.0 annotation traversal misses array-dimension and receiver annotations in the language-constructs
+ * fixture. Scan source tokens independently of AST annotation positions to retain those groups, exact argument text,
+ * and comment ownership. Reconsider AST-based discovery only after the source-range and E2E contracts are preserved.
+ */
 @UtilityClass
-// TODO Annotations: Can we reuse spoon model maximally and avoid using eclipse parser?
 public class AnnotationSourceScanner {
 
     /** Two line separators leave the blank line that separates comment blocks. */

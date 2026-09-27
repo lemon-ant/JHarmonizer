@@ -1560,13 +1560,13 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 ### 11. Annotation review follow-ups
 
 Inventory of all 13 `TODO Annotations` comments found on 2026-09-27, grouped by priority. P1 addresses processing
-failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Only item 1 is
-resolved in this review; the other comments remain in their source locations.
+failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1 and 2 are
+resolved; the other comments remain in their source locations.
 
 | Item | Priority | Source symbol | Follow-up | Status |
 | --- | --- | --- | --- | --- |
 | 1 | P1 | `FlowDebugStageRecorder` constructor | Remove automatic source snapshots from production flows; TRACE logging must not require writable debug storage. | Resolved |
-| 2 | P2 | `AnnotationSourceScanner` | Evaluate Spoon model reuse while preserving annotation coverage, exact source ranges, and comment ownership. | Open |
+| 2 | P2 | `AnnotationSourceScanner` | Retain lexical scanning: the Spoon 11.5.0 annotation traversal misses array-dimension and receiver groups. | Resolved |
 | 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Open |
 | 4 | P2 | `SpoonAstModel.printerConfig` | Review ownership of processing-wide printer configuration. | Open |
 | 5 | P2 | `RelocationDetector.findRelocations` | Consider returning relocation diagnostics from sorting. | Open |
@@ -1579,7 +1579,8 @@ resolved in this review; the other comments remain in their source locations.
 | 12 | P3 | `AbstractOptOutFlow.checkSortThenFormat` result construction | Extract the annotation diff into a descriptive local variable. | Open |
 | 13 | P3 | `Sorter.sort` | Extract sorted annotation groups into a descriptive local variable. | Open |
 
-Items 5–8 belong to the [explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites).
+Items 5–8 belong to the
+[explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites).
 For item 9, `AnnotationOrderingConfigurationTest` already covers replacing defaults, disabling annotation sorting with
 an empty list, and retaining criteria through unrelated overlays; naming review remains open.
 
@@ -1587,5 +1588,10 @@ Item 1 had the highest priority because enabling TRACE made flow construction an
 `debug/`. Directory or snapshot I/O failures could prevent normal processing. Production flows no longer write these
 snapshots. A parameterized regression test covers all three flow types with TRACE enabled and denied debug-directory
 access.
+
+Item 2 is resolved by retaining the existing lexer. The
+[scanning-boundary review](source-printer.md#annotation-scanning-boundary) records the official API contracts, debugger
+evidence, alternatives, and regression coverage. AST annotation positions cannot define the scan boundaries while they
+omit supported source groups. This decision adds no parsing pass or dependency and changes no sorting behavior.
 
 ---

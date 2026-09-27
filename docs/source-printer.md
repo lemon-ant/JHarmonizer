@@ -93,3 +93,45 @@ stay inside the utility. Empty headers and unmodified header text retain their e
 
 `GroupBoundaryMarker` selects the first member and interprets group configuration. The printer
 owns comment-position checks, duplicate-header detection and combined spacing decisions.
+
+## Annotation scanning boundary
+
+Reviewed on 2026-09-27 with Spoon 11.5.0 and JDK 21. Retain JDT token scanning as the source of annotation groups;
+do not restrict scanning to positions obtained from Spoon's annotation nodes.
+
+Spoon provides annotation lists, recursive element queries, and source positions through
+[`CtElement`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/reflect/declaration/CtElement.java).
+These APIs describe the modeled elements. They do not establish that every written annotation has a model node.
+The existing `18-annotation-language-constructs/input/TypeUseAnnotationOrdering.java` fixture demonstrates the gap:
+debugger logpoints in `SpoonParser` and `SrcAstTranslator` observed only six annotations in a recursive `CtAnnotation`
+query of the main type, versus twelve lexical annotations within that type.
+
+| Source location | Recursive Spoon query | Lexical scanner |
+| --- | --- | --- |
+| Generic argument, type parameter, and return type | 6 | 6 |
+| Two array dimensions in `String @Z @A [] @D @C []` | 0 | 4 |
+| Receiver parameter `@Z @A TypeUseAnnotationOrdering this` | 0 | 2 |
+
+The four `@Target` annotations on the fixture's annotation declarations are outside the main type and excluded from
+these counts. This result concerns the configured Spoon version and fixture, not a general absence of type-use support.
+
+The original-source-fragment API also has limits:
+[`CtCompilationUnitImpl`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/reflect/declaration/CtCompilationUnitImpl.java)
+rejects fragment roots for module and package compilation units, and lazily loads original text from the backing file.
+The scanner instead consumes the supplied source string, including virtual sources without a backing file.
+
+`AnnotationSourceScanner` uses JDT's existing
+[`IScanner`](https://help.eclipse.org/latest/topic/org.eclipse.jdt.doc.isv/reference/api/org/eclipse/jdt/core/compiler/IScanner.html)
+token API, which supplies token kinds, original source positions, and token text with Unicode escapes decoded.
+It does not build a second Java AST. Scanning also supplies lexical adjacency, written argument order, parentheses,
+and comment/separator ownership needed by the sorting contract. Spoon remains responsible for declaration structure,
+dependencies, opt-outs, and declaration boundaries.
+
+Using AST annotations first would still require scanning the remaining source to find omitted groups and process gaps,
+then reconciling both inventories. Keep one lexical inventory unless a measured alternative preserves the same output
+and source ranges. Recheck this decision when upgrading Spoon or changing annotation discovery.
+
+`SpoonParserTest.parseJavaSrcFile_arrayAndReceiverAnnotations_preservesLexicalSourceGroups` checks the exact group
+bounds and source text for the omitted groups using the existing fixture. It does not require Spoon to keep omitting
+them. The shared printer E2E runner checks full output, compilation, and repeated processing for annotation fixtures,
+including comments, package/module declarations, records, and type uses.
