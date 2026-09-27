@@ -3,13 +3,16 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinter.serializeCompilationUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -24,6 +27,10 @@ import spoon.reflect.declaration.CtType;
 class SpoonSrcPrinterTest {
 
     @NonNull
+    private static final URL HEADER_SPACING_FIXTURE = requireClasspathResourceUrl(
+            "/test-cases/core/e2e/printer/scenarios/13-blank-line-header/input/PrinterConfigBlankLineAfterTypeHeaderEnabledScenario.java");
+
+    @NonNull
     private final PrinterConfig printerConfig = new PrinterConfig(true, true, false);
 
     @TempDir
@@ -35,17 +42,17 @@ class SpoonSrcPrinterTest {
         String srcCode = readClasspathResourceAsString(
                 "/test-cases/core/e2e/printer/scenarios/05-combined-boundaries/input/BoundarySample.java");
         SpoonAstModel model =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")), printerConfig);
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
         String otherSrcCode = "class Other {\r\n    int value;\r\n}\r\n";
         PrinterConfig otherPrinterConfig = new PrinterConfig(false, false, false);
         SpoonAstModel otherModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")), otherPrinterConfig);
-        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(model);
+                SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")));
+        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(model, printerConfig);
         Map<CtType<?>, SrcCharacterRange> originalRanges = Map.copyOf(firstResult.getSortingSkippedTypeRanges());
-        SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(otherModel);
+        SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(otherModel, otherPrinterConfig);
 
         // When
-        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(model);
+        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(model, printerConfig);
 
         // Then
         assertThat(firstResult.getSortingSkippedTypeRanges())
@@ -57,6 +64,23 @@ class SpoonSrcPrinterTest {
         assertThat(otherResult.getSortingSkippedTypeRanges()).isEmpty();
         assertThatThrownBy(() -> firstResult.getSortingSkippedTypeRanges().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void serializeCompilationUnit_sameModelWithDifferentConfigurations_usesCurrentSettings() {
+        // Given
+        SpoonAstModel model = parseAstModelFromJavaFixtureResource(HEADER_SPACING_FIXTURE);
+        PrinterConfig compactConfig = new PrinterConfig(false, false, false);
+        PrinterConfig spacedConfig = new PrinterConfig(true, false, false);
+        String compactSrcCode = serializeCompilationUnit(model, compactConfig).getSerializedSrcCode();
+        String spacedSrcCode = serializeCompilationUnit(model, spacedConfig).getSerializedSrcCode();
+
+        // When
+        String repeatedSrcCode = serializeCompilationUnit(model, compactConfig).getSerializedSrcCode();
+
+        // Then
+        assertThat(spacedSrcCode).isNotEqualTo(compactSrcCode);
+        assertThat(repeatedSrcCode).isEqualTo(compactSrcCode);
     }
 
     @ParameterizedTest(name = "{0}, trailing terminators: {1}")
@@ -72,13 +96,13 @@ class SpoonSrcPrinterTest {
                         .stripTrailing()
                 + "\n".repeat(trailingTerminators);
         Path srcPath = temporaryDirectory.resolve(fileName);
-        SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(inputSrcCode, srcPath), printerConfig);
-        String printedSrcCode = serializeCompilationUnit(model).getSerializedSrcCode();
+        SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(inputSrcCode, srcPath));
+        String printedSrcCode = serializeCompilationUnit(model, printerConfig).getSerializedSrcCode();
         SpoonAstModel repeatedModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath), printerConfig);
+                SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath));
 
         // When
-        String repeatedSrcCode = serializeCompilationUnit(repeatedModel).getSerializedSrcCode();
+        String repeatedSrcCode = serializeCompilationUnit(repeatedModel, printerConfig).getSerializedSrcCode();
 
         // Then
         assertThat(printedSrcCode).isEqualTo(expectedSrcCode);

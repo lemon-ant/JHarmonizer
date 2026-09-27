@@ -80,12 +80,11 @@ class SpoonParserTest {
 
     @NonNull
     private static SpoonAstModel invokeBuildSpoonAstModel(SrcFile srcFile, Launcher launcher) throws Exception {
-        Method buildSpoonAstModel = SpoonParser.class.getDeclaredMethod(
-                "buildSpoonAstModel", SrcFile.class, Launcher.class, PrinterConfig.class);
+        Method buildSpoonAstModel =
+                SpoonParser.class.getDeclaredMethod("buildSpoonAstModel", SrcFile.class, Launcher.class);
         buildSpoonAstModel.setAccessible(true);
         try {
-            return (SpoonAstModel)
-                    buildSpoonAstModel.invoke(null, srcFile, launcher, new PrinterConfig(true, true, false));
+            return (SpoonAstModel) buildSpoonAstModel.invoke(null, srcFile, launcher);
         } catch (InvocationTargetException exception) {
             if (exception.getCause() instanceof RuntimeException runtimeException) {
                 throw runtimeException;

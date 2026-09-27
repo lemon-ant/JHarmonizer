@@ -1560,7 +1560,7 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 ### 11. Annotation review follow-ups
 
 Inventory of all 13 `TODO Annotations` comments found on 2026-09-27, grouped by priority. P1 addresses processing
-failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1–3 and 13 are
+failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1–4 and 13 are
 resolved; the other comments remain in their source locations.
 
 | Item | Priority | Source symbol | Follow-up | Status |
@@ -1568,7 +1568,7 @@ resolved; the other comments remain in their source locations.
 | 1 | P1 | `FlowDebugStageRecorder` constructor | Remove automatic source snapshots from production flows; TRACE logging must not require writable debug storage. | Resolved |
 | 2 | P2 | `AnnotationSourceScanner` | Retain lexical scanning: the Spoon 11.5.0 annotation traversal misses array-dimension and receiver groups. | Resolved |
 | 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Resolved |
-| 4 | P2 | `SpoonAstModel.printerConfig` | Review ownership of processing-wide printer configuration. | Open |
+| 4 | P2 | `SpoonAstModel.printerConfig` | Keep printer settings in the flow and pass them explicitly to serialization. | Resolved |
 | 5 | P2 | `RelocationDetector.findRelocations` | Consider returning relocation diagnostics from sorting. | Open |
 | 6 | P2 | `RelocationDetector.hasRelocations` | Consider returning the combined change flag from sorting. | Open |
 | 7 | P2 | `RelocationDetector.hasReorderedAnnotations` | Consider returning the annotation-order change flag from sorting. | Open |
@@ -1598,5 +1598,9 @@ Item 3 is resolved by passing `SpoonAstModel` into `SpoonSorter` and returning t
 The sorter obtains the compilation unit, skipped types, and annotation groups from that model. This also resolves item 13:
 `Sorter` times one sorting call without assembling annotation groups. The benchmark copies the compilation unit together
 with its matching model state; its existing shared-type limitation is documented in [benchmark.md](benchmark.md).
+
+Item 4 is resolved by removing printer configuration from parsing and `SpoonAstModel`. Each flow supplies its immutable
+settings to serialization. A printer test reuses the same parsed model with different settings and verifies that returning
+to the original settings reproduces the original output.
 
 ---

@@ -67,7 +67,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
+            parsingResult = SrcAstTranslator.parse(srcFile);
         } catch (SpoonModelBuildException exception) {
             return processSrcWithFormattingOnlyFallback(srcFile, exception);
         }

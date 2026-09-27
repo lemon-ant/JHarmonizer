@@ -100,7 +100,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
+            parsingResult = SrcAstTranslator.parse(srcFile);
         } catch (SpoonModelBuildException modelBuildException) {
             return processSrcWithFormattingOnlyFallback(srcFile, modelBuildException.getMessage());
         }

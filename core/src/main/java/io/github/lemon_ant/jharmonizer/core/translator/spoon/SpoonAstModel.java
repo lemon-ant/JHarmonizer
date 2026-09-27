@@ -52,11 +52,6 @@ public class SpoonAstModel {
     @NonNull
     Path path;
 
-    /** Immutable spacing settings supplied to the parser for subsequent printing. */
-    @NonNull
-    // TODO Annotations: It's global for the SrcProcessing flow, why do we store it here?
-    PrinterConfig printerConfig;
-
     /** Exact input text; annotation and Spoon source offsets refer to this string. */
     @NonNull
     String srcCode;

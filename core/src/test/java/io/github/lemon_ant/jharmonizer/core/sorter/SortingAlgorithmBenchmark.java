@@ -10,7 +10,6 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URISyntaxException;
@@ -49,7 +48,7 @@ public class SortingAlgorithmBenchmark {
     @NonNull
     private static Stream<SpoonAstModel> loadFixturesFromRoot(Path fixtureRoot) {
         return SrcFilesHandler.readJavaFiles(fixtureRoot, List.of("**/input/*.java"), List.of())
-                .map(srcFile -> SpoonParser.parseJavaSrcFile(srcFile, new PrinterConfig(true, true, false)));
+                .map(SpoonParser::parseJavaSrcFile);
     }
 
     @NonNull

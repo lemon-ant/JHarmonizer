@@ -42,11 +42,13 @@ public final class SpoonSrcPrinter {
     /**
      * Prints the current declaration order with independent state for each invocation.
      * Calls for independent models may run concurrently with different configurations.
-     * @param model working AST, annotation order, original source, opt-outs, and spacing configuration
+     * @param model working AST, annotation order, original source, and opt-outs
+     * @param printerConfig the spacing configuration for this invocation
      * @return printed source and immutable skipped-type ranges, independent of subsequent calls
      */
     @NonNull
-    public static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(@NonNull SpoonAstModel model) {
+    public static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(
+            @NonNull SpoonAstModel model, @NonNull PrinterConfig printerConfig) {
         CtCompilationUnit compilationUnit = model.getCompilationUnit();
         String srcCode = model.getSrcCode();
         if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
@@ -57,7 +59,7 @@ public final class SpoonSrcPrinter {
         return new Serialization(
                         srcCode,
                         model.getOptOuts().getSortingSkippedTypes(),
-                        model.getPrinterConfig(),
+                        printerConfig,
                         model.getAnnotationSrcGroups())
                 .serializeCompilationUnit(compilationUnit);
     }

@@ -5,11 +5,13 @@ SPDX-License-Identifier: Apache-2.0
 
 # Source printer
 
-`SpoonParser` stores the original source, annotation fragments, and immutable `PrinterConfig` in `SpoonAstModel`.
-`SrcAstTranslator` passes the sorted model directly to the stateless `SpoonSrcPrinter`; no printer instance is stored.
+`SpoonParser` stores the original source, annotation fragments, and opt-outs in `SpoonAstModel`.
+The flow retains its immutable `PrinterConfig` and passes it to `SrcAstTranslator.serialize(model, printerConfig)`.
+The translator forwards the model and settings to the stateless `SpoonSrcPrinter`; no printer instance is stored.
+The same parsed model can be serialized with different settings without reparsing or retaining settings in the model.
 The printer uses Spoon declarations and source positions; all output code belongs to this project.
 It neither inherits from Spoon printers nor regenerates declarations through `CtElement.toString()`.
-Parsing, sorting, formatting and import cleanup retain their existing entry points.
+Parsing and sorting do not depend on printer settings.
 
 | Component | Responsibility |
 | --- | --- |

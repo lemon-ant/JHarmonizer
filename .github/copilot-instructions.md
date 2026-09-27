@@ -83,6 +83,8 @@ SPDX-License-Identifier: Apache-2.0
   it enforces consistency. Do not expose independent builder inputs for these dependent views.
 - Keep scanner/parser result models limited to data consumed by downstream production code; retain temporary parsing
   state in local variables or private implementation state.
+- Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
+  models must not retain printer configuration.
 - Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.
   Nest annotation, gap, layout, and base-fragment types there; keep source parsing and preparation in the scanner.
 - Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.

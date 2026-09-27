@@ -26,7 +26,6 @@ public class SpoonAstModelTestCreator {
                 .optOuts(templateModel.getOptOuts())
                 .originalMemberOrder(templateModel.getOriginalMemberOrder())
                 .path(templateModel.getPath())
-                .printerConfig(templateModel.getPrinterConfig())
                 .srcCode(templateModel.getSrcCode())
                 .build();
     }

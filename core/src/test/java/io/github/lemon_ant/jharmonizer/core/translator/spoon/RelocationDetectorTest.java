@@ -40,15 +40,10 @@ import spoon.reflect.declaration.CtTypeMember;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RelocationDetectorTest {
     private CompiledConfig defaultConfig;
-    private PrinterConfig defaultPrinterConfig;
 
     @BeforeAll
     void setUp() {
         defaultConfig = ConfigurationManager.loadDefaultConfig();
-        defaultPrinterConfig = new PrinterConfig(
-                defaultConfig.getFormatting().isBlankLineAfterTypeHeader(),
-                defaultConfig.getFormatting().isBlankLineBeforeComment(),
-                defaultConfig.getFormatting().isBlankLineBetweenFields());
     }
 
     @Test
@@ -63,7 +58,7 @@ class RelocationDetectorTest {
                         + "    public void d() {}\n"
                         + "}\n",
                 Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
@@ -91,7 +86,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
@@ -113,7 +108,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<CtTypeMember> originalMemberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
 
@@ -135,7 +130,7 @@ class RelocationDetectorTest {
                         + "    public void c() {}\n"
                         + "}\n",
                 Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
@@ -161,7 +156,7 @@ class RelocationDetectorTest {
     void findRelocations_withEmptyOriginalMemberOrder_returnsEmptyList() {
         // Given
         SrcFile srcFile = createSrcFile("public class Sample {\n    public void a() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
 
         // When
@@ -178,7 +173,7 @@ class RelocationDetectorTest {
                 "@SuppressWarnings(\"all\") @Deprecated class AnnotationOnlyRelocation {}",
                 Path.of("AnnotationOnlyRelocation.java"));
         SpoonAstModel parsedModel =
-                SrcAstTranslator.parse(srcFile, defaultPrinterConfig).getSpoonAstModel();
+                SrcAstTranslator.parse(srcFile).getSpoonAstModel();
         SpoonAstModel sortedModel = new Sorter(defaultConfig).sort(parsedModel).getSortedSpoonAstModel();
 
         // When
@@ -196,7 +191,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
 
         // When
@@ -211,7 +206,7 @@ class RelocationDetectorTest {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, defaultPrinterConfig);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> alpha = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
         CtType<?> beta = spoonAstModel.getCompilationUnit().getDeclaredTypes().get(1);
@@ -249,8 +244,7 @@ class RelocationDetectorTest {
                                     "@Deprecated @SuppressWarnings(\"all\")"
                                             + " @javax.annotation.processing.Generated(\"test\") class ThreeAnnotations"
                                             + " {}",
-                                    Path.of("ThreeAnnotations.java")),
-                            defaultPrinterConfig)
+                                    Path.of("ThreeAnnotations.java")))
                     .getSpoonAstModel();
         }
 
@@ -340,7 +334,7 @@ class RelocationDetectorTest {
                             + " }",
                     Path.of("LaterAnnotationGroup.java"));
             SpoonAstModel parsedModel =
-                    SrcAstTranslator.parse(srcFile, defaultPrinterConfig).getSpoonAstModel();
+                    SrcAstTranslator.parse(srcFile).getSpoonAstModel();
             SpoonAstModel sortedModel =
                     new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
 
@@ -391,7 +385,7 @@ class RelocationDetectorTest {
         void isRelocated_unchangedAnnotations_returnsFalse(@NonNull String srcCode) {
             // Given
             SpoonAstModel parsedModel = SrcAstTranslator.parse(
-                            createSrcFile(srcCode, Path.of("UnchangedAnnotations.java")), defaultPrinterConfig)
+                            createSrcFile(srcCode, Path.of("UnchangedAnnotations.java")))
                     .getSpoonAstModel();
             SpoonAstModel sortedModel =
                     new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();

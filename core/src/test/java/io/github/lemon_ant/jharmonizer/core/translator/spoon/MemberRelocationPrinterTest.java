@@ -5,8 +5,6 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.diff.DiffReporter;
 import io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
@@ -22,11 +20,6 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 class MemberRelocationPrinterTest {
-    private static final CompiledConfig DEFAULT_CONFIG = ConfigurationManager.loadDefaultConfig();
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(
-            DEFAULT_CONFIG.getFormatting().isBlankLineAfterTypeHeader(),
-            DEFAULT_CONFIG.getFormatting().isBlankLineBeforeComment(),
-            DEFAULT_CONFIG.getFormatting().isBlankLineBetweenFields());
     private static final WhitespaceVisualizationStyle STYLE = DiffReporter.resolveStyle();
 
     @Test
@@ -40,7 +33,7 @@ class MemberRelocationPrinterTest {
                         + "    public void d() {}\n"
                         + "}\n",
                 Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
@@ -67,7 +60,7 @@ class MemberRelocationPrinterTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<CtTypeMember> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
@@ -106,7 +99,7 @@ class MemberRelocationPrinterTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<MemberRelocation> fakeRelocations = buildMethodRelocationsWithFakeNeighbors(spoonAstModel);
 
@@ -125,7 +118,7 @@ class MemberRelocationPrinterTest {
     void printRelocations_withTopLevelTypeRelocation_showsFileRootAsTypeName() {
         // Given
         SrcFile srcFile = createSrcFile("class Alpha {}\nclass Beta {}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<CtTypeMember> topLevelTypes = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .map(CtTypeMember.class::cast)

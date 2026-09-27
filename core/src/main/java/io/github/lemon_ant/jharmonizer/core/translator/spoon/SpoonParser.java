@@ -22,23 +22,22 @@ public class SpoonParser {
     /**
      * Parses the java source resource.
      * @param srcFile the original source file
-     * @param printerConfig the spacing configuration stored in the returned model
      * @return the java source resource
      */
     @NonNull
-    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile, @NonNull PrinterConfig printerConfig) {
+    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile) {
         VirtualFile virtualFile =
                 new VirtualFile(srcFile.getSrcCode(), srcFile.getPath().toString());
 
         Launcher launcher = createPreconfiguredParserLauncher();
         launcher.addInputResource(virtualFile);
 
-        return buildSpoonAstModel(srcFile, launcher, printerConfig);
+        return buildSpoonAstModel(srcFile, launcher);
     }
 
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher, PrinterConfig printerConfig) {
+    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
         try {
             launcher.buildModel();
         } catch (RuntimeException exception) {
@@ -58,7 +57,6 @@ public class SpoonParser {
                 .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
-                .printerConfig(printerConfig)
                 .srcCode(srcFile.getSrcCode())
                 .optOuts(optOuts)
                 .path(srcFile.getPath())

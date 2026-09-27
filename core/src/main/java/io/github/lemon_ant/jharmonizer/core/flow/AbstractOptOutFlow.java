@@ -47,6 +47,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     private final Formatter formatter;
 
     @NonNull
+    @Getter(AccessLevel.NONE)
     private final PrinterConfig printerConfig;
 
     @NonNull
@@ -277,7 +278,8 @@ abstract class AbstractOptOutFlow implements IFlow {
         }
 
         SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
-        SerializationResult serializationResult = SrcAstTranslator.serialize(sortingResult.getSortedSpoonAstModel());
+        SerializationResult serializationResult =
+                SrcAstTranslator.serialize(sortingResult.getSortedSpoonAstModel(), printerConfig);
         return new SortingAndSerializationResult(serializationResult, sortingResult, false);
     }
 
