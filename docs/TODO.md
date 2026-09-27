@@ -1556,3 +1556,36 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 - [ ] Measure parsing, allocation, and rendering costs before choosing incremental AST/text synchronization.
 
 ---
+
+### 11. Annotation review follow-ups
+
+Inventory of all 13 `TODO Annotations` comments found on 2026-09-27, grouped by priority. P1 addresses processing
+failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Only item 1 is
+resolved in this review; the other comments remain in their source locations.
+
+| Item | Priority | Source symbol | Follow-up | Status |
+| --- | --- | --- | --- | --- |
+| 1 | P1 | `FlowDebugStageRecorder` constructor | Remove automatic source snapshots from production flows; TRACE logging must not require writable debug storage. | Resolved |
+| 2 | P2 | `AnnotationSourceScanner` | Evaluate Spoon model reuse while preserving annotation coverage, exact source ranges, and comment ownership. | Open |
+| 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Open |
+| 4 | P2 | `SpoonAstModel.printerConfig` | Review ownership of processing-wide printer configuration. | Open |
+| 5 | P2 | `RelocationDetector.findRelocations` | Consider returning relocation diagnostics from sorting. | Open |
+| 6 | P2 | `RelocationDetector.hasRelocations` | Consider returning the combined change flag from sorting. | Open |
+| 7 | P2 | `RelocationDetector.hasReorderedAnnotations` | Consider returning the annotation-order change flag from sorting. | Open |
+| 8 | P2 | `RelocationDetector.hasReorderedDeclarations` | Consider returning the declaration-order change flag from sorting. | Open |
+| 9 | P3 | `FlexibleUnifiedConfig.annotationsOrdering` | Review criteria naming and overlay test coverage. | Open |
+| 10 | P3 | `AbstractOptOutFlow` | Review the shared pipeline abstraction's name. | Open |
+| 11 | P3 | `AbstractOptOutFlow.checkSortThenFormat` | Make the sorting-first check and formatting short-circuit clear in its name. | Open |
+| 12 | P3 | `AbstractOptOutFlow.checkSortThenFormat` result construction | Extract the annotation diff into a descriptive local variable. | Open |
+| 13 | P3 | `Sorter.sort` | Extract sorted annotation groups into a descriptive local variable. | Open |
+
+Items 5–8 belong to the [explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites).
+For item 9, `AnnotationOrderingConfigurationTest` already covers replacing defaults, disabling annotation sorting with
+an empty list, and retaining criteria through unrelated overlays; naming review remains open.
+
+Item 1 had the highest priority because enabling TRACE made flow construction and processing depend on writes to
+`debug/`. Directory or snapshot I/O failures could prevent normal processing. Production flows no longer write these
+snapshots. A parameterized regression test covers all three flow types with TRACE enabled and denied debug-directory
+access.
+
+---

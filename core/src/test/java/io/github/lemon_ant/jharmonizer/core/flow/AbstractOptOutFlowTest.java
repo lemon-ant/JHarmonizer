@@ -103,7 +103,7 @@ class AbstractOptOutFlowTest {
         }
 
         ThrowingFlow(@NonNull RuntimeException exceptionToThrow) {
-            super(DEFAULT_FORMATTER, DEFAULT_SORTER, DEFAULT_PRINTER_CONFIG, FlowType.CHECK_ALL);
+            super(DEFAULT_FORMATTER, DEFAULT_SORTER, DEFAULT_PRINTER_CONFIG);
             this.exceptionToThrow = exceptionToThrow;
         }
 

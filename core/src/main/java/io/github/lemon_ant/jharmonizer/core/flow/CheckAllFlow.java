@@ -3,11 +3,9 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -30,7 +28,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
-        super(formatter, sorter, printerConfig, CHECK_ALL);
+        super(formatter, sorter, printerConfig);
     }
 
     @Override
@@ -55,7 +53,6 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
             parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());

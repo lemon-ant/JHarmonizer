@@ -44,9 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 abstract class AbstractOptOutFlow implements IFlow {
 
     @NonNull
-    private final FlowDebugStageRecorder debugStageRecorder;
-
-    @NonNull
     private final Formatter formatter;
 
     @NonNull
@@ -76,15 +73,17 @@ abstract class AbstractOptOutFlow implements IFlow {
         return postProcessResults(mappedResults);
     }
 
+    /**
+     * Creates the shared source-processing pipeline.
+     * @param formatter the formatter applied after sorting
+     * @param sorter the declaration and annotation sorter
+     * @param printerConfig the source printer settings
+     */
     protected AbstractOptOutFlow(
-            @NonNull Formatter formatter,
-            @NonNull Sorter sorter,
-            @NonNull PrinterConfig printerConfig,
-            @NonNull FlowType flowType) {
+            @NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
         this.formatter = formatter;
         this.sorter = sorter;
         this.printerConfig = printerConfig;
-        this.debugStageRecorder = new FlowDebugStageRecorder(flowType);
     }
 
     /**
@@ -113,11 +112,6 @@ abstract class AbstractOptOutFlow implements IFlow {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult.getSerializedSrcCode());
 
         List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
                 ? List.of()
@@ -154,11 +148,6 @@ abstract class AbstractOptOutFlow implements IFlow {
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                                 sortedSpoonAstModel.getOptOuts(),
                                 sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormattedSrcCode());
 
         if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
             String srcDiff = computeDiff(
@@ -203,14 +192,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                     srcFile.getPath(),
                     failureMessage);
         }
-        FormattingResult formattingResult =
-                getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormattedSrcCode());
-        return formattingResult;
+        return getFormatter().formatSrc(srcFile.getSrcCode(), srcFile.getPath(), List.of());
     }
 
     /**
@@ -300,7 +282,7 @@ abstract class AbstractOptOutFlow implements IFlow {
     }
 
     /**
-     * Performs the shared sorting, serialization, formatting, and debug-stage recording pipeline.
+     * Performs the shared sorting, serialization, and formatting pipeline.
      *
      * @param srcFile the source file being processed
      * @param parsedSpoonAstModel the parsed Spoon AST model for the source file
@@ -312,11 +294,6 @@ abstract class AbstractOptOutFlow implements IFlow {
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, sortingDescription);
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.SORTED,
-                        sortingAndSerializationResult.getSerializedSrcCode());
         FormattingResult formattingResult = getFormatter()
                 .formatSrc(
                         sortingAndSerializationResult.getSerializedSrcCode(),
@@ -324,11 +301,6 @@ abstract class AbstractOptOutFlow implements IFlow {
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                                 parsedSpoonAstModel.getOptOuts(),
                                 sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
-        getDebugStageRecorder()
-                .recordSrcStage(
-                        srcFile.getPath(),
-                        FlowDebugStageRecorder.SrcFlowStage.FORMATTED,
-                        formattingResult.getFormattedSrcCode());
         return new SortingSerializationAndFormattingResult(formattingResult, sortingAndSerializationResult);
     }
 

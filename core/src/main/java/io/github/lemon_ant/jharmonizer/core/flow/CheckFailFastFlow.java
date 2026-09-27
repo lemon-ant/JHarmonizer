@@ -3,10 +3,8 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_FAIL_FAST;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -42,7 +40,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      */
     public CheckFailFastFlow(
             @NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
-        super(formatter, sorter, printerConfig, CHECK_FAIL_FAST);
+        super(formatter, sorter, printerConfig);
     }
 
     @Override
@@ -100,7 +98,6 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
     @Override
     @NonNull
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
             parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());

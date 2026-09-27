@@ -71,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Removed automatic intermediate-source snapshots from production flows. TRACE logging no longer creates `debug/`
+  files or lets snapshot I/O failures interrupt checking or rewriting sources.
 - Standalone module builds resolve shared license, PMD, and SpotBugs resources from the repository root through the
   tracked `.mvn` directory.
 - Relocation detection includes source-fragment annotation order, including annotations absent from Spoon's AST.

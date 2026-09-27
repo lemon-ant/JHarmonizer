@@ -5,12 +5,10 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasRelocations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
@@ -44,7 +42,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
             boolean backupsEnabled,
             @NonNull Sorter sorter,
             @NonNull PrinterConfig printerConfig) {
-        super(formatter, sorter, printerConfig, REORDER);
+        super(formatter, sorter, printerConfig);
         this.backupsEnabled = backupsEnabled;
     }
 
@@ -67,7 +65,6 @@ public class ReorderFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
             parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
