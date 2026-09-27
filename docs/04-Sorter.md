@@ -33,10 +33,18 @@ eligible source group once with that comparator, including annotations missing f
 AST annotation lists retain their parsed order: printing consumes the sorted source groups directly, so a second AST
 scan and annotation sort would not affect output. Singleton groups and groups in excluded types retain their original
 order.
-The fragment printer emits prepared annotation strings with their attached comment blocks. Group boundaries and gaps
-remain fixed when the sorter replaces the immutable fragment order. Blank lines determine whether
+The sorter passes sorted annotations and resolved gap slots as two required lists to the group constructor.
+Resolving a gap only selects a scanner-prepared whitespace prefix, comparing source boundaries and separator counts.
+It does not read source text, inspect characters, or parse comments. Each gap combines that prefix with its fixed
+content; its shared immutable layout supports subsequent sorts without storing complete previous code versions. The
+constructor retains unmodifiable views and requires one gap per annotation. Producers must not modify the supplied
+lists after handoff. The private mixed sequence is lazily built and cached by a static helper that alternates the lists;
+sorting reads only the typed lists. Clients cannot access or independently replace the derived sequence. The group lazily
+concatenates it into `replacementCode` on first access; every newly constructed group has its own caches.
+The printer only replaces the original group range with that complete block. Group boundaries and
+gap positions remain fixed when the sorter replaces the immutable annotation order. Blank lines determine whether
 a standalone block belongs to the preceding or following annotation. Separate blocks and their surrounding gaps stay in
-place; declaration JavaDoc and file preambles retain their positions. The printer preserves line-comment terminators and
+place; declaration JavaDoc and file preambles retain their positions. The sorter preserves line-comment terminators and
 moves blank lines with the blocks they attach to an annotation, removing redundant blank lines from the original
 position. Complete ties retain source order. See
 [`annotations-ordering`](config-dsl.md#annotations-ordering) for criteria, defaults, and comment attachment rules.

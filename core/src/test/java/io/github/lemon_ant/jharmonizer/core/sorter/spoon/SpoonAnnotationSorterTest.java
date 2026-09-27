@@ -3,21 +3,29 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasReorderedAnnotations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledModelCompiler;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
+import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.net.URL;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import spoon.reflect.cu.SourcePosition;
@@ -27,13 +35,23 @@ import spoon.reflect.declaration.CtType;
 class SpoonAnnotationSorterTest {
     private static final URL FIXTURE = requireClasspathResourceUrl(
             "/test-cases/core/e2e/printer/scenarios/17-annotation-fragments/input/AnnotationFragmentPreservation.java");
+    private static final URL GROUP_EXPECTED = requireClasspathResourceUrl(
+            "/test-cases/core/e2e/printer/scenarios/21-annotation-group-gaps/expected/AnnotationGroupGapPreservation.java");
+    private static final URL GROUP_INPUT = requireClasspathResourceUrl(
+            "/test-cases/core/e2e/printer/scenarios/21-annotation-group-gaps/input/AnnotationGroupGapPreservation.java");
 
     private static CompiledConfig compiledConfig;
+    private static List<String> expectedReplacementCodes;
+    private static List<AnnotationSrcGroup> sourceGroups;
 
     @BeforeAll
     static void setUp() {
         compiledConfig =
                 Unified2CompiledModelCompiler.compile(JHarmonizerConfigurationManager.parseUnifiedDefaultConfig());
+        sourceGroups = AnnotationSourceScanner.scan(readClasspathResourceAsString(GROUP_INPUT));
+        expectedReplacementCodes = AnnotationSourceScanner.scan(readClasspathResourceAsString(GROUP_EXPECTED)).stream()
+                .map(AnnotationSrcGroup::getReplacementCode)
+                .toList();
     }
 
     @ParameterizedTest
@@ -50,7 +68,7 @@ class SpoonAnnotationSorterTest {
                 originalAnnotations.stream().map(CtAnnotation::getPosition).toList();
         List<AnnotationSrcGroup> originalGroups = model.getAnnotationSrcGroups();
         List<AnnotationSrcFragment> originalTypeAnnotations =
-                originalGroups.get(0).getFragmentsInPrintOrder();
+                originalGroups.get(0).getAnnotationSrcFragments();
         Sorter sorter = new Sorter(compiledConfig);
 
         // When
@@ -66,30 +84,84 @@ class SpoonAnnotationSorterTest {
         assertThat(originalAnnotations.stream().map(CtAnnotation::getPosition).toList())
                 .containsExactlyElementsOf(originalPositions);
         assertThat(sortedModel.getAnnotationSrcGroups()).hasSameSizeAs(originalGroups);
-        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getFragmentsInPrintOrder())
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getAnnotationSrcFragments())
                 .containsExactly(originalTypeAnnotations.get(1), originalTypeAnnotations.get(0));
         assertThat(sortedModel.getAnnotationSrcGroups().get(0).getStart())
                 .isEqualTo(originalGroups.get(0).getStart());
         assertThat(sortedModel.getAnnotationSrcGroups().get(0).getEndExclusive())
                 .isEqualTo(originalGroups.get(0).getEndExclusive());
-        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getGapsInSrcOrder())
-                .isSameAs(originalGroups.get(0).getGapsInSrcOrder());
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getAnnotationSrcGapsInSrcOrder())
+                .extracting(AnnotationSrcGap::getStart, AnnotationSrcGap::getEndExclusive)
+                .containsExactlyElementsOf(originalGroups.get(0).getAnnotationSrcGapsInSrcOrder().stream()
+                        .map(fragment -> tuple(fragment.getStart(), fragment.getEndExclusive()))
+                        .toList());
         assertThat(originalTypeAnnotations)
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Zed", "Able");
         assertThat(sortedModel.getAnnotationSrcGroups().stream()
-                        .flatMap(group -> group.getFragmentsInPrintOrder().stream())
+                        .flatMap(group -> group.getAnnotationSrcFragments().stream())
                         .toList())
                 .containsExactlyInAnyOrderElementsOf(originalGroups.stream()
-                        .flatMap(group -> group.getFragmentsInPrintOrder().stream())
+                        .flatMap(group -> group.getAnnotationSrcFragments().stream())
                         .toList());
         assertThatThrownBy(() -> sortedModel.getAnnotationSrcGroups().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThatThrownBy(() -> sortedModel
                         .getAnnotationSrcGroups()
                         .get(0)
-                        .getFragmentsInPrintOrder()
+                        .getAnnotationSrcFragments()
                         .clear())
                 .isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> sortedModel
+                        .getAnnotationSrcGroups()
+                        .get(0)
+                        .getAnnotationSrcGapsInSrcOrder()
+                        .clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void sort_previouslySortedGroups_retainsOriginalGapOwnership() {
+        // Given
+        Comparator<AnnotationDescriptor> comparator = Comparator.comparing(AnnotationDescriptor::getName);
+        List<AnnotationSrcGroup> ascendingGroups = SpoonAnnotationSorter.sort(Set.of(), sourceGroups, comparator);
+        List<String> ascendingReplacementCodes = ascendingGroups.stream()
+                .map(AnnotationSrcGroup::getReplacementCode)
+                .toList();
+        List<AnnotationSrcGroup> descendingGroups =
+                SpoonAnnotationSorter.sort(Set.of(), ascendingGroups, comparator.reversed());
+        List<String> descendingReplacementCodes = descendingGroups.stream()
+                .map(AnnotationSrcGroup::getReplacementCode)
+                .toList();
+
+        // When
+        List<AnnotationSrcGroup> sortedGroups = SpoonAnnotationSorter.sort(Set.of(), descendingGroups, comparator);
+
+        // Then
+        assertThat(descendingReplacementCodes).isNotEqualTo(ascendingReplacementCodes);
+        assertThat(sortedGroups).containsExactlyElementsOf(ascendingGroups);
+        assertThat(sortedGroups)
+                .extracting(AnnotationSrcGroup::getReplacementCode)
+                .containsExactlyElementsOf(expectedReplacementCodes);
+        assertThat(ascendingGroups)
+                .extracting(AnnotationSrcGroup::getReplacementCode)
+                .containsExactlyElementsOf(ascendingReplacementCodes);
+    }
+
+    @Test
+    void sort_scannedGroups_providesSortedReplacementBeforePrinting() {
+        // When
+        List<AnnotationSrcGroup> sortedGroups =
+                SpoonAnnotationSorter.sort(Set.of(), sourceGroups, Comparator.comparing(AnnotationDescriptor::getName));
+
+        // Then
+        assertThat(sortedGroups)
+                .extracting(AnnotationSrcGroup::getReplacementCode)
+                .containsExactlyElementsOf(expectedReplacementCodes);
+        assertThat(sortedGroups)
+                .extracting(AnnotationSrcGroup::getStart, AnnotationSrcGroup::getEndExclusive)
+                .containsExactlyElementsOf(sourceGroups.stream()
+                        .map(group -> tuple(group.getStart(), group.getEndExclusive()))
+                        .toList());
     }
 }

@@ -48,6 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no
   behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
+- Keep generic source-offset and whitespace operations in `SrcCodeUtils`; keep token-specific logic in the parser.
 - Report annotation ordering diffs with the existing formatting-violation message and diff renderer.
 - Prefer explicit Java types over `var`.
 - Prefer normal imports over repeated fully qualified class names.
@@ -62,7 +63,7 @@ SPDX-License-Identifier: Apache-2.0
 - For data carriers with five or fewer constructor parameters, use Lombok's generated constructor and keep positional
   calls aligned with declaration order. Remove builders unless features such as `toBuilder` are required.
 - Do not add explicit constructors solely to preserve parameter order across field sorting. Retain explicit
-  constructors only when needed for behavior such as validation, immutable snapshots, or deserialization.
+  constructors only when needed for validation, immutable snapshots, deserialization, or inherited-state initialization.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out
   explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
@@ -70,13 +71,29 @@ SPDX-License-Identifier: Apache-2.0
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
   - For nested helper/data-carrier types created only by the enclosing type, keep their constructors `private`; tests
     are not a reason to widen constructor visibility.
+  - Apply the same visibility review to Lombok-generated getters. Keep derived views used only inside a model private;
+    test their effects through the production-facing contract.
 - Keep production models and value objects focused on state plus simple accessors or validation.
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing
     classes.
+  - Prefer named predicates when a numeric model value encodes a domain condition. Derive them from existing state
+    when possible instead of storing a redundant flag.
+- For models exposing several views of the same data, accept the representation naturally produced by callers and
+  derive the other views internally, eagerly or lazily. Simple partitioning or interleaving belongs in the model when
+  it enforces consistency. Do not expose independent builder inputs for these dependent views.
 - Keep scanner/parser result models limited to data consumed by downstream production code; retain temporary parsing
   state in local variables or private implementation state.
-- Prepare annotation text and comment/separator ownership during scanning. Print ordered groups from their prepared
-  fragments and fixed gaps instead of reconstructing individual source replacements.
+- Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.
+  Nest annotation, gap, layout, and base-fragment types there; keep source parsing and preparation in the scanner.
+- Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.
+  Prepare gap content, whitespace-prefix choices, and separator counts in the scanner. Sorters select from this
+  prepared state; they must not read or analyze original source text. Gap fragments retain one ready-to-emit code
+  string, with shared immutable layout components instead of complete original and relocated code copies.
+  Sorting determines annotation order and gap text. Group construction retains unmodifiable views of both typed lists
+  and requires one gap per annotation. Producers must not modify handed-off lists; the scanner starts fresh lists for
+  each group. Each group lazily interleaves and caches its mixed sequence, then lazily concatenates its replacement
+  code. Printers only replace the group range with that code; they must not interpret fragment
+  internals. `SrcPrinterOutput` owns source-range copying and group replacement for all compilation units.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private
   method parameters may stay implicit when the intent is already obvious.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
@@ -125,6 +142,8 @@ SPDX-License-Identifier: Apache-2.0
   - Exception: annotation ordering criteria in strict and flexible YAML/unified configurations use unmodifiable views
     without defensive copies. Callers must not mutate supplied lists after construction; do not add tests that assume
     snapshot isolation for these criteria.
+  - Exception: annotation source groups retain unmodifiable views without copying. Callers must not mutate the supplied
+    lists after handoff; the scanner uses fresh lists for subsequent groups.
 - Reject null entries in YAML configuration collections during deserialization. Configure the YAML mapper centrally;
   custom collection deserializers must enforce the same rule. Preserve nullable optional properties.
 - When a mutable buffer is reused or cleared after handoff, retain an immutable snapshot; an unmodifiable view still
@@ -145,6 +164,8 @@ SPDX-License-Identifier: Apache-2.0
 - Make a variable's domain role explicit when its type is generic, for example `annotationOwner` or
   `annotationComparator`. Name maps by both values and key meaning, such as `annotationDescriptorsBySrcStartOffset`.
 - When collection ordering matters to its use, reflect that order in the variable name.
+- Use current-order terminology for group views shared by scanning and sorting. Reserve sorted-order names for
+  sequences already sorted by the comparator; printers consume prepared groups.
 - Name helper and data-carrier types after the entities they represent, for example `AnnotationSrcFragment`, so their
   purpose remains clear at import and usage sites outside the enclosing class.
 - Build and validate with JDK 21.

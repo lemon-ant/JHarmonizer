@@ -36,6 +36,8 @@ public final class Sorter {
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
         log.trace("Sorting {}", spoonAstModel.getPath());
         StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(
+                // TODO Annotations: Introduce an intermediate explanatory variable for
+                //  spoonSorter.sortCompilationUnitRecursively
                 () -> spoonAstModel.withAnnotationSrcGroups(spoonSorter.sortCompilationUnitRecursively(
                         spoonAstModel.getCompilationUnit(),
                         spoonAstModel.getOptOuts().getSortingSkippedTypes(),

@@ -41,7 +41,7 @@ SpoonAstModel
     ├─ CtCompilationUnit       (Spoon AST)
     ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
     ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    ├─ annotationSrcGroups     (group bounds, prepared fragments in print order, and fixed gaps)
+    ├─ annotationSrcGroups     (group bounds, mixed annotation/gap fragments, and lazy replacement code)
     ├─ srcCode                 (exact original text for source offsets)
     └─ PrinterConfig           (immutable spacing configuration)
     ↓
@@ -59,12 +59,22 @@ Sorter → SpoonSrcPrinter → Formatter
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
 
-Annotation fragments belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
+`AnnotationSrcGroup` is the shared model in `core.spoon`, with nested annotation, gap, layout, and base-fragment types.
+`AnnotationSourceScanner` produces these groups and retains the private parsing state and source-preparation logic.
+The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
 declaration order in the AST and returns a model wrapper with the new immutable group order. AST annotation lists
 remain unchanged. Printing consumes that returned model directly;
 annotation order is neither stored in `CtCompilationUnit` metadata nor captured by a serialization supplier.
-The scanner prepares each fragment's source text and attached-comment separators. Group boundaries and fixed gaps
-remain in source order when the sorter replaces a group's fragment order.
+The scanner collects annotations and gaps in separate lists with source bounds and comment ownership. The group
+constructor retains unmodifiable views; callers must not modify the lists after handoff. The scanner starts fresh
+lists for each group. The sorter supplies a new annotation order and resolved gaps to the same constructor.
+`annotationSrcFragments` represents source order after scanning and comparator order after sorting. The private
+`srcFragments` sequence is assembled by a static interleaving helper when replacement code is requested, then cached.
+Each group lazily concatenates and caches its replacement code from that sequence. All original ranges remain unchanged.
+Each gap contains one ready-to-emit code string and a shared `AnnotationGapLayout` prepared by the scanner. The layout
+separates fixed content from whitespace prefixes and records available physical separators. An annotation whose line
+comment already ends with a Unicode escape requires no additional physical separator. Sorting uses these prepared
+components and counts without reading or analyzing the original source.
 
 ## What is preserved
 

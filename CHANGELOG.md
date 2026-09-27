@@ -27,16 +27,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Annotation scanning prepares fragment text, attached-comment separators, and fixed gaps in explicit source groups.
-  Printing visits group starts and appends the sorted fragments directly, without individual replacements or restoring
-  their source order. Group bounds and independent comments remain fixed.
+- Centralized annotation scanner whitespace and line-boundary operations in `SrcCodeUtils`, preserving source offsets,
+  comment whitespace, and CR/LF/CRLF handling.
+- Moved shared annotation source models into standalone `AnnotationSrcGroup`, with nested annotation, gap, layout,
+  and base-fragment types. `AnnotationSourceScanner` retains source parsing and fragment preparation.
+- Made the annotation group's common fragment base, mixed-sequence getter, and fixed gap-content getter private.
+  Typed annotation and gap lists remain available to sorting; printing consumes the prepared replacement code.
+- Annotation and gap fragments share source text and original ranges through `SrcFragment`. Sorting determines
+  annotation order and gap text. Groups retain unmodifiable views of both typed lists, require one gap per annotation,
+  and lazily interleave the mixed sequence through a static helper. Callers must not mutate handed-off lists.
+  `annotationSrcFragments` and internal `srcFragments` retain the group's current order. Each group lazily
+  caches its mixed sequence and `replacementCode`; independent group builder inputs are removed. Printing replaces
+  the original range with that block without inspecting fragment types or reconstructing annotation order.
+- Annotation gaps retain one ready-to-emit code string. The scanner prepares fixed content, whitespace-prefix choices,
+  and separator counts in a shared immutable layout. Sorting selects a prefix without reading or analyzing source
+  text, preserving repeated sorting, exact unchanged gaps, and comment attachment.
+- Merged annotation-group replacement into `SrcPrinterOutput`; declaration fragments and units without declared types
+  share the same source-range copying method.
 - Removed redundant collection copies and wrappers in dependency ordering and CLI process test results.
 - Declaration-only relocation detection is private; callers use the model-based check that also detects annotation order.
 - Annotation ordering models retain unmodifiable views of criteria without copying; callers must not mutate supplied lists.
 - Annotation fragments keep sorting keys, prepared text, the annotation offset, and required trailing separators.
+  Gap preparation uses a computed blank-line requirement instead of interpreting a separator-count value.
   Parsing-only comment and token offsets stay private in the scanner.
-- Annotation descriptors, fragments, and groups use Lombok-generated constructors, with call sites aligned to field
-  declaration order.
+- Annotation descriptors use Lombok-generated constructors. Annotation fragment builders initialize inherited ranges.
 - Annotation order is computed only from source-fragment groups. Removed the duplicate AST scan, descriptor index,
   and annotation-list mutations; source printing uses the single sorted order.
 - Annotation fragments and their sorted order now belong to `SpoonAstModel`, passed explicitly between parser, sorter,
@@ -62,8 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Relocation detection includes source-fragment annotation order, including annotations absent from Spoon's AST.
   Check flows display annotation ordering diffs using the standard formatting-violation message. All flows classify
   annotation-only changes as reordering.
-- Annotation scanning snapshots each group before clearing its reusable buffer, preserving annotations for sorting
-  and relocation detection.
+- Annotation scanning hands off independent lists for each group and starts fresh lists for the next group, preserving
+  annotations for sorting and relocation detection without collection copies.
 - Source printing includes annotations preceding Spoon's declaration start when a comment appears between annotations,
   preserving them during repeated processing of top-level types, nested types, and type members.
 - Annotation sorting moves a standalone comment block with the preceding annotation when they are adjacent and a blank

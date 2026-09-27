@@ -5,6 +5,7 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.overrideDefaultConfig;
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource;
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
@@ -17,11 +18,12 @@ import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -183,7 +185,7 @@ class RelocationDetectorTest {
         boolean relocated = hasRelocations(sortedModel);
 
         // Then
-        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getFragmentsInPrintOrder())
+        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getAnnotationSrcFragments())
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
         assertThat(relocated).isTrue();
@@ -294,12 +296,13 @@ class RelocationDetectorTest {
                 int first, int second, int third, boolean expectedRelocation) {
             // Given
             List<AnnotationSrcFragment> originalGroup =
-                    permutationModel.getAnnotationSrcGroups().get(0).getFragmentsInPrintOrder();
-            SpoonAstModel reorderedModel = permutationModel.withAnnotationSrcGroups(List.of(permutationModel
-                    .getAnnotationSrcGroups()
-                    .get(0)
-                    .withFragmentsInPrintOrder(
-                            List.of(originalGroup.get(first), originalGroup.get(second), originalGroup.get(third)))));
+                    permutationModel.getAnnotationSrcGroups().get(0).getAnnotationSrcFragments();
+            List<String> namesInRequestedOrder = List.of(first, second, third).stream()
+                    .map(index -> originalGroup.get(index).getDescriptor().getName())
+                    .toList();
+            SpoonAstModel reorderedModel = permutationModel.withAnnotationSrcGroups(sortAnnotationGroups(
+                    permutationModel.getAnnotationSrcGroups(),
+                    Comparator.comparingInt(descriptor -> namesInRequestedOrder.indexOf(descriptor.getName()))));
 
             // When
             boolean relocated = hasRelocations(reorderedModel);
@@ -369,7 +372,7 @@ class RelocationDetectorTest {
             boolean relocated = hasRelocations(sortedModel);
 
             // Then
-            assertThat(repeatedAnnotations.getFragmentsInPrintOrder())
+            assertThat(repeatedAnnotations.getAnnotationSrcFragments())
                     .extracting(fragment -> fragment.getDescriptor().getName())
                     .containsExactly("Tag", "Tag");
             assertThat(relocated).isTrue();

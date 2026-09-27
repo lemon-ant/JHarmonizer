@@ -4,9 +4,10 @@ package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcFragment;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
 import java.util.List;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
@@ -26,13 +27,48 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = AnnotationSourceScanner.scan(srcCode)
                 .get(0)
-                .getFragmentsInPrintOrder()
+                .getAnnotationSrcFragments()
                 .get(1);
 
         // Then
         assertThat(fragment.getSrcCode()).isEqualTo(comments + "@B");
-        assertThat(fragment.getStart()).isEqualTo(prefix.length() + comments.length());
+        assertThat(fragment.getStart()).isEqualTo(prefix.length());
+        assertThat(fragment.getAnnotationStart()).isEqualTo(prefix.length() + comments.length());
+        assertThat(fragment.getEndExclusive()).isEqualTo(srcCode.indexOf(" class"));
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo("@B".length());
+    }
+
+    @Test
+    void scan_annotationsAndGaps_preservesSourceRangesAndCachesReplacement() {
+        // Given
+        String srcCode = "@Deprecated /* note */ @SuppressWarnings(\"all\") class Sample {}";
+        int firstAnnotationEnd = srcCode.indexOf(" @SuppressWarnings");
+        int secondAnnotationStart = srcCode.indexOf("@SuppressWarnings");
+        int secondAnnotationEnd = srcCode.indexOf(" class");
+        int groupEnd = srcCode.indexOf("class");
+
+        // When
+        AnnotationSrcGroup group = AnnotationSourceScanner.scan(srcCode).get(0);
+
+        // Then
+        assertThat(group.getStart()).isZero();
+        assertThat(group.getEndExclusive()).isEqualTo(groupEnd);
+        assertThat(group.getAnnotationSrcFragments())
+                .extracting(
+                        AnnotationSrcFragment::getStart,
+                        AnnotationSrcFragment::getEndExclusive,
+                        AnnotationSrcFragment::getSrcCode)
+                .containsExactly(
+                        tuple(0, firstAnnotationEnd, "@Deprecated /* note */"),
+                        tuple(secondAnnotationStart, secondAnnotationEnd, "@SuppressWarnings(\"all\")"));
+        assertThat(group.getAnnotationSrcGapsInSrcOrder())
+                .extracting(AnnotationSrcGap::getStart, AnnotationSrcGap::getEndExclusive, AnnotationSrcGap::getSrcCode)
+                .containsExactly(
+                        tuple(firstAnnotationEnd, secondAnnotationStart, " "),
+                        tuple(secondAnnotationEnd, groupEnd, " "));
+        String replacementCode = group.getReplacementCode();
+        assertThat(replacementCode).isEqualTo(srcCode.substring(0, groupEnd));
+        assertThat(group.getReplacementCode()).isSameAs(replacementCode);
     }
 
     @ParameterizedTest
@@ -53,14 +89,29 @@ class AnnotationSourceScannerTest {
 
         // Then
         AnnotationSrcGroup group = groups.get(0);
-        AnnotationSrcFragment fragment = group.getFragmentsInPrintOrder().get(0);
+        AnnotationSrcFragment fragment = group.getAnnotationSrcFragments().get(0);
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo(annotation.length());
         assertThat(fragment.getStart()).isEqualTo(prefix.length());
         assertThat(fragment.getSrcCode()).isEqualTo(annotation + " /* trailing */");
         assertThat(group.getStart()).isEqualTo(prefix.length());
         assertThat(group.getEndExclusive()).isEqualTo(srcCode.indexOf("class"));
-        assertThat(group.getFragmentsInPrintOrder().get(1).getDescriptor().getDeclarationLength())
+        assertThat(group.getAnnotationSrcFragments().get(1).getDescriptor().getDeclarationLength())
                 .isEqualTo("@B".length());
+    }
+
+    @Test
+    void scan_escapedLineTerminator_requiresNoPhysicalSeparator() {
+        // When
+        AnnotationSrcFragment fragment = AnnotationSourceScanner.scan("@A // note\\u000a @B class Sample {}")
+                .get(0)
+                .getAnnotationSrcFragments()
+                .get(0);
+
+        // Then
+        assertThat(fragment.getSrcCode()).isEqualTo("@A // note\\u000a");
+        assertThat(fragment.getTrailingLineSeparatorCount()).isZero();
+        assertThat(fragment.requiresTrailingBlankLine()).isFalse();
+        assertThat(fragment.getTrailingLineSeparators()).isEmpty();
     }
 
     @ParameterizedTest
@@ -74,13 +125,13 @@ class AnnotationSourceScannerTest {
     void scan_lineComment_countsCommentWithoutLineSeparator(@NonNull String lineSeparator) {
         List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan("@A(// note  " + lineSeparator + "\"aa\")");
         assertThat(groups.get(0)
-                        .getFragmentsInPrintOrder()
+                        .getAnnotationSrcFragments()
                         .get(0)
                         .getDescriptor()
                         .getDeclarationLength())
                 .isEqualTo("@A(// note  \"aa\")".length());
         assertThat(groups.get(0)
-                        .getFragmentsInPrintOrder()
+                        .getAnnotationSrcFragments()
                         .get(0)
                         .getDescriptor()
                         .getArguments())
@@ -88,25 +139,28 @@ class AnnotationSourceScannerTest {
     }
 
     @Test
-    void scan_multipleGroups_preservesEachGroupAfterBufferReuse() {
+    void scan_multipleGroups_keepsIndependentFragmentLists() {
         List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan(
                 "@Deprecated class AnnotationSrcGroups { @SuppressWarnings(\"all\") void execute() {} }");
         assertThat(groups)
                 .hasSize(2)
                 .allSatisfy(
-                        group -> assertThat(group.getFragmentsInPrintOrder()).hasSize(1));
-        assertThat(groups.stream().flatMap(group -> group.getFragmentsInPrintOrder().stream()))
+                        group -> assertThat(group.getAnnotationSrcFragments()).hasSize(1));
+        assertThat(groups.stream().flatMap(group -> group.getAnnotationSrcFragments().stream()))
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
+        assertThat(groups)
+                .extracting(AnnotationSrcGroup::getReplacementCode)
+                .containsExactly("@Deprecated ", "@SuppressWarnings(\"all\") ");
     }
 
     @Test
     void scan_returnedGroups_preventsMutation() {
         List<AnnotationSrcGroup> groups = AnnotationSourceScanner.scan("@Z @A class Sample {}");
         assertThatThrownBy(groups::clear).isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> groups.get(0).getFragmentsInPrintOrder().clear())
+        assertThatThrownBy(() -> groups.get(0).getAnnotationSrcFragments().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> groups.get(0).getGapsInSrcOrder().clear())
+        assertThatThrownBy(() -> groups.get(0).getAnnotationSrcGapsInSrcOrder().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -120,15 +174,17 @@ class AnnotationSourceScannerTest {
 
         // When
         List<AnnotationSrcFragment> fragments =
-                AnnotationSourceScanner.scan(srcCode).get(0).getFragmentsInPrintOrder();
+                AnnotationSourceScanner.scan(srcCode).get(0).getAnnotationSrcFragments();
 
         // Then
         AnnotationSrcFragment firstFragment = fragments.get(0);
         assertThat(firstFragment.getSrcCode()).isEqualTo(commentedAnnotation);
         assertThat(firstFragment.getTrailingLineSeparators()).isEqualTo(blankLineSeparator);
         assertThat(firstFragment.getTrailingLineSeparatorCount()).isEqualTo(2);
+        assertThat(firstFragment.requiresTrailingBlankLine()).isTrue();
         assertThat(firstFragment.getDescriptor().getDeclarationLength()).isEqualTo("@A".length());
         assertThat(fragments.get(1).getSrcCode()).isEqualTo("// above" + lineSeparator + "@B");
+        assertThat(fragments.get(1).requiresTrailingBlankLine()).isFalse();
     }
 
     @ParameterizedTest
@@ -142,7 +198,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = AnnotationSourceScanner.scan(srcCode)
                 .get(0)
-                .getFragmentsInPrintOrder()
+                .getAnnotationSrcFragments()
                 .get(0);
 
         // Then
@@ -162,11 +218,13 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = AnnotationSourceScanner.scan(srcCode)
                 .get(0)
-                .getFragmentsInPrintOrder()
+                .getAnnotationSrcFragments()
                 .get(0);
 
         // Then
         assertThat(fragment.getSrcCode()).isEqualTo(commentedAnnotation);
+        assertThat(fragment.getTrailingLineSeparatorCount()).isEqualTo(1);
+        assertThat(fragment.requiresTrailingBlankLine()).isFalse();
         assertThat(fragment.getTrailingLineSeparators()).isEqualTo(lineSeparator);
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo(annotation.length());
     }
@@ -176,13 +234,13 @@ class AnnotationSourceScannerTest {
         List<AnnotationSrcGroup> groups =
                 AnnotationSourceScanner.scan("@A (value = 1 /* note */ + 2) @B class Sample {}");
         assertThat(groups.get(0)
-                        .getFragmentsInPrintOrder()
+                        .getAnnotationSrcFragments()
                         .get(0)
                         .getDescriptor()
                         .getDeclarationLength())
                 .isEqualTo("@A(value=1/* note */+2)".length());
         assertThat(groups.get(0)
-                        .getFragmentsInPrintOrder()
+                        .getAnnotationSrcFragments()
                         .get(0)
                         .getDescriptor()
                         .getArguments())

@@ -9,7 +9,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.io.File;
 import java.util.Comparator;
@@ -43,13 +43,14 @@ public class SpoonSorter {
     private final CompiledConfig compiledConfig;
 
     /**
-     * Sorts declaration order in the AST and annotation source groups for printing.
+     * Sorts declaration order in the AST and finalizes sorted annotation source groups.
      * @param compilationUnit source model to update
      * @param sortingSkippedTypes types excluded from sorting
      * @param annotationSrcGroups annotation fragments captured from the original source
-     * @return immutable annotation groups in the order to print
+     * @return immutable annotation groups with sorted fragments and lazily computed replacement code
      */
     @NonNull
+    // TODO Annotations: Can we pass SpoonASTModel with together with sortingSkippedTypes?
     public List<AnnotationSrcGroup> sortCompilationUnitRecursively(
             @NonNull CtCompilationUnit compilationUnit,
             @NonNull Set<CtType<?>> sortingSkippedTypes,

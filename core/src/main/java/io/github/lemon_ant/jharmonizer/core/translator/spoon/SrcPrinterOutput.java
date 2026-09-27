@@ -6,15 +6,17 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFr
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import java.util.List;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import lombok.NonNull;
 
 /** Owns one serialization buffer and copies source slices without intermediate strings. */
 final class SrcPrinterOutput {
 
     @NonNull
-    private final AnnotationGroupPrinter annotationGroupPrinter;
+    private final NavigableMap<Integer, AnnotationSrcGroup> annotationSrcGroupsBySrcStart = new TreeMap<>();
 
     @NonNull
     // Each invocation owns a fresh buffer; capacity cannot accumulate across files.
@@ -35,11 +37,11 @@ final class SrcPrinterOutput {
     /**
      * Creates an output buffer using the original source's size and dominant line separator.
      * @param srcCode original source
-     * @param annotationSrcGroups annotation fragments in the order to print
+     * @param annotationSrcGroups annotation groups with prepared replacement code
      */
     SrcPrinterOutput(@NonNull String srcCode, @NonNull List<AnnotationSrcGroup> annotationSrcGroups) {
         this.srcCode = srcCode;
-        annotationGroupPrinter = new AnnotationGroupPrinter(annotationSrcGroups);
+        annotationSrcGroups.forEach(group -> annotationSrcGroupsBySrcStart.put(group.getStart(), group));
         lineSeparator = detectDominantLineSeparator(srcCode);
         buffer = new StringBuilder(srcCode.length());
     }
@@ -66,7 +68,7 @@ final class SrcPrinterOutput {
             }
             // Interior whitespace belongs to the fragment; surrounding gaps belong to its container.
             int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
-            annotationGroupPrinter.append(buffer, srcCode, indentationStart, fragmentEndExclusive);
+            printSrcRange(indentationStart, fragmentEndExclusive);
             writeln();
             return true;
         } catch (IndexOutOfBoundsException exception) {
@@ -87,6 +89,26 @@ final class SrcPrinterOutput {
                 .append("// ")
                 .append(groupHeader);
         writeln();
+    }
+
+    /**
+     * Copies a source range, replacing complete annotation groups without changing surrounding whitespace.
+     * @param start first source offset
+     * @param endExclusive first source offset after the range
+     */
+    void printSrcRange(int start, int endExclusive) {
+        int cursor = start;
+        for (AnnotationSrcGroup group : annotationSrcGroupsBySrcStart
+                .subMap(start, true, endExclusive, false)
+                .values()) {
+            if (group.getEndExclusive() > endExclusive) {
+                // A slice ending inside a group cannot safely reorder that group independently.
+                continue;
+            }
+            buffer.append(srcCode, cursor, group.getStart()).append(group.getReplacementCode());
+            cursor = group.getEndExclusive();
+        }
+        buffer.append(srcCode, cursor, endExclusive);
     }
 
     /**

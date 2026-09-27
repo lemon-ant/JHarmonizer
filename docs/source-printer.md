@@ -15,8 +15,7 @@ Parsing, sorting, formatting and import cleanup retain their existing entry poin
 | --- | --- |
 | `SpoonSrcPrinter` | Stateless serialization entry point with explicit configuration |
 | `SpoonSrcPrinter.Serialization` | Per-call state, declaration layout, member spacing and boundaries, skipped-type ranges |
-| `SrcPrinterOutput` | Source slices and tails, indentation, dominant line separator detection, output offsets |
-| `AnnotationGroupPrinter` | Group boundaries and sequential output of prepared annotation and gap text |
+| `SrcPrinterOutput` | Source slices and tails, annotation-group replacements, indentation, line separator detection, output offsets |
 | `SpoonTypeMemberUtils` | Explicit members, effective source boundaries and comment attribution |
 | `SrcCodeUtils` | Shared source-fragment boundary operations |
 | `SpoonGroupSeparatorUtils` | Assigning separators and resolving their kind and header text |
@@ -32,16 +31,30 @@ Effective starts include annotations preceding Spoon's declaration range: a comm
 make the range omit an earlier annotation. Top-level types, nested types, and members use the same boundary calculation.
 The output uses one `StringBuilder`, initially sized to the original source, and appends source ranges
 directly. Interior line endings remain unchanged; generated lines use the dominant separator, with
-CRLF, LF, CR tie precedence. No serialized result is cached.
+CRLF, LF, CR tie precedence. The complete serialized source is not cached.
 
 Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
 Configuration, source text, annotation order, skipped types and the compilation unit come from the supplied model;
-the printer has no shared state. `AnnotationGroupPrinter` indexes each `AnnotationSrcGroup` by its original start.
-At a group boundary it appends the prepared fragments in print order, interleaved with the group's fixed gaps, then
-continues after the original group end. It does not rebuild source order or individual replacement ranges.
-`AnnotationSourceScanner` captures the exact annotation text with its attached comments and prepares the gaps once.
-Ordinary whitespace and independent comment blocks stay in their slots. Separators required by trailing line comments
-or attached lower comment blocks are supplied by the fragment when the destination gap cannot retain them.
+the printer has no shared state. `SrcPrinterOutput` indexes each `AnnotationSrcGroup` by its original start.
+At a group boundary it appends `replacementCode` and continues after the original group end. It does not inspect
+annotation or gap fragments, decide separator ownership, or rebuild replacement text.
+The same range-copying method handles fragments inside types and entire units without declared types, including
+`package-info.java` and `module-info.java`, without adding whitespace to those units.
+The standalone `AnnotationSrcGroup` model owns its nested annotation, gap, layout, and private base-fragment types.
+`AnnotationSourceScanner` collects `AnnotationSrcFragment` and `AnnotationSrcGap` in separate lists. Both extend
+`SrcFragment` with text and original source bounds. `SpoonAnnotationSorter` sorts annotations and resolves gap text in
+the original source slots. Both producers pass their two typed lists to the group constructor, which requires one gap
+per annotation and retains unmodifiable views. Producers must not modify handed-off lists; the scanner allocates fresh
+lists for each group. A static helper lazily assembles and caches the mixed sequence by pairing entries at the same
+index. The mixed sequence stays private and cannot be supplied independently. Each group lazily concatenates and caches
+its own `replacementCode`. Its annotation list supports sorting and relocation detection; its gap list retains
+slot order for subsequent sorting. Original fragment ranges remain unchanged even when a gap's text changes length.
+Each gap stores only one complete code string. Its shared `AnnotationGapLayout` holds fixed content, exact and relocated
+whitespace-prefix choices, destination indentation, and the available separator count. The scanner prepares all of
+these components. Sorting compares boundaries and counts to select a prefix, which the gap combines with its fixed
+content. It never reads or analyzes the original source, and later sorts reuse the same immutable layout.
+Ordinary whitespace and independent comment blocks stay in their slots. The sorter supplies separators required by
+trailing line comments or attached lower comment blocks when the destination gap cannot retain them.
 An annotation that stays in its original slot retains its unmodified gap, even when other group members move.
 For example, the blank gap in `@B\n\n@A` stays between the sorted annotations; the terminator of `@B // note\n@A`
 must also follow `@B` when it moves. These are separate ownership rules, so blindly concatenating annotations with

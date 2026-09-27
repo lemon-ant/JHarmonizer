@@ -6,6 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberU
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils.UNTRACKED;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils.computeLisMask;
 
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,11 +91,11 @@ public class RelocationDetector {
         // Spoon annotation lists retain source order and omit some syntax. Lexer offsets are unique and unchanged:
         // every permutation of a group other than its original ascending order contains an adjacent inversion.
         return sortedModel.getAnnotationSrcGroups().stream()
-                .map(annotationGroup -> annotationGroup.getFragmentsInPrintOrder())
+                .map(AnnotationSrcGroup::getAnnotationSrcFragments)
                 .anyMatch(annotationGroup -> IntStream.range(1, annotationGroup.size())
                         .anyMatch(annotationIndex ->
-                                annotationGroup.get(annotationIndex - 1).getStart()
-                                        > annotationGroup.get(annotationIndex).getStart()));
+                                annotationGroup.get(annotationIndex - 1).getAnnotationStart()
+                                        > annotationGroup.get(annotationIndex).getAnnotationStart()));
     }
 
     /**
