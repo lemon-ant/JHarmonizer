@@ -19,6 +19,11 @@ the LIS computation factored into
 `SortingResult.memberRelocations` directly. The pass remains separate from comparison and dependency ordering because
 the operations used by those algorithms do not define a minimal relocation report. Sorting time includes detection.
 
+`Sorter` also computes `hasRelocations(...)` before serialization and retains it as `SortingResult.relocationsDetected`.
+`ReorderFlow` consumes that flag for status reporting. The flag includes declaration and annotation changes relative to
+the original source order; later sorting of the shared AST does not recompute an earlier result's flag. Skipped sorting
+returns `false`. Its detection time is included in sorting statistics.
+
 ## Inputs
 
 - The original DFS source-order snapshot of `CtTypeMember`s, captured at parse time

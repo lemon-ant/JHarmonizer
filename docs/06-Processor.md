@@ -75,7 +75,8 @@ For each source file (driven by the parallel `Stream<SrcFile>` returned by
    `SpoonAstModel` (also resolves opt-out directives).
 2. **Opt-out short-circuit** — if the file is `@jharmonizer:fully-off`, the original
    text is reused verbatim and the flow records `SKIPPED_BY_OPT_OUT`.
-3. **Sort** — `Sorter.sort(...)` reorders members per `CompiledConfig` and prepares member-relocation diagnostics.
+3. **Sort** — `Sorter.sort(...)` reorders members per `CompiledConfig` and prepares member-relocation diagnostics plus
+   the combined declaration-or-annotation change flag. `ReorderFlow` consumes the flag when reporting the file status.
 4. **Serialize** — `SrcAstTranslator.serialize(model, printerConfig)` passes the flow's settings to `SpoonSrcPrinter`,
    which assembles source fragments in the reordered AST's declaration order.
 5. **Format** — `Formatter.formatSrc(...)` runs the Palantir pass and (optionally)

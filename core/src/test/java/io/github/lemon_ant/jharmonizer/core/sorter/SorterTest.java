@@ -53,6 +53,7 @@ class SorterTest {
 
         // Then
         assertThat(result.getMemberRelocations()).isEmpty();
+        assertThat(result.isRelocationsDetected()).isTrue();
         assertThat(result.getSortedSpoonAstModel()
                         .getAnnotationSrcGroups()
                         .getFirst()
@@ -74,6 +75,7 @@ class SorterTest {
                 .toList();
         assertThat(relocatedMembers).anyMatch(member -> member instanceof CtType<?>);
         assertThat(relocatedMembers).anyMatch(member -> !(member instanceof CtType<?>));
+        assertThat(result.isRelocationsDetected()).isTrue();
         assertThat(result.getSortedSpoonAstModel().getCompilationUnit()).isSameAs(model.getCompilationUnit());
         assertThatThrownBy(() -> result.getMemberRelocations().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
@@ -93,6 +95,22 @@ class SorterTest {
 
         // Then
         assertThat(result.getMemberRelocations()).isEmpty();
+        assertThat(result.isRelocationsDetected()).isFalse();
+    }
+
+    @Test
+    void sort_repeatedSortRestoresOriginalOrder_retainsEarlierRelocationFlag() {
+        // Given
+        SpoonAstModel model = SpoonParser.parseJavaSrcFile(
+                createSrcFile("class Zeta {} class Alpha {}", Path.of("Zeta.java")));
+        SortingResult firstResult = topLevelTypesSorter.sort(model);
+
+        // When
+        SortingResult secondResult = defaultSorter.sort(model);
+
+        // Then
+        assertThat(firstResult.isRelocationsDetected()).isTrue();
+        assertThat(secondResult.isRelocationsDetected()).isFalse();
     }
 
     @Test

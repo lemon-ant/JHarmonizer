@@ -1561,7 +1561,7 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 ### 11. Annotation review follow-ups
 
 Inventory of all 13 `TODO Annotations` comments found on 2026-09-27, grouped by priority. P1 addresses processing
-failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1–5 and 13 are
+failures, P2 covers shared-state and architecture decisions, and P3 covers naming and readability. Items 1–6 and 13 are
 resolved; the other comments remain in their source locations.
 
 | Item | Priority | Source symbol | Follow-up | Status |
@@ -1571,7 +1571,7 @@ resolved; the other comments remain in their source locations.
 | 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Resolved |
 | 4 | P2 | `SpoonAstModel.printerConfig` | Keep printer settings in the flow and pass them explicitly to serialization. | Resolved |
 | 5 | P2 | `RelocationDetector.findRelocations` | Return unmodifiable member-relocation diagnostics in `SortingResult`. | Resolved |
-| 6 | P2 | `RelocationDetector.hasRelocations` | Consider returning the combined change flag from sorting. | Open |
+| 6 | P2 | `RelocationDetector.hasRelocations` | Return the combined change flag in `SortingResult`. | Resolved |
 | 7 | P2 | `RelocationDetector.hasReorderedAnnotations` | Consider returning the annotation-order change flag from sorting. | Open |
 | 8 | P2 | `RelocationDetector.hasReorderedDeclarations` | Consider returning the declaration-order change flag from sorting. | Open |
 | 9 | P3 | `FlexibleUnifiedConfig.annotationsOrdering` | Review criteria naming and overlay test coverage. | Open |
@@ -1580,7 +1580,7 @@ resolved; the other comments remain in their source locations.
 | 12 | P3 | `AbstractOptOutFlow.checkSortThenFormat` result construction | Extract the annotation diff into a descriptive local variable. | Open |
 | 13 | P3 | `Sorter.sort` | Remove nested group assembly by returning the updated model from `SpoonSorter`. | Resolved |
 
-Items 6–8 belong to the
+Items 7–8 belong to the
 [explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites).
 For item 9, `AnnotationOrderingConfigurationTest` already covers replacing defaults, disabling annotation sorting with
 an empty list, and retaining criteria through unrelated overlays; naming review remains open.
@@ -1609,6 +1609,12 @@ serialization, and check flows consume them directly. The LIS diagnostic pass re
 to preserve its minimal moved-member report. Its time is included in sorting statistics. Result and chunk lists use
 unmodifiable views without copies; producers must not mutate handed-off lists. Tests cover returned-list write protection,
 empty reports, and earlier diagnostics surviving a later sort with different settings.
-The Spoon AST remains shared; items 6–8 and the full ordered-content hierarchy remain separate follow-ups.
+The Spoon AST remains shared; items 7–8 and the full ordered-content hierarchy remain separate follow-ups.
+
+Item 6 is resolved at the sorting facade boundary: `Sorter` computes the existing combined declaration-or-annotation
+change flag before returning and includes its detection time in sorting statistics. `SortingResult.relocationsDetected`
+retains that value, and `ReorderFlow` uses it without inspecting the AST after serialization. Skipped sorting returns
+`false`. Tests cover declaration and annotation changes, unchanged order, formatting-only and sorting-disabled statuses,
+and an earlier result's flag surviving a later sort that restores the original order.
 
 ---

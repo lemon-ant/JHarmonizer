@@ -89,8 +89,10 @@ This file defines repository-wide conventions for coding agents working in this 
   state in local variables or private implementation state.
 - Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
   models must not retain printer configuration.
-- Return prepared member-relocation diagnostics from sorting in `SortingResult`.
-  Check flows consume these diagnostics instead of recomputing them from the mutable AST after serialization.
+- Return prepared member-relocation diagnostics and the combined change flag from sorting in `SortingResult`.
+  Flows consume these results instead of recomputing them from the mutable AST after serialization.
+- When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
+  summing separate measurements.
 - Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.
   Nest annotation, gap, layout, and base-fragment types there; keep source parsing and preparation in the scanner.
 - Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.

@@ -55,16 +55,17 @@ Input: a `SpoonAstModel` (see [`03-Parser.md`](03-Parser.md)) plus a `CompiledCo
 (see [`02-Configurator.md`](02-Configurator.md)).
 
 Output: `SortingResult` contains a model wrapper with the new immutable annotation order, prepared member-relocation
-diagnostics, and timing statistics. The underlying Spoon AST is shared with the input wrapper; declaration lists are
-reordered in place, while annotation lists remain unchanged.
+diagnostics, the combined `relocationsDetected` flag, and timing statistics. The underlying Spoon AST is shared with the
+input wrapper; declaration lists are reordered in place, while annotation lists remain unchanged.
 Serialization consumes the returned model to print declaration order from the AST and annotation order from the groups.
 
 `Sorter` computes the existing LIS relocation report before returning. The result and chunk lists use unmodifiable views
 without defensive copies. Producers must not mutate handed-off lists. Each invocation uses fresh result and scope lists,
 so sorting the same AST again leaves earlier reports intact. The referenced Spoon nodes remain mutable.
-Check flows consume these prepared diagnostics instead of traversing the AST after printing. Detection runs
-for every actual sort and contributes to sorting time; a file-level sorting opt-out returns empty diagnostics and zero
-sorting time. The combined and annotation change flags remain separate from this report.
+Check flows consume these prepared diagnostics. `Sorter` also computes the combined declaration-or-annotation change
+flag before returning; `ReorderFlow` uses it for status reporting after printing. One timed block covers sorting and both
+detection passes. A file-level sorting opt-out returns empty diagnostics, a `false` change flag, and zero sorting time.
+The annotation-only check remains separate from the sorting result.
 
 ## Implementation map
 
@@ -73,7 +74,7 @@ The Spoon-backed sorter lives in
 
 | Class                                | Role                                                                                                  |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `Sorter` / `SortingResult`           | Public facade and per-file result with the model, relocation diagnostics, and timing.                |
+| `Sorter` / `SortingResult`           | Public facade and per-file result with the model, relocation diagnostics, combined change flag, and timing. |
 | `SpoonSorter`                        | Top-level driver: walks types, dispatches members into compiled groups, emits sorted output.          |
 | `TypeMemberGrouper`                  | Dispatches each member to its leaf member group via the compiled selector predicates.                 |
 | `NaturalMemberGroupResolver` / `EffectiveMemberGroupResolver` | Resolve which compiled group claims a given member, with first-match-wins semantics.    |

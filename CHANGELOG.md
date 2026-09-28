@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added the combined declaration-or-annotation change flag to `SortingResult`. `ReorderFlow` uses the prepared flag for
+  status reporting. One timed block covers sorting and relocation detection before serialization; skipped sorting returns
+  `false`.
 - Added member-relocation diagnostics to `SortingResult` using unmodifiable views without defensive copies. Producers
   must not mutate handed-off lists. Check flows consume these diagnostics, and sorting timing includes their detection.
   Moved relocation helpers and models to the neutral `core.spoon` package.

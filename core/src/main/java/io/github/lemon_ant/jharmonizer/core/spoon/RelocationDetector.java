@@ -68,11 +68,10 @@ public class RelocationDetector {
     }
 
     /**
-     * Detects declaration or annotation relocations in the sorted processing model.
+     * Computes the combined declaration or annotation change flag retained in the sorting result.
      * @param sortedModel model containing sorted declarations, annotation groups, and the original member snapshot
      * @return whether a declaration or annotation changed its position within its scope
      */
-    // TODO Annotations: Do we need to detect it after resorting? Possibly sorting algorithm can return this flag
     public static boolean hasRelocations(@NonNull SpoonAstModel sortedModel) {
         return hasReorderedAnnotations(sortedModel)
                 || hasReorderedDeclarations(sortedModel.getOriginalMemberOrder(), sortedModel.getCompilationUnit());

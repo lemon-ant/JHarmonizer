@@ -270,7 +270,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                                             ? OptOutFormattingRangeResolver.resolveFullyOffTypeRanges(
                                                     parsedSpoonAstModel.getOptOuts(), originalSrcCode)
                                             : Map.of())),
-                    new SortingResult(List.of(), parsedSpoonAstModel, new SortingStatistic(0)),
+                    new SortingResult(List.of(), false, parsedSpoonAstModel, new SortingStatistic(0)),
                     true);
         }
 
@@ -398,11 +398,6 @@ abstract class AbstractOptOutFlow implements IFlow {
         @NonNull
         FormattingStatistic getFormattingStatistic() {
             return formattingResult.getFormattingStatistic();
-        }
-
-        @NonNull
-        SpoonAstModel getSortedSpoonAstModel() {
-            return sortingAndSerializationResult.getSortedSpoonAstModel();
         }
     }
 }

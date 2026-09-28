@@ -12,8 +12,8 @@ the proposed pipeline and types are not implemented. Track implementation in
 [the backlog](TODO.md#10-explicit-sorting-result-and-support-for-future-source-rewrites).
 
 The sorting facade now returns prepared member-relocation diagnostics in `SortingResult` as unmodifiable views without
-defensive copies. Producers must not mutate handed-off lists. The full ordered-content hierarchy and independence from
-mutable Spoon nodes remain deferred.
+defensive copies and retains the combined declaration-or-annotation change flag. Producers must not mutate handed-off
+lists. The full ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
 
 The direction is to return one explicit ordering model instead of combining a mutated Spoon compilation unit with
 separately returned annotation groups. Extend this direction to support code transformations before sorting.
@@ -33,7 +33,7 @@ and attached annotation fragments that the custom printer can consume directly. 
 | `SpoonSorter.sortCompilationUnitRecursively` | Mutates top-level types and nested member lists; returns the model with sorted annotation groups. |
 | `SpoonAnnotationSorter` | Orders lexical annotations and resolves gap text; each group lazily assembles its replacement code. AST annotation lists remain unchanged. |
 | `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
-| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, and timing; the input and result wrappers share the mutable compilation unit. |
+| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, the combined change flag, and timing; the input and result wrappers share the mutable compilation unit. |
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
 | `RelocationDetector` | Compares original node identities with the mutated AST traversal and detects annotation permutations from lexer source offsets. |
 

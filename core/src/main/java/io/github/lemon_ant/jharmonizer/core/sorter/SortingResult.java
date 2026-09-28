@@ -11,13 +11,16 @@ import lombok.Value;
 
 /**
  * Result of sorting all members in a single compilation unit.
- * Bundles the reordered Spoon AST model, prepared member-relocation diagnostics, and timing statistics.
+ * Bundles the reordered Spoon AST model, prepared relocation diagnostics, a combined change flag, and timing statistics.
  */
 @Value
 public class SortingResult {
 
     @NonNull
     List<MemberRelocation> memberRelocations;
+
+    /** Whether declaration or annotation order differs from the original source order. */
+    boolean relocationsDetected;
 
     @NonNull
     SpoonAstModel sortedSpoonAstModel;
@@ -28,14 +31,17 @@ public class SortingResult {
     /**
      * Retains sorting output with an unmodifiable view of its member diagnostics.
      * @param memberRelocations the prepared diagnostics; callers must not modify this list after handoff
+     * @param relocationsDetected whether declaration or annotation order differs from the original source order
      * @param sortedSpoonAstModel the working model after sorting
      * @param sortingStatistic the sorting and relocation-detection timing
      */
     public SortingResult(
             @NonNull List<MemberRelocation> memberRelocations,
+            boolean relocationsDetected,
             @NonNull SpoonAstModel sortedSpoonAstModel,
             @NonNull SortingStatistic sortingStatistic) {
         this.memberRelocations = Collections.unmodifiableList(memberRelocations);
+        this.relocationsDetected = relocationsDetected;
         this.sortedSpoonAstModel = sortedSpoonAstModel;
         this.sortingStatistic = sortingStatistic;
     }
