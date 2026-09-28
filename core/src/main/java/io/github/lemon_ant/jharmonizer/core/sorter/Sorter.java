@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
+
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +33,7 @@ public final class Sorter {
      * Reorders declarations in the working AST and returns a model with immutable sorted annotation groups.
      *
      * @param spoonAstModel the SpoonASTModel to sort
-     * @return the model to use for subsequent serialization, together with sorting statistics
+     * @return the model for serialization, unmodifiable member diagnostics, and sorting statistics
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
@@ -37,7 +41,15 @@ public final class Sorter {
         log.trace("Sorting {}", spoonAstModel.getPath());
         StopWatch.TimedResult<SpoonAstModel> sortingResult =
                 StopWatch.measure(() -> spoonSorter.sortCompilationUnitRecursively(spoonAstModel));
+        SpoonAstModel sortedSpoonAstModel = sortingResult.getResult();
+        // Compute diagnostics before handing off the shared AST, which a later sort can reorder again.
+        // TODO The original idea was that the sorting algorithm can nativelly report about relocations
+        StopWatch.TimedResult<List<MemberRelocation>> relocationResult = StopWatch.measure(() -> findRelocations(
+                sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit()));
 
-        return new SortingResult(sortingResult.getResult(), new SortingStatistic(sortingResult.getNanos()));
+        return new SortingResult(
+                relocationResult.getResult(),
+                sortedSpoonAstModel,
+                new SortingStatistic(sortingResult.getNanos() + relocationResult.getNanos()));
     }
 }

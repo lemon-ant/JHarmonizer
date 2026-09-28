@@ -89,6 +89,8 @@ This file defines repository-wide conventions for coding agents working in this 
   state in local variables or private implementation state.
 - Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
   models must not retain printer configuration.
+- Return prepared member-relocation diagnostics from sorting in `SortingResult`.
+  Check flows consume these diagnostics instead of recomputing them from the mutable AST after serialization.
 - Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.
   Nest annotation, gap, layout, and base-fragment types there; keep source parsing and preparation in the scanner.
 - Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.
@@ -161,6 +163,9 @@ This file defines repository-wide conventions for coding agents working in this 
     snapshot isolation for these criteria.
   - Exception: annotation source groups retain unmodifiable views without copying. Callers must not mutate the supplied
     lists after handoff; the scanner uses fresh lists for subsequent groups.
+  - Exception: member-relocation diagnostics in `SortingResult` and `MemberRelocation` use unmodifiable views without
+    defensive copies. Producers must not mutate handed-off lists. Test returned-list write protection and processing
+    behavior; do not simulate caller mutations forbidden by this ownership contract.
 - Reject null entries in YAML configuration collections during deserialization. Configure the YAML mapper centrally;
   custom collection deserializers must enforce the same rule. Preserve nullable optional properties.
 - When a mutable buffer is reused or cleared after handoff, retain an immutable snapshot; an unmodifiable view still

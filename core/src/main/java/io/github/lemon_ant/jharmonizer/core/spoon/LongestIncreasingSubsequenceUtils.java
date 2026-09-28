@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.translator.spoon;
+package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -32,9 +32,8 @@ public class LongestIncreasingSubsequenceUtils {
      * @return a mask the same length as {@code values}; {@code true} where a position belongs
      *         to the chosen LIS
      */
-    @NonNull
     @SuppressWarnings("PMD.UseVarargs")
-    public static boolean[] computeLisMask(int[] values) {
+    public static boolean @NonNull [] computeLisMask(int[] values) {
         int n = values.length;
         boolean[] inLis = new boolean[n];
         int[] tails = new int[n];

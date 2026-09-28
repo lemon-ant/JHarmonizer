@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added member-relocation diagnostics to `SortingResult` using unmodifiable views without defensive copies. Producers
+  must not mutate handed-off lists. Check flows consume these diagnostics, and sorting timing includes their detection.
+  Moved relocation helpers and models to the neutral `core.spoon` package.
 - Removed printer settings from parsing and `SpoonAstModel`. Flows now pass `PrinterConfig` directly to serialization,
   allowing the same parsed model to be printed with different settings.
 - Updated `SpoonSorter` to accept and return the complete processing model, keeping declaration sorting, opt-outs, and

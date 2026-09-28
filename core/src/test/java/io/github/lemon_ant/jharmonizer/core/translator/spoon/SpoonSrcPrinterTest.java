@@ -41,12 +41,10 @@ class SpoonSrcPrinterTest {
         // Given
         String srcCode = readClasspathResourceAsString(
                 "/test-cases/core/e2e/printer/scenarios/05-combined-boundaries/input/BoundarySample.java");
-        SpoonAstModel model =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
+        SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
         String otherSrcCode = "class Other {\r\n    int value;\r\n}\r\n";
         PrinterConfig otherPrinterConfig = new PrinterConfig(false, false, false);
-        SpoonAstModel otherModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")));
+        SpoonAstModel otherModel = SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")));
         SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(model, printerConfig);
         Map<CtType<?>, SrcCharacterRange> originalRanges = Map.copyOf(firstResult.getSortingSkippedTypeRanges());
         SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(otherModel, otherPrinterConfig);
@@ -98,11 +96,11 @@ class SpoonSrcPrinterTest {
         Path srcPath = temporaryDirectory.resolve(fileName);
         SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(inputSrcCode, srcPath));
         String printedSrcCode = serializeCompilationUnit(model, printerConfig).getSerializedSrcCode();
-        SpoonAstModel repeatedModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath));
+        SpoonAstModel repeatedModel = SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath));
 
         // When
-        String repeatedSrcCode = serializeCompilationUnit(repeatedModel, printerConfig).getSerializedSrcCode();
+        String repeatedSrcCode =
+                serializeCompilationUnit(repeatedModel, printerConfig).getSerializedSrcCode();
 
         // Then
         assertThat(printedSrcCode).isEqualTo(expectedSrcCode);

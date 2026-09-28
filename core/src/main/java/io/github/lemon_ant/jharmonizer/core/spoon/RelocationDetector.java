@@ -1,13 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.translator.spoon;
+package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils.UNTRACKED;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils.computeLisMask;
+import static io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils.UNTRACKED;
+import static io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils.computeLisMask;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
-import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,8 +56,6 @@ public class RelocationDetector {
      * @return list of relocations for all detected chunks, in current encounter order
      */
     @NonNull
-    // TODO Annotations: Do we need to detect it after resorting? Possibly sorting algorithm can return this relocation
-    // map
     public static List<MemberRelocation> findRelocations(
             @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
 
@@ -111,7 +108,7 @@ public class RelocationDetector {
      * @return immutable flat list of all type members in their original source order
      */
     @NonNull
-    static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
+    public static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
         return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit).toList();
     }
 
@@ -122,7 +119,7 @@ public class RelocationDetector {
             List<MemberRelocation> relocations) {
         CtTypeMember predecessor = chunkStart > 0 ? scopeMembers.get(chunkStart - 1) : null;
         CtTypeMember successor = chunkEndExclusive < scopeMembers.size() ? scopeMembers.get(chunkEndExclusive) : null;
-        List<CtTypeMember> chunk = Collections.unmodifiableList(scopeMembers.subList(chunkStart, chunkEndExclusive));
+        List<? extends CtTypeMember> chunk = scopeMembers.subList(chunkStart, chunkEndExclusive);
         relocations.add(new MemberRelocation(chunk, predecessor, successor));
     }
 

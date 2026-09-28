@@ -28,8 +28,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
         CtType<?> outerType = spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getNestedTypes().stream()
                 .findFirst()
                 .orElseThrow();
@@ -58,8 +57,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
@@ -75,8 +73,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of("CommentOnly.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("CommentOnly.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -92,8 +89,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of("CommentOnly.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("CommentOnly.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -110,8 +106,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -130,8 +125,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
@@ -146,8 +140,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
@@ -166,8 +159,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
@@ -182,8 +174,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.SORTING_OFF);
@@ -202,8 +193,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of("module-info.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("module-info.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -222,8 +212,8 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of("package-info.java")));
+        SpoonAstModel spoonAstModel =
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("package-info.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -243,8 +233,8 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of("package-info.java")));
+        SpoonAstModel spoonAstModel =
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("package-info.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -262,8 +252,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst();
 
@@ -284,8 +273,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Outer.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Outer.java")));
         CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
         CtType<?> outerType = compilationUnit.getDeclaredTypes().getFirst();
         CtType<?> nestedType = outerType.getNestedTypes().stream().findFirst().orElseThrow();
@@ -306,8 +294,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().isEmpty()).isTrue();
@@ -323,8 +310,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
 
         // Then
         assertThat(spoonAstModel.getOptOuts().getFileOptOutMode()).contains(JHarmonizerOptOutMode.FULLY_OFF);
@@ -342,8 +328,7 @@ class JHarmonizerOptOutResolverTest {
             """;
 
         // When
-        SpoonAstModel spoonAstModel =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        SpoonAstModel spoonAstModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
         CtType<?> nestedType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().getFirst().getNestedTypes().stream()
                         .findFirst()

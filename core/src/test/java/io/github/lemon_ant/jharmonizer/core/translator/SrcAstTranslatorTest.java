@@ -65,8 +65,7 @@ class SrcAstTranslatorTest {
             %s
             """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
-        SpoonAstModel spoonAstModel =
-                SrcAstTranslator.parse(srcFile).getSpoonAstModel();
+        SpoonAstModel spoonAstModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
         SerializationResult result = SrcAstTranslator.serialize(spoonAstModel, DEFAULT_PRINTER_CONFIG);
@@ -89,8 +88,7 @@ class SrcAstTranslatorTest {
         // Given: simple source code
         String src = "class Demo { void m() {} }";
         SrcFile srcFile = createSrcFile(src, Path.of("Demo.java"));
-        SpoonAstModel model =
-                SrcAstTranslator.parse(srcFile).getSpoonAstModel();
+        SpoonAstModel model = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
         SerializationResult result = SrcAstTranslator.serialize(model, DEFAULT_PRINTER_CONFIG);
@@ -109,8 +107,7 @@ class SrcAstTranslatorTest {
         // Given
         String srcCode = "class Gamma {}";
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Gamma.java"));
-        SpoonAstModel spoonAstModel =
-                SrcAstTranslator.parse(srcFile).getSpoonAstModel();
+        SpoonAstModel spoonAstModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = new SerializedSrcWithSkippedTypeRanges(
                 srcCode,
                 new HashMap<>(

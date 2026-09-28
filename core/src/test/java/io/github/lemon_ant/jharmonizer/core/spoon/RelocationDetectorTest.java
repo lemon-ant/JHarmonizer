@@ -1,27 +1,27 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.translator.spoon;
+package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.overrideDefaultConfig;
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource;
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasRelocations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.snapshotOriginalMemberOrder;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasRelocations;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasReorderedAnnotations;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.snapshotOriginalMemberOrder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
@@ -172,8 +172,7 @@ class RelocationDetectorTest {
         SrcFile srcFile = createSrcFile(
                 "@SuppressWarnings(\"all\") @Deprecated class AnnotationOnlyRelocation {}",
                 Path.of("AnnotationOnlyRelocation.java"));
-        SpoonAstModel parsedModel =
-                SrcAstTranslator.parse(srcFile).getSpoonAstModel();
+        SpoonAstModel parsedModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
         SpoonAstModel sortedModel = new Sorter(defaultConfig).sort(parsedModel).getSortedSpoonAstModel();
 
         // When
@@ -239,12 +238,11 @@ class RelocationDetectorTest {
             annotationConfig =
                     overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(requireClasspathResourceUrl(
                             "/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/config.yml")));
-            permutationModel = SrcAstTranslator.parse(
-                            createSrcFile(
-                                    "@Deprecated @SuppressWarnings(\"all\")"
-                                            + " @javax.annotation.processing.Generated(\"test\") class ThreeAnnotations"
-                                            + " {}",
-                                    Path.of("ThreeAnnotations.java")))
+            permutationModel = SrcAstTranslator.parse(createSrcFile(
+                            "@Deprecated @SuppressWarnings(\"all\")"
+                                    + " @javax.annotation.processing.Generated(\"test\") class ThreeAnnotations"
+                                    + " {}",
+                            Path.of("ThreeAnnotations.java")))
                     .getSpoonAstModel();
         }
 
@@ -333,8 +331,7 @@ class RelocationDetectorTest {
                     "@Deprecated class LaterAnnotationGroup { @SuppressWarnings(\"all\") @Deprecated void execute() {}"
                             + " }",
                     Path.of("LaterAnnotationGroup.java"));
-            SpoonAstModel parsedModel =
-                    SrcAstTranslator.parse(srcFile).getSpoonAstModel();
+            SpoonAstModel parsedModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
             SpoonAstModel sortedModel =
                     new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
 

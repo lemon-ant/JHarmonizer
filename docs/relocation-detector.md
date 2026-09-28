@@ -11,9 +11,13 @@ output — it is a pure diagnostic pass whose result is printed by
 `MemberRelocationPrinter`.
 
 The implementation lives in
-`io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector`, with
+`io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector`, with
 the LIS computation factored into
-`io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils`.
+`io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils`.
+
+`Sorter.sort(...)` runs this diagnostic pass once before returning `SortingResult`. Check flows use
+`SortingResult.memberRelocations` directly. The pass remains separate from comparison and dependency ordering because
+the operations used by those algorithms do not define a minimal relocation report. Sorting time includes detection.
 
 ## Inputs
 
@@ -26,26 +30,30 @@ the LIS computation factored into
 
 ## Output
 
-A list of `MemberRelocation` records. Each record represents one contiguous run of
+A list of `MemberRelocation` values. Each value represents one contiguous run of
 moved members in the **sorted** order, and carries:
 
-- `movedMembers` — the run of members, in their final order;
-- `predecessor` / `successor` — the sorted-order neighbours that frame the run
+- `relocatedMembers` — the run of members, in their final order;
+- `sortedPredecessor` / `sortedSuccessor` — the sorted-order neighbours that frame the run
   (either may be `null` when the run sits at the start or end of its scope).
 
-`MemberRelocationPrinter` turns each record into one line of the form
+The result list and each moved chunk are unmodifiable views without defensive copies. Producers must not modify
+handed-off lists. The detector uses fresh result and scope lists for each invocation, so later sorting preserves earlier
+reports without copying the diagnostic lists. The referenced Spoon nodes remain mutable.
+
+`MemberRelocationPrinter` turns each value into one line of the form
 "move *N* members before *X*", so the user sees one diagnostic line per
 contiguous run instead of one line per moved member.
 
 ## Algorithm
 
-The detector runs once per *scope* (file root, then each type body it contains):
+The detector builds one index, then visits the file root and each type body:
 
-1. **Build a per-scope successor map.**
-   `RelocationDetector.buildScopeSuccessorMap(...)` walks the original DFS snapshot
-   and derives the per-scope `Map<CtTypeMember, CtTypeMember>` of consecutive pairs.
-2. **Project the sorted members onto original-source indices.**
-   For each member in the sorted order, look up its index in
+1. **Build an original-order index.**
+   `RelocationDetector.buildOriginalIndexMap(...)` maps tracked members to their positions in the original DFS snapshot.
+   It uses node identity so structurally equal declarations in different scopes remain distinct.
+2. **Project each sorted scope onto original-source indices.**
+   For each member in the scope's sorted order, look up its index in
    `originalMemberOrder`; members with invalid source positions, or members not
    present in the snapshot, are tagged with the `UNTRACKED = -1` sentinel and
    treated as stable.
@@ -78,9 +86,8 @@ mis-attribute movement to stable members.
 
 - **Deterministic.** The patience-sort LIS is deterministic for a fixed input;
   ties are broken by index.
-- **Diagnostic-only.** The detector's output never feeds back into sorting,
-  serialization, formatting, or check decisions. Disabling it would not change a
-  single byte of produced source.
+- **Diagnostic-only.** The report does not alter declaration order or printed source. Check flows use its presence to
+  classify member-ordering violations and skip formatting until sorting passes.
 - **Resilient to missing positions.** Members without a valid source position
   (synthetic/implicit members, members the parser could not pin to a region) are
   tagged `UNTRACKED` and treated as stable. They are silently ignored by the

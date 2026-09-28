@@ -5,8 +5,7 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFormattingOnlyFallbackResult;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.hasReorderedAnnotations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -17,12 +16,12 @@ import io.github.lemon_ant.jharmonizer.core.optout.OptOutFormattingRangeResolver
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
@@ -114,10 +113,8 @@ abstract class AbstractOptOutFlow implements IFlow {
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
 
-        List<MemberRelocation> memberRelocations = sortingAndSerializationResult.isSortingSkipped()
-                ? List.of()
-                : findRelocations(
-                        sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
+        List<MemberRelocation> memberRelocations =
+                sortingAndSerializationResult.getSortingResult().getMemberRelocations();
         boolean annotationsReordered =
                 !sortingAndSerializationResult.isSortingSkipped() && hasReorderedAnnotations(sortedSpoonAstModel);
         if (!memberRelocations.isEmpty() || annotationsReordered) {
@@ -273,7 +270,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                                             ? OptOutFormattingRangeResolver.resolveFullyOffTypeRanges(
                                                     parsedSpoonAstModel.getOptOuts(), originalSrcCode)
                                             : Map.of())),
-                    new SortingResult(parsedSpoonAstModel, new SortingStatistic(0)),
+                    new SortingResult(List.of(), parsedSpoonAstModel, new SortingStatistic(0)),
                     true);
         }
 

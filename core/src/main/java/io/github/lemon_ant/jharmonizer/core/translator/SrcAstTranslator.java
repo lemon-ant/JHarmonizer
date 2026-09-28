@@ -41,8 +41,7 @@ public final class SrcAstTranslator {
     public static ParsingResult parse(@NonNull SrcFile srcFile) {
         log.trace("Parsing {}", srcFile.getPath());
 
-        TimedResult<SpoonAstModel> parsingTimedResult =
-                StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
+        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         ParsingStatistic statistic = createParsingStatistic(srcFile.getSrcCode(), parsingTimedResult);

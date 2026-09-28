@@ -45,8 +45,7 @@ class SpoonPrinterBoundaryIntegrationTest {
         // Given
         String srcCode = inputSrcCode.stripTrailing().replace("\n", lineSeparator)
                 + lineSeparator.repeat(trailingLineTerminators);
-        SpoonAstModel model =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
+        SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
         CtType<?> mainType = model.getMainType().orElseThrow();
         markHeader(requireTypeMemberBySimpleName(mainType.getTypeMembers(), "first"), "Fields");
         markHeader(requireTypeMemberBySimpleName(mainType.getTypeMembers(), "Nested"), "Nested types");
