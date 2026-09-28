@@ -7,8 +7,8 @@ import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHar
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasRelocations;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedDeclarations;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.snapshotOriginalMemberOrder;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
@@ -167,7 +167,7 @@ class RelocationDetectorTest {
     }
 
     @Test
-    void isRelocated_annotationsOnly_returnsTrue() {
+    void hasReorderedAnnotations_annotationsOnly_returnsTrue() {
         // Given
         SrcFile srcFile = createSrcFile(
                 "@SuppressWarnings(\"all\") @Deprecated class AnnotationOnlyRelocation {}",
@@ -176,17 +176,17 @@ class RelocationDetectorTest {
         SpoonAstModel sortedModel = new Sorter(defaultConfig).sort(parsedModel).getSortedSpoonAstModel();
 
         // When
-        boolean relocated = hasRelocations(sortedModel);
+        boolean annotationsReordered = hasReorderedAnnotations(sortedModel);
 
         // Then
         assertThat(sortedModel.getAnnotationSrcGroups().get(0).getAnnotationSrcFragments())
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
-        assertThat(relocated).isTrue();
+        assertThat(annotationsReordered).isTrue();
     }
 
     @Test
-    void isRelocated_noChanges_returnsFalse() {
+    void hasReorderedDeclarations_noChanges_returnsFalse() {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
@@ -194,10 +194,11 @@ class RelocationDetectorTest {
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
 
         // When
-        boolean relocated = hasRelocations(spoonAstModel);
+        boolean declarationsReordered =
+                hasReorderedDeclarations(spoonAstModel.getOriginalMemberOrder(), spoonAstModel.getCompilationUnit());
 
         // Then
-        assertThat(relocated).isFalse();
+        assertThat(declarationsReordered).isFalse();
     }
 
     @Test
@@ -257,7 +258,7 @@ class RelocationDetectorTest {
                     "module-info.java",
                     "package-info.java"
                 })
-        void isRelocated_annotationLanguageConstructs_detectsSorting(@NonNull String fileName) {
+        void hasReorderedAnnotations_annotationLanguageConstructs_detectsSorting(@NonNull String fileName) {
             // Given
             SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(requireClasspathResourceUrl(
                     "/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/input/" + fileName));
@@ -265,11 +266,10 @@ class RelocationDetectorTest {
                     new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
 
             // When
-            boolean relocated = hasRelocations(sortedModel);
+            boolean annotationsReordered = hasReorderedAnnotations(sortedModel);
 
             // Then
-            assertThat(relocated).isTrue();
-            assertThat(hasReorderedAnnotations(sortedModel)).isTrue();
+            assertThat(annotationsReordered).isTrue();
             assertThat(hasReorderedAnnotations(parsedModel)).isFalse();
             assertThat(findRelocations(sortedModel.getOriginalMemberOrder(), sortedModel.getCompilationUnit()))
                     .isEmpty();
@@ -284,7 +284,7 @@ class RelocationDetectorTest {
             "2, 0, 1, true",
             "2, 1, 0, true"
         })
-        void isRelocated_annotationPermutations_detectsEveryChangedOrder(
+        void hasReorderedAnnotations_annotationPermutations_detectsEveryChangedOrder(
                 int first, int second, int third, boolean expectedRelocation) {
             // Given
             List<AnnotationSrcFragment> originalGroup =
@@ -297,16 +297,15 @@ class RelocationDetectorTest {
                     Comparator.comparingInt(descriptor -> namesInRequestedOrder.indexOf(descriptor.getName()))));
 
             // When
-            boolean relocated = hasRelocations(reorderedModel);
+            boolean annotationsReordered = hasReorderedAnnotations(reorderedModel);
 
             // Then
-            assertThat(relocated).isEqualTo(expectedRelocation);
-            assertThat(hasReorderedAnnotations(reorderedModel)).isEqualTo(expectedRelocation);
-            assertThat(hasRelocations(permutationModel)).isFalse();
+            assertThat(annotationsReordered).isEqualTo(expectedRelocation);
+            assertThat(hasReorderedAnnotations(permutationModel)).isFalse();
         }
 
         @Test
-        void isRelocated_disabledAnnotationSorting_returnsFalse() {
+        void hasReorderedAnnotations_disabledAnnotationSorting_returnsFalse() {
             // Given
             CompiledConfig disabledConfig = overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(
                     requireClasspathResourceUrl("/test-cases/core/e2e/reorder/34-annotations-disabled/config.yml")));
@@ -316,16 +315,16 @@ class RelocationDetectorTest {
                     new Sorter(disabledConfig).sort(parsedModel).getSortedSpoonAstModel();
 
             // When
-            boolean relocated = hasRelocations(sortedModel);
+            boolean annotationsReordered = hasReorderedAnnotations(sortedModel);
 
             // Then
             assertThat(sortedModel.getAnnotationSrcGroups())
                     .containsExactlyElementsOf(parsedModel.getAnnotationSrcGroups());
-            assertThat(relocated).isFalse();
+            assertThat(annotationsReordered).isFalse();
         }
 
         @Test
-        void isRelocated_onlyLaterAnnotationGroupChanges_returnsTrue() {
+        void hasReorderedAnnotations_onlyLaterAnnotationGroupChanges_returnsTrue() {
             // Given
             SrcFile srcFile = createSrcFile(
                     "@Deprecated class LaterAnnotationGroup { @SuppressWarnings(\"all\") @Deprecated void execute() {}"
@@ -336,16 +335,16 @@ class RelocationDetectorTest {
                     new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
 
             // When
-            boolean relocated = hasRelocations(sortedModel);
+            boolean annotationsReordered = hasReorderedAnnotations(sortedModel);
 
             // Then
             assertThat(sortedModel.getAnnotationSrcGroups().get(0))
                     .isEqualTo(parsedModel.getAnnotationSrcGroups().get(0));
-            assertThat(relocated).isTrue();
+            assertThat(annotationsReordered).isTrue();
         }
 
         @Test
-        void isRelocated_repeatedAnnotationArgumentsChangeOrder_returnsTrue() {
+        void hasReorderedAnnotations_repeatedAnnotationArgumentsChangeOrder_returnsTrue() {
             // Given
             CompiledConfig argumentsConfig =
                     overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(requireClasspathResourceUrl(
@@ -360,14 +359,13 @@ class RelocationDetectorTest {
                     new Sorter(argumentsConfig).sort(repeatedAnnotationsModel).getSortedSpoonAstModel();
 
             // When
-            boolean relocated = hasRelocations(sortedModel);
+            boolean annotationsReordered = hasReorderedAnnotations(sortedModel);
 
             // Then
             assertThat(repeatedAnnotations.getAnnotationSrcFragments())
                     .extracting(fragment -> fragment.getDescriptor().getName())
                     .containsExactly("Tag", "Tag");
-            assertThat(relocated).isTrue();
-            assertThat(hasReorderedAnnotations(sortedModel)).isTrue();
+            assertThat(annotationsReordered).isTrue();
             assertThat(findRelocations(sortedModel.getOriginalMemberOrder(), sortedModel.getCompilationUnit()))
                     .isEmpty();
         }
@@ -379,7 +377,7 @@ class RelocationDetectorTest {
                     "@Deprecated class UnchangedAnnotations {}",
                     "@Deprecated @SuppressWarnings(\"all\") class UnchangedAnnotations {}"
                 })
-        void isRelocated_unchangedAnnotations_returnsFalse(@NonNull String srcCode) {
+        void hasReorderedAnnotations_unchangedAnnotations_returnsFalse(@NonNull String srcCode) {
             // Given
             SpoonAstModel parsedModel = SrcAstTranslator.parse(
                             createSrcFile(srcCode, Path.of("UnchangedAnnotations.java")))
@@ -388,10 +386,10 @@ class RelocationDetectorTest {
                     new Sorter(annotationConfig).sort(parsedModel).getSortedSpoonAstModel();
 
             // When
-            boolean relocated = hasRelocations(sortedModel);
+            boolean annotationsReordered = hasReorderedAnnotations(sortedModel);
 
             // Then
-            assertThat(relocated).isFalse();
+            assertThat(annotationsReordered).isFalse();
         }
     }
 }

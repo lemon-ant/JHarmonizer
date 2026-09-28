@@ -3,7 +3,8 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasRelocations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedDeclarations;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
@@ -36,7 +37,7 @@ public final class Sorter {
      * Reorders declarations in the working AST and returns a model with immutable sorted annotation groups.
      *
      * @param spoonAstModel the SpoonASTModel to sort
-     * @return the model for serialization, member diagnostics, the combined change flag, and sorting statistics
+     * @return the model for serialization, member diagnostics, change flags, and sorting statistics
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
@@ -48,14 +49,19 @@ public final class Sorter {
             // TODO Annotations: The original idea was that the sorting algorithm can natively report about relocations
             List<MemberRelocation> memberRelocations = findRelocations(
                     sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-            boolean relocationsDetected = hasRelocations(sortedSpoonAstModel);
-            return new SortedContent(memberRelocations, relocationsDetected, sortedSpoonAstModel);
+            boolean annotationsReordered = hasReorderedAnnotations(sortedSpoonAstModel);
+            // The report omits untracked members and invalid source positions, so it cannot replace this order check.
+            boolean membersReordered = annotationsReordered
+                    || hasReorderedDeclarations(
+                            sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
+            return new SortedContent(annotationsReordered, memberRelocations, membersReordered, sortedSpoonAstModel);
         });
         SortedContent sortedContent = sortingResult.getResult();
 
         return new SortingResult(
+                sortedContent.isAnnotationsReordered(),
                 sortedContent.getMemberRelocations(),
-                sortedContent.isRelocationsDetected(),
+                sortedContent.isMembersReordered(),
                 sortedContent.getSortedSpoonAstModel(),
                 new SortingStatistic(sortingResult.getNanos()));
     }
@@ -63,10 +69,12 @@ public final class Sorter {
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     private static class SortedContent {
+        boolean annotationsReordered;
+
         @NonNull
         List<MemberRelocation> memberRelocations;
 
-        boolean relocationsDetected;
+        boolean membersReordered;
 
         @NonNull
         SpoonAstModel sortedSpoonAstModel;

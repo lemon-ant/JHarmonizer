@@ -19,10 +19,15 @@ the LIS computation factored into
 `SortingResult.memberRelocations` directly. The pass remains separate from comparison and dependency ordering because
 the operations used by those algorithms do not define a minimal relocation report. Sorting time includes detection.
 
-`Sorter` also computes `hasRelocations(...)` before serialization and retains it as `SortingResult.relocationsDetected`.
-`ReorderFlow` consumes that flag for status reporting. The flag includes declaration and annotation changes relative to
-the original source order; later sorting of the shared AST does not recompute an earlier result's flag. Skipped sorting
-returns `false`. Its detection time is included in sorting statistics.
+`Sorter` computes `hasReorderedAnnotations(...)` once before serialization and retains it as
+`SortingResult.annotationsReordered`. Check flows use that flag for violations and source diffs. The same value
+contributes to `SortingResult.membersReordered`: declaration order is checked only when annotations have not moved.
+`ReorderFlow` consumes the combined flag for status reporting. Both flags compare against original source order and
+retain their values when the shared model is sorted again. Skipped sorting returns `false` for both. Sorting and
+detection share one timer.
+
+The combined flag is kept separate from the member report: diagnostics omit untracked members and members without valid
+source positions, while the declaration-order check compares the original and current hierarchy by node identity.
 
 ## Inputs
 

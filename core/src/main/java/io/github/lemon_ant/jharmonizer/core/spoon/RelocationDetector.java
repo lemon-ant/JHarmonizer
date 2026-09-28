@@ -68,21 +68,10 @@ public class RelocationDetector {
     }
 
     /**
-     * Computes the combined declaration or annotation change flag retained in the sorting result.
-     * @param sortedModel model containing sorted declarations, annotation groups, and the original member snapshot
-     * @return whether a declaration or annotation changed its position within its scope
-     */
-    public static boolean hasRelocations(@NonNull SpoonAstModel sortedModel) {
-        return hasReorderedAnnotations(sortedModel)
-                || hasReorderedDeclarations(sortedModel.getOriginalMemberOrder(), sortedModel.getCompilationUnit());
-    }
-
-    /**
      * Detects annotation permutations within the source groups retained by the sorted model.
      * @param sortedModel model containing the current annotation order and original source offsets
      * @return whether any annotation group differs from its original source order
      */
-    // TODO Annotations: Do we need to detect it after resorting? Possibly sorting algorithm can return this flag
     public static boolean hasReorderedAnnotations(@NonNull SpoonAstModel sortedModel) {
         // Spoon annotation lists retain source order and omit some syntax. Lexer offsets are unique and unchanged:
         // every permutation of a group other than its original ascending order contains an adjacent inversion.
@@ -92,6 +81,35 @@ public class RelocationDetector {
                         .anyMatch(annotationIndex ->
                                 annotationGroup.get(annotationIndex - 1).getAnnotationStart()
                                         > annotationGroup.get(annotationIndex).getAnnotationStart()));
+    }
+
+    /**
+     * Returns whether any declared element has moved within its scope, excluding annotation order.
+     *
+     * <p>Compares the pre-sort {@code originalMemberOrder} snapshot with the flat member order
+     * of {@code reorderedCompilationUnit} element by element. Any positional mismatch indicates
+     * that at least one member was relocated.
+     *
+     * @param originalMemberOrder flat list of all type members in their original source order,
+     *                            as produced by {@link #snapshotOriginalMemberOrder}
+     * @param reorderedCompilationUnit the reordered compilation unit to inspect
+     * @return {@code true} if any element is at a different position in the sorted order;
+     *         otherwise {@code false}
+     */
+    // TODO Annotations: Do we need to detect it after resorting? Possibly sorting algorithm can return this flag
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    public static boolean hasReorderedDeclarations(
+            @NonNull List<CtTypeMember> originalMemberOrder, @NonNull CtCompilationUnit reorderedCompilationUnit) {
+
+        AtomicInteger index = new AtomicInteger(0);
+        boolean mismatchFound = SpoonTypeUtils.streamDeclaredHierarchy(reorderedCompilationUnit)
+                .anyMatch(member -> {
+                    int currentIndex = index.getAndIncrement();
+                    // The snapshot tracks node identities; structurally equal declarations can still move.
+                    return currentIndex >= originalMemberOrder.size()
+                            || originalMemberOrder.get(currentIndex) != member;
+                });
+        return mismatchFound || index.get() != originalMemberOrder.size();
     }
 
     /**
@@ -236,35 +254,6 @@ public class RelocationDetector {
             } while (i < n && isMoved(origIdx, inLis, i));
             addMovedChunk(scopeMembers, chunkStart, i, relocations);
         }
-    }
-
-    /**
-     * Returns whether any declared element has moved within its scope, excluding annotation order.
-     *
-     * <p>Compares the pre-sort {@code originalMemberOrder} snapshot with the flat member order
-     * of {@code reorderedCompilationUnit} element by element. Any positional mismatch indicates
-     * that at least one member was relocated.
-     *
-     * @param originalMemberOrder flat list of all type members in their original source order,
-     *                            as produced by {@link #snapshotOriginalMemberOrder}
-     * @param reorderedCompilationUnit the reordered compilation unit to inspect
-     * @return {@code true} if any element is at a different position in the sorted order;
-     *         otherwise {@code false}
-     */
-    // TODO Annotations: Do we need to detect it after resorting? Possibly sorting algorithm can return this flag
-    @SuppressWarnings("PMD.CompareObjectsWithEquals")
-    private static boolean hasReorderedDeclarations(
-            List<CtTypeMember> originalMemberOrder, CtCompilationUnit reorderedCompilationUnit) {
-
-        AtomicInteger index = new AtomicInteger(0);
-        boolean mismatchFound = SpoonTypeUtils.streamDeclaredHierarchy(reorderedCompilationUnit)
-                .anyMatch(member -> {
-                    int currentIndex = index.getAndIncrement();
-                    // The snapshot tracks node identities; structurally equal declarations can still move.
-                    return currentIndex >= originalMemberOrder.size()
-                            || originalMemberOrder.get(currentIndex) != member;
-                });
-        return mismatchFound || index.get() != originalMemberOrder.size();
     }
 
     private static boolean isMoved(int[] origIdx, boolean[] inLis, int position) {

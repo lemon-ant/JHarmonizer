@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added `annotationsReordered` to `SortingResult`. Sorting computes the annotation-change flag once and reuses it
+  for the combined status. Check flows consume the prepared flag for sorting violations and source diffs.
+  Renamed the combined flag from `relocationsDetected` to `membersReordered` to use the same naming pattern, and aligned
+  constructor arguments with field declaration order.
 - Added the combined declaration-or-annotation change flag to `SortingResult`. `ReorderFlow` uses the prepared flag for
   status reporting. One timed block covers sorting and relocation detection before serialization; skipped sorting returns
   `false`.

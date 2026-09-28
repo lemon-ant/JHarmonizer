@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class AbstractOptOutFlowTest {
     private static final CompiledConfig DEFAULT_CONFIG = ConfigurationManager.loadDefaultConfig();
@@ -27,6 +29,33 @@ class AbstractOptOutFlowTest {
             DEFAULT_CONFIG.getFormatting().isBlankLineBeforeComment(),
             DEFAULT_CONFIG.getFormatting().isBlankLineBetweenFields());
     private static final Sorter DEFAULT_SORTER = new Sorter(DEFAULT_CONFIG);
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void processStream_annotationsOutOfOrder_reportsDiffWithoutFormatting(boolean failFast) {
+        // Given
+        IFlow flow = failFast
+                ? new CheckFailFastFlow(DEFAULT_FORMATTER, DEFAULT_SORTER, DEFAULT_PRINTER_CONFIG)
+                : new CheckAllFlow(DEFAULT_FORMATTER, DEFAULT_SORTER, DEFAULT_PRINTER_CONFIG);
+        SrcFile annotatedFile = createSrcFile(
+                "@SuppressWarnings(\"all\") @Deprecated class AnnotationViolation {}",
+                Path.of("AnnotationViolation.java"));
+        SrcFile cleanFile = createSrcFile("class Clean {}\n", Path.of("Clean.java"));
+
+        // When
+        List<FileProcessingResult> results =
+                flow.processStream(Stream.of(annotatedFile, cleanFile)).toList();
+
+        // Then
+        assertThat(results).hasSize(failFast ? 1 : 2);
+        FileProcessingResult result = results.getFirst();
+        assertThat(result.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
+        assertThat(result.getMemberRelocations()).isEmpty();
+        assertThat(result.getDiff()).isNotEmpty();
+        assertThat(result.getFormattingStatistic().getFormattingTimeInNanos()).isZero();
+        assertThat(result.getFormattingStatistic().getFormattedCodeLength()).isZero();
+        assertThat(result.isStopRequested()).isEqualTo(failFast);
+    }
 
     @Test
     void processStream_blankMessageException_returnsErrorResult() {

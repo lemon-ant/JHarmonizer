@@ -62,8 +62,9 @@ SPDX-License-Identifier: Apache-2.0
   constructor private, for example with `@AllArgsConstructor(access = AccessLevel.PRIVATE)`.
 - For data carriers with five or fewer constructor parameters, use Lombok's generated constructor and keep positional
   calls aligned with declaration order. Remove builders unless features such as `toBuilder` are required.
-- Do not add explicit constructors solely to preserve parameter order across field sorting. Retain explicit
-  constructors only when needed for validation, immutable snapshots, deserialization, or inherited-state initialization.
+- After field renaming or sorting, update positional constructor calls instead of moving fields back or adding explicit
+  constructors to preserve the old argument order. Retain explicit constructors only when needed for validation,
+  immutable snapshots, deserialization, or inherited-state initialization.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out
   explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
@@ -85,8 +86,9 @@ SPDX-License-Identifier: Apache-2.0
   state in local variables or private implementation state.
 - Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
   models must not retain printer configuration.
-- Return prepared member-relocation diagnostics and the combined change flag from sorting in `SortingResult`.
-  Flows consume these results instead of recomputing them from the mutable AST after serialization.
+- Return prepared member-relocation diagnostics plus `annotationsReordered` and combined `membersReordered` flags from
+  sorting in `SortingResult`. Flows consume these results instead of recomputing them from the mutable AST after
+  serialization.
 - When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
   summing separate measurements.
 - Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.

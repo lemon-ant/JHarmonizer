@@ -55,17 +55,20 @@ Input: a `SpoonAstModel` (see [`03-Parser.md`](03-Parser.md)) plus a `CompiledCo
 (see [`02-Configurator.md`](02-Configurator.md)).
 
 Output: `SortingResult` contains a model wrapper with the new immutable annotation order, prepared member-relocation
-diagnostics, the combined `relocationsDetected` flag, and timing statistics. The underlying Spoon AST is shared with the
-input wrapper; declaration lists are reordered in place, while annotation lists remain unchanged.
+diagnostics, the `annotationsReordered` and combined `membersReordered` flags, and timing statistics. The underlying
+Spoon AST is shared with the input wrapper; declaration lists are reordered in place, while annotation lists remain
+unchanged.
 Serialization consumes the returned model to print declaration order from the AST and annotation order from the groups.
 
 `Sorter` computes the existing LIS relocation report before returning. The result and chunk lists use unmodifiable views
 without defensive copies. Producers must not mutate handed-off lists. Each invocation uses fresh result and scope lists,
 so sorting the same AST again leaves earlier reports intact. The referenced Spoon nodes remain mutable.
-Check flows consume these prepared diagnostics. `Sorter` also computes the combined declaration-or-annotation change
-flag before returning; `ReorderFlow` uses it for status reporting after printing. One timed block covers sorting and both
-detection passes. A file-level sorting opt-out returns empty diagnostics, a `false` change flag, and zero sorting time.
-The annotation-only check remains separate from the sorting result.
+Check flows consume these prepared diagnostics and `annotationsReordered` to report sorting violations and annotation
+diffs. `Sorter` computes annotation changes once and reuses that value for the combined `membersReordered` flag,
+checking declaration order only when annotations have not moved. `ReorderFlow` uses the combined flag for status
+reporting. Member-only changes set the combined flag while leaving `annotationsReordered` false, so check flows emit
+member diagnostics without an annotation diff. One timed block covers sorting and detection. A file-level sorting
+opt-out returns empty diagnostics, `false` change flags, and zero sorting time.
 
 ## Implementation map
 
@@ -74,7 +77,7 @@ The Spoon-backed sorter lives in
 
 | Class                                | Role                                                                                                  |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `Sorter` / `SortingResult`           | Public facade and per-file result with the model, relocation diagnostics, combined change flag, and timing. |
+| `Sorter` / `SortingResult`           | Public facade and per-file result with the model, relocation diagnostics, annotation and combined change flags, and timing. |
 | `SpoonSorter`                        | Top-level driver: walks types, dispatches members into compiled groups, emits sorted output.          |
 | `TypeMemberGrouper`                  | Dispatches each member to its leaf member group via the compiled selector predicates.                 |
 | `NaturalMemberGroupResolver` / `EffectiveMemberGroupResolver` | Resolve which compiled group claims a given member, with first-match-wins semantics.    |

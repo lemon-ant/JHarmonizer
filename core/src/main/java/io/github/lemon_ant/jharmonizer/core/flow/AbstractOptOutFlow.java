@@ -5,7 +5,6 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import static io.github.lemon_ant.jharmonizer.core.diff.DiffReporter.computeDiff;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFormattingOnlyFallbackResult;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
@@ -112,11 +111,10 @@ abstract class AbstractOptOutFlow implements IFlow {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
+        SortingResult sortingResult = sortingAndSerializationResult.getSortingResult();
 
-        List<MemberRelocation> memberRelocations =
-                sortingAndSerializationResult.getSortingResult().getMemberRelocations();
-        boolean annotationsReordered =
-                !sortingAndSerializationResult.isSortingSkipped() && hasReorderedAnnotations(sortedSpoonAstModel);
+        List<MemberRelocation> memberRelocations = sortingResult.getMemberRelocations();
+        boolean annotationsReordered = sortingResult.isAnnotationsReordered();
         if (!memberRelocations.isEmpty() || annotationsReordered) {
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
@@ -270,14 +268,13 @@ abstract class AbstractOptOutFlow implements IFlow {
                                             ? OptOutFormattingRangeResolver.resolveFullyOffTypeRanges(
                                                     parsedSpoonAstModel.getOptOuts(), originalSrcCode)
                                             : Map.of())),
-                    new SortingResult(List.of(), false, parsedSpoonAstModel, new SortingStatistic(0)),
-                    true);
+                    new SortingResult(false, List.of(), false, parsedSpoonAstModel, new SortingStatistic(0)));
         }
 
         SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
         SerializationResult serializationResult =
                 SrcAstTranslator.serialize(sortingResult.getSortedSpoonAstModel(), printerConfig);
-        return new SortingAndSerializationResult(serializationResult, sortingResult, false);
+        return new SortingAndSerializationResult(serializationResult, sortingResult);
     }
 
     /**
@@ -356,8 +353,6 @@ abstract class AbstractOptOutFlow implements IFlow {
 
         @NonNull
         SortingResult sortingResult;
-
-        boolean sortingSkipped;
 
         @NonNull
         SerializationStatistic getSerializationStatistic() {

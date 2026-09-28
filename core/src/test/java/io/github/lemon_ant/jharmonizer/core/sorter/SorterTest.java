@@ -27,16 +27,23 @@ import spoon.reflect.declaration.CtTypeMember;
 class SorterTest {
     private static final URL COMPLEX_TYPES_FIXTURE = requireClasspathResourceUrl(
             "/test-cases/core/e2e/printer/scenarios/11-default-complex-types/input/DefaultConfigComplexTypesScenario.java");
+    private static final URL DISABLED_ANNOTATIONS_CONFIG =
+            requireClasspathResourceUrl("/test-cases/core/e2e/reorder/34-annotations-disabled/config.yml");
+    private static final URL DISABLED_ANNOTATIONS_FIXTURE = requireClasspathResourceUrl(
+            "/test-cases/core/e2e/reorder/34-annotations-disabled/input/DisabledAnnotationOrdering.java");
     private static final URL TOP_LEVEL_TYPES_CONFIG =
             requireClasspathResourceUrl("/test-cases/core/e2e/reorder/17-top-level-types-ordering/config.yml");
     private static final URL TOP_LEVEL_TYPES_FIXTURE = requireClasspathResourceUrl(
             "/test-cases/core/e2e/reorder/17-top-level-types-ordering/input/TopLevelTypesOrderingFixture.java");
 
+    private Sorter annotationSortingDisabledSorter;
     private Sorter defaultSorter;
     private Sorter topLevelTypesSorter;
 
     @BeforeAll
     void setUp() {
+        annotationSortingDisabledSorter = new Sorter(
+                overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(DISABLED_ANNOTATIONS_CONFIG)));
         defaultSorter = new Sorter(loadDefaultConfig());
         topLevelTypesSorter = new Sorter(
                 overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(TOP_LEVEL_TYPES_CONFIG)));
@@ -53,7 +60,8 @@ class SorterTest {
 
         // Then
         assertThat(result.getMemberRelocations()).isEmpty();
-        assertThat(result.isRelocationsDetected()).isTrue();
+        assertThat(result.isAnnotationsReordered()).isTrue();
+        assertThat(result.isMembersReordered()).isTrue();
         assertThat(result.getSortedSpoonAstModel()
                         .getAnnotationSrcGroups()
                         .getFirst()
@@ -75,7 +83,7 @@ class SorterTest {
                 .toList();
         assertThat(relocatedMembers).anyMatch(member -> member instanceof CtType<?>);
         assertThat(relocatedMembers).anyMatch(member -> !(member instanceof CtType<?>));
-        assertThat(result.isRelocationsDetected()).isTrue();
+        assertThat(result.isMembersReordered()).isTrue();
         assertThat(result.getSortedSpoonAstModel().getCompilationUnit()).isSameAs(model.getCompilationUnit());
         assertThatThrownBy(() -> result.getMemberRelocations().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
@@ -95,22 +103,42 @@ class SorterTest {
 
         // Then
         assertThat(result.getMemberRelocations()).isEmpty();
-        assertThat(result.isRelocationsDetected()).isFalse();
+        assertThat(result.isAnnotationsReordered()).isFalse();
+        assertThat(result.isMembersReordered()).isFalse();
     }
 
     @Test
-    void sort_repeatedSortRestoresOriginalOrder_retainsEarlierRelocationFlag() {
+    void sort_repeatedSortRestoresOriginalOrder_retainsEarlierReorderingFlag() {
         // Given
-        SpoonAstModel model = SpoonParser.parseJavaSrcFile(
-                createSrcFile("class Zeta {} class Alpha {}", Path.of("Zeta.java")));
+        SpoonAstModel model =
+                SpoonParser.parseJavaSrcFile(createSrcFile("class Zeta {} class Alpha {}", Path.of("Zeta.java")));
         SortingResult firstResult = topLevelTypesSorter.sort(model);
 
         // When
         SortingResult secondResult = defaultSorter.sort(model);
 
         // Then
-        assertThat(firstResult.isRelocationsDetected()).isTrue();
-        assertThat(secondResult.isRelocationsDetected()).isFalse();
+        assertThat(firstResult.isAnnotationsReordered()).isFalse();
+        assertThat(firstResult.isMembersReordered()).isTrue();
+        assertThat(secondResult.isAnnotationsReordered()).isFalse();
+        assertThat(secondResult.isMembersReordered()).isFalse();
+    }
+
+    @Test
+    void sort_repeatedSortWithAnnotationSortingDisabled_preservesEarlierAnnotationFlag() {
+        // Given
+        SpoonAstModel model = parseAstModelFromJavaFixtureResource(DISABLED_ANNOTATIONS_FIXTURE);
+        SortingResult firstResult = defaultSorter.sort(model);
+
+        // When
+        SortingResult secondResult = annotationSortingDisabledSorter.sort(model);
+
+        // Then
+        assertThat(firstResult.isAnnotationsReordered()).isTrue();
+        assertThat(firstResult.isMembersReordered()).isTrue();
+        assertThat(secondResult.isAnnotationsReordered()).isFalse();
+        assertThat(secondResult.getSortedSpoonAstModel().getAnnotationSrcGroups())
+                .containsExactlyElementsOf(model.getAnnotationSrcGroups());
     }
 
     @Test
