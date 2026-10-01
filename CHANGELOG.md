@@ -27,13 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Added `annotationsReordered` to `SortingResult`. Sorting computes the annotation-change flag once and reuses it
-  for the combined status. Check flows consume the prepared flag for sorting violations and source diffs.
-  Renamed the combined flag from `relocationsDetected` to `membersReordered` to use the same naming pattern, and aligned
-  constructor arguments with field declaration order.
-- Added the combined declaration-or-annotation change flag to `SortingResult`. `ReorderFlow` uses the prepared flag for
-  status reporting. One timed block covers sorting and relocation detection before serialization; skipped sorting returns
-  `false`.
+- Annotation sorting preserves source-group order and collects its aggregate change flag while preparing groups,
+  removing group-iterator comparisons. Prepared groups and their flag reuse `ElementOrdering` without a separate
+  annotation result type or repeated change detection. Sorting output remains in the nested
+  `SpoonSorter.SpoonSortingResult`.
+- Sorting detects final declaration and annotation order changes while collecting output, removing separate AST and
+  annotation-group checks. Each parsed model is sorted once per flow; rejecting repeated sorting remains a TODO.
+  Detailed member reports are computed only for check flows with declaration changes, preserving minimal relocation
+  diagnostics while skipping their cost for reordering, annotation-only changes, and unchanged declarations.
+- Sorting results retain independent `annotationsReordered` and `membersReordered` flags for source annotation order
+  and Spoon declaration order, including top-level types. `isReordered()` derives their OR without storing another flag
+  or traversing source models. Flows use it for sorting checks and status; annotation-only changes leave
+  `membersReordered` false and retain annotation diffs. Constructor arguments follow field declaration order.
 - Added member-relocation diagnostics to `SortingResult` using unmodifiable views without defensive copies. Producers
   must not mutate handed-off lists. Check flows consume these diagnostics, and sorting timing includes their detection.
   Moved relocation helpers and models to the neutral `core.spoon` package.
@@ -61,7 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merged annotation-group replacement into `SrcPrinterOutput`; declaration fragments and units without declared types
   share the same source-range copying method.
 - Removed redundant collection copies and wrappers in dependency ordering and CLI process test results.
-- Declaration-only relocation detection is private; callers use the model-based check that also detects annotation order.
 - Annotation ordering models retain unmodifiable views of criteria without copying; callers must not mutate supplied lists.
 - Annotation fragments keep sorting keys, prepared text, the annotation offset, and required trailing separators.
   Gap preparation uses a computed blank-line requirement instead of interpreting a separator-count value.

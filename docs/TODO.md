@@ -1552,7 +1552,7 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 - [ ] Introduce the explicit result without changing current output or sorting algorithms.
 - [ ] Preserve ordered `MemberGroupBlock` information and move separator ownership out of Spoon metadata.
 - [ ] Adapt printing, relocation reporting, and opt-out range tracking to the explicit result.
-- [ ] Verify unchanged input AST and independent results from repeated sorts with different configurations.
+- [ ] Verify unchanged input AST and independent results from separately parsed models with different configurations.
 - [ ] Add the source-rewrite stage separately, using versioned edits and reparsing before sorting.
 - [ ] Measure parsing, allocation, and rendering costs before choosing incremental AST/text synchronization.
 
@@ -1560,10 +1560,9 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 
 ### 11. Annotation review follow-ups
 
-The initial inventory contains all 13 `TODO Annotations` comments found on 2026-09-27. Item 14 was added on 2026-09-28.
-P1 addresses processing failures, P2 covers shared-state and architecture decisions, and P3 covers naming and
-readability. Items 1–7 and 13 are resolved; the other comments remain in their source locations. The table is grouped by
-priority.
+The initial inventory contains all 13 `TODO Annotations` comments found on 2026-09-27. Item 14 was added on 2026-09-28,
+and items 15–22 on 2026-10-01. P1 addresses processing failures, P2 covers shared-state and architecture decisions, and
+P3 covers naming and readability. Items 1–8, 11–14, and 17–22 are resolved; remaining work is listed below by priority.
 
 | Item | Priority | Source symbol | Follow-up | Status |
 | --- | --- | --- | --- | --- |
@@ -1572,18 +1571,26 @@ priority.
 | 3 | P2 | `SpoonSorter.sortCompilationUnitRecursively` | Pass the processing model together with its opt-outs and annotation groups. | Resolved |
 | 4 | P2 | `SpoonAstModel.printerConfig` | Keep printer settings in the flow and pass them explicitly to serialization. | Resolved |
 | 5 | P2 | `RelocationDetector.findRelocations` | Return unmodifiable member-relocation diagnostics in `SortingResult`. | Resolved |
-| 6 | P2 | `RelocationDetector.hasRelocations` | Return the combined change flag in `SortingResult`. | Resolved |
-| 7 | P2 | `RelocationDetector.hasReorderedAnnotations` | Return the annotation-order change flag in `SortingResult`. | Resolved |
-| 8 | P2 | `RelocationDetector.hasReorderedDeclarations` | Consider returning the declaration-order change flag from sorting. | Open |
-| 14 | P2 | `Sorter.sort` | Review native relocation reporting by the sorting algorithm while preserving minimal moved-member reports. | Open |
+| 6 | P2 | `SortingResult.isReordered` | Derive the combined change flag from independent annotation and member flags. | Resolved |
+| 7 | P2 | `SortingResult.annotationsReordered` | Return the annotation-order change flag from sorting. | Resolved |
+| 8 | P2 | `OrderChangeCollector` | Detect final-order changes during output collection under the single-sort model contract. | Resolved |
+| 14 | P2 | `Sorter.sort` | Emit change flags during sorting and compute minimal member reports only when needed. | Resolved |
+| 15 | P2 | `Sorter.sort` / `SpoonAstModel` | Reject repeated sorting through any wrapper sharing the same AST, including an unchanged first sort. | Open |
+| 16 | P2 | `SpoonSorter.SpoonSortingResult` | Decide whether sorting flags belong in the parsed model or the sorting-stage result. | Open |
 | 9 | P3 | `FlexibleUnifiedConfig.annotationsOrdering` | Review criteria naming and overlay test coverage. | Open |
 | 10 | P3 | `AbstractOptOutFlow` | Review the shared pipeline abstraction's name. | Open |
-| 11 | P3 | `AbstractOptOutFlow.checkSortThenFormat` | Make the sorting-first check and formatting short-circuit clear in its name. | Open |
-| 12 | P3 | `AbstractOptOutFlow.checkSortThenFormat` result construction | Extract the annotation diff into a descriptive local variable. | Open |
+| 11 | P3 | `AbstractOptOutFlow.checkSortingThenFormattingIfOrdered` | Make the sorting-first check and formatting short-circuit clear in its name. | Resolved |
+| 12 | P3 | `AbstractOptOutFlow.checkSortingThenFormattingIfOrdered` result construction | Extract the annotation diff into a descriptive local variable. | Resolved |
 | 13 | P3 | `Sorter.sort` | Remove nested group assembly by returning the updated model from `SpoonSorter`. | Resolved |
+| 17 | P3 | `SpoonAnnotationSorter.sort` parameters | Put source groups first and sorting opt-outs second. | Resolved |
+| 18 | P3 | `SpoonAnnotationSorter.sort` result | Preserve group slots and collect the aggregate annotation-change flag directly. | Resolved |
+| 19 | P3 | `SpoonSorter.sortTypeRecursively` | Skip 0–1-member scopes before building a graph or result wrapper. | Resolved |
+| 20 | P3 | `AbstractOptOutFlow.sortSerializeAndFormatSrc` | Explain why REORDER skips member diagnostics. | Resolved |
+| 21 | P3 | `SortingResult.isReordered` | Use the computed aggregate in flows; keep member and annotation flags independent. | Resolved |
+| 22 | P3 | `FileProcessingStatus.REORDERED` | Verify that annotation-only changes retain the sorting status and use source diffs. | Resolved |
 
-Item 8 belongs to the
-[explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites).
+The [explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites) must preserve
+final-order change detection under the single-sort model contract.
 For item 9, `AnnotationOrderingConfigurationTest` already covers replacing defaults, disabling annotation sorting with
 an empty list, and retaining criteria through unrelated overlays; naming review remains open.
 
@@ -1606,26 +1613,46 @@ Item 4 is resolved by removing printer configuration from parsing and `SpoonAstM
 settings to serialization. A printer test reuses the same parsed model with different settings and verifies that returning
 to the original settings reproduces the original output.
 
-Item 5 is resolved at the sorting facade boundary: `Sorter` computes and returns member-relocation diagnostics before
-serialization, and check flows consume them directly. The LIS diagnostic pass remains separate from the sorting algorithm
-to preserve its minimal moved-member report. Its time is included in sorting statistics. Result and chunk lists use
-unmodifiable views without copies; producers must not mutate handed-off lists. Tests cover returned-list write protection,
-empty reports, and earlier diagnostics surviving a later sort with different settings.
-The Spoon AST remains shared; item 8 and the full ordered-content hierarchy remain separate follow-ups.
+Item 5 is resolved at the sorting facade boundary: requested member-relocation diagnostics are returned before
+serialization, and check flows consume them directly. The LIS pass preserves minimal moved-member selection, chunk
+grouping, and sorted-order neighbours. Its time is included in sorting statistics. Result and chunk lists use
+unmodifiable views without copies; producers must not mutate handed-off lists.
 
-Item 6 is resolved at the sorting facade boundary: `Sorter` computes the existing combined declaration-or-annotation
-change flag before returning and includes its detection time in sorting statistics. `SortingResult.membersReordered`
-retains that value, and `ReorderFlow` uses it without inspecting the AST after serialization. Skipped sorting returns
-`false`. Tests cover declaration and annotation changes, unchanged order, formatting-only and sorting-disabled statuses,
-and an earlier result's flag surviving a later sort that restores the original order.
+Items 6 and 7 are resolved by returning independent `SortingResult.membersReordered` and `annotationsReordered` flags.
+The first covers Spoon declarations, including top-level types; the second covers source annotation fragments.
+`isReordered()` derives their OR for status and sorting violations, while the annotation flag selects source diffs.
+Skipped sorting returns `false` for both flags. Tests cover all four flag combinations, disabled sorting, declarations
+without printable diagnostics, formatting-only statuses, and check-flow behavior.
 
-Item 7 is resolved at the sorting facade boundary: `Sorter` computes annotation changes once and returns
-`SortingResult.annotationsReordered`. Check flows consume the prepared flag for violations and source diffs.
-The combined flag reuses the same value and checks declarations only when needed. Skipped sorting returns `false` for
-both flags. Tests cover annotation-only changes, declaration-only changes, unchanged and disabled annotation order,
-repeated sorting, check-flow continuation and fail-fast behavior, skipped formatting, and file-level sorting opt-outs.
+Items 11 and 12 are resolved by naming the conditional check `checkSortingThenFormattingIfOrdered` and extracting
+`annotationSrcDiff` before result construction. The flow checks `isReordered()`, which combines the independent member
+and annotation flags (item 21). `membersReordered` alone excludes annotation changes. `AbstractOptOutFlowTest` and
+`SrcProcessorTest.AnnotationOrdering` cover the `REORDERED` status, skipped formatting, and the existing
+formatting-violation diff renderer (item 22).
 
-Item 14 tracks the follow-up to item 5: the sorting facade returns diagnostics, but still computes them in a separate
-LIS pass. Native reporting must preserve moved-member selection, chunk grouping, and sorted-order neighbours.
+Items 8 and 14 are resolved by detecting identity changes while collecting final declaration and annotation order.
+The collection step runs after grouping and dependency repair, so temporary comparator moves that cancel out do not
+report reordering. Separate declaration-hierarchy and annotation-group detection passes are removed. Check flows request
+the detailed member report only when declarations changed; reordering and annotation-only changes skip that pass.
+The parse-time snapshot remains available for member diagnostics.
+
+Item 15 remains open: enforce one sorting invocation per shared parsed AST, including calls through its input and
+returned model wrappers. An unchanged first sort must also consume the model. The guard must be shared across wrappers;
+a flag stored independently on each wrapper would allow the same mutable AST to be sorted again.
+
+Item 16 remains open for discussion. The nested sorting-stage result currently owns invocation change flags, while
+`SpoonAstModel` is also returned before sorting. Moving flags there would remove one result wrapper but make their
+meaning depend on the processing phase. This can work when callers read flags only after sorting; wrapper-local change
+flags would still not enforce the shared-AST lifecycle or distinguish a fresh model from an unchanged completed sort.
+
+Items 17 and 18 are resolved at the annotation sorting boundary: source groups are the first parameter, opt-outs the
+second, and the shared `ElementOrdering<AnnotationSrcGroup>` retains groups in source-range order. A group is replaced
+only when its internal annotation order changes; preparation collects that flag without a second iterator comparing
+groups or another change-detection call.
+
+Item 19 already has a direct early return after nested types are processed and before the current scope builds a
+dependency graph or result wrapper. A no-op wrapper factory would add an allocation to that path. Extending the guard
+to more scopes must preserve group separator metadata as well as order. Item 20 is resolved by documenting that REORDER
+uses change flags and check flows consume the detailed member report.
 
 ---

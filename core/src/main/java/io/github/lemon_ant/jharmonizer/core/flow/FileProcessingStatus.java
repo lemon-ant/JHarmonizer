@@ -24,15 +24,15 @@ public enum FileProcessingStatus {
     /**
      * Resolves the resulting processing status from the observed relocation and formatting outcomes.
      *
-     * @param hasRelocations whether declaration or annotation relocations were detected
+     * @param reordered whether declaration or annotation order changed
      * @param contentChanged whether the produced source text differs from the original
      * @param checkingOnly whether the flow only validates input without rewriting files
      * @return the resulting processing status
      */
     @NonNull
     public static FileProcessingStatus defineFileProcessingStatus(
-            boolean hasRelocations, boolean contentChanged, boolean checkingOnly) {
-        if (hasRelocations) {
+            boolean reordered, boolean contentChanged, boolean checkingOnly) {
+        if (reordered) {
             return REORDERED;
         }
         if (contentChanged) {

@@ -2,13 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.OrderChangeCollector.ElementOrdering;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SortableTypeMember.OrderingKey;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraph;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import java.io.File;
@@ -18,8 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.jspecify.annotations.Nullable;
@@ -35,6 +41,7 @@ import spoon.reflect.declaration.CtTypeMember;
  */
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class SpoonSorter {
     private static final int MAX_MEMBERS_WITHOUT_SORTING = 1;
 
@@ -44,18 +51,24 @@ public class SpoonSorter {
 
     /**
      * Sorts declaration order in the AST and finalizes sorted annotation source groups.
-     * @param spoonAstModel working AST with its opt-outs and original annotation source groups
-     * @return model with the updated AST and immutable sorted annotation source groups
+     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
+     * @return model with the updated AST, immutable annotation groups, and invocation change flags
      */
     @NonNull
-    public SpoonAstModel sortCompilationUnitRecursively(@NonNull SpoonAstModel spoonAstModel) {
+    public SpoonSortingResult sortCompilationUnitRecursively(@NonNull SpoonAstModel spoonAstModel) {
         CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
         Set<CtType<?>> sortingSkippedTypes = spoonAstModel.getOptOuts().getSortingSkippedTypes();
-        reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
+        boolean membersReordered = reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
         File srcFile = compilationUnit.getFile();
-        compilationUnit.getDeclaredTypes().forEach(type -> sortTypeRecursively(type, sortingSkippedTypes, srcFile));
-        return spoonAstModel.withAnnotationSrcGroups(SpoonAnnotationSorter.sort(
-                sortingSkippedTypes, spoonAstModel.getAnnotationSrcGroups(), compiledConfig.getAnnotationComparator()));
+        for (CtType<?> type : compilationUnit.getDeclaredTypes()) {
+            membersReordered |= sortTypeRecursively(type, sortingSkippedTypes, srcFile);
+        }
+        ElementOrdering<AnnotationSrcGroup> annotationOrdering = SpoonAnnotationSorter.sort(
+                spoonAstModel.getAnnotationSrcGroups(), sortingSkippedTypes, compiledConfig.getAnnotationComparator());
+        return new SpoonSortingResult(
+                annotationOrdering.isReordered(),
+                membersReordered,
+                spoonAstModel.withAnnotationSrcGroups(annotationOrdering.getElementsInSortedOrder()));
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
@@ -64,6 +77,7 @@ public class SpoonSorter {
     }
 
     @NonNull
+    // TODO Move to the ComparatorUtils?
     private static Comparator<CtType<?>> createTopLevelTypesComparator(
             CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering,
             CtType<?> mainType,
@@ -93,22 +107,11 @@ public class SpoonSorter {
         return topLevelTypesSelectors.size();
     }
 
-    /**
-     * Flattens blocks into a single member list preserving the block order.
-     * Group boundary markers are expected to be applied before flattening.
-     */
-    @NonNull
-    private static List<CtTypeMember> flattenMembers(List<MemberGroupBlock> memberGroupBlocks) {
-        return memberGroupBlocks.stream()
-                .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream())
-                .toList();
-    }
-
-    private static void reorderTopLevelTypes(
+    private static boolean reorderTopLevelTypes(
             CtCompilationUnit compilationUnit, CompiledTopLevelTypesOrdering compiledTopLevelTypesOrdering) {
         List<CtType<?>> declaredTypes = compilationUnit.getDeclaredTypes();
         if (declaredTypes.size() <= MAX_MEMBERS_WITHOUT_SORTING) {
-            return;
+            return false;
         }
 
         CtType<?> mainType =
@@ -118,17 +121,16 @@ public class SpoonSorter {
         Comparator<CtType<?>> declaredTypeComparator =
                 createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
-        List<CtType<?>> sortedDeclaredTypes =
-                declaredTypes.stream().sorted(declaredTypeComparator).toList();
-        compilationUnit.setDeclaredTypes(sortedDeclaredTypes);
+        ElementOrdering<CtType<?>> declaredTypeOrdering = OrderChangeCollector.collectOrderedElements(
+                declaredTypes.size(),
+                declaredTypes.iterator(),
+                declaredTypes.stream().sorted(declaredTypeComparator));
+        compilationUnit.setDeclaredTypes(declaredTypeOrdering.getElementsInSortedOrder());
+        return declaredTypeOrdering.isReordered();
     }
 
     @NonNull
-    private static List<CtTypeMember> sortTypeMembers(CtType<?> type, CompiledMemberGroup rootMemberGroup) {
-        if (type.getTypeMembers().size() <= MAX_MEMBERS_WITHOUT_SORTING) {
-            return type.getTypeMembers();
-        }
-
+    private static ElementOrdering<CtTypeMember> sortTypeMembers(CtType<?> type, CompiledMemberGroup rootMemberGroup) {
         Map<CtTypeMember, MemberDescriptor> typeMember2Descriptor = SpoonMemberDescriptorFactory.describeMembers(type);
 
         Map<CtTypeMember, CompiledMemberGroup> naturalGroupByMember =
@@ -147,7 +149,11 @@ public class SpoonSorter {
                 GroupMembersOrderer.orderMembersInsideGroups(memberGroupBlocks, memberDependencyGraph);
 
         GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
-        return flattenMembers(orderedMemberGroupBlocks);
+        return OrderChangeCollector.collectOrderedElements(
+                typeMember2Descriptor.size(),
+                streamExplicitSrcTypeMembers(type).iterator(),
+                orderedMemberGroupBlocks.stream()
+                        .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream()));
     }
 
     /**
@@ -159,10 +165,12 @@ public class SpoonSorter {
      * This order keeps the logic deterministic and ensures nested types are already "clean"
      * when the outer type is printed.
      */
-    private void sortTypeRecursively(
-            CtType<?> currentType, Set<CtType<?>> sortingSkippedTypes, @Nullable File srcFile) {
+    private boolean sortTypeRecursively(
+            CtType<?> currentType,
+            Set<CtType<?>> sortingSkippedTypes, /*TODO We use only srcFile.getPath*/
+            @Nullable File srcFile) {
         if (sortingSkippedTypes.contains(currentType)) {
-            return;
+            return false;
         }
 
         MemberDescriptor topLevelTypeDescriptor = SpoonMemberDescriptorFactory.describeMember(currentType);
@@ -180,9 +188,39 @@ public class SpoonSorter {
                     currentType.getQualifiedName(),
                     rootMemberGroup.getName() != null ? rootMemberGroup.getName() : "<unnamed>");
         }
-        currentType
-                .getNestedTypes()
-                .forEach(nestedType -> sortTypeRecursively(nestedType, sortingSkippedTypes, srcFile));
-        currentType.setTypeMembers(sortTypeMembers(currentType, rootMemberGroup));
+        boolean nestedMembersReordered = false;
+        for (CtType<?> nestedType : currentType.getNestedTypes()) {
+            nestedMembersReordered |= sortTypeRecursively(nestedType, sortingSkippedTypes, srcFile);
+        }
+        // Skip this scope before building a graph or result wrapper, after processing any nested scopes.
+        if (currentType.getTypeMembers().size() <= MAX_MEMBERS_WITHOUT_SORTING) {
+            return nestedMembersReordered;
+        }
+        ElementOrdering<CtTypeMember> memberOrdering = sortTypeMembers(currentType, rootMemberGroup);
+        currentType.setTypeMembers(memberOrdering.getElementsInSortedOrder());
+        return nestedMembersReordered || memberOrdering.isReordered();
+    }
+
+    /** Final model and order changes produced by one sorting invocation. */
+    @Value
+    @AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+    public static class SpoonSortingResult {
+
+        // TODO Annotations: Can we keep these flags in SpoonAstModel?
+        boolean annotationsReordered;
+
+        /** Whether Spoon declaration order changed, including top-level types. */
+        boolean membersReordered;
+
+        @NonNull
+        SpoonAstModel sortedSpoonAstModel;
+
+        /**
+         * Reports whether declaration or annotation order changed.
+         * @return whether any source elements were reordered
+         */
+        public boolean isReordered() {
+            return annotationsReordered || membersReordered;
+        }
     }
 }

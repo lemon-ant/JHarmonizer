@@ -19,6 +19,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypeSe
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTypeKind;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter.SpoonSortingResult;
 import io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -48,9 +49,12 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
+        SpoonSortingResult result = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
 
         // Then
+        assertThat(result.isAnnotationsReordered()).isFalse();
+        assertThat(result.isMembersReordered()).isTrue();
+        assertThat(result.isReordered()).isTrue();
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                         .map(type -> type.getSimpleName())
                         .toList())
@@ -80,9 +84,12 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
+        SpoonSortingResult result = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
 
         // Then
+        assertThat(result.isAnnotationsReordered()).isFalse();
+        assertThat(result.isMembersReordered()).isTrue();
+        assertThat(result.isReordered()).isTrue();
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                         .map(type -> type.getSimpleName())
                         .toList())
@@ -106,9 +113,12 @@ class SpoonSorterTopLevelTypesOrderingTest {
                 .build()));
 
         // When
-        spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
+        SpoonSortingResult result = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
 
         // Then
+        assertThat(result.isAnnotationsReordered()).isFalse();
+        assertThat(result.isMembersReordered()).isTrue();
+        assertThat(result.isReordered()).isTrue();
         assertThat(spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                         .map(type -> type.getSimpleName())
                         .toList())

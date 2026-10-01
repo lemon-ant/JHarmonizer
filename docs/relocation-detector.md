@@ -15,19 +15,24 @@ The implementation lives in
 the LIS computation factored into
 `io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils`.
 
-`Sorter.sort(...)` runs this diagnostic pass once before returning `SortingResult`. Check flows use
-`SortingResult.memberRelocations` directly. The pass remains separate from comparison and dependency ordering because
-the operations used by those algorithms do not define a minimal relocation report. Sorting time includes detection.
+`SpoonSorter` emits declaration and annotation change flags while collecting final output. Element identities are
+compared against input order during the same traversal; checks stop after the first mismatch in each scope. Grouping
+and dependency repair complete before the flag is decided, so temporary moves that cancel out do not report a change.
+Annotation groups remain in source-range order. Preparing them collects whether any group's annotation order changed;
+it does not compare group permutations.
+`SortingResult.annotationsReordered` controls annotation diffs. The independent `membersReordered` flag reports Spoon
+declaration changes, including top-level types. `isReordered()` derives their OR for flow status and sorting checks.
 
-`Sorter` computes `hasReorderedAnnotations(...)` once before serialization and retains it as
-`SortingResult.annotationsReordered`. Check flows use that flag for violations and source diffs. The same value
-contributes to `SortingResult.membersReordered`: declaration order is checked only when annotations have not moved.
-`ReorderFlow` consumes the combined flag for status reporting. Both flags compare against original source order and
-retain their values when the shared model is sorted again. Skipped sorting returns `false` for both. Sorting and
-detection share one timer.
+`Sorter.sort(...)` prepares the LIS member report only when requested and declaration order changed. Check flows request
+and consume `SortingResult.memberRelocations`; `ReorderFlow` requests only the change flags. Annotation-only changes and
+unchanged declarations skip the diagnostic pass. Sorting and requested diagnostics share one timer. The LIS pass remains
+separate because intermediate sorting operations do not define a minimal relocation report.
 
-The combined flag is kept separate from the member report: diagnostics omit untracked members and members without valid
-source positions, while the declaration-order check compares the original and current hierarchy by node identity.
+The combined flag is independent of member diagnostics, which omit untracked nodes and invalid source positions.
+Each freshly parsed shared AST is sorted once per flow, so invocation changes also describe differences from source
+order. The parse-time snapshot remains necessary for detailed reports. Rejecting repeated sorting through either the
+input or output model wrapper is deferred in [the backlog](TODO.md#11-annotation-review-follow-ups). Skipped sorting
+returns empty diagnostics and `false` change flags.
 
 ## Inputs
 
@@ -48,8 +53,8 @@ moved members in the **sorted** order, and carries:
   (either may be `null` when the run sits at the start or end of its scope).
 
 The result list and each moved chunk are unmodifiable views without defensive copies. Producers must not modify
-handed-off lists. The detector uses fresh result and scope lists for each invocation, so later sorting preserves earlier
-reports without copying the diagnostic lists. The referenced Spoon nodes remain mutable.
+handed-off lists. The detector builds fresh result and scope lists for each report. The referenced Spoon nodes remain
+mutable.
 
 `MemberRelocationPrinter` turns each value into one line of the form
 "move *N* members before *X*", so the user sees one diagnostic line per

@@ -3,10 +3,13 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.OrderChangeCollector.ElementOrdering;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationGapLayout;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -22,22 +25,31 @@ class SpoonAnnotationSorter {
     private static final int MINIMUM_SORTABLE_ANNOTATION_COUNT = 2;
 
     /**
-     * Returns sorted source annotation groups, respecting disabled type scopes.
+     * Sorts annotations within source groups without changing group order, respecting disabled type scopes.
+     * The result's change flag reports annotation reordering within any group, not group permutations.
+     * @param annotationSrcGroupsInSrcOrder source annotation groups in their original scope order
      * @param sortingSkippedTypes types excluded by opt-out directives
-     * @param annotationSrcGroups source annotation groups from the processing model
      * @param annotationComparator precompiled annotation comparator
-     * @return immutable groups with enabled annotations sorted and other groups preserved
+     * @return immutable groups in source order and their annotation-order change flag
      */
     @NonNull
-    static List<AnnotationSrcGroup> sort(
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    static ElementOrdering<AnnotationSrcGroup> sort(
+            @NonNull List<AnnotationSrcGroup> annotationSrcGroupsInSrcOrder,
             @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull List<AnnotationSrcGroup> annotationSrcGroups,
             @NonNull Comparator<AnnotationDescriptor> annotationComparator) {
-        // Finalize annotation order and gap text; each group assembles its own consistent fragment sequence.
-        return annotationSrcGroups.stream()
-                .map(annotationSrcGroup ->
-                        sortAnnotationSrcFragments(annotationSrcGroup, sortingSkippedTypes, annotationComparator))
-                .toList();
+        List<AnnotationSrcGroup> preparedAnnotationSrcGroupsInSrcOrder =
+                new ArrayList<>(annotationSrcGroupsInSrcOrder.size());
+        boolean annotationsReordered = false;
+        for (AnnotationSrcGroup annotationSrcGroup : annotationSrcGroupsInSrcOrder) {
+            AnnotationSrcGroup preparedAnnotationSrcGroup =
+                    sortAnnotationSrcFragments(annotationSrcGroup, sortingSkippedTypes, annotationComparator);
+            preparedAnnotationSrcGroupsInSrcOrder.add(preparedAnnotationSrcGroup);
+            // A group is replaced only when its annotations move; the group's source slot stays unchanged.
+            annotationsReordered |= preparedAnnotationSrcGroup != annotationSrcGroup;
+        }
+        return new ElementOrdering<>(
+                Collections.unmodifiableList(preparedAnnotationSrcGroupsInSrcOrder), annotationsReordered);
     }
 
     @NonNull
@@ -107,11 +119,14 @@ class SpoonAnnotationSorter {
                                 originalAnnotationSrcFragments.get(0).getAnnotationStart()))) {
             return annotationSrcGroup;
         }
-        List<AnnotationSrcFragment> sortedAnnotationSrcFragments = originalAnnotationSrcFragments.stream()
-                .sorted(Comparator.comparing(AnnotationSrcFragment::getDescriptor, annotationComparator))
-                .toList();
-        return sortedAnnotationSrcFragments.equals(originalAnnotationSrcFragments)
-                ? annotationSrcGroup
-                : assembleAnnotationSrcGroupWithSortedAnnotations(annotationSrcGroup, sortedAnnotationSrcFragments);
+        ElementOrdering<AnnotationSrcFragment> annotationOrdering = OrderChangeCollector.collectOrderedElements(
+                originalAnnotationSrcFragments.size(),
+                originalAnnotationSrcFragments.iterator(),
+                originalAnnotationSrcFragments.stream()
+                        .sorted(Comparator.comparing(AnnotationSrcFragment::getDescriptor, annotationComparator)));
+        return annotationOrdering.isReordered()
+                ? assembleAnnotationSrcGroupWithSortedAnnotations(
+                        annotationSrcGroup, annotationOrdering.getElementsInSortedOrder())
+                : annotationSrcGroup;
     }
 }

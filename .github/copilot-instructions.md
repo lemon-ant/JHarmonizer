@@ -86,9 +86,16 @@ SPDX-License-Identifier: Apache-2.0
   state in local variables or private implementation state.
 - Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
   models must not retain printer configuration.
-- Return prepared member-relocation diagnostics plus `annotationsReordered` and combined `membersReordered` flags from
-  sorting in `SortingResult`. Flows consume these results instead of recomputing them from the mutable AST after
-  serialization.
+- Return requested member-relocation diagnostics plus independent `annotationsReordered` and `membersReordered` flags
+  from sorting in `SortingResult`. `membersReordered` covers Spoon declaration order, including top-level types;
+  `annotationsReordered` covers source annotation fragments. Derive `isReordered()` as their OR without storing another
+  flag. Flows use this aggregate for status and sorting checks instead of recomputing changes from the AST.
+- Sort each freshly parsed shared AST only once per flow. Detect final-order changes while collecting sorted output,
+  after grouping and dependency repair, instead of traversing the completed AST again. Compute detailed member
+  diagnostics only when declarations changed and the caller needs the report.
+- Preserve annotation source-group order during sorting; only annotation order inside each group may change.
+  Collect the aggregate annotation-change flag while preparing groups instead of checking for group permutations.
+  Reuse `ElementOrdering` for the prepared groups and their change flag without rerunning change detection.
 - When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
   summing separate measurements.
 - Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.

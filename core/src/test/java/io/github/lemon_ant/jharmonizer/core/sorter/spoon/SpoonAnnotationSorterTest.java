@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
@@ -15,6 +15,8 @@ import io.github.lemon_ant.jharmonizer.core.config.compiled.Unified2CompiledMode
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
+import io.github.lemon_ant.jharmonizer.core.sorter.SortingResult;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.OrderChangeCollector.ElementOrdering;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
@@ -27,6 +29,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotation;
@@ -55,6 +58,34 @@ class SpoonAnnotationSorterTest {
     }
 
     @ParameterizedTest
+    @CsvSource({"0, 1, 2, false", "0, 2, 1, true", "1, 0, 2, true", "1, 2, 0, true", "2, 0, 1, true", "2, 1, 0, true"})
+    void sort_annotationPermutations_reportsEveryChangedOrder(
+            int firstSlotIndex, int secondSlotIndex, int thirdSlotIndex, boolean expectedReordering) {
+        // Given
+        AnnotationSrcGroup originalGroup = sourceGroups.getFirst();
+        List<AnnotationSrcFragment> originalAnnotations = originalGroup.getAnnotationSrcFragments();
+        List<String> namesInRequestedOrder = List.of(firstSlotIndex, secondSlotIndex, thirdSlotIndex).stream()
+                .map(slotIndex ->
+                        originalAnnotations.get(slotIndex).getDescriptor().getName())
+                .toList();
+        Comparator<AnnotationDescriptor> comparator =
+                Comparator.comparingInt(descriptor -> namesInRequestedOrder.indexOf(descriptor.getName()));
+
+        // When
+        ElementOrdering<AnnotationSrcGroup> result =
+                SpoonAnnotationSorter.sort(List.of(originalGroup), Set.of(), comparator);
+
+        // Then
+        assertThat(result.isReordered()).isEqualTo(expectedReordering);
+        assertThat(result.getElementsInSortedOrder().getFirst().getAnnotationSrcFragments())
+                .extracting(fragment -> fragment.getDescriptor().getName())
+                .containsExactlyElementsOf(namesInRequestedOrder);
+        if (!expectedReordering) {
+            assertThat(result.getElementsInSortedOrder().getFirst()).isSameAs(originalGroup);
+        }
+    }
+
+    @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void sort_annotationSrcGroups_preservesAstAnnotationsAndReturnsImmutableOrder(boolean sourcePositionAvailable) {
         // Given
@@ -72,11 +103,12 @@ class SpoonAnnotationSorterTest {
         Sorter sorter = new Sorter(compiledConfig);
 
         // When
-        SpoonAstModel sortedModel = sorter.sort(model).getSortedSpoonAstModel();
+        SortingResult result = sorter.sort(model);
 
         // Then
-        assertThat(hasReorderedAnnotations(sortedModel)).isTrue();
-        assertThat(hasReorderedAnnotations(model)).isFalse();
+        SpoonAstModel sortedModel = result.getSortedSpoonAstModel();
+        assertThat(result.isAnnotationsReordered()).isTrue();
+        assertThat(model.getAnnotationSrcGroups()).isSameAs(originalGroups);
         assertThat(sortedModel.getCompilationUnit()).isSameAs(model.getCompilationUnit());
         assertThat(type.getAnnotations()).containsExactlyElementsOf(originalAnnotations);
         assertThat(type.getAnnotations())
@@ -124,18 +156,17 @@ class SpoonAnnotationSorterTest {
     void sort_previouslySortedGroups_retainsOriginalGapOwnership() {
         // Given
         Comparator<AnnotationDescriptor> comparator = Comparator.comparing(AnnotationDescriptor::getName);
-        List<AnnotationSrcGroup> ascendingGroups = SpoonAnnotationSorter.sort(Set.of(), sourceGroups, comparator);
+        List<AnnotationSrcGroup> ascendingGroups = sortAnnotationGroups(sourceGroups, comparator);
         List<String> ascendingReplacementCodes = ascendingGroups.stream()
                 .map(AnnotationSrcGroup::getReplacementCode)
                 .toList();
-        List<AnnotationSrcGroup> descendingGroups =
-                SpoonAnnotationSorter.sort(Set.of(), ascendingGroups, comparator.reversed());
+        List<AnnotationSrcGroup> descendingGroups = sortAnnotationGroups(ascendingGroups, comparator.reversed());
         List<String> descendingReplacementCodes = descendingGroups.stream()
                 .map(AnnotationSrcGroup::getReplacementCode)
                 .toList();
 
         // When
-        List<AnnotationSrcGroup> sortedGroups = SpoonAnnotationSorter.sort(Set.of(), descendingGroups, comparator);
+        List<AnnotationSrcGroup> sortedGroups = sortAnnotationGroups(descendingGroups, comparator);
 
         // Then
         assertThat(descendingReplacementCodes).isNotEqualTo(ascendingReplacementCodes);
@@ -151,10 +182,12 @@ class SpoonAnnotationSorterTest {
     @Test
     void sort_scannedGroups_providesSortedReplacementBeforePrinting() {
         // When
-        List<AnnotationSrcGroup> sortedGroups =
-                SpoonAnnotationSorter.sort(Set.of(), sourceGroups, Comparator.comparing(AnnotationDescriptor::getName));
+        ElementOrdering<AnnotationSrcGroup> result =
+                SpoonAnnotationSorter.sort(sourceGroups, Set.of(), Comparator.comparing(AnnotationDescriptor::getName));
 
         // Then
+        List<AnnotationSrcGroup> sortedGroups = result.getElementsInSortedOrder();
+        assertThat(result.isReordered()).isTrue();
         assertThat(sortedGroups)
                 .extracting(AnnotationSrcGroup::getReplacementCode)
                 .containsExactlyElementsOf(expectedReplacementCodes);

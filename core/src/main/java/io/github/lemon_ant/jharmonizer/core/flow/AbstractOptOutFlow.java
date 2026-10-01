@@ -101,32 +101,29 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @return the processing result for the source file
      */
     @NonNull
-    // TODO Annotations: We need to reflect it name, that we check consequently sorting, and do not format if it was
-    // sorted
-    protected final FileProcessingResult checkSortThenFormat(
+    protected final FileProcessingResult checkSortingThenFormattingIfOrdered(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
             @NonNull ParsingResult parsingResult,
             boolean stopOnViolation) {
         SortingAndSerializationResult sortingAndSerializationResult =
-                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks");
+                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks", true);
         SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
         SortingResult sortingResult = sortingAndSerializationResult.getSortingResult();
 
         List<MemberRelocation> memberRelocations = sortingResult.getMemberRelocations();
         boolean annotationsReordered = sortingResult.isAnnotationsReordered();
-        if (!memberRelocations.isEmpty() || annotationsReordered) {
+        if (sortingResult.isReordered()) {
+            String annotationSrcDiff = annotationsReordered
+                    ? computeDiff(
+                            srcFile.getPath().toString(),
+                            srcFile.getSrcCode(),
+                            sortingAndSerializationResult.getSerializedSrcCode())
+                    : "";
             return FileProcessingResult.builder()
                     .path(srcFile.getPath())
                     .memberRelocations(memberRelocations)
-                    .diff(
-                            // TODO Annotations: Create a local explanatory variable before FileProcessingResult creaton
-                            annotationsReordered
-                                    ? computeDiff(
-                                            srcFile.getPath().toString(),
-                                            srcFile.getSrcCode(),
-                                            sortingAndSerializationResult.getSerializedSrcCode())
-                                    : "")
+                    .diff(annotationSrcDiff)
                     .parsingStatistic(parsingResult.getParsingStatistic())
                     .sortingStatistic(
                             sortingAndSerializationResult.getSortingResult().getSortingStatistic())
@@ -245,11 +242,20 @@ abstract class AbstractOptOutFlow implements IFlow {
         return buildFormattingOnlyFallbackResult(srcFile, formattingResult, isStopRequestedOnFormattingChange());
     }
 
+    /**
+     * Sorts and serializes enabled input, or preserves source text for a file-level sorting opt-out.
+     * @param srcFile source file being processed
+     * @param parsedSpoonAstModel freshly parsed model
+     * @param skippedOperationDescription operation description for opt-out logging
+     * @param collectMemberRelocations whether the flow needs the detailed member report
+     * @return sorting and serialization output
+     */
     @NonNull
     protected final SortingAndSerializationResult sortAndSerializeOrReuseOriginalSrc(
             @NonNull SrcFile srcFile,
             @NonNull SpoonAstModel parsedSpoonAstModel,
-            @NonNull String skippedOperationDescription) {
+            @NonNull String skippedOperationDescription,
+            boolean collectMemberRelocations) {
         Optional<JHarmonizerOptOutMode> fileOptOutMode =
                 parsedSpoonAstModel.getOptOuts().getFileOptOutMode();
         boolean reuseOriginalSrc = fileOptOutMode
@@ -271,7 +277,7 @@ abstract class AbstractOptOutFlow implements IFlow {
                     new SortingResult(false, List.of(), false, parsedSpoonAstModel, new SortingStatistic(0)));
         }
 
-        SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel);
+        SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel, collectMemberRelocations);
         SerializationResult serializationResult =
                 SrcAstTranslator.serialize(sortingResult.getSortedSpoonAstModel(), printerConfig);
         return new SortingAndSerializationResult(serializationResult, sortingResult);
@@ -288,8 +294,9 @@ abstract class AbstractOptOutFlow implements IFlow {
     @NonNull
     protected final SortingSerializationAndFormattingResult sortSerializeAndFormatSrc(
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
+        // REORDER reports change flags; detailed relocation lists are only consumed by check flows.
         SortingAndSerializationResult sortingAndSerializationResult =
-                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, sortingDescription);
+                sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, sortingDescription, false);
         FormattingResult formattingResult = getFormatter()
                 .formatSrc(
                         sortingAndSerializationResult.getSerializedSrcCode(),

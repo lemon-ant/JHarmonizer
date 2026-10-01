@@ -12,8 +12,8 @@ the proposed pipeline and types are not implemented. Track implementation in
 [the backlog](TODO.md#10-explicit-sorting-result-and-support-for-future-source-rewrites).
 
 The sorting facade now returns prepared member-relocation diagnostics in `SortingResult` as unmodifiable views without
-defensive copies and retains annotation and combined change flags. Producers must not mutate handed-off lists. The full
-ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
+defensive copies and retains independent annotation and member flags with a computed aggregate. Producers must not
+mutate handed-off lists. The full ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
 
 The direction is to return one explicit ordering model instead of combining a mutated Spoon compilation unit with
 separately returned annotation groups. Extend this direction to support code transformations before sorting.
@@ -30,12 +30,12 @@ and attached annotation fragments that the custom printer can consume directly. 
 
 | Current component | Observable behavior |
 | --- | --- |
-| `SpoonSorter.sortCompilationUnitRecursively` | Mutates top-level types and nested member lists; returns the model with sorted annotation groups. |
+| `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns the model with sorted annotation groups and final-order change flags. |
 | `SpoonAnnotationSorter` | Orders lexical annotations and resolves gap text; each group lazily assembles its replacement code. AST annotation lists remain unchanged. |
 | `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
-| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, annotation and combined change flags, and timing; the input and result wrappers share the mutable compilation unit. |
+| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing; the input and result wrappers share the mutable compilation unit. |
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
-| `RelocationDetector` | Compares original node identities with the mutated AST traversal and detects annotation permutations from lexer source offsets. |
+| `RelocationDetector` | Computes minimal declaration relocation reports from the original snapshot when check flows need diagnostics. |
 
 Consequently, sorting the same input model with configuration A and then B can leave result A holding annotation
 order A alongside the member order and metadata produced by B. Immutable outer lists do not isolate this shared state.

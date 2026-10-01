@@ -23,6 +23,6 @@ public class SpoonAnnotationSorterTestUtils {
     @NonNull
     public static List<AnnotationSrcGroup> sortAnnotationGroups(
             @NonNull List<AnnotationSrcGroup> groups, @NonNull Comparator<AnnotationDescriptor> comparator) {
-        return SpoonAnnotationSorter.sort(Set.of(), groups, comparator);
+        return SpoonAnnotationSorter.sort(groups, Set.of(), comparator).getElementsInSortedOrder();
     }
 }

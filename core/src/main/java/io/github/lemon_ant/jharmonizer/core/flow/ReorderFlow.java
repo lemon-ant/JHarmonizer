@@ -99,7 +99,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
                 .fileProcessingStatus(defineFileProcessingStatus(
-                        sortingAndSerializationResult.getSortingResult().isMembersReordered(), hasChanges, false))
+                        sortingAndSerializationResult.getSortingResult().isReordered(), hasChanges, false))
                 .build();
     }
 

@@ -63,6 +63,6 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
-        return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, false);
+        return checkSortingThenFormattingIfOrdered(srcFile, parsedSpoonAstModel, parsingResult, false);
     }
 }

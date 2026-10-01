@@ -16,13 +16,13 @@ import lombok.Value;
 @Value
 public class SortingResult {
 
-    /** Whether annotation order differs from the original source order. */
+    /** Whether this sorting invocation changed annotation order. */
     boolean annotationsReordered;
 
     @NonNull
     List<MemberRelocation> memberRelocations;
 
-    /** Whether declaration or annotation order differs from the original source order. */
+    /** Whether this sorting invocation changed Spoon declaration order, including top-level types. */
     boolean membersReordered;
 
     @NonNull
@@ -33,9 +33,9 @@ public class SortingResult {
 
     /**
      * Retains sorting output with an unmodifiable view of its member diagnostics.
-     * @param annotationsReordered whether annotation order differs from the original source order
-     * @param memberRelocations the prepared diagnostics; callers must not modify this list after handoff
-     * @param membersReordered whether declaration or annotation order differs from the original source order
+     * @param annotationsReordered whether this invocation changed annotation order
+     * @param memberRelocations the requested diagnostics; callers must not modify this list after handoff
+     * @param membersReordered whether this invocation changed Spoon declaration order, including top-level types
      * @param sortedSpoonAstModel the working model after sorting
      * @param sortingStatistic the sorting and relocation-detection timing
      */
@@ -50,5 +50,13 @@ public class SortingResult {
         this.membersReordered = membersReordered;
         this.sortedSpoonAstModel = sortedSpoonAstModel;
         this.sortingStatistic = sortingStatistic;
+    }
+
+    /**
+     * Reports whether declaration or annotation order changed.
+     * @return whether either independent sorting flag is set
+     */
+    public boolean isReordered() {
+        return annotationsReordered || membersReordered;
     }
 }

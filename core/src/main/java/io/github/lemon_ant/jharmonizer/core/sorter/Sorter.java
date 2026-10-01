@@ -3,11 +3,10 @@
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedAnnotations;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.hasReorderedDeclarations;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter.SpoonSortingResult;
 import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
@@ -36,47 +35,54 @@ public final class Sorter {
     /**
      * Reorders declarations in the working AST and returns a model with immutable sorted annotation groups.
      *
-     * @param spoonAstModel the SpoonASTModel to sort
+     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @return the model for serialization, member diagnostics, change flags, and sorting statistics
      */
     @NonNull
-    @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
+        return sort(spoonAstModel, true);
+    }
+
+    /**
+     * Sorts a parsed model once and prepares member diagnostics only when requested.
+     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
+     * @param collectMemberRelocations whether the caller needs the detailed member report
+     * @return the model for serialization, requested diagnostics, change flags, and sorting statistics
+     */
+    @NonNull
+    @SuppressWarnings("PMD.GuardLogStatement")
+    public SortingResult sort(@NonNull SpoonAstModel spoonAstModel, boolean collectMemberRelocations) {
         log.trace("Sorting {}", spoonAstModel.getPath());
+        // Each flow sorts a parsed model once, so invocation changes also describe changes from its source order.
+        // TODO Reject repeated sorting through any wrapper sharing this AST, including an unchanged first sort.
         StopWatch.TimedResult<SortedContent> sortingResult = StopWatch.measure(() -> {
-            SpoonAstModel sortedSpoonAstModel = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
-            // Compute diagnostics before handing off the shared AST, which a later sort can reorder again.
-            // TODO Annotations: The original idea was that the sorting algorithm can natively report about relocations
-            List<MemberRelocation> memberRelocations = findRelocations(
-                    sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-            boolean annotationsReordered = hasReorderedAnnotations(sortedSpoonAstModel);
-            // The report omits untracked members and invalid source positions, so it cannot replace this order check.
-            boolean membersReordered = annotationsReordered
-                    || hasReorderedDeclarations(
-                            sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit());
-            return new SortedContent(annotationsReordered, memberRelocations, membersReordered, sortedSpoonAstModel);
+            SpoonSortingResult spoonSortingResult = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
+            SpoonAstModel sortedSpoonAstModel = spoonSortingResult.getSortedSpoonAstModel();
+            List<MemberRelocation> memberRelocations = collectMemberRelocations
+                            && spoonSortingResult.isMembersReordered()
+                    ? findRelocations(
+                            sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit())
+                    : List.of();
+            return new SortedContent(memberRelocations, spoonSortingResult);
         });
         SortedContent sortedContent = sortingResult.getResult();
 
         return new SortingResult(
-                sortedContent.isAnnotationsReordered(),
+                sortedContent.getSpoonSortingResult().isAnnotationsReordered(),
                 sortedContent.getMemberRelocations(),
-                sortedContent.isMembersReordered(),
-                sortedContent.getSortedSpoonAstModel(),
+                sortedContent.getSpoonSortingResult().isMembersReordered(),
+                sortedContent.getSpoonSortingResult().getSortedSpoonAstModel(),
                 new SortingStatistic(sortingResult.getNanos()));
     }
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     private static class SortedContent {
-        boolean annotationsReordered;
 
         @NonNull
         List<MemberRelocation> memberRelocations;
 
-        boolean membersReordered;
-
         @NonNull
-        SpoonAstModel sortedSpoonAstModel;
+        SpoonSortingResult spoonSortingResult;
     }
 }
