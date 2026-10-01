@@ -35,11 +35,11 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+/** Shared source-processing pipeline for reordering, checking, formatting, and failure handling. */
 @Slf4j
 @Getter(AccessLevel.PROTECTED)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CouplingBetweenObjects", "PMD.TooManyMethods"})
-// TODO Annotations: The name of the class doesn't reflect it's abstracton functionality anymore, reconsider
-abstract class AbstractOptOutFlow implements IFlow {
+abstract class AbstractSrcProcessingFlow implements IFlow {
 
     @NonNull
     private final Formatter formatter;
@@ -64,8 +64,8 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @param srcFiles the stream of source files to process
      * @return a stream of per-file processing results
      */
-    @Override
     @NonNull
+    @Override
     public final Stream<FileProcessingResult> processStream(@NonNull Stream<SrcFile> srcFiles) {
         Stream<SrcFile> preCheckedSrcFiles = preCheckSrcFiles(srcFiles);
         Stream<FileProcessingResult> mappedResults = preCheckedSrcFiles.map(this::processSrcSafely);
@@ -78,7 +78,7 @@ abstract class AbstractOptOutFlow implements IFlow {
      * @param sorter the declaration and annotation sorter
      * @param printerConfig the source printer settings
      */
-    protected AbstractOptOutFlow(
+    protected AbstractSrcProcessingFlow(
             @NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
         this.formatter = formatter;
         this.sorter = sorter;

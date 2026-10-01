@@ -36,14 +36,14 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 vendorConfig.getProcessingStatisticsMode().orElse(null);
         UnifiedHeaderLine headerLine = readHeaderLine(vendorConfig);
         List<UnifiedMemberGroup> rootMemberGroups = readRootMemberGroups(vendorConfig);
-        List<@NonNull UnifiedAnnotationOrderingRule> annotationsOrdering = vendorConfig
-                .getAnnotationsOrdering()
-                .map(rules -> rules.stream()
+        List<@NonNull UnifiedAnnotationOrderingRule> annotationOrderingRules = vendorConfig
+                .getAnnotationOrderingRules()
+                .map(vendorAnnotationOrderingRules -> vendorAnnotationOrderingRules.stream()
                         .map(JHarmonizerAnnotationOrderingRule::getUnifiedOrderingRule)
                         .toList())
                 .orElse(null);
         FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder builder = FlexibleUnifiedConfig.builder()
-                .annotationsOrdering(annotationsOrdering)
+                .annotationOrderingRules(annotationOrderingRules)
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(formatting)
                 .backupsEnabled(backupsEnabled)

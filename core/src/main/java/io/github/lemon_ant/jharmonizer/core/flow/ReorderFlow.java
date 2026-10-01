@@ -25,7 +25,7 @@ import lombok.NonNull;
  * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
  * Optionally renames the original file to a backup before overwriting it.
  */
-public class ReorderFlow extends AbstractOptOutFlow {
+public class ReorderFlow extends AbstractSrcProcessingFlow {
     private final boolean backupsEnabled;
 
     /**

@@ -39,15 +39,21 @@ class AnnotationOrderingConfigurationTest {
     @Test
     void compile_yamlOverlay_appliesConfiguredCriteria() {
         // Given
+        FlexibleUnifiedConfig baseline = FlexibleUnifiedConfig.builder()
+                .annotationOrderingRules(defaultConfig.getAnnotationOrderingRules())
+                .build();
         FlexibleUnifiedConfig overlay = JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
                 requireClasspathResourceUrl(FIXTURES + "criteria.yml"));
-        UnifiedConfig merged = UnifiedConfigMerger.merge(defaultConfig, overlay);
+        FlexibleUnifiedConfig flexible = UnifiedConfigMerger.merge(baseline, overlay);
+        UnifiedConfig merged = UnifiedConfigMerger.merge(defaultConfig, flexible);
 
         // When
         CompiledConfig compiled = Unified2CompiledModelCompiler.compile(merged);
 
         // Then
-        assertThat(merged.getAnnotationsOrdering())
+        assertThat(flexible.getAnnotationOrderingRules())
+                .contains(List.of(NAME_LENGTH_ASC, DECLARATION_LENGTH_ASC, ALPHA, ARGUMENTS_ALPHA));
+        assertThat(merged.getAnnotationOrderingRules())
                 .containsExactly(NAME_LENGTH_ASC, DECLARATION_LENGTH_ASC, ALPHA, ARGUMENTS_ALPHA);
         assertThat(compiled.getAnnotationComparator()
                         .compare(new AnnotationDescriptor("z", 30, "A"), new AnnotationDescriptor("a", 20, "LongName")))
@@ -56,7 +62,7 @@ class AnnotationOrderingConfigurationTest {
 
     @Test
     void loadDefault_annotationCriteria_usesArgumentAlphabetAsFinalCriterion() {
-        assertThat(defaultConfig.getAnnotationsOrdering())
+        assertThat(defaultConfig.getAnnotationOrderingRules())
                 .containsExactly(DECLARATION_LENGTH_ASC, NAME_LENGTH_ASC, ALPHA, ARGUMENTS_ALPHA);
     }
 
@@ -74,7 +80,7 @@ class AnnotationOrderingConfigurationTest {
     void merge_emptyAnnotationOverlay_disablesSortingAcrossBothMergeStages() {
         // Given
         FlexibleUnifiedConfig annotations = FlexibleUnifiedConfig.builder()
-                .annotationsOrdering(List.of(ALPHA))
+                .annotationOrderingRules(List.of(ALPHA))
                 .build();
         FlexibleUnifiedConfig disabled =
                 JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(
@@ -85,15 +91,15 @@ class AnnotationOrderingConfigurationTest {
         UnifiedConfig merged = UnifiedConfigMerger.merge(defaultConfig, flexible);
 
         // Then
-        assertThat(flexible.getAnnotationsOrdering()).contains(List.of());
-        assertThat(merged.getAnnotationsOrdering()).isEmpty();
+        assertThat(flexible.getAnnotationOrderingRules()).contains(List.of());
+        assertThat(merged.getAnnotationOrderingRules()).isEmpty();
     }
 
     @Test
     void merge_unrelatedOverlay_preservesAnnotationCriteriaAcrossBothMergeStages() {
         // Given
         FlexibleUnifiedConfig annotations = FlexibleUnifiedConfig.builder()
-                .annotationsOrdering(List.of(NAME_LENGTH_ASC))
+                .annotationOrderingRules(List.of(NAME_LENGTH_ASC))
                 .build();
         FlexibleUnifiedConfig unrelated =
                 FlexibleUnifiedConfig.builder().backupsEnabled(false).build();
@@ -103,8 +109,8 @@ class AnnotationOrderingConfigurationTest {
         UnifiedConfig merged = UnifiedConfigMerger.merge(defaultConfig, flexible);
 
         // Then
-        assertThat(merged.getAnnotationsOrdering()).containsExactly(NAME_LENGTH_ASC);
-        assertThat(UnifiedConfigMerger.merge(defaultConfig, unrelated).getAnnotationsOrdering())
-                .containsExactlyElementsOf(defaultConfig.getAnnotationsOrdering());
+        assertThat(merged.getAnnotationOrderingRules()).containsExactly(NAME_LENGTH_ASC);
+        assertThat(UnifiedConfigMerger.merge(defaultConfig, unrelated).getAnnotationOrderingRules())
+                .containsExactlyElementsOf(defaultConfig.getAnnotationOrderingRules());
     }
 }

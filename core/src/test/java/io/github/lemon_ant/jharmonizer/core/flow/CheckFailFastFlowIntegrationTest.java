@@ -163,7 +163,7 @@ class CheckFailFastFlowIntegrationTest {
             @NonNull SrcFile srcFile,
             @NonNull SpoonModelBuildException modelBuildException)
             throws Exception {
-        Method method = AbstractOptOutFlow.class.getDeclaredMethod(
+        Method method = AbstractSrcProcessingFlow.class.getDeclaredMethod(
                 "processSrcWithFormattingOnlyFallback", SrcFile.class, String.class);
         method.setAccessible(true);
         try {

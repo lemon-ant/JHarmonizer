@@ -57,7 +57,7 @@ public final class JHarmonizer2UnifiedConverter {
                 vendor.getMemberGroups().stream().map(MemberGroupMapper::map).toList();
 
         return UnifiedConfig.builder()
-                .annotationsOrdering(vendor.getAnnotationsOrdering().stream()
+                .annotationOrderingRules(vendor.getAnnotationOrderingRules().stream()
                         .map(JHarmonizerAnnotationOrderingRule::getUnifiedOrderingRule)
                         .toList())
                 .topLevelTypesOrdering(top)

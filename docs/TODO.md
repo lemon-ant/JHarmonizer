@@ -1562,7 +1562,7 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 
 The initial inventory contains all 13 `TODO Annotations` comments found on 2026-09-27. Item 14 was added on 2026-09-28,
 and items 15–22 on 2026-10-01. P1 addresses processing failures, P2 covers shared-state and architecture decisions, and
-P3 covers naming and readability. Items 1–8, 11–15, and 17–22 are resolved; remaining work is listed below by priority.
+P3 covers naming and readability. All 22 items are resolved.
 
 | Item | Priority | Source symbol | Follow-up | Status |
 | --- | --- | --- | --- | --- |
@@ -1576,23 +1576,30 @@ P3 covers naming and readability. Items 1–8, 11–15, and 17–22 are resolved
 | 8 | P2 | `OrderChangeCollector` | Detect final-order changes during output collection under the single-sort model contract. | Resolved |
 | 14 | P2 | `Sorter.sort` | Emit change flags during sorting and compute minimal member reports only when needed. | Resolved |
 | 15 | P2 | `SpoonSorter.sortCompilationUnitRecursively` / `SpoonAstModel` | Reject repeated sorting through any wrapper sharing the same AST, including an unchanged first sort. | Resolved |
-| 16 | P2 | `SpoonSorter.SpoonSortingResult` | Decide whether sorting flags belong in the parsed model or the sorting-stage result. | Open |
-| 9 | P3 | `FlexibleUnifiedConfig.annotationsOrdering` | Review criteria naming and overlay test coverage. | Open |
-| 10 | P3 | `AbstractOptOutFlow` | Review the shared pipeline abstraction's name. | Open |
-| 11 | P3 | `AbstractOptOutFlow.checkSortingThenFormattingIfOrdered` | Make the sorting-first check and formatting short-circuit clear in its name. | Resolved |
-| 12 | P3 | `AbstractOptOutFlow.checkSortingThenFormattingIfOrdered` result construction | Extract the annotation diff into a descriptive local variable. | Resolved |
+| 16 | P2 | `SpoonSorter.SpoonSortingResult` | Keep invocation change flags in the sorting-stage result. | Resolved |
+| 9 | P3 | `FlexibleUnifiedConfig.annotationOrderingRules` | Use rule-list naming across configuration models and verify overlay replacement. | Resolved |
+| 10 | P3 | `AbstractSrcProcessingFlow` | Name the shared abstraction after the source-processing pipeline it implements. | Resolved |
+| 11 | P3 | `AbstractSrcProcessingFlow.checkSortingThenFormattingIfOrdered` | Make the sorting-first check and formatting short-circuit clear in its name. | Resolved |
+| 12 | P3 | `AbstractSrcProcessingFlow.checkSortingThenFormattingIfOrdered` result construction | Extract the annotation diff into a descriptive local variable. | Resolved |
 | 13 | P3 | `Sorter.sort` | Remove nested group assembly by returning the updated model from `SpoonSorter`. | Resolved |
 | 17 | P3 | `SpoonAnnotationSorter.sort` parameters | Put source groups first and sorting opt-outs second. | Resolved |
 | 18 | P3 | `SpoonAnnotationSorter.sort` result | Preserve group slots and collect the aggregate annotation-change flag directly. | Resolved |
 | 19 | P3 | `SpoonSorter.sortTypeRecursively` | Skip 0–1-member scopes before building a graph or result wrapper. | Resolved |
-| 20 | P3 | `AbstractOptOutFlow.sortSerializeAndFormatSrc` | Explain why REORDER skips member diagnostics. | Resolved |
+| 20 | P3 | `AbstractSrcProcessingFlow.sortSerializeAndFormatSrc` | Explain why REORDER skips member diagnostics. | Resolved |
 | 21 | P3 | `SortingResult.isReordered` | Use the computed aggregate in flows; keep member and annotation flags independent. | Resolved |
 | 22 | P3 | `FileProcessingStatus.REORDERED` | Verify that annotation-only changes retain the sorting status and use source diffs. | Resolved |
 
 The [explicit sorting-result design](#10-explicit-sorting-result-and-support-for-future-source-rewrites) must preserve
 final-order change detection under the single-sort model contract.
-For item 9, `AnnotationOrderingConfigurationTest` already covers replacing defaults, disabling annotation sorting with
-an empty list, and retaining criteria through unrelated overlays; naming review remains open.
+Item 9 is resolved by using `annotationOrderingRules` for criterion lists across strict and flexible input/unified
+models, constructor parameters, getters, builders, converters, mergers, and the compiler. The YAML property remains
+`annotations-ordering`. `AnnotationOrderingConfigurationTest` verifies replacement of default criteria, empty-list
+disabling, and retention through unrelated overlays across both merge stages.
+
+Item 10 is resolved by renaming the shared base to `AbstractSrcProcessingFlow`. It orchestrates source-file stream
+processing, sorting, serialization, formatting, sorting-first checks, opt-outs, formatting fallback, and error
+isolation. Production callers, reflection-based tests, and architecture documentation use the new name; regression
+stack traces retain the names from the recorded failures.
 
 Item 1 had the highest priority because enabling TRACE made flow construction and processing depend on writes to
 `debug/`. Directory or snapshot I/O failures could prevent normal processing. Production flows no longer write these
@@ -1626,7 +1633,7 @@ without printable diagnostics, formatting-only statuses, and check-flow behavior
 
 Items 11 and 12 are resolved by naming the conditional check `checkSortingThenFormattingIfOrdered` and extracting
 `annotationSrcDiff` before result construction. The flow checks `isReordered()`, which combines the independent member
-and annotation flags (item 21). `membersReordered` alone excludes annotation changes. `AbstractOptOutFlowTest` and
+and annotation flags (item 21). `membersReordered` alone excludes annotation changes. `AbstractSrcProcessingFlowTest` and
 `SrcProcessorTest.AnnotationOrdering` cover the `REORDERED` status, skipped formatting, and the existing
 formatting-violation diff renderer (item 22).
 
@@ -1641,11 +1648,10 @@ attempt. Input, pre-existing, and returned model views observe the same metadata
 second attempt after unchanged or failed sorting; clones of consumed units retain the claim. Reparsing creates an
 independent lifecycle. Tests cover these aliases, mixed entry points, failures, cloning, and reparsing.
 
-Item 16 remains open for discussion. The nested sorting-stage result currently owns invocation change flags, while
-`SpoonAstModel` is also returned before sorting. Moving flags there would remove one result wrapper but make their
-meaning depend on the processing phase. This can work when callers read flags only after sorting. The shared
-compilation-unit claim enforces the lifecycle separately; wrapper-local change flags cannot distinguish a fresh model
-from an unchanged completed sort.
+Item 16 is resolved by retaining primitive invocation change flags in `SpoonSortingResult` and `SortingResult`.
+The stage result carries known flags after successful sorting; `SpoonAstModel` keeps no nullable post-sort fields.
+This preserves the result contract without partial flag states or converting an unknown result to false.
+The shared compilation-unit claim continues to enforce the sorting lifecycle independently of result flags.
 
 Items 17 and 18 are resolved at the annotation sorting boundary: source groups are the first parameter, opt-outs the
 second, and the shared `ElementOrdering<AnnotationSrcGroup>` retains groups in source-range order. A group is replaced

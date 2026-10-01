@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renamed annotation criterion fields, getters, and builder methods to `annotationOrderingRules` across input and
+  unified configuration models; the YAML property remains `annotations-ordering`.
+- Renamed the shared flow base to `AbstractSrcProcessingFlow` to reflect its source-processing pipeline role.
 - Sorting rejects repeated attempts for a shared compilation unit through any model view or sorting entry point,
   including unchanged and failed first attempts. Clones retain the consumed state; reparsing starts a fresh lifecycle.
 - Annotation sorting preserves source-group order and collects its aggregate change flag while preparing groups,

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class AbstractOptOutFlowTest {
+class AbstractSrcProcessingFlowTest {
     private static final CompiledConfig DEFAULT_CONFIG = ConfigurationManager.loadDefaultConfig();
     private static final Formatter DEFAULT_FORMATTER = new Formatter(
             DEFAULT_CONFIG.getFormatting().getFormatterStyle(),
@@ -118,7 +118,7 @@ class AbstractOptOutFlowTest {
         assertThat(fileProcessingResults.getFirst().getPath()).isEqualTo(Path.of("A.java"));
     }
 
-    private class ThrowingFlow extends AbstractOptOutFlow {
+    private class ThrowingFlow extends AbstractSrcProcessingFlow {
         private final RuntimeException exceptionToThrow;
 
         @Override
@@ -136,8 +136,8 @@ class AbstractOptOutFlowTest {
             this.exceptionToThrow = exceptionToThrow;
         }
 
-        @Override
         @NonNull
+        @Override
         FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
             throw exceptionToThrow;
         }

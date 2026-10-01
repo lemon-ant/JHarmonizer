@@ -20,7 +20,7 @@ import org.apache.commons.lang3.Validate;
 public class JHarmonizerConfig {
 
     @NonNull
-    List<JHarmonizerAnnotationOrderingRule> annotationsOrdering;
+    List<JHarmonizerAnnotationOrderingRule> annotationOrderingRules;
 
     boolean backupsEnabled;
 
@@ -42,7 +42,7 @@ public class JHarmonizerConfig {
     // TODO Make it package
     /**
      * Creates a new JHarmonizerConfig.
-     * @param annotationsOrdering annotation criteria in priority order
+     * @param annotationOrderingRules annotation criteria in priority order
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
@@ -52,7 +52,7 @@ public class JHarmonizerConfig {
      */
     public JHarmonizerConfig(
             @NonNull @JsonProperty(value = "annotations-ordering", required = true)
-                    List<@NonNull JHarmonizerAnnotationOrderingRule> annotationsOrdering,
+                    List<@NonNull JHarmonizerAnnotationOrderingRule> annotationOrderingRules,
             @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
                     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
@@ -62,7 +62,7 @@ public class JHarmonizerConfig {
             @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
                     List<@NonNull JHarmonizerMemberGroup> memberGroups) {
-        this.annotationsOrdering = Collections.unmodifiableList(annotationsOrdering);
+        this.annotationOrderingRules = Collections.unmodifiableList(annotationOrderingRules);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;

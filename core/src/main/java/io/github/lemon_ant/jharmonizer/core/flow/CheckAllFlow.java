@@ -16,7 +16,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
-public class CheckAllFlow extends AbstractOptOutFlow {
+public class CheckAllFlow extends AbstractSrcProcessingFlow {
 
     /**
      * Creates a flow that reports all ordering and formatting violations found in one source file.

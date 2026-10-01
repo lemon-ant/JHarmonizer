@@ -183,6 +183,8 @@ SPDX-License-Identifier: Apache-2.0
   single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
 - Make a variable's domain role explicit when its type is generic, for example `annotationOwner` or
   `annotationComparator`. Name maps by both values and key meaning, such as `annotationDescriptorsBySrcStartOffset`.
+- Name annotation criterion lists `annotationOrderingRules` across strict and flexible input/unified models.
+  The YAML property remains `annotations-ordering`.
 - When collection ordering matters to its use, reflect that order in the variable name.
 - Use current-order terminology for group views shared by scanning and sorting. Reserve sorted-order names for
   sequences already sorted by the comparator; printers consume prepared groups.

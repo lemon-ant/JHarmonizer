@@ -23,7 +23,7 @@ import org.apache.commons.lang3.Validate;
 public class UnifiedConfig {
 
     @NonNull
-    List<UnifiedAnnotationOrderingRule> annotationsOrdering;
+    List<UnifiedAnnotationOrderingRule> annotationOrderingRules;
 
     boolean backupsEnabled;
 
@@ -56,7 +56,7 @@ public class UnifiedConfig {
 
     /**
      * Creates a new UnifiedConfig.
-     * @param annotationsOrdering annotation criteria in priority order
+     * @param annotationOrderingRules annotation criteria in priority order
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
@@ -66,14 +66,14 @@ public class UnifiedConfig {
      */
     @Builder
     private UnifiedConfig(
-            @NonNull List<UnifiedAnnotationOrderingRule> annotationsOrdering,
+            @NonNull List<UnifiedAnnotationOrderingRule> annotationOrderingRules,
             @NonNull UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             @NonNull Boolean backupsEnabled,
             @NonNull ProcessingStatisticsMode processingStatisticsMode,
             @NonNull UnifiedHeaderLine headerLine,
             @NonNull @Singular List<UnifiedMemberGroup> rootMemberGroups) {
-        this.annotationsOrdering = Collections.unmodifiableList(annotationsOrdering);
+        this.annotationOrderingRules = Collections.unmodifiableList(annotationOrderingRules);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;

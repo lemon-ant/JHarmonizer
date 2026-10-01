@@ -28,7 +28,7 @@ import lombok.NonNull;
  * {@link #postProcessResults} to propagate the stop flag via {@code peek} after
  * each result passes through.
  */
-public class CheckFailFastFlow extends AbstractOptOutFlow {
+public class CheckFailFastFlow extends AbstractSrcProcessingFlow {
     private final AtomicBoolean stopFlag = new AtomicBoolean(false);
 
     /**
@@ -65,8 +65,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @param results the stream of per-file results from the mapping phase
      * @return the same stream, with stop-flag propagation via {@code peek}
      */
-    @Override
     @NonNull
+    @Override
     protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
         return results.peek(fileProcessingResult -> {
             if (fileProcessingResult.isStopRequested()) {
@@ -83,8 +83,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @param srcFiles the incoming stream of source files
      * @return a stream that skips remaining files once the stop flag is set
      */
-    @Override
     @NonNull
+    @Override
     protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
         return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
     }
@@ -95,8 +95,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @param srcFile the source file
      * @return the result, with {@code stopRequested = true} if a violation was detected
      */
-    @Override
     @NonNull
+    @Override
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
         ParsingResult parsingResult;
         try {

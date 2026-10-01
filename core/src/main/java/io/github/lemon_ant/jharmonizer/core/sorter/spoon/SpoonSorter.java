@@ -226,8 +226,6 @@ public class SpoonSorter {
     @Value
     @AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
     public static class SpoonSortingResult {
-
-        // TODO Annotations: Can we keep these flags in SpoonAstModel?
         boolean annotationsReordered;
 
         /** Whether Spoon declaration order changed, including top-level types. */

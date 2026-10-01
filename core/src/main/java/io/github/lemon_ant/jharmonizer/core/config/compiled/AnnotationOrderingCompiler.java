@@ -15,20 +15,21 @@ class AnnotationOrderingCompiler {
 
     /**
      * Chains criteria in their configured priority order.
-     * @param rules annotation ordering criteria; empty preserves order
+     * @param annotationOrderingRules annotation criteria in priority order; empty preserves source order
      * @return compiled comparator, retaining source order on complete ties
      */
     @NonNull
-    static Comparator<AnnotationDescriptor> compile(@NonNull List<UnifiedAnnotationOrderingRule> rules) {
-        return rules.stream()
+    static Comparator<AnnotationDescriptor> compile(
+            @NonNull List<UnifiedAnnotationOrderingRule> annotationOrderingRules) {
+        return annotationOrderingRules.stream()
                 .map(AnnotationOrderingCompiler::compileRule)
                 .reduce(Comparator::thenComparing)
                 .orElse((left, right) -> 0);
     }
 
     @NonNull
-    private static Comparator<AnnotationDescriptor> compileRule(UnifiedAnnotationOrderingRule rule) {
-        return switch (rule) {
+    private static Comparator<AnnotationDescriptor> compileRule(UnifiedAnnotationOrderingRule annotationOrderingRule) {
+        return switch (annotationOrderingRule) {
             case ALPHA -> Comparator.comparing(AnnotationDescriptor::getName);
             case NAME_LENGTH_ASC ->
                 Comparator.comparingInt(annotation -> annotation.getName().length());

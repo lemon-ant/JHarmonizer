@@ -24,14 +24,12 @@ import org.jspecify.annotations.Nullable;
  * Annotation criteria are wrapped without copying; callers must not mutate the supplied list.
  */
 @Value
-@SuppressWarnings("PMD.DataClass")
 @Getter(AccessLevel.NONE)
+@SuppressWarnings("PMD.DataClass")
 public class FlexibleUnifiedConfig {
 
-    // TODO Annotations: Do we have merge test with overriding of the default annotation ordering rules and name of the
-    // field doesn't represent rules. Check naming consistency among similar types and parameter/field names
     @Nullable
-    List<UnifiedAnnotationOrderingRule> annotationsOrdering;
+    List<UnifiedAnnotationOrderingRule> annotationOrderingRules;
 
     @Nullable
     Boolean backupsEnabled;
@@ -66,7 +64,7 @@ public class FlexibleUnifiedConfig {
 
     /**
      * Creates a new FlexibleUnifiedConfig.
-     * @param annotationsOrdering optional annotation criteria; empty disables annotation sorting
+     * @param annotationOrderingRules optional annotation criteria; empty disables annotation sorting
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
@@ -76,7 +74,7 @@ public class FlexibleUnifiedConfig {
      */
     @Builder
     private FlexibleUnifiedConfig(
-            @Nullable List<UnifiedAnnotationOrderingRule> annotationsOrdering,
+            @Nullable List<UnifiedAnnotationOrderingRule> annotationOrderingRules,
             @Nullable UnifiedTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable FlexibleUnifiedFormatting formatting,
             @Nullable Boolean backupsEnabled,
@@ -84,7 +82,7 @@ public class FlexibleUnifiedConfig {
             @Nullable UnifiedHeaderLine headerLine,
             @Nullable List<UnifiedMemberGroup> rootMemberGroups) {
         Validate.isTrue(
-                annotationsOrdering != null
+                annotationOrderingRules != null
                         || topLevelTypesOrdering != null
                         || formatting != null
                         || backupsEnabled != null
@@ -92,7 +90,7 @@ public class FlexibleUnifiedConfig {
                         || headerLine != null
                         || rootMemberGroups != null,
                 "At least one field must be set in FlexibleUnifiedConfig");
-        this.annotationsOrdering = ofNullable(annotationsOrdering)
+        this.annotationOrderingRules = ofNullable(annotationOrderingRules)
                 .map(Collections::unmodifiableList)
                 .orElse(null);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
@@ -105,12 +103,12 @@ public class FlexibleUnifiedConfig {
     }
 
     /**
-     * Returns the optional annotation ordering override.
-     * @return annotation criteria; an empty list explicitly preserves source order
+     * Returns the optional annotation ordering rules override.
+     * @return rules in priority order; an empty list explicitly preserves source order
      */
     @NonNull
-    public Optional<List<UnifiedAnnotationOrderingRule>> getAnnotationsOrdering() {
-        return ofNullable(annotationsOrdering);
+    public Optional<List<UnifiedAnnotationOrderingRule>> getAnnotationOrderingRules() {
+        return ofNullable(annotationOrderingRules);
     }
 
     /**

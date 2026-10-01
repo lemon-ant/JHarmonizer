@@ -257,7 +257,7 @@ class JHarmonizerConfigLoaderTest {
                     TestCaseResourceUtils.requireClasspathResourceUrl(FIXTURES + "valid/optional-null-overrides.yml"));
 
             // Then
-            assertThat(config.getAnnotationsOrdering()).isEmpty();
+            assertThat(config.getAnnotationOrderingRules()).isEmpty();
             assertThat(config.getMemberGroups()).isEmpty();
             assertThat(config.getTopLevelTypesOrdering()).isEmpty();
             assertThat(config.getFormatting()).isEmpty();

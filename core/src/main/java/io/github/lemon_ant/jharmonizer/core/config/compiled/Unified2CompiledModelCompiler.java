@@ -32,7 +32,7 @@ public class Unified2CompiledModelCompiler {
         CompiledTopLevelTypesOrdering topLevelTypesOrdering =
                 TopLevelTypesOrderingCompiler.compileTopLevelTypesOrdering(unifiedConfig.getTopLevelTypesOrdering());
         Comparator<AnnotationDescriptor> annotationComparator =
-                AnnotationOrderingCompiler.compile(unifiedConfig.getAnnotationsOrdering());
+                AnnotationOrderingCompiler.compile(unifiedConfig.getAnnotationOrderingRules());
 
         return CompiledConfig.builder()
                 .annotationComparator(annotationComparator)
