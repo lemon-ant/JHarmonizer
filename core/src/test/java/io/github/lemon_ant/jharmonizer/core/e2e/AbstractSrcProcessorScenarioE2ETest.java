@@ -65,6 +65,8 @@ abstract class AbstractSrcProcessorScenarioE2ETest<ValidationStateT> {
     @NonNull
     private static FlexibleUnifiedConfig disableProcessingStatisticsOutput(FlexibleUnifiedConfig flexibleConfig) {
         return FlexibleUnifiedConfig.builder()
+                .annotationOrderingRules(
+                        flexibleConfig.getAnnotationOrderingRules().orElse(null))
                 .topLevelTypesOrdering(flexibleConfig.getTopLevelTypesOrdering().orElse(null))
                 .formatting(flexibleConfig.getFormatting().orElse(null))
                 .backupsEnabled(flexibleConfig.getBackupsEnabled().orElse(null))

@@ -35,13 +35,14 @@ identifiers.
 ```
 SrcFile (raw text + path)
     ↓
-SpoonParser.parseJavaSrcFile(srcFile, printerConfig)
+SpoonParser.parseJavaSrcFile(srcFile)
     ↓
 SpoonAstModel
     ├─ CtCompilationUnit       (Spoon AST)
     ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
     ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    └─ Supplier<SerializedSrcWithSkippedTypeRanges>  (lazy re-serialization)
+    ├─ annotationSrcGroups     (group bounds, mixed annotation/gap fragments, and lazy replacement code)
+    └─ srcCode                 (exact original text for source offsets)
     ↓
 Sorter → SpoonSrcPrinter → Formatter
 ```
@@ -51,11 +52,30 @@ Sorter → SpoonSrcPrinter → Formatter
 | Class                                | Role                                                                                                  |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
 | `SpoonParser`                        | Entry point. Wraps the source in a `VirtualFile`, builds a `Launcher` with `complianceLevel = 21`, and assembles the `SpoonAstModel`. |
-| `SpoonAstModel`                      | Immutable post-parse snapshot used by the rest of the pipeline.                                       |
+| `SpoonAstModel`                      | Typed processing context with the mutable Spoon AST, immutable annotation groups, original source, opt-outs, and source-order snapshot. |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
-| `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the serializer can compute relocations.  |
+| `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the sorter can compute relocation diagnostics. |
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
+
+`AnnotationSrcGroup` is the shared model in `core.spoon`, with nested annotation, gap, layout, and base-fragment types.
+`AnnotationSourceScanner` produces these groups and retains the private parsing state and source-preparation logic.
+The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
+declaration order in the AST and returns a model wrapper with the new immutable group order. AST annotation lists
+remain unchanged. Printing consumes that returned model together with the flow's `PrinterConfig`;
+annotation order is neither stored in `CtCompilationUnit` metadata nor captured by a serialization supplier.
+Parsing does not depend on printer settings. The flow passes its immutable configuration to
+`SrcAstTranslator.serialize(model, printerConfig)` for each printing invocation.
+The scanner collects annotations and gaps in separate lists with source bounds and comment ownership. The group
+constructor retains unmodifiable views; callers must not modify the lists after handoff. The scanner starts fresh
+lists for each group. The sorter supplies a new annotation order and resolved gaps to the same constructor.
+`annotationSrcFragments` represents source order after scanning and comparator order after sorting. The private
+`srcFragments` sequence is assembled by a static interleaving helper when replacement code is requested, then cached.
+Each group lazily concatenates and caches its replacement code from that sequence. All original ranges remain unchanged.
+Each gap contains one ready-to-emit code string and a shared `AnnotationGapLayout` prepared by the scanner. The layout
+separates fixed content from whitespace prefixes and records available physical separators. An annotation whose line
+comment already ends with a Unicode escape requires no additional physical separator. Sorting uses these prepared
+components and counts without reading or analyzing the original source.
 
 ## What is preserved
 

@@ -45,8 +45,7 @@ class SpoonPrinterBoundaryIntegrationTest {
         // Given
         String srcCode = inputSrcCode.stripTrailing().replace("\n", lineSeparator)
                 + lineSeparator.repeat(trailingLineTerminators);
-        SpoonAstModel model =
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")), printerConfig);
+        SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
         CtType<?> mainType = model.getMainType().orElseThrow();
         markHeader(requireTypeMemberBySimpleName(mainType.getTypeMembers(), "first"), "Fields");
         markHeader(requireTypeMemberBySimpleName(mainType.getTypeMembers(), "Nested"), "Nested types");
@@ -58,7 +57,7 @@ class SpoonPrinterBoundaryIntegrationTest {
 
         // When
         SerializedSrcWithSkippedTypeRanges result =
-                SrcAstTranslator.serialize(model).getSerializedSrcWithSkippedTypeRanges();
+                SrcAstTranslator.serialize(model, printerConfig).getSerializedSrcWithSkippedTypeRanges();
 
         // Then
         assertThat(result.getSortingSkippedTypeRanges()).hasSize(1);

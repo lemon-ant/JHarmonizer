@@ -23,6 +23,16 @@ class SrcPrinterE2ETest extends AbstractCompilableSrcProcessorE2ETest {
     private static final Path FIXTURES_ROOT =
             Path.of(URI.create(requireClasspathDirectoryUrl(FIXTURES).toExternalForm()));
 
+    @ParameterizedTest
+    @ValueSource(strings = {"\n", "\r\n", "\r"})
+    void reorder_annotationFragments_preservesLineSeparators(@NonNull String lineSeparator) throws Exception {
+        processFixtureVariant(
+                "17-annotation-fragments",
+                "AnnotationFragmentPreservation.java",
+                srcCode -> srcCode.replace("\n", lineSeparator),
+                srcCode -> srcCode.replace("\n", lineSeparator));
+    }
+
     @ParameterizedTest(name = "{0}, trailing line terminators: {2}")
     @MethodSource("provideBoundaryVariants")
     void reorder_combinedSeparatorsAndOptOut_preservesExactBoundaries(
@@ -92,6 +102,16 @@ class SrcPrinterE2ETest extends AbstractCompilableSrcProcessorE2ETest {
                 "HeaderlessScenario.java",
                 "class HeaderlessScenario{int zebra;int alpha;}",
                 "class HeaderlessScenario{\nint alpha;\nint zebra;\n}\n".replace("\n", System.lineSeparator()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\n", "\r\n", "\r"})
+    void reorder_leadingTypeComments_preservesLineSeparators(@NonNull String lineSeparator) throws Exception {
+        processFixtureVariant(
+                "19-leading-type-comments",
+                "LeadingTypeCommentOrdering.java",
+                srcCode -> srcCode.replace("\n", lineSeparator),
+                srcCode -> srcCode.replace("\n", lineSeparator));
     }
 
     @ParameterizedTest(name = "{0}")

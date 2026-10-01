@@ -35,7 +35,7 @@ class SrcAstTranslatorTest {
         SrcFile srcFile = createSrcFile(Files.readString(file, StandardCharsets.UTF_8), file);
 
         // When
-        ParsingResult result = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult result = SrcAstTranslator.parse(srcFile);
 
         // Then
         assertThat(result).isNotNull();
@@ -65,11 +65,10 @@ class SrcAstTranslatorTest {
             %s
             """.formatted(sortOffFragment.stripTrailing(), fullyOffFragment.stripTrailing());
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Sample.java"));
-        SpoonAstModel spoonAstModel =
-                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
+        SpoonAstModel spoonAstModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
-        SerializationResult result = SrcAstTranslator.serialize(spoonAstModel);
+        SerializationResult result = SrcAstTranslator.serialize(spoonAstModel, DEFAULT_PRINTER_CONFIG);
         List<SrcCharacterRange> formattingSkippedRanges = OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
                 spoonAstModel.getOptOuts(), result.getSerializedSrcWithSkippedTypeRanges());
         String serializedSrcCode =
@@ -89,11 +88,10 @@ class SrcAstTranslatorTest {
         // Given: simple source code
         String src = "class Demo { void m() {} }";
         SrcFile srcFile = createSrcFile(src, Path.of("Demo.java"));
-        SpoonAstModel model =
-                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
+        SpoonAstModel model = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
 
         // When
-        SerializationResult result = SrcAstTranslator.serialize(model);
+        SerializationResult result = SrcAstTranslator.serialize(model, DEFAULT_PRINTER_CONFIG);
 
         // Then
         assertThat(result).isNotNull();
@@ -109,8 +107,7 @@ class SrcAstTranslatorTest {
         // Given
         String srcCode = "class Gamma {}";
         SrcFile srcFile = createSrcFile(srcCode, Path.of("Gamma.java"));
-        SpoonAstModel spoonAstModel =
-                SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG).getSpoonAstModel();
+        SpoonAstModel spoonAstModel = SrcAstTranslator.parse(srcFile).getSpoonAstModel();
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = new SerializedSrcWithSkippedTypeRanges(
                 srcCode,
                 new HashMap<>(

@@ -3,8 +3,13 @@
 package io.github.lemon_ant.jharmonizer.core.utilities;
 
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentEndExclusive;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStart;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationEnd;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineContentEndExclusive;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineSeparatorStart;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineStart;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -179,6 +184,40 @@ class SrcCodeUtilsTest {
     }
 
     @Nested
+    class FindFragmentStart {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideInvalidRanges")
+        void findFragmentStart_invalidRange_throwsIndexOutOfBoundsException(
+                @NonNull String scenario, int start, int end) {
+            assertThatThrownBy(() -> findFragmentStart(start, end, "text"))
+                    .as(scenario)
+                    .isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourceRanges")
+        void findFragmentStart_sourceRange_returnsFirstContentOffset(
+                @NonNull String scenario, @NonNull String srcCode, int start, int end, int expectedStart) {
+            assertThat(findFragmentStart(start, end, srcCode)).as(scenario).isEqualTo(expectedStart);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourceRanges() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, -1, 0),
+                    Arguments.of("empty interior range", " x", 1, 0, 1),
+                    Arguments.of("spaces before content", "  @A ", 0, 4, 2),
+                    Arguments.of("range starts after content", "@A \t@B", 2, 5, 4),
+                    Arguments.of("bounded search stops before content", "  @A", 0, 0, 1),
+                    Arguments.of("only whitespace", " \t\r\n\f", 0, 4, 5),
+                    Arguments.of("CRLF before indentation", "\r\n\t@A", 0, 4, 3),
+                    Arguments.of("form feed and Unicode whitespace", "\f\u2003x", 0, 2, 2),
+                    Arguments.of("non-breaking space is content", "\u00A0x", 0, 1, 0));
+        }
+    }
+
+    @Nested
     class FindFragmentStartWithIndentation {
 
         @ParameterizedTest(name = "{0}")
@@ -289,6 +328,34 @@ class SrcCodeUtilsTest {
     }
 
     @Nested
+    class FindIndentationEnd {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourceRanges")
+        void findIndentationEnd_sourceRange_skipsOnlySpacesAndTabs(
+                @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedEnd) {
+            assertThat(findIndentationEnd(start, endExclusive, srcCode))
+                    .as(scenario)
+                    .isEqualTo(expectedEnd);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourceRanges() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0, 0),
+                    Arguments.of("empty interior range", " \t@A", 2, 2, 2),
+                    Arguments.of("mixed indentation", " \t@A", 0, 4, 2),
+                    Arguments.of("indentation after preceding content", "x \t@A", 1, 5, 3),
+                    Arguments.of("bounded indentation", " \t ", 0, 2, 2),
+                    Arguments.of("indentation reaches EOF", " \t ", 0, 3, 3),
+                    Arguments.of("form feed stops indentation", " \f @A", 0, 5, 1),
+                    Arguments.of("CRLF stops indentation", " \r\n@A", 0, 5, 1),
+                    Arguments.of("Unicode whitespace stops indentation", " \u2003@A", 0, 4, 1),
+                    Arguments.of("no indentation", "@A", 0, 2, 0));
+        }
+    }
+
+    @Nested
     class FindIndentationStart {
 
         @Test
@@ -323,6 +390,90 @@ class SrcCodeUtilsTest {
                     Arguments.of("form feed before indentation", "\f \ttext", 3, 1),
                     Arguments.of("Unicode whitespace before indentation", "\u2003 \ttext", 3, 1),
                     Arguments.of("indentation reaches EOF", " \t ", 3, 0));
+        }
+    }
+
+    @Nested
+    class FindLineContentEndExclusive {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourceRanges")
+        void findLineContentEndExclusive_sourceRange_removesOnlyTrailingLineSeparators(
+                @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedEnd) {
+            assertThat(findLineContentEndExclusive(start, endExclusive, srcCode))
+                    .as(scenario)
+                    .isEqualTo(expectedEnd);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourceRanges() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0, 0),
+                    Arguments.of("empty interior range", "x\n", 1, 1, 1),
+                    Arguments.of("spaces and tabs in a line comment", "// note  \t\r\n", 0, 12, 10),
+                    Arguments.of("LF", "// x\n", 0, 5, 4),
+                    Arguments.of("CR", "// x\r", 0, 5, 4),
+                    Arguments.of("consecutive separators", "x\r\n\n", 0, 4, 1),
+                    Arguments.of("bounded search ignores following text", "x\nnext", 0, 2, 1),
+                    Arguments.of("range contains only separators", "\r\n@A", 0, 2, 0),
+                    Arguments.of("range begins inside CRLF", "x\r\n", 2, 3, 2),
+                    Arguments.of("spaces after a separator remain", "x\n ", 0, 3, 3),
+                    Arguments.of("other whitespace remains", " \f\u2003", 0, 3, 3));
+        }
+    }
+
+    @Nested
+    class FindLineSeparatorStart {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourcePositions")
+        void findLineSeparatorStart_sourcePosition_findsOnlyTheImmediatelyPrecedingSeparator(
+                @NonNull String scenario, @NonNull String srcCode, int lineStart, int expectedStart) {
+            assertThat(findLineSeparatorStart(lineStart, srcCode)).as(scenario).isEqualTo(expectedStart);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourcePositions() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0),
+                    Arguments.of("source start", "x", 0, 0),
+                    Arguments.of("no preceding separator", "x", 1, 1),
+                    Arguments.of("LF at source start", "\n", 1, 0),
+                    Arguments.of("LF", "x\nA", 2, 1),
+                    Arguments.of("CR", "x\rA", 2, 1),
+                    Arguments.of("CRLF", "x\r\nA", 3, 1),
+                    Arguments.of("CRLF at source start", "\r\n", 2, 0),
+                    Arguments.of("consecutive LF separators", "x\n\nA", 3, 2),
+                    Arguments.of("CR followed by CRLF", "x\r\r\nA", 4, 2),
+                    Arguments.of("bounded CR before LF", "x\r\nA", 2, 1),
+                    Arguments.of("indentation after separator", "\r\n \t", 4, 4));
+        }
+    }
+
+    @Nested
+    class FindLineStart {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourcePositions")
+        void findLineStart_contentPosition_returnsOffsetAfterPrecedingCrOrLf(
+                @NonNull String scenario, @NonNull String srcCode, int contentStart, int expectedStart) {
+            assertThat(findLineStart(contentStart, srcCode)).as(scenario).isEqualTo(expectedStart);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourcePositions() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0),
+                    Arguments.of("source start", "abc", 0, 0),
+                    Arguments.of("no line separator", "abc", 3, 0),
+                    Arguments.of("CRLF before indentation", "x\r\n \t@A", 5, 3),
+                    Arguments.of("CR before indentation", "x\r @A", 3, 2),
+                    Arguments.of("LF before annotation", "x\n@A", 2, 2),
+                    Arguments.of("empty preceding line", "x\n\n@A", 3, 3),
+                    Arguments.of("CRLF at EOF", "x\r\n", 3, 3),
+                    Arguments.of("later separator is ignored", "first\nsecond\nthird", 8, 6),
+                    Arguments.of("separator at the boundary is excluded", "line\n", 4, 0),
+                    Arguments.of("Unicode separator is not CR or LF", "x\u2028@A", 3, 0));
         }
     }
 }

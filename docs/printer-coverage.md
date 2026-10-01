@@ -15,6 +15,9 @@ Unit tests and the general E2E suites are excluded from these counters and run d
 
 ## Measured coverage
 
+The counters below record the implementation before annotation-group replacement moved into `SrcPrinterOutput`.
+They are historical measurements, not current coverage results.
+
 JDK 21, Spoon 11.5.0, JaCoCo 0.8.14: 30 fixture pairs and 44 source variants,
 plus scenario-directory validation (75 tests).
 These cover empty preambles, declaration kinds, combined separator requests, group headers,
@@ -100,11 +103,12 @@ printer, Lombok, or Spoon changes; no automated exclusion check is installed.
 | Exclusion | Reason |
 | --- | --- |
 | Lombok `@NonNull` parameter failures | The pipeline supplies non-null arguments. Null API arguments are outside the E2E input contract. |
-| `SrcPrinterOutput.detectDominantLineSeparator`, empty source | Input without declared types bypasses output construction. |
 | `SrcCodeUtils.findFragmentEndExclusive`, scan reaches the range start | `SrcPrinterOutput.printFragment` skips whitespace-only fragments before finding their end. Direct utility tests cover these ranges. |
 
-Per-class exclusions include respectively 4, 0, 2, 6, 4, and 3 Lombok null-argument outcomes
-in table order, plus the other exclusions listed above. Uncovered implicit-member filtering
+The recorded per-class exclusions include respectively 4, 0, 2, 6, 4, and 3 Lombok null-argument outcomes
+in table order, plus the other exclusions listed above and the formerly unreachable empty-source branch in
+`SrcPrinterOutput.detectDominantLineSeparator`. Units without declared types now construct `SrcPrinterOutput`, so
+fresh measurements must count that empty-source branch as reachable. Uncovered implicit-member filtering
 and leading-comment placement outcomes remain counted as reachable.
 Unicode whitespace retains its existing behavior.
 Line totals remain unadjusted. No classes or methods are manually excluded with `@Generated`.

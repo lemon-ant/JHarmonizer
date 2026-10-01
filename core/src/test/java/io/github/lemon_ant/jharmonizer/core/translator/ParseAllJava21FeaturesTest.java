@@ -30,7 +30,7 @@ class ParseAllJava21FeaturesTest {
         SrcFile srcFile = createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then
@@ -52,11 +52,10 @@ class ParseAllJava21FeaturesTest {
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSrcCode() {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH),
-                DEFAULT_PRINTER_CONFIG);
+                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
 
         // When
-        SerializationResult serializationResult = SrcAstTranslator.serialize(spoonASTModel);
+        SerializationResult serializationResult = SrcAstTranslator.serialize(spoonASTModel, DEFAULT_PRINTER_CONFIG);
 
         // Then
         assertThat(serializationResult).isNotNull();

@@ -2,20 +2,61 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import java.util.Collections;
+import java.util.List;
 import lombok.NonNull;
 import lombok.Value;
 
 /**
  * Result of sorting all members in a single compilation unit.
- * Bundles the reordered Spoon AST model with the associated timing statistics.
+ * Bundles the reordered Spoon AST model, prepared relocation diagnostics, change flags, and timing statistics.
  */
 @Value
 public class SortingResult {
+
+    /** Whether this sorting invocation changed annotation order. */
+    boolean annotationsReordered;
+
+    @NonNull
+    List<MemberRelocation> memberRelocations;
+
+    /** Whether this sorting invocation changed Spoon declaration order, including top-level types. */
+    boolean membersReordered;
 
     @NonNull
     SpoonAstModel sortedSpoonAstModel;
 
     @NonNull
     SortingStatistic sortingStatistic;
+
+    /**
+     * Retains sorting output with an unmodifiable view of its member diagnostics.
+     * @param annotationsReordered whether this invocation changed annotation order
+     * @param memberRelocations the requested diagnostics; callers must not modify this list after handoff
+     * @param membersReordered whether this invocation changed Spoon declaration order, including top-level types
+     * @param sortedSpoonAstModel the working model after sorting
+     * @param sortingStatistic the sorting and relocation-detection timing
+     */
+    public SortingResult(
+            boolean annotationsReordered,
+            @NonNull List<MemberRelocation> memberRelocations,
+            boolean membersReordered,
+            @NonNull SpoonAstModel sortedSpoonAstModel,
+            @NonNull SortingStatistic sortingStatistic) {
+        this.annotationsReordered = annotationsReordered;
+        this.memberRelocations = Collections.unmodifiableList(memberRelocations);
+        this.membersReordered = membersReordered;
+        this.sortedSpoonAstModel = sortedSpoonAstModel;
+        this.sortingStatistic = sortingStatistic;
+    }
+
+    /**
+     * Reports whether declaration or annotation order changed.
+     * @return whether either independent sorting flag is set
+     */
+    public boolean isReordered() {
+        return annotationsReordered || membersReordered;
+    }
 }

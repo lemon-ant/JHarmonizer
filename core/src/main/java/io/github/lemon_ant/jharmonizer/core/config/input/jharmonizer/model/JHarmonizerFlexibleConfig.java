@@ -20,9 +20,12 @@ import org.jspecify.annotations.Nullable;
  * Flexible overlay for JHarmonizerConfig. Each field is individually optional, but at least one must be set.
  */
 @Value
-@SuppressWarnings("PMD.DataClass")
 @Getter(AccessLevel.NONE)
+@SuppressWarnings("PMD.DataClass")
 public class JHarmonizerFlexibleConfig {
+
+    @Nullable
+    List<JHarmonizerAnnotationOrderingRule> annotationOrderingRules;
 
     @Nullable
     Boolean backupsEnabled;
@@ -46,6 +49,7 @@ public class JHarmonizerFlexibleConfig {
      * Creates a flexible JHarmonizer configuration with optional overlay values.
      *
      * @param topLevelTypesOrdering the optional top-level types ordering override
+     * @param annotationOrderingRules optional annotation criteria; empty disables annotation sorting
      * @param formatting the optional partial formatting override
      * @param backupsEnabled the optional backups-enabled override
      * @param processingStatisticsMode the optional processing-statistics-mode override
@@ -53,6 +57,8 @@ public class JHarmonizerFlexibleConfig {
      * @param memberGroups the optional member group overrides
      */
     public JHarmonizerFlexibleConfig(
+            @Nullable @JsonProperty("annotations-ordering")
+                    List<@NonNull JHarmonizerAnnotationOrderingRule> annotationOrderingRules,
             @Nullable @JsonProperty("top-level-types-ordering") JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @Nullable @JsonProperty("formatting") JHarmonizerFlexibleFormatting formatting,
             @Nullable @JsonProperty("backups-enabled") Boolean backupsEnabled,
@@ -60,13 +66,17 @@ public class JHarmonizerFlexibleConfig {
             @Nullable @JsonProperty("header-line") JHarmonizerHeaderLine headerLine,
             @Nullable @JsonProperty("type-members-ordering") List<@NonNull JHarmonizerMemberGroup> memberGroups) {
         Validate.isTrue(
-                topLevelTypesOrdering != null
+                annotationOrderingRules != null
+                        || topLevelTypesOrdering != null
                         || formatting != null
                         || backupsEnabled != null
                         || processingStatisticsMode != null
                         || headerLine != null
                         || memberGroups != null,
                 "At least one field must be set in JHarmonizerFlexibleConfig");
+        this.annotationOrderingRules = ofNullable(annotationOrderingRules)
+                .map(Collections::unmodifiableList)
+                .orElse(null);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;
@@ -74,6 +84,15 @@ public class JHarmonizerFlexibleConfig {
         this.headerLine = headerLine;
         this.memberGroups =
                 ofNullable(memberGroups).map(Collections::unmodifiableList).orElse(null);
+    }
+
+    /**
+     * Returns the optional annotation ordering rules override.
+     * @return rules in priority order; an empty list explicitly preserves source order
+     */
+    @NonNull
+    public Optional<List<JHarmonizerAnnotationOrderingRule>> getAnnotationOrderingRules() {
+        return ofNullable(annotationOrderingRules);
     }
 
     /**

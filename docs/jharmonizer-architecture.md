@@ -34,8 +34,9 @@ JHarmonizer is split into four Maven modules:
    `FlowProcessingStats`.
 5. Optionally renders processing statistics via `ProcessingStatisticsPrintService`.
 
-`AbstractOptOutFlow` is the shared base class that handles file-scope opt-out
-short-circuiting (see [`docs/directives.md`](directives.md)).
+`AbstractSrcProcessingFlow` provides the shared source-processing pipeline: stream hooks, sorting, serialization,
+formatting, sorting-first checks, opt-out handling, formatting fallback, and per-file error isolation.
+Opt-out short-circuiting follows the [directive rules](directives.md).
 
 ## Per-file pipeline
 

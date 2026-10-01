@@ -48,6 +48,10 @@ SPDX-License-Identifier: Apache-2.0
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no
   behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
+- Keep generic source-offset and whitespace operations in `SrcCodeUtils`; keep token-specific logic in the parser.
+- Report annotation ordering diffs with the existing formatting-violation message and diff renderer.
+- Preserve observable annotation order for repeatable annotations, including repetitions and mixed direct/container
+  uses. Annotation sorting criteria must not override that semantic order.
 - Prefer explicit Java types over `var`.
 - Prefer normal imports over repeated fully qualified class names.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode`
@@ -56,6 +60,13 @@ SPDX-License-Identifier: Apache-2.0
   mutability is required.
 - When a simple data-carrier class only needs a narrower constructor than Lombok's default, keep `@Value` and add the
   constructor visibility override instead of decomposing `@Value` into separate Lombok annotations.
+- For data carriers with more than five constructor parameters, use a named Lombok builder and keep the generated
+  constructor private, for example with `@AllArgsConstructor(access = AccessLevel.PRIVATE)`.
+- For data carriers with five or fewer constructor parameters, use Lombok's generated constructor and keep positional
+  calls aligned with declaration order. Remove builders unless features such as `toBuilder` are required.
+- After field renaming or sorting, update positional constructor calls instead of moving fields back or adding explicit
+  constructors to preserve the old argument order. Retain explicit constructors only when needed for validation,
+  immutable snapshots, deserialization, or inherited-state initialization.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out
   explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
@@ -63,9 +74,45 @@ SPDX-License-Identifier: Apache-2.0
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
   - For nested helper/data-carrier types created only by the enclosing type, keep their constructors `private`; tests
     are not a reason to widen constructor visibility.
+  - Apply the same visibility review to Lombok-generated getters. Keep derived views used only inside a model private;
+    test their effects through the production-facing contract.
 - Keep production models and value objects focused on state plus simple accessors or validation.
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing
     classes.
+  - Prefer named predicates when a numeric model value encodes a domain condition. Derive them from existing state
+    when possible instead of storing a redundant flag.
+- For models exposing several views of the same data, accept the representation naturally produced by callers and
+  derive the other views internally, eagerly or lazily. Simple partitioning or interleaving belongs in the model when
+  it enforces consistency. Do not expose independent builder inputs for these dependent views.
+- Keep scanner/parser result models limited to data consumed by downstream production code; retain temporary parsing
+  state in local variables or private implementation state.
+- Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
+  models must not retain printer configuration.
+- Return requested member-relocation diagnostics plus independent `annotationsReordered` and `membersReordered` flags
+  from sorting in `SortingResult`. `membersReordered` covers Spoon declaration order, including top-level types;
+  `annotationsReordered` covers source annotation fragments. Derive `isReordered()` as their OR without storing another
+  flag. Flows use this aggregate for status and sorting checks instead of recomputing changes from the AST.
+- Sort each freshly parsed shared AST only once per flow. Claim its shared compilation unit before the first sorting
+  attempt, including unchanged and failed attempts; model views and clones of consumed units must not reset the claim.
+  Detect final-order changes while collecting sorted output, after grouping and dependency repair, instead of traversing
+  the completed AST again. Compute detailed member diagnostics only when declarations changed and the caller needs the
+  report.
+- Preserve annotation source-group order during sorting; only annotation order inside each group may change.
+  Collect the aggregate annotation-change flag while preparing groups instead of checking for group permutations.
+  Reuse `ElementOrdering` for the prepared groups and their change flag without rerunning change detection.
+- When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
+  summing separate measurements.
+- Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.
+  Nest annotation, gap, layout, and base-fragment types there; keep source parsing and preparation in the scanner.
+- Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.
+  Prepare gap content, whitespace-prefix choices, and separator counts in the scanner. Sorters select from this
+  prepared state; they must not read or analyze original source text. Gap fragments retain one ready-to-emit code
+  string, with shared immutable layout components instead of complete original and relocated code copies.
+  Sorting determines annotation order and gap text. Group construction retains unmodifiable views of both typed lists
+  and requires one gap per annotation. Producers must not modify handed-off lists; the scanner starts fresh lists for
+  each group. Each group lazily interleaves and caches its mixed sequence, then lazily concatenates its replacement
+  code. Printers only replace the group range with that code; they must not interpret fragment
+  internals. `SrcPrinterOutput` owns source-range copying and group replacement for all compilation units.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private
   method parameters may stay implicit when the intent is already obvious.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
@@ -109,8 +156,23 @@ SPDX-License-Identifier: Apache-2.0
   including private/package-private helpers, so the receiver cannot mutate the handed-off instance.
 - Do not add a second unmodifiable wrapper or defensive copy when the collection already stays immutable upstream or
   never leaves the local method scope.
+- Immutable models accepting caller-owned collections must retain an immutable snapshot, not a read-only view of mutable
+  input. Reuse immutable instances where supported, for example through `List.copyOf`.
+  - Exception: annotation ordering criteria in strict and flexible YAML/unified configurations use unmodifiable views
+    without defensive copies. Callers must not mutate supplied lists after construction; do not add tests that assume
+    snapshot isolation for these criteria.
+  - Exception: annotation source groups retain unmodifiable views without copying. Callers must not mutate the supplied
+    lists after handoff; the scanner uses fresh lists for subsequent groups.
+  - Exception: member-relocation diagnostics in `SortingResult` and `MemberRelocation` use unmodifiable views without
+    defensive copies. Producers must not mutate handed-off lists. Test returned-list write protection and processing
+    behavior; do not simulate caller mutations forbidden by this ownership contract.
+- Reject null entries in YAML configuration collections during deserialization. Configure the YAML mapper centrally;
+  custom collection deserializers must enforce the same rule. Preserve nullable optional properties.
+- When a mutable buffer is reused or cleared after handoff, retain an immutable snapshot; an unmodifiable view still
+  reflects subsequent buffer mutations.
 - Non-obvious build/configuration workarounds must include a nearby comment that explains why the workaround exists,
   which upstream component requires it, and when it can be removed.
+- Document non-obvious regular expressions next to the pattern, including matching rules and examples that match or fail.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of
   an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it
   should not be changed casually.
@@ -121,7 +183,18 @@ SPDX-License-Identifier: Apache-2.0
   family.
 - Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use
   single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
+- Make a variable's domain role explicit when its type is generic, for example `annotationOwner` or
+  `annotationComparator`. Name maps by both values and key meaning, such as `annotationDescriptorsBySrcStartOffset`.
+- Name annotation criterion lists `annotationOrderingRules` across strict and flexible input/unified models.
+  The YAML property remains `annotations-ordering`.
+- When collection ordering matters to its use, reflect that order in the variable name.
+- Use current-order terminology for group views shared by scanning and sorting. Reserve sorted-order names for
+  sequences already sorted by the comparator; printers consume prepared groups.
+- Name helper and data-carrier types after the entities they represent, for example `AnnotationSrcFragment`, so their
+  purpose remains clear at import and usage sites outside the enclosing class.
 - Build and validate with JDK 21.
+- Preserve the root `.mvn` directory: shared quality-gate paths use `maven.multiModuleProjectDirectory`. Validate changes
+  to shared build-resource paths from both the repository root and the affected module directory.
 - Automatically run tests only for the module being changed; for changes spanning modules, limit test runs to those
   modules.
   - If prerequisite modules need to be built, skip their tests unless they are also being changed.
@@ -197,6 +270,9 @@ SPDX-License-Identifier: Apache-2.0
 - Keep the condition minimal but specific.
 - Prefer `<ProductionClassName>Test` for unit tests.
 - Prefer `<FeatureOrScenarioName>Test` for integration tests that cover a pipeline.
+- Make test class names and main Java fixture type/file names describe the tested behavior without relying on package or
+  scenario-directory names.
+- Use distinct main fixture names for different scenarios; keep each `input/` and `expected/` pair aligned.
 - If you need multiple scenarios, prefer `@Nested` classes instead of splitting into many test classes.
 
 ### Structure

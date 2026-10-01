@@ -3,10 +3,12 @@
 package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.converter;
 
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.FormatterStyle;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerAnnotationOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleConfig;
 import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.model.JHarmonizerFlexibleFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedFormatting;
+import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationOrderingRule;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedMemberGroup;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedTopLevelTypesOrdering;
@@ -34,7 +36,14 @@ public class JHarmonizerFlexible2FlexibleUnifiedConverter {
                 vendorConfig.getProcessingStatisticsMode().orElse(null);
         UnifiedHeaderLine headerLine = readHeaderLine(vendorConfig);
         List<UnifiedMemberGroup> rootMemberGroups = readRootMemberGroups(vendorConfig);
+        List<@NonNull UnifiedAnnotationOrderingRule> annotationOrderingRules = vendorConfig
+                .getAnnotationOrderingRules()
+                .map(vendorAnnotationOrderingRules -> vendorAnnotationOrderingRules.stream()
+                        .map(JHarmonizerAnnotationOrderingRule::getUnifiedOrderingRule)
+                        .toList())
+                .orElse(null);
         FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder builder = FlexibleUnifiedConfig.builder()
+                .annotationOrderingRules(annotationOrderingRules)
                 .topLevelTypesOrdering(topLevelTypesOrdering)
                 .formatting(formatting)
                 .backupsEnabled(backupsEnabled)

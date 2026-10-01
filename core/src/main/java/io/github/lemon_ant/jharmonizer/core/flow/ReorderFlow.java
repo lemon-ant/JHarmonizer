@@ -5,12 +5,9 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.defineFileProcessingStatus;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildSyntheticParsingStatistic;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.REORDER;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector.isRelocated;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFilesHandler;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingResult;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
@@ -28,7 +25,7 @@ import lombok.NonNull;
  * Flow that rewrites source files in-place according to the configured ordering and formatting rules.
  * Optionally renames the original file to a backup before overwriting it.
  */
-public class ReorderFlow extends AbstractOptOutFlow {
+public class ReorderFlow extends AbstractSrcProcessingFlow {
     private final boolean backupsEnabled;
 
     /**
@@ -44,7 +41,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
             boolean backupsEnabled,
             @NonNull Sorter sorter,
             @NonNull PrinterConfig printerConfig) {
-        super(formatter, sorter, printerConfig, REORDER);
+        super(formatter, sorter, printerConfig);
         this.backupsEnabled = backupsEnabled;
     }
 
@@ -67,10 +64,9 @@ public class ReorderFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
+            parsingResult = SrcAstTranslator.parse(srcFile);
         } catch (SpoonModelBuildException exception) {
             return processSrcWithFormattingOnlyFallback(srcFile, exception);
         }
@@ -83,7 +79,6 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 sortSerializeAndFormatSrc(srcFile, parsedSpoonAstModel, "sorting");
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortingSerializationAndFormattingResult.getSortingAndSerializationResult();
-        SpoonAstModel sortedSpoonAstModel = sortingSerializationAndFormattingResult.getSortedSpoonAstModel();
 
         boolean hasChanges =
                 !srcFile.getSrcCode().equals(sortingSerializationAndFormattingResult.getFormattedSrcCode());
@@ -104,12 +99,7 @@ public class ReorderFlow extends AbstractOptOutFlow {
                 .serializationStatistic(sortingAndSerializationResult.getSerializationStatistic())
                 .formattingStatistic(sortingSerializationAndFormattingResult.getFormattingStatistic())
                 .fileProcessingStatus(defineFileProcessingStatus(
-                        !sortingAndSerializationResult.isSortingSkipped()
-                                && isRelocated(
-                                        sortedSpoonAstModel.getOriginalMemberOrder(),
-                                        sortedSpoonAstModel.getCompilationUnit()),
-                        hasChanges,
-                        false))
+                        sortingAndSerializationResult.getSortingResult().isReordered(), hasChanges, false))
                 .build();
     }
 

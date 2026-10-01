@@ -6,6 +6,7 @@
     "fixImports" : true,
     "formatterStyle" : "PALANTIR"
   },
+  "annotationOrderingRules" : [ "DECLARATION_LENGTH_ASC", "NAME_LENGTH_ASC", "ALPHA", "ARGUMENTS_ALPHA" ],
   "backupsEnabled" : true,
   "headerLine" : {
     "character" : "-",

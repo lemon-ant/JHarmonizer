@@ -128,7 +128,8 @@ class CheckAllFlowIntegrationTest {
     void processStream_sortingOffOptOut_skipsReorderingAndFormatsSrcCode() {
         // Given
         SrcFile srcFile = createSrcFile(
-                "// @jharmonizer:sort-off\npublic class B {\n    public void b() {}\n\n    public void a() {}\n}\n",
+                "// @jharmonizer:sort-off\n@SuppressWarnings(\"all\") @Deprecated"
+                        + " public class B { public void b() {} public void a() {} }",
                 Path.of("B.java"));
 
         // When
@@ -139,6 +140,8 @@ class CheckAllFlowIntegrationTest {
         assertThat(fileProcessingResult.getFileProcessingStatus())
                 .isIn(FileProcessingStatus.FORMATTED, FileProcessingStatus.CHECKED);
         assertThat(fileProcessingResult.getMemberRelocations()).isEmpty();
+        assertThat(fileProcessingResult.getSortingStatistic().getSortingTimeInNanos())
+                .isZero();
     }
 
     @NonNull

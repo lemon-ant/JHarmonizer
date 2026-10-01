@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core;
 
+import static io.github.lemon_ant.jharmonizer.core.flow.FileProcessingStatus.REORDERED;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager;
 import io.github.lemon_ant.jharmonizer.core.config.unified.FlexibleUnifiedConfig;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedOrderingRule;
@@ -37,8 +40,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -640,5 +648,52 @@ class SrcProcessorTest {
     private static Path writeJavaFile(Path baseDirectoryPath, String fileName, String fileContent) throws Exception {
         Path javaFilePath = baseDirectoryPath.resolve(fileName);
         return Files.writeString(javaFilePath, fileContent, StandardCharsets.UTF_8);
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class AnnotationOrdering {
+        private static final URL CONFIG =
+                requireClasspathResourceUrl("/test-cases/core/e2e/reorder/33-annotations-alpha/config.yml");
+        private static final URL INPUT = requireClasspathResourceUrl(
+                "/test-cases/core/e2e/reorder/33-annotations-alpha/input/AlphabeticalAnnotationOrdering.java");
+
+        private String srcCode;
+        private SrcProcessor srcProcessor;
+
+        @BeforeAll
+        void setUp() {
+            srcCode = TestCaseResourceUtils.readClasspathResourceAsString(INPUT);
+            srcProcessor = new SrcProcessor(
+                    JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource(CONFIG));
+        }
+
+        @ParameterizedTest
+        @EnumSource(FlowType.class)
+        void processSources_onlyAnnotationOrderChanges_reportsReordering(@NonNull FlowType flowType) throws Exception {
+            // Given
+            Path srcPath = writeJavaFile(temporaryDirectory, "AlphabeticalAnnotationOrdering.java", srcCode);
+            ListAppender<ILoggingEvent> listAppender = attachListAppender();
+            SrcProcessingResult result;
+
+            // When
+            try {
+                result = srcProcessor.processSources(
+                        temporaryDirectory, INCLUDE_ALL_JAVA_FILES, EXCLUDE_NO_FILES, flowType);
+            } finally {
+                detachListAppender(listAppender);
+            }
+
+            // Then
+            AggregatedProcessingStatistic statistics = result.getStatistics();
+            assertThat(statistics.getStatusCounts()).containsEntry(REORDERED, 1L);
+            assertThat(result.isSuccess()).isEqualTo(flowType == FlowType.REORDER);
+            if (flowType != FlowType.REORDER) {
+                assertThat(statistics.getTotalFormattingTimeNanos()).isZero();
+                assertThat(collectLogMessages(listAppender))
+                        .contains("Detected formatting violations in:", "@Ax", "@LongerName");
+                assertThat(Files.readString(srcPath, StandardCharsets.UTF_8)).isEqualTo(srcCode);
+            }
+        }
     }
 }

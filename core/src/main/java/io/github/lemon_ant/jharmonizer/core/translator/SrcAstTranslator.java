@@ -10,6 +10,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinter;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.nio.charset.StandardCharsets;
@@ -33,16 +34,14 @@ public final class SrcAstTranslator {
      * Parses the source file.
      *
      * @param srcFile the source file to parse
-     * @param printerConfig the printer configuration used during serialization
      * @return the parsing result containing the Spoon model and parsing statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
-    public static ParsingResult parse(@NonNull SrcFile srcFile, @NonNull PrinterConfig printerConfig) {
+    public static ParsingResult parse(@NonNull SrcFile srcFile) {
         log.trace("Parsing {}", srcFile.getPath());
 
-        TimedResult<SpoonAstModel> parsingTimedResult =
-                StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile, printerConfig));
+        TimedResult<SpoonAstModel> parsingTimedResult = StopWatch.measure(() -> SpoonParser.parseJavaSrcFile(srcFile));
 
         SpoonAstModel spoonASTModel = parsingTimedResult.getResult();
         ParsingStatistic statistic = createParsingStatistic(srcFile.getSrcCode(), parsingTimedResult);
@@ -53,15 +52,17 @@ public final class SrcAstTranslator {
      * Serializes the sorted AST model back to source code.
      *
      * @param sortedSpoonAstModel the sorted Spoon AST model to serialize
+     * @param printerConfig the source printer settings for this invocation
      * @return the serialization result containing the source code and statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
-    public static SerializationResult serialize(@NonNull SpoonAstModel sortedSpoonAstModel) {
+    public static SerializationResult serialize(
+            @NonNull SpoonAstModel sortedSpoonAstModel, @NonNull PrinterConfig printerConfig) {
         log.trace("Serializing {}", sortedSpoonAstModel.getPath());
 
-        TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult = StopWatch.measure(
-                () -> sortedSpoonAstModel.getSerializedSrcCode().get());
+        TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult =
+                StopWatch.measure(() -> SpoonSrcPrinter.serializeCompilationUnit(sortedSpoonAstModel, printerConfig));
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = serializationTimedResult.getResult();
 
         return new SerializationResult(

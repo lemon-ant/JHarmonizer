@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
+annotations-ordering: null
+type-members-ordering: null
+top-level-types-ordering: null
+formatting: null
+header-line: null
+processing-statistics-mode: null
+backups-enabled: false

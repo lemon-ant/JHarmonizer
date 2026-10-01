@@ -3,11 +3,9 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_ALL;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -18,7 +16,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import lombok.NonNull;
 
-public class CheckAllFlow extends AbstractOptOutFlow {
+public class CheckAllFlow extends AbstractSrcProcessingFlow {
 
     /**
      * Creates a flow that reports all ordering and formatting violations found in one source file.
@@ -30,7 +28,7 @@ public class CheckAllFlow extends AbstractOptOutFlow {
      */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public CheckAllFlow(@NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
-        super(formatter, sorter, printerConfig, CHECK_ALL);
+        super(formatter, sorter, printerConfig);
     }
 
     @Override
@@ -55,10 +53,9 @@ public class CheckAllFlow extends AbstractOptOutFlow {
     @NonNull
     @Override
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
+            parsingResult = SrcAstTranslator.parse(srcFile);
         } catch (SpoonModelBuildException exception) {
             return processSrcWithFormattingOnlyFallback(srcFile, exception.getMessage());
         }
@@ -66,6 +63,6 @@ public class CheckAllFlow extends AbstractOptOutFlow {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
-        return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, false);
+        return checkSortingThenFormattingIfOrdered(srcFile, parsedSpoonAstModel, parsingResult, false);
     }
 }

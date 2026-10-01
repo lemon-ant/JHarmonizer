@@ -11,9 +11,29 @@ output — it is a pure diagnostic pass whose result is printed by
 `MemberRelocationPrinter`.
 
 The implementation lives in
-`io.github.lemon_ant.jharmonizer.core.translator.spoon.RelocationDetector`, with
+`io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector`, with
 the LIS computation factored into
-`io.github.lemon_ant.jharmonizer.core.translator.spoon.LongestIncreasingSubsequenceUtils`.
+`io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils`.
+
+`SpoonSorter` emits declaration and annotation change flags while collecting final output. Element identities are
+compared against input order during the same traversal; checks stop after the first mismatch in each scope. Grouping
+and dependency repair complete before the flag is decided, so temporary moves that cancel out do not report a change.
+Annotation groups remain in source-range order. Preparing them collects whether any group's annotation order changed;
+it does not compare group permutations.
+`SortingResult.annotationsReordered` controls annotation diffs. The independent `membersReordered` flag reports Spoon
+declaration changes, including top-level types. `isReordered()` derives their OR for flow status and sorting checks.
+
+`Sorter.sort(...)` prepares the LIS member report only when requested and declaration order changed. Check flows request
+and consume `SortingResult.memberRelocations`; `ReorderFlow` requests only the change flags. Annotation-only changes and
+unchanged declarations skip the diagnostic pass. Sorting and requested diagnostics share one timer. The LIS pass remains
+separate because intermediate sorting operations do not define a minimal relocation report.
+
+The combined flag is independent of member diagnostics, which omit untracked nodes and invalid source positions.
+Each freshly parsed shared AST is sorted once per flow, so invocation changes also describe differences from source
+order. The parse-time snapshot remains necessary for detailed reports. `SpoonSorter` claims the shared compilation unit
+before sorting and rejects repeated attempts through any model view, including after unchanged or failed sorting.
+Clones retain a consumed unit's claim; reparsing starts a fresh lifecycle. Skipped sorting returns empty diagnostics and
+`false` change flags.
 
 ## Inputs
 
@@ -26,26 +46,30 @@ the LIS computation factored into
 
 ## Output
 
-A list of `MemberRelocation` records. Each record represents one contiguous run of
+A list of `MemberRelocation` values. Each value represents one contiguous run of
 moved members in the **sorted** order, and carries:
 
-- `movedMembers` — the run of members, in their final order;
-- `predecessor` / `successor` — the sorted-order neighbours that frame the run
+- `relocatedMembers` — the run of members, in their final order;
+- `sortedPredecessor` / `sortedSuccessor` — the sorted-order neighbours that frame the run
   (either may be `null` when the run sits at the start or end of its scope).
 
-`MemberRelocationPrinter` turns each record into one line of the form
+The result list and each moved chunk are unmodifiable views without defensive copies. Producers must not modify
+handed-off lists. The detector builds fresh result and scope lists for each report. The referenced Spoon nodes remain
+mutable.
+
+`MemberRelocationPrinter` turns each value into one line of the form
 "move *N* members before *X*", so the user sees one diagnostic line per
 contiguous run instead of one line per moved member.
 
 ## Algorithm
 
-The detector runs once per *scope* (file root, then each type body it contains):
+The detector builds one index, then visits the file root and each type body:
 
-1. **Build a per-scope successor map.**
-   `RelocationDetector.buildScopeSuccessorMap(...)` walks the original DFS snapshot
-   and derives the per-scope `Map<CtTypeMember, CtTypeMember>` of consecutive pairs.
-2. **Project the sorted members onto original-source indices.**
-   For each member in the sorted order, look up its index in
+1. **Build an original-order index.**
+   `RelocationDetector.buildOriginalIndexMap(...)` maps tracked members to their positions in the original DFS snapshot.
+   It uses node identity so structurally equal declarations in different scopes remain distinct.
+2. **Project each sorted scope onto original-source indices.**
+   For each member in the scope's sorted order, look up its index in
    `originalMemberOrder`; members with invalid source positions, or members not
    present in the snapshot, are tagged with the `UNTRACKED = -1` sentinel and
    treated as stable.
@@ -78,9 +102,8 @@ mis-attribute movement to stable members.
 
 - **Deterministic.** The patience-sort LIS is deterministic for a fixed input;
   ties are broken by index.
-- **Diagnostic-only.** The detector's output never feeds back into sorting,
-  serialization, formatting, or check decisions. Disabling it would not change a
-  single byte of produced source.
+- **Diagnostic-only.** The report does not alter declaration order or printed source. Check flows use its presence to
+  classify member-ordering violations and skip formatting until sorting passes.
 - **Resilient to missing positions.** Members without a valid source position
   (synthetic/implicit members, members the parser could not pin to a region) are
   tagged `UNTRACKED` and treated as stable. They are silently ignored by the

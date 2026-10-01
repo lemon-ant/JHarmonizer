@@ -26,13 +26,66 @@ The sorter handles every Spoon `CtTypeMember` kind:
 Sorting is recursive: nested types are processed with the same configuration as the
 enclosing type.
 
+Global `annotations-ordering` also reorders source annotation groups on packages, modules, types, and their descendants.
+The configuration compiler builds the comparator once. During parsing, `AnnotationSourceScanner` captures source
+fragments and computes their keys, storing the immutable groups in `SpoonAstModel`. `SpoonAnnotationSorter` sorts each
+eligible source group once with that comparator, including annotations missing from Spoon's model.
+AST annotation lists retain their parsed order: printing consumes the sorted source groups directly, so a second AST
+scan and annotation sort would not affect output. Singleton groups and groups in excluded types retain their original
+order.
+The sorter passes sorted annotations and resolved gap slots as two required lists to the group constructor.
+Resolving a gap only selects a scanner-prepared whitespace prefix, comparing source boundaries and separator counts.
+It does not read source text, inspect characters, or parse comments. Each gap combines that prefix with its fixed
+content; its shared immutable layout supports subsequent sorts without storing complete previous code versions. The
+constructor retains unmodifiable views and requires one gap per annotation. Producers must not modify the supplied
+lists after handoff. The private mixed sequence is lazily built and cached by a static helper that alternates the lists;
+sorting reads only the typed lists. Clients cannot access or independently replace the derived sequence. The group lazily
+concatenates it into `replacementCode` on first access; every newly constructed group has its own caches.
+The printer only replaces the original group range with that complete block. Group boundaries and
+gap positions remain fixed when the sorter replaces the immutable annotation order. Blank lines determine whether
+a standalone block belongs to the preceding or following annotation. Separate blocks and their surrounding gaps stay in
+place; declaration JavaDoc and file preambles retain their positions. The sorter preserves line-comment terminators and
+moves blank lines with the blocks they attach to an annotation, removing redundant blank lines from the original
+position. Complete ties retain source order. See
+[`annotations-ordering`](config-dsl.md#annotations-ordering) for criteria, defaults, and comment attachment rules.
+
 ## Input / output
 
 Input: a `SpoonAstModel` (see [`03-Parser.md`](03-Parser.md)) plus a `CompiledConfig`
 (see [`02-Configurator.md`](02-Configurator.md)).
 
-Output: the AST with members reordered in place. The serializer (Spoon custom printer)
-later writes the AST back to text in the new order.
+Output: `SortingResult` contains a model wrapper with the new immutable annotation order, prepared member-relocation
+diagnostics, independent `annotationsReordered` and `membersReordered` flags, and timing statistics. The member flag
+covers Spoon declaration order, including top-level types; the annotation flag covers source annotation fragments.
+`isReordered()` derives their OR without storing another flag. The underlying Spoon AST is shared with the input
+wrapper; declaration lists are reordered in place, while AST annotation lists remain unchanged.
+Serialization consumes the returned model to print declaration order from the AST and annotation order from the groups.
+
+Each freshly parsed shared AST is sorted once per flow. `SpoonSorter` returns its model and change flags in the nested
+`SpoonSortingResult`. Final declaration and annotation order is collected together with identity-based change flags,
+after grouping and dependency repair. Annotation source groups retain their source-range order; only annotation order
+inside a group can change. Group preparation collects the aggregate annotation-change flag without comparing group
+permutations and returns the prepared groups and flag in the shared `ElementOrdering<AnnotationSrcGroup>` carrier.
+No separate AST traversal is needed to decide whether sorting changed order.
+
+`SpoonSorter` atomically claims the shared compilation unit through metadata before any sorting mutation. A repeated
+attempt through the input model, a pre-existing view, the returned model, or either sorting entry point throws
+`IllegalStateException`, including after unchanged or failed first attempts.
+[Spoon's clone implementation](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/visitor/clone/CloneBuilder.java#L60)
+copies this metadata, so a clone of a consumed unit remains consumed. Reparsing source starts a new sorting lifecycle.
+
+The monitor protects only the short metadata claim; sorting runs outside it. The helper's local PMD suppression follows
+the [JDK 21 guidance](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html) for short in-memory operations.
+
+Check flows request the LIS member report when declarations changed and consume `annotationsReordered` for annotation
+diffs. `ReorderFlow` requests only change flags and skips the diagnostic pass. Annotation-only changes and unchanged
+declarations also skip member diagnostics. Report and chunk lists use unmodifiable views without defensive copies;
+producers must not mutate handed-off lists. One timed block covers sorting and requested diagnostics. A file-level
+sorting opt-out returns empty diagnostics, `false` change flags, and zero sorting time.
+
+`checkSortingThenFormattingIfOrdered` checks sorting first and skips formatting if declaration or annotation order
+changed. Flows use `isReordered()` for this decision and for status; `membersReordered` alone excludes annotation
+changes. Annotation violations retain the `REORDERED` status and use the existing formatting-violation diff renderer.
 
 ## Implementation map
 
@@ -41,8 +94,10 @@ The Spoon-backed sorter lives in
 
 | Class                                | Role                                                                                                  |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `Sorter` / `SortingResult`           | Public sorter facade and per-type sorting result.                                                     |
-| `SpoonSorter`                        | Top-level driver: walks types, dispatches members into compiled groups, emits sorted output.          |
+| `Sorter` / `SortingResult`           | Public facade and per-file result with the model, relocation diagnostics, independent annotation and member flags, their computed aggregate, and timing. |
+| `SpoonSorter` / `SpoonSorter.SpoonSortingResult` | Walk types, sort declarations and annotations, and retain the final model and native change flags. |
+| `OrderChangeCollector` | Collects final permutations and detects identity changes during the same traversal. |
+| `OrderChangeCollector.ElementOrdering` | Shared carrier for prepared elements and their change flag, including annotation groups retained in source order. |
 | `TypeMemberGrouper`                  | Dispatches each member to its leaf member group via the compiled selector predicates.                 |
 | `NaturalMemberGroupResolver` / `EffectiveMemberGroupResolver` | Resolve which compiled group claims a given member, with first-match-wins semantics.    |
 | `GroupMembersOrderer`                | Orders members inside a single leaf group; computes accessor super-clusters and property clusters.    |

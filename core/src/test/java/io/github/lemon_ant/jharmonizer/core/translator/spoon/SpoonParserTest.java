@@ -3,21 +3,31 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.nio.file.Path;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import spoon.Launcher;
 
 class SpoonParserTest {
+
+    @NonNull
+    private static final URL TYPE_USE_ANNOTATIONS = requireClasspathResourceUrl(
+            "/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/input/TypeUseAnnotationOrdering.java");
 
     @Test
     void buildSpoonAstModel_launcherBuildFails_wrapsWithSpoonModelBuildException() throws Exception {
@@ -39,14 +49,42 @@ class SpoonParserTest {
                 .hasCause(launcherFailure);
     }
 
-    private static SpoonAstModel invokeBuildSpoonAstModel(@NonNull SrcFile srcFile, @NonNull Launcher launcher)
-            throws Exception {
-        Method buildSpoonAstModel = SpoonParser.class.getDeclaredMethod(
-                "buildSpoonAstModel", SrcFile.class, Launcher.class, PrinterConfig.class);
+    @Test
+    void parseJavaSrcFile_arrayAndReceiverAnnotations_preservesLexicalSourceGroups() {
+        // Given
+        String srcCode = readClasspathResourceAsString(TYPE_USE_ANNOTATIONS);
+        int firstDimensionStart = srcCode.indexOf("@Z @A []");
+        int secondDimensionStart = srcCode.indexOf("@D @C []");
+        int receiverStart = srcCode.indexOf("@Z @A TypeUseAnnotationOrdering this");
+
+        // When
+        SpoonAstModel spoonAstModel = parseAstModelFromJavaFixtureResource(TYPE_USE_ANNOTATIONS);
+
+        // Then
+        assertThat(spoonAstModel.getAnnotationSrcGroups())
+                .filteredOn(group -> group.getStart() == firstDimensionStart
+                        || group.getStart() == secondDimensionStart
+                        || group.getStart() == receiverStart)
+                .extracting(
+                        AnnotationSrcGroup::getStart,
+                        AnnotationSrcGroup::getEndExclusive,
+                        AnnotationSrcGroup::getReplacementCode)
+                .containsExactly(
+                        tuple(firstDimensionStart, srcCode.indexOf("[]", firstDimensionStart), "@Z @A "),
+                        tuple(secondDimensionStart, srcCode.indexOf("[]", secondDimensionStart), "@D @C "),
+                        tuple(
+                                receiverStart,
+                                srcCode.indexOf("TypeUseAnnotationOrdering this", receiverStart),
+                                "@Z @A "));
+    }
+
+    @NonNull
+    private static SpoonAstModel invokeBuildSpoonAstModel(SrcFile srcFile, Launcher launcher) throws Exception {
+        Method buildSpoonAstModel =
+                SpoonParser.class.getDeclaredMethod("buildSpoonAstModel", SrcFile.class, Launcher.class);
         buildSpoonAstModel.setAccessible(true);
         try {
-            return (SpoonAstModel)
-                    buildSpoonAstModel.invoke(null, srcFile, launcher, new PrinterConfig(true, true, false));
+            return (SpoonAstModel) buildSpoonAstModel.invoke(null, srcFile, launcher);
         } catch (InvocationTargetException exception) {
             if (exception.getCause() instanceof RuntimeException runtimeException) {
                 throw runtimeException;

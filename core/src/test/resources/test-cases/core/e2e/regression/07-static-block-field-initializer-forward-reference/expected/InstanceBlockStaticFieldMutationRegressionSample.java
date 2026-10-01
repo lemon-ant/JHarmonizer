@@ -15,7 +15,7 @@ class InstanceBlockStaticFieldMutationRegressionSample {
         ITEM_REGISTRY.put(3, "gamma");
     }
 
-    private final List<String> registrySnapshot = List.copyOf(ITEM_REGISTRY.values());
+    private final List<String> registrySnapshot = Collections.unmodifiableList(ITEM_REGISTRY.values());
 
     public static void main(String[] args) {
         InstanceBlockStaticFieldMutationRegressionSample instance =

@@ -3,10 +3,8 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.flow.FlowResultUtils.buildFullyOffFileSkippedResult;
-import static io.github.lemon_ant.jharmonizer.core.flow.FlowType.CHECK_FAIL_FAST;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.flow.FlowDebugStageRecorder.SrcFlowStage;
 import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutMode;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
@@ -30,7 +28,7 @@ import lombok.NonNull;
  * {@link #postProcessResults} to propagate the stop flag via {@code peek} after
  * each result passes through.
  */
-public class CheckFailFastFlow extends AbstractOptOutFlow {
+public class CheckFailFastFlow extends AbstractSrcProcessingFlow {
     private final AtomicBoolean stopFlag = new AtomicBoolean(false);
 
     /**
@@ -42,7 +40,7 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      */
     public CheckFailFastFlow(
             @NonNull Formatter formatter, @NonNull Sorter sorter, @NonNull PrinterConfig printerConfig) {
-        super(formatter, sorter, printerConfig, CHECK_FAIL_FAST);
+        super(formatter, sorter, printerConfig);
     }
 
     @Override
@@ -67,8 +65,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @param results the stream of per-file results from the mapping phase
      * @return the same stream, with stop-flag propagation via {@code peek}
      */
-    @Override
     @NonNull
+    @Override
     protected Stream<FileProcessingResult> postProcessResults(@NonNull Stream<FileProcessingResult> results) {
         return results.peek(fileProcessingResult -> {
             if (fileProcessingResult.isStopRequested()) {
@@ -85,8 +83,8 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @param srcFiles the incoming stream of source files
      * @return a stream that skips remaining files once the stop flag is set
      */
-    @Override
     @NonNull
+    @Override
     protected Stream<SrcFile> preCheckSrcFiles(@NonNull Stream<SrcFile> srcFiles) {
         return super.preCheckSrcFiles(srcFiles).takeWhile(srcFile -> !stopFlag.get());
     }
@@ -97,13 +95,12 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
      * @param srcFile the source file
      * @return the result, with {@code stopRequested = true} if a violation was detected
      */
-    @Override
     @NonNull
+    @Override
     FileProcessingResult processSrc(@NonNull SrcFile srcFile) {
-        getDebugStageRecorder().recordSrcStage(srcFile.getPath(), SrcFlowStage.ORIGINAL, srcFile.getSrcCode());
         ParsingResult parsingResult;
         try {
-            parsingResult = SrcAstTranslator.parse(srcFile, getPrinterConfig());
+            parsingResult = SrcAstTranslator.parse(srcFile);
         } catch (SpoonModelBuildException modelBuildException) {
             return processSrcWithFormattingOnlyFallback(srcFile, modelBuildException.getMessage());
         }
@@ -111,6 +108,6 @@ public class CheckFailFastFlow extends AbstractOptOutFlow {
         if (parsedSpoonAstModel.getOptOuts().hasFileOptOutMode(JHarmonizerOptOutMode.FULLY_OFF)) {
             return buildFullyOffFileSkippedResult(srcFile, parsingResult, "all harmonization checks");
         }
-        return checkSortThenFormat(srcFile, parsedSpoonAstModel, parsingResult, true);
+        return checkSortingThenFormattingIfOrdered(srcFile, parsedSpoonAstModel, parsingResult, true);
     }
 }

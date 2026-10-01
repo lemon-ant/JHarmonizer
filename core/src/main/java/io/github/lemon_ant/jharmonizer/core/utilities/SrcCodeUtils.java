@@ -13,6 +13,26 @@ import lombok.experimental.UtilityClass;
 public class SrcCodeUtils {
 
     /**
+     * Counts line separators in a source slice, treating CRLF as one separator.
+     * @param start first source offset
+     * @param endExclusive end of the source slice
+     * @param srcCode source code text
+     * @return number of CR, LF, or CRLF separators in the slice
+     * @throws IndexOutOfBoundsException if the range is invalid for the source text
+     */
+    public static int countLineSeparators(int start, int endExclusive, @NonNull String srcCode) {
+        Objects.checkFromToIndex(start, endExclusive, srcCode.length());
+        int count = 0;
+        for (int offset = start; offset < endExclusive; offset++) {
+            char character = srcCode.charAt(offset);
+            if (character == '\r' || character == '\n' && (offset == start || srcCode.charAt(offset - 1) != '\r')) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Finds a fragment's exclusive end, excluding trailing {@linkplain Character#isWhitespace(char) whitespace}.
      *
      * @param start the first source index to inspect
@@ -28,6 +48,23 @@ public class SrcCodeUtils {
             contentEndExclusive--;
         }
         return contentEndExclusive;
+    }
+
+    /**
+     * Finds the first content position, skipping leading {@linkplain Character#isWhitespace(char) whitespace}.
+     * @param start first source index to inspect
+     * @param end inclusive last source index; {@code start - 1} denotes an empty range
+     * @param srcCode source code text
+     * @return first non-whitespace offset, or {@code end + 1} if the range has no content
+     * @throws IndexOutOfBoundsException if the range is invalid for the source text
+     */
+    public static int findFragmentStart(int start, int end, @NonNull String srcCode) {
+        Objects.checkFromToIndex(start, end + 1, srcCode.length());
+        int contentStart = start;
+        while (contentStart <= end && Character.isWhitespace(srcCode.charAt(contentStart))) {
+            contentStart++;
+        }
+        return contentStart;
     }
 
     /**
@@ -58,6 +95,24 @@ public class SrcCodeUtils {
     }
 
     /**
+     * Finds the end of a run of spaces and tabs within a source range.
+     * @param start first indentation offset to inspect
+     * @param endExclusive end of the source range
+     * @param srcCode source code text
+     * @return first offset that is not a space or tab, or {@code endExclusive} if the range contains only indentation
+     * @throws IndexOutOfBoundsException if the range is invalid for the source text
+     */
+    public static int findIndentationEnd(int start, int endExclusive, @NonNull String srcCode) {
+        Objects.checkFromToIndex(start, endExclusive, srcCode.length());
+        int indentationEnd = start;
+        while (indentationEnd < endExclusive
+                && (srcCode.charAt(indentationEnd) == ' ' || srcCode.charAt(indentationEnd) == '\t')) {
+            indentationEnd++;
+        }
+        return indentationEnd;
+    }
+
+    /**
      * Finds the first indentation character position for the source fragment.
      *
      * @param start the source index to scan backward from
@@ -74,5 +129,60 @@ public class SrcCodeUtils {
             position--;
         }
         return position + 1;
+    }
+
+    /**
+     * Finds the content end of a source range, excluding only trailing CR and LF characters.
+     * Spaces, tabs, and other whitespace remain part of the content.
+     * @param start first source offset
+     * @param endExclusive end of the source range
+     * @param srcCode source code text
+     * @return offset after the last character other than CR or LF, or {@code start} if none remains
+     * @throws IndexOutOfBoundsException if the range is invalid for the source text
+     */
+    public static int findLineContentEndExclusive(int start, int endExclusive, @NonNull String srcCode) {
+        Objects.checkFromToIndex(start, endExclusive, srcCode.length());
+        int contentEndExclusive = endExclusive;
+        while (contentEndExclusive > start
+                && (srcCode.charAt(contentEndExclusive - 1) == '\r'
+                        || srcCode.charAt(contentEndExclusive - 1) == '\n')) {
+            contentEndExclusive--;
+        }
+        return contentEndExclusive;
+    }
+
+    /**
+     * Finds the CR, LF, or CRLF separator ending immediately before a source offset.
+     * @param lineStart source offset immediately after the separator
+     * @param srcCode source code text
+     * @return separator start, or {@code lineStart} if no separator precedes it
+     * @throws IndexOutOfBoundsException if the offset is outside the source text or its end boundary
+     */
+    public static int findLineSeparatorStart(int lineStart, @NonNull String srcCode) {
+        Objects.checkFromToIndex(0, lineStart, srcCode.length());
+        if (lineStart == 0) {
+            return lineStart;
+        }
+        int separatorStart = lineStart - 1;
+        char lastCharacter = srcCode.charAt(separatorStart);
+        if (lastCharacter != '\r' && lastCharacter != '\n') {
+            return lineStart;
+        }
+        if (lastCharacter == '\n' && separatorStart > 0 && srcCode.charAt(separatorStart - 1) == '\r') {
+            separatorStart--;
+        }
+        return separatorStart;
+    }
+
+    /**
+     * Finds the source offset after the last CR or LF before a content position.
+     * @param contentStart content offset or the end of the source text
+     * @param srcCode source code text
+     * @return offset after the preceding CR or LF, or zero if neither occurs before {@code contentStart}
+     * @throws IndexOutOfBoundsException if the offset is outside the source text or its end boundary
+     */
+    public static int findLineStart(int contentStart, @NonNull String srcCode) {
+        Objects.checkFromToIndex(0, contentStart, srcCode.length());
+        return Math.max(srcCode.lastIndexOf('\r', contentStart - 1), srcCode.lastIndexOf('\n', contentStart - 1)) + 1;
     }
 }

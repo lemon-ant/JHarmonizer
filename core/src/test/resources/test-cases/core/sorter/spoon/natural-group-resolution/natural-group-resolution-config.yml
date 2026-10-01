@@ -15,6 +15,7 @@ formatting:
 
 backups-enabled: false
 processing-statistics-mode: FULL
+annotations-ordering: []
 
 header-line:
   character: '#'

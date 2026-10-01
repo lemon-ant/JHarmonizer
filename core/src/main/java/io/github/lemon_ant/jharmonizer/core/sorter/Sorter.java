@@ -2,12 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
+
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter.SpoonSortingResult;
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
+import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -26,22 +33,57 @@ public final class Sorter {
     }
 
     /**
-     * Sorts the given SpoonASTModel.
+     * Reorders declarations in the working AST and returns a model with immutable sorted annotation groups.
      *
-     * @param spoonAstModel the SpoonASTModel to sort
-     * @return a SortingResult containing the sorted SpoonASTModel and statistics
+     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
+     * @return the model for serialization, member diagnostics, change flags, and sorting statistics
+     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
+     */
+    @NonNull
+    public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
+        return sort(spoonAstModel, true);
+    }
+
+    /**
+     * Sorts a parsed model once and prepares member diagnostics only when requested.
+     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
+     * @param collectMemberRelocations whether the caller needs the detailed member report
+     * @return the model for serialization, requested diagnostics, change flags, and sorting statistics
+     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
-    public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
+    public SortingResult sort(@NonNull SpoonAstModel spoonAstModel, boolean collectMemberRelocations) {
         log.trace("Sorting {}", spoonAstModel.getPath());
-        StopWatch.TimedResult<SpoonAstModel> sortingResult = StopWatch.measure(() -> {
-            spoonSorter.sortCompilationUnitRecursively(
-                    spoonAstModel.getCompilationUnit(),
-                    spoonAstModel.getOptOuts().getSortingSkippedTypes());
-            return spoonAstModel;
+        // Each flow sorts a parsed model once, so invocation changes also describe changes from its source order.
+        StopWatch.TimedResult<SortedContent> sortingResult = StopWatch.measure(() -> {
+            SpoonSortingResult spoonSortingResult = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
+            SpoonAstModel sortedSpoonAstModel = spoonSortingResult.getSortedSpoonAstModel();
+            List<MemberRelocation> memberRelocations = collectMemberRelocations
+                            && spoonSortingResult.isMembersReordered()
+                    ? findRelocations(
+                            sortedSpoonAstModel.getOriginalMemberOrder(), sortedSpoonAstModel.getCompilationUnit())
+                    : List.of();
+            return new SortedContent(memberRelocations, spoonSortingResult);
         });
+        SortedContent sortedContent = sortingResult.getResult();
 
-        return new SortingResult(sortingResult.getResult(), new SortingStatistic(sortingResult.getNanos()));
+        return new SortingResult(
+                sortedContent.getSpoonSortingResult().isAnnotationsReordered(),
+                sortedContent.getMemberRelocations(),
+                sortedContent.getSpoonSortingResult().isMembersReordered(),
+                sortedContent.getSpoonSortingResult().getSortedSpoonAstModel(),
+                new SortingStatistic(sortingResult.getNanos()));
+    }
+
+    @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    private static class SortedContent {
+
+        @NonNull
+        List<MemberRelocation> memberRelocations;
+
+        @NonNull
+        SpoonSortingResult spoonSortingResult;
     }
 }
