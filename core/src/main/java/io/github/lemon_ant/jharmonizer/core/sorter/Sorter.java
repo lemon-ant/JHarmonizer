@@ -37,6 +37,7 @@ public final class Sorter {
      *
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @return the model for serialization, member diagnostics, change flags, and sorting statistics
+     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
      */
     @NonNull
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
@@ -48,13 +49,13 @@ public final class Sorter {
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @param collectMemberRelocations whether the caller needs the detailed member report
      * @return the model for serialization, requested diagnostics, change flags, and sorting statistics
+     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel, boolean collectMemberRelocations) {
         log.trace("Sorting {}", spoonAstModel.getPath());
         // Each flow sorts a parsed model once, so invocation changes also describe changes from its source order.
-        // TODO Reject repeated sorting through any wrapper sharing this AST, including an unchanged first sort.
         StopWatch.TimedResult<SortedContent> sortingResult = StopWatch.measure(() -> {
             SpoonSortingResult spoonSortingResult = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
             SpoonAstModel sortedSpoonAstModel = spoonSortingResult.getSortedSpoonAstModel();

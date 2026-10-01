@@ -27,12 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Sorting rejects repeated attempts for a shared compilation unit through any model view or sorting entry point,
+  including unchanged and failed first attempts. Clones retain the consumed state; reparsing starts a fresh lifecycle.
 - Annotation sorting preserves source-group order and collects its aggregate change flag while preparing groups,
   removing group-iterator comparisons. Prepared groups and their flag reuse `ElementOrdering` without a separate
   annotation result type or repeated change detection. Sorting output remains in the nested
   `SpoonSorter.SpoonSortingResult`.
 - Sorting detects final declaration and annotation order changes while collecting output, removing separate AST and
-  annotation-group checks. Each parsed model is sorted once per flow; rejecting repeated sorting remains a TODO.
+  annotation-group checks. Each parsed model is sorted once per flow, enforced by the shared-AST sorting guard.
   Detailed member reports are computed only for check flows with declaration changes, preserving minimal relocation
   diagnostics while skipping their cost for reordering, annotation-only changes, and unchanged declarations.
 - Sorting results retain independent `annotationsReordered` and `membersReordered` flags for source annotation order

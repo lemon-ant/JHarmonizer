@@ -94,9 +94,11 @@ This file defines repository-wide conventions for coding agents working in this 
   from sorting in `SortingResult`. `membersReordered` covers Spoon declaration order, including top-level types;
   `annotationsReordered` covers source annotation fragments. Derive `isReordered()` as their OR without storing another
   flag. Flows use this aggregate for status and sorting checks instead of recomputing changes from the AST.
-- Sort each freshly parsed shared AST only once per flow. Detect final-order changes while collecting sorted output,
-  after grouping and dependency repair, instead of traversing the completed AST again. Compute detailed member
-  diagnostics only when declarations changed and the caller needs the report.
+- Sort each freshly parsed shared AST only once per flow. Claim its shared compilation unit before the first sorting
+  attempt, including unchanged and failed attempts; model views and clones of consumed units must not reset the claim.
+  Detect final-order changes while collecting sorted output, after grouping and dependency repair, instead of traversing
+  the completed AST again. Compute detailed member diagnostics only when declarations changed and the caller needs the
+  report.
 - Preserve annotation source-group order during sorting; only annotation order inside each group may change.
   Collect the aggregate annotation-change flag while preparing groups instead of checking for group permutations.
   Reuse `ElementOrdering` for the prepared groups and their change flag without rerunning change detection.

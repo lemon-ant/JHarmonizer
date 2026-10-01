@@ -31,7 +31,10 @@ public class SpoonAstModel {
     @With
     List<AnnotationSrcGroup> annotationSrcGroups;
 
-    /** Spoon's mutable working AST; sorting reorders declarations but preserves annotation lists. */
+    /**
+     * Shared working AST; one sorting attempt consumes it across all model views.
+     * Sorting reorders declarations but preserves annotation lists.
+     */
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
     CtCompilationUnit compilationUnit;

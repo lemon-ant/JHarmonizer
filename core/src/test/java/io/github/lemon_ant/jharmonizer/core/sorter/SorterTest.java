@@ -9,11 +9,16 @@ import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModelTestCreator.copyWithClonedCompilationUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
@@ -21,6 +26,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -50,6 +56,7 @@ class SorterTest {
 
     private Sorter annotationSortingDisabledSorter;
     private Sorter defaultSorter;
+    private SpoonSorter defaultSpoonSorter;
     private Sorter fieldAlphaSorter;
     private Sorter topLevelTypesSorter;
 
@@ -57,7 +64,9 @@ class SorterTest {
     void setUp() {
         annotationSortingDisabledSorter = new Sorter(
                 overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(DISABLED_ANNOTATIONS_CONFIG)));
-        defaultSorter = new Sorter(loadDefaultConfig());
+        CompiledConfig defaultConfig = loadDefaultConfig();
+        defaultSpoonSorter = new SpoonSorter(defaultConfig);
+        defaultSorter = new Sorter(defaultConfig);
         fieldAlphaSorter =
                 new Sorter(overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(FIELD_ALPHA_CONFIG)));
         topLevelTypesSorter = new Sorter(
@@ -317,6 +326,125 @@ class SorterTest {
             assertThat(result.isAnnotationsReordered()).isFalse();
             assertThat(result.isMembersReordered()).isFalse();
             assertThat(result.isReordered()).isFalse();
+        }
+    }
+
+    @Nested
+    class SortingLifecycle {
+        private static final String ALREADY_SORTED_MESSAGE = "already been submitted for sorting";
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void sort_changedOrUnchangedSharedAst_rejectsEveryModelView(boolean firstSortChangesOrder) {
+            // Given
+            String membersInSrcOrder = firstSortChangesOrder ? "void execute() {} int value;" : "";
+            SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(
+                    "@Deprecated class SingleSortingAttempt { " + membersInSrcOrder + " }",
+                    Path.of("SingleSortingAttempt.java")));
+            SpoonAstModel preexistingModelView = model.withAnnotationSrcGroups(List.of());
+            SortingResult firstResult = defaultSorter.sort(model);
+            List<SpoonAstModel> sharedModelViews =
+                    List.of(model, preexistingModelView, firstResult.getSortedSpoonAstModel());
+
+            // When / Then
+            sharedModelViews.forEach(sharedModelView -> assertThatThrownBy(() -> defaultSorter.sort(sharedModelView))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining(ALREADY_SORTED_MESSAGE)
+                    .hasMessageContaining(model.getPath().toString()));
+            assertThat(firstResult.isMembersReordered()).isEqualTo(firstSortChangesOrder);
+        }
+
+        @Test
+        void sort_clonedConsumedUnit_rejectsRepeatedInvocation() {
+            // Given
+            SpoonAstModel model = SpoonParser.parseJavaSrcFile(
+                    createSrcFile("class ClonedConsumedModel {}", Path.of("ClonedConsumedModel.java")));
+            defaultSorter.sort(model);
+            SpoonAstModel clonedModel = copyWithClonedCompilationUnit(model);
+
+            // When
+            Throwable repeatedFailure = catchThrowable(() -> defaultSorter.sort(clonedModel));
+
+            // Then
+            assertThat(clonedModel.getCompilationUnit()).isNotSameAs(model.getCompilationUnit());
+            assertThat(repeatedFailure)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining(ALREADY_SORTED_MESSAGE);
+        }
+
+        @Test
+        void sort_copiedUnusedUnit_keepsTemplateAvailable() {
+            // Given
+            SpoonAstModel templateModel = SpoonParser.parseJavaSrcFile(
+                    createSrcFile("class UnusedCompilationUnitCopy {}", Path.of("UnusedCompilationUnitCopy.java")));
+            SpoonAstModel copiedModel = copyWithClonedCompilationUnit(templateModel);
+            defaultSorter.sort(copiedModel);
+
+            // When
+            SortingResult result = defaultSorter.sort(templateModel);
+
+            // Then
+            assertThat(copiedModel.getCompilationUnit()).isNotSameAs(templateModel.getCompilationUnit());
+            assertThat(result.isReordered()).isFalse();
+        }
+
+        @Test
+        void sort_failedInvocation_blocksRetry() {
+            // Given
+            SpoonAstModel model = SpoonParser.parseJavaSrcFile(
+                    createSrcFile("class FailedSortingAttempt {}", Path.of("FailedSortingAttempt.java")));
+            CompiledConfig failingConfig = mock(CompiledConfig.class);
+            when(failingConfig.getTopLevelTypesOrdering())
+                    .thenThrow(new IllegalStateException("Cannot resolve declaration order"));
+            SpoonSorter failingSorter = new SpoonSorter(failingConfig);
+
+            // When
+            Throwable firstFailure = catchThrowable(() -> failingSorter.sortCompilationUnitRecursively(model));
+            Throwable repeatedFailure = catchThrowable(() -> defaultSorter.sort(model));
+
+            // Then
+            assertThat(firstFailure)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Cannot resolve declaration order");
+            assertThat(repeatedFailure)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining(ALREADY_SORTED_MESSAGE);
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void sort_mixedSortingEntryPoints_rejectsSecondInvocation(boolean spoonSorterRunsFirst) {
+            // Given
+            SpoonAstModel model = SpoonParser.parseJavaSrcFile(
+                    createSrcFile("class MixedSortingEntryPoints {}", Path.of("MixedSortingEntryPoints.java")));
+            Consumer<SpoonAstModel> firstSortInvocation =
+                    spoonSorterRunsFirst ? defaultSpoonSorter::sortCompilationUnitRecursively : defaultSorter::sort;
+            Consumer<SpoonAstModel> repeatedSortInvocation =
+                    spoonSorterRunsFirst ? defaultSorter::sort : defaultSpoonSorter::sortCompilationUnitRecursively;
+            firstSortInvocation.accept(model);
+
+            // When / Then
+            assertThatThrownBy(() -> repeatedSortInvocation.accept(model))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining(ALREADY_SORTED_MESSAGE);
+        }
+
+        @Test
+        void sort_reparsedSource_startsIndependentSortingLifecycle() {
+            // Given
+            SrcFile srcFile = createSrcFile(
+                    "class ReparsedSortingModel { void execute() {} int value; }",
+                    Path.of("ReparsedSortingModel.java"));
+            SpoonAstModel firstModel = SpoonParser.parseJavaSrcFile(srcFile);
+            defaultSorter.sort(firstModel);
+            SpoonAstModel reparsedModel = SpoonParser.parseJavaSrcFile(srcFile);
+
+            // When
+            SortingResult result = defaultSorter.sort(reparsedModel);
+
+            // Then
+            assertThat(reparsedModel.getCompilationUnit()).isNotSameAs(firstModel.getCompilationUnit());
+            assertThat(result.isMembersReordered()).isTrue();
         }
     }
 }

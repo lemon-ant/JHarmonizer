@@ -1562,7 +1562,7 @@ alternatives, benefits, costs, source-position and comment constraints, the `sta
 
 The initial inventory contains all 13 `TODO Annotations` comments found on 2026-09-27. Item 14 was added on 2026-09-28,
 and items 15–22 on 2026-10-01. P1 addresses processing failures, P2 covers shared-state and architecture decisions, and
-P3 covers naming and readability. Items 1–8, 11–14, and 17–22 are resolved; remaining work is listed below by priority.
+P3 covers naming and readability. Items 1–8, 11–15, and 17–22 are resolved; remaining work is listed below by priority.
 
 | Item | Priority | Source symbol | Follow-up | Status |
 | --- | --- | --- | --- | --- |
@@ -1575,7 +1575,7 @@ P3 covers naming and readability. Items 1–8, 11–14, and 17–22 are resolved
 | 7 | P2 | `SortingResult.annotationsReordered` | Return the annotation-order change flag from sorting. | Resolved |
 | 8 | P2 | `OrderChangeCollector` | Detect final-order changes during output collection under the single-sort model contract. | Resolved |
 | 14 | P2 | `Sorter.sort` | Emit change flags during sorting and compute minimal member reports only when needed. | Resolved |
-| 15 | P2 | `Sorter.sort` / `SpoonAstModel` | Reject repeated sorting through any wrapper sharing the same AST, including an unchanged first sort. | Open |
+| 15 | P2 | `SpoonSorter.sortCompilationUnitRecursively` / `SpoonAstModel` | Reject repeated sorting through any wrapper sharing the same AST, including an unchanged first sort. | Resolved |
 | 16 | P2 | `SpoonSorter.SpoonSortingResult` | Decide whether sorting flags belong in the parsed model or the sorting-stage result. | Open |
 | 9 | P3 | `FlexibleUnifiedConfig.annotationsOrdering` | Review criteria naming and overlay test coverage. | Open |
 | 10 | P3 | `AbstractOptOutFlow` | Review the shared pipeline abstraction's name. | Open |
@@ -1636,14 +1636,16 @@ report reordering. Separate declaration-hierarchy and annotation-group detection
 the detailed member report only when declarations changed; reordering and annotation-only changes skip that pass.
 The parse-time snapshot remains available for member diagnostics.
 
-Item 15 remains open: enforce one sorting invocation per shared parsed AST, including calls through its input and
-returned model wrappers. An unchanged first sort must also consume the model. The guard must be shared across wrappers;
-a flag stored independently on each wrapper would allow the same mutable AST to be sorted again.
+Item 15 is resolved by atomically claiming the shared compilation unit in `SpoonSorter` before the first sorting
+attempt. Input, pre-existing, and returned model views observe the same metadata. Both sorting entry points reject a
+second attempt after unchanged or failed sorting; clones of consumed units retain the claim. Reparsing creates an
+independent lifecycle. Tests cover these aliases, mixed entry points, failures, cloning, and reparsing.
 
 Item 16 remains open for discussion. The nested sorting-stage result currently owns invocation change flags, while
 `SpoonAstModel` is also returned before sorting. Moving flags there would remove one result wrapper but make their
-meaning depend on the processing phase. This can work when callers read flags only after sorting; wrapper-local change
-flags would still not enforce the shared-AST lifecycle or distinguish a fresh model from an unchanged completed sort.
+meaning depend on the processing phase. This can work when callers read flags only after sorting. The shared
+compilation-unit claim enforces the lifecycle separately; wrapper-local change flags cannot distinguish a fresh model
+from an unchanged completed sort.
 
 Items 17 and 18 are resolved at the annotation sorting boundary: source groups are the first parameter, opt-outs the
 second, and the shared `ElementOrdering<AnnotationSrcGroup>` retains groups in source-range order. A group is replaced

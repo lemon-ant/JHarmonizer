@@ -45,6 +45,9 @@ import spoon.reflect.declaration.CtTypeMember;
 public class SpoonSorter {
     private static final int MAX_MEMBERS_WITHOUT_SORTING = 1;
 
+    @NonNull
+    private static final String SORTING_STARTED_METADATA = SpoonSorter.class.getName() + ".sortingStarted";
+
     // TODO Try to remove this field and make the class static util
     @NonNull
     private final CompiledConfig compiledConfig;
@@ -53,10 +56,11 @@ public class SpoonSorter {
      * Sorts declaration order in the AST and finalizes sorted annotation source groups.
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @return model with the updated AST, immutable annotation groups, and invocation change flags
+     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
      */
     @NonNull
     public SpoonSortingResult sortCompilationUnitRecursively(@NonNull SpoonAstModel spoonAstModel) {
-        CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
+        CtCompilationUnit compilationUnit = claimCompilationUnitForSorting(spoonAstModel);
         Set<CtType<?>> sortingSkippedTypes = spoonAstModel.getOptOuts().getSortingSkippedTypes();
         boolean membersReordered = reorderTopLevelTypes(compilationUnit, compiledConfig.getTopLevelTypesOrdering());
         File srcFile = compilationUnit.getFile();
@@ -69,6 +73,23 @@ public class SpoonSorter {
                 annotationOrdering.isReordered(),
                 membersReordered,
                 spoonAstModel.withAnnotationSrcGroups(annotationOrdering.getElementsInSortedOrder()));
+    }
+
+    @NonNull
+    @SuppressWarnings("PMD.AvoidSynchronizedStatement")
+    private static CtCompilationUnit claimCompilationUnitForSorting(SpoonAstModel spoonAstModel) {
+        CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
+        // Model views share this unit. Claim it before any mutation, including unchanged or failed attempts.
+        // Spoon copies metadata when cloning a unit; a consumed clone also requires reparsing before sorting.
+        // Only this short metadata claim uses the monitor; sorting and I/O must stay outside it.
+        synchronized (compilationUnit) {
+            if (Boolean.TRUE.equals(compilationUnit.getMetadata(SORTING_STARTED_METADATA))) {
+                throw new IllegalStateException(
+                        "Spoon AST has already been submitted for sorting: " + spoonAstModel.getPath());
+            }
+            compilationUnit.putMetadata(SORTING_STARTED_METADATA, Boolean.TRUE);
+        }
+        return compilationUnit;
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")

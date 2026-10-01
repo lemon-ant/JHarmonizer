@@ -66,8 +66,16 @@ Each freshly parsed shared AST is sorted once per flow. `SpoonSorter` returns it
 after grouping and dependency repair. Annotation source groups retain their source-range order; only annotation order
 inside a group can change. Group preparation collects the aggregate annotation-change flag without comparing group
 permutations and returns the prepared groups and flag in the shared `ElementOrdering<AnnotationSrcGroup>` carrier.
-No separate AST traversal is needed to decide whether sorting changed order. A repeated-sort guard for both wrappers
-sharing the AST remains a TODO.
+No separate AST traversal is needed to decide whether sorting changed order.
+
+`SpoonSorter` atomically claims the shared compilation unit through metadata before any sorting mutation. A repeated
+attempt through the input model, a pre-existing view, the returned model, or either sorting entry point throws
+`IllegalStateException`, including after unchanged or failed first attempts.
+[Spoon's clone implementation](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/visitor/clone/CloneBuilder.java#L60)
+copies this metadata, so a clone of a consumed unit remains consumed. Reparsing source starts a new sorting lifecycle.
+
+The monitor protects only the short metadata claim; sorting runs outside it. The helper's local PMD suppression follows
+the [JDK 21 guidance](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html) for short in-memory operations.
 
 Check flows request the LIS member report when declarations changed and consume `annotationsReordered` for annotation
 diffs. `ReorderFlow` requests only change flags and skips the diagnostic pass. Annotation-only changes and unchanged
