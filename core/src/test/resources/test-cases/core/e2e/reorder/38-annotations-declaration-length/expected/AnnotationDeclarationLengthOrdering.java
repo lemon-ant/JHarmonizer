@@ -15,25 +15,25 @@ class AnnotationDeclarationLengthOrdering {
     @M()
     int parentheses;
 
-    @Tag("zz")
     @Tag(value = "a")
+    @Tag("zz")
     int parameterNames;
 
-    @Tag("z")
     @Tag("longer")
+    @Tag("z")
     int values;
 
-    @Tag("zz")
     @Tag(/* argument */ "aa")
+    @Tag("zz")
     int blockComments;
 
-    @Tag(value = {"aa", "bb"})
     @Tag(value /* name */ = {"a", /* value */ "b"} /* trailing */)
+    @Tag(value = {"aa", "bb"})
     int arrayComments;
 
-    @Tag("zz")
     @Tag(// argument with unmatched ) and @Tag("annotation")
             "aa")
+    @Tag("zz")
     int lineComments;
 
     @Tag("a") /* Trailing comments do not contribute to declaration length. */

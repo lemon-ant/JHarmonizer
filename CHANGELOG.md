@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Regression fixtures for repeatable annotation source and reflection order, including qualified names, nonadjacent
+  repetitions, explicit containers, and distinct annotation types sharing a simple name.
 - Global annotation sorting by name, name length, complete declaration length, or argument text, with ascending criteria
   and ordered tie-breakers. Defaults to declaration length, name length, alphabetical name, then alphabetical argument
   text; an empty list preserves source order. Argument comparison includes parameter names and assignments, excluding

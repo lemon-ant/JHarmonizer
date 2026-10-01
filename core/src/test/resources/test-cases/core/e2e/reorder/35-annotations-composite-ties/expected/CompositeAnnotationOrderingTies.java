@@ -5,8 +5,8 @@
 @B("zy")
 @Bb("x")
 @CC("w")
-@Tag("aa")
 @Tag("zz")
+@Tag("aa")
 @Container({@Tag("z"), @Tag("a")})
 class CompositeAnnotationOrderingTies {}
 

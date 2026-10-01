@@ -50,6 +50,8 @@ SPDX-License-Identifier: Apache-2.0
 - Reuse existing project and library utilities before introducing custom helpers.
 - Keep generic source-offset and whitespace operations in `SrcCodeUtils`; keep token-specific logic in the parser.
 - Report annotation ordering diffs with the existing formatting-violation message and diff renderer.
+- Preserve observable annotation order for repeatable annotations, including repetitions and mixed direct/container
+  uses. Annotation sorting criteria must not override that semantic order.
 - Prefer explicit Java types over `var`.
 - Prefer normal imports over repeated fully qualified class names.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode`

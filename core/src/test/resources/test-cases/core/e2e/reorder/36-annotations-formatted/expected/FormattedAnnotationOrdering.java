@@ -5,8 +5,8 @@
 @B(value = {"class", "annotation"})
 class FormattedAnnotationOrdering {
 
-    @B("zz")
     @B(/* argument */ "aa")
+    @B("zz")
     int repeated;
 
     @B("aa")

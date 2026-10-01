@@ -8,34 +8,34 @@ class AlphabeticalAnnotationArgumentsOrdering {
     static final String AA = "zz";
     static final String ZZ = "aa";
 
+    @Tag(value = "zz")
     @Tag(
         value = /* kept */ "aa")
-    @Tag(value = "zz")
     int namedValues;
 
-    @Tag(AlphabeticalAnnotationArgumentsOrdering.AA)
     @Tag(AlphabeticalAnnotationArgumentsOrdering.ZZ)
+    @Tag(AlphabeticalAnnotationArgumentsOrdering.AA)
     int constants;
 
-    @Pair(alpha = "zz", zeta = "aa")
     @Pair(zeta = "aa", alpha = "zz")
+    @Pair(alpha = "zz", zeta = "aa")
     int parameterNames;
 
-    @Tag("a ")
     @Tag("aa")
+    @Tag("a ")
     int literalWhitespace;
 
     @Tag("same")
     @Tag( /* stays */ "same")
     int equalArguments;
 
-    @Tag
-    @Tag()
     @Tag("")
+    @Tag()
+    @Tag
     int emptyArguments;
 
-    @Tag
     @Tag( /* empty */ )
+    @Tag
     @Tag()
     int commentOnlyArguments;
 
@@ -43,12 +43,12 @@ class AlphabeticalAnnotationArgumentsOrdering {
     @Tag()
     int missingArguments;
 
-    @Groups({@Tag("a"), @Tag("z")})
     @Groups({@Tag("z"), @Tag("a")})
+    @Groups({@Tag("a"), @Tag("z")})
     int nestedArrays;
 
-    @Tag("a" + ("a"))
     @Tag("z" + ("z"))
+    @Tag("a" + ("a"))
     int expressions;
 }
 
