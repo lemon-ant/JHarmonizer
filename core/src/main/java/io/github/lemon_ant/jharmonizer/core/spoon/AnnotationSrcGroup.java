@@ -6,6 +6,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -86,32 +87,6 @@ public class AnnotationSrcGroup {
         this.endExclusive = endExclusive;
     }
 
-    /** Scanner-prepared gap components; sorting selects a whitespace prefix without inspecting source text. */
-    @Value
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
-    public static class AnnotationGapLayout {
-
-        /** Independent comments and all following text, excluding leading whitespace. */
-        @Getter(AccessLevel.PRIVATE)
-        @NonNull
-        String content;
-
-        /** Destination line indentation to append after separators supplied by an annotation. */
-        @NonNull
-        String indentation;
-
-        /** Exact original whitespace prefix, restored when the original preceding annotation returns. */
-        @NonNull
-        String leadingWhitespace;
-
-        /** Prefix for a moved annotation: original whitespace, or one line break after a departing lower block. */
-        @NonNull
-        String relocatedLeadingWhitespace;
-
-        /** Available physical separators; zero when an attached lower block takes its blank lines with it. */
-        int retainedLineSeparatorCount;
-    }
-
     /**
      * Prepared source text and sorting keys for one annotation, including its attached comments.
      * Separators required by trailing comments remain separate so existing destination line breaks can be reused.
@@ -128,17 +103,23 @@ public class AnnotationSrcGroup {
          */
         int annotationStart;
 
-        /** Sorting keys computed from the annotation's name, argument tokens, and internal comments. */
+        /** Precomputed annotation ordering keys and semantic constraints. */
         @NonNull
         AnnotationDescriptor descriptor;
 
         /**
-         * Minimum physical separators needed outside this fragment: zero normally, one after {@code //},
-         * two after an attached lower comment block.
+         * Minimum physical line separators needed after this fragment's trailing comments.
+         * {@code @A @B} needs zero; {@code @A // note\n@B} needs one to terminate the line comment;
+         * {@code @A\n// below\n\n@B} needs two so the lower comment remains attached to A when reordered.
+         * These separators are not part of the fragment's source text.
          */
         int trailingLineSeparatorCount;
 
-        /** Original separators needed when a destination cannot preserve the trailing comment's attachment. */
+        /**
+         * Original separators to insert when the destination gap has too few retained separators.
+         * Moving {@code @A // note} into the space before B in {@code @C @B} needs A's line separator;
+         * moving {@code @A\n// below} there needs its following blank line to keep the comment attached to A.
+         */
         @NonNull
         String trailingLineSeparators;
 
@@ -163,32 +144,73 @@ public class AnnotationSrcGroup {
          * Indicates whether trailing comments require a blank line before the next token.
          * @return true when more than one physical line separator is required
          */
-        boolean requiresTrailingBlankLine() {
+        boolean requiresBlankLineAfterTrailingComments() {
             return trailingLineSeparatorCount > 1;
         }
     }
 
-    /** Ready-to-emit gap text with scanner-prepared components for subsequent sorting. */
+    /** Ready-to-emit gap text retaining scanner-prepared values independently of the selected whitespace prefix. */
     @Value
     @EqualsAndHashCode(callSuper = true)
     @ToString(callSuper = true)
     public static class AnnotationSrcGap extends SrcFragment {
 
-        /** Fixed content and whitespace choices prepared once by the scanner, shared by all placements of this gap. */
+        /** Independent comments and all following text, excluding leading whitespace. */
+        @Getter(AccessLevel.NONE)
         @NonNull
-        AnnotationGapLayout layout;
+        String content;
+
+        /** Destination line indentation to append after separators supplied by an annotation. */
+        @NonNull
+        String indentation;
+
+        /** Exact source prefix, restored when the original preceding annotation returns to this gap. */
+        @NonNull
+        String originalLeadingWhitespace;
+
+        /** Prefix for a moved annotation: original whitespace, or one line break after a departing lower block. */
+        @NonNull
+        String relocatedLeadingWhitespace;
+
+        /** Available physical separators; zero when an attached lower block takes its blank lines with it. */
+        int retainedLineSeparatorCount;
 
         /**
-         * Combines the selected whitespace prefix with the gap's fixed content.
-         * @param endExclusive first source offset after the original gap
-         * @param layout scanner-prepared content and whitespace choices
-         * @param leadingWhitespace selected prefix for the current preceding annotation
-         * @param start first source offset of the original gap
+         * Combines a selected prefix with fixed content, retaining original source values for subsequent ordering.
+         * Immutable strings remain shared with the supplied gap.
+         * @param originalGap gap whose original values and source range are retained
+         * @param selectedLeadingWhitespace prefix selected for the current preceding annotation
          */
-        public AnnotationSrcGap(
-                int endExclusive, @NonNull AnnotationGapLayout layout, @NonNull String leadingWhitespace, int start) {
-            super(endExclusive, leadingWhitespace + layout.getContent(), start);
-            this.layout = layout;
+        public AnnotationSrcGap(@NonNull AnnotationSrcGap originalGap, @NonNull String selectedLeadingWhitespace) {
+            super(
+                    originalGap.getEndExclusive(),
+                    selectedLeadingWhitespace + originalGap.content,
+                    originalGap.getStart());
+            content = originalGap.content;
+            indentation = originalGap.indentation;
+            originalLeadingWhitespace = originalGap.originalLeadingWhitespace;
+            relocatedLeadingWhitespace = originalGap.relocatedLeadingWhitespace;
+            retainedLineSeparatorCount = originalGap.retainedLineSeparatorCount;
+        }
+
+        // The scanner supplies original values; the emitted text initially uses the original whitespace prefix.
+        @Builder(access = AccessLevel.PACKAGE)
+        private AnnotationSrcGap(
+                String content,
+                String indentation,
+                String originalLeadingWhitespace,
+                String relocatedLeadingWhitespace,
+                int retainedLineSeparatorCount,
+                int start,
+                int endExclusive) {
+            super(endExclusive, originalLeadingWhitespace + content, start);
+            this.content = Objects.requireNonNull(content, "content");
+            this.indentation = Objects.requireNonNull(indentation, "indentation");
+            this.originalLeadingWhitespace =
+                    Objects.requireNonNull(originalLeadingWhitespace, "originalLeadingWhitespace");
+            this.relocatedLeadingWhitespace =
+                    Objects.requireNonNull(relocatedLeadingWhitespace, "relocatedLeadingWhitespace");
+            this.retainedLineSeparatorCount = retainedLineSeparatorCount;
         }
     }
 
@@ -196,7 +218,7 @@ public class AnnotationSrcGroup {
     @Value
     @NonFinal
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    private static sealed class SrcFragment permits AnnotationSrcFragment, AnnotationSrcGap {
+    private static class SrcFragment {
 
         /** First offset after the original fragment; replacement text may have a different length. */
         int endExclusive;

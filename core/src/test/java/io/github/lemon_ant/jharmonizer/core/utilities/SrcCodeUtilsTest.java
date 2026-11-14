@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.utilities;
 
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentEndExclusive;
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStart;
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentEndExclusive;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentStartWithIndentation;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFirstNonWhitespace;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationEnd;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineContentEndExclusive;
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineSeparatorStart;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineEnd;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findLineStart;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findPrecedingLineSeparatorStart;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findTrailingLineSeparatorsStart;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SrcCodeUtilsTest {
 
@@ -41,11 +43,11 @@ class SrcCodeUtilsTest {
     private static Stream<Arguments> provideInvalidRanges() {
         return Stream.of(
                 Arguments.of("negative start", -1, 0),
-                Arguments.of("end before an empty range", 0, -2),
+                Arguments.of("negative end", 0, -1),
                 Arguments.of("reversed range", 3, 1),
-                Arguments.of("end beyond source", 0, 4),
-                Arguments.of("empty range beyond EOF", 5, 4),
-                Arguments.of("end index overflow", 0, Integer.MAX_VALUE));
+                Arguments.of("end beyond source", 0, 5),
+                Arguments.of("empty range beyond EOF", 5, 5),
+                Arguments.of("maximum end offset", 0, Integer.MAX_VALUE));
     }
 
     @NonNull
@@ -79,251 +81,261 @@ class SrcCodeUtilsTest {
     }
 
     @Nested
-    class FindFragmentEndExclusive {
+    class FindContentEndExclusive {
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("provideContentRanges")
-        void findFragmentEndExclusive_contentInRange_returnsEndAfterLastContent(
-                @NonNull String scenario, @NonNull String srcCode, int start, int end, int expectedEndExclusive) {
+        void findContentEndExclusive_contentInRange_returnsEndAfterLastContent(
+                @NonNull String scenario,
+                @NonNull String srcCode,
+                int start,
+                int endExclusive,
+                int expectedEndExclusive) {
             // When
-            int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
+            int contentEndExclusive = findContentEndExclusive(start, endExclusive, srcCode);
 
             // Then
-            assertThat(fragmentEndExclusive).as(scenario).isEqualTo(expectedEndExclusive);
+            assertThat(contentEndExclusive).as(scenario).isEqualTo(expectedEndExclusive);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideInvalidRanges")
-        void findFragmentEndExclusive_invalidRange_throwsIndexOutOfBoundsException(
-                @NonNull String scenario, int start, int end) {
+        void findContentEndExclusive_invalidRange_throwsIndexOutOfBoundsException(
+                @NonNull String scenario, int start, int endExclusive) {
             // When / Then
-            assertThatThrownBy(() -> findFragmentEndExclusive(start, end, "text"))
+            assertThatThrownBy(() -> findContentEndExclusive(start, endExclusive, "text"))
                     .as(scenario)
                     .isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideContentCharacters")
-        void findFragmentEndExclusive_nonWhitespaceCharacter_stopsSkipping(@NonNull String scenario, char character) {
+        void findContentEndExclusive_nonWhitespaceCharacter_stopsSkipping(@NonNull String scenario, char character) {
             // Given
             String expectedFragment = "text" + character;
             String srcCode = expectedFragment + " \n\t";
 
             // When
-            int fragmentEndExclusive = findFragmentEndExclusive(0, srcCode.length() - 1, srcCode);
+            int contentEndExclusive = findContentEndExclusive(0, srcCode.length(), srcCode);
 
             // Then
-            assertThat(fragmentEndExclusive).as(scenario).isEqualTo(5);
-            assertThat(srcCode.substring(0, fragmentEndExclusive)).isEqualTo(expectedFragment);
+            assertThat(contentEndExclusive).as(scenario).isEqualTo(5);
+            assertThat(srcCode.substring(0, contentEndExclusive)).isEqualTo(expectedFragment);
         }
 
         @Test
         @SuppressWarnings("DataFlowIssue")
-        void findFragmentEndExclusive_nullSource_throwsNullPointerException() {
+        void findContentEndExclusive_nullSource_throwsNullPointerException() {
             // When / Then
-            assertThatThrownBy(() -> findFragmentEndExclusive(0, -1, null)).isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> findContentEndExclusive(0, 0, null)).isInstanceOf(NullPointerException.class);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("provideRangesWithoutContent")
-        void findFragmentEndExclusive_rangeWithoutContent_returnsStart(
-                @NonNull String scenario, @NonNull String srcCode, int start, int end, int expectedEndExclusive) {
+        void findContentEndExclusive_rangeWithoutContent_returnsStart(
+                @NonNull String scenario,
+                @NonNull String srcCode,
+                int start,
+                int endExclusive,
+                int expectedEndExclusive) {
             // When
-            int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
+            int contentEndExclusive = findContentEndExclusive(start, endExclusive, srcCode);
 
             // Then
-            assertThat(fragmentEndExclusive).as(scenario).isEqualTo(expectedEndExclusive);
+            assertThat(contentEndExclusive).as(scenario).isEqualTo(expectedEndExclusive);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideWhitespaceBoundaries")
-        void findFragmentEndExclusive_trailingWhitespace_excludesWhitespace(
+        void findContentEndExclusive_trailingWhitespace_excludesWhitespace(
                 @NonNull String scenario, @NonNull String whitespace) {
             // Given / When
             String srcCode = " \ttext" + whitespace + " \t";
-            int fragmentEndExclusive = findFragmentEndExclusive(0, srcCode.length() - 1, srcCode);
+            int contentEndExclusive = findContentEndExclusive(0, srcCode.length(), srcCode);
 
             // Then
-            assertThat(fragmentEndExclusive).as(scenario).isEqualTo(6);
-            assertThat(srcCode.substring(0, fragmentEndExclusive)).isEqualTo(" \ttext");
+            assertThat(contentEndExclusive).as(scenario).isEqualTo(6);
+            assertThat(srcCode.substring(0, contentEndExclusive)).isEqualTo(" \ttext");
         }
 
         @NonNull
         private static Stream<Arguments> provideContentRanges() {
             return Stream.of(
-                    Arguments.of("content without trailing whitespace", "text", 0, 3, 4),
-                    Arguments.of("one-character range includes its end", "x", 0, 0, 1),
-                    Arguments.of("trailing spaces", "text   ", 0, 6, 4),
-                    Arguments.of("trailing tabs", "text\t\t", 0, 5, 4),
-                    Arguments.of("mixed trailing spaces and tabs", "text \t ", 0, 6, 4),
-                    Arguments.of("leading indentation is retained", " \ttext \t", 0, 7, 6),
-                    Arguments.of("interior line break and indentation are retained", "x\n  y \n", 0, 6, 5),
-                    Arguments.of("start inside content", "text", 2, 3, 4),
-                    Arguments.of("content at the lower bound", "ignoredx \t", 7, 9, 8),
-                    Arguments.of("end inside content", "text", 0, 1, 2),
-                    Arguments.of("content after the range is ignored", "x \ty", 0, 2, 1),
-                    Arguments.of("end inside trailing whitespace", "text  ignored", 0, 5, 4),
-                    Arguments.of("content at the inclusive end", " \tx ignored", 0, 2, 3),
-                    Arguments.of("last content in a multiline fragment", "x\n  y", 0, 4, 5));
+                    Arguments.of("content without trailing whitespace", "text", 0, 4, 4),
+                    Arguments.of("one-character range includes its last offset", "x", 0, 1, 1),
+                    Arguments.of("trailing spaces", "text   ", 0, 7, 4),
+                    Arguments.of("trailing tabs", "text\t\t", 0, 6, 4),
+                    Arguments.of("mixed trailing spaces and tabs", "text \t ", 0, 7, 4),
+                    Arguments.of("leading indentation is retained", " \ttext \t", 0, 8, 6),
+                    Arguments.of("interior line break and indentation are retained", "x\n  y \n", 0, 7, 5),
+                    Arguments.of("start inside content", "text", 2, 4, 4),
+                    Arguments.of("content at the lower bound", "ignoredx \t", 7, 10, 8),
+                    Arguments.of("end inside content", "text", 0, 2, 2),
+                    Arguments.of("content after the range is ignored", "x \ty", 0, 3, 1),
+                    Arguments.of("end inside trailing whitespace", "text  ignored", 0, 6, 4),
+                    Arguments.of("content at the last included offset", " \tx ignored", 0, 3, 3),
+                    Arguments.of("last content in a multiline fragment", "x\n  y", 0, 5, 5));
         }
 
         @NonNull
         private static Stream<Arguments> provideRangesWithoutContent() {
             return Stream.of(
-                    Arguments.of("empty source", "", 0, -1, 0),
-                    Arguments.of("empty range before content", "text", 0, -1, 0),
-                    Arguments.of("empty range inside source", "text", 2, 1, 2),
-                    Arguments.of("empty range at EOF", "text", 4, 3, 4),
-                    Arguments.of("spaces only", "   ", 0, 2, 0),
-                    Arguments.of("tabs only", "\t\t", 0, 1, 0),
-                    Arguments.of("mixed whitespace only", " \t\r\n\f\u2003", 0, 5, 0),
-                    Arguments.of("content exists only after the range", " \ttext", 0, 1, 0),
-                    Arguments.of("content exists only before the range", "x \t", 1, 2, 1),
-                    Arguments.of("whitespace before start stays outside the range", " \t ", 1, 2, 1));
+                    Arguments.of("empty source", "", 0, 0, 0),
+                    Arguments.of("empty range before content", "text", 0, 0, 0),
+                    Arguments.of("empty range inside source", "text", 2, 2, 2),
+                    Arguments.of("empty range at EOF", "text", 4, 4, 4),
+                    Arguments.of("spaces only", "   ", 0, 3, 0),
+                    Arguments.of("tabs only", "\t\t", 0, 2, 0),
+                    Arguments.of("mixed whitespace only", " \t\r\n\f\u2003", 0, 6, 0),
+                    Arguments.of("content exists only after the range", " \ttext", 0, 2, 0),
+                    Arguments.of("content exists only before the range", "x \t", 1, 3, 1),
+                    Arguments.of("whitespace before start stays outside the range", " \t ", 1, 3, 1));
         }
     }
 
     @Nested
-    class FindFragmentStart {
-
-        @ParameterizedTest(name = "{0}")
-        @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideInvalidRanges")
-        void findFragmentStart_invalidRange_throwsIndexOutOfBoundsException(
-                @NonNull String scenario, int start, int end) {
-            assertThatThrownBy(() -> findFragmentStart(start, end, "text"))
-                    .as(scenario)
-                    .isInstanceOf(IndexOutOfBoundsException.class);
-        }
-
-        @ParameterizedTest(name = "{0}")
-        @MethodSource("provideSourceRanges")
-        void findFragmentStart_sourceRange_returnsFirstContentOffset(
-                @NonNull String scenario, @NonNull String srcCode, int start, int end, int expectedStart) {
-            assertThat(findFragmentStart(start, end, srcCode)).as(scenario).isEqualTo(expectedStart);
-        }
-
-        @NonNull
-        private static Stream<Arguments> provideSourceRanges() {
-            return Stream.of(
-                    Arguments.of("empty source", "", 0, -1, 0),
-                    Arguments.of("empty interior range", " x", 1, 0, 1),
-                    Arguments.of("spaces before content", "  @A ", 0, 4, 2),
-                    Arguments.of("range starts after content", "@A \t@B", 2, 5, 4),
-                    Arguments.of("bounded search stops before content", "  @A", 0, 0, 1),
-                    Arguments.of("only whitespace", " \t\r\n\f", 0, 4, 5),
-                    Arguments.of("CRLF before indentation", "\r\n\t@A", 0, 4, 3),
-                    Arguments.of("form feed and Unicode whitespace", "\f\u2003x", 0, 2, 2),
-                    Arguments.of("non-breaking space is content", "\u00A0x", 0, 1, 0));
-        }
-    }
-
-    @Nested
-    class FindFragmentStartWithIndentation {
+    class FindContentStartWithIndentation {
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("provideContentRanges")
-        void findFragmentStartWithIndentation_contentInRange_preservesIndentation(
-                @NonNull String scenario, @NonNull String srcCode, int start, int end, int expectedStart) {
+        void findContentStartWithIndentation_contentInRange_preservesIndentation(
+                @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedStart) {
             // When
-            int fragmentStart = findFragmentStartWithIndentation(start, end, srcCode);
+            int contentStart = findContentStartWithIndentation(start, endExclusive, srcCode);
 
             // Then
-            assertThat(fragmentStart).as(scenario).isEqualTo(expectedStart);
+            assertThat(contentStart).as(scenario).isEqualTo(expectedStart);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideInvalidRanges")
-        void findFragmentStartWithIndentation_invalidRange_throwsIndexOutOfBoundsException(
-                @NonNull String scenario, int start, int end) {
+        void findContentStartWithIndentation_invalidRange_throwsIndexOutOfBoundsException(
+                @NonNull String scenario, int start, int endExclusive) {
             // When / Then
-            assertThatThrownBy(() -> findFragmentStartWithIndentation(start, end, "text"))
+            assertThatThrownBy(() -> findContentStartWithIndentation(start, endExclusive, "text"))
                     .as(scenario)
                     .isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideWhitespaceBoundaries")
-        void findFragmentStartWithIndentation_nonIndentationWhitespace_keepsFollowingIndentation(
+        void findContentStartWithIndentation_nonIndentationWhitespace_keepsFollowingIndentation(
                 @NonNull String scenario, @NonNull String whitespace) {
             // Given
             String srcCode = " \t" + whitespace + " \ttext";
             int expectedStart = 2 + whitespace.length();
 
             // When
-            int fragmentStart = findFragmentStartWithIndentation(0, srcCode.length() - 1, srcCode);
+            int contentStart = findContentStartWithIndentation(0, srcCode.length(), srcCode);
 
             // Then
-            assertThat(fragmentStart).as(scenario).isEqualTo(expectedStart);
-            assertThat(srcCode.substring(fragmentStart)).isEqualTo(" \ttext");
+            assertThat(contentStart).as(scenario).isEqualTo(expectedStart);
+            assertThat(srcCode.substring(contentStart)).isEqualTo(" \ttext");
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideContentCharacters")
-        void findFragmentStartWithIndentation_nonWhitespaceCharacter_stopsSkipping(
+        void findContentStartWithIndentation_nonWhitespaceCharacter_stopsSkipping(
                 @NonNull String scenario, char character) {
             // Given
             String srcCode = "\n \t" + character + "\ntext";
             String expectedFragment = " \t" + character + "\ntext";
 
             // When
-            int fragmentStart = findFragmentStartWithIndentation(0, srcCode.length() - 1, srcCode);
+            int contentStart = findContentStartWithIndentation(0, srcCode.length(), srcCode);
 
             // Then
-            assertThat(fragmentStart).as(scenario).isEqualTo(1);
-            assertThat(srcCode.substring(fragmentStart)).isEqualTo(expectedFragment);
+            assertThat(contentStart).as(scenario).isEqualTo(1);
+            assertThat(srcCode.substring(contentStart)).isEqualTo(expectedFragment);
         }
 
         @Test
         @SuppressWarnings("DataFlowIssue")
-        void findFragmentStartWithIndentation_nullSource_throwsNullPointerException() {
+        void findContentStartWithIndentation_nullSource_throwsNullPointerException() {
             // When / Then
-            assertThatThrownBy(() -> findFragmentStartWithIndentation(0, -1, null))
+            assertThatThrownBy(() -> findContentStartWithIndentation(0, 0, null))
                     .isInstanceOf(NullPointerException.class);
         }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("provideRangesWithoutContent")
-        void findFragmentStartWithIndentation_rangeWithoutContent_returnsEndExclusive(
-                @NonNull String scenario, @NonNull String srcCode, int start, int end, int expectedStart) {
+        void findContentStartWithIndentation_rangeWithoutContent_returnsEndExclusive(
+                @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedStart) {
             // When
-            int fragmentStart = findFragmentStartWithIndentation(start, end, srcCode);
+            int contentStart = findContentStartWithIndentation(start, endExclusive, srcCode);
 
             // Then
-            assertThat(fragmentStart).as(scenario).isEqualTo(expectedStart);
+            assertThat(contentStart).as(scenario).isEqualTo(expectedStart);
         }
 
         @NonNull
         private static Stream<Arguments> provideContentRanges() {
             return Stream.of(
-                    Arguments.of("content at the start of the file", "text", 0, 3, 0),
-                    Arguments.of("one-character range includes its end", "x", 0, 0, 0),
-                    Arguments.of("leading spaces", "    text", 0, 7, 0),
-                    Arguments.of("leading tabs", "\t\ttext", 0, 5, 0),
-                    Arguments.of("mixed spaces and tabs", " \t text", 0, 6, 0),
-                    Arguments.of("start after indentation", " \t text", 3, 6, 0),
-                    Arguments.of("start inside indentation", " \t text", 1, 6, 0),
-                    Arguments.of("indentation follows earlier code", "x; \ttext", 4, 7, 2),
-                    Arguments.of("start inside content", "text", 2, 3, 2),
-                    Arguments.of("blank lines before indented content", "\n\n \ttext", 0, 7, 2),
-                    Arguments.of("start inside a gap before another line", " \t\n  text", 1, 8, 3),
-                    Arguments.of("content immediately after a line break", "\ntext", 0, 4, 1),
-                    Arguments.of("content at the inclusive end", "\n  xignored", 0, 3, 1),
-                    Arguments.of("content prevents skipping later line breaks", "x\n  y", 0, 4, 0));
+                    Arguments.of("content at the start of the file", "text", 0, 4, 0),
+                    Arguments.of("one-character range includes its last offset", "x", 0, 1, 0),
+                    Arguments.of("leading spaces", "    text", 0, 8, 0),
+                    Arguments.of("leading tabs", "\t\ttext", 0, 6, 0),
+                    Arguments.of("mixed spaces and tabs", " \t text", 0, 7, 0),
+                    Arguments.of("start after indentation", " \t text", 3, 7, 0),
+                    Arguments.of("start inside indentation", " \t text", 1, 7, 0),
+                    Arguments.of("indentation follows earlier code", "x; \ttext", 4, 8, 2),
+                    Arguments.of("start inside content", "text", 2, 4, 2),
+                    Arguments.of("blank lines before indented content", "\n\n \ttext", 0, 8, 2),
+                    Arguments.of("start inside a gap before another line", " \t\n  text", 1, 9, 3),
+                    Arguments.of("content immediately after a line break", "\ntext", 0, 5, 1),
+                    Arguments.of("content at the last included offset", "\n  xignored", 0, 4, 1),
+                    Arguments.of("content prevents skipping later line breaks", "x\n  y", 0, 5, 0));
         }
 
         @NonNull
         private static Stream<Arguments> provideRangesWithoutContent() {
             return Stream.of(
-                    Arguments.of("empty source", "", 0, -1, 0),
-                    Arguments.of("empty range before content", "text", 0, -1, 0),
-                    Arguments.of("empty range inside source", "text", 2, 1, 2),
-                    Arguments.of("empty range at EOF", "text", 4, 3, 4),
-                    Arguments.of("spaces only", "   ", 0, 2, 3),
-                    Arguments.of("tabs only", "\t\t", 0, 1, 2),
-                    Arguments.of("mixed whitespace only", " \t\r\n\f\u2003", 0, 5, 6),
-                    Arguments.of("content exists only after the range", " \ttext", 0, 1, 2),
-                    Arguments.of("content exists only before the range", "x \t", 1, 2, 3),
-                    Arguments.of("indentation before start is not content", " \t ", 1, 2, 3));
+                    Arguments.of("empty source", "", 0, 0, 0),
+                    Arguments.of("empty range before content", "text", 0, 0, 0),
+                    Arguments.of("empty range inside source", "text", 2, 2, 2),
+                    Arguments.of("empty range at EOF", "text", 4, 4, 4),
+                    Arguments.of("spaces only", "   ", 0, 3, 3),
+                    Arguments.of("tabs only", "\t\t", 0, 2, 2),
+                    Arguments.of("mixed whitespace only", " \t\r\n\f\u2003", 0, 6, 6),
+                    Arguments.of("content exists only after the range", " \ttext", 0, 2, 2),
+                    Arguments.of("content exists only before the range", "x \t", 1, 3, 3),
+                    Arguments.of("indentation before start is not content", " \t ", 1, 3, 3));
+        }
+    }
+
+    @Nested
+    class FindFirstNonWhitespace {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideInvalidRanges")
+        void findFirstNonWhitespace_invalidRange_throwsIndexOutOfBoundsException(
+                @NonNull String scenario, int start, int endExclusive) {
+            assertThatThrownBy(() -> findFirstNonWhitespace(start, endExclusive, "text"))
+                    .as(scenario)
+                    .isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourceRanges")
+        void findFirstNonWhitespace_sourceRange_returnsFirstContentOffset(
+                @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedStart) {
+            assertThat(findFirstNonWhitespace(start, endExclusive, srcCode))
+                    .as(scenario)
+                    .isEqualTo(expectedStart);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourceRanges() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0, 0),
+                    Arguments.of("empty interior range", " x", 1, 1, 1),
+                    Arguments.of("spaces before content", "  @A ", 0, 5, 2),
+                    Arguments.of("range starts after content", "@A \t@B", 2, 6, 4),
+                    Arguments.of("bounded search stops before content", "  @A", 0, 1, 1),
+                    Arguments.of("only whitespace", " \t\r\n\f", 0, 5, 5),
+                    Arguments.of("CRLF before indentation", "\r\n\t@A", 0, 5, 3),
+                    Arguments.of("form feed and Unicode whitespace", "\f\u2003x", 0, 3, 2),
+                    Arguments.of("non-breaking space is content", "\u00A0x", 0, 2, 0));
         }
     }
 
@@ -357,6 +369,13 @@ class SrcCodeUtilsTest {
 
     @Nested
     class FindIndentationStart {
+
+        @ParameterizedTest
+        @ValueSource(ints = {-1, 5})
+        void findIndentationStart_invalidOffset_throwsIndexOutOfBoundsException(int contentStart) {
+            assertThatThrownBy(() -> findIndentationStart(contentStart, "text"))
+                    .isInstanceOf(IndexOutOfBoundsException.class);
+        }
 
         @Test
         @SuppressWarnings("DataFlowIssue")
@@ -394,59 +413,46 @@ class SrcCodeUtilsTest {
     }
 
     @Nested
-    class FindLineContentEndExclusive {
+    class FindLineEnd {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtilsTest#provideInvalidRanges")
+        void findLineEnd_invalidRange_throwsIndexOutOfBoundsException(
+                @NonNull String scenario, int start, int endExclusive) {
+            assertThatThrownBy(() -> findLineEnd(start, endExclusive, "text"))
+                    .as(scenario)
+                    .isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @SuppressWarnings("DataFlowIssue")
+        void findLineEnd_nullSource_throwsNullPointerException() {
+            assertThatThrownBy(() -> findLineEnd(0, 0, null)).isInstanceOf(NullPointerException.class);
+        }
 
         @ParameterizedTest(name = "{0}")
         @MethodSource("provideSourceRanges")
-        void findLineContentEndExclusive_sourceRange_removesOnlyTrailingLineSeparators(
+        void findLineEnd_sourceRange_returnsFirstSeparatorOrRangeEnd(
                 @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedEnd) {
-            assertThat(findLineContentEndExclusive(start, endExclusive, srcCode))
-                    .as(scenario)
-                    .isEqualTo(expectedEnd);
+            assertThat(findLineEnd(start, endExclusive, srcCode)).as(scenario).isEqualTo(expectedEnd);
         }
 
         @NonNull
         private static Stream<Arguments> provideSourceRanges() {
             return Stream.of(
                     Arguments.of("empty source", "", 0, 0, 0),
-                    Arguments.of("empty interior range", "x\n", 1, 1, 1),
-                    Arguments.of("spaces and tabs in a line comment", "// note  \t\r\n", 0, 12, 10),
-                    Arguments.of("LF", "// x\n", 0, 5, 4),
-                    Arguments.of("CR", "// x\r", 0, 5, 4),
-                    Arguments.of("consecutive separators", "x\r\n\n", 0, 4, 1),
-                    Arguments.of("bounded search ignores following text", "x\nnext", 0, 2, 1),
-                    Arguments.of("range contains only separators", "\r\n@A", 0, 2, 0),
-                    Arguments.of("range begins inside CRLF", "x\r\n", 2, 3, 2),
-                    Arguments.of("spaces after a separator remain", "x\n ", 0, 3, 3),
-                    Arguments.of("other whitespace remains", " \f\u2003", 0, 3, 3));
-        }
-    }
-
-    @Nested
-    class FindLineSeparatorStart {
-
-        @ParameterizedTest(name = "{0}")
-        @MethodSource("provideSourcePositions")
-        void findLineSeparatorStart_sourcePosition_findsOnlyTheImmediatelyPrecedingSeparator(
-                @NonNull String scenario, @NonNull String srcCode, int lineStart, int expectedStart) {
-            assertThat(findLineSeparatorStart(lineStart, srcCode)).as(scenario).isEqualTo(expectedStart);
-        }
-
-        @NonNull
-        private static Stream<Arguments> provideSourcePositions() {
-            return Stream.of(
-                    Arguments.of("empty source", "", 0, 0),
-                    Arguments.of("source start", "x", 0, 0),
-                    Arguments.of("no preceding separator", "x", 1, 1),
-                    Arguments.of("LF at source start", "\n", 1, 0),
-                    Arguments.of("LF", "x\nA", 2, 1),
-                    Arguments.of("CR", "x\rA", 2, 1),
-                    Arguments.of("CRLF", "x\r\nA", 3, 1),
-                    Arguments.of("CRLF at source start", "\r\n", 2, 0),
-                    Arguments.of("consecutive LF separators", "x\n\nA", 3, 2),
-                    Arguments.of("CR followed by CRLF", "x\r\r\nA", 4, 2),
-                    Arguments.of("bounded CR before LF", "x\r\nA", 2, 1),
-                    Arguments.of("indentation after separator", "\r\n \t", 4, 4));
+                    Arguments.of("empty range at LF", "x\n", 1, 1, 1),
+                    Arguments.of("no separator", "xy", 0, 2, 2),
+                    Arguments.of("LF before more content", "x\ny", 0, 3, 1),
+                    Arguments.of("CR before more content", "x\ry", 0, 3, 1),
+                    Arguments.of("CRLF before more content", "x\r\ny", 0, 4, 1),
+                    Arguments.of("range begins inside CRLF", "x\r\ny", 2, 4, 2),
+                    Arguments.of("range ends inside CRLF", "x\r\ny", 0, 2, 1),
+                    Arguments.of("earlier separator is ignored", "x\nnext", 2, 6, 6),
+                    Arguments.of("separator at excluded end", "x\n", 0, 1, 1),
+                    Arguments.of("consecutive separators", "x\n\n", 0, 3, 1),
+                    Arguments.of("spaces and tabs are content", " \tx", 0, 3, 3),
+                    Arguments.of("Unicode separator is not CR or LF", "x\u2028y", 0, 3, 3));
         }
     }
 
@@ -474,6 +480,65 @@ class SrcCodeUtilsTest {
                     Arguments.of("later separator is ignored", "first\nsecond\nthird", 8, 6),
                     Arguments.of("separator at the boundary is excluded", "line\n", 4, 0),
                     Arguments.of("Unicode separator is not CR or LF", "x\u2028@A", 3, 0));
+        }
+    }
+
+    @Nested
+    class FindPrecedingLineSeparatorStart {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourcePositions")
+        void findPrecedingLineSeparatorStart_sourcePosition_findsOnlyTheImmediatelyPrecedingSeparator(
+                @NonNull String scenario, @NonNull String srcCode, int lineStart, int expectedStart) {
+            assertThat(findPrecedingLineSeparatorStart(lineStart, srcCode))
+                    .as(scenario)
+                    .isEqualTo(expectedStart);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourcePositions() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0),
+                    Arguments.of("source start", "x", 0, 0),
+                    Arguments.of("no preceding separator", "x", 1, 1),
+                    Arguments.of("LF at source start", "\n", 1, 0),
+                    Arguments.of("LF", "x\nA", 2, 1),
+                    Arguments.of("CR", "x\rA", 2, 1),
+                    Arguments.of("CRLF", "x\r\nA", 3, 1),
+                    Arguments.of("CRLF at source start", "\r\n", 2, 0),
+                    Arguments.of("consecutive LF separators", "x\n\nA", 3, 2),
+                    Arguments.of("CR followed by CRLF", "x\r\r\nA", 4, 2),
+                    Arguments.of("bounded CR before LF", "x\r\nA", 2, 1),
+                    Arguments.of("indentation after separator", "\r\n \t", 4, 4));
+        }
+    }
+
+    @Nested
+    class FindTrailingLineSeparatorsStart {
+
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("provideSourceRanges")
+        void findTrailingLineSeparatorsStart_sourceRange_removesOnlyTrailingLineSeparators(
+                @NonNull String scenario, @NonNull String srcCode, int start, int endExclusive, int expectedEnd) {
+            assertThat(findTrailingLineSeparatorsStart(start, endExclusive, srcCode))
+                    .as(scenario)
+                    .isEqualTo(expectedEnd);
+        }
+
+        @NonNull
+        private static Stream<Arguments> provideSourceRanges() {
+            return Stream.of(
+                    Arguments.of("empty source", "", 0, 0, 0),
+                    Arguments.of("empty interior range", "x\n", 1, 1, 1),
+                    Arguments.of("spaces and tabs in a line comment", "// note  \t\r\n", 0, 12, 10),
+                    Arguments.of("LF", "// x\n", 0, 5, 4),
+                    Arguments.of("CR", "// x\r", 0, 5, 4),
+                    Arguments.of("consecutive separators", "x\r\n\n", 0, 4, 1),
+                    Arguments.of("bounded search ignores following text", "x\nnext", 0, 2, 1),
+                    Arguments.of("range contains only separators", "\r\n@A", 0, 2, 0),
+                    Arguments.of("range begins inside CRLF", "x\r\n", 2, 3, 2),
+                    Arguments.of("spaces after a separator remain", "x\n ", 0, 3, 3),
+                    Arguments.of("other whitespace remains", " \f\u2003", 0, 3, 3));
         }
     }
 }

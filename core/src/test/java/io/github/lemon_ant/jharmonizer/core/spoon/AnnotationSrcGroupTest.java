@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.scanAnnotationSrcGroups;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
@@ -24,8 +25,7 @@ class AnnotationSrcGroupTest {
     @ValueSource(ints = {0, 1, 3})
     void construct_mismatchedGapCount_rejectsGroup(int gapCount) {
         // Given
-        AnnotationSrcGroup group = AnnotationSourceScanner.scan(
-                        "@Deprecated @SuppressWarnings(\"all\") class Sample {}")
+        AnnotationSrcGroup group = scanAnnotationSrcGroups("@Deprecated @SuppressWarnings(\"all\") class Sample {}")
                 .get(0);
         List<AnnotationSrcGap> gapsInSrcOrder = Collections.nCopies(
                 gapCount, group.getAnnotationSrcGapsInSrcOrder().get(0));

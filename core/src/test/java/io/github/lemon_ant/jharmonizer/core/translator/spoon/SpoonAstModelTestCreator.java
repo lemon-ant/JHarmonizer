@@ -10,9 +10,9 @@ import spoon.reflect.declaration.CtCompilationUnit;
 public class SpoonAstModelTestCreator {
 
     /**
-     * Copies a parsed fixture with a cloned compilation unit and shared type declarations.
+     * Copies a parsed fixture with a cloned {@code CtCompilationUnit} and shared type declarations.
      * @param templateModel parsed fixture to copy
-     * @return model with the copied compilation unit and matching source data and type references
+     * @return model with the copied {@code CtCompilationUnit} and matching source data and type references
      */
     @NonNull
     public static SpoonAstModel copyWithClonedCompilationUnit(@NonNull SpoonAstModel templateModel) {

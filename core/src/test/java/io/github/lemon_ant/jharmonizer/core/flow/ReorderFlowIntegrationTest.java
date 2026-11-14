@@ -3,6 +3,8 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
@@ -12,6 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +27,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class ReorderFlowIntegrationTest {
+
+    @NonNull
+    private static final URL INVALID_REPEATABLE_CONTAINER = requireClasspathResourceUrl(
+            "/test-cases/core/source-processor/flow-level/invalid/InvalidRepeatableContainer.java");
 
     @TempDir
     Path temporaryDirectory;
@@ -70,6 +77,25 @@ class ReorderFlowIntegrationTest {
         // Then
         assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.SKIPPED);
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isEqualTo(originalSrcCode);
+    }
+
+    @Test
+    void processStream_invalidRepeatableContainer_returnsErrorAndPreservesFileWithoutBackup() throws IOException {
+        // Given
+        String originalSrcCode = readClasspathResourceAsString(INVALID_REPEATABLE_CONTAINER);
+        Path srcPath = writeJavaFile("InvalidRepeatableContainer.java", originalSrcCode);
+        byte[] originalSrcBytes = Files.readAllBytes(srcPath);
+        SrcFile srcFile = createSrcFile(originalSrcCode, srcPath);
+        ReorderFlow reorderFlow = createFlow(true);
+
+        // When
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
+        assertThat(Files.readAllBytes(srcPath)).containsExactly(originalSrcBytes);
+        assertThat(srcPath.resolveSibling(srcPath.getFileName() + ".bak")).doesNotExist();
     }
 
     @ParameterizedTest

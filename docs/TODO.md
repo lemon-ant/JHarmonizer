@@ -488,7 +488,7 @@ them safely using source-local AST rewriting:
 
 **Phase 2 — package-private constants (medium risk)**
 
-Requires cross-file analysis limited to the same compilation unit / package boundary:
+Requires cross-file analysis limited to the same package:
 - collect all same-package call sites before rewriting;
 - apply a consistent rename across all affected files in a single pass;
 - skip when any call site is ambiguous or unresolvable in no-classpath mode.
@@ -667,7 +667,7 @@ the declaration and all in-scope call sites affected by the reordering.
 #### Proposed solution (future)
 Introduce an override-aware parameter ordering pass that:
 - resolves method override relations (including interface inheritance) and constructor delegation
-  chains (`this(...)` / `super(...)`) inside the compilation unit scope;
+  chains (`this(...)` / `super(...)`) inside the source file;
 - builds a base-parameter mapping for each candidate method/constructor;
 - verifies whether declaration parameter order is `[base-mapped..., extension...]`;
 - when not compliant, rewrites the declaration signature to the canonical order;
@@ -1231,7 +1231,7 @@ Core principles:
 - [ ] Create/confirm upstream Spoon issue(s) with minimal reproducible samples for:
   - [ ] package declarations with leading file comments;
   - [ ] module declarations with leading file comments;
-  - [ ] comment-only compilation units.
+  - [ ] source files containing only comments.
 - [ ] Re-evaluate and remove/limit raw-source fallback after upstream fix is available and verified.
 
 ---
@@ -1529,7 +1529,7 @@ dedicated review pass.
 
 #### Problem and direction
 
-`SpoonSorter` mutates declaration order in the compilation unit, writes group separators to member
+`SpoonSorter` mutates declaration order in the Spoon AST, writes group separators to member
 metadata, and returns a model wrapper with immutable annotation groups. The returned `SpoonAstModel` shares the mutable
 AST with its input, so later sorting can affect earlier models. `SortingResult` separately retains member diagnostics;
 it does not yet isolate declaration order or separator metadata.
@@ -1612,8 +1612,8 @@ evidence, alternatives, and regression coverage. AST annotation positions cannot
 omit supported source groups. This decision adds no parsing pass or dependency and changes no sorting behavior.
 
 Item 3 is resolved by passing `SpoonAstModel` into `SpoonSorter` and returning the model with sorted annotation groups.
-The sorter obtains the compilation unit, skipped types, and annotation groups from that model. This also resolves item 13:
-`Sorter` times one sorting call without assembling annotation groups. The benchmark copies the compilation unit together
+The sorter obtains the Spoon AST, skipped types, and annotation groups from that model. This also resolves item 13:
+`Sorter` times one sorting call without assembling annotation groups. The benchmark copies the Spoon AST together
 with its matching model state; its existing shared-type limitation is documented in [benchmark.md](benchmark.md).
 
 Item 4 is resolved by removing printer configuration from parsing and `SpoonAstModel`. Each flow supplies its immutable
@@ -1643,15 +1643,15 @@ report reordering. Separate declaration-hierarchy and annotation-group detection
 the detailed member report only when declarations changed; reordering and annotation-only changes skip that pass.
 The parse-time snapshot remains available for member diagnostics.
 
-Item 15 is resolved by atomically claiming the shared compilation unit in `SpoonSorter` before the first sorting
-attempt. Input, pre-existing, and returned model views observe the same metadata. Both sorting entry points reject a
-second attempt after unchanged or failed sorting; clones of consumed units retain the claim. Reparsing creates an
-independent lifecycle. Tests cover these aliases, mixed entry points, failures, cloning, and reparsing.
+Item 15 is resolved by atomically claiming the shared `CtCompilationUnit` model in `SpoonSorter` before the first
+sorting attempt. Input, pre-existing, and returned model views observe the same metadata. Both sorting entry points
+reject a second attempt after unchanged or failed sorting; clones of consumed models retain the claim. Reparsing creates
+an independent lifecycle. Tests cover these aliases, mixed entry points, failures, cloning, and reparsing.
 
 Item 16 is resolved by retaining primitive invocation change flags in `SpoonSortingResult` and `SortingResult`.
 The stage result carries known flags after successful sorting; `SpoonAstModel` keeps no nullable post-sort fields.
 This preserves the result contract without partial flag states or converting an unknown result to false.
-The shared compilation-unit claim continues to enforce the sorting lifecycle independently of result flags.
+The shared AST claim continues to enforce the sorting lifecycle independently of result flags.
 
 Items 17 and 18 are resolved at the annotation sorting boundary: source groups are the first parameter, opt-outs the
 second, and the shared `ElementOrdering<AnnotationSrcGroup>` retains groups in source-range order. A group is replaced

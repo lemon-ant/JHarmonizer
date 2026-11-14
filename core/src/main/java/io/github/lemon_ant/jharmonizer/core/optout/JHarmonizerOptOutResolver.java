@@ -26,10 +26,10 @@ public final class JHarmonizerOptOutResolver {
     private final SrcFile srcFile;
 
     /**
-     * Resolves file-level and type-level opt-out directives from a parsed compilation unit.
+     * Resolves file-level and type-level opt-out directives from a parsed source file.
      *
-     * @param srcFile the source file that owns the parsed compilation unit
-     * @param compilationUnit the parsed compilation unit to inspect
+     * @param srcFile source file associated with the parsed Spoon model
+     * @param compilationUnit Spoon model of the source file to inspect
      * @return the resolved opt-out summary
      */
     @NonNull

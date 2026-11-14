@@ -39,6 +39,11 @@ class JHarmonizerOptOutCommentUtilities {
      * file-scope opt-out probing in package-declaration and module-declaration units where Spoon
      * comment attachment is unreliable.
      */
+    // TODO(JAVA_COMMENT_TOKENS): Use Java tokenization with original offsets for package/module comment discovery.
+    // Examples in Java string notation: "\\u002f\\u002f @jharmonizer:fully-off\npackage p;" and
+    // "// @jharmonizer:fully-off\\u000apackage p;" contain valid directives that this raw regex misreads.
+    // Ignore comment-shaped string contents: @Deprecated(since="/* @jharmonizer:fully-off */") package p;
+    // currently disables the file despite containing no directive comment.
     private static final Pattern COMMENT_PATTERN = Pattern.compile("(?s)/\\*.*?\\*/|//.*?(?:\\R|$)");
     private static final char LINE_FEED = '\n';
 
@@ -142,6 +147,8 @@ class JHarmonizerOptOutCommentUtilities {
     @Nullable
     static JHarmonizerOptOutMode parseFileScopeOptOutMode(
             @NonNull String rawComment, int commentOffset, @NonNull SrcFile srcFile) {
+        // TODO(UNICODE_DIRECTIVES): Match the payload after Java Unicode translation, retaining original offsets.
+        // Java string notation: "// \\u0040jharmonizer:fully-off" must resolve FULLY_OFF, but raw spelling is ignored.
         // Normalize raw text by stripping Java comment delimiters, trimming incidental whitespace,
         // and switching to lowercase for case-insensitive token lookup.
         String normalizedContent = rawComment
@@ -188,6 +195,9 @@ class JHarmonizerOptOutCommentUtilities {
      */
     @Nullable
     static JHarmonizerOptOutMode parseTypeOptOutMode(@NonNull CtComment comment) {
+        // TODO(UNICODE_DIRECTIVES): Spoon can retain Unicode escape spellings in CtComment.getContent().
+        // Java string notation: "// \\u0040jharmonizer:fully-off" is ignored in ordinary files and type directives too.
+        // Resolve the translated comment payload consistently with file-scope token parsing.
         String normalizedContent = comment.getContent().trim().toLowerCase(Locale.ROOT);
         int tokenPrefixIndex = normalizedContent.indexOf(JHarmonizerOptOutMode.TOKEN_PREFIX);
         if (tokenPrefixIndex < 0) {

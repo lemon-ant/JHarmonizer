@@ -103,7 +103,7 @@ printer, Lombok, or Spoon changes; no automated exclusion check is installed.
 | Exclusion | Reason |
 | --- | --- |
 | Lombok `@NonNull` parameter failures | The pipeline supplies non-null arguments. Null API arguments are outside the E2E input contract. |
-| `SrcCodeUtils.findFragmentEndExclusive`, scan reaches the range start | `SrcPrinterOutput.printFragment` skips whitespace-only fragments before finding their end. Direct utility tests cover these ranges. |
+| `SrcCodeUtils.findContentEndExclusive`, scan reaches the range start | `SrcPrinterOutput.printFragment` skips whitespace-only fragments before finding their end. Direct utility tests cover these ranges. |
 
 The recorded per-class exclusions include respectively 4, 0, 2, 6, 4, and 3 Lombok null-argument outcomes
 in table order, plus the other exclusions listed above and the formerly unreachable empty-source branch in

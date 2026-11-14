@@ -96,7 +96,7 @@ class RelocationDetectorTest {
 
     @Test
     void findRelocations_oneMemberMovedFromLastToFirst_reportsSingleRelocationForMovedMember() {
-        // Given — compilation unit has the "sorted" order [d, a, b, c] (d was last, now first)
+        // Given — source-file AST has the "sorted" order [d, a, b, c] (d was last, now first)
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n"
                         + "    public void d() {}\n\n"

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentEndExclusive;
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentEndExclusive;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentStartWithIndentation;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
@@ -62,12 +62,13 @@ final class SrcPrinterOutput {
      */
     boolean printFragment(int start, int end) {
         try {
-            int indentationStart = findFragmentStartWithIndentation(start, end, srcCode);
+            int endExclusive = end + 1;
+            int indentationStart = findContentStartWithIndentation(start, endExclusive, srcCode);
             if (indentationStart > end) {
                 return false;
             }
             // Interior whitespace belongs to the fragment; surrounding gaps belong to its container.
-            int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
+            int fragmentEndExclusive = findContentEndExclusive(start, endExclusive, srcCode);
             printSrcRange(indentationStart, fragmentEndExclusive);
             writeln();
             return true;
@@ -116,7 +117,7 @@ final class SrcPrinterOutput {
      * @param start first source offset after the last original top-level type
      */
     void printTail(int start) {
-        int tailStart = findFragmentStartWithIndentation(start, srcCode.length() - 1, srcCode);
+        int tailStart = findContentStartWithIndentation(start, srcCode.length(), srcCode);
         if (tailStart < srcCode.length()) {
             writeln();
             buffer.append(srcCode, tailStart, srcCode.length());

@@ -68,7 +68,7 @@ concrete providers contribute edges.
 | `InitializerBlockMutableFieldReadDependencyProvider`               | 3               | Conservative edge for mutable fields whose contents may have been mutated by a prior initializer block via method calls (e.g. `map.put(...)`). |
 | `EnumConstantInitializerDependencyProvider`                        | 4               | Enum constants are static fields initialized in source order; their initializers cannot be reordered past their providers. |
 | `BlankFinalDefiniteAssignmentDependencyProvider`                   | 5               | If a dependent initialization member reads a blank final field, edges are added from all potential assignment providers declared above it. |
-| `CrossTypeConstantBackRefDependencyProvider`                       | 6               | Detects transitive cross-type initializer chains within the same compilation unit (`T.F → E1.SF1 → … → T.G`). Cross-file pairs are intentionally out of scope. |
+| `CrossTypeConstantBackRefDependencyProvider`                       | 6               | Detects transitive cross-type initializer chains within the same source file (`T.F → E1.SF1 → … → T.G`). Cross-file pairs are intentionally out of scope. |
 | `AccessorPairDependencyProvider`                                   | 7               | Emits `ACCESSOR_BUNDLE` edges (not declaration-order). Driven by `keepAccessorsTogether` and `SpoonJavaBeansAccessorUtils`. |
 
 `MemberDependencyGraphBuilder` exposes a `relaxedForwardReferences` knob for the strict

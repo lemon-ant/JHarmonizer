@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Package-level documentation fixture for non-type compilation-unit coverage.
+ * Package-level documentation fixture for source files without type declarations.
  *
  * <p>Keeps legal package annotations so the formatter and parser still have syntax to preserve.
  */

@@ -4,3 +4,5 @@
 @javax.annotation.processing.Generated("generator")
 @Deprecated
 package annotationpackage;
+
+import java.lang.Deprecated;

@@ -25,7 +25,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
  * Provides declaration-order dependencies caused by cross-type constant back-references.
  *
  * <p>When a field {@code F} in type {@code T} accesses a field from a resolvable type {@code E1}
- * (present in the same compilation unit), and a transitive initializer chain from {@code E1}
+ * (present in the same source file), and a transitive initializer chain from {@code E1}
  * eventually reads fields of {@code T}, then {@code F} depends on those fields of {@code T}.
  * Accessing the cross-type field triggers {@code E1}'s static initialization, which may trigger
  * further static initializations, eventually reading fields of {@code T}. If those fields are not

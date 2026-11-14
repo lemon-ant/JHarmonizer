@@ -30,10 +30,10 @@ separate because intermediate sorting operations do not define a minimal relocat
 
 The combined flag is independent of member diagnostics, which omit untracked nodes and invalid source positions.
 Each freshly parsed shared AST is sorted once per flow, so invocation changes also describe differences from source
-order. The parse-time snapshot remains necessary for detailed reports. `SpoonSorter` claims the shared compilation unit
-before sorting and rejects repeated attempts through any model view, including after unchanged or failed sorting.
-Clones retain a consumed unit's claim; reparsing starts a fresh lifecycle. Skipped sorting returns empty diagnostics and
-`false` change flags.
+order. The parse-time snapshot remains necessary for detailed reports. `SpoonSorter` claims the shared
+`CtCompilationUnit` before sorting and rejects repeated attempts through any model view, including after unchanged
+or failed sorting. Clones retain a consumed model's claim; reparsing starts a fresh lifecycle. Skipped sorting returns
+empty diagnostics and `false` change flags.
 
 ## Inputs
 

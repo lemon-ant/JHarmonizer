@@ -5,8 +5,8 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator.HEADER;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator.NEW_LINE;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.resolveSeparator;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.findEffectiveMemberStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findEffectiveMemberEnd;
-import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findEffectiveMemberStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findExplicitTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findLeadingTypeCommentStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine;
@@ -142,7 +142,7 @@ public final class SpoonSrcPrinter {
                 return;
             }
             int[] memberStarts = members.stream()
-                    .mapToInt(SpoonTypeMemberUtils::findEffectiveMemberStart)
+                    .mapToInt(SpoonTypeUtils::findEffectiveMemberStart)
                     .sorted()
                     .toArray();
             srcPrinterOutput.printFragment(typeStart, memberStarts[0] - 1);
@@ -193,7 +193,7 @@ public final class SpoonSrcPrinter {
         private SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(CtCompilationUnit compilationUnit) {
             List<CtType<?>> rootTypes = SpoonTypeUtils.getRootTypes(compilationUnit);
             int firstTypeStart = rootTypes.stream()
-                    .mapToInt(SpoonTypeMemberUtils::findEffectiveMemberStart)
+                    .mapToInt(SpoonTypeUtils::findEffectiveMemberStart)
                     .min()
                     .orElseThrow(IllegalStateException::new);
             int firstTypeCommentStart = findLeadingTypeCommentStart(compilationUnit, firstTypeStart, srcCode);

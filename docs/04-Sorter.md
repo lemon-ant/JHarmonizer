@@ -36,7 +36,7 @@ order.
 The sorter passes sorted annotations and resolved gap slots as two required lists to the group constructor.
 Resolving a gap only selects a scanner-prepared whitespace prefix, comparing source boundaries and separator counts.
 It does not read source text, inspect characters, or parse comments. Each gap combines that prefix with its fixed
-content; its shared immutable layout supports subsequent sorts without storing complete previous code versions. The
+content; its retained original values support subsequent sorts without storing complete previous code versions. The
 constructor retains unmodifiable views and requires one gap per annotation. Producers must not modify the supplied
 lists after handoff. The private mixed sequence is lazily built and cached by a static helper that alternates the lists;
 sorting reads only the typed lists. Clients cannot access or independently replace the derived sequence. The group lazily
@@ -68,11 +68,11 @@ inside a group can change. Group preparation collects the aggregate annotation-c
 permutations and returns the prepared groups and flag in the shared `ElementOrdering<AnnotationSrcGroup>` carrier.
 No separate AST traversal is needed to decide whether sorting changed order.
 
-`SpoonSorter` atomically claims the shared compilation unit through metadata before any sorting mutation. A repeated
-attempt through the input model, a pre-existing view, the returned model, or either sorting entry point throws
+`SpoonSorter` atomically claims the shared `CtCompilationUnit` model through metadata before any sorting mutation.
+A repeated attempt through the input model, a pre-existing view, the returned model, or either sorting entry point throws
 `IllegalStateException`, including after unchanged or failed first attempts.
 [Spoon's clone implementation](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/visitor/clone/CloneBuilder.java#L60)
-copies this metadata, so a clone of a consumed unit remains consumed. Reparsing source starts a new sorting lifecycle.
+copies this metadata, so a clone of a consumed model remains consumed. Reparsing source starts a new sorting lifecycle.
 
 The monitor protects only the short metadata claim; sorting runs outside it. The helper's local PMD suppression follows
 the [JDK 21 guidance](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html) for short in-memory operations.
@@ -133,7 +133,7 @@ For each type processed (top-level and nested):
 
 ## Top-level types
 
-Top-level types of a compilation unit are sorted independently by `SpoonSorter` using
+Top-level types of a source file are sorted independently by `SpoonSorter` using
 `UnifiedTopLevelTypesOrdering` (see [`config-dsl.md`](config-dsl.md#top-level-types-ordering)),
 with the same `OrderingKey` machinery but a member-only comparator
 (`buildMemberOnlyOrderingComparator`).

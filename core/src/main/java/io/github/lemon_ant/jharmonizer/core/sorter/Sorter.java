@@ -37,7 +37,7 @@ public final class Sorter {
      *
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @return the model for serialization, member diagnostics, change flags, and sorting statistics
-     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
+     * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
@@ -49,7 +49,7 @@ public final class Sorter {
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @param collectMemberRelocations whether the caller needs the detailed member report
      * @return the model for serialization, requested diagnostics, change flags, and sorting statistics
-     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
+     * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")

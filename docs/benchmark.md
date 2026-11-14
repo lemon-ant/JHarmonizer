@@ -15,13 +15,13 @@ The benchmark:
 - uses fixtures from `src/test/resources/test-cases/core/e2e/reorder/**/input/*.java`
   and `src/test/resources/test-cases/core/e2e/regression/**/input/*.java`;
 - parses fixtures once during JMH setup;
-- clones each fixture's compilation unit, preserves its matching model state, and runs
+- clones each fixture's `CtCompilationUnit` model, preserves its matching model state, and runs
   `SpoonSorter.sortCompilationUnitRecursively(...)` in benchmarked operations;
 - reuses immutable annotation source groups and input text without reparsing Java source.
 
 Spoon 11.5.0's
 [`CloneVisitor`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/visitor/clone/CloneVisitor.java)
-copies compilation-unit references in the same factory.
+copies `CtCompilationUnit` references in the same factory.
 [`CtCompilationUnitImpl`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/reflect/declaration/CtCompilationUnitImpl.java)
 resolves declared types through those references. The benchmark therefore retains shared type declarations between
 invocations, including previous member-order mutations. Independent model/factory copies remain a benchmark follow-up;

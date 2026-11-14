@@ -29,7 +29,7 @@ Directive matching is case-insensitive, so variants such as `@JHarmonizer:Fully-
 
 ### File scope
 
-Place a directive in the compilation-unit preamble:
+Place a directive at the beginning of the source file:
 
 - before `package`
 - between `package` and the first `import`
@@ -51,6 +51,9 @@ Behavior:
 - `@jharmonizer:fully-off` — fully disable harmonization for that type subtree and preserve its original source text
 - `@jharmonizer:sort-off` — disable sorting only for that type subtree; it is still formatted together with the rest of
   the file
+
+Both directives preserve annotation order on the type and throughout its subtree, including nested types, members,
+parameters, and type uses. File-scope directives preserve annotation order throughout the file.
 
 ## Unsupported placements and tokens
 

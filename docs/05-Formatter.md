@@ -38,7 +38,7 @@ The wrapper internally delegates to this verified method from `com.palantir.java
 
 ```java
 /**
- * Formats an input string (a Java compilation unit) and fixes imports.
+ * Formats an input Java source string and fixes imports.
  *
  * Fixing imports includes ordering, spacing, and removal of unused import statements.
  *
@@ -191,7 +191,7 @@ Practical guidance for users:
 
 ## Known limitation: template placeholders are not Java grammar
 
-Palantir formatter expects parseable Java compilation units. Template placeholders like:
+Palantir formatter expects parseable Java source files. Template placeholders like:
 
 ```java
 package ${package};

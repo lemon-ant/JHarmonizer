@@ -49,7 +49,7 @@ public class RelocationDetector {
      *
      * @param originalMemberOrder flat list of all type members in their original source order,
      *                            as produced by {@link #snapshotOriginalMemberOrder}
-     * @param reorderedCompilationUnit the reordered compilation unit to inspect
+     * @param reorderedCompilationUnit reordered Spoon model of the source file to inspect
      * @return list of relocations for all detected chunks, in current encounter order
      */
     @NonNull
@@ -65,7 +65,7 @@ public class RelocationDetector {
     }
 
     /**
-     * Builds a flat snapshot of all type members declared in the compilation unit,
+     * Builds a flat snapshot of all type members declared in the source file,
      * in source-code order (DFS: each type node followed by its own members recursively).
      *
      * <p>The returned list contains both the root type declarations and all their nested
@@ -73,7 +73,7 @@ public class RelocationDetector {
      * element in this list reflects its order in the original code. This snapshot can be
      * compared against the member order after sorting to detect relocations.
      *
-     * @param compilationUnit the compilation unit to snapshot
+     * @param compilationUnit Spoon model of the source file to snapshot
      * @return immutable flat list of all type members in their original source order
      */
     @NonNull

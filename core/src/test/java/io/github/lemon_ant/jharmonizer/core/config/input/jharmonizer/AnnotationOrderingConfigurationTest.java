@@ -18,6 +18,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedConfigMerger;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,9 @@ class AnnotationOrderingConfigurationTest {
         assertThat(merged.getAnnotationOrderingRules())
                 .containsExactly(NAME_LENGTH_ASC, DECLARATION_LENGTH_ASC, ALPHA, ARGUMENTS_ALPHA);
         assertThat(compiled.getAnnotationComparator()
-                        .compare(new AnnotationDescriptor("z", 30, "A"), new AnnotationDescriptor("a", 20, "LongName")))
+                        .compare(
+                                new AnnotationDescriptor("z", 30, "A", Set.of("A")),
+                                new AnnotationDescriptor("a", 20, "LongName", Set.of("LongName"))))
                 .isNegative();
     }
 

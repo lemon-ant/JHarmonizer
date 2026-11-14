@@ -11,7 +11,6 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
-import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
@@ -39,20 +38,6 @@ class SpoonTypeMemberUtils {
     }
 
     /**
-     * Finds the earliest source start of a declaration and its annotations.
-     * @param member the declaration to inspect
-     * @return first source offset including annotations outside Spoon's declaration range
-     */
-    static int findEffectiveMemberStart(@NonNull CtTypeMember member) {
-        // Spoon can start a declaration at a comment between its annotations, excluding earlier annotations.
-        return member.getAnnotations().stream()
-                .map(CtAnnotation::getPosition)
-                .filter(SourcePosition::isValidPosition)
-                .mapToInt(SourcePosition::getSourceStart)
-                .reduce(member.getPosition().getSourceStart(), Math::min);
-    }
-
-    /**
      * Returns the explicit (source-positioned, non-implicit) type members of the given type.
      *
      * @param type the type declaration to inspect
@@ -71,7 +56,7 @@ class SpoonTypeMemberUtils {
 
     /**
      * Finds comments adjacent to the first type that Spoon left outside its source range.
-     * @param compilationUnit compilation unit containing the original comments
+     * @param compilationUnit Spoon model of the source file containing the original comments
      * @param typeStart first type's original source start
      * @param srcCode original source text
      * @return start of the type's leading comments, excluding a separate file header
@@ -89,6 +74,10 @@ class SpoonTypeMemberUtils {
         int firstJavaDocStart = typeStart;
         for (CtComment comment : commentsBeforeTypeInReverseSrcOrder) {
             SourcePosition commentPosition = comment.getPosition();
+            // TODO(UNICODE_COMMENT_GAPS): Recognize translated whitespace while preserving original source offsets.
+            // Java string notation: "/** B docs */\\u000aclass B {}\nclass A {}" must keep the JavaDoc with B.
+            // The raw gap fails here, leaving B's docs before A when A moves first. Also cover a gap of
+            // "\\u0020" or "\n\\u0020": escaped spaces and indentation must not detach the comment either.
             if (!CommentGapPatterns.ADJACENT_COMMENT_GAP
                     .matcher(srcCode)
                     .region(commentPosition.getSourceEnd() + 1, firstCommentStart)
@@ -100,7 +89,7 @@ class SpoonTypeMemberUtils {
                 firstJavaDocStart = firstCommentStart;
             }
         }
-        // Without a package/import, Spoon can attach type comments to the compilation unit.
+        // Without a package/import, Spoon can attach type comments to the source-file model (CtCompilationUnit).
         // The loop collected one adjacent block of any length, with no blank line or source text between its
         // comments and the first type. If only whitespace precedes this block, treat it as reaching the file start.
         // Split such a block at the earliest JavaDoc in source order: earlier comments belong to the file;

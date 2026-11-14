@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import lombok.NonNull;
@@ -59,7 +60,9 @@ class SrcPrinterOutputTest {
     @NonNull
     private static SrcPrinterOutput createOutputWithSortedAnnotations(String srcCode) {
         List<AnnotationSrcGroup> annotationSrcGroups = sortAnnotationGroups(
-                AnnotationSourceScanner.scan(srcCode), Comparator.comparing(AnnotationDescriptor::getName));
+                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")))
+                        .getAnnotationSrcGroups(),
+                Comparator.comparing(AnnotationDescriptor::getName));
         return new SrcPrinterOutput(srcCode, annotationSrcGroups);
     }
 }

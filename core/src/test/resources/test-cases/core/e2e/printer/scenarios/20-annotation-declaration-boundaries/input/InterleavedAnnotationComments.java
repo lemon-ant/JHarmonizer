@@ -11,6 +11,8 @@ class InterleavedAnnotationComments {
     // Field annotations.
     @SuppressWarnings("unused")
     int value;
+    // Leading constructor annotation.
+    /* Adjacent constructor annotation. */
     @Deprecated
     // Constructor annotations.
     @SuppressWarnings("unused")

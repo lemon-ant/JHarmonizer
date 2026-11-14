@@ -145,7 +145,7 @@ JHarmonizer supports two opt-out directives placed as source comments.
 ```
 
 Directive matching is case-insensitive. Both line (`//`) and block (`/* */`) comment forms are supported.
-Directives can be placed at **file scope** (in the compilation-unit preamble) or **type scope** (immediately
+Directives can be placed at **file scope** (at the beginning of the source file) or **type scope** (immediately
 before a type declaration).
 
 For the full reference — placement rules, scope semantics, and unsupported tokens — see

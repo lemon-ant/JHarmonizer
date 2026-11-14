@@ -35,7 +35,7 @@ import spoon.reflect.declaration.CtTypeMember;
 
 /**
  * Root coordinator for sorting:
- * - (later) reorders top-level types in the compilation unit,
+ * - (later) reorders top-level types in the source file,
  * - recursively processes nested types (depth-first),
  * - applies member sorting to each type via
  */
@@ -56,7 +56,7 @@ public class SpoonSorter {
      * Sorts declaration order in the AST and finalizes sorted annotation source groups.
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @return model with the updated AST, immutable annotation groups, and invocation change flags
-     * @throws IllegalStateException if sorting was already attempted for the shared compilation unit
+     * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
     public SpoonSortingResult sortCompilationUnitRecursively(@NonNull SpoonAstModel spoonAstModel) {

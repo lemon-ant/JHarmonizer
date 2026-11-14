@@ -281,7 +281,7 @@ class SorterTest {
         }
 
         @Test
-        void sort_repeatedAnnotationArgumentsChangeOrder_returnsTrue() {
+        void sort_repeatedAnnotationArgumentsPreserved_returnsFalse() {
             // Given
             CompiledConfig argumentsConfig =
                     overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(requireClasspathResourceUrl(
@@ -300,9 +300,10 @@ class SorterTest {
             assertThat(repeatedAnnotations.getAnnotationSrcFragments())
                     .extracting(fragment -> fragment.getDescriptor().getName())
                     .containsExactly("Tag", "Tag");
-            assertThat(result.isAnnotationsReordered()).isTrue();
+            assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups()).containsExactly(repeatedAnnotations);
+            assertThat(result.isAnnotationsReordered()).isFalse();
             assertThat(result.isMembersReordered()).isFalse();
-            assertThat(result.isReordered()).isTrue();
+            assertThat(result.isReordered()).isFalse();
             assertThat(result.getMemberRelocations()).isEmpty();
         }
 

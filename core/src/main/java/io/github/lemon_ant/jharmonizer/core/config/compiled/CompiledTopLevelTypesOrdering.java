@@ -17,7 +17,7 @@ import lombok.Value;
  *
  * <p>TODO Replace this passive data holder with a fully compiled top-level ordering strategy that is created once
  * during configuration compilation and then reused as-is at runtime. Comparator construction and any main-type-aware
- * branching should not happen on the hot path for every processed compilation unit.</p>
+ * branching should not happen on the hot path for every processed source file.</p>
  */
 @Value
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)

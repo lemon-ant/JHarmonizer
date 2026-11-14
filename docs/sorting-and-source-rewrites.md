@@ -15,7 +15,7 @@ The sorting facade now returns prepared member-relocation diagnostics in `Sortin
 defensive copies and retains independent annotation and member flags with a computed aggregate. Producers must not
 mutate handed-off lists. The full ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
 
-The direction is to return one explicit ordering model instead of combining a mutated Spoon compilation unit with
+The direction is to return one explicit ordering model instead of combining a mutated Spoon AST with
 separately returned annotation groups. Extend this direction to support code transformations before sorting.
 The first migration should preserve current output and sorting algorithms. Semantic rewrites are a separate step.
 
@@ -33,7 +33,7 @@ and attached annotation fragments that the custom printer can consume directly. 
 | `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns the model with sorted annotation groups and final-order change flags. |
 | `SpoonAnnotationSorter` | Orders lexical annotations and resolves gap text; each group lazily assembles its replacement code. AST annotation lists remain unchanged. |
 | `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
-| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing; the input and result wrappers share the mutable compilation unit. |
+| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing; the input and result wrappers share the mutable Spoon AST. |
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
 | `RelocationDetector` | Computes minimal declaration relocation reports from the original snapshot when check flows need diagnostics. |
 
@@ -42,7 +42,7 @@ order A alongside the member order and metadata produced by B. Immutable outer l
 This is an architectural consequence of the inspected references, not a new runtime reproducer executed for this note.
 
 Spoon does retain annotation lists. The extra source representation exists to retain exact spelling, comments,
-parentheses, and constructs absent from the model. It is inaccurate to say that the compilation unit cannot contain
+parentheses, and constructs absent from the model. It is inaccurate to say that the Spoon AST cannot contain
 annotations at all. Conversely, its annotation lists cannot replace all existing lexical fragments.
 Only lexical groups carry the output annotation order; sorting AST annotation lists would duplicate unused work.
 
@@ -86,7 +86,7 @@ AST and has a memory cost; omit them from the final rendering structure when no 
 
 After sorting, source slices and saved layout facts can be sufficient for rendering. Spoon references can stay in a
 separate analysis/diagnostic association if required. An explicit association belongs to project data, not hidden
-compilation-unit metadata. Model classes remain focused on state; builders and processing services do the work.
+Spoon AST metadata. Model classes remain focused on state; builders and processing services do the work.
 
 ### One content hierarchy, several ordering operations
 
@@ -204,7 +204,7 @@ partially reordered output string or insert the same edit both into a member and
 - Adapt opt-out range tracking, currently keyed by `CtType<?>`, to the result's identities and rendered ranges. Preserve
   current exclusions during migration. Before adding rewrites, define their opt-out policy explicitly: fully-off code
   stays protected; sort-off must not silently become permission to perform semantic rewrites.
-- Keep file-level/import edits at the compilation-unit level. New references must coordinate with import handling;
+- Keep whole-file and import edits at the source-file level. New references must coordinate with import handling;
   token replacements inside members alone cannot express all future features. Transformations spanning files need a
   separate transaction/scope design and are not implied by this per-file architecture.
 

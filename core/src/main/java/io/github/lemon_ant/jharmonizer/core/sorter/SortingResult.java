@@ -10,7 +10,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 /**
- * Result of sorting all members in a single compilation unit.
+ * Result of sorting all members in a single source file.
  * Bundles the reordered Spoon AST model, prepared relocation diagnostics, change flags, and timing statistics.
  */
 @Value

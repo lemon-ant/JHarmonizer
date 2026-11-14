@@ -66,10 +66,11 @@ case-insensitive.
 Use `annotations-ordering: []` to preserve annotation order. An overlay replaces the whole criterion list; omitting
 the setting inherits the baseline.
 
-Declaration length counts the written qualified name, `@`, parentheses, parameter names, assignments, values, and
-comments inside the declaration. Inter-token whitespace is excluded; string contents count, with incidental text-block
-indentation removed. Comments outside the declaration are excluded from its length. The original annotation text is
-printed unchanged. Comments move according to their source adjacency:
+Declaration length sums the written token and internal-comment lengths in UTF-16 code units: the qualified name,
+`@`, parentheses, parameter names, assignments, values, and comments. Unicode escapes count their complete source
+spelling: `\u0040A` has length 7, while `@BB` has length 3. Inter-token whitespace is excluded; string contents count,
+with incidental text-block indentation removed. Comments outside the declaration are excluded from its length.
+The original annotation text is printed unchanged. Comments move according to their source adjacency:
 
 | Comment placement | Attachment |
 | --- | --- |
@@ -84,8 +85,8 @@ new position without leaving an extra blank line between annotations. Gaps aroun
 place. Blank lines inside a block comment do not separate it from an annotation.
 
 Argument comparison concatenates Java tokens inside the parentheses in their written order, excluding comments and
-inter-token whitespace. For example, `@Tag("aa")` precedes `@Tag("zz")`, and `@Tag(value = "aa")` compares as
-`value="aa"`.
+inter-token whitespace. For example, argument text `"aa"` compares before `"zz"`, and `@Tag(value = "aa")` compares as
+`value="aa"`. Preservation dependencies take precedence over the configured criteria.
 Constant references and expressions are compared as written, without evaluation. Annotations without parentheses sort
 before those with empty parentheses, followed by non-empty argument text: `@Tag`, `@Tag()`, `@Tag("")`. Parentheses
 containing only comments or whitespace compare as empty parentheses.
@@ -95,6 +96,28 @@ local variables, record components, and type uses. Adjacent annotations form a s
 groups. Annotation arguments and arrays of nested annotation values retain their order. Where Spoon omits annotations,
 the Java lexer supplies the source fragments and the same compiled comparator orders them.
 File and type opt-out directives also disable annotation sorting in their scope.
+
+Repeated annotation types retain their relative source order. Source declarations and explicit canonical imports can
+establish their type identities across written qualifications without loading library classes. Explicit nested
+occurrences also create dependencies: `@Tags({@Tag("first"), @Tag("second")})` retains its position relative to a direct
+`@Tag("third")`. Nested argument content is emitted unchanged. Confirmed distinct types with the same simple name
+remain independent. Different full spellings alone do not establish that distinction: `@library.Base.Tag` and
+`@library.Derived.Tag` can denote the same inherited annotation. When short names, wildcard/static imports, or owner
+hierarchies cannot be resolved, potentially identical types with the same simple name acquire conservative dependencies.
+Those pairs retain their relative order without a warning; independent annotations in the same adjacent group still sort.
+A potentially shared alias does not combine otherwise confirmed distinct types into one dependency family.
+
+For example, with `annotations-ordering: alpha`, `@library.Base.Tag("z") @Zulu @library.Derived.Tag("a") @Alpha` becomes
+`@Alpha @library.Base.Tag("z") @library.Derived.Tag("a") @Zulu` when the two `Tag` spellings cannot be distinguished.
+
+When the repeated annotation type is declared in the current source file, its `@Repeatable` metadata relates it to its
+container, including usages with omitted values. This metadata is optional; unavailable library declarations do not
+disable sorting. Without that relationship, a container such as `@Tags` or `@Tags(label = "x")` can hide occurrences in
+its default `value`, even when the container itself is declared locally. Its order relative to direct `@Tag` uses cannot
+be guaranteed; sorting can change the values observed through the container or `getAnnotationsByType`.
+To preserve an affected type's annotation order, use a
+`// @jharmonizer:sort-off` [directive](directives.md) for that type, or disable annotation ordering with
+`annotations-ordering: []`.
 
 ## `header-line`
 

@@ -9,6 +9,7 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedAnnotationOrderingRule;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
@@ -21,10 +22,10 @@ class AnnotationOrderingCompilerTest {
     @Test
     void compile_alphabeticalFirst_usesLengthOnlyForEqualNames() {
         // Given
-        AnnotationDescriptor shortAlpha = new AnnotationDescriptor("", 10, "Alpha");
-        AnnotationDescriptor longAlpha = new AnnotationDescriptor("z", 20, "Alpha");
-        AnnotationDescriptor tiedAlpha = new AnnotationDescriptor("a", 20, "Alpha");
-        AnnotationDescriptor beta = new AnnotationDescriptor("", 2, "Beta");
+        AnnotationDescriptor shortAlpha = new AnnotationDescriptor("", 10, "Alpha", Set.of("Alpha"));
+        AnnotationDescriptor longAlpha = new AnnotationDescriptor("z", 20, "Alpha", Set.of("Alpha"));
+        AnnotationDescriptor tiedAlpha = new AnnotationDescriptor("a", 20, "Alpha", Set.of("Alpha"));
+        AnnotationDescriptor beta = new AnnotationDescriptor("", 2, "Beta", Set.of("Beta"));
         List<AnnotationDescriptor> annotations = List.of(beta, longAlpha, tiedAlpha, shortAlpha);
 
         // When
@@ -39,8 +40,8 @@ class AnnotationOrderingCompilerTest {
     @Test
     void compile_emptyCriteria_preservesSourceOrder() {
         // Given
-        List<AnnotationDescriptor> annotations =
-                List.of(new AnnotationDescriptor("z", 8, "Z"), new AnnotationDescriptor("a", 2, "A"));
+        List<AnnotationDescriptor> annotations = List.of(
+                new AnnotationDescriptor("z", 8, "Z", Set.of("Z")), new AnnotationDescriptor("a", 2, "A", Set.of("A")));
 
         // When
         Comparator<AnnotationDescriptor> annotationComparator = AnnotationOrderingCompiler.compile(List.of());
@@ -52,11 +53,11 @@ class AnnotationOrderingCompilerTest {
     @Test
     void compile_multipleCriteria_resolvesTiesInConfiguredOrder() {
         // Given
-        AnnotationDescriptor first = new AnnotationDescriptor("z", 2, "B");
-        AnnotationDescriptor second = new AnnotationDescriptor("a", 12, "Aa");
-        AnnotationDescriptor third = new AnnotationDescriptor("z", 12, "Aa");
-        AnnotationDescriptor fourth = new AnnotationDescriptor("a", 12, "Ab");
-        AnnotationDescriptor fifth = new AnnotationDescriptor("a", 12, "Zzz");
+        AnnotationDescriptor first = new AnnotationDescriptor("z", 2, "B", Set.of("B"));
+        AnnotationDescriptor second = new AnnotationDescriptor("a", 12, "Aa", Set.of("Aa"));
+        AnnotationDescriptor third = new AnnotationDescriptor("z", 12, "Aa", Set.of("Aa"));
+        AnnotationDescriptor fourth = new AnnotationDescriptor("a", 12, "Ab", Set.of("Ab"));
+        AnnotationDescriptor fifth = new AnnotationDescriptor("a", 12, "Zzz", Set.of("Zzz"));
         List<AnnotationDescriptor> annotations = List.of(fifth, fourth, third, second, first);
 
         // When
@@ -74,11 +75,11 @@ class AnnotationOrderingCompilerTest {
             @NonNull UnifiedAnnotationOrderingRule rule, @NonNull List<String> expectedNames) {
         // Given
         List<AnnotationDescriptor> annotations = List.of(
-                new AnnotationDescriptor("z", 10, "Bb"),
-                new AnnotationDescriptor("a", 10, "Cc"),
-                new AnnotationDescriptor("", 30, "Z"),
-                new AnnotationDescriptor("a", 5, "ALong"),
-                new AnnotationDescriptor(null, 8, "Missing"));
+                new AnnotationDescriptor("z", 10, "Bb", Set.of("Bb")),
+                new AnnotationDescriptor("a", 10, "Cc", Set.of("Cc")),
+                new AnnotationDescriptor("", 30, "Z", Set.of("Z")),
+                new AnnotationDescriptor("a", 5, "ALong", Set.of("ALong")),
+                new AnnotationDescriptor(null, 8, "Missing", Set.of("Missing")));
 
         // When
         Comparator<AnnotationDescriptor> annotationComparator = AnnotationOrderingCompiler.compile(List.of(rule));

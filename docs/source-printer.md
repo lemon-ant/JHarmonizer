@@ -29,20 +29,24 @@ excluded; skipped types are copied as a whole and their UTF-16 output offsets ar
 
 Each type indexes its original member starts in a sorted `int[]`. Binary search finds the next source
 boundary regardless of output order, including duplicate starts in multi-field declarations.
-Effective starts include annotations preceding Spoon's declaration range: a comment between annotations can otherwise
-make the range omit an earlier annotation. Top-level types, nested types, and members use the same boundary calculation.
+Effective starts include annotations preceding the member declaration range reported by Spoon. The reported start can
+fall at a comment after those annotations. Top-level types, nested types, and members use the same
+boundary calculation. It retains leading comments already included in the member range reported by Spoon;
+it does not search comments independently.
+Source-text helpers use half-open `[start, endExclusive)` ranges; the printer converts Spoon's inclusive source ends
+before invoking them.
 The output uses one `StringBuilder`, initially sized to the original source, and appends source ranges
 directly. Interior line endings remain unchanged; generated lines use the dominant separator, with
 CRLF, LF, CR tie precedence. The complete serialized source is not cached.
 
 Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
-Configuration, source text, annotation order, skipped types and the compilation unit come from the supplied model;
+Configuration, source text, annotation order, skipped types and the Spoon AST come from the supplied model;
 the printer has no shared state. `SrcPrinterOutput` indexes each `AnnotationSrcGroup` by its original start.
 At a group boundary it appends `replacementCode` and continues after the original group end. It does not inspect
 annotation or gap fragments, decide separator ownership, or rebuild replacement text.
-The same range-copying method handles fragments inside types and entire units without declared types, including
-`package-info.java` and `module-info.java`, without adding whitespace to those units.
-The standalone `AnnotationSrcGroup` model owns its nested annotation, gap, layout, and private base-fragment types.
+The same range-copying method handles fragments inside types and entire files without declared types, including
+`package-info.java` and `module-info.java`, without adding whitespace to those files.
+The standalone `AnnotationSrcGroup` model owns its nested annotation, gap, and private base-fragment types.
 `AnnotationSourceScanner` collects `AnnotationSrcFragment` and `AnnotationSrcGap` in separate lists. Both extend
 `SrcFragment` with text and original source bounds. `SpoonAnnotationSorter` sorts annotations and resolves gap text in
 the original source slots. Both producers pass their two typed lists to the group constructor, which requires one gap
@@ -51,10 +55,11 @@ lists for each group. A static helper lazily assembles and caches the mixed sequ
 index. The mixed sequence stays private and cannot be supplied independently. Each group lazily concatenates and caches
 its own `replacementCode`. Its annotation list supports sorting and relocation detection; its gap list retains
 slot order for subsequent sorting. Original fragment ranges remain unchanged even when a gap's text changes length.
-Each gap stores only one complete code string. Its shared `AnnotationGapLayout` holds fixed content, exact and relocated
-whitespace-prefix choices, destination indentation, and the available separator count. The scanner prepares all of
-these components. Sorting compares boundaries and counts to select a prefix, which the gap combines with its fixed
-content. It never reads or analyzes the original source, and later sorts reuse the same immutable layout.
+Each gap stores one complete code string plus fixed content, original and relocated whitespace-prefix choices,
+destination indentation, and the available separator count. The scanner supplies these values through a named builder.
+Sorting compares boundaries and counts to select a prefix. A copy constructor retains the original values and range,
+sharing immutable strings while combining the selected prefix with fixed content. Original whitespace remains
+independent of the current code so later ordering can restore it. Sorting never reads or analyzes the original source.
 Ordinary whitespace and independent comment blocks stay in their slots. The sorter supplies separators required by
 trailing line comments or attached lower comment blocks when the destination gap cannot retain them.
 An annotation that stays in its original slot retains its unmodified gap, even when other group members move.
@@ -68,6 +73,9 @@ calls for independent models may run concurrently with different configurations.
 
 Spoon 11.5.0 provides correct member positions for the existing enum lambda/body regressions. The old
 enum correction, which generated text and searched it with a regular expression, has been removed.
+Spoon 11.5.0 reports `CommentedAnnotation` in printer scenario `21-annotation-group-gaps` as starting at a comment after
+both annotations. `findEffectiveMemberStart` includes those earlier annotations and retains leading comments already
+covered by the reported range. Recheck this correction after the next Spoon GA upgrade.
 The fixture expectations are the compatibility reference, except for
 the source-tail behavior described below.
 
@@ -75,7 +83,7 @@ The source tail starts after the greatest original end offset among top-level ty
 their output order. `printTail` skips the leading gap, retains indentation, and copies the remaining
 source range once after one blank line. Comment text, internal spacing, trailing whitespace and the
 presence or absence of a final line terminator remain unchanged. Whitespace-only tails add nothing.
-Compilation-unit bounds and comment attachment are not used, so virtual sources and comments adjacent
+File bounds and comment attachment reported by Spoon are not used, so virtual sources and comments adjacent
 to the closing brace follow the same rule. A Spoon type range can already include a trailing block
 comment beyond its body end; that comment stays in the copied type range. Starting the tail at the
 body end would duplicate it. Repeated processing preserves this boundary.
@@ -119,7 +127,8 @@ these counts. This result concerns the configured Spoon version and fixture, not
 
 The original-source-fragment API also has limits:
 [`CtCompilationUnitImpl`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/reflect/declaration/CtCompilationUnitImpl.java)
-rejects fragment roots for module and package compilation units, and lazily loads original text from the backing file.
+rejects fragment roots for `module-info.java` and `package-info.java` models, and lazily loads original text from the
+backing file.
 The scanner instead consumes the supplied source string, including virtual sources without a backing file.
 
 `AnnotationSourceScanner` uses JDT's existing
