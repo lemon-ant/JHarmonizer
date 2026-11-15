@@ -275,6 +275,7 @@ SPDX-License-Identifier: Apache-2.0
   readability. Split processing classes by coherent responsibilities, document the boundary, and pass required context
   explicitly.
   Name coordinators after their overall result and subordinate processors after their operation or lookup mechanism.
+  Make member-type lookup names distinguish direct declarations from superclass/superinterface hierarchy traversal.
 - Do not retain state-holder classes or distort control flow solely to satisfy method-count checks.
   Reuse suitable utilities or split them by coherent responsibility before suppressing `PMD.TooManyMethods`.
   A narrowly scoped suppression is allowed for a cohesive utility class without a sensible split; document the reason.
@@ -353,9 +354,14 @@ SPDX-License-Identifier: Apache-2.0
   single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
 - Make a variable's domain role explicit when its type is generic, for example `annotationOwner` or
   `annotationComparator`. Name maps by both values and key meaning, such as `annotationDescriptorsBySrcStartOffset`.
+  For nested collections, document each level's element meaning and the scope of one call; distinguish per-item data
+  from collections covering a whole source file.
 - Name annotation criterion lists `annotationOrderingRules` across strict and flexible input/unified models.
   The YAML property remains `annotations-ordering`.
 - When collection ordering matters to its use, reflect that order in the variable name.
+- Prefer `Set` over `List` for collections of unique values whose iteration order is irrelevant to their consumers.
+- When an index must cover every requested key, reject missing entries with a diagnostic exception instead of
+  substituting empty/default values. Validate this invariant once before dependent lookups where practical.
 - Use current-order terminology for group views shared by scanning and sorting. Reserve sorted-order names for
   sequences already sorted by the comparator; printers consume prepared groups.
 - Name helper and data-carrier types after the entities they represent, for example `AnnotationSrcFragment`, so their

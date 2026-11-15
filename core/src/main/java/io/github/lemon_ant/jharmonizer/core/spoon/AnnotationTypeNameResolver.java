@@ -3,9 +3,12 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
+import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.JAVA_LANG_PACKAGE_SEGMENT_COUNT;
+import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.JAVA_LANG_TYPE_PREFIX;
 import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findJavaLangTopLevelType;
-import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findPublicMemberType;
+import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findPublicMemberTypeInHierarchy;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,10 +34,6 @@ import spoon.reflect.visitor.CtScanner;
  * This class owns their precedence and the annotation-use AST index shared by stages 4 and 5.
  */
 final class AnnotationTypeNameResolver {
-
-    @NonNull
-    // TODO Possibly we have it already in RuntimeTypeUtils
-    private static final String JAVA_LANG_TYPE_PREFIX = "java.lang.";
 
     @NonNull
     private final AnnotationTypeNameFromDeclarationsResolver annotationTypeNameFromDeclarationsResolver;
@@ -222,13 +221,13 @@ final class AnnotationTypeNameResolver {
     @NonNull
     private static AnnotationTypeNameResolution resolveModuleAnnotationTypeName(String writtenAnnotationTypeName) {
         String[] typeNameSegments = writtenAnnotationTypeName.split("\\.");
+        // Try the first segment as an implicitly imported type; a matching type takes precedence over a package.
         Optional<Class<?>> javaLangRootType = findJavaLangTopLevelType(typeNameSegments[0]);
         if (javaLangRootType.isEmpty() && writtenAnnotationTypeName.startsWith(JAVA_LANG_TYPE_PREFIX)) {
-            // Resolve a visible type before interpreting a package prefix (JLS 6.5.4.1).
-            // This also handles a future public java.lang.java that could obscure the package name java.
-            typeNameSegments = writtenAnnotationTypeName
-                    .substring(JAVA_LANG_TYPE_PREFIX.length())
-                    .split("\\.");
+            // For @java.lang.Deprecated, the first lookup found no top-level type named "java".
+            // Strip the explicitly written package prefix "java.lang." and retry with the type name "Deprecated".
+            typeNameSegments =
+                    Arrays.copyOfRange(typeNameSegments, JAVA_LANG_PACKAGE_SEGMENT_COUNT, typeNameSegments.length);
             javaLangRootType = findJavaLangTopLevelType(typeNameSegments[0]);
         }
         if (javaLangRootType.isEmpty()) {
@@ -237,7 +236,8 @@ final class AnnotationTypeNameResolver {
         }
         Class<?> currentRuntimeType = javaLangRootType.orElseThrow();
         for (int segmentIndex = 1; segmentIndex < typeNameSegments.length; segmentIndex++) {
-            Optional<Class<?>> memberType = findPublicMemberType(currentRuntimeType, typeNameSegments[segmentIndex]);
+            Optional<Class<?>> memberType =
+                    findPublicMemberTypeInHierarchy(currentRuntimeType, typeNameSegments[segmentIndex]);
             if (memberType.isEmpty()) {
                 // Once a visible type owns the path, do not restart it as a package name.
                 return new AnnotationTypeNameResolution(writtenAnnotationTypeName);

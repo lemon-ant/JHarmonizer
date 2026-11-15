@@ -19,15 +19,24 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class RuntimeTypeUtils {
 
+    /** Package prefix for java.lang type names, including the trailing dot. */
+    @NonNull
+    public static final String JAVA_LANG_TYPE_PREFIX = "java.lang.";
+
+    /** Number of package-name segments in {@link #JAVA_LANG_TYPE_PREFIX}. */
+    public static final int JAVA_LANG_PACKAGE_SEGMENT_COUNT = JAVA_LANG_TYPE_PREFIX.split("\\.").length;
+
     @NonNull
     private static final String CLASS_FILE_SUFFIX = ".class";
 
     @NonNull
-    private static final String JAVA_LANG_RESOURCE_PREFIX = "java/lang/";
+    private static final String JAVA_LANG_RESOURCE_PREFIX = JAVA_LANG_TYPE_PREFIX.replace('.', '/');
 
     @NonNull
     private static final Map<String, Class<?>> JAVA_LANG_TOP_LEVEL_TYPES_BY_SIMPLE_NAME =
             collectJavaLangTopLevelTypesBySimpleName();
+
+    private static final int REQUIRED_MEMBER_TYPE_COUNT = 1;
 
     /**
      * Finds a public top-level type implicitly imported from the running JDK's {@code java.lang} package.
@@ -41,20 +50,23 @@ public class RuntimeTypeUtils {
     }
 
     /**
-     * Finds a uniquely named public member type, including inherited members of classes and interfaces.
-     * Direct declarations hide their ancestors even when the declarations themselves are not public.
-     * @param ownerType runtime type whose members are searched
+     * Finds one public member type by name in the owner and its superclass/superinterface hierarchy.
+     * Direct declarations hide inherited declarations even when the direct declaration is not public.
+     * @param ownerType runtime type whose declared and inherited member types are searched
      * @param memberTypeName simple name of the member type
      * @return the unique public member declaration, or empty for absence, ambiguity, or a non-public selection
      */
     @NonNull
-    public static Optional<Class<?>> findPublicMemberType(@NonNull Class<?> ownerType, @NonNull String memberTypeName) {
-        Set<Class<?>> memberDeclarations = collectMemberTypeDeclarations(ownerType, memberTypeName);
-        return memberDeclarations.size() == 1
-                ? memberDeclarations.stream()
-                        .filter(memberDeclaration -> Modifier.isPublic(memberDeclaration.getModifiers()))
-                        .findFirst()
-                : Optional.empty();
+    public static Optional<Class<?>> findPublicMemberTypeInHierarchy(
+            @NonNull Class<?> ownerType, @NonNull String memberTypeName) {
+        Set<Class<?>> memberDeclarations = collectMemberTypesInHierarchy(ownerType, memberTypeName);
+        // A protected class member and a public interface member can still make the name ambiguous.
+        if (memberDeclarations.size() != REQUIRED_MEMBER_TYPE_COUNT) {
+            return Optional.empty();
+        }
+        Class<?> memberDeclaration = memberDeclarations.iterator().next();
+        // Both direct and inherited declarations must pass this public-access check.
+        return Modifier.isPublic(memberDeclaration.getModifiers()) ? Optional.of(memberDeclaration) : Optional.empty();
     }
 
     /** Enumerates only direct java.lang class resources, then validates their actual runtime nesting and access. */
@@ -80,9 +92,12 @@ public class RuntimeTypeUtils {
         }
     }
 
-    /** Retains non-public inherited selections until ambiguity is checked by the caller. */
+    /**
+     * Collects matching member types from the owner and its superclass/superinterface hierarchy.
+     * Stops each branch at a direct declaration; retains non-public candidates for the caller's ambiguity check.
+     */
     @NonNull
-    private static Set<Class<?>> collectMemberTypeDeclarations(Class<?> ownerType, String memberTypeName) {
+    private static Set<Class<?>> collectMemberTypesInHierarchy(Class<?> ownerType, String memberTypeName) {
         Optional<Class<?>> directDeclaration = Stream.of(ownerType.getDeclaredClasses())
                 .filter(memberDeclaration -> memberTypeName.equals(memberDeclaration.getSimpleName()))
                 .findFirst();
@@ -91,15 +106,25 @@ public class RuntimeTypeUtils {
             return Set.of(directDeclaration.orElseThrow());
         }
         return Stream.concat(Stream.ofNullable(ownerType.getSuperclass()), Stream.of(ownerType.getInterfaces()))
-                .flatMap(parentType -> collectMemberTypeDeclarations(parentType, memberTypeName).stream())
-                .filter(memberDeclaration -> isInheritedBy(ownerType, memberDeclaration))
+                .flatMap(parentType -> collectMemberTypesInHierarchy(parentType, memberTypeName).stream())
+                .filter(memberDeclaration -> isMemberTypeAccessibleForInheritance(ownerType, memberDeclaration))
                 // The same declaration reached through both sides of a diamond is one member, not ambiguity.
                 // Different declarations remain ambiguous even if their owners have a subtype relationship.
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    /** Checks inheritance at every edge so package-private members cannot reappear after crossing a package. */
-    private static boolean isInheritedBy(Class<?> inheritingType, Class<?> memberDeclaration) {
+    /** Excludes subpackages while retaining names such as java/lang/Dollar$Type.class. */
+    private static boolean isJavaLangClassResource(String resourceName) {
+        return resourceName.startsWith(JAVA_LANG_RESOURCE_PREFIX)
+                && resourceName.endsWith(CLASS_FILE_SUFFIX)
+                && resourceName.indexOf('/', JAVA_LANG_RESOURCE_PREFIX.length()) < 0;
+    }
+
+    /**
+     * Checks member-type access across a parent relationship already established by the caller's traversal.
+     * Checks package access at each step so package-private members cannot reappear after crossing a package boundary.
+     */
+    private static boolean isMemberTypeAccessibleForInheritance(Class<?> inheritingType, Class<?> memberDeclaration) {
         int memberModifiers = memberDeclaration.getModifiers();
         if (Modifier.isPrivate(memberModifiers)) {
             return false;
@@ -109,13 +134,6 @@ public class RuntimeTypeUtils {
                 || Modifier.isProtected(memberModifiers)
                 || declaringType.getModule().equals(inheritingType.getModule())
                         && declaringType.getPackageName().equals(inheritingType.getPackageName());
-    }
-
-    /** Excludes subpackages while retaining names such as java/lang/Dollar$Type.class. */
-    private static boolean isJavaLangClassResource(String resourceName) {
-        return resourceName.startsWith(JAVA_LANG_RESOURCE_PREFIX)
-                && resourceName.endsWith(CLASS_FILE_SUFFIX)
-                && resourceName.indexOf('/', JAVA_LANG_RESOURCE_PREFIX.length()) < 0;
     }
 
     /** Loads a listed java.base resource by its binary name without initializing the class. */

@@ -57,6 +57,7 @@ final class AnnotationDependencyKeyResolver {
      * </ul>
      * Source annotation declarations are indexed eagerly; lookups also cache identities and containers reached recursively.
      * Resolved names are first seeded with themselves during recursive lookup, then updated if a container is found.
+     * Every returned key retains a terminal key-to-itself entry, including external containers and lexical identities.
      * External repeatable declarations are not inspected. The collector reads this index to add pair-specific keys
      * to fragment dependency sets.
      */
@@ -123,14 +124,17 @@ final class AnnotationDependencyKeyResolver {
      *
      * The input list and its sets must be unmodifiable; their producers must not mutate backing collections after handoff.
      * Unchanged input collections can be reused.
-     * @param groupKeysInAnnotationOrder original key sets of one source group in annotation order
+     * @param groupKeysPerAnnotationInSrcOrder one key set per outer annotation of the current adjacent sequence;
+     *                                       each set includes keys from nested annotation arguments
      * @return unmodifiable expanded key sets in an unmodifiable list in the same annotation order
      */
     @NonNull
     List<Set<String>> collectConservativeOrderPreservationGroupKeys(
-            @NonNull List<Set<String>> groupKeysInAnnotationOrder) {
+            @NonNull List<Set<String>> groupKeysPerAnnotationInSrcOrder) {
         return AnnotationOrderPreservationKeyCollector.collect(
-                groupKeysInAnnotationOrder, rootContainerTypeNameByAnnotationTypeName, confirmedCanonicalTypeNames);
+                rootContainerTypeNameByAnnotationTypeName,
+                confirmedCanonicalTypeNames,
+                groupKeysPerAnnotationInSrcOrder);
     }
 
     /**

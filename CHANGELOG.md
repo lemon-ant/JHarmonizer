@@ -42,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Annotation preservation-key collection uses one candidate index for possible aliases and repeatable families,
+  removing the separate input-key set, reverse name index, and repeated pairwise name matching.
+  Candidates are limited to current input keys and known repeatable-container keys instead of unrelated homonyms.
+  Canonical pair keys remain independent of set iteration order, without sorting all keys first.
+  Empty and single-key inputs skip pair construction after cache-coverage validation; unchanged collections are reused.
+  Each unique input key validates its terminal cache entry and seeds its own candidate once; singleton inputs also skip
+  the cache traversal for alias expansion.
+  Missing annotation-name index entries fail with a diagnostic exception instead of silently using an empty set.
 - Repeatable class-literal validation compares Spoon type-reference objects with null-safe equality after requiring
   a container type reference.
 - Annotation type-name lookup prepares shared import facts once per source file, reusing single-type indexes,

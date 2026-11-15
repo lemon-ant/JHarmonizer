@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.scanAnnotationSrcGroups;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
+import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -21,6 +24,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class AnnotationSourceScannerTest {
+
+    @NonNull
+    private static final URL ANNOTATION_GROUP_KEY_SCOPE_FIXTURE = requireClasspathResourceUrl(
+            "/test-cases/core/spoon/valid/annotation-group-key-scope/AnnotationGroupKeyScope.java");
 
     @ParameterizedTest
     @ValueSource(strings = {"\n", "\r\n", "\r"})
@@ -220,6 +227,27 @@ class AnnotationSourceScannerTest {
         assertThat(groups)
                 .extracting(AnnotationSrcGroup::getReplacementCode)
                 .containsExactly("@Deprecated ", "@SuppressWarnings(\"all\") ");
+    }
+
+    @Test
+    void scan_nestedAnnotationsAcrossFields_keepsOneKeySetPerOuterAnnotation() {
+        // When
+        List<AnnotationSrcGroup> annotationGroupsInSrcOrder = parseAstModelFromJavaFixtureResource(
+                        ANNOTATION_GROUP_KEY_SCOPE_FIXTURE)
+                .getAnnotationSrcGroups();
+
+        // Then
+        assertThat(annotationGroupsInSrcOrder.stream()
+                        .map(annotationGroup -> annotationGroup.getAnnotationSrcFragments().stream()
+                                .map(annotationFragment ->
+                                        annotationFragment.getDescriptor().getOrderPreservationGroupKeys())
+                                .toList())
+                        .toList())
+                .containsExactly(
+                        List.of(
+                                Set.of("annotationgroupscope.Envelope", "annotationgroupscope.Nested"),
+                                Set.of("annotationgroupscope.Marker")),
+                        List.of(Set.of("annotationgroupscope.Nested")));
     }
 
     @ParameterizedTest

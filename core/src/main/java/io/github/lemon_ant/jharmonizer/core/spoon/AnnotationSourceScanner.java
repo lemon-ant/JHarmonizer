@@ -456,13 +456,15 @@ public class AnnotationSourceScanner {
                 // Repeat with the already parsed B in @A @B. A declaration token, @interface or EOF ends the group.
                 precedingAnnotationSrcFragment = followingAnnotationSrcFragment;
             } while (precedingAnnotationSrcFragment != null);
-            List<Set<String>> groupKeysInAnnotationOrder = annotationSrcFragmentsInSrcOrder.stream()
+            // One set per outer annotation; nested argument annotations contribute keys to that same set.
+            // This list covers only the adjacent fragments collected by this invocation, not the complete file.
+            List<Set<String>> groupKeysPerAnnotationInSrcOrder = annotationSrcFragmentsInSrcOrder.stream()
                     .map(annotationSrcFragment ->
                             annotationSrcFragment.getDescriptor().getOrderPreservationGroupKeys())
                     .toList();
-            List<Set<String>> conservativeGroupKeysInAnnotationOrder =
+            List<Set<String>> conservativeKeysPerAnnotationInSrcOrder =
                     annotationDependencyKeyResolver.collectConservativeOrderPreservationGroupKeys(
-                            groupKeysInAnnotationOrder);
+                            groupKeysPerAnnotationInSrcOrder);
             // Library Derived extends Base and inherits Base.Tag:
             // @library.Derived.Tag("z") @java.lang.Deprecated @library.Base.Tag("a") int value;
             // Only the complete group exposes both potential aliases; Deprecated remains independent.
@@ -471,7 +473,7 @@ public class AnnotationSourceScanner {
                     annotationIndex < annotationSrcFragmentsInSrcOrder.size();
                     annotationIndex++) {
                 AnnotationSrcFragment annotationSrcFragment = annotationSrcFragmentsInSrcOrder.get(annotationIndex);
-                Set<String> conservativeGroupKeys = conservativeGroupKeysInAnnotationOrder.get(annotationIndex);
+                Set<String> conservativeGroupKeys = conservativeKeysPerAnnotationInSrcOrder.get(annotationIndex);
                 AnnotationDescriptor annotationDescriptor = annotationSrcFragment.getDescriptor();
                 // Keep fragments whose keys did not change. A later @library.Base.Tag in a group containing
                 // @library.Derived.Tag can add a shared alias key to both; replace only those affected fragments.

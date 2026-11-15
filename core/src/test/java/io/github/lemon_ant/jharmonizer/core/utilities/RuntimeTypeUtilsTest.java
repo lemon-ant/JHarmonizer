@@ -3,7 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.utilities;
 
 import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findJavaLangTopLevelType;
-import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findPublicMemberType;
+import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findPublicMemberTypeInHierarchy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.AbstractMap;
@@ -33,16 +33,16 @@ class RuntimeTypeUtilsTest {
 
     @ParameterizedTest
     @MethodSource("provideUnavailableMemberTypes")
-    void findPublicMemberType_absentNonPublicOrAmbiguousMember_returnsEmpty(
+    void findPublicMemberTypeInHierarchy_absentNonPublicOrAmbiguousMember_returnsEmpty(
             @NonNull Class<?> ownerType, @NonNull String memberTypeName) {
-        assertThat(findPublicMemberType(ownerType, memberTypeName)).isEmpty();
+        assertThat(findPublicMemberTypeInHierarchy(ownerType, memberTypeName)).isEmpty();
     }
 
     @ParameterizedTest
     @MethodSource("providePublicMemberTypes")
-    void findPublicMemberType_uniquePublicMember_returnsActualDeclaration(
+    void findPublicMemberTypeInHierarchy_uniquePublicMember_returnsActualDeclaration(
             @NonNull Class<?> ownerType, @NonNull String memberTypeName, @NonNull Class<?> expectedType) {
-        assertThat(findPublicMemberType(ownerType, memberTypeName)).contains(expectedType);
+        assertThat(findPublicMemberTypeInHierarchy(ownerType, memberTypeName)).contains(expectedType);
     }
 
     @NonNull
