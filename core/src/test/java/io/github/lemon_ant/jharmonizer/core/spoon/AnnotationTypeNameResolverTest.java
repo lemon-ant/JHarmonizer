@@ -3,6 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
@@ -10,10 +11,13 @@ import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUti
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
+import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +43,14 @@ class AnnotationTypeNameResolverTest {
     @NonNull
     private static final URL EXTERNAL_REPEATABLE_CONTAINER_FIXTURE = requireClasspathResourceUrl(
             "/test-cases/core/spoon/valid/external-repeatable-container/ExternalRepeatableContainerUse.java");
+
+    @NonNull
+    private static final URL IMPORTED_EXTERNAL_REPEATABLE_CONTAINER_FIXTURE = requireClasspathResourceUrl(
+            "/test-cases/core/spoon/valid/imported-external-repeatable-container/ImportedExternalRepeatableContainer.java");
+
+    @NonNull
+    private static final URL INHERITED_EXTERNAL_REPEATABLE_CONTAINER_FIXTURE = requireClasspathResourceUrl(
+            "/test-cases/core/spoon/valid/inherited-external-repeatable-container/InheritedExternalRepeatableContainer.java");
 
     @NonNull
     private static final URL JAVA_LANG_OWNER_SHADOWING_FIXTURE = requireClasspathResourceUrl(
@@ -127,6 +139,46 @@ class AnnotationTypeNameResolverTest {
     }
 
     @Test
+    void resolveAnnotationTypeName_importedExternalContainer_confirmsCanonicalIdentityAndContainerKey() {
+        // Given
+        SpoonAstModel parsedModel =
+                parseAstModelFromJavaFixtureResource(IMPORTED_EXTERNAL_REPEATABLE_CONTAINER_FIXTURE);
+        String containerTypeName = "annotationimportedexternalcontainer.library.Stamps";
+        int containerSrcOffset = parsedModel.getSrcCode().indexOf("@Stamps");
+        int stampSrcOffset = parsedModel.getSrcCode().indexOf("@Stamp(\"a\")");
+        CtAnnotation<?> containerUse = requireAnnotationUse(parsedModel, containerSrcOffset);
+        AnnotationTypeNameResolver resolver = createResolver(parsedModel.getCompilationUnit());
+        AnnotationDependencyKeyResolver dependencyResolver =
+                new AnnotationDependencyKeyResolver(parsedModel.getCompilationUnit());
+
+        // When
+        AnnotationTypeNameResolution containerTypeNameResolution =
+                resolver.resolveAnnotationTypeName(containerSrcOffset, "Stamps");
+        AnnotationTypeNameResolution stampTypeNameResolution =
+                resolver.resolveAnnotationTypeName(stampSrcOffset, "Stamp");
+        String stampDependencyKey =
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(stampSrcOffset, "Stamp");
+        String containerDependencyKey =
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(containerSrcOffset, "Stamps");
+
+        // Then
+        assertThat(containerUse.getAnnotationType().getDeclaration()).isNull();
+        assertThat(containerTypeNameResolution).satisfies(annotationTypeNameResolution -> {
+            assertThat(annotationTypeNameResolution.getAnnotationTypeName()).isEqualTo(containerTypeName);
+            assertThat(annotationTypeNameResolution.isCanonicalTypeNameConfirmed())
+                    .isTrue();
+        });
+        assertThat(stampTypeNameResolution).satisfies(annotationTypeNameResolution -> {
+            assertThat(annotationTypeNameResolution.getAnnotationTypeName())
+                    .isEqualTo("annotationimportedexternalcontainer.ImportedExternalRepeatableContainer.Stamp");
+            assertThat(annotationTypeNameResolution.isCanonicalTypeNameConfirmed())
+                    .isTrue();
+        });
+        assertThat(stampDependencyKey).isEqualTo(containerTypeName).doesNotStartWith("?.");
+        assertThat(containerDependencyKey).isEqualTo(stampDependencyKey);
+    }
+
+    @Test
     void resolveAnnotationTypeName_importedOwnerWithSourceBinding_retainsUnconfirmedWrittenName() {
         // Given
         SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(SINGLE_IMPORT_ANNOTATION_IDENTITIES_FIXTURE);
@@ -141,7 +193,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(annotationUse.getAnnotationType().getDeclaration()).isNotNull();
@@ -153,6 +205,53 @@ class AnnotationTypeNameResolverTest {
         assertThat(typeNameResolution.getAnnotationTypeName()).isEqualTo(writtenTypeName);
         assertThat(typeNameResolution.isCanonicalTypeNameConfirmed()).isFalse();
         assertThat(dependencyKey).isEqualTo("?." + writtenTypeName);
+    }
+
+    @Test
+    void resolveAnnotationTypeName_inheritedExternalContainer_marksUnconfirmedRootAndPreservesOrder() {
+        // Given
+        SpoonAstModel parsedModel =
+                parseAstModelFromJavaFixtureResource(INHERITED_EXTERNAL_REPEATABLE_CONTAINER_FIXTURE);
+        int containerSrcOffset = parsedModel.getSrcCode().indexOf("@Owner.Tags");
+        int tagSrcOffset = parsedModel.getSrcCode().indexOf("@Tag(\"a\")");
+        AnnotationDependencyKeyResolver dependencyResolver =
+                new AnnotationDependencyKeyResolver(parsedModel.getCompilationUnit());
+        AnnotationSrcGroup originalGroup = parsedModel.getAnnotationSrcGroups().stream()
+                .filter(annotationGroup -> annotationGroup.getStart() == containerSrcOffset)
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException("No field annotation group at offset " + containerSrcOffset));
+        List<AnnotationSrcFragment> originalAnnotations = originalGroup.getAnnotationSrcFragments();
+        Comparator<AnnotationDescriptor> nameComparator = Comparator.comparing(AnnotationDescriptor::getName);
+
+        // When
+        String containerDependencyKey =
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(containerSrcOffset, "Owner.Tags");
+        String tagDependencyKey = dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(tagSrcOffset, "Tag");
+        List<AnnotationSrcGroup> sortedGroups = sortAnnotationGroups(List.of(originalGroup), nameComparator);
+
+        // Then
+        assertThat(containerDependencyKey)
+                .isEqualTo("annotationinheritedexternalcontainer.InheritedExternalRepeatableContainer.Owner.Tags")
+                .doesNotStartWith("?.");
+        assertThat(tagDependencyKey)
+                .isEqualTo("?.annotationinheritedexternalcontainer.Derived.Tags")
+                .startsWith("?.")
+                .isNotEqualTo(containerDependencyKey);
+        assertThat(originalAnnotations)
+                .extracting(
+                        annotationFragment -> annotationFragment.getDescriptor().getName())
+                .containsExactly("Tags", "Tag");
+        assertThat(originalAnnotations.getFirst().getDescriptor().getOrderPreservationGroupKeys())
+                .contains(containerDependencyKey)
+                .containsAnyElementsOf(
+                        originalAnnotations.getLast().getDescriptor().getOrderPreservationGroupKeys());
+        assertThat(originalAnnotations.getLast().getDescriptor().getOrderPreservationGroupKeys())
+                .contains(tagDependencyKey);
+        assertThat(sortedGroups)
+                .singleElement()
+                .satisfies(sortedGroup -> assertThat(sortedGroup.getAnnotationSrcFragments())
+                        .containsExactlyElementsOf(originalAnnotations));
     }
 
     @ParameterizedTest
@@ -181,7 +280,7 @@ class AnnotationTypeNameResolverTest {
 
         // When
         AnnotationTypeNameResolution typeNameResolution = resolver.resolveAnnotationTypeName(srcOffset, "Tag");
-        String dependencyKey = dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, "Tag");
+        String dependencyKey = dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, "Tag");
 
         // Then
         assertScannedUse(localScopeModel, srcOffset);
@@ -206,7 +305,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         // LocalAnnotationBase.Tag is declared in another fixture file; Spoon instead guesses a top-level Tag.
@@ -250,7 +349,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(parsedModel.getCompilationUnit().getImports())
@@ -293,7 +392,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(parsedModel.getCompilationUnit().getDeclaredTypes())
@@ -328,10 +427,10 @@ class AnnotationTypeNameResolverTest {
                 resolver.resolveAnnotationTypeName(containerSrcOffset, containerTypeName);
         AnnotationTypeNameResolution stampTypeNameResolution =
                 resolver.resolveAnnotationTypeName(stampSrcOffset, "Stamp");
-        String containerDependencyKey = dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(
-                containerSrcOffset, containerTypeName);
+        String containerDependencyKey =
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(containerSrcOffset, containerTypeName);
         String stampDependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(stampSrcOffset, "Stamp");
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(stampSrcOffset, "Stamp");
         List<Set<String>> dependencyKeys = dependencyResolver.collectConservativeOrderPreservationGroupKeys(
                 List.of(Set.of(containerDependencyKey), Set.of(stampDependencyKey)));
 
@@ -349,11 +448,8 @@ class AnnotationTypeNameResolverTest {
                     .isTrue();
         });
         assertThat(containerDependencyKey).isEqualTo("?." + containerTypeName);
-        assertThat(stampDependencyKey).isEqualTo(containerTypeName).isNotEqualTo(containerDependencyKey);
-        assertThat(dependencyKeys.getFirst())
-                .contains(containerDependencyKey)
-                .containsAnyElementsOf(dependencyKeys.getLast());
-        assertThat(dependencyKeys.getLast()).contains(stampDependencyKey);
+        assertThat(stampDependencyKey).isEqualTo(containerDependencyKey);
+        assertThat(dependencyKeys).containsExactly(Set.of(containerDependencyKey), Set.of(containerDependencyKey));
         assertThat(parsedModel.getAnnotationSrcGroups())
                 .filteredOn(group -> group.getStart() == containerSrcOffset)
                 .singleElement()
@@ -405,7 +501,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 moduleResolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(moduleModel.getCompilationUnit().getDeclaredTypes()).isEmpty();
@@ -458,7 +554,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertScannedUse(parsedModel, srcOffset);
@@ -487,9 +583,9 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution directTypeNameResolution =
                 resolver.resolveAnnotationTypeName(directSrcOffset, directTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
         String directDependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(directSrcOffset, directTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(directSrcOffset, directTypeName);
         List<Set<String>> dependencyKeys = dependencyResolver.collectConservativeOrderPreservationGroupKeys(
                 List.of(Set.of(dependencyKey), Set.of(directDependencyKey)));
 
@@ -526,7 +622,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(simpleModuleModel.getCompilationUnit().getDeclaredModule().getAnnotations())
@@ -554,7 +650,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(SpoonTypeUtils.getAllTypes(srcQualifiedArrayModel.getCompilationUnit()))
@@ -600,7 +696,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 typeResolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(boundTypeName).isEqualTo("lombok.EqualsAndHashCode.Exclude");
@@ -630,7 +726,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(parsedModel.getCompilationUnit().getImports()).isEmpty();
@@ -659,7 +755,7 @@ class AnnotationTypeNameResolverTest {
         AnnotationTypeNameResolution typeNameResolution =
                 resolver.resolveAnnotationTypeName(srcOffset, writtenTypeName);
         String dependencyKey =
-                dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(srcOffset, writtenTypeName);
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
         assertThat(parsedModel.getCompilationUnit().getDeclaredPackage().isUnnamedPackage())

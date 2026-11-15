@@ -140,8 +140,19 @@ SPDX-License-Identifier: Apache-2.0
   `AnnotationTypeNameResolver` always returns a named `AnnotationTypeNameResolution` with canonical-name
   confirmation. Select fallback names inside this resolver; blocked lookup or insufficient context
   retains the unconfirmed original written name. Terminal `UNRESOLVED` must still stop subsequent lookup stages.
-  Use the `?.` lexical namespace for every unconfirmed annotation name, including accepted fallbacks; do not derive
-  additional resolution states from name-index membership.
+  Use the `?.` namespace for every unconfirmed dependency key, including fallback uses and unresolved `@Repeatable`
+  container roots. Keep unprefixed names in lookup result models; encode confidence when constructing dependency keys.
+  Cache only confirmed canonical annotation type names as keys, mapping them to final dependency keys. Unconfirmed
+  terminal containers are values only, and per-use fallback keys remain outside the cache. Determine metadata-name
+  confidence from source declarations and exact single-type imports before eager traversal; do not keep a parallel
+  confirmed-name set. Match aliases against current input keys and both sides of source repeatable relationships.
+  Keep root-key cache access in a `computeIfAbsent` wrapper around a cache-independent computation method. The
+  computation must neither access the cache nor call its wrapper; validate declarations and detect cycles locally.
+  During source-family preparation, index confirmed terminal identities only after their computation returns.
+  Collectors may read the prepared relationship index.
+  Prepare source repeatable relationships before collecting group aliases, including repeated annotation types with no
+  earlier confirmed use. This discovery preserves defaulted-container order and cannot be replaced by caching only
+  observed confirmed uses.
   Keep written-name retention and bounded qualification enrichment in one final stage. After excluding wildcard
   imports, handle module descriptors before the ordinary-file qualified-name guard. Look up the first segment as a
   public top-level `java.lang` type before interpreting an explicit `java.lang.` prefix; follow public declared and

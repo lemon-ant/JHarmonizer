@@ -53,6 +53,14 @@ class AnnotationDependencyKeyResolverTest {
             "/test-cases/core/spoon/invalid/competing-wildcard-annotation-bindings/package-info.java");
 
     @NonNull
+    private static final URL EXTERNAL_REPEATABLE_CONTAINER = requireClasspathResourceUrl(
+            "/test-cases/core/spoon/valid/external-repeatable-container/ExternalRepeatableContainerUse.java");
+
+    @NonNull
+    private static final URL IMPORTED_EXTERNAL_REPEATABLE_CONTAINER = requireClasspathResourceUrl(
+            "/test-cases/core/spoon/valid/imported-external-repeatable-container/ImportedExternalRepeatableContainer.java");
+
+    @NonNull
     private static final URL IMPORTED_ORDINARY_TYPE_SHADOWING = requireClasspathResourceUrl(
             "/test-cases/core/spoon/valid/single-import-annotation-identities/ImportedOrdinaryTypeShadowing.java");
 
@@ -139,7 +147,7 @@ class AnnotationDependencyKeyResolverTest {
                 requirePackageAnnotationAtSrcOffset(parsedCompilationUnit, annotationSrcStartOffset);
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, "Tag");
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, "Tag");
 
         // Then
         assertSourceAnnotationBinding(
@@ -159,10 +167,27 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(identity).isEqualTo("annotationtreeunavailable.UnavailableTreeAnnotationOwner.Direct.Tag");
+    }
+
+    @ParameterizedTest
+    @MethodSource("externalRepeatableContainerCases")
+    void resolveAnnotationTypeNameOrRootContainerTypeName_externalContainer_usesCanonicalImportEvidenceBeforeUse(
+            @NonNull URL fixture, @NonNull String expectedGroupKey) {
+        // Given
+        SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(fixture);
+        int stampSrcOffset = parsedModel.getSrcCode().indexOf("@Stamp(\"a\")");
+        AnnotationDependencyKeyResolver resolver =
+                new AnnotationDependencyKeyResolver(parsedModel.getCompilationUnit());
+
+        // When
+        String stampDependencyKey = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(stampSrcOffset, "Stamp");
+
+        // Then
+        assertThat(stampDependencyKey).isEqualTo(expectedGroupKey);
     }
 
     @ParameterizedTest
@@ -179,7 +204,7 @@ class AnnotationDependencyKeyResolverTest {
         CtAnnotation<?> annotationUse = requireFieldAnnotation(parsedCompilationUnit, ownerTypeName, fieldName);
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), writtenTypeName);
 
         // Then
@@ -205,7 +230,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
@@ -239,7 +264,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertSourceAnnotationBinding(
@@ -262,7 +287,7 @@ class AnnotationDependencyKeyResolverTest {
         AnnotationDependencyKeyResolver resolver = new AnnotationDependencyKeyResolver(parsedCompilationUnit);
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), "Entry");
 
         // Then
@@ -287,7 +312,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(parsedCompilationUnit.getDeclaredTypes().stream()
@@ -311,7 +336,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(SpoonTypeUtils.getAllTypes(parsedCompilationUnit))
@@ -336,7 +361,7 @@ class AnnotationDependencyKeyResolverTest {
                 requireFieldAnnotation(parsedCompilationUnit, "InheritedMemberTypeBranches", fieldName);
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), writtenTypeName);
 
         // Then
@@ -359,7 +384,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
@@ -396,10 +421,10 @@ class AnnotationDependencyKeyResolverTest {
                 "Expected an annotation declaration, but resolved source type " + fixtureTypePrefix + resolvedTypeName;
 
         // When
-        Throwable initialFailure = catchThrowable(() ->
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName));
-        Throwable repeatedFailure = catchThrowable(() ->
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName));
+        Throwable initialFailure = catchThrowable(
+                () -> resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName));
+        Throwable repeatedFailure = catchThrowable(
+                () -> resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName));
 
         // Then
         assertSourceAnnotationBinding(parsedCompilationUnit, annotationUse, fixtureTypePrefix + boundTypeName);
@@ -422,7 +447,7 @@ class AnnotationDependencyKeyResolverTest {
         String expectedTypeName = "annotationtypekindvalidation.AnnotationTypeKindValidation." + boundTypeName;
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), "Tag");
 
         // Then
@@ -440,7 +465,7 @@ class AnnotationDependencyKeyResolverTest {
                 requireFieldAnnotation(parsedCompilationUnit, "MultiHopEnclosingDerived", "value");
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), "Tag");
 
         // Then
@@ -468,7 +493,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
@@ -489,7 +514,7 @@ class AnnotationDependencyKeyResolverTest {
         AnnotationDependencyKeyResolver resolver = new AnnotationDependencyKeyResolver(parsedCompilationUnit);
 
         // When
-        Throwable failure = catchThrowable(() -> resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        Throwable failure = catchThrowable(() -> resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), "Tag"));
 
         // Then
@@ -519,7 +544,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
@@ -568,7 +593,7 @@ class AnnotationDependencyKeyResolverTest {
                 .orElseThrow(() -> new IllegalStateException("No single type import named " + importedSimpleName));
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), writtenTypeName);
 
         // Then
@@ -620,7 +645,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(parsedCompilationUnit.getImports())
@@ -659,7 +684,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertSourceAnnotationBinding(
@@ -681,7 +706,7 @@ class AnnotationDependencyKeyResolverTest {
         CtAnnotation<?> annotationUse = requireFieldAnnotation(parsedCompilationUnit, ownerTypeName, fieldName);
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), writtenTypeName);
 
         // Then
@@ -709,7 +734,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(packageAnnotation.getAnnotationType().getDeclaration()).isNull();
@@ -732,7 +757,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertSourceAnnotationBinding(parsedCompilationUnit, packageAnnotation, expectedTypeName);
@@ -753,7 +778,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertSourceAnnotationBinding(
@@ -776,7 +801,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertSourceAnnotationBinding(
@@ -804,7 +829,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // When
         String identity =
-                resolver.resolveAnnotationTypeNameOrRootContainerTypeName(annotationSrcStartOffset, writtenTypeName);
+                resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
         assertThat(identity).isEqualTo(expectedIdentity);
@@ -823,7 +848,7 @@ class AnnotationDependencyKeyResolverTest {
         AnnotationDependencyKeyResolver resolver = new AnnotationDependencyKeyResolver(parsedCompilationUnit);
 
         // When
-        String identity = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String identity = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 annotationUse.getPosition().getSourceStart(), writtenTypeName);
 
         // Then
@@ -837,6 +862,14 @@ class AnnotationDependencyKeyResolverTest {
                 .as("The unmodified Spoon reference points to a declaration in the parsed source file")
                 .contains(annotationUse.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(annotationUse.getAnnotationType())).isEqualTo(expectedSourceTypeName);
+    }
+
+    @NonNull
+    private static Stream<Arguments> externalRepeatableContainerCases() {
+        return Stream.of(
+                Arguments.of(EXTERNAL_REPEATABLE_CONTAINER, "?.annotationexternalcontainer.library.Stamps"),
+                Arguments.of(
+                        IMPORTED_EXTERNAL_REPEATABLE_CONTAINER, "annotationimportedexternalcontainer.library.Stamps"));
     }
 
     @NonNull
@@ -959,11 +992,11 @@ class AnnotationDependencyKeyResolverTest {
                     .getFirst();
 
             // When
-            String containerKey = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+            String containerKey = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                     containerAnnotation.getPosition().getSourceStart(), "Tags");
-            String repeatedKey = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+            String repeatedKey = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                     repeatedAnnotation.getPosition().getSourceStart(), "Tag");
-            String qualifiedKey = resolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+            String qualifiedKey = resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                     qualifiedAnnotation.getPosition().getSourceStart(), "RepeatableAnnotationRuntimeOrder.Tag");
 
             // Then

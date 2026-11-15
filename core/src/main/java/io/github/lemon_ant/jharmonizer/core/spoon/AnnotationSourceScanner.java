@@ -340,7 +340,7 @@ public class AnnotationSourceScanner {
                     // A container and a direct occurrence share a dependency even without library metadata.
                     // A set keeps @Tags({@Tag("a"), @Tag("b")}) from creating a dependency on itself.
                     nestedOrderPreservationGroupKeys.add(
-                            annotationDependencyKeyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+                            annotationDependencyKeyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                                     nestedAnnotationStart, nestedTypeName.getWrittenTypeName()));
                     continue;
                 }
@@ -394,7 +394,7 @@ public class AnnotationSourceScanner {
             int tokenSrcLengthThroughAnnotation = annotationTypeName.getCumulativeTokenSrcLengthAtEnd();
             Set<String> orderPreservationGroupKeys = new HashSet<>();
             String orderPreservationGroupKey =
-                    annotationDependencyKeyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+                    annotationDependencyKeyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                             start, writtenTypeName);
             orderPreservationGroupKeys.add(orderPreservationGroupKey);
             String annotationArguments = null;

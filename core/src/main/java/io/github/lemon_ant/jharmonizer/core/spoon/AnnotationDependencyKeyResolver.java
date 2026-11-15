@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.spoon.AnnotationDependencyKeyUtils.formatUnconfirmedGroupKey;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
 
 import java.lang.annotation.Repeatable;
@@ -33,36 +34,35 @@ final class AnnotationDependencyKeyResolver {
     @NonNull
     private final AnnotationTypeNameResolver annotationTypeNameResolver;
 
-    /**
-     * Canonical-name evidence from declarations, imports, and resolved uses; consulted only for annotation identities.
-     * Names match exactly: importing library.Owner does not confirm library.Owner.Tag.
-     * This processor owns and extends the set; the collector only reads it during a synchronous call.
-     */
+    /** Exact single-type import evidence shared with annotation-use lookup. */
     @NonNull
-    private final Set<String> confirmedCanonicalTypeNames;
+    private final Set<String> canonicalSingleImportedTypeNames;
 
     /** Shared exact-name index for source annotation declarations and wildcard-import owners. */
     @NonNull
     private final Map<String, CtType<?>> declaredTypesByCanonicalName;
 
     /**
-     * Maps resolved annotation/container names and unresolved lexical identities to order-preservation keys:
+     * Maps only confirmed canonical annotation names to terminal order-preservation keys:
      * <ul>
      *     <li>{@code p.Tag -> p.Tag}: no repeatable relationship is declared in this source file.
      *         Terminal containers and external types whose metadata is not inspected also retain their own names.</li>
      *     <li>{@code p.Tag -> p.TagGroups}: follows a source-declared chain such as
      *         {@code Tag -> Tags -> TagGroups}; both {@code p.Tag} and {@code p.Tags} map to {@code p.TagGroups}.</li>
-     *     <li>{@code ?.Outer.Tag -> ?.Outer.Tag}: unconfirmed identity, with a fallback name or the original written
-     *         name prefixed by {@code ?.}, which cannot occur in a Java type name.</li>
+     *     <li>{@code p.Tag -> ?.library.Derived.Tags}: the annotation is confirmed, but its container name is not.
+     *         Unconfirmed metadata terminals are values only; they receive no separate cache entry.</li>
      * </ul>
-     * Source annotation declarations are indexed eagerly; lookups also cache identities and containers reached recursively.
-     * Resolved names are first seeded with themselves during recursive lookup, then updated if a container is found.
-     * Every returned key retains a terminal key-to-itself entry, including external containers and lexical identities.
+     * Source repeatable relationships are prepared before scanning uses, including defaulted containers whose repeated
+     * annotation has no earlier confirmed use. Declarations and exact single-type imports supply canonical-name evidence.
+     * All cache reads and writes for root-key lookup are confined to {@link #resolveRootGroupKey(String)}.
+     * Computed keys are cached only after successful traversal; computation uses no cache entries or recursion markers.
+     * Every confirmed terminal key retains a key-to-itself entry, including confirmed external containers.
+     * Unconfirmed use keys bypass this cache; the collector reads them directly from the current annotation sequence.
      * External repeatable declarations are not inspected. The collector reads this index to add pair-specific keys
      * to fragment dependency sets.
      */
     @NonNull
-    private final Map<String, String> rootContainerTypeNameByAnnotationTypeName;
+    private final Map<String, String> rootGroupKeyByAnnotationCanonicalTypeName;
 
     /**
      * Prepares dependency metadata and shared source declarations for one source file.
@@ -71,7 +71,7 @@ final class AnnotationDependencyKeyResolver {
      */
     @SuppressWarnings("PMD.UseConcurrentHashMap")
     AnnotationDependencyKeyResolver(@NonNull CtCompilationUnit compilationUnit) {
-        rootContainerTypeNameByAnnotationTypeName = new HashMap<>();
+        rootGroupKeyByAnnotationCanonicalTypeName = new HashMap<>();
         // Metadata identities require canonical top-level/member owner chains.
         // Local and anonymous visibility scopes are indexed separately by the declaration resolver.
         List<CtType<?>> canonicalTypeDeclarations = SpoonTypeUtils.getAllTypes(compilationUnit);
@@ -81,20 +81,21 @@ final class AnnotationDependencyKeyResolver {
         SpoonTypeImportContext typeImportContext =
                 SpoonImportUtils.collectTypeImportContext(compilationUnit, declaredTypesByCanonicalName);
         annotationTypeNameResolver = new AnnotationTypeNameResolver(compilationUnit, typeImportContext);
+        canonicalSingleImportedTypeNames = typeImportContext.getCanonicalSingleTypeNames();
         // Declarations expose their kind: ordinary source types cannot be annotation identities.
         // Nested @interface declarations are included independently of their owner's kind.
-        Set<String> confirmedCanonicalTypeNames = declaredTypesByCanonicalName.entrySet().stream()
+        // @Tags can precede its @Tag occurrence and omit a defaulted @Tag value.
+        // Collect Tag -> Tags even when only @Tags and an unconfirmed @p.Owner.Tag appear before Tag's declaration.
+        // A cache populated solely by confirmed visible uses would contain only Tags -> Tags and lose this dependency.
+        // Import evidence is available before metadata traversal, so imported containers retain canonical keys.
+        declaredTypesByCanonicalName.entrySet().stream()
                 .filter(typeEntry -> typeEntry.getValue().isAnnotationType())
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toCollection(HashSet::new));
-        // @Tags can precede its @Tag occurrence and omit a defaulted @Tag value.
-        // Seed source relationships now so group checks still see Tag's original identity behind the Tags key.
-        // Populate cache rootContainerTypeNameByAnnotationTypeName
-        confirmedCanonicalTypeNames.forEach(this::findRootContainerTypeNameInAllDeclaredTypes);
-        // Imported declarations can be unavailable, so keep canonical names without requiring annotation-kind metadata.
-        // The collector consults imported names only when an annotation identity matches them exactly.
-        confirmedCanonicalTypeNames.addAll(typeImportContext.getCanonicalSingleTypeNames());
-        this.confirmedCanonicalTypeNames = confirmedCanonicalTypeNames;
+                .map(this::resolveRootGroupKey)
+                // Index confirmed terminal identities after computation returns, including imported external
+                // containers.
+                .filter(AnnotationDependencyKeyUtils::isConfirmedGroupKey)
+                .forEach(this::resolveRootGroupKey);
     }
 
     /**
@@ -132,9 +133,7 @@ final class AnnotationDependencyKeyResolver {
     List<Set<String>> collectConservativeOrderPreservationGroupKeys(
             @NonNull List<Set<String>> groupKeysPerAnnotationInSrcOrder) {
         return AnnotationOrderPreservationKeyCollector.collect(
-                rootContainerTypeNameByAnnotationTypeName,
-                confirmedCanonicalTypeNames,
-                groupKeysPerAnnotationInSrcOrder);
+                rootGroupKeyByAnnotationCanonicalTypeName, groupKeysPerAnnotationInSrcOrder);
     }
 
     /**
@@ -153,15 +152,14 @@ final class AnnotationDependencyKeyResolver {
      * @throws IllegalStateException if a resolved source declaration is not an annotation type
      */
     @NonNull
-    String resolveAnnotationTypeNameOrRootContainerTypeName(
+    String resolveAnnotationCanonicalTypeNameOrGroupKey(
             int annotationSrcStartOffset, @NonNull String writtenAnnotationTypeName) {
         AnnotationTypeNameResolution annotationTypeNameResolution =
                 annotationTypeNameResolver.resolveAnnotationTypeName(
                         annotationSrcStartOffset, writtenAnnotationTypeName);
         String annotationTypeName = annotationTypeNameResolution.getAnnotationTypeName();
         if (annotationTypeNameResolution.isCanonicalTypeNameConfirmed()) {
-            confirmedCanonicalTypeNames.add(annotationTypeName);
-            return findRootContainerTypeNameInAllDeclaredTypes(annotationTypeName);
+            return resolveRootGroupKey(annotationTypeName);
         }
         // Unconfirmed results include a blocked lookup, insufficient context, and accepted provisional names:
         // ordinary @Deprecated with no supported context -> ?.Deprecated;
@@ -170,9 +168,7 @@ final class AnnotationDependencyKeyResolver {
         // package EqualsAndHashCode; import lombok.*; @EqualsAndHashCode.Exclude uses Lombok's annotation,
         // even if this file declares an ordinary class Exclude. Do not read that class's annotation metadata.
         // Always use a separate lexical key namespace; matching a canonical string cannot confirm this use.
-        String lexicalGroupKey = "?." + annotationTypeName;
-        rootContainerTypeNameByAnnotationTypeName.putIfAbsent(lexicalGroupKey, lexicalGroupKey);
-        return lexicalGroupKey;
+        return formatUnconfirmedGroupKey(annotationTypeName);
     }
 
     @NonNull
@@ -204,48 +200,55 @@ final class AnnotationDependencyKeyResolver {
                         repeatableAnnotation, "missing or inconsistent class-literal type references"));
     }
 
+    /** Computes the source repeatable-chain key independently of the cache, tracking cycles only within this traversal. */
+    @NonNull
+    private String computeRootGroupKey(String annotationCanonicalTypeName) {
+        Set<String> traversedRepeatableTypeNames = new HashSet<>();
+        String currentAnnotationCanonicalTypeName = annotationCanonicalTypeName;
+        while (true) {
+            Optional<CtAnnotation<?>> repeatableAnnotation = Optional.ofNullable(
+                            declaredTypesByCanonicalName.get(currentAnnotationCanonicalTypeName))
+                    .map(SpoonTypeUtils::requireAnnotationTypeDeclaration)
+                    .flatMap(annotationDeclaration -> annotationDeclaration.getAnnotations().stream()
+                            .filter(metaAnnotation -> Repeatable.class
+                                    .getName()
+                                    .equals(formatCanonicalTypeName(metaAnnotation.getAnnotationType())))
+                            .findFirst());
+            // An unavailable external declaration or an annotation without @Repeatable retains its own identity.
+            if (repeatableAnnotation.isEmpty()) {
+                return currentAnnotationCanonicalTypeName;
+            }
+            if (!traversedRepeatableTypeNames.add(currentAnnotationCanonicalTypeName)) {
+                throw createInvalidRepeatableContainerException(
+                        repeatableAnnotation.get(),
+                        "cyclic container relationship for " + currentAnnotationCanonicalTypeName);
+            }
+            CtTypeReference<?> containerType = resolveRepeatableContainerType(repeatableAnnotation.get());
+            String containerTypeName = formatCanonicalTypeName(containerType);
+            // A formatted Spoon reference can still be an inherited owner alias such as Derived.Tags.
+            // Follow only declaration/import-confirmed names; otherwise retain an unconfirmed terminal key.
+            if (!declaredTypesByCanonicalName.containsKey(containerTypeName)
+                    && !canonicalSingleImportedTypeNames.contains(containerTypeName)) {
+                return formatUnconfirmedGroupKey(containerTypeName);
+            }
+            currentAnnotationCanonicalTypeName = containerTypeName;
+        }
+    }
+
     /**
-     * Resolves and caches the terminal name in the source-declared {@code @Repeatable} container chain.
+     * Finds and caches the terminal group key in a source-declared {@code @Repeatable} container chain.
      * For {@code Tag -> Tags -> TagGroups}, all three names resolve to {@code TagGroups}.
-     * Without a relationship declared in this source file, returns the input name; external metadata is not loaded.
+     * Source declarations and exact single-type imports confirm container names before following the chain.
+     * An unconfirmed external terminal receives {@code ?.} and stops traversal without becoming a cache key.
      *
-     * @param annotationTypeName resolved annotation type name, including a container reached recursively
-     * @return last reachable container's name, or the input name if no source-declared container is found
+     * @param annotationCanonicalTypeName confirmed annotation or container type name
+     * @return terminal dependency key, or the input name when no source-declared container is found
      * @throws IllegalStateException if a source declaration is not an annotation type, repeatable metadata is malformed,
      *                               or container relationships form a cycle
      */
     @NonNull
-    private String findRootContainerTypeNameInAllDeclaredTypes(String annotationTypeName) {
-        // Keep explicit cache access: resolving @Repeatable(Tags.class) can recursively cache Tags.
-        // A computeIfAbsent mapping function must not modify this same map; HashMap can throw
-        // ConcurrentModificationException even for an acyclic Tag -> Tags relationship.
-        String cachedGroupKey = rootContainerTypeNameByAnnotationTypeName.get(annotationTypeName);
-        if (cachedGroupKey != null) {
-            return cachedGroupKey;
-        }
-        Optional<CtAnnotation<?>> repeatableAnnotation = Optional.ofNullable(
-                        declaredTypesByCanonicalName.get(annotationTypeName))
-                .map(SpoonTypeUtils::requireAnnotationTypeDeclaration)
-                .flatMap(annotationDeclaration -> annotationDeclaration.getAnnotations().stream()
-                        .filter(metaAnnotation -> Repeatable.class
-                                .getName()
-                                .equals(formatCanonicalTypeName(metaAnnotation.getAnnotationType())))
-                        .findFirst());
-        // Cache after annotation-kind validation, so a rejected declaration cannot bypass it on a later lookup.
-        // Seed before following containers; a chain returning to this name is rejected below.
-        rootContainerTypeNameByAnnotationTypeName.put(annotationTypeName, annotationTypeName);
-        // An unavailable external declaration or an annotation without @Repeatable retains its own identity.
-        if (repeatableAnnotation.isEmpty()) {
-            return annotationTypeName;
-        }
-        CtTypeReference<?> containerType = resolveRepeatableContainerType(repeatableAnnotation.get());
-        String rootContainerTypeName =
-                findRootContainerTypeNameInAllDeclaredTypes(formatCanonicalTypeName(containerType));
-        if (annotationTypeName.equals(rootContainerTypeName)) {
-            throw createInvalidRepeatableContainerException(
-                    repeatableAnnotation.get(), "cyclic container relationship for " + annotationTypeName);
-        }
-        rootContainerTypeNameByAnnotationTypeName.put(annotationTypeName, rootContainerTypeName);
-        return rootContainerTypeName;
+    private String resolveRootGroupKey(String annotationCanonicalTypeName) {
+        return rootGroupKeyByAnnotationCanonicalTypeName.computeIfAbsent(
+                annotationCanonicalTypeName, this::computeRootGroupKey);
     }
 }

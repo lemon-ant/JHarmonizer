@@ -67,7 +67,7 @@ class ModuleAnnotationTypeNameResolverTest {
         // When
         AnnotationTypeNameResolution resolution =
                 moduleResolver.resolveAnnotationTypeName(srcOffset, writtenAnnotationTypeName);
-        String dependencyKey = dependencyKeyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(
+        String dependencyKey = dependencyKeyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(
                 srcOffset, writtenAnnotationTypeName);
 
         // Then

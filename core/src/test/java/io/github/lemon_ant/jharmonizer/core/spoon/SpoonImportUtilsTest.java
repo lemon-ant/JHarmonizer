@@ -164,8 +164,8 @@ class SpoonImportUtilsTest {
         // When
         SpoonTypeImportContext typeImportContext =
                 collectTypeImportContext(compilationUnit, declaredTypesByCanonicalName);
-        String dependencyKey = dependencyResolver.resolveAnnotationTypeNameOrRootContainerTypeName(
-                annotationSrcStartOffset, "Deprecated");
+        String dependencyKey =
+                dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, "Deprecated");
 
         // Then
         // Spoon 11.5.0 collects imports through a HashSet; source order alone does not establish this precondition.
