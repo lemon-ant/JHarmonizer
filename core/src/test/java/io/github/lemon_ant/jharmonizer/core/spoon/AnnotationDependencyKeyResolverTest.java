@@ -234,9 +234,9 @@ class AnnotationDependencyKeyResolverTest {
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.getAllTypes(parsedCompilationUnit), annotationSrcStartOffset))
+                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .isEmpty();
-        assertThat(SpoonTypeUtils.getAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
                 .as("The source declaration hides the unavailable ancestor on its inheritance branch")
                 .contains(packageAnnotation.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(packageAnnotation.getAnnotationType()))
@@ -339,7 +339,7 @@ class AnnotationDependencyKeyResolverTest {
                 resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.getAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
                 .contains(packageAnnotation.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(packageAnnotation.getAnnotationType()))
                 .isEqualTo("annotationtreeinheritedowner.InheritedAnnotationOwnerBase.Inner.Tag");
@@ -388,11 +388,11 @@ class AnnotationDependencyKeyResolverTest {
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.getAllTypes(parsedCompilationUnit), annotationSrcStartOffset))
+                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .as("Package annotations have no enclosing type before source-tree lookup")
                 .isEmpty();
         assertThat(parsedCompilationUnit.getImports()).isEmpty();
-        assertThat(SpoonTypeUtils.getAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
                 .contains(packageAnnotation.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(packageAnnotation.getAnnotationType()))
                 .isEqualTo("annotationtreebindings.InheritedTreeAnnotationBase.Tag");
@@ -497,7 +497,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.getAllTypes(parsedCompilationUnit), annotationSrcStartOffset))
+                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .isEmpty();
         assertSourceAnnotationBinding(
                 parsedCompilationUnit, packageAnnotation, "annotationmultihop.MultiHopAnnotationBase.Tag");
@@ -548,7 +548,7 @@ class AnnotationDependencyKeyResolverTest {
 
         // Then
         assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.getAllTypes(parsedCompilationUnit), annotationSrcStartOffset))
+                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .as("Stage 1 has no enclosing type for the package annotation")
                 .isEmpty();
         assertThat(parsedCompilationUnit.getDeclaredTypes())
@@ -657,7 +657,7 @@ class AnnotationDependencyKeyResolverTest {
         assertThat(wildcardOwnerReferencesByCanonicalName.get(srcOwnerTypeName).getDeclaration())
                 .isNotNull()
                 .isSameAs(parsedCompilationUnit.getDeclaredTypes().getFirst());
-        assertThat(SpoonTypeUtils.getAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
                 .contains(wildcardOwnerReferencesByCanonicalName
                         .get(srcOwnerTypeName)
                         .getDeclaration());
@@ -858,7 +858,7 @@ class AnnotationDependencyKeyResolverTest {
 
     private static void assertSourceAnnotationBinding(
             CtCompilationUnit parsedCompilationUnit, CtAnnotation<?> annotationUse, String expectedSourceTypeName) {
-        assertThat(SpoonTypeUtils.getAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
                 .as("The unmodified Spoon reference points to a declaration in the parsed source file")
                 .contains(annotationUse.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(annotationUse.getAnnotationType())).isEqualTo(expectedSourceTypeName);

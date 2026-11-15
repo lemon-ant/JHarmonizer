@@ -316,8 +316,7 @@ public class AnnotationSourceScanner {
          * Capturing the counter before reading the following token excludes comments after the annotation.
          */
         @Nullable
-        private ParsedAnnotationArguments parseAnnotationArguments(
-                /*TODO Remove it*/ int annotationSrcFragmentStart) throws InvalidInputException {
+        private ParsedAnnotationArguments parseAnnotationArguments() throws InvalidInputException {
             if (currentToken != ITerminalSymbols.TokenNameLPAREN) {
                 return null;
             }
@@ -327,7 +326,7 @@ public class AnnotationSourceScanner {
             while (true) {
                 if (currentToken == ITerminalSymbols.TokenNameEOF) {
                     throw new IllegalArgumentException("Unclosed annotation arguments at source offset "
-                            + annotationSrcFragmentStart
+                            + scanner.getCurrentTokenStartPosition()
                             + " during JDT annotation scanning");
                 }
                 if (currentToken == ITerminalSymbols.TokenNameAT) {
@@ -398,7 +397,7 @@ public class AnnotationSourceScanner {
                             start, writtenTypeName);
             orderPreservationGroupKeys.add(orderPreservationGroupKey);
             String annotationArguments = null;
-            ParsedAnnotationArguments parsedAnnotationArguments = parseAnnotationArguments(start);
+            ParsedAnnotationArguments parsedAnnotationArguments = parseAnnotationArguments();
             if (parsedAnnotationArguments != null) {
                 annotationArguments = parsedAnnotationArguments.getArguments();
                 tokenSrcLengthThroughAnnotation = parsedAnnotationArguments.getCumulativeTokenSrcLengthAtEnd();

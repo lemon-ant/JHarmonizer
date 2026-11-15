@@ -191,7 +191,7 @@ public final class SpoonSrcPrinter {
 
         @NonNull
         private SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(CtCompilationUnit compilationUnit) {
-            List<CtType<?>> rootTypes = SpoonTypeUtils.getRootTypes(compilationUnit);
+            List<CtType<?>> rootTypes = compilationUnit.getDeclaredTypes();
             int firstTypeStart = rootTypes.stream()
                     .mapToInt(SpoonTypeUtils::findEffectiveMemberStart)
                     .min()

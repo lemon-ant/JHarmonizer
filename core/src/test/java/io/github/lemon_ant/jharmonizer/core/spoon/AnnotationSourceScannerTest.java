@@ -367,6 +367,16 @@ class AnnotationSourceScannerTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"@A(", "/* leading */ @A(1", "@A(@B(1)"})
+    void scan_unclosedAnnotationArguments_reportsEndOfSourceOffset(@NonNull String srcCode) {
+        assertThatThrownBy(() -> scanAnnotationSrcGroups(srcCode))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Unclosed annotation arguments at source offset "
+                        + srcCode.length()
+                        + " during JDT annotation scanning");
+    }
+
+    @ParameterizedTest
     @MethodSource("provideUnicodeEscapedDeclarations")
     void scan_unicodeEscapedDeclaration_measuresRawTokenTextAndPreservesDecodedKeys(
             @NonNull String annotation, @NonNull String translatedAnnotation, int expectedDeclarationLength) {

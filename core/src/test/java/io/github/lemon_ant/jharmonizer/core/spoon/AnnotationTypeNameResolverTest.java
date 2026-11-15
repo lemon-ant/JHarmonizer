@@ -197,7 +197,7 @@ class AnnotationTypeNameResolverTest {
 
         // Then
         assertThat(annotationUse.getAnnotationType().getDeclaration()).isNotNull();
-        assertThat(SpoonTypeUtils.getAllTypes(parsedModel.getCompilationUnit()))
+        assertThat(SpoonTypeUtils.streamAllTypes(parsedModel.getCompilationUnit()))
                 .contains(annotationUse.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(annotationUse.getAnnotationType()))
                 .isEqualTo("annotationimportidentities.ImportSource.Owner.NestedTag");
@@ -653,7 +653,7 @@ class AnnotationTypeNameResolverTest {
                 dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.getAllTypes(srcQualifiedArrayModel.getCompilationUnit()))
+        assertThat(SpoonTypeUtils.streamAllTypes(srcQualifiedArrayModel.getCompilationUnit()))
                 .filteredOn(CtType::isAnnotationType)
                 .extracting(srcType -> formatCanonicalTypeName(srcType.getReference()))
                 .contains(writtenTypeName);
@@ -775,8 +775,7 @@ class AnnotationTypeNameResolverTest {
 
     @NonNull
     private static AnnotationTypeNameResolver createResolver(CtCompilationUnit compilationUnit) {
-        List<CtType<?>> declaredTypes = SpoonTypeUtils.getAllTypes(compilationUnit);
-        Map<String, CtType<?>> declarationsByName = declaredTypes.stream()
+        Map<String, CtType<?>> declarationsByName = SpoonTypeUtils.streamAllTypes(compilationUnit)
                 .collect(Collectors.toUnmodifiableMap(
                         srcType -> formatCanonicalTypeName(srcType.getReference()), srcType -> srcType));
         SpoonTypeImportContext typeImportContext =

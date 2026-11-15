@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Spoon type traversal streams declarations directly into indexes. Parsing statistics count types and members in one
+  traversal without intermediate aggregate lists; removed redundant root-type and member-list helpers.
+- Unclosed annotation-argument diagnostics use the lexer's end-of-source offset without passing a diagnostic-only
+  annotation-start parameter through the scanner.
 - Annotation dependency-cache access uses a `computeIfAbsent` wrapper around independent repeatable-chain traversal.
   Computation validates source declarations and detects cycles locally without accessing the cache.
   Source repeatable relationships remain prepared before scanning annotation groups.

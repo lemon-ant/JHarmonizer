@@ -135,7 +135,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
         // NOT_FOUND here does not exclude an imported first segment; stage 3 must check the original spelling.
         // A same-package type from another file can obscure the package prefix even without imports.
         // Stage 4 checks a package-qualified source path as part of AST-binding confirmation, not at this stage.
-        Optional<CtType<?>> srcPathRootType = SpoonTypeUtils.getRootTypes(compilationUnit).stream()
+        Optional<CtType<?>> srcPathRootType = compilationUnit.getDeclaredTypes().stream()
                 .filter(srcType -> startsWithTypeName(writtenAnnotationTypeName, srcType.getSimpleName()))
                 .findFirst();
         return srcPathRootType

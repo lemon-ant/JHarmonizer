@@ -74,8 +74,7 @@ final class AnnotationDependencyKeyResolver {
         rootGroupKeyByAnnotationCanonicalTypeName = new HashMap<>();
         // Metadata identities require canonical top-level/member owner chains.
         // Local and anonymous visibility scopes are indexed separately by the declaration resolver.
-        List<CtType<?>> canonicalTypeDeclarations = SpoonTypeUtils.getAllTypes(compilationUnit);
-        declaredTypesByCanonicalName = canonicalTypeDeclarations.stream()
+        declaredTypesByCanonicalName = SpoonTypeUtils.streamAllTypes(compilationUnit)
                 .collect(Collectors.toUnmodifiableMap(
                         srcType -> formatCanonicalTypeName(srcType.getReference()), srcType -> srcType));
         SpoonTypeImportContext typeImportContext =

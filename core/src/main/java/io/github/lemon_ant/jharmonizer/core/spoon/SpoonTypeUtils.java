@@ -25,10 +25,8 @@ import spoon.reflect.visitor.filter.TypeFilter;
 @UtilityClass
 // Shared type formatting, declaration traversal, and lexical-scope helpers belong to one stateless Spoon utility.
 @SuppressWarnings("PMD.TooManyMethods")
-// TODO Reconsider methods and remove superfluous
 public class SpoonTypeUtils {
     private static final int ONE_ROOT_TYPE = 1;
-    private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
     /**
      * Finds the earliest source offset of a member declaration and its annotations.
@@ -81,40 +79,6 @@ public class SpoonTypeUtils {
     }
 
     /**
-     * Returns the all type members.
-     * @param compilationUnit Spoon model of the source file to inspect
-     * @return the all type members
-     */
-    @NonNull
-    public static List<CtTypeMember> getAllTypeMembers(@NonNull CtCompilationUnit compilationUnit) {
-        return getAllTypes(compilationUnit).stream()
-                .flatMap(type -> type.getElements(TYPE_MEMBER_FILTER).stream())
-                .toList();
-    }
-
-    /**
-     * Collects top-level and member types through direct declaration nesting, excluding local and anonymous classes.
-     * @param compilationUnit Spoon model of the source file to inspect
-     * @return unmodifiable top-level/member declarations in nesting order
-     */
-    @NonNull
-    public static List<CtType<?>> getAllTypes(@NonNull CtCompilationUnit compilationUnit) {
-        return getRootTypes(compilationUnit).stream()
-                .flatMap(SpoonTypeUtils::streamTypesTree)
-                .toList();
-    }
-
-    /**
-     * Returns the root types.
-     * @param compilationUnit Spoon model of the source file to inspect
-     * @return the root types
-     */
-    @NonNull
-    public static List<CtType<?>> getRootTypes(@NonNull CtCompilationUnit compilationUnit) {
-        return compilationUnit.getDeclaredTypes();
-    }
-
-    /**
      * Checks whether the source-file model has no sortable type declarations.
      * @param compilationUnit Spoon model of the source file to inspect
      * @return {@code true} when the unit is not TYPE_DECLARATION or has no declared types
@@ -125,11 +89,23 @@ public class SpoonTypeUtils {
     }
 
     /**
-     * Current order for a whole source file: declared types as-is.
+     * Streams top-level and member types through direct declaration nesting, excluding local and anonymous classes.
+     * @param compilationUnit Spoon model of the source file to inspect
+     * @return top-level/member declarations in nesting order, without collecting an intermediate list
+     */
+    @NonNull
+    public static Stream<CtType<?>> streamAllTypes(@NonNull CtCompilationUnit compilationUnit) {
+        return compilationUnit.getDeclaredTypes().stream().flatMap(SpoonTypeUtils::streamTypesTree);
+    }
+
+    /**
+     * Streams top-level types and their explicit, source-positioned members in current declaration-list order.
+     * @param compilationUnit Spoon model of the source file to inspect
+     * @return types and members, recursively descending into member types
      */
     @NonNull
     public static Stream<CtTypeMember> streamDeclaredHierarchy(@NonNull CtCompilationUnit compilationUnit) {
-        return getRootTypes(compilationUnit).stream().flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
+        return compilationUnit.getDeclaredTypes().stream().flatMap(SpoonTypeUtils::streamTypeAndNestedElements);
     }
 
     /**
@@ -160,7 +136,7 @@ public class SpoonTypeUtils {
      */
     @NonNull
     static List<CtType<?>> collectSrcTypeScopes(@NonNull CtCompilationUnit compilationUnit) {
-        return getRootTypes(compilationUnit).stream()
+        return compilationUnit.getDeclaredTypes().stream()
                 .flatMap(rootType -> rootType.getElements(new TypeFilter<CtType<?>>(CtType.class)).stream())
                 .filter(typeScope -> !(typeScope instanceof CtTypeParameter))
                 .toList();

@@ -103,8 +103,7 @@ class SpoonImportUtilsTest {
         // Given
         CtCompilationUnit compilationUnit = parseCompilationUnitFromJavaFixtureResource(RESOLVED_MEMBER_IMPORTS);
         CtType<?> consumerType = compilationUnit.getDeclaredTypes().getFirst();
-        List<CtType<?>> declaredTypes = SpoonTypeUtils.getAllTypes(compilationUnit);
-        Map<String, CtType<?>> declaredTypesByCanonicalName = declaredTypes.stream()
+        Map<String, CtType<?>> declaredTypesByCanonicalName = SpoonTypeUtils.streamAllTypes(compilationUnit)
                 .collect(Collectors.toUnmodifiableMap(
                         srcType -> formatCanonicalTypeName(srcType.getReference()), srcType -> srcType));
 
@@ -187,7 +186,7 @@ class SpoonImportUtilsTest {
         CtCompilationUnit compilationUnit =
                 parseCompilationUnitFromJavaFixtureResource(WILDCARD_OWNER_SOURCE_DECLARATIONS);
         CtType<?> srcOwnerType = compilationUnit.getDeclaredTypes().getFirst();
-        Map<String, CtType<?>> declaredTypesByCanonicalName = SpoonTypeUtils.getAllTypes(compilationUnit).stream()
+        Map<String, CtType<?>> declaredTypesByCanonicalName = SpoonTypeUtils.streamAllTypes(compilationUnit)
                 .collect(Collectors.toUnmodifiableMap(
                         srcType -> formatCanonicalTypeName(srcType.getReference()), srcType -> srcType));
         CtImport srcOwnerImport = requireStaticWildcardImportForOwner(

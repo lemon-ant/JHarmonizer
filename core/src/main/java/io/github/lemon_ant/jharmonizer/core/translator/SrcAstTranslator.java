@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTypeMembers;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getAllTypes;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.getRootTypes;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamAllTypes;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
@@ -14,13 +12,13 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinter;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.IntSummaryStatistics;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtCompilationUnit;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 /**
  * Facade for parsing Java source files into Spoon AST models and serializing them back to source code.
@@ -29,6 +27,9 @@ import spoon.reflect.declaration.CtTypeMember;
 @Slf4j
 @UtilityClass
 public final class SrcAstTranslator {
+
+    @NonNull
+    private static final TypeFilter<CtTypeMember> TYPE_MEMBER_FILTER = new TypeFilter<>(CtTypeMember.class);
 
     /**
      * Parses the source file.
@@ -81,16 +82,18 @@ public final class SrcAstTranslator {
         CtCompilationUnit compilationUnit = spoonASTModel.getCompilationUnit();
 
         // TODO It doesn't work String originalSrcCode = compilationUnit.getOriginalSourceCode();
-        List<CtType<?>> rootTypes = getRootTypes(compilationUnit);
-        List<CtType<?>> allDeclaredTypes = getAllTypes(compilationUnit);
-        List<CtTypeMember> allTypesMembers = getAllTypeMembers(compilationUnit);
+        // Summarize the existing subtree counts in one pass without aggregate type/member lists.
+        // Spoon includes each type itself and implicit members; nested subtrees contribute to each enclosing count.
+        IntSummaryStatistics memberCountsByType = streamAllTypes(compilationUnit)
+                .mapToInt(type -> type.getElements(TYPE_MEMBER_FILTER).size())
+                .summaryStatistics();
 
         return new ParsingStatistic(
                 originalSrcCode.length(),
                 originalSrcCode.getBytes(StandardCharsets.UTF_8).length,
-                allTypesMembers.size(),
-                rootTypes.size(),
-                allDeclaredTypes.size(),
+                Math.toIntExact(memberCountsByType.getSum()),
+                compilationUnit.getDeclaredTypes().size(),
+                Math.toIntExact(memberCountsByType.getCount()),
                 parsingTimedResult.getNanos());
     }
 }
