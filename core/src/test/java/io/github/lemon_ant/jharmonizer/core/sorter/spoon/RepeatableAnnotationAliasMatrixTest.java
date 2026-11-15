@@ -116,7 +116,7 @@ class RepeatableAnnotationAliasMatrixTest {
             @NonNull String description, @NonNull AnnotationSrcGroup annotationGroup) {
         List<AnnotationSrcFragment> repeatedAnnotations = annotationGroup.getAnnotationSrcFragments();
         assertThat(repeatedAnnotations).as(description).hasSize(2);
-        // Pair keys may differ between uses; a shared key is the actual dependency contract.
+        // Candidate key sets may differ between uses; a shared key is the actual dependency contract.
         assertThat(repeatedAnnotations.getFirst().getDescriptor().getOrderPreservationGroupKeys())
                 .as(description)
                 .containsAnyElementsOf(

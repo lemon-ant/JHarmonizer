@@ -58,8 +58,8 @@ final class AnnotationDependencyKeyResolver {
      * Computed keys are cached only after successful traversal; computation uses no cache entries or recursion markers.
      * Every confirmed terminal key retains a key-to-itself entry, including confirmed external containers.
      * Unconfirmed use keys bypass this cache; the collector reads them directly from the current annotation sequence.
-     * External repeatable declarations are not inspected. The collector reads this index to add pair-specific keys
-     * to fragment dependency sets.
+     * External repeatable declarations are not inspected. The collector reads this index to add possible type/container
+     * group keys to fragment dependency sets.
      */
     @NonNull
     private final Map<String, String> rootGroupKeyByAnnotationCanonicalTypeName;
@@ -117,9 +117,10 @@ final class AnnotationDependencyKeyResolver {
      * Java permits inherited qualified aliases (JLS 6.7); ordinary single-type imports require canonical names
      * (JLS 7.5.1). An unavailable library alone does not invalidate an ordinary {@code import library.Base.Tag}.
      *
-     * <p>Pair keys preserve only possible alias relationships. If source-declared {@code First.Tag} and
+     * <p>Alternative group keys preserve possible alias relationships. If source-declared {@code First.Tag} and
      * {@code Second.Tag} are distinct, but an unavailable {@code Derived.Tag} could denote either one,
-     * it shares a separate pair key with each. The two confirmed types remain independently sortable.
+     * its key set includes both alternatives. The two confirmed types keep their separate singleton key sets
+     * and remain independently sortable.
      * Original keys also remain: source-declared {@code Tag -> Tags} relationships expose Tag's simple name
      * even when only a defaulted {@code @Tags} container is visible.
      *

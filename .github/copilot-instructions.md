@@ -173,8 +173,9 @@ SPDX-License-Identifier: Apache-2.0
   explicit containers. Resolve identities across written qualifications; confirmed distinct types sharing a simple name
   remain independently sortable. Different qualified spellings alone do not prove distinct nested types: inherited
   owner aliases can denote the same annotation. When a pair sharing a simple name cannot be distinguished, including
-  unresolved short names and wildcard/static imports, conservatively preserve its relative order. Keep type/container
-  dependency keys and add pair-specific keys; do not merge confirmed distinct homonyms into one dependency family.
+  unresolved short names and wildcard/static imports, conservatively preserve its relative order. Retain original
+  type/container keys and add each occurrence's alternative group keys once. Do not expand alternatives transitively
+  or merge confirmed distinct homonyms into one dependency family.
   Continue sorting independent annotations in the same source group without warnings.
   Use repeatable metadata from declarations in the current source file as additional dependency evidence, including
   defaulted containers; unavailable external metadata must not disable annotation sorting.

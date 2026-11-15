@@ -23,7 +23,7 @@ class AnnotationDependencyKeyUtils {
     }
 
     /**
-     * Reads canonical-name confidence from an original dependency key, before synthetic pair expansion.
+     * Reads canonical-name confidence from an original dependency key, before candidate expansion.
      * @param groupKey original annotation or container dependency key
      * @return whether the key represents a confirmed canonical identity
      */

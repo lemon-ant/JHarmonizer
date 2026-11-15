@@ -52,10 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sides of source repeatable relationships. Unconfirmed terminals and per-use fallbacks have no separate cache entries.
   Added compilable external-inheritance and imported-container regressions.
 - Annotation preservation-key collection uses one candidate index for possible aliases and repeatable families,
-  removing the separate input-key set, reverse name index, and repeated pairwise name matching.
+  adding candidate type/container keys directly to each annotation fragment. Removed synthetic pair strings,
+  their extra index, and quadratic pair construction, along with the separate input-key set and reverse name index.
   Candidates are limited to current input keys and known repeatable-container keys instead of unrelated homonyms.
-  Canonical pair keys remain independent of set iteration order, without sorting all keys first.
-  Empty and single-key inputs skip pair construction after cache-coverage validation; unchanged collections are reused.
+  Confirmed distinct homonyms retain disjoint key sets; uncertain occurrences can carry several alternatives.
+  Input sets already containing all candidates are reused; singleton candidates reuse the input list after validation.
   Each unique input key seeds its own candidate once; confirmed keys validate their terminal cache entry.
   Singleton inputs also skip alias expansion. Missing confirmed identity entries fail with a diagnostic exception.
 - Repeatable class-literal validation compares Spoon type-reference objects with null-safe equality after requiring
@@ -240,7 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Annotation sorting preserves repeated visible type identities without loading library annotation classes. Explicit
   containers contribute nested identities; same-file repeatable declarations add dependencies for defaulted containers.
-  Unresolved names and ambiguous inherited owner aliases add conservative pair dependencies without warnings;
+  Unresolved names and ambiguous inherited owner aliases add conservative alternative group keys without warnings;
   independent annotations in the same source group still sort, and confirmed distinct homonyms keep separate identities.
   Hidden container defaults without a source-declared repeatable relationship remain a documented limitation;
   sorting opt-outs preserve nested annotations.

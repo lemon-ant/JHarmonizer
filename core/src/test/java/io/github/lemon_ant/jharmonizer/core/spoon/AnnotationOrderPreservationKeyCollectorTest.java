@@ -20,6 +20,29 @@ import org.junit.jupiter.params.provider.ValueSource;
 class AnnotationOrderPreservationKeyCollectorTest {
 
     @Test
+    void collect_candidatesAlreadyPresent_reusesInputSets() {
+        // Given
+        String confirmedTypeName = "p.Owner.Tag";
+        String unconfirmedTypeKey = "?.Alias.Tag";
+        String unrelatedTypeName = "p.Marker";
+        Set<String> coveredGroupKeys = Set.of(confirmedTypeName, unconfirmedTypeKey);
+        Set<String> unrelatedGroupKeys = Set.of(unrelatedTypeName);
+        List<Set<String>> groupKeysPerAnnotationInSrcOrder = List.of(coveredGroupKeys, unrelatedGroupKeys);
+        Map<String, String> rootGroupKeyByAnnotationTypeName = Map.of(
+                confirmedTypeName, confirmedTypeName,
+                unrelatedTypeName, unrelatedTypeName);
+
+        // When
+        List<Set<String>> expandedKeysPerAnnotationInSrcOrder = AnnotationOrderPreservationKeyCollector.collect(
+                rootGroupKeyByAnnotationTypeName, groupKeysPerAnnotationInSrcOrder);
+
+        // Then
+        assertThat(expandedKeysPerAnnotationInSrcOrder).containsExactlyElementsOf(groupKeysPerAnnotationInSrcOrder);
+        assertThat(expandedKeysPerAnnotationInSrcOrder.getFirst()).isSameAs(coveredGroupKeys);
+        assertThat(expandedKeysPerAnnotationInSrcOrder.getLast()).isSameAs(unrelatedGroupKeys);
+    }
+
+    @Test
     void collect_canonicalInputKeyMissingFromCache_rejectsIncompleteIndex() {
         List<Set<String>> groupKeysPerAnnotationInSrcOrder = List.of(Set.of("p.Missing.Tag"));
 
@@ -78,14 +101,12 @@ class AnnotationOrderPreservationKeyCollectorTest {
 
     @ParameterizedTest
     @CsvSource({"false, false", "false, true", "true, false", "true, true"})
-    void collect_inputIterationOrders_keepsCanonicalPairKeys(
+    void collect_inputIterationOrders_keepsCandidateUnions(
             boolean reverseAnnotationOrder, boolean reverseGroupKeyOrder) {
         // Given
         String firstConfirmedTypeName = "p.First.Tag";
         String secondConfirmedTypeName = "p.Second.Tag";
         String unconfirmedTypeKey = "?.Alias.Tag";
-        String firstAliasPairKey = "?.Alias.Tag|p.First.Tag";
-        String secondAliasPairKey = "?.Alias.Tag|p.Second.Tag";
         List<Set<String>> groupKeysPerAnnotationInSrcOrder = Stream.of(
                         List.of(firstConfirmedTypeName, secondConfirmedTypeName),
                         List.of(unconfirmedTypeKey, firstConfirmedTypeName),
@@ -94,9 +115,9 @@ class AnnotationOrderPreservationKeyCollectorTest {
                 .map(groupKeys -> Collections.unmodifiableSet(new LinkedHashSet<>(groupKeys)))
                 .toList();
         List<Set<String>> expectedKeysPerAnnotationInSrcOrder = List.of(
-                Set.of(firstConfirmedTypeName, secondConfirmedTypeName, firstAliasPairKey, secondAliasPairKey),
-                Set.of(unconfirmedTypeKey, firstConfirmedTypeName, firstAliasPairKey, secondAliasPairKey),
-                Set.of(unconfirmedTypeKey, firstAliasPairKey, secondAliasPairKey));
+                Set.of(firstConfirmedTypeName, secondConfirmedTypeName),
+                Set.of(unconfirmedTypeKey, firstConfirmedTypeName, secondConfirmedTypeName),
+                Set.of(unconfirmedTypeKey, firstConfirmedTypeName, secondConfirmedTypeName));
         if (reverseAnnotationOrder) {
             groupKeysPerAnnotationInSrcOrder = groupKeysPerAnnotationInSrcOrder.reversed();
             expectedKeysPerAnnotationInSrcOrder = expectedKeysPerAnnotationInSrcOrder.reversed();
@@ -132,10 +153,10 @@ class AnnotationOrderPreservationKeyCollectorTest {
         String confirmedTypeName = "p.Owner.Tag";
         String unconfirmedTypeKey = "?.Alias.Tag";
         String unrelatedTypeName = "p.Marker";
-        String aliasPairKey = "?.Alias.Tag|p.Owner.Tag";
+        Set<String> confirmedGroupKeys = Set.of(confirmedTypeName);
         Set<String> unrelatedGroupKeys = Set.of(unrelatedTypeName);
         List<Set<String>> groupKeysPerAnnotationInSrcOrder =
-                List.of(Set.of(confirmedTypeName), Set.of(unconfirmedTypeKey), unrelatedGroupKeys);
+                List.of(confirmedGroupKeys, Set.of(unconfirmedTypeKey), unrelatedGroupKeys);
         Map<String, String> rootGroupKeyByAnnotationTypeName = Map.of(
                 confirmedTypeName, confirmedTypeName,
                 unrelatedTypeName, unrelatedTypeName);
@@ -147,10 +168,8 @@ class AnnotationOrderPreservationKeyCollectorTest {
         // Then
         assertThat(expandedKeysPerAnnotationInSrcOrder)
                 .isNotSameAs(groupKeysPerAnnotationInSrcOrder)
-                .containsExactly(
-                        Set.of(confirmedTypeName, aliasPairKey),
-                        Set.of(unconfirmedTypeKey, aliasPairKey),
-                        unrelatedGroupKeys);
+                .containsExactly(confirmedGroupKeys, Set.of(unconfirmedTypeKey, confirmedTypeName), unrelatedGroupKeys);
+        assertThat(expandedKeysPerAnnotationInSrcOrder.getFirst()).isSameAs(confirmedGroupKeys);
         assertThat(expandedKeysPerAnnotationInSrcOrder.get(2)).isSameAs(unrelatedGroupKeys);
         assertThat(groupKeysPerAnnotationInSrcOrder)
                 .containsExactly(Set.of(confirmedTypeName), Set.of(unconfirmedTypeKey), Set.of(unrelatedTypeName));
@@ -163,11 +182,10 @@ class AnnotationOrderPreservationKeyCollectorTest {
     }
 
     @Test
-    void collect_uncachedLexicalHomonyms_preservesPairDependencies() {
+    void collect_uncachedLexicalHomonyms_sharesCandidateKeys() {
         // Given
         String firstLexicalKey = "?.First.Tag";
         String secondLexicalKey = "?.Second.Tag";
-        String pairKey = "?.First.Tag|?.Second.Tag";
         List<Set<String>> groupKeysPerAnnotationInSrcOrder = List.of(Set.of(firstLexicalKey), Set.of(secondLexicalKey));
 
         // When
@@ -176,7 +194,7 @@ class AnnotationOrderPreservationKeyCollectorTest {
 
         // Then
         assertThat(expandedKeysPerAnnotationInSrcOrder)
-                .containsExactly(Set.of(firstLexicalKey, pairKey), Set.of(secondLexicalKey, pairKey));
+                .containsExactly(Set.of(firstLexicalKey, secondLexicalKey), Set.of(firstLexicalKey, secondLexicalKey));
     }
 
     @Test
@@ -196,9 +214,9 @@ class AnnotationOrderPreservationKeyCollectorTest {
         // Given
         String annotationKey = "?.Tag";
         String containerKey = "?.Tags";
-        String pairKey = "?.Tag|?.Tags";
+        String rootContainerKey = "?.library.Tags";
         List<Set<String>> groupKeysPerAnnotationInSrcOrder = List.of(Set.of(annotationKey), Set.of(containerKey));
-        Map<String, String> rootGroupKeyByAnnotationTypeName = Map.of("p.Tag", "?.library.Tags");
+        Map<String, String> rootGroupKeyByAnnotationTypeName = Map.of("p.Tag", rootContainerKey);
 
         // When
         List<Set<String>> expandedKeysPerAnnotationInSrcOrder = AnnotationOrderPreservationKeyCollector.collect(
@@ -206,7 +224,7 @@ class AnnotationOrderPreservationKeyCollectorTest {
 
         // Then
         assertThat(expandedKeysPerAnnotationInSrcOrder)
-                .containsExactly(Set.of(annotationKey, pairKey), Set.of(containerKey, pairKey));
+                .containsExactly(Set.of(annotationKey, rootContainerKey), Set.of(containerKey, rootContainerKey));
     }
 
     @Test
@@ -221,5 +239,38 @@ class AnnotationOrderPreservationKeyCollectorTest {
 
         // Then
         assertThat(expandedKeysPerAnnotationInSrcOrder).isSameAs(groupKeysPerAnnotationInSrcOrder);
+    }
+
+    @Test
+    void collect_unconfirmedHomonym_linksConfirmedTypesWithoutMergingThem() {
+        // Given
+        String firstConfirmedTypeName = "p.First.Tag";
+        String secondConfirmedTypeName = "p.Second.Tag";
+        String unconfirmedTypeKey = "?.Alias.Tag";
+        Set<String> firstConfirmedGroupKeys = Set.of(firstConfirmedTypeName);
+        Set<String> secondConfirmedGroupKeys = Set.of(secondConfirmedTypeName);
+        List<Set<String>> groupKeysPerAnnotationInSrcOrder =
+                List.of(firstConfirmedGroupKeys, secondConfirmedGroupKeys, Set.of(unconfirmedTypeKey));
+        Map<String, String> rootGroupKeyByAnnotationTypeName = Map.of(
+                firstConfirmedTypeName, firstConfirmedTypeName,
+                secondConfirmedTypeName, secondConfirmedTypeName);
+
+        // When
+        List<Set<String>> expandedKeysPerAnnotationInSrcOrder = AnnotationOrderPreservationKeyCollector.collect(
+                rootGroupKeyByAnnotationTypeName, groupKeysPerAnnotationInSrcOrder);
+
+        // Then
+        assertThat(expandedKeysPerAnnotationInSrcOrder)
+                .containsExactly(
+                        firstConfirmedGroupKeys,
+                        secondConfirmedGroupKeys,
+                        Set.of(unconfirmedTypeKey, firstConfirmedTypeName, secondConfirmedTypeName));
+        assertThat(expandedKeysPerAnnotationInSrcOrder.getFirst()).isSameAs(firstConfirmedGroupKeys);
+        assertThat(expandedKeysPerAnnotationInSrcOrder.get(1)).isSameAs(secondConfirmedGroupKeys);
+        assertThat(expandedKeysPerAnnotationInSrcOrder.getFirst())
+                .doesNotContainAnyElementsOf(expandedKeysPerAnnotationInSrcOrder.get(1));
+        assertThat(expandedKeysPerAnnotationInSrcOrder.getLast())
+                .containsAnyElementsOf(firstConfirmedGroupKeys)
+                .containsAnyElementsOf(secondConfirmedGroupKeys);
     }
 }

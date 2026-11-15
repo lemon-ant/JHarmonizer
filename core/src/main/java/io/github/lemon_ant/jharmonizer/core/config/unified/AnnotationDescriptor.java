@@ -48,11 +48,11 @@ public class AnnotationDescriptor {
      *
      * <p>Repeated nested types contribute one key per fragment, preventing self-dependencies.
      * Key iteration order is irrelevant: dependencies follow the original source-fragment sequence.
-     * Unresolved names retain lexical keys. Potential aliases also share a separate key for each possible pair,
-     * preserving their relative order while allowing independent annotations in the same source group to move.
+     * Unresolved names retain lexical keys and add possible type/container group keys as ordering constraints.
      * For example, confirmed distinct {@code FirstOwner.Tag} and {@code SecondOwner.Tag} may both precede an
-     * unresolved {@code UnknownOwner.Tag}; each shares a pair key with the unknown type, without sharing a key
-     * with the other confirmed type. Merging all three into one family would add the same unwanted dependency.
+     * unresolved {@code UnknownOwner.Tag}. The unknown occurrence includes both confirmed keys as alternatives;
+     * the confirmed occurrences retain disjoint key sets and remain independently sortable.
+     * Alternative keys do not confirm an annotation identity or authorize declaration metadata lookup.
      */
     @NonNull
     Set<String> orderPreservationGroupKeys;

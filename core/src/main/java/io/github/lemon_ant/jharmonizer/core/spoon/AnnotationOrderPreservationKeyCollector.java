@@ -16,7 +16,7 @@ import lombok.experimental.UtilityClass;
 /** Prepares annotation dependency keys without merging potentially distinct type identities. */
 @UtilityClass
 class AnnotationOrderPreservationKeyCollector {
-    private static final int MIN_GROUP_KEYS_FOR_PAIR = 2;
+    private static final int MIN_GROUP_KEYS_FOR_ALIAS_EXPANSION = 2;
 
     /**
      * Adds conservative dependency keys for possible aliases and source-declared repeatable relationships.
@@ -24,8 +24,8 @@ class AnnotationOrderPreservationKeyCollector {
      * The list covers only the adjacent outer annotations currently being parsed.
      * For {@code @Envelope({@Nested}) @Marker int first; @Nested int second;}, the calls receive
      * {@code [{Envelope, Nested}, {Marker}]} and {@code [{Nested}]} respectively (type qualification omitted).
-     * Reuses unchanged input collections. The input list and its sets must be unmodifiable, and their producers
-     * must not mutate the backing collections after handoff.
+     * Reuses input sets that already contain all candidates. Input collections must be unmodifiable;
+     * producers must not mutate their backing collections after handoff.
      * @param rootGroupKeyByAnnotationTypeName confirmed canonical type names mapped to terminal group keys;
      *                                         confirmed input keys require terminal self-mappings
      * @param groupKeysPerAnnotationInSrcOrder one key set per outer annotation of the current adjacent sequence
@@ -36,19 +36,16 @@ class AnnotationOrderPreservationKeyCollector {
     static List<Set<String>> collect(
             @NonNull Map<String, String> rootGroupKeyByAnnotationTypeName,
             @NonNull List<Set<String>> groupKeysPerAnnotationInSrcOrder) {
-        // Keep possible identities separate from the original keys; they only establish pair dependencies.
+        // Possible identities add ordering constraints; they do not confirm an annotation's type.
         Map<String, Set<String>> candidateGroupKeysByInputGroupKey =
                 collectCandidateGroupKeys(rootGroupKeyByAnnotationTypeName, groupKeysPerAnnotationInSrcOrder);
-        // Candidate collection validates cache coverage even when no pair can exist.
-        if (candidateGroupKeysByInputGroupKey.size() < MIN_GROUP_KEYS_FOR_PAIR) {
-            return groupKeysPerAnnotationInSrcOrder;
-        }
-        Map<String, Set<String>> pairKeysByGroupKey = collectPairKeys(candidateGroupKeysByInputGroupKey);
-        if (pairKeysByGroupKey.isEmpty()) {
+        // Singleton candidate sets add no keys; validation still runs before this fast path.
+        if (candidateGroupKeysByInputGroupKey.values().stream()
+                .allMatch(candidateGroupKeys -> candidateGroupKeys.size() == 1)) {
             return groupKeysPerAnnotationInSrcOrder;
         }
         return groupKeysPerAnnotationInSrcOrder.stream()
-                .map(groupKeys -> expandGroupKeys(groupKeys, pairKeysByGroupKey))
+                .map(groupKeys -> expandGroupKeys(groupKeys, candidateGroupKeysByInputGroupKey))
                 .toList();
     }
 
@@ -77,12 +74,6 @@ class AnnotationOrderPreservationKeyCollector {
         });
     }
 
-    private static void addPairKey(Map<String, Set<String>> pairKeysByGroupKey, String groupKey, String pairKey) {
-        pairKeysByGroupKey
-                .computeIfAbsent(groupKey, unusedGroupKey -> new HashSet<>())
-                .add(pairKey);
-    }
-
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
     private static Map<String, Set<String>> collectCandidateGroupKeys(
@@ -105,53 +96,24 @@ class AnnotationOrderPreservationKeyCollector {
         if (candidateGroupKeysByInputGroupKey.isEmpty()) {
             return Map.of();
         }
-        if (candidateGroupKeysByInputGroupKey.size() >= MIN_GROUP_KEYS_FOR_PAIR) {
+        if (candidateGroupKeysByInputGroupKey.size() >= MIN_GROUP_KEYS_FOR_ALIAS_EXPANSION) {
             addAliasCandidateGroupKeys(rootGroupKeyByAnnotationTypeName, candidateGroupKeysByInputGroupKey);
         }
         return Collections.unmodifiableMap(candidateGroupKeysByInputGroupKey);
     }
 
     @NonNull
-    @SuppressWarnings("PMD.UseConcurrentHashMap")
-    private static Map<String, Set<String>> collectPairKeys(
-            Map<String, Set<String>> candidateGroupKeysByInputGroupKey) {
-        Map<String, Set<String>> pairKeysByGroupKey = new HashMap<>();
-        for (String firstGroupKey : candidateGroupKeysByInputGroupKey.keySet()) {
-            for (String secondGroupKey : candidateGroupKeysByInputGroupKey.keySet()) {
-                // Both loops use the same key set, so they visit (A, B), (B, A), and self-pairs such as (A, A).
-                // For A < B: skip (A, A), whose occurrences already share their original key A.
-                // Skip (B, A): (A, B) checks the same unordered pair, regardless of map iteration order.
-                // Only (A, B) reaches candidate matching below and can create the stable pair key A|B.
-                // The sorter derives dependency direction from source order; this fixes the key's spelling.
-                if (firstGroupKey.compareTo(secondGroupKey) >= 0) {
-                    continue;
-                }
-                if (!Collections.disjoint(
-                        candidateGroupKeysByInputGroupKey.get(firstGroupKey),
-                        candidateGroupKeysByInputGroupKey.get(secondGroupKey))) {
-                    // The separator cannot occur in a Java type name.
-                    // Do not merge aliases transitively: uncertain Derived.Tag may denote First.Tag or
-                    // Second.Tag while those two confirmed annotations remain independently sortable.
-                    String pairKey = firstGroupKey + '|' + secondGroupKey;
-                    addPairKey(pairKeysByGroupKey, firstGroupKey, pairKey);
-                    addPairKey(pairKeysByGroupKey, secondGroupKey, pairKey);
-                }
-            }
-        }
-        return Collections.unmodifiableMap(pairKeysByGroupKey);
-    }
-
-    @NonNull
     private static Set<String> expandGroupKeys(
-            Set<String> originalGroupKeys, Map<String, Set<String>> pairKeysByGroupKey) {
-        // Raw type/container and lexical keys never contain '|'; synthetic pair keys are added only here.
-        // Every pair-map entry is nonempty, so its presence guarantees keys absent from the original set.
-        if (originalGroupKeys.stream().noneMatch(pairKeysByGroupKey::containsKey)) {
+            Set<String> originalGroupKeys, Map<String, Set<String>> candidateGroupKeysByInputGroupKey) {
+        if (originalGroupKeys.stream()
+                .allMatch(groupKey -> originalGroupKeys.containsAll(candidateGroupKeysByInputGroupKey.get(groupKey)))) {
             return originalGroupKeys;
         }
+        // Keep alternatives per occurrence: confirmed A and B retain {A} and {B}, while uncertain U can use {U, A, B}.
+        // Expand once; merging these sets transitively would also constrain the independent confirmed annotations.
         Set<String> expandedGroupKeys = new HashSet<>(originalGroupKeys);
         originalGroupKeys.forEach(
-                groupKey -> expandedGroupKeys.addAll(pairKeysByGroupKey.getOrDefault(groupKey, Set.of())));
+                groupKey -> expandedGroupKeys.addAll(candidateGroupKeysByInputGroupKey.get(groupKey)));
         return Collections.unmodifiableSet(expandedGroupKeys);
     }
 
