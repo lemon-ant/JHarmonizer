@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.countLineSeparators;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFirstNonWhitespace;
@@ -10,8 +10,8 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findPr
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findTrailingLineSeparatorsStart;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcGap;
 import io.github.lemon_ant.jharmonizer.core.utilities.JavaTokenSourceUtils;
 import java.util.ArrayList;
 import java.util.Collections;

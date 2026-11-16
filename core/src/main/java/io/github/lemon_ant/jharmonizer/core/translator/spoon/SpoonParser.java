@@ -5,10 +5,9 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner;
-import io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSourceScanner;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.Launcher;
@@ -55,7 +54,8 @@ public class SpoonParser {
         // Keep the supplied text and its annotation fragments in the processing model before reordering.
         return SpoonAstModel.builder()
                 .annotationSrcGroups(AnnotationSourceScanner.scan(srcFile.getSrcCode(), compilationUnit))
-                .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))
+                .originalMemberOrder(SpoonTypeTreeUtils.streamDeclaredHierarchy(compilationUnit)
+                        .toList())
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
                 .srcCode(srcFile.getSrcCode())

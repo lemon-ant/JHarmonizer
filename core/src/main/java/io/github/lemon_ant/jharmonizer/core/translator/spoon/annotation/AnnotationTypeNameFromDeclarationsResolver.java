@@ -1,12 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeInheritanceUtils.findInheritedMemberTypeDeclaration;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.startsWithTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeInheritanceUtils.findInheritedMemberTypeDeclaration;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.startsWithTypeName;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeInheritanceUtils.InheritedMemberTypeLookupResult;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeTreeUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeInheritanceUtils.InheritedMemberTypeLookupResult;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,7 +51,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     AnnotationTypeNameFromDeclarationsResolver(
             @NonNull CtCompilationUnit compilationUnit, @NonNull SpoonTypeImportContext typeImportContext) {
         this.compilationUnit = compilationUnit;
-        srcTypeScopes = SpoonTypeUtils.collectSrcTypeScopes(compilationUnit);
+        srcTypeScopes = SpoonTypeTreeUtils.collectSrcTypeScopes(compilationUnit);
         wildcardImportsInModelOrder = typeImportContext.getWildcardImportsInModelOrder();
         srcOwnerTypesByWildcardImport = typeImportContext.getSrcOwnerTypesByWildcardImport();
     }
@@ -98,7 +99,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     CanonicalAnnotationTypeNameLookupResult resolveCanonicalAnnotationTypeNameInEnclosingTypes(
             int annotationUseSrcStartOffset, @NonNull String writtenAnnotationTypeName) {
         List<CtType<?>> enclosingTypesInInnerToOuterOrder =
-                SpoonTypeUtils.collectEnclosingSrcTypes(srcTypeScopes, annotationUseSrcStartOffset);
+                SpoonTypeTreeUtils.collectEnclosingSrcTypes(srcTypeScopes, annotationUseSrcStartOffset);
         // Any annotation use inside an indexed type's valid Spoon-reported range enters this loop, including
         // ordinary field, method, parameter and type-use annotations; nested types are not required.
         // class Example { @Tag int value; } gives [Example]; inside Outer.Inner the list is [Outer.Inner, Outer].

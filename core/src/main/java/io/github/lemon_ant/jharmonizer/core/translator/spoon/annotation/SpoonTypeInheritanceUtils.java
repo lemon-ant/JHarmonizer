@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
@@ -109,6 +110,7 @@ class SpoonTypeInheritanceUtils {
 
     /** Outcome of a source inheritance lookup; absence is distinct from an unavailable or ambiguous branch. */
     @Value
+    @Getter(AccessLevel.PACKAGE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class InheritedMemberTypeLookupResult {
 

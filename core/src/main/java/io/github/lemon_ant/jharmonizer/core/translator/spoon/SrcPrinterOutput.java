@@ -6,7 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findCo
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentStartWithIndentation;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;

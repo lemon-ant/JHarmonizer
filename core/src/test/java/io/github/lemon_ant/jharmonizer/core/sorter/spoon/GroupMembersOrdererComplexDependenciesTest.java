@@ -3,6 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.GroupMembersOrderer.orderMembersInsideGroups;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamExplicitSrcTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +38,7 @@ class GroupMembersOrdererComplexDependenciesTest {
                 requireClasspathResourceUrl(Constants.GROUP_MEMBER_ORDERING_COMPLEX_FIXTURE_CLASSPATH_PATH);
         CtType<?> mainType = SpoonTestCaseUtils.parseMainTypeFromJavaFixtureResource(fixtureResourceUrl);
         List<CtTypeMember> explicitSrcTypeMembers =
-                SpoonTypeMemberUtils.streamExplicitSrcTypeMembers(mainType).toList();
+                streamExplicitSrcTypeMembers(mainType).toList();
         CompiledMemberGroup compiledMemberGroup =
                 CompiledMemberGroupTestCreator.createCompiledMemberGroup("complex", true, List.of(OrderingRule.ALPHA));
         Map<CtTypeMember, CompiledMemberGroup> memberToNaturalGroup = explicitSrcTypeMembers.stream()

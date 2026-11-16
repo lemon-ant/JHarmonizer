@@ -54,12 +54,18 @@ Sorter → SpoonSrcPrinter → Formatter
 | `SpoonParser`                        | Entry point. Wraps the source in a `VirtualFile`, builds a `Launcher` with `complianceLevel = 21`, and assembles the `SpoonAstModel`. |
 | `SpoonAstModel`                      | Typed processing context with the mutable Spoon AST, immutable annotation groups, original source, opt-outs, and source-order snapshot. |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
-| `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the sorter can compute relocation diagnostics. |
+| `SpoonTypeTreeUtils`                  | Traverses source type trees and enclosing types; captures the original DFS order of `CtTypeMember`s with `streamDeclaredHierarchy`. |
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
 
-`AnnotationSrcGroup` is the shared model in `core.spoon`, with nested annotation, gap, and base-fragment types.
+[`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
+is the shared model beside the scanner, with nested annotation, gap, and private base-fragment types.
 `AnnotationSourceScanner` produces these groups and retains the private parsing state and source-preparation logic.
+The scanner and its type-name, import, inheritance, and dependency preparation helpers belong to
+`translator.spoon.annotation`. Parser-wide tree traversal stays in
+[`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
+The neutral `core.spoon.SpoonTypeUtils` retains only main-type selection, effective member boundaries, and explicit
+source-member traversal used across processing stages.
 For the annotation identity algorithm, lookup precedence, stopping conditions, and worked examples, see
 [annotation type resolution](annotation-type-resolution.md) (in Russian).
 The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
@@ -69,8 +75,11 @@ annotation order is neither stored in `CtCompilationUnit` metadata nor captured 
 Parsing does not depend on printer settings. The flow passes its immutable configuration to
 `SrcAstTranslator.serialize(model, printerConfig)` for each printing invocation.
 The scanner collects annotations and gaps in separate lists with source bounds and comment ownership. The group
-constructor retains unmodifiable views; callers must not modify the lists after handoff. The scanner starts fresh
-lists for each group. The sorter supplies a new annotation order and resolved gaps to the same constructor.
+constructor retains unmodifiable views; callers must not modify the lists after handoff. Initial group construction
+and fragment builders are package-private. The scanner starts fresh lists for each group. The sorter selects the new
+annotation order and gap prefixes, then copies existing gaps with `copyWithLeadingWhitespace` and the group with
+`copyWithFragments`. These model operations retain the original ranges and prepared source values without selecting
+order or whitespace themselves.
 `annotationSrcFragments` represents source order after scanning and comparator order after sorting. The private
 `srcFragments` sequence is assembled by a static interleaving helper when replacement code is requested, then cached.
 Each group lazily concatenates and caches its replacement code from that sequence. All original ranges remain unchanged.

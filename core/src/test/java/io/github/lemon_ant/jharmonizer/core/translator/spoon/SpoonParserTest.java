@@ -13,8 +13,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;

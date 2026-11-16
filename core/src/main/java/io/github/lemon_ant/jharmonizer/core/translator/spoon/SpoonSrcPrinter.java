@@ -12,11 +12,11 @@ import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMem
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasMatchingLeadingComment;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.GroupSeparator;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +51,7 @@ public final class SpoonSrcPrinter {
             @NonNull SpoonAstModel model, @NonNull PrinterConfig printerConfig) {
         CtCompilationUnit compilationUnit = model.getCompilationUnit();
         String srcCode = model.getSrcCode();
-        if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
+        if (SpoonTypeTreeUtils.hasNoDeclaredTypes(compilationUnit)) {
             SrcPrinterOutput srcPrinterOutput = new SrcPrinterOutput(srcCode, model.getAnnotationSrcGroups());
             srcPrinterOutput.printSrcRange(0, srcCode.length());
             return new SerializedSrcWithSkippedTypeRanges(srcPrinterOutput.toString(), Map.of());

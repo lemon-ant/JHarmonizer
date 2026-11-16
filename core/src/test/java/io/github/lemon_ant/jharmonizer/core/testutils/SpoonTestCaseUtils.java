@@ -7,10 +7,10 @@ import static java.util.Objects.requireNonNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSourceScanner;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSourceScanner;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.file.Path;

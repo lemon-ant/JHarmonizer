@@ -11,9 +11,14 @@ output — it is a pure diagnostic pass whose result is printed by
 `MemberRelocationPrinter`.
 
 The implementation lives in
-`io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector`, with
-the LIS computation factored into
-`io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils`.
+[`RelocationDetector`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/RelocationDetector.java), with
+the LIS computation factored into the package-private
+[`LongestIncreasingSubsequenceUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/LongestIncreasingSubsequenceUtils.java).
+Both stay in `core.spoon` beside the shared
+[`MemberRelocation`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/MemberRelocation.java)
+model so its constructor remains package-private. `Sorter` is the detector's only production caller; the resulting
+model is consumed across sorting, flow reporting, and printing. This placement keeps model construction within one
+package while exposing its read-only diagnostic data to those consumers.
 
 `SpoonSorter` emits declaration and annotation change flags while collecting final output. Element identities are
 compared against input order during the same traversal; checks stop after the first mismatch in each scope. Grouping
@@ -37,10 +42,9 @@ empty diagnostics and `false` change flags.
 
 ## Inputs
 
-- The original DFS source-order snapshot of `CtTypeMember`s, captured at parse time
-  by `RelocationDetector.snapshotOriginalMemberOrder(...)` and stored on
-  `SpoonAstModel.originalMemberOrder` (built via
-  `SpoonTypeUtils.streamDeclaredHierarchy`).
+- The original DFS source-order snapshot of `CtTypeMember`s, captured at parse time with
+  `SpoonTypeTreeUtils.streamDeclaredHierarchy(...).toList()` in the parser and stored on
+  `SpoonAstModel.originalMemberOrder`.
 - The post-sort AST produced by the sorter — i.e. the same Spoon model with
   members reordered in place.
 

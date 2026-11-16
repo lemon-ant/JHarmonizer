@@ -4,7 +4,7 @@ package io.github.lemon_ant.jharmonizer.core.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.findRelocations;
-import static io.github.lemon_ant.jharmonizer.core.spoon.RelocationDetector.snapshotOriginalMemberOrder;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeTreeTestUtils.collectDeclaredHierarchy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
@@ -85,7 +85,7 @@ class RelocationDetectorTest {
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
         ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
-        List<CtTypeMember> originalMemberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
+        List<CtTypeMember> originalMemberOrder = collectDeclaredHierarchy(spoonAstModel.getCompilationUnit());
 
         // When
         List<MemberRelocation> relocations = findRelocations(originalMemberOrder, spoonAstModel.getCompilationUnit());
@@ -142,7 +142,7 @@ class RelocationDetectorTest {
     }
 
     @Test
-    void snapshotOriginalMemberOrder_multiRootTypeFile_collectsMembersInSourceOrder() {
+    void streamDeclaredHierarchy_multiRootTypeFile_collectsMembersInSourceOrder() {
         // Given
         SrcFile srcFile =
                 createSrcFile("class Alpha { static String label() {} }\nclass Beta {}\n", Path.of("Sample.java"));
@@ -153,7 +153,7 @@ class RelocationDetectorTest {
         CtTypeMember labelMethod = alpha.getMethods().iterator().next();
 
         // When
-        List<CtTypeMember> memberOrder = snapshotOriginalMemberOrder(spoonAstModel.getCompilationUnit());
+        List<CtTypeMember> memberOrder = collectDeclaredHierarchy(spoonAstModel.getCompilationUnit());
 
         // Then — DFS source order: Alpha, Alpha.label, Beta
         assertThat(memberOrder).containsExactly(alpha, labelMethod, beta);

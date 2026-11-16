@@ -6,9 +6,9 @@ import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.findEffe
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.OrderChangeCollector.ElementOrdering;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcGap;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcGap;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies;
 import io.github.lemon_ant.jharmonizer.sorting.Dependencies.Dependency;
 import io.github.lemon_ant.jharmonizer.sorting.Groups;
@@ -71,11 +71,8 @@ class SpoonAnnotationSorter {
                                 .getAnnotationSrcGapsInSrcOrder()
                                 .get(destinationSlotIndex)))
                 .toList();
-        return new AnnotationSrcGroup(
-                annotationSrcFragmentsInSortedOrder,
-                preparedAnnotationSrcGapsInSrcOrder,
-                annotationSrcGroupBeforeSorting.getStart(),
-                annotationSrcGroupBeforeSorting.getEndExclusive());
+        return annotationSrcGroupBeforeSorting.copyWithFragments(
+                annotationSrcFragmentsInSortedOrder, preparedAnnotationSrcGapsInSrcOrder);
     }
 
     private static boolean containsAnnotation(CtType<?> type, int annotationStartOffset) {
@@ -132,7 +129,7 @@ class SpoonAnnotationSorter {
             // when the original annotation takes its attached lower comment block and blank lines with it.
             selectedWhitespacePrefix = destinationAnnotationSrcGap.getRelocatedLeadingWhitespace();
         }
-        return new AnnotationSrcGap(destinationAnnotationSrcGap, selectedWhitespacePrefix);
+        return destinationAnnotationSrcGap.copyWithLeadingWhitespace(selectedWhitespacePrefix);
     }
 
     @NonNull

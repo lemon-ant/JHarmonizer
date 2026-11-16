@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonImportUtils.extractCanonicalSingleImportTypeName;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.requireAnnotationTypeDeclaration;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonImportUtils.extractCanonicalSingleImportTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.requireAnnotationTypeDeclaration;
 
 import lombok.AccessLevel;
 import lombok.Getter;

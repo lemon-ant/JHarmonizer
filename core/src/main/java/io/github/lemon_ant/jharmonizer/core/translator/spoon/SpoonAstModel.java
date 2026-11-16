@@ -7,7 +7,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;

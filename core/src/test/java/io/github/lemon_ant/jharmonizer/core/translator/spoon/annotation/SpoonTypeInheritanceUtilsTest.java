@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeInheritanceUtils.findInheritedMemberTypeDeclaration;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeInheritanceUtils.findInheritedMemberTypeDeclaration;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeInheritanceUtils.InheritedMemberTypeLookupResult;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeInheritanceUtils.InheritedMemberTypeLookupResult;
 import java.net.URL;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;

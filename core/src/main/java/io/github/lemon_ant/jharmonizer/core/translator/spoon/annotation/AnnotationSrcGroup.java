@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class AnnotationSrcGroup {
      * @param endExclusive first source offset after the original group
      * @throws IllegalArgumentException if annotations are empty or the two lists have different sizes
      */
-    public AnnotationSrcGroup(
+    AnnotationSrcGroup(
             @NonNull List<AnnotationSrcFragment> annotationSrcFragments,
             @NonNull List<AnnotationSrcGap> annotationSrcGapsInSrcOrder,
             int start,
@@ -85,6 +85,21 @@ public class AnnotationSrcGroup {
         }
         this.start = start;
         this.endExclusive = endExclusive;
+    }
+
+    /**
+     * Copies prepared annotation and gap fragments while retaining this group's original source range.
+     * The copy derives its own fragment sequence and replacement text; cached values of this group are not reused.
+     * Callers must not modify the supplied lists after handoff.
+     * @param annotationSrcFragments annotations in the prepared current order
+     * @param annotationSrcGapsInSrcOrder prepared gap slots in original source order
+     * @return a group with the supplied fragments and the same source range
+     */
+    @NonNull
+    public AnnotationSrcGroup copyWithFragments(
+            @NonNull List<AnnotationSrcFragment> annotationSrcFragments,
+            @NonNull List<AnnotationSrcGap> annotationSrcGapsInSrcOrder) {
+        return new AnnotationSrcGroup(annotationSrcFragments, annotationSrcGapsInSrcOrder, start, endExclusive);
     }
 
     /**
@@ -181,7 +196,7 @@ public class AnnotationSrcGroup {
          * @param originalGap gap whose original values and source range are retained
          * @param selectedLeadingWhitespace prefix selected for the current preceding annotation
          */
-        public AnnotationSrcGap(@NonNull AnnotationSrcGap originalGap, @NonNull String selectedLeadingWhitespace) {
+        private AnnotationSrcGap(AnnotationSrcGap originalGap, String selectedLeadingWhitespace) {
             super(
                     originalGap.getEndExclusive(),
                     selectedLeadingWhitespace + originalGap.content,
@@ -211,6 +226,17 @@ public class AnnotationSrcGroup {
             this.relocatedLeadingWhitespace =
                     Objects.requireNonNull(relocatedLeadingWhitespace, "relocatedLeadingWhitespace");
             this.retainedLineSeparatorCount = retainedLineSeparatorCount;
+        }
+
+        /**
+         * Copies this parsed gap with a selected whitespace prefix, preserving its content and original metadata.
+         * The caller selects the prefix; this method only combines it with the retained content.
+         * @param selectedLeadingWhitespace prepared prefix for this gap
+         * @return gap with the selected prefix and the same content, source range, and original whitespace values
+         */
+        @NonNull
+        public AnnotationSrcGap copyWithLeadingWhitespace(@NonNull String selectedLeadingWhitespace) {
+            return new AnnotationSrcGap(this, selectedLeadingWhitespace);
         }
     }
 

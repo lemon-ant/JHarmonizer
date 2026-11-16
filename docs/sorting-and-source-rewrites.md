@@ -37,6 +37,26 @@ and attached annotation fragments that the custom printer can consume directly. 
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
 | `RelocationDetector` | Computes minimal declaration relocation reports from the original snapshot when check flows need diagnostics. |
 
+The parser prepares annotation fragments, type identities, and preservation keys in `core.translator.spoon.annotation`,
+through
+[`AnnotationSourceScanner.scan`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSourceScanner.java).
+[`SpoonAnnotationSorter`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/sorter/spoon/SpoonAnnotationSorter.java)
+applies the comparator and prepared constraints during sorting. The shared
+[`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
+stays beside the scanner to restrict initial group and fragment construction to that package, despite consumers in
+sorting and printing. The sorter selects annotation order and gap whitespace; `copyWithFragments` and
+`copyWithLeadingWhitespace` only copy prepared state while retaining original ranges and source values.
+Parser-wide type-tree traversal uses
+[`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
+Annotation-only type-name, import, and inheritance helpers stay with their consumers in `translator.spoon.annotation`.
+The neutral `SpoonTypeUtils` retains only operations with actual consumers across processing stages.
+For relocation diagnostics, `core.spoon` co-locates `RelocationDetector`, its package-private
+[`LIS helper`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/LongestIncreasingSubsequenceUtils.java),
+and the shared `MemberRelocation` model so its constructor remains package-private. Only `Sorter` calls the detector;
+the model is consumed across stages. Other helpers owned by one stage stay beside their consumers even when independent
+of Spoon. Generic names and possible reuse do not justify a neutral package; check actual production consumers of each
+class and method before moving shared operations there.
+
 Consequently, sorting the same input model with configuration A and then B can leave result A holding annotation
 order A alongside the member order and metadata produced by B. Immutable outer lists do not isolate this shared state.
 This is an architectural consequence of the inspected references, not a new runtime reproducer executed for this note.

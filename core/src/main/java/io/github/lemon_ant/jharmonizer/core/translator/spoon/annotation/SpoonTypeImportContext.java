@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,8 +17,8 @@ import spoon.reflect.declaration.CtType;
  * Prepared type-import facts and source owners keyed by the original wildcard-import instances.
  * The constructor retains read-only collection views; producers must not mutate the inputs after handoff.
  */
-@Getter(AccessLevel.PACKAGE)
 @Value
+@Getter(AccessLevel.PACKAGE)
 class SpoonTypeImportContext {
 
     @NonNull

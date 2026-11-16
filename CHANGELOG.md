@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Grouped annotation scanning, source-fragment models, metadata preparation, and type-name/import/inheritance helpers
+  under `translator.spoon.annotation`. Parser tree traversal stays in `translator.spoon.SpoonTypeTreeUtils`;
+  `core.spoon` retains shared models, cross-stage type operations, and relocation diagnostics alongside their
+  package-private LIS helper. `MemberRelocation` retains its package-private constructor.
+- Restricted initial annotation-group and fragment construction to the scanner's package. Sorting copies existing gaps
+  and groups with prepared whitespace and order while retaining their original source ranges.
 - Spoon type traversal streams declarations directly into indexes. Parsing statistics count types and members in one
   traversal without intermediate aggregate lists; removed redundant root-type and member-list helpers.
 - Unclosed annotation-argument diagnostics use the lexer's end-of-source offset without passing a diagnostic-only
@@ -134,9 +140,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Annotation-name scanning reports the unexpected token's source offset directly from the lexer cursor.
 - Unexpected `@Repeatable` expression shapes, inconsistent class-literal models, and cyclic container relationships fail
   processing for the affected file instead of accepting alternate AST forms or silently dropping dependency metadata.
-- Moved reusable Spoon type-name formatting, lookup through nesting, and enclosing-type selection into
-  `SpoonTypeUtils`. Inherited member-type lookup uses `SpoonTypeInheritanceUtils` with an iterative parent-reference
-  queue and per-call local state. `AnnotationTypeNameResolver` determines names with declaration traversal delegated to
+- Kept annotation type-name formatting in `SpoonTypeNameUtils` and source type-tree traversal in `SpoonTypeTreeUtils`.
+  Inherited member-type lookup uses `SpoonTypeInheritanceUtils` with an iterative parent-reference queue and per-call
+  local state. `AnnotationTypeNameResolver` determines names with declaration traversal delegated to
   `AnnotationTypeNameFromDeclarationsResolver`; `AnnotationDependencyKeyResolver` handles repeatable containers
   and keys.
 - Annotation identity resolution uses the owning resolver's source-file context and indexes directly; each lookup
@@ -191,7 +197,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `membersReordered` false and retain annotation diffs. Constructor arguments follow field declaration order.
 - Added member-relocation diagnostics to `SortingResult` using unmodifiable views without defensive copies. Producers
   must not mutate handed-off lists. Check flows consume these diagnostics, and sorting timing includes their detection.
-  Moved relocation helpers and models to the neutral `core.spoon` package.
+  Kept the shared `MemberRelocation` model, its diagnostic producer, and the package-private LIS helper in `core.spoon`
+  so the model constructor remains package-private.
 - Removed printer settings from parsing and `SpoonAstModel`. Flows now pass `PrinterConfig` directly to serialization,
   allowing the same parsed model to be printed with different settings.
 - Updated `SpoonSorter` to accept and return the complete processing model, keeping declaration sorting, opt-outs, and

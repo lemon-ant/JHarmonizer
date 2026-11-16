@@ -1,20 +1,21 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeTreeUtils;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -197,7 +198,7 @@ class AnnotationTypeNameResolverTest {
 
         // Then
         assertThat(annotationUse.getAnnotationType().getDeclaration()).isNotNull();
-        assertThat(SpoonTypeUtils.streamAllTypes(parsedModel.getCompilationUnit()))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(parsedModel.getCompilationUnit()))
                 .contains(annotationUse.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(annotationUse.getAnnotationType()))
                 .isEqualTo("annotationimportidentities.ImportSource.Owner.NestedTag");
@@ -653,7 +654,7 @@ class AnnotationTypeNameResolverTest {
                 dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(srcOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.streamAllTypes(srcQualifiedArrayModel.getCompilationUnit()))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(srcQualifiedArrayModel.getCompilationUnit()))
                 .filteredOn(CtType::isAnnotationType)
                 .extracting(srcType -> formatCanonicalTypeName(srcType.getReference()))
                 .contains(writtenTypeName);
@@ -775,7 +776,7 @@ class AnnotationTypeNameResolverTest {
 
     @NonNull
     private static AnnotationTypeNameResolver createResolver(CtCompilationUnit compilationUnit) {
-        Map<String, CtType<?>> declarationsByName = SpoonTypeUtils.streamAllTypes(compilationUnit)
+        Map<String, CtType<?>> declarationsByName = SpoonTypeTreeUtils.streamAllTypes(compilationUnit)
                 .collect(Collectors.toUnmodifiableMap(
                         srcType -> formatCanonicalTypeName(srcType.getReference()), srcType -> srcType));
         SpoonTypeImportContext typeImportContext =

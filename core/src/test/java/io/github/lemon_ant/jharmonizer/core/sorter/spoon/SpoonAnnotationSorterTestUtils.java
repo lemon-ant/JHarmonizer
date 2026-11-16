@@ -3,7 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;

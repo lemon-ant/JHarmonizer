@@ -13,13 +13,13 @@ import lombok.experimental.UtilityClass;
  * relocate to recover the sorted order from the original source.
  */
 @UtilityClass
-public class LongestIncreasingSubsequenceUtils {
+class LongestIncreasingSubsequenceUtils {
 
     /**
      * Sentinel value marking array positions that should be ignored when computing the LIS.
      * A position holding this value never participates in the resulting subsequence.
      */
-    public static final int UNTRACKED = -1;
+    static final int UNTRACKED = -1;
 
     /**
      * Computes a boolean mask marking the elements of {@code values} that participate in a
@@ -33,7 +33,7 @@ public class LongestIncreasingSubsequenceUtils {
      *         to the chosen LIS
      */
     @SuppressWarnings("PMD.UseVarargs")
-    public static boolean @NonNull [] computeLisMask(int[] values) {
+    static boolean @NonNull [] computeLisMask(int[] values) {
         int n = values.length;
         boolean[] inLis = new boolean[n];
         int[] tails = new int[n];

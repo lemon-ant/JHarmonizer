@@ -1,16 +1,17 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseCompilationUnitFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeTreeUtils;
 import java.lang.annotation.Repeatable;
 import java.net.URL;
 import java.util.List;
@@ -233,10 +234,10 @@ class AnnotationDependencyKeyResolverTest {
                 resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
+        assertThat(SpoonTypeTreeUtils.collectEnclosingSrcTypes(
+                        SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .isEmpty();
-        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit))
                 .as("The source declaration hides the unavailable ancestor on its inheritance branch")
                 .contains(packageAnnotation.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(packageAnnotation.getAnnotationType()))
@@ -339,7 +340,7 @@ class AnnotationDependencyKeyResolverTest {
                 resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit))
                 .contains(packageAnnotation.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(packageAnnotation.getAnnotationType()))
                 .isEqualTo("annotationtreeinheritedowner.InheritedAnnotationOwnerBase.Inner.Tag");
@@ -387,12 +388,12 @@ class AnnotationDependencyKeyResolverTest {
                 resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
+        assertThat(SpoonTypeTreeUtils.collectEnclosingSrcTypes(
+                        SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .as("Package annotations have no enclosing type before source-tree lookup")
                 .isEmpty();
         assertThat(parsedCompilationUnit.getImports()).isEmpty();
-        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit))
                 .contains(packageAnnotation.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(packageAnnotation.getAnnotationType()))
                 .isEqualTo("annotationtreebindings.InheritedTreeAnnotationBase.Tag");
@@ -496,8 +497,8 @@ class AnnotationDependencyKeyResolverTest {
                 resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
+        assertThat(SpoonTypeTreeUtils.collectEnclosingSrcTypes(
+                        SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .isEmpty();
         assertSourceAnnotationBinding(
                 parsedCompilationUnit, packageAnnotation, "annotationmultihop.MultiHopAnnotationBase.Tag");
@@ -547,8 +548,8 @@ class AnnotationDependencyKeyResolverTest {
                 resolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, writtenTypeName);
 
         // Then
-        assertThat(SpoonTypeUtils.collectEnclosingSrcTypes(
-                        SpoonTypeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
+        assertThat(SpoonTypeTreeUtils.collectEnclosingSrcTypes(
+                        SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit).toList(), annotationSrcStartOffset))
                 .as("Stage 1 has no enclosing type for the package annotation")
                 .isEmpty();
         assertThat(parsedCompilationUnit.getDeclaredTypes())
@@ -641,7 +642,7 @@ class AnnotationDependencyKeyResolverTest {
                         .map(CtTypeMemberWildcardImportReference.class::cast)
                         .map(CtTypeMemberWildcardImportReference::getTypeReference)
                         .collect(Collectors.toMap(
-                                SpoonTypeUtils::formatCanonicalTypeName, ownerTypeReference -> ownerTypeReference));
+                                SpoonTypeNameUtils::formatCanonicalTypeName, ownerTypeReference -> ownerTypeReference));
 
         // When
         String identity =
@@ -657,7 +658,7 @@ class AnnotationDependencyKeyResolverTest {
         assertThat(wildcardOwnerReferencesByCanonicalName.get(srcOwnerTypeName).getDeclaration())
                 .isNotNull()
                 .isSameAs(parsedCompilationUnit.getDeclaredTypes().getFirst());
-        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit))
                 .contains(wildcardOwnerReferencesByCanonicalName
                         .get(srcOwnerTypeName)
                         .getDeclaration());
@@ -858,7 +859,7 @@ class AnnotationDependencyKeyResolverTest {
 
     private static void assertSourceAnnotationBinding(
             CtCompilationUnit parsedCompilationUnit, CtAnnotation<?> annotationUse, String expectedSourceTypeName) {
-        assertThat(SpoonTypeUtils.streamAllTypes(parsedCompilationUnit))
+        assertThat(SpoonTypeTreeUtils.streamAllTypes(parsedCompilationUnit))
                 .as("The unmodified Spoon reference points to a declaration in the parsed source file")
                 .contains(annotationUse.getAnnotationType().getDeclaration());
         assertThat(formatCanonicalTypeName(annotationUse.getAnnotationType())).isEqualTo(expectedSourceTypeName);

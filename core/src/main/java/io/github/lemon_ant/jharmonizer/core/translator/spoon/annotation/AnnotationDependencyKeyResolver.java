@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.AnnotationDependencyKeyUtils.formatUnconfirmedGroupKey;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationDependencyKeyUtils.formatUnconfirmedGroupKey;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
 
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeTreeUtils;
 import java.lang.annotation.Repeatable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,7 +75,7 @@ final class AnnotationDependencyKeyResolver {
         rootGroupKeyByAnnotationCanonicalTypeName = new HashMap<>();
         // Metadata identities require canonical top-level/member owner chains.
         // Local and anonymous visibility scopes are indexed separately by the declaration resolver.
-        declaredTypesByCanonicalName = SpoonTypeUtils.streamAllTypes(compilationUnit)
+        declaredTypesByCanonicalName = SpoonTypeTreeUtils.streamAllTypes(compilationUnit)
                 .collect(Collectors.toUnmodifiableMap(
                         srcType -> formatCanonicalTypeName(srcType.getReference()), srcType -> srcType));
         SpoonTypeImportContext typeImportContext =
@@ -208,7 +209,7 @@ final class AnnotationDependencyKeyResolver {
         while (true) {
             Optional<CtAnnotation<?>> repeatableAnnotation = Optional.ofNullable(
                             declaredTypesByCanonicalName.get(currentAnnotationCanonicalTypeName))
-                    .map(SpoonTypeUtils::requireAnnotationTypeDeclaration)
+                    .map(SpoonTypeNameUtils::requireAnnotationTypeDeclaration)
                     .flatMap(annotationDeclaration -> annotationDeclaration.getAnnotations().stream()
                             .filter(metaAnnotation -> Repeatable.class
                                     .getName()

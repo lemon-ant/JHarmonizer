@@ -6,10 +6,10 @@ import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.l
 import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.overrideDefaultConfig;
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource;
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamDeclaredHierarchy;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModelTestCreator.copyWithClonedCompilationUnit;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeTreeTestUtils.collectDeclaredHierarchy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -19,10 +19,10 @@ import static org.mockito.Mockito.when;
 import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonSorter;
-import io.github.lemon_ant.jharmonizer.core.spoon.AnnotationSrcGroup;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
@@ -216,8 +216,7 @@ class SorterTest {
         assertThat(result.isMembersReordered()).isFalse();
         assertThat(result.isReordered()).isFalse();
         assertThat(result.getMemberRelocations()).isEmpty();
-        assertThat(streamDeclaredHierarchy(result.getSortedSpoonAstModel().getCompilationUnit())
-                        .toList())
+        assertThat(collectDeclaredHierarchy(result.getSortedSpoonAstModel().getCompilationUnit()))
                 .containsExactlyElementsOf(membersBeforeSorting);
     }
 

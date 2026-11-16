@@ -6,13 +6,13 @@ SPDX-License-Identifier: Apache-2.0
 # Как JHarmonizer определяет тип аннотации
 
 Этот документ описывает алгоритм `resolveAnnotationTypeName` класса
-[`AnnotationTypeNameResolver`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolver.java).
+[`AnnotationTypeNameResolver`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolver.java).
 Он определяет имя типа аннотации на этапах 1–5.
 Метод всегда возвращает `AnnotationTypeNameResolution`: модель содержит имя и признак подтверждения его
 канонической идентичности. Основание — объявление, одиночный импорт или найденный тип аннотации из `java.lang`
 для описателя модуля. Если каноническое имя установить нельзя, результат содержит неподтверждённое резервное имя.
 В схеме и примерах ниже под результатом имени подразумевается поле `annotationTypeName` этой модели.
-[`AnnotationDependencyKeyResolver`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationDependencyKeyResolver.java)
+[`AnnotationDependencyKeyResolver`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationDependencyKeyResolver.java)
 использует это имя для repeatable-контейнеров и ключей сохранения порядка. Далее описаны порядок проверок,
 условия продолжения и остановки поиска, а также связь результата с сортировкой.
 
@@ -39,6 +39,21 @@ flowchart TD
     S5 -->|"Иначе"| F["Вернуть неподтверждённое имя<br/>canonicalTypeNameConfirmed = false"]
     U --> F
 ```
+
+Сканирование аннотаций, определение имён и подготовка ключей зависимостей выполняются внутри `SpoonParser`,
+до сортировки. Эти процессоры и внутренние результаты поиска находятся в `core.translator.spoon.annotation`;
+точка входа —
+[`AnnotationSourceScanner.scan`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSourceScanner.java).
+`SpoonAnnotationSorter` из `core.sorter.spoon` применяет подготовленные ключи и компаратор.
+Общая модель
+[`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
+находится рядом со сканером: исходные группы и фрагменты создаются только внутри этого пакета, хотя модель используют
+также сортировка и печать. Сортировщик выбирает порядок и пробельные префиксы, а методы модели `copyWithFragments` и
+`copyWithLeadingWhitespace` копируют подготовленное состояние с сохранением исходных диапазонов.
+Обход деревьев типов и выбор окружающих типов
+относятся к этапу разбора и находятся в `translator.spoon.SpoonTypeTreeUtils`. Форматирование имён, подготовка импортов
+и поиск наследуемых типов-членов нужны только процессорам аннотаций и находятся в `translator.spoon.annotation`.
+В нейтральном `SpoonTypeUtils` остаются только операции, используемые разными этапами обработки.
 
 **Зачем этапы 1–3, если Spoon уже определил тип.** JHarmonizer разбирает отдельный файл в режиме `no-classpath`:
 доступность всех зависимостей компилируемого проекта при этом не гарантируется. Воспроизведён случай, когда
@@ -387,7 +402,7 @@ class InheritedAnnotationExample {
 объявляющего владельца, то есть её каноническое имя. Возвращается вся строка `demo.Base.Tag`, а не `Tag`.
 В безымянном пакете префикса пакета нет; у верхнеуровневой аннотации `Tag` оба вида имени совпадают с простым `Tag`.
 
-`SpoonTypeUtils.formatCanonicalTypeName` форматирует цепочку ссылок `CtTypeReference.getDeclaringType()`,
+`SpoonTypeNameUtils.formatCanonicalTypeName` форматирует цепочку ссылок `CtTypeReference.getDeclaringType()`,
 а не ищет объявления через `getDeclaration()`. Ссылки на владельцев могут существовать и без доступных объявлений.
 Spoon соединяет эти уровни в `getQualifiedName()` через `$`; форматтер соединяет их через точки.
 Сами идентификаторы сохраняются: для класса `Dollar$Owner` с вложенной аннотацией `Tag$Kind` результат —
@@ -617,7 +632,7 @@ public @interface Deprecated {}
 Объект создаётся тремя конструкторами; конструктора из произвольной строки нет:
 
 - Приватный конструктор с `boolean terminal` создаёт только статус `NOT_FOUND` или `UNRESOLVED`, без имени.
-- Конструктор с `CtType<?>` проверяет найденное объявление через `SpoonTypeUtils.requireAnnotationTypeDeclaration`,
+- Конструктор с `CtType<?>` проверяет найденное объявление через `SpoonTypeNameUtils.requireAnnotationTypeDeclaration`,
   сужает его до `CtAnnotationType<?>` и вычисляет имя из ссылки самого объявления аннотации.
   Обычный конечный класс или интерфейс вызывает `IllegalStateException` ещё до создания успешного результата.
 - Конструктор с `CtImport` принимает определённый одиночный импорт после полного совпадения имени. Для разрешённой
@@ -666,10 +681,10 @@ public @interface Deprecated {}
 
 ### 5.1. Как выбираются окружающие типы
 
-`SpoonTypeUtils.collectEnclosingSrcTypes` оставляет типы, в диапазон которых, **сообщённый Spoon**, входит смещение
+`SpoonTypeTreeUtils.collectEnclosingSrcTypes` оставляет типы, в диапазон которых, **сообщённый Spoon**, входит смещение
 аннотации. Обе границы Spoon включительные: `sourceStart <= offset <= sourceEnd`.
 Типы упорядочиваются по убыванию начального смещения — от внутреннего окружающего типа к внешнему.
-Для этого используется отдельный список `srcTypeScopes`, собранный `SpoonTypeUtils.collectSrcTypeScopes` из AST:
+Для этого используется отдельный список `srcTypeScopes`, собранный `SpoonTypeTreeUtils.collectSrcTypeScopes` из AST:
 он включает верхнеуровневые, вложенные, локальные и анонимные типы. Поэтому родитель локального или анонимного
 класса проверяется раньше, чем одноимённое объявление снаружи либо импорт.
 Список `canonicalTypeDeclarations` для канонического индекса остаётся отдельным:
@@ -819,7 +834,7 @@ class Outer {
 Объявления различаются по каноническому имени. Структурное равенство `CtType.equals()` для этого не подходит:
 два пустых `@interface Tag {}` в разных владельцах Spoon может считать равными. Проверка на компилируемой фикстуре
 без неоднозначного использования закреплена в
-[`SpoonTypeInheritanceUtilsTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/SpoonTypeInheritanceUtilsTest.java).
+[`SpoonTypeInheritanceUtilsTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/SpoonTypeInheritanceUtilsTest.java).
 
 Найденный тип становится текущим типом поиска для следующего сегмента. Поэтому для унаследованной `Inner` проверяются
 и её собственные родители, если следующий сегмент не объявлен непосредственно внутри неё.
@@ -905,7 +920,7 @@ class Outer {
 начинается с пакета `demo`, этот этап всё равно не пропускает его и не ищет пакет. Совпадать должен целый сегмент:
 `Outer` подходит для `Outer` и `Outer.Inner.Tag`, но не для `OuterOther.Tag`.
 
-Этап 2 использует `SpoonTypeUtils.startsWithTypeName` для проверки границы сегмента.
+Этап 2 использует `SpoonTypeNameUtils.startsWithTypeName` для проверки границы сегмента.
 На этапе 3 первый сегмент выбирает импорт из подготовленного индекса по простому имени.
 
 **Почему префикс текущего пакета намеренно не удаляется.** Совпадение начальных сегментов с именем пакета
@@ -1585,7 +1600,7 @@ Spoon уже связал его с `Base.Tag`, а этап 4 проверяет
 
 Тест
 `resolveAnnotationTypeNameOrRootContainerTypeName_qualifiedInheritedPackageAnnotation_resolvesSourceContainer`
-в [`AnnotationDependencyKeyResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationDependencyKeyResolverTest.java)
+в [`AnnotationDependencyKeyResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationDependencyKeyResolverTest.java)
 проверяет отсутствие окружающих типов и импортов, имена верхнеуровневых типов, исходную ссылку на `Base.Tag`
 и итоговый ключ `annotationbindings.PackageAnnotationBase.Tags`. Тест не изменяет позиции, ссылки, объявления
 или другие части AST после разбора.
@@ -1630,7 +1645,7 @@ Spoon уже связал его с `Base.Tag`, а этап 4 проверяет
 Поэтому все четыре этапа возвращают `NOT_FOUND`, а этап 5 сохраняет написанное имя. Компилируемый на JDK 21 вариант
 получен заменой имени использования до разбора; AST после разбора не изменяется. Тест
 `resolveAnnotationTypeName_srcQualifiedArrayUseWithoutAst_retainsDeclaredName` в
-[`AnnotationTypeNameResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolverTest.java)
+[`AnnotationTypeNameResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolverTest.java)
 проверяет наличие объявления, отсутствие AST-ссылки по смещению использования, обнаружение сканером и итоговое имя.
 Результат остаётся неподтверждённым: совпадение сохранённой строки с каноническим именем местной `Tag` не даёт права
 читать её контейнер как установленный для этого использования. Внешний ключ —
@@ -1811,7 +1826,7 @@ int value;
 исходную ссылку, сохранённое написание и пересечение ключей зависимостей без изменений AST.
 
 Эти исходы проверяет
-[`AnnotationTypeNameResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolverTest.java).
+[`AnnotationTypeNameResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolverTest.java).
 Сравнение написания с форматированной внешней ссылкой для этапа 5 не требуется: ни совпадение, ни несовпадение
 не устанавливают каноническую идентичность. В обычном исходнике для имени с точкой сохраняется написание;
 контекстное уточнение того же этапа относится только к простым именам. Модульный поиск от AST-ссылки не зависит.
@@ -1970,7 +1985,7 @@ module example {}
 При разборе только потребителя неизменённый AST Spoon 11.5.0 связывает использование с `java.lang.Deprecated`.
 Поэтому `selectFallbackAnnotationTypeName` сохраняет `Deprecated`, а не принимает ошибочное связывание.
 Этот случай закреплён в
-[`AnnotationTypeNameResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolverTest.java).
+[`AnnotationTypeNameResolverTest`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolverTest.java).
 Доступ к типам своего пакета и неявный импорт `java.lang` установлены в
 [JLS 7.3](https://docs.oracle.com/javase/specs/jls/se21/html/jls-7.html#jls-7.3), а приоритет собственного объявления — в
 [JLS 6.4.1](https://docs.oracle.com/javase/specs/jls/se21/html/jls-6.html#jls-6.4.1).
@@ -2314,25 +2329,30 @@ import java.lang.annotation.Repeatable;
 
 | Часть алгоритма | Код или существующие проверки |
 |---|---|
-| Полный алгоритм определения имени: приоритет этапов, одиночные импорты, квалифицированное написание, контекст пакета и индекс AST-ссылок | [`AnnotationTypeNameResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolver.java). |
-| Определение и подтверждение имени обходом объявлений вложенных и наследуемых типов: этапы 1, 2 и 4 | [`AnnotationTypeNameFromDeclarationsResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameFromDeclarationsResolver.java). |
-| Три исхода поиска и проверка вида при создании успешного результата | [`CanonicalAnnotationTypeNameLookupResult.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/CanonicalAnnotationTypeNameLookupResult.java). |
-| Итоговое имя и отдельное подтверждение канонической идентичности | [`AnnotationTypeNameResolution.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolution.java). |
-| Repeatable-метаданные, контейнеры и ключи сохранения порядка | [`AnnotationDependencyKeyResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationDependencyKeyResolver.java). |
-| Единый префикс неподтверждённых ключей аннотаций и контейнеров | [`AnnotationDependencyKeyUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationDependencyKeyUtils.java). |
-| Отдельный индекс локальных/анонимных областей, диапазоны окружающих типов, вложенность и форматирование | [`SpoonTypeUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/SpoonTypeUtils.java). |
-| Поиск наследуемых типов-членов по родительским ветвям и его результат | [`SpoonTypeInheritanceUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/SpoonTypeInheritanceUtils.java). |
+| Лексические границы, точное написание, вложенные аннотации и комментарии | [`AnnotationSourceScannerTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSourceScannerTest.java). |
+| Исходные группы, закрытое первичное создание и копирование подготовленных фрагментов | [`AnnotationSrcGroup.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java), [`AnnotationSrcGroupTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroupTest.java). |
+| Полный алгоритм определения имени: приоритет этапов, одиночные импорты, квалифицированное написание, контекст пакета и индекс AST-ссылок | [`AnnotationTypeNameResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolver.java). |
+| Определение и подтверждение имени обходом объявлений вложенных и наследуемых типов: этапы 1, 2 и 4 | [`AnnotationTypeNameFromDeclarationsResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameFromDeclarationsResolver.java). |
+| Три исхода поиска и проверка вида при создании успешного результата | [`CanonicalAnnotationTypeNameLookupResult.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/CanonicalAnnotationTypeNameLookupResult.java). |
+| Итоговое имя и отдельное подтверждение канонической идентичности | [`AnnotationTypeNameResolution.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolution.java). |
+| Контракт результата имени и его конструкторов | [`AnnotationTypeNameResolutionTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolutionTest.java). |
+| Repeatable-метаданные, контейнеры и ключи сохранения порядка | [`AnnotationDependencyKeyResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationDependencyKeyResolver.java). |
+| Единый префикс неподтверждённых ключей аннотаций и контейнеров | [`AnnotationDependencyKeyUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationDependencyKeyUtils.java). |
+| Обход объявлений типов, отдельный индекс локальных/анонимных областей и диапазоны окружающих типов | [`SpoonTypeTreeUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java). |
+| Форматирование канонического имени, границы сегментов и проверка вида аннотации | [`SpoonTypeNameUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/SpoonTypeNameUtils.java). |
+| Форматирование вложенных имён независимо от доступности объявлений, включая `$` в идентификаторах | [`SpoonTypeNameUtilsTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/SpoonTypeNameUtilsTest.java). |
+| Поиск наследуемых типов-членов по родительским ветвям и его результат | [`SpoonTypeInheritanceUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/SpoonTypeInheritanceUtils.java). |
 | Общий индекс публичных верхнеуровневых типов `java.lang` работающей JDK и поиск публичных объявленных/унаследованных типов-членов | [`RuntimeTypeUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/utilities/RuntimeTypeUtils.java). |
 | Фактические типы JDK, вложенность, наследование, сокрытие и неоднозначность публичных членов | [`RuntimeTypeUtilsTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/utilities/RuntimeTypeUtilsTest.java). |
-| Подготовка контекста импортов, их форма, имена одиночных типов и исходные wildcard-владельцы | [`SpoonImportUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/SpoonImportUtils.java). |
-| Общие факты об импортах, все wildcard-импорты и индекс доступных исходных владельцев | [`SpoonTypeImportContext.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/SpoonTypeImportContext.java). |
-| Возможные совпадения внешних путей и расширение наборов групповыми ключами кандидатов | [`AnnotationOrderPreservationKeyCollector.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationOrderPreservationKeyCollector.java). |
-| Лексические ключи без записи в кэше, неподтверждённые контейнеры, независимые одноимённые типы и неизменяемость наборов | [`AnnotationOrderPreservationKeyCollectorTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationOrderPreservationKeyCollectorTest.java). |
+| Подготовка контекста импортов, их форма, имена одиночных типов и исходные wildcard-владельцы | [`SpoonImportUtils.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/SpoonImportUtils.java). |
+| Общие факты об импортах, все wildcard-импорты и индекс доступных исходных владельцев | [`SpoonTypeImportContext.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/SpoonTypeImportContext.java). |
+| Возможные совпадения внешних путей и расширение наборов групповыми ключами кандидатов | [`AnnotationOrderPreservationKeyCollector.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationOrderPreservationKeyCollector.java). |
+| Лексические ключи без записи в кэше, неподтверждённые контейнеры, независимые одноимённые типы и неизменяемость наборов | [`AnnotationOrderPreservationKeyCollectorTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationOrderPreservationKeyCollectorTest.java). |
 | Критерии сравнения и отдельные ключи зависимостей | [`AnnotationDescriptor.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/config/unified/AnnotationDescriptor.java). |
 | Построение рёбер и вызов сортировки с компаратором | [`SpoonAnnotationSorter.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/sorter/spoon/SpoonAnnotationSorter.java). |
-| Приоритет импортов, цепочки родителей и промежуточных владельцев, пропущенное использование AST, package-привязка, repeatable-метаданные | [`AnnotationDependencyKeyResolverTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationDependencyKeyResolverTest.java). |
-| Этап 5 с отсутствующей, совпадающей, правильно и ошибочно раскрытой внешней AST-ссылкой; зависимости повторений; одиночные и wildcard-импорты модуля | [`AnnotationTypeNameResolverTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/AnnotationTypeNameResolverTest.java). |
-| Совместная компиляция настоящего модуля с аннотацией из пакета `Owner`; разбор только исходного описателя и сохранение неподтверждённого имени | [`ModuleAnnotationTypeNameResolverTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/spoon/ModuleAnnotationTypeNameResolverTest.java). |
+| Приоритет импортов, цепочки родителей и промежуточных владельцев, пропущенное использование AST, package-привязка, repeatable-метаданные | [`AnnotationDependencyKeyResolverTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationDependencyKeyResolverTest.java). |
+| Этап 5 с отсутствующей, совпадающей, правильно и ошибочно раскрытой внешней AST-ссылкой; зависимости повторений; одиночные и wildcard-импорты модуля | [`AnnotationTypeNameResolverTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolverTest.java). |
+| Совместная компиляция настоящего модуля с аннотацией из пакета `Owner`; разбор только исходного описателя и сохранение неподтверждённого имени | [`ModuleAnnotationTypeNameResolverTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/ModuleAnnotationTypeNameResolverTest.java). |
 | Внешние псевдонимы, независимые одноимённые типы, искусственное удаление позиций AST | [`SpoonAnnotationSorterTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/sorter/spoon/SpoonAnnotationSorterTest.java). |
 
 Показательные исходные фикстуры:

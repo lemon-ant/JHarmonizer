@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils.UNTRACKED;
 import static io.github.lemon_ant.jharmonizer.core.spoon.LongestIncreasingSubsequenceUtils.computeLisMask;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamExplicitSrcTypeMembers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,8 +47,8 @@ public class RelocationDetector {
      *       {@code originalMemberOrder}, are treated as stable and never reported as moved.</li>
      * </ul>
      *
-     * @param originalMemberOrder flat list of all type members in their original source order,
-     *                            as produced by {@link #snapshotOriginalMemberOrder}
+     * @param originalMemberOrder flat snapshot of type declarations and explicit source members captured from the
+     *                            parsed model before sorting, in source hierarchy order
      * @param reorderedCompilationUnit reordered Spoon model of the source file to inspect
      * @return list of relocations for all detected chunks, in current encounter order
      */
@@ -62,23 +62,6 @@ public class RelocationDetector {
         collectScopeRelocations(rootTypes, originalIndex, relocations);
         rootTypes.forEach(type -> collectTypeMemberRelocations(type, originalIndex, relocations));
         return Collections.unmodifiableList(relocations);
-    }
-
-    /**
-     * Builds a flat snapshot of all type members declared in the source file,
-     * in source-code order (DFS: each type node followed by its own members recursively).
-     *
-     * <p>The returned list contains both the root type declarations and all their nested
-     * members, interleaved in the order they appear in source code. The position of each
-     * element in this list reflects its order in the original code. This snapshot can be
-     * compared against the member order after sorting to detect relocations.
-     *
-     * @param compilationUnit Spoon model of the source file to snapshot
-     * @return immutable flat list of all type members in their original source order
-     */
-    @NonNull
-    public static List<CtTypeMember> snapshotOriginalMemberOrder(@NonNull CtCompilationUnit compilationUnit) {
-        return SpoonTypeUtils.streamDeclaredHierarchy(compilationUnit).toList();
     }
 
     private static void addMovedChunk(

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Anton Lem <antonlem78@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
-package io.github.lemon_ant.jharmonizer.core.spoon;
+package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
-import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.formatCanonicalTypeName;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.SpoonTypeNameUtils.formatCanonicalTypeName;
 import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.JAVA_LANG_PACKAGE_SEGMENT_COUNT;
 import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.JAVA_LANG_TYPE_PREFIX;
 import static io.github.lemon_ant.jharmonizer.core.utilities.RuntimeTypeUtils.findJavaLangTopLevelType;

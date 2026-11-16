@@ -77,12 +77,16 @@ SPDX-License-Identifier: Apache-2.0
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no
   behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
-- Keep generic raw source-offset and whitespace operations in `SrcCodeUtils`. Keep reusable Java lexical helpers that
-  do not depend on Spoon in neutral utilities; retain token-cursor state and annotation-specific parsing in the scanner.
+- Keep generic raw source-offset and whitespace operations in `SrcCodeUtils`. Place Java lexical helpers according to
+  their actual consumers; independence from Spoon does not require a global utilities package. Retain token-cursor
+  state and annotation-specific parsing in the scanner.
 - Use half-open `[start, endExclusive)` ranges in `SrcCodeUtils`; convert Spoon's inclusive end offsets at integration
   boundaries.
-- Keep reusable Spoon type-name formatting and prefix matching at segment boundaries, source type nesting,
-  and enclosing-type selection in `SpoonTypeUtils`.
+- Keep parser-stage type-tree traversal, source type nesting, and enclosing-type selection in
+  `translator.spoon.SpoonTypeTreeUtils`. Keep annotation-only type-name formatting, prefix matching at segment
+  boundaries, and annotation-kind validation in the package-private `translator.spoon.annotation.SpoonTypeNameUtils`.
+  Keep only cross-stage main-type selection, effective member boundaries, and explicit source-member traversal in
+  `core.spoon.SpoonTypeUtils`.
   Format nesting through recorded type-reference owner links, independently of declaration availability.
   Preserve literal `$` characters in Java identifiers instead of replacing every `$` with a dot.
   Keep inherited member-type lookup and its result model in `SpoonTypeInheritanceUtils`.
@@ -92,15 +96,16 @@ SPDX-License-Identifier: Apache-2.0
   Share `CanonicalAnnotationTypeNameLookupResult` as an independent result model.
   Keep repeatable-container metadata and order-preservation key resolution in `AnnotationDependencyKeyResolver`.
   Distinguish type nesting from inheritance in helper names and documentation.
-- Keep reusable Spoon import-name extraction and import-shape checks in `SpoonImportUtils`.
+- Keep Spoon import-name extraction, import-shape checks, and inherited member-type lookup within
+  `translator.spoon.annotation`, in `SpoonImportUtils` and `SpoonTypeInheritanceUtils` respectively.
   Type-name extractors must exclude resolved field/method references and unresolved static members. Preserve their
   simple names as lookup blockers: a field/method reference may omit a same-name inherited type imported by that
   declaration. A definite type import takes precedence; other matching static-member names are lookup uncertainty,
   not canonical type-name evidence.
-  Prepare scope-independent import names, classifications, and wildcard owners once per source file in a shared
-  `SpoonTypeImportContext`. Retain all real wildcard imports in model order and index all available source owners
-  by the original import's identity. Check imports in that order and stop when an owner is unavailable; keep per-name
-  owner searches and selected annotation-kind validation in the lookup stages.
+  Prepare scope-independent import names, classifications, and wildcard owners once per source file in a
+  `SpoonTypeImportContext` shared by these annotation processors. Retain all real wildcard imports in model order
+  and index all available source owners by the original import's identity. Check imports in that order and stop when
+  an owner is unavailable; keep per-name owner searches and selected annotation-kind validation in the lookup stages.
   Pass the prepared import context to consumers instead of unpacking its collections at call sites.
   Consumers that need only part of it must extract and retain the required fields in their constructors.
   Retain a computed predicate when a consumer needs that fact but not the underlying collection.
@@ -234,8 +239,11 @@ SPDX-License-Identifier: Apache-2.0
   Reuse `ElementOrdering` for the prepared groups and their change flag without rerunning change detection.
 - When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
   summing separate measurements.
-- Keep shared annotation source models in the standalone `AnnotationSrcGroup` class in the neutral `core.spoon` package.
-  Nest annotation, gap, and base-fragment types there; keep source parsing and preparation in the scanner.
+- Keep annotation source models in the standalone `AnnotationSrcGroup` class beside the scanner in
+  `translator.spoon.annotation`, with nested annotation, gap, and private base-fragment types.
+  Keep the initial group constructor and fragment/gap builders package-private; keep fragment/gap constructors private.
+  Sorting selects annotation order and whitespace; public `copyWithFragments` and `copyWithLeadingWhitespace` methods
+  only copy the supplied prepared state while retaining original ranges and immutable source values.
 - Keep annotation ordering keys and semantic constraint metadata in `AnnotationDescriptor`. Annotation fragments retain
   the descriptor plus source ranges and text; gap fragments retain prepared content and whitespace values.
   Ordering algorithms remain in the sorter.
@@ -319,8 +327,22 @@ SPDX-License-Identifier: Apache-2.0
   appropriate.
 - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record
   handling.
-- If a utility is shared across processing phases, place it in a neutral package instead of under a phase-specific
-  package.
+- Organize production classes by their owning processing stage. Keep source parsing and printing in `translator`,
+  ordering in `sorter`, and formatting in `formatter`.
+  Group the source annotation scanner and its name, repeatable-container, and dependency-key preparation helpers in
+  `translator.spoon.annotation`; they prepare the model before sorting. Keep their internal helpers package-private.
+  Reserve neutral packages such as `core.spoon` and `core.utilities` for helpers with actual production consumers
+  in different processing stages. Review both whole classes and individual methods against their actual consumers;
+  generic names and possible future reuse do not justify a neutral API. Keep helpers consumed within one stage as close
+  as possible to their owning processors, even when shared by several processors or independent of Spoon.
+  Models may stay beside their producers to restrict initial construction with package-private access, even when read
+  by several stages. Cross-stage consumption alone does not require placing a model in a neutral package.
+  As an explicit exception, keep `RelocationDetector` and its package-private `LongestIncreasingSubsequenceUtils`
+  beside the shared `MemberRelocation` model in `core.spoon`, so the model constructor remains package-private.
+  `Sorter` is the detector's only production caller; this co-location preserves construction access rather than
+  indicating cross-stage use of the detector.
+  Shared utilities must not depend on stage-specific processors or helpers. Extract genuinely shared operations into
+  the neutral package and update callers instead of adding forwarding wrappers.
 - Wrap collections once when returning or handing off a collection that was built mutably in the current method,
   including private/package-private helpers, so the receiver cannot mutate the handed-off instance.
   When handing collections to a model, enforce this protection in the model constructor instead of requiring callers
